@@ -1526,6 +1526,19 @@ export function Methodology() {
                 </table>
               </div>
 
+              {/* Data coverage horizon — federal bulk feed froze Sep 2025 (CompraNet -> ComprasMX) */}
+              <div className="p-3 rounded-md bg-accent/5 border border-accent/10">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-accent mb-1">
+                  {t('body.dataSources.horizonLabel')}
+                </p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  {t('body.dataSources.horizonBodyStart')}<strong className="text-text-primary">{t('body.dataSources.horizonBodyStrong')}</strong>{t('body.dataSources.horizonBodyEnd')}
+                </p>
+                <p className="text-xs text-text-muted mt-2">
+                  {t('body.dataSources.horizonNote')}
+                </p>
+              </div>
+
               {/* Amount validation */}
               <div className="p-3 rounded-md bg-risk-critical/5 border border-risk-critical/10">
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-risk-critical mb-1">

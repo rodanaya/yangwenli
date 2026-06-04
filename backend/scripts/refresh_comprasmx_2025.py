@@ -2,7 +2,8 @@
 Refresh ComprasMX 2025 contract data.
 
 CompraNet was abolished April 10, 2025. ComprasMX launched April 18, 2025.
-The 2025 CSV is updated periodically at the same URL pattern.
+The 2025 CSV was updated periodically at the same URL pattern — until the
+legacy bulk export was frozen (see 2026-06-04 follow-up below).
 
 AUDIT FINDINGS (2026-02-25):
   - Contratos_CompraNet2025.csv already ingested: 90,895 contracts (Structure D)
@@ -11,6 +12,38 @@ AUDIT FINDINGS (2026-02-25):
   - Estimated gap: Oct 2025 – Feb 2026 (~5 months, ~50K contracts)
   - Structure: SAME as Structure D — no ETL code changes needed
   - Detection markers confirmed: 'Clave Ramo', 'Partida específica' both present
+
+FOLLOW-UP (2026-06-04 — legacy source FROZEN, no refresh available):
+  - Upstream bulk files are frozen at Last-Modified 2025-09-29 05:16 GMT.
+    Verified via HEAD on both mirrors: Contratos_CompraNet{2023,2024,2025}.csv
+    all carry the SAME Sep 29 2025 timestamp (the whole datos_abiertos
+    directory was regenerated once, then abandoned). No 2026 file exists
+    (404 under every naming convention tried); directory autoindex disabled.
+  - The 2026-02-25 "Oct 2025 - Feb 2026 gap" was NEVER published — the export
+    stopped at ~Sep 28 2025 rather than continuing monthly. Our DB is already
+    current to that frontier (publication_date max = 2025-09-28), so there is
+    nothing left to ingest from this URL.
+  - Root cause: CompraNet's legal abolition wound down this legacy bulk export.
+    The successor (ComprasMX, run by the Secretaria Anticorrupcion / SABG)
+    did NOT republish a comprehensive bulk feed. Verified 2026-06-04 against
+    the datos.gob.mx CKAN catalog (/api/3/action/package_search, 1,652 sets):
+      * 'comprasmx' -> 0 datasets; 'compranet' -> 1, and it is only a frozen
+        historical archive (sabg/.../compranet_historico.csv, mod 2025-07-29).
+      * SABG publishes 21 datasets (sanctions, audits, declarations...) but
+        NONE is an ongoing contract-award feed.
+      * Award data is now fragmented per-agency on repodatos.atdt.gob.mx:
+        ~37 'contratos' datasets across ~25 agencies, heterogeneous schemas.
+        The one clear ongoing feed is CFE (cfe/contratos_adjudicados/
+        contratos_adjudicados.csv, mod 2026-03-13, data through 2026-01-28).
+        Most big spenders (PEMEX/IMSS/ISSSTE/SEP/SEDENA) have none — i.e. a
+        real transparency regression, not a moved file.
+  - ACTION: no comprehensive refresh exists. Re-probe this URL periodically
+    (procedure below still applies IF Last-Modified advances past 2025-09-29
+    or a 2026 file appears). To extend coverage past 2025-09-28 today would
+    require NEW ETL, either: (a) reverse-engineer the ComprasMX portal API
+    (comprasmx.buengobierno.gob.mx) for the full corpus, or (b) a datos.gob.mx
+    CKAN crawler over per-agency feeds (partial coverage). Treat 2025-09-28 as
+    the federal data horizon until then.
 
 REFRESH PROCEDURE:
   1. Download latest CSV (see URL below)
@@ -27,7 +60,8 @@ REFRESH PROCEDURE:
 DATA SOURCE:
   URL: https://upcp-compranet.buengobierno.gob.mx/cnetassets/datos_abiertos_contratos_expedientes/Contratos_CompraNet2025.csv
   Alt: https://comprasmx.buengobierno.gob.mx/cnetassets/datos_abiertos_contratos_expedientes/Contratos_CompraNet2025.csv
-  Updated: Monthly (typically mid-month)
+  Updated: FROZEN at 2025-09-29 (was monthly; abandoned after CompraNet's
+           abolition — see 2026-06-04 follow-up above). Re-probe before use.
 
 STRUCTURE VERIFICATION:
   Run this after downloading to confirm Structure D compatibility:
