@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { scaleToColor } from '@/components/charts/editorial'
 import { ADMINISTRATIONS, PARTY_COLORS } from './data'
 import type { AdminName } from './types'
 
@@ -37,55 +38,38 @@ function getCellDisplay(metric: MatrixMetric, v: LiveCell): string {
   return val.toFixed(0) + '%'
 }
 
-function getRiskLevel(pct: number): 'critical' | 'high' | 'medium' | 'low' {
-  if (pct >= 20) return 'critical'
-  if (pct >= 12) return 'high'
-  if (pct >= 6)  return 'medium'
-  return 'low'
+// Relative-intensity heatmap (replaces the old absolute 20/12/6 tier ladder).
+// Cells are colored by their position within the grid's OWN min–max for the
+// active metric (cream → amber → red via scaleToColor 'risk'), NOT by per-contract
+// risk tiers. Rationale: avg-risk aggregates cluster at 0.19–0.32 and never reach
+// RISK_THRESHOLDS (high 0.40 / critical 0.60), so absolute-tier coloring would
+// either overclaim (paint 0.25 "critical" red) or read flat (all muted grey).
+// Relative intensity shows where risk concentrates, honestly. Low end is cream —
+// never green (Bible §3.10).
+function cellInk(t: number): string {
+  // Dark ink over the light cream→amber range; switch to white once the fill reddens.
+  return t > 0.62 ? '#ffffff' : 'var(--color-text-primary)'
 }
-
-function getCellBg(riskLevel: 'critical' | 'high' | 'medium' | 'low'): string {
-  switch (riskLevel) {
-    case 'critical': return 'rgba(239,68,68,0.25)'
-    case 'high':     return 'rgba(245,158,11,0.2)'
-    case 'medium':   return 'rgba(161,98,7,0.15)'
-    case 'low':      return 'var(--color-background-elevated)'
-  }
-}
-
-function getCellColor(riskLevel: 'critical' | 'high' | 'medium' | 'low'): string {
-  switch (riskLevel) {
-    case 'critical': return '#ef4444'
-    case 'high':     return '#f59e0b'
-    case 'medium':   return '#a16207'
-    case 'low':      return 'var(--color-text-muted)'
-  }
+function intensityOf(value: number, min: number, max: number): number {
+  return max === min ? 0 : Math.max(0, Math.min(1, (value - min) / (max - min)))
 }
 
 interface MatrixCellProps {
   adminName: string
   sector: { key: string; code: string; name: string }
-  cellData: LiveCell
-  metric: MatrixMetric
-  adminColor: string
-  maxValueAcrossAll: number
-  totalMXNForCell: number
-  maxMXNAcrossAll: number
+  value: number
+  displayText: string
+  min: number
+  max: number
 }
 
-function MatrixCell({ adminName, sector, cellData, metric, adminColor, maxValueAcrossAll, totalMXNForCell, maxMXNAcrossAll }: MatrixCellProps) {
-  const displayVal = getCellValue(metric, cellData)
-  const displayText = getCellDisplay(metric, cellData)
-  // Use risk-based coloring for visual encoding regardless of selected metric
-  const riskLevel = getRiskLevel(cellData.risk * 100)
-  const bgColor = getCellBg(riskLevel)
-  const textColor = getCellColor(riskLevel)
-  const barWidth = maxMXNAcrossAll > 0 ? Math.max(4, (totalMXNForCell / maxMXNAcrossAll) * 100) : 0
-  void maxValueAcrossAll // suppress unused warning — kept for future normalization
+function MatrixCell({ adminName, sector, value, displayText, min, max }: MatrixCellProps) {
+  const t = intensityOf(value, min, max)
+  const bgColor = scaleToColor(value, min, max, 'risk')
   return (
     <td className="p-0">
       <div
-        className="relative flex flex-col items-center justify-center cursor-default select-none overflow-hidden"
+        className="flex items-center justify-center cursor-default select-none overflow-hidden"
         style={{
           minWidth: 72,
           minHeight: 48,
@@ -101,23 +85,11 @@ function MatrixCell({ adminName, sector, cellData, metric, adminColor, maxValueA
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontSize: 18,
-            color: textColor,
+            color: cellInk(t),
           }}
         >
-          {displayVal.toFixed(0)}%
+          {displayText}
         </span>
-        {/* Mini MXN spend bar at bottom */}
-        {barWidth > 0 && (
-          <div
-            className="absolute bottom-0 left-0 h-[3px]"
-            style={{
-              width: `${barWidth}%`,
-              backgroundColor: adminColor,
-              opacity: 0.6,
-            }}
-            aria-hidden="true"
-          />
-        )}
       </div>
     </td>
   )
@@ -198,6 +170,18 @@ export function AdminSectorMatrix({
     }
   }
   const maxValueAcrossAll = allCellValues.length > 0 ? Math.max(...allCellValues) : 1
+  const minValueAcrossAll = allCellValues.length > 0 ? Math.min(...allCellValues) : 0
+
+  // The OVERALL standings column gets its own intensity scale (5 admin values)
+  // so the worst administration reads reddest regardless of the cell-grid range.
+  const overallValues = ADMINISTRATIONS
+    .map((a) => {
+      const s = summary?.[a.name]
+      return s ? getCellValue(metric, s) : null
+    })
+    .filter((v): v is number => v !== null)
+  const overallMin = overallValues.length > 0 ? Math.min(...overallValues) : 0
+  const overallMax = overallValues.length > 0 ? Math.max(...overallValues) : 1
 
   return (
     <div className="card-elevated">
@@ -250,12 +234,19 @@ export function AdminSectorMatrix({
             >
               {t('matrixChrono', 'Crono')}
             </button>
-            {/* Risk-level legend */}
-            <div className="flex items-center gap-2 text-[9px] font-mono">
-              <span className="px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}>CRIT</span>
-              <span className="px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>HIGH</span>
-              <span className="px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: 'rgba(161,98,7,0.15)', color: '#a16207' }}>MED</span>
-              <span className="px-1.5 py-0.5 rounded-sm text-text-muted" style={{ backgroundColor: 'var(--color-background-elevated)' }}>LOW</span>
+            {/* Relative-intensity legend — color is each cell's rank within the
+                grid's own min–max for the active metric, not an absolute risk tier. */}
+            <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-muted">
+              <span>{t('matrixLess', 'menor')}</span>
+              <span
+                className="h-2.5 w-20 rounded-sm"
+                style={{
+                  background: 'linear-gradient(90deg, #f3f1ec, #f59e0b, #ef4444)',
+                  border: '1px solid var(--color-border)',
+                }}
+                aria-hidden="true"
+              />
+              <span>{t('matrixMore', 'mayor')}</span>
             </div>
           </div>
         </div>
@@ -304,9 +295,9 @@ export function AdminSectorMatrix({
               const isSelected = admin.name === selectedAdmin
               const isAMLO = admin.name === 'AMLO'
               const partyColor = PARTY_COLORS[admin.party] || '#64748b'
-              const adminColor = admin.color || partyColor
               const overall = summary?.[admin.name] ?? null
-              const overallLevel = getRiskLevel((overall?.risk ?? 0) * 100)
+              const overallVal = overall ? getCellValue(metric, overall) : 0
+              const overallT = intensityOf(overallVal, overallMin, overallMax)
               return (
                 <tr
                   key={admin.name}
@@ -333,14 +324,14 @@ export function AdminSectorMatrix({
                       </span>
                     </div>
                   </td>
-                  {/* OVERALL standing — the anchor column */}
+                  {/* OVERALL standing — the anchor column (own intensity scale) */}
                   <td className="p-0">
                     <div
                       className="flex items-center justify-center select-none"
                       style={{
                         minWidth: 64,
                         minHeight: 48,
-                        backgroundColor: getCellBg(overallLevel),
+                        backgroundColor: overall ? scaleToColor(overallVal, overallMin, overallMax, 'risk') : 'var(--color-background-elevated)',
                         border: '1px solid var(--color-border-hover)',
                         borderRadius: 3,
                       }}
@@ -349,7 +340,7 @@ export function AdminSectorMatrix({
                     >
                       <span
                         className="font-bold tabular-nums leading-none"
-                        style={{ fontFamily: 'var(--font-family-serif)', fontSize: 19, color: getCellColor(overallLevel) }}
+                        style={{ fontFamily: 'var(--font-family-serif)', fontSize: 19, color: overall ? cellInk(overallT) : 'var(--color-text-muted)' }}
                       >
                         {overall ? getCellDisplay(metric, overall) : '–'}
                       </span>
@@ -357,18 +348,15 @@ export function AdminSectorMatrix({
                   </td>
                   {MATRIX_SECTORS.map((sector) => {
                     const cellData = liveRow?.[sector.key] ?? { risk: 0, da: 0, hr: 0, sb: 0 }
-                    const cellVal = getCellValue(metric, cellData)
                     return (
                       <MatrixCell
                         key={sector.key}
                         adminName={admin.name}
                         sector={sector}
-                        cellData={cellData}
-                        metric={metric}
-                        adminColor={adminColor}
-                        maxValueAcrossAll={maxValueAcrossAll}
-                        totalMXNForCell={cellVal}
-                        maxMXNAcrossAll={maxValueAcrossAll}
+                        value={getCellValue(metric, cellData)}
+                        displayText={getCellDisplay(metric, cellData)}
+                        min={minValueAcrossAll}
+                        max={maxValueAcrossAll}
                       />
                     )
                   })}

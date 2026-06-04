@@ -7,7 +7,8 @@
  * per-admin blocks → lame-duck multiples → compare footer → PageFooter
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { PresidentAvatar } from '@/components/administrations/PresidentAvatar'
 import { DeltaBadge } from '@/components/administrations/DeltaBadge'
 import { AdminDossierPanel } from '@/components/administrations/AdminDossierPanel'
@@ -180,13 +181,33 @@ function computeZScore(values: number[], value: number): number {
 
 // AdminDossierPanel moved to components/administrations/AdminDossierPanel.tsx
 
+/** URL-friendly slug for ?admin= deep links: "Pena Nieto" → "pena-nieto". */
+const adminSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-')
+
 export default function Administrations() {
   const { t, i18n } = useTranslation('administrations')
   const { t: ts } = useTranslation('sectors')
-  const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminName>(() => {
+    const p = searchParams.get('admin')
+    const match = p ? ADMINISTRATIONS.find((a) => adminSlug(a.name) === p) : undefined
+    return (match?.name ?? 'AMLO') as AdminName
+  })
   const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
   const [compareOpen, setCompareOpen] = useState(false)
   const systemicChartRef = useRef<HTMLDivElement>(null)
+
+  // Keep ?admin= synced with the selection so a chosen administration is a
+  // shareable, reload-safe deep link (e.g. /administrations?admin=amlo).
+  useEffect(() => {
+    const want = adminSlug(selectedAdmin)
+    if (searchParams.get('admin') !== want) {
+      const next = new URLSearchParams(searchParams)
+      next.set('admin', want)
+      setSearchParams(next, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAdmin])
 
   // Data queries
   const { data: yoyResp, isLoading: yoyLoading, isError: yoyError } = useQuery({
