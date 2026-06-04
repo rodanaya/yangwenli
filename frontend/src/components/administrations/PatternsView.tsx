@@ -247,7 +247,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
                 }))}
                 formatVal={(v) => `${v.toFixed(1)}%`}
               />
-              <p className="text-[10px] text-text-muted font-mono mt-1">High Risk % por año del sexenio</p>
+              <p className="text-[10px] text-text-muted font-mono mt-1">{isEs ? 'Riesgo alto % por año del sexenio' : 'High-risk % by sexenio year'}</p>
             </div>
             {/* Election Year Effect note removed (M7): null finding 23.34% vs 23.46% */}
           </div>
