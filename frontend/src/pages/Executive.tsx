@@ -40,91 +40,8 @@ import { LeadTimeChart } from '@/components/executive/LeadTimeChart'
 import { TopCategoriesChart } from '@/components/executive/TopCategoriesChart'
 import { PesosAtRiskChart } from '@/components/executive/PesosAtRiskChart'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// § 5 Historias Ejemplares — three hand-picked vendor dossiers
-// ─────────────────────────────────────────────────────────────────────────────
-type DossierFlag = 'gt' | 'efos' | 'sfp' | 'ghost' | 'fp_structural'
-interface ExampleDossier {
-  vendorId: number
-  name: string
-  risk: number
-  tier: 1 | 2 | 3 | 4
-  flags: DossierFlag[]
-  contracts: string
-  /** Display string per locale. Display only — USD is computed from mxnAmount. */
-  value: { en: string; es: string }
-  /** Numeric MXN total used to compute the USD scale companion in the card
-   *  footer. Liconsa uses the documented MX$15B food-scandal anchor; Pharma
-   *  and Hemoser use their precise contract totals. */
-  mxnAmount: number
-  kicker: { en: string; es: string }
-  lede: { en: string; es: string }
-  detected: { en: string; es: string }
-  outcome: { en: string; es: string }
-}
-
-const EXAMPLE_DOSSIERS: ExampleDossier[] = [
-  {
-    vendorId: 29277,
-    name: 'GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.',
-    risk: 0.99, tier: 1, flags: ['gt'],
-    contracts: '6,303', value: { en: '$133.2B MXN', es: '133,200 MDP' },
-    mxnAmount: 133_200_000_000,
-    kicker: { en: 'PHARMA OLIGOPOLY · IMSS CAPTURE', es: 'OLIGOPOLIO FARMACÉUTICO · CAPTURA IMSS' },
-    lede: {
-      en: '$133.2B MXN in IMSS medicines over 14 years — 60% of the entire pharma category. A single distributor holding a majority of Mexico\'s public drug supply, 79% awarded without competitive bidding.',
-      es: '133,200 MDP en medicamentos al IMSS en 14 años — 60% de toda la categoría farmacéutica. Un solo distribuidor con la mayoría del suministro de medicamentos públicos de México, 79% sin licitación.',
-    },
-    detected: {
-      en: 'ARIA Tier 1 · P6 institutional capture · price volatility critical · 6,303 contracts all above sector median',
-      es: 'ARIA Tier 1 · captura institucional P6 · volatilidad de precio crítica · 6,303 contratos sobre la mediana sectorial',
-    },
-    outcome: {
-      en: 'COFECE opened cartel investigation 2018 · AMLO publicly vetoed the pharma cartel 2019 · SFP imposed sanctions',
-      es: 'COFECE abrió investigación de cártel 2018 · AMLO vetó públicamente el cártel farmacéutico 2019 · SFP impuso sanciones',
-    },
-  },
-  {
-    vendorId: 31655,
-    name: 'LICONSA S.A. DE C.V.',
-    risk: 0.92, tier: 1, flags: ['gt'],
-    contracts: '~3,000', value: { en: '~$15B MXN', es: '~15,000 MDP' },
-    mxnAmount: 15_000_000_000,
-    kicker: { en: 'SEGALMEX FOOD FRAUD', es: 'FRAUDE SEGALMEX' },
-    lede: {
-      en: 'Government parastatal at the center of a MX$15B food-distribution scandal. Funds diverted from a program feeding Mexico\'s poorest households — corn tortillas, milk, and beans that never arrived.',
-      es: 'Paraestatal al centro de un escándalo de 15,000 MDP en distribución de alimentos. Fondos desviados de un programa que alimenta a los hogares más pobres de México — tortillas, leche y frijoles que nunca llegaron.',
-    },
-    detected: {
-      en: 'Anchor GT case · avg risk score 0.66 · P6 capture pattern · 90%+ direct-award rate · network links to shell intermediaries',
-      es: 'Caso GT ancla · puntaje de riesgo promedio 0.66 · patrón de captura P6 · 90%+ adjudicación directa · vínculos con intermediarios fantasma',
-    },
-    outcome: {
-      en: 'MX$15B diverted from food subsidies · FGR criminal investigation ongoing since 2022 · parastatal placed under federal intervention',
-      es: '15,000 MDP desviados de subsidios alimentarios · investigación penal FGR en curso desde 2022 · paraestatal sometida a intervención federal',
-    },
-  },
-  {
-    vendorId: 6038,
-    name: 'HEMOSER, S.A. DE C.V.',
-    risk: 0.85, tier: 1, flags: ['gt'],
-    contracts: '~400', value: { en: '$17.2B MXN', es: '17,200 MDP' },
-    mxnAmount: 17_200_000_000,
-    kicker: { en: 'COVID MEDICAL SUPPLY · SAME-DAY IMSS', es: 'INSUMOS COVID · MISMO DÍA IMSS' },
-    lede: {
-      en: '$17.2B MXN in IMSS medical supplies awarded during COVID emergency — many contracts signed and fulfilled the same day, a pattern that is physically impossible under normal procurement.',
-      es: '17,200 MDP en insumos médicos al IMSS adjudicados durante la emergencia COVID — muchos contratos firmados y cumplidos el mismo día, un patrón físicamente imposible en contratación normal.',
-    },
-    detected: {
-      en: 'ARIA Tier 1 · same-day-award spike pattern · COVID emergency bracket · risk score 0.85 · price ratio above sector by 2.4×',
-      es: 'ARIA Tier 1 · patrón de adjudicación mismo-día · emergencia COVID · puntaje 0.85 · razón de precio 2.4× sobre el sector',
-    },
-    outcome: {
-      en: 'Documented in GT corruption corpus · congressional review initiated · part of broader COVID emergency procurement investigation',
-      es: 'Documentado en corpus GT · revisión congresional iniciada · parte de la investigación más amplia de compras COVID',
-    },
-  },
-]
+// § 5 Historias Ejemplares (EXAMPLE_DOSSIERS + ExampleDossier/DossierFlag types)
+// removed 2026-06-04 with the dashboard section that consumed them.
 
 export default function Executive() {
   const { i18n } = useTranslation('executive')
@@ -1767,83 +1684,12 @@ export default function Executive() {
           </PlateFrame>
         </section>
 
-        {/* ─── § 5 HISTORIAS EJEMPLARES — try-it dossiers ─── */}
-        <section className="mb-8" aria-labelledby="historias-title">
-          <div id="historias-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {lang === 'en' ? '§ 5 · Example dossiers — open one' : '§ 5 · Historias ejemplares — abre una'}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {EXAMPLE_DOSSIERS.map((d) => {
-              // First sentence of the lede only — the rest lives on the
-              // full vendor dossier. This card's job is to invite a click,
-              // not summarize the case.
-              // Split on sentence-ending period (followed by whitespace or
-              // end) OR em-dash — NOT decimal points inside amounts like
-              // "$133.2B" (caught by the trailing-digit lookahead).
-              const pullQuote = d.lede[lang].split(/\.(?=\s|$)|—/)[0].trim() + '.'
-              return (
-                <div
-                  key={d.vendorId}
-                  role="link"
-                  tabIndex={0}
-                  onClick={() => navigate(`/vendors/${d.vendorId}`)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/vendors/${d.vendorId}`) }}
-                  className="group surface-card p-5 rounded-sm flex flex-col cursor-pointer hover:border-border-hover transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  aria-label={`${lang === 'en' ? 'Open dossier' : 'Abrir dossier'}: ${d.name}`}
-                >
-                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-                    {d.kicker[lang]}
-                  </div>
-
-                  <div className="mb-4">
-                    <EntityIdentityChip
-                      type="vendor"
-                      id={d.vendorId}
-                      name={d.name}
-                      riskScore={d.risk}
-                      ariaTier={d.tier}
-                      flags={d.flags}
-                      size="md"
-                      narrative
-                    />
-                  </div>
-
-                  {/* Single editorial pull-quote — first sentence of the lede */}
-                  <p
-                    className="text-[14px] leading-[1.55] mb-5 text-pretty flex-1"
-                    style={{
-                      fontFamily: "'Playfair Display', Georgia, serif",
-                      fontStyle: 'italic',
-                      color: 'var(--color-text-primary)',
-                    }}
-                  >
-                    {pullQuote}
-                  </p>
-
-                  {/* Footer: stat (MXN + USD scale companion) + open affordance.
-                      Two-line stack so USD reads as supporting scale, not a
-                      competing number. */}
-                  <div className="flex items-end justify-between gap-3 pt-3 border-t border-border/40 text-[11px] font-mono">
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <div className="flex items-center gap-2 text-text-secondary">
-                        <span className="tabular-nums">{d.value[lang]}</span>
-                        <span className="text-text-muted" aria-hidden="true">·</span>
-                        <span className="tabular-nums text-text-muted">{d.contracts}</span>
-                      </div>
-                      <span className="text-[10px] tabular-nums text-text-muted opacity-80">
-                        ≈{formatCompactUSD(d.mxnAmount)}
-                      </span>
-                    </div>
-                    <span className="inline-flex items-center gap-1 text-text-muted group-hover:text-accent transition-colors self-end pb-0.5">
-                      {lang === 'en' ? 'Open' : 'Abrir'}
-                      <ArrowUpRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </section>
+        {/* §5 Historias Ejemplares (3 try-it dossier cards) removed 2026-06-04 —
+            its "open a specific case" job is already served by the Observatory
+            (click-into-vendors), every KEY FINDING card (investigate link), the
+            Documented Cases Timeline below, and /casos; the named-case detail
+            lives on the vendor dossiers one click away. EXAMPLE_DOSSIERS + the
+            ExampleDossier/DossierFlag types were removed with it. */}
 
         {/* ─── Amber divider ─── */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-40 mb-10" />
