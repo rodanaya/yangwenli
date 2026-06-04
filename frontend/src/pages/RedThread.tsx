@@ -180,7 +180,7 @@ type WebEvidenceArticle = {
 const WEB_VERDICT_STYLE: Record<string, { bg: string; color: string }> = {
   CORRUPTION_MENTION: { bg: 'rgba(239,68,68,0.10)',   color: 'var(--color-risk-critical)' },
   RISK_MENTION:       { bg: 'rgba(245,158,11,0.10)',  color: 'var(--color-risk-high)' },
-  EXCULPATORY:        { bg: 'rgba(34,197,94,0.10)',   color: '#16a34a' },
+  EXCULPATORY:        { bg: 'rgba(51,65,85,0.10)',    color: '#334155' }, // slate-700 — §3.10: exculpatory isn't green-for-clean
   NEUTRAL:            { bg: 'rgba(100,116,139,0.08)', color: 'var(--color-text-muted)' },
 }
 

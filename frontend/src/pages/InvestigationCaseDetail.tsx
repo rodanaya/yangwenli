@@ -132,14 +132,18 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
   color: string
 }> = {
   pending:       { icon: Clock,        labelKey: 'caseDetail.statusPending',       color: '#f59e0b' },
-  corroborated:  { icon: CheckCircle2, labelKey: 'caseDetail.statusCorroborated',  color: '#22c55e' },
+  // §3.10: "corroborated" (a supported corruption finding) is neutral slate, not
+  // green — the ✓ icon carries the verification; green would read as "good".
+  corroborated:  { icon: CheckCircle2, labelKey: 'caseDetail.statusCorroborated',  color: '#64748b' },
   refuted:       { icon: XCircle,      labelKey: 'caseDetail.statusRefuted',       color: '#ef4444' },
   inconclusive:  { icon: HelpCircle,   labelKey: 'caseDetail.statusInconclusive',  color: '#78716c' },
 }
 
 const EVIDENCE_STRENGTH_COLOR: Record<string, string> = {
-  confirmed: '#22c55e',
-  strong: '#22c55e',
+  // §3.10: strong/confirmed evidence is neutral slate, not green — a procurement
+  // platform doesn't paint a well-supported finding "good".
+  confirmed: '#64748b',
+  strong: '#64748b',
   likely: '#f59e0b',
   moderate: '#f59e0b',
   suspected: '#a16207',
@@ -336,7 +340,7 @@ export function InvestigationCaseDetail() {
 
   // Confidence pill color
   const confidencePct = (detail.confidence * 100).toFixed(0)
-  const confidenceColor = detail.confidence >= 0.75 ? '#22c55e' : detail.confidence >= 0.5 ? '#f59e0b' : '#78716c'
+  const confidenceColor = detail.confidence >= 0.75 ? '#64748b' : detail.confidence >= 0.5 ? '#f59e0b' : '#78716c'
 
   // Summary-strip scales
   const VALUE_CEIL = 100_000_000_000 // 100 B MXN cap for DotBar scale
@@ -547,11 +551,11 @@ export function InvestigationCaseDetail() {
                     fontFamily: 'monospace',
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
-                    color: '#22c55e',
-                    border: '1px solid rgba(34,197,94,0.3)',
+                    color: '#64748b',
+                    border: '1px solid rgba(100,116,139,0.3)',
                     padding: '6px 12px',
                     borderRadius: 4,
-                    backgroundColor: 'rgba(34,197,94,0.08)',
+                    backgroundColor: 'rgba(100,116,139,0.08)',
                     cursor: 'pointer',
                   }}
                 >
@@ -1427,9 +1431,9 @@ export function InvestigationCaseDetail() {
                   fontFamily: 'monospace',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: '#22c55e',
-                  border: '1px solid rgba(34,197,94,0.3)',
-                  backgroundColor: 'rgba(34,197,94,0.08)',
+                  color: '#64748b',
+                  border: '1px solid rgba(100,116,139,0.3)',
+                  backgroundColor: 'rgba(100,116,139,0.08)',
                   padding: '7px 14px',
                   borderRadius: 4,
                   cursor: 'pointer',
