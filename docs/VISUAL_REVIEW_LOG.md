@@ -1,4 +1,47 @@
 ---
+## Visual Review — 2026-06-04T12:10:49Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/atlas | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/aria | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/sectors | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/sectors/salud | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/cases | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/methodology | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (cloud egress block — host_not_allowed) | WARN |
+
+Note: Persistent CDN/WAF block on cloud egress IP (`x-deny-reason: host_not_allowed`). TLS handshake completes successfully — server is reachable. Not indicative of site downtime. Consistent with all prior runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/cases?limit=5 | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/sectors | 403 (cloud egress block — empty body) | WARN |
+
+### Bilingual Gaps
+Scan results (false positives filtered — same stable baseline as prior runs):
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` in `RedThread.tsx:241-242` — object property access, not a rendered string. OK.
+- `TIER_STYLES[tierName]` in `InstitutionScorecards.tsx:441` — style lookup, not a UI string. OK.
+- Academic citation in `Methodology.tsx:120` — untranslatable bibliographic reference. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ... : ...`). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx:1433` — code data (S.A., C.V. etc.), not rendered UI labels. OK.
+- `VendorHero.tsx:710` — code comment with vendor name example, not rendered. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — `target_name: 'Maypo S.A.'` in chart data constants, vendor proper name. OK.
+- `CaseLibrary.tsx:220` — JSX comment `never see "ADMINISTRATIONS.FOO"`, not rendered. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx` — `label="Risk Score"` / `label="Risk Factors"` hardcoded English labels without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by persistent server-side IP allowlist (cloud egress → CDN WAF). TLS connects successfully — server alive. All WARN flags are infrastructure constraints from this environment, not site failures. Bilingual scan clean — no new gaps detected since last run.
+
+---
 ## Visual Review — 2026-06-03T18:09:22Z
 
 ### HTTP Status
