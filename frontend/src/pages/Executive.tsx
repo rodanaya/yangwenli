@@ -127,7 +127,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
 ]
 
 export default function Executive() {
-  const { t, i18n } = useTranslation('executive')
+  const { i18n } = useTranslation('executive')
   const navigate = useNavigate()
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
@@ -212,13 +212,6 @@ export default function Executive() {
   const headlineSpendUSD = lang === 'en' ? `≈${formatCompactUSD(TOTAL_SPEND_MXN)}` : null
   // Per-tile descriptors below are inlined into the editorial cards JSX
   // so they can each have a distinctive micro-visualization and layout.
-
-  // ─── Recommendations (3-column audience grid) ──────────────────────────────
-  const audiences: Array<{ key: 'a1' | 'a2' | 'a3' }> = [
-    { key: 'a1' },
-    { key: 'a2' },
-    { key: 'a3' },
-  ]
 
   return (
     <>
@@ -1876,38 +1869,6 @@ export default function Executive() {
           >
             <CaseTimeline lang={lang} />
           </PlateFrame>
-        </section>
-
-        {/* ─── Recommendations by Audience ─── */}
-        <section className="mb-8">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {t('recommendations.sectionLabel')}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {audiences.map((a, idx) => (
-              <motion.div
-                key={a.key}
-                className="surface-card rounded-sm p-5 border-l-2 border-accent/40"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + idx * 0.08 }}
-              >
-                <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-accent mb-3">
-                  {t(`recommendations.${a.key}.audience`)}
-                </div>
-                <ul className="space-y-3">
-                  {(['s1', 's2', 's3'] as const).map((s, sIdx) => (
-                    <li key={s} className="text-xs text-text-secondary leading-[1.6] flex gap-2">
-                      <span className="font-mono text-text-muted tabular-nums shrink-0">
-                        {String(sIdx + 1).padStart(2, '0')}
-                      </span>
-                      <span>{t(`recommendations.${a.key}.${s}`)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </div>
         </section>
 
         {/* ─── Recent Critical Alerts — live news wire ─── */}
