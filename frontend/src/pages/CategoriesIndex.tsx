@@ -344,8 +344,8 @@ export default function CategoriesIndex() {
           }
           footer={
             lang === 'es'
-              ? 'Datos de contratos federales COMPRANET · RUBLI v0.8.5 · Gasto validado: 9.97T MXN'
-              : 'COMPRANET federal contract data · RUBLI v0.8.5 · Validated spend: 9.97T MXN'
+              ? 'Datos de contratos federales COMPRANET · RUBLI v0.8.5 · Gasto validado: 9.9T MXN'
+              : 'COMPRANET federal contract data · RUBLI v0.8.5 · Validated spend: 9.9T MXN'
           }
         >
           <CategoryTreemap

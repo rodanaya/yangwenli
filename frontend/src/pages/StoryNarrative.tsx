@@ -446,18 +446,25 @@ function HeroArtwork({ accentColor, variant = 'cluster' }: { accentColor: string
     return (
       <svg viewBox="0 0 560 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         {Array.from({ length: 6 }).map((_, row) =>
-          Array.from({ length: 12 }).map((_, col) => (
-            <rect
-              key={`${row}-${col}`}
-              x={20 + col * 44}
-              y={16 + row * 30}
-              width={36}
-              height={22}
-              fill={accentColor}
-              opacity={0.05 + Math.random() * 0.18}
-              rx={1}
-            />
-          ))
+          Array.from({ length: 12 }).map((_, col) => {
+            // Deterministic per-cell jitter (stable across renders). Was
+            // Math.random(), which re-randomized every paint and faked data
+            // variation — a sanctioned decorative backdrop must still be stable.
+            const s = Math.sin((row * 12 + col + 1) * 12.9898) * 43758.5453
+            const jitter = s - Math.floor(s)
+            return (
+              <rect
+                key={`${row}-${col}`}
+                x={20 + col * 44}
+                y={16 + row * 30}
+                width={36}
+                height={22}
+                fill={accentColor}
+                opacity={0.05 + jitter * 0.18}
+                rx={1}
+              />
+            )
+          })
         )}
       </svg>
     )

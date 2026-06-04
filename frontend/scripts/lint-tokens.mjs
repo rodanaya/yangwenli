@@ -17,7 +17,7 @@
  *
  * To extend: add a new pattern to PATTERNS array.
  */
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 
 // Scan paths. src/hooks was added 2026-04-27 after AnimatedFill in
@@ -142,8 +142,13 @@ for (const root of ROOTS) {
   for (const { name, regex, severity } of PATTERNS) {
     let output = ''
     try {
-      output = execSync(
-        `grep -rEn "${regex}" ${root} --include='*.tsx' --include='*.ts' --include='*.css'`,
+      // execFileSync (no shell): grep receives `regex` as a single argv element,
+      // so a pattern with shell metacharacters — e.g. the green-hex rule's
+      // ["']#(34d399|10b981|…) — can't break quoting and crash the gate (it did
+      // under execSync, where the bare (a|b|c) became a subshell + pipes).
+      output = execFileSync(
+        'grep',
+        ['-rEn', regex, root, '--include=*.tsx', '--include=*.ts', '--include=*.css'],
         { encoding: 'utf-8' }
       )
     } catch (err) {
