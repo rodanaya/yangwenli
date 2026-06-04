@@ -1,29 +1,25 @@
 /**
  * InstitutionCommandPanel — the operational masthead body for the institution
- * dossier, by analogy to VendorCommandPanel. Replaces the five full-viewport
- * narrative chapters (Subject/Timeline/Suppliers/Spending/Risk) with:
+ * dossier:
  *
  *   InstitutionStatStrip      — the decisive numbers in one aligned readout.
- *   InstitutionDiagnosticGrid — a 2×2 grid: where the risk sits (risk-level
- *                               distribution), OECD deviation, top suppliers,
- *                               risk over time.
- *   InstitutionSupplierTable  — the full-width supplier reference (replaces the
- *                               centered ChapterShell list; routes every supplier
- *                               through EntityIdentityChip — Hard Rule #1).
+ *   InstitutionDiagnosticGrid — a 2×2 grid: where the risk sits (risk-band
+ *                               distribution, with an avg-vs-baseline fallback
+ *                               while the slow per-contract GROUP BY loads),
+ *                               OECD deviation, top suppliers, risk over time.
+ *   InstitutionSupplierTable  — the full-width supplier reference
+ *                               (EntityIdentityChip rows — Hard Rule #1).
  *
- * Built 2026-06-03 (DESIGNUS — institution dossier operational rebuild, P0 from
- * docs/WEBSITE_STANDARDS.md). Folio register: mono labels, tabular numbers,
- * RISK_COLORS fills / RISK_TEXT_COLORS numerals, no green for low risk.
+ * 2026-06-04 (DESIGNUS — P2 convergence): the shared masthead grammar now lives
+ * in components/dossier/command/primitives; this file keeps the institution
+ * computation, the where-the-risk-sits fallback, and the supplier table.
  */
 import { useMemo } from 'react'
 import type {
   InstitutionDetailResponse,
   InstitutionRiskProfile,
   InstitutionVendorItem,
-  RiskLevel,
 } from '@/api/types'
-import { DotBarRow } from '@/components/ui/DotBar'
-import { EditorialAreaChart } from '@/components/charts/editorial'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   RISK_COLORS,
@@ -34,14 +30,18 @@ import {
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
-
-// vendor_stats / institution rate fields can be stored 0–1 OR 0–100; canonicalize
-// to a 0–100 percentage (same defense as VendorCommandPanel.ratePct).
-function ratePct(v: number | null | undefined): number | null {
-  if (v == null || !Number.isFinite(v)) return null
-  const frac = v > 1 ? v / 100 : v
-  return Math.max(0, Math.min(100, frac * 100))
-}
+import {
+  ratePct,
+  StatStrip,
+  Panel,
+  EmptyNote,
+  OecdDeviationPanel,
+  RiskOverTimePanel,
+  RiskBandDistribution,
+  TopEntitiesList,
+  type StatCell,
+  type BenchRow,
+} from '@/components/dossier/command/primitives'
 
 interface TimelinePoint {
   year: number
@@ -87,7 +87,7 @@ export function InstitutionStatStrip({
   const riskLvl = institution.avg_risk_score != null ? getRiskLevelFromScore(institution.avg_risk_score) : 'low'
   const avgRiskColor = avgRisk == null ? undefined : riskLvl === 'critical' ? RISK_TEXT_COLORS.critical : riskLvl === 'high' ? RISK_TEXT_COLORS.high : undefined
 
-  const cells: Array<{ label: string; value: string; sub?: string; color?: string } | null> = [
+  const cells: Array<StatCell | null> = [
     {
       label: isEs ? 'Gasto total' : 'Total spend',
       value: formatCompactMXN(institution.total_amount_mxn ?? 0),
@@ -127,62 +127,11 @@ export function InstitutionStatStrip({
       sub: isEs ? `${span} año${span === 1 ? '' : 's'}` : `${span} yr${span === 1 ? '' : 's'}`,
     },
   ]
-  const shown = cells.filter(Boolean) as Array<{ label: string; value: string; sub?: string; color?: string }>
 
-  return (
-    <div
-      className="grid border-t border-b"
-      style={{
-        borderColor: 'var(--color-border)',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(116px, 1fr))',
-      }}
-    >
-      {shown.map((c, i) => (
-        <div key={c.label} className="px-3 py-3 sm:px-4 sm:py-4" style={{ borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)' }}>
-          <div
-            className="font-mono"
-            style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-          >
-            {c.label}
-          </div>
-          <div
-            className="tabular-nums"
-            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 600, fontSize: 'clamp(18px, 2vw, 24px)', lineHeight: 1, color: c.color ?? 'var(--color-text-primary)', letterSpacing: '-0.01em' }}
-          >
-            {c.value}
-          </div>
-          {c.sub && (
-            <div className="font-mono tabular-nums" style={{ fontSize: 9, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, opacity: c.color ? 0.85 : 1, whiteSpace: 'nowrap' }}>
-              {c.sub}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ─── Panel chrome (shared shape with VendorCommandPanel) ─────────────────────
-
-function Panel({ label, accent, children }: { label: string; accent: string; children: React.ReactNode }) {
-  return (
-    <section style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)', borderRadius: 3, padding: '14px 16px 16px', background: 'transparent' }}>
-      <div className="font-mono flex items-center gap-2" style={{ fontSize: 9.5, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: 12 }}>
-        <span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: 999, background: accent }} />
-        {label}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-function EmptyNote({ text }: { text: string }) {
-  return <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-muted)' }}>{text}</p>
+  return <StatStrip cells={cells} />
 }
 
 // ─── Diagnostic grid ─────────────────────────────────────────────────────────
-
-const RISK_ORDER: RiskLevel[] = ['critical', 'high', 'medium', 'low']
 
 export function InstitutionDiagnosticGrid({
   institution,
@@ -201,10 +150,9 @@ export function InstitutionDiagnosticGrid({
 }) {
   const isEs = lang === 'es'
 
-  // Risk-level distribution of contracts (where the risk sits)
+  // Risk-band distribution of contracts (where the risk sits)
   const dist = riskProfile?.contracts_by_risk_level
-  const distTotal = dist ? RISK_ORDER.reduce((s, k) => s + (dist[k] ?? 0), 0) : 0
-  const distMax = dist ? Math.max(1, ...RISK_ORDER.map((k) => dist[k] ?? 0)) : 1
+  const distTotal = dist ? (dist.critical ?? 0) + (dist.high ?? 0) + (dist.medium ?? 0) + (dist.low ?? 0) : 0
 
   // Fallback for "where the risk sits" — the risk-profile GROUP BY over every
   // contract is slow on large institutions (673K rows for IMSS), so while it
@@ -222,7 +170,7 @@ export function InstitutionDiagnosticGrid({
   // OECD deviation
   const hr = hrOf(institution), da = daOf(institution), sb = ratePct(institution.single_bid_pct)
   const daLim = OECD_DIRECT_AWARD_LIMIT * 100, sbLim = OECD_SINGLE_BID_LIMIT * 100, hrLim = MODEL_HR_BASELINE * 100
-  const benchRows: Array<{ label: string; pct: number; limit: number; over: boolean }> = []
+  const benchRows: BenchRow[] = []
   if (da != null) benchRows.push({ label: isEs ? 'Adjudicación directa' : 'Direct award', pct: da, limit: daLim, over: da > daLim })
   if (sb != null) benchRows.push({ label: isEs ? 'Único postor' : 'Single bid', pct: sb, limit: sbLim, over: sb > sbLim })
   if (hr != null) benchRows.push({ label: isEs ? 'Alto riesgo' : 'High-risk', pct: hr, limit: hrLim, over: hr > hrLim })
@@ -234,32 +182,13 @@ export function InstitutionDiagnosticGrid({
     () => timeline.map((p) => ({ year: p.year, avg: (p.avg_risk_score ?? 0) as number })).filter((p) => Number.isFinite(p.avg)).sort((a, b) => a.year - b.year),
     [timeline],
   )
-  const peak = trend.reduce<{ year: number; avg: number } | null>((mx, p) => (!mx || p.avg > mx.avg ? p : mx), null)
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {/* ─ Where the risk sits — contract distribution by risk level ─ */}
+      {/* ─ Where the risk sits — contract distribution by risk band ─ */}
       <Panel label={isEs ? 'Dónde está el riesgo' : 'Where the risk sits'} accent={RISK_COLORS.critical}>
         {dist && distTotal > 0 ? (
-          <div className="space-y-2.5">
-            {RISK_ORDER.map((k) => {
-              const n = dist[k] ?? 0
-              const pct = distTotal > 0 ? (n / distTotal) * 100 : 0
-              const labels: Record<RiskLevel, [string, string]> = {
-                critical: ['Crítico', 'Critical'], high: ['Alto', 'High'], medium: ['Medio', 'Medium'], low: ['Bajo', 'Low'],
-              }
-              return (
-                <DotBarRow
-                  key={k}
-                  label={isEs ? labels[k][0] : labels[k][1]}
-                  readout={`${formatNumber(n)} · ${Math.round(pct)}%`}
-                  value={n}
-                  max={distMax}
-                  color={RISK_COLORS[k]}
-                />
-              )
-            })}
-          </div>
+          <RiskBandDistribution dist={dist} isEs={isEs} />
         ) : avgRisk100 != null || hrCount != null ? (
           <div className="space-y-3">
             {avgRisk100 != null && (
@@ -308,71 +237,27 @@ export function InstitutionDiagnosticGrid({
       </Panel>
 
       {/* ─ Deviation vs OECD ─ */}
-      <Panel label={isEs ? 'Desviación · OCDE' : 'Deviation · OECD'} accent={RISK_COLORS.high}>
-        {benchRows.length > 0 ? (
-          <div className="space-y-3">
-            {benchRows.map((r) => {
-              const color = r.over ? RISK_TEXT_COLORS.critical : 'var(--color-text-muted)'
-              return (
-                <div key={r.label}>
-                  <div className="flex items-baseline justify-between mb-1">
-                    <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>{r.label}</span>
-                    <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color }}>
-                      {Math.round(r.pct)}%<span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> / {r.limit}%</span>
-                    </span>
-                  </div>
-                  <div style={{ position: 'relative', height: 4, background: 'var(--color-border)', borderRadius: 999 }}>
-                    <div style={{ position: 'absolute', inset: 0, width: `${Math.min(100, r.pct)}%`, background: color, borderRadius: 999 }} />
-                    <div aria-hidden="true" style={{ position: 'absolute', top: -2, bottom: -2, left: `${Math.min(100, r.limit)}%`, width: 1, background: 'var(--color-text-muted)' }} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <EmptyNote text={isEs ? 'Sin métricas de procedimiento.' : 'No procedure metrics.'} />
-        )}
-      </Panel>
+      <OecdDeviationPanel rows={benchRows} isEs={isEs} />
 
       {/* ─ Top suppliers ─ */}
       <Panel label={isEs ? 'Mayores proveedores' : 'Top suppliers'} accent={sectorAccent}>
         {topSuppliers.length > 0 ? (
-          <ul className="space-y-2">
-            {topSuppliers.map((v) => {
-              const share = totalSpend > 0 ? ((v.total_value_mxn ?? 0) / totalSpend) * 100 : 0
-              return (
-                <li key={v.vendor_id} className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" />
-                  </div>
-                  <div className="flex items-baseline gap-2.5 flex-shrink-0 font-mono tabular-nums" style={{ fontSize: 11 }}>
-                    <span style={{ color: share >= 10 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: 600 }}>{share.toFixed(0)}%</span>
-                    <span style={{ color: 'var(--color-text-muted)' }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</span>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+          <TopEntitiesList
+            items={topSuppliers.map((v) => ({
+              id: v.vendor_id,
+              name: v.vendor_name,
+              type: 'vendor' as const,
+              share: totalSpend > 0 ? ((v.total_value_mxn ?? 0) / totalSpend) * 100 : 0,
+              value: v.total_value_mxn ?? 0,
+            }))}
+          />
         ) : (
           <EmptyNote text={isEs ? 'Sin desglose por proveedor.' : 'No supplier breakdown.'} />
         )}
       </Panel>
 
       {/* ─ Risk over time ─ */}
-      <Panel label={isEs ? 'Riesgo en el tiempo' : 'Risk over time'} accent={RISK_COLORS.critical}>
-        {trend.length > 1 ? (
-          <>
-            <EditorialAreaChart data={trend} xKey="year" yKey="avg" colorToken="risk-critical" yFormat="pct" yDomain={[0, 1]} height={96} />
-            {peak && (
-              <p className="font-mono mt-2" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
-                {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg * 100)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}
-              </p>
-            )}
-          </>
-        ) : (
-          <EmptyNote text={isEs ? 'Actividad insuficiente para una serie.' : 'Insufficient activity for a series.'} />
-        )}
-      </Panel>
+      <RiskOverTimePanel trend={trend} isEs={isEs} />
     </div>
   )
 }
