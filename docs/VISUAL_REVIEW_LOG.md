@@ -3191,3 +3191,46 @@ Grep results analyzed:
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (Anthropic Egress Gateway TLS interception, "Host not in allowlist") — persistent infrastructure constraint consistent with all prior runs, not a site failure. TLS certificate for rubli.xyz is valid and current. Bilingual scan clean; no new gaps detected.
+
+---
+## Visual Review — 2026-06-05T12:08:12Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/atlas | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/aria | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/sectors | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/sectors/salud | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/cases | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/methodology | 403 (cloud egress block — host_not_allowed) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (cloud egress block — host_not_allowed) | WARN |
+
+Note: Persistent CDN/WAF block on cloud egress IP (`x-deny-reason: host_not_allowed`). TLS handshake completes — server reachable. Not indicative of site downtime. Consistent with all prior runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/cases?limit=5 | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/sectors | 403 (cloud egress block — empty body) | WARN |
+
+Note: Same infrastructure constraint as HTTP checks — cloud IP on server allowlist deny-list. API layer unreachable from this container.
+
+### Bilingual Gaps
+Scan results (false positives filtered — same stable baseline as prior runs):
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` in `RedThread.tsx:241-242` — object property access, not a rendered string. OK.
+- `TIER_STYLES[tierName]` in `InstitutionScorecards.tsx:441` — style lookup, not a UI string. OK.
+- Academic citation in `Methodology.tsx:120` — untranslatable bibliographic reference. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ... : ...` throughout). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx:1418-1433` — code comments / token arrays, not rendered strings. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — internal data fixture with vendor name (`Maypo S.A.`). Not a user-facing label. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks uniformly blocked by cloud egress policy (`x-deny-reason: host_not_allowed`) — persistent infrastructure constraint, not a site failure. TLS certificate valid. Bilingual scan clean; no new gaps detected. No change in status vs. 2026-06-04 run.
