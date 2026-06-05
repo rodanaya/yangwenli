@@ -3145,3 +3145,49 @@ Grep results analyzed:
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (Anthropic Egress Gateway TLS interception) — persistent infrastructure constraint consistent with all prior runs, not a site failure. Bilingual scan clean; no new gaps detected.
+
+---
+## Visual Review — 2026-06-05T06:07:26Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | WARN — egress blocked |
+| https://rubli.xyz/atlas | 403 | WARN — egress blocked |
+| https://rubli.xyz/aria | 403 | WARN — egress blocked |
+| https://rubli.xyz/sectors | 403 | WARN — egress blocked |
+| https://rubli.xyz/sectors/salud | 403 | WARN — egress blocked |
+| https://rubli.xyz/cases | 403 | WARN — egress blocked |
+| https://rubli.xyz/methodology | 403 | WARN — egress blocked |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | WARN — egress blocked |
+
+> All 403s carry TLS interception by `O=Anthropic; CN=Egress Gateway SDS Issuing CA (production)`. Response body: "Host not in allowlist". Not a site failure — same persistent egress restriction as all prior runs. Certificate for rubli.xyz itself was valid (issued 2026-06-05, expires 2026-07-05).
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 — host not in allowlist, no JSON returned | WARN — egress blocked |
+| /api/v1/cases?limit=5 | 403 — host not in allowlist, no JSON returned | WARN — egress blocked |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 — host not in allowlist, no JSON returned | WARN — egress blocked |
+| /api/v1/sectors | 403 — host not in allowlist, no JSON returned | WARN — egress blocked |
+
+> Same root cause as HTTP checks. API data quality cannot be verified from this container.
+
+### Bilingual Gaps
+Grep results analyzed:
+
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` in `RedThread.tsx:241-242` — object property access, not a rendered UI string. **OK.**
+- `TIER_STYLES[tierName]` in `InstitutionScorecards.tsx:441` — style lookup map, not rendered. **OK.**
+- Academic citation in `Methodology.tsx:120` — untranslatable author/title. **OK.**
+- Pattern labels in `ConcentrationConstellation.tsx:155-163` — correctly bilingual (`isEs ? ... : ...` pattern throughout). **OK.**
+- Corporate-form token constants in `ExploreCanvas.tsx:1418-1419` — code comments, not rendered strings. **OK.**
+- `StoryMoneySankeyChart.tsx:22,37` — internal data fixture with vendor name. Low severity, not a user-facing label. **OK.**
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx` — `label="Risk Score"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+**New gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (Anthropic Egress Gateway TLS interception, "Host not in allowlist") — persistent infrastructure constraint consistent with all prior runs, not a site failure. TLS certificate for rubli.xyz is valid and current. Bilingual scan clean; no new gaps detected.
