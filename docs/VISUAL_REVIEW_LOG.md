@@ -3363,3 +3363,46 @@ Scan results (false positives filtered — same stable baseline as prior runs):
 
 ### Overall: WARN
 HTTP and API checks uniformly blocked by cloud egress policy (server-side IP allowlist) — persistent infrastructure constraint, not a site failure. TLS certificate valid and TLS handshake succeeds. Bilingual scan clean; no new gaps detected. No change in status vs. prior run.
+
+---
+## Visual Review — 2026-06-06T12:04:21Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (WAF: host_not_allowed) | WARN |
+| https://rubli.xyz/atlas | 403 (WAF: host_not_allowed) | WARN |
+| https://rubli.xyz/aria | 403 (WAF: host_not_allowed) | WARN |
+| https://rubli.xyz/sectors | 403 (WAF: host_not_allowed) | WARN |
+| https://rubli.xyz/sectors/salud | 403 (WAF: host_not_allowed) | WARN |
+| https://rubli.xyz/cases | 403 (WAF: host_not_allowed) | WARN |
+| https://rubli.xyz/methodology | 403 (WAF: host_not_allowed) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (WAF: host_not_allowed) | WARN |
+
+Note: `x-deny-reason: host_not_allowed` — CDN IP allowlist is blocking this cloud runner's egress IP. TLS handshake succeeds; this is not a site outage. Consistent with all prior automated runs from this environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 WAF block — no JSON body | WARN |
+| /api/v1/cases?limit=5 | 403 WAF block — no JSON body | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 WAF block — no JSON body | WARN |
+| /api/v1/sectors | 403 WAF block — no JSON body | WARN |
+
+Note: Same CDN IP allowlist restriction as HTTP routes. Backend not reachable from cloud runner.
+
+### Bilingual Gaps
+Grep output reviewed; all matches are false positives:
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` in `RedThread.tsx:241-242` — object property lookup, not rendered string. OK.
+- `TIER_STYLES[tierName]` in `InstitutionScorecards.tsx:441` — style lookup constant. OK.
+- Academic citation in `Methodology.tsx:120` — untranslatable bibliographic reference. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ES : EN` throughout). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx:1418-1433` — comment + token array, not rendered UI strings. OK.
+- Vendor fixture name in `StoryMoneySankeyChart.tsx:22,37` — internal data, not user-facing label. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+All HTTP and API checks blocked by cloud egress CDN policy (persistent infrastructure constraint — server-side IP allowlist). TLS is valid; this is not a site failure. Bilingual scan clean with no new gaps. No regression detected.
