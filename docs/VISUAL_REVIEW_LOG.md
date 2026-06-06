@@ -3277,3 +3277,46 @@ Scan results (false positives filtered — same stable baseline as prior runs):
 
 ### Overall: WARN
 HTTP and API checks uniformly blocked by cloud egress policy (`x-deny-reason: host_not_allowed`) — persistent infrastructure constraint, not a site failure. TLS certificate valid. Bilingual scan clean; no new gaps detected. No change in status vs. 2026-06-05 prior run.
+
+---
+## Visual Review — 2026-06-06T00:06:09Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 (x-deny-reason: host_not_allowed) | WARN |
+| /atlas | 403 (x-deny-reason: host_not_allowed) | WARN |
+| /aria | 403 (x-deny-reason: host_not_allowed) | WARN |
+| /sectors | 403 (x-deny-reason: host_not_allowed) | WARN |
+| /sectors/salud | 403 (x-deny-reason: host_not_allowed) | WARN |
+| /cases | 403 (x-deny-reason: host_not_allowed) | WARN |
+| /methodology | 403 (x-deny-reason: host_not_allowed) | WARN |
+| /stories/el-ejercito-fantasma | 403 (x-deny-reason: host_not_allowed) | WARN |
+
+Note: All 403s share `x-deny-reason: host_not_allowed` — CDN/proxy IP allowlist blocks outbound requests from cloud data-center ranges. This is an infrastructure constraint of the ephemeral execution environment, not a site outage. TLS handshake succeeds (HTTP/2 response received). No 5xx errors observed.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/cases?limit=5 | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (cloud egress block — empty body) | WARN |
+| /api/v1/sectors | 403 (cloud egress block — empty body) | WARN |
+
+Note: Same infrastructure constraint as HTTP checks — cloud IP on server allowlist deny-list. API layer unreachable from this container.
+
+### Bilingual Gaps
+Scan results (false positives filtered — same stable baseline as prior runs):
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` in `RedThread.tsx:241-242` — object property access, not a rendered string. OK.
+- `TIER_STYLES[tierName]` in `InstitutionScorecards.tsx:441` — style lookup, not a UI string. OK.
+- Academic citation in `Methodology.tsx:120` — untranslatable bibliographic reference. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ... : ...` throughout). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx:1418-1433` — code comments / token arrays, not rendered strings. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — internal data fixture with vendor name (`Maypo S.A.`). Not a user-facing label. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks uniformly blocked by cloud egress policy (`x-deny-reason: host_not_allowed`) — persistent infrastructure constraint, not a site failure. TLS certificate valid. Bilingual scan clean; no new gaps detected. No change in status vs. 2026-06-06T00:06:09Z prior run.
