@@ -3320,3 +3320,46 @@ Scan results (false positives filtered — same stable baseline as prior runs):
 
 ### Overall: WARN
 HTTP and API checks uniformly blocked by cloud egress policy (`x-deny-reason: host_not_allowed`) — persistent infrastructure constraint, not a site failure. TLS certificate valid. Bilingual scan clean; no new gaps detected. No change in status vs. 2026-06-06T00:06:09Z prior run.
+
+---
+## Visual Review — 2026-06-06T06:04:19Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 | WARN |
+| /atlas | 403 | WARN |
+| /aria | 403 | WARN |
+| /sectors | 403 | WARN |
+| /sectors/salud | 403 | WARN |
+| /cases | 403 | WARN |
+| /methodology | 403 | WARN |
+| /stories/el-ejercito-fantasma | 403 | WARN |
+
+Note: DNS resolves to 37.60.232.109. TLS handshake completes (valid cert, TLSv1.3). All 403s from server-side IP allowlist denying the cloud runner egress IP — persistent infrastructure constraint, not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | "Host not in allowlist" — no JSON body | WARN |
+| /api/v1/cases?limit=5 | "Host not in allowlist" — no JSON body | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | "Host not in allowlist" — no JSON body | WARN |
+| /api/v1/sectors | "Host not in allowlist" — no JSON body | WARN |
+
+Note: Same infrastructure constraint as HTTP — cloud runner IP on server deny-list.
+
+### Bilingual Gaps
+Scan results (false positives filtered — same stable baseline as prior runs):
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` in `RedThread.tsx:241-242` — object property access, not a rendered string. OK.
+- `TIER_STYLES[tierName]` in `InstitutionScorecards.tsx:441` — style lookup, not a UI string. OK.
+- Academic citation in `Methodology.tsx:120` — untranslatable bibliographic reference. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ... : ...` throughout). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx:1418-1433` — code comments / token arrays, not rendered strings. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — internal data fixture with vendor name (`Maypo S.A.`). Not a user-facing label. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks uniformly blocked by cloud egress policy (server-side IP allowlist) — persistent infrastructure constraint, not a site failure. TLS certificate valid and TLS handshake succeeds. Bilingual scan clean; no new gaps detected. No change in status vs. prior run.
