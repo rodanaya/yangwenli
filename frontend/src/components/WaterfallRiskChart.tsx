@@ -1,8 +1,10 @@
 /**
- * WaterfallRiskChart — pure SVG SHAP contribution bars.
+ * WaterfallRiskChart — SHAP contribution bars, left-anchored + full-width.
  *
- * Horizontal diverging bars, positive = risk-increasing (red),
- * negative = risk-protective (green). No Recharts dependency.
+ * Horizontal bars sorted by |contribution|. Positive = risk-increasing (red),
+ * negative = risk-protective (neutral slate — never green, Bible §3.10).
+ * Left-aligned to the section margin with bars that fill the available width
+ * (the old fixed-348px SVG rendered tiny + centered). No chart dependency.
  */
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
@@ -49,96 +51,67 @@ export function WaterfallRiskChart({
 
   const maxVal = Math.max(...data.map((d) => Math.abs(d.contribution)), 0.1)
 
-  const ROW_H = 30
-  const LABEL_W = 126
-  const BAR_AREA = 164
-  const VAL_W = 58
-  const svgW = LABEL_W + BAR_AREA + VAL_W
-  const svgH = data.length * ROW_H + 6
-  const centerX = LABEL_W + BAR_AREA / 2
-
   return (
-    <div className={cn('w-full', className)}>
-      <svg
-        viewBox={`0 0 ${svgW} ${svgH}`}
-        width="100%"
-        height={Math.max(200, svgH)}
-        role="img"
-        aria-label="SHAP feature contribution chart"
-      >
-        {/* Zero axis */}
-        <line
-          x1={centerX}
-          y1={0}
-          x2={centerX}
-          y2={svgH}
-          stroke="rgba(255,255,255,0.08)"
-          strokeWidth={1}
-        />
-
-        {data.map((entry, i) => {
-          const y = i * ROW_H
-          const barPx = (Math.abs(entry.contribution) / maxVal) * (BAR_AREA / 2 - 5)
-          const isPos = entry.contribution >= 0
-          // Bible §3.10: risk-decreasing contributions are neutral slate, not green.
-          const color = isPos ? '#dc2626' : '#64748b'
-          const x1 = isPos ? centerX : centerX - barPx
-
-          return (
-            <g key={entry.feature}>
-              {/* Feature label */}
-              <text
-                x={LABEL_W - 6}
-                y={y + ROW_H * 0.52}
-                fill="var(--color-text-secondary, #a1a1aa)"
-                fontSize={10}
-                textAnchor="end"
-                dominantBaseline="middle"
-                fontFamily="var(--font-family-mono, monospace)"
+    <div className={cn('w-full space-y-2', className)}>
+      {data.map((entry) => {
+        const isPos = entry.contribution >= 0
+        // Bible §3.10: risk-decreasing contributions are neutral slate, not green.
+        const color = isPos ? '#dc2626' : '#64748b'
+        const barPct = Math.max(1.5, (Math.abs(entry.contribution) / maxVal) * 100)
+        return (
+          <div key={entry.feature} className="flex items-center gap-3">
+            {/* Factor label + z-score — left-aligned column, anchors the section */}
+            <div className="flex-shrink-0" style={{ width: 188 }}>
+              <div
+                className="truncate"
+                title={entry.label}
+                style={{
+                  fontFamily: 'var(--font-family-mono, monospace)',
+                  fontSize: 11,
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: 1.2,
+                }}
               >
-                {entry.label.slice(0, 18)}
-              </text>
-
-              {/* z-score sublabel */}
-              <text
-                x={LABEL_W - 6}
-                y={y + ROW_H * 0.80}
-                fill="rgba(113,113,122,0.55)"
-                fontSize={7.5}
-                textAnchor="end"
-                dominantBaseline="auto"
-                fontFamily="var(--font-family-mono, monospace)"
+                {entry.label}
+              </div>
+              <div
+                className="tabular-nums"
+                style={{
+                  fontFamily: 'var(--font-family-mono, monospace)',
+                  fontSize: 8.5,
+                  color: 'var(--color-text-muted)',
+                  opacity: 0.7,
+                  lineHeight: 1.2,
+                }}
               >
                 z={entry.z_score.toFixed(2)}
-              </text>
+              </div>
+            </div>
 
-              {/* Contribution bar */}
-              <rect
-                x={x1}
-                y={y + ROW_H * 0.20}
-                width={Math.max(barPx, 2)}
-                height={ROW_H * 0.55}
-                fill={color}
-                fillOpacity={0.84}
-                rx={2}
+            {/* Contribution bar — fills the remaining width (big, not a 77px stub) */}
+            <div className="flex-1 relative" style={{ height: 18 }} aria-hidden="true">
+              <div
+                className="absolute inset-y-0 left-0 rounded-sm"
+                style={{ width: `${barPct}%`, background: color, opacity: isPos ? 0.86 : 0.6 }}
               />
+            </div>
 
-              {/* Value label */}
-              <text
-                x={isPos ? centerX + barPx + 5 : centerX - barPx - 5}
-                y={y + ROW_H * 0.52}
-                fill={color}
-                fontSize={9}
-                textAnchor={isPos ? 'start' : 'end'}
-                dominantBaseline="middle"
-                fontFamily="var(--font-family-mono, monospace)"
-              >
-                {isPos ? '+' : ''}{entry.contribution.toFixed(3)}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
+            {/* Value — right-aligned */}
+            <span
+              className="flex-shrink-0 text-right tabular-nums"
+              style={{
+                width: 58,
+                fontFamily: 'var(--font-family-mono, monospace)',
+                fontSize: 11,
+                fontWeight: 700,
+                color,
+              }}
+            >
+              {isPos ? '+' : ''}{entry.contribution.toFixed(3)}
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 }

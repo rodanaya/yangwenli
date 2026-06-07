@@ -114,7 +114,7 @@
     }
   },
   "waterfall": {
-    "description": "Las barras positivas aumentan el riesgo (rojo/naranja). Las barras negativas reducen el riesgo (verde). La altura de la barra refleja la contribución de cada factor a la puntuación total.",
+    "description": "Las barras positivas aumentan el riesgo (rojo). Las barras negativas son protectoras (gris). La longitud de la barra refleja la contribución de cada factor a la puntuación total.",
     "totalScore": "Puntuación Total",
     "contribution": "contribución",
     "modelCoefficient": "Coeficiente del modelo",

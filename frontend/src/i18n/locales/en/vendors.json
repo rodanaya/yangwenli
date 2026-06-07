@@ -114,7 +114,7 @@
     }
   },
   "waterfall": {
-    "description": "Positive bars increase risk (red/orange). Negative bars reduce risk (green). Bar height reflects each factor's contribution to the overall score.",
+    "description": "Positive bars increase risk (red). Negative bars are protective (slate). Bar length reflects each factor's contribution to the overall score.",
     "totalScore": "Total Score",
     "contribution": "contribution",
     "modelCoefficient": "Model coefficient",

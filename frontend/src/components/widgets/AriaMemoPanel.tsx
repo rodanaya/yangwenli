@@ -5,7 +5,7 @@
  * Shows loading skeleton, error, and empty states.
  */
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { ariaApi, vendorApi } from '@/api/client'
@@ -205,6 +205,116 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
 }
 
 // ---------------------------------------------------------------------------
+// FormattedMemo — turns the raw ARIA memo text (ALL-CAPS headers underlined with
+// "====", "•" bullets, "Key: value" preamble) into editorial structure instead of
+// a monospaced whitespace-pre-wrap dump.
+// ---------------------------------------------------------------------------
+
+const MEMO_SERIF = 'var(--font-family-serif)'
+const MEMO_OCHRE = '#a06820'
+
+function FormattedMemo({ text }: { text: string }) {
+  const lines = text.replace(/\r/g, '').split('\n')
+  const out: ReactNode[] = []
+  let bullets: string[] = []
+  let para: string[] = []
+  let kvs: Array<[string, string]> = []
+  let k = 0
+  let titleDone = false
+
+  const isUnderline = (s: string) => /^[=_~–—-]{3,}$/.test(s.trim())
+  const flushPara = () => {
+    if (para.length) {
+      out.push(
+        <p key={`p${k++}`} style={{ fontFamily: MEMO_SERIF, fontSize: 13, lineHeight: 1.55, color: 'var(--color-text-secondary)', maxWidth: '70ch' }}>
+          {para.join(' ')}
+        </p>,
+      )
+      para = []
+    }
+  }
+  const flushBullets = () => {
+    if (bullets.length) {
+      out.push(
+        <ul key={`u${k++}`} className="space-y-1.5">
+          {bullets.map((b, i) => (
+            <li key={i} className="flex gap-2.5" style={{ fontFamily: MEMO_SERIF, fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)', maxWidth: '70ch' }}>
+              <span aria-hidden="true" style={{ color: MEMO_OCHRE, flexShrink: 0 }}>›</span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>,
+      )
+      bullets = []
+    }
+  }
+  const flushKvs = () => {
+    if (kvs.length) {
+      out.push(
+        <dl
+          key={`d${k++}`}
+          className="grid gap-x-3 gap-y-1 px-3 py-2.5 rounded-sm"
+          style={{ gridTemplateColumns: 'auto 1fr', background: 'var(--color-background-elevated)', border: '1px solid var(--color-border)' }}
+        >
+          {kvs.map(([kk, vv], i) => (
+            <div key={i} className="contents">
+              <dt className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>{kk}</dt>
+              <dd style={{ fontFamily: MEMO_SERIF, fontSize: 12.5, color: 'var(--color-text-primary)' }}>{vv}</dd>
+            </div>
+          ))}
+        </dl>,
+      )
+      kvs = []
+    }
+  }
+  const flushAll = () => { flushBullets(); flushPara(); flushKvs() }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    const next = lines[i + 1]?.trim()
+    if (isUnderline(line)) continue
+    if (!line) { flushAll(); continue }
+
+    // First non-empty line → the memo's own title.
+    if (!titleDone) {
+      titleDone = true
+      out.push(
+        <p key={`t${k++}`} style={{ fontFamily: MEMO_SERIF, fontSize: 14.5, fontWeight: 600, lineHeight: 1.4, color: 'var(--color-text-primary)' }}>
+          {line}
+        </p>,
+      )
+      continue
+    }
+
+    // Section header: ALL-CAPS short line, or any line immediately underlined.
+    const looksHeader =
+      (next != null && isUnderline(next)) ||
+      (/^[^a-záéíóúñü]+$/.test(line) && line.length >= 3 && line.length <= 46 && !/^[•·\-*]/.test(line))
+    if (looksHeader) {
+      flushAll()
+      out.push(
+        <p key={`h${k++}`} className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.14em', fontWeight: 700, color: MEMO_OCHRE, marginTop: 4 }}>
+          {line.replace(/[=_~–—-]+$/, '').trim()}
+        </p>,
+      )
+      continue
+    }
+
+    // Bullet.
+    if (/^[•·\-*]\s+/.test(line)) { flushPara(); flushKvs(); bullets.push(line.replace(/^[•·\-*]\s+/, '')); continue }
+
+    // Key: value preamble (e.g. RFC, Tipo, Confianza) — only before prose/bullets begin.
+    const kv = /^([A-Za-zÁÉÍÓÚÑ][^:]{1,22}):\s+(.+)$/.exec(line)
+    if (kv && bullets.length === 0 && para.length === 0) { kvs.push([kv[1], kv[2]]); continue }
+
+    // Prose.
+    flushBullets(); flushKvs(); para.push(line)
+  }
+  flushAll()
+  return <div className="space-y-3">{out}</div>
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -325,12 +435,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
                 </p>
               </div>
             )}
-            <div
-              className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap"
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-            >
-              {memo.memo_text}
-            </div>
+            <FormattedMemo text={memo.memo_text} />
 
             {/* Actions */}
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
