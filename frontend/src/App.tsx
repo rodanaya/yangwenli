@@ -84,7 +84,6 @@ const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const Relationships = lazy(() => import('@/pages/Relationships'))
 const Intersection = lazy(() => import('@/pages/Intersection'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
-const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
@@ -99,6 +98,14 @@ const AtlasStoryPlayer = lazy(() => import('@/pages/AtlasStoryPlayer'))
 function SectorRedirect() {
   const { id } = useParams<{ id: string }>()
   return <Navigate to={`/sectors/${id}`} replace />
+}
+
+// /thread/:vendorId retired 2026-06-07 — the vendor narrative was folded into
+// the single /vendors/:id dossier. Redirect preserves external/bookmarked
+// thread links (same pattern as /observatorio → /atlas).
+function ThreadRedirect() {
+  const { vendorId } = useParams<{ vendorId: string }>()
+  return <Navigate to={`/vendors/${vendorId}`} replace />
 }
 
 // Enhanced QueryClient configuration for better caching and UX
@@ -601,17 +608,12 @@ function App() {
               <Route path="metodologia" element={<Navigate to="/methodology" replace />} />
               <Route path="cases-library" element={<Navigate to="/cases" replace />} />
 
-              {/* Red Thread — scroll-driven investigation narrative */}
-              {/* Default to top T1 ARIA vendor: GRUPO FARMACOS ESPECIALIZADOS (id=29277, IPS=0.870, risk=0.983) */}
-              <Route path="thread" element={<Navigate to="/thread/29277" replace />} />
-              <Route
-                path="thread/:vendorId"
-                element={
-                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <RedThread />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* Red Thread retired 2026-06-07 — folded into the single
+                  /vendors/:id dossier (its six chapters duplicated the
+                  dossier's reference sections). Kept as redirects so external
+                  links and demos don't 404. */}
+              <Route path="thread" element={<Navigate to="/vendors/29277" replace />} />
+              <Route path="thread/:vendorId" element={<ThreadRedirect />} />
 
               {/* Retired: /states merged into /administrations. */}
               <Route path="states" element={<Navigate to="/administrations" replace />} />

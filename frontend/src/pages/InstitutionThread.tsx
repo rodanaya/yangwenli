@@ -495,7 +495,6 @@ function TopVendorsList({
                 name={v.vendor_name}
                 size="sm"
                 riskScore={risk}
-                narrative
                 hideIcon
               />
             </div>

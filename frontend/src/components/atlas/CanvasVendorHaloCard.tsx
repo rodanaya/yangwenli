@@ -70,7 +70,7 @@ export function CanvasVendorHaloCard({
 
   const handleOpen = () => {
     if (!isNumericId) return
-    navigate(`/thread/${dot.id}`)
+    navigate(`/vendors/${dot.id}`)
   }
 
   return (

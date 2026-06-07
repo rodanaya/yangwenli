@@ -282,7 +282,7 @@ export function ZPullLine({
  * canonical destination dossier:
  *   Z1 → /sectors/:code
  *   Z2 → /institutions/:id
- *   Z3 → /vendors/:id   (or /thread/:vendorId for T1/T2)
+ *   Z3 → /vendors/:id   (or /vendors/:vendorId for T1/T2)
  *   Z4 → /contracts/:id
  *
  * /explore is the entry instrument; dossiers are the destinations.

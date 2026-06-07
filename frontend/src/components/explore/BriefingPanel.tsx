@@ -675,7 +675,7 @@ function InstitutionBriefing({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Vendor briefing — Z3 (deep-link to /thread)
+// Vendor briefing — Z3 (deep-link to /vendors)
 // ────────────────────────────────────────────────────────────────────────────
 
 function VendorBriefing({
@@ -790,7 +790,7 @@ function VendorBriefing({
       <RiskPill score={risk} lang={lang} />
       <button
         type="button"
-        onClick={() => navigate(`/thread/${vendorId}`)}
+        onClick={() => navigate(`/vendors/${vendorId}`)}
         className="mt-4 w-full py-2 px-3 text-[11px] font-mono uppercase tracking-[0.14em] rounded-sm transition-colors"
         style={{
           background: 'var(--color-accent)',
@@ -1244,7 +1244,7 @@ function ContractBriefing({
         <>
           <button
             type="button"
-            onClick={() => navigate(`/thread/${vendorId}`)}
+            onClick={() => navigate(`/vendors/${vendorId}`)}
             className="w-full py-2 px-3 text-[11px] font-mono uppercase tracking-[0.14em] rounded-sm transition-colors"
             style={{
               background: 'var(--color-accent)',

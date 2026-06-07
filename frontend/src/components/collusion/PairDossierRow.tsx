@@ -217,7 +217,7 @@ export function PairDossierRow({
               {pair.is_potential_collusion && (
                 <button
                   type="button"
-                  onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
+                  onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
                   className="inline-flex items-center gap-1.5 transition-colors"
                   style={{ color: accent }}
                 >
@@ -250,7 +250,7 @@ export function PairDossierRow({
             {pair.is_potential_collusion && (
               <button
                 type="button"
-                onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
+                onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
                 className="inline-flex items-center gap-1 transition-colors"
                 style={{ color: accent }}
                 aria-label={t('pairCard.investigationThread')}

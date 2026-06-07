@@ -413,8 +413,8 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
               fontWeight={600}
             >
               {lang === 'es'
-                ? 'Score inflado por Segalmex — ver /thread/segalmex'
-                : 'Score inflated by Segalmex — see /thread/segalmex'}
+                ? 'Score inflado por Segalmex — ver /vendors/segalmex'
+                : 'Score inflated by Segalmex — see /vendors/segalmex'}
             </text>
           </g>
         )}

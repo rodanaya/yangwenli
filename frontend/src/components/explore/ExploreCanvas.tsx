@@ -6,7 +6,7 @@
  * Z0 — 12 sectors as bodies, sized by total spend, colored by sector palette
  * Z1 — institutions inside the focused sector (loaded via existing
  *      /api/v1/atlas/sector-institutions endpoint)
- * Z2 — placeholder: institution-focus state. Click navigates to /thread/:id
+ * Z2 — placeholder: institution-focus state. Click navigates to /vendors/:id
  *      until we have a real vendor sub-constellation endpoint.
  *
  * Drag-to-pan + wheel-zoom are universal — work at every level.
@@ -4225,8 +4225,8 @@ function Z3TimelineStrip({
                     className="w-full"
                     style={{
                       height: `${heightPct}%`,
-                      background: 'var(--color-text-muted)',
-                      opacity: 0.4,
+                      background: avgRisk >= 0.25 ? capColor : 'var(--color-text-muted)',
+                      opacity: avgRisk >= 0.60 ? 0.62 : avgRisk >= 0.40 ? 0.5 : avgRisk >= 0.25 ? 0.42 : 0.35,
                       borderTop: `2px solid ${capColor}`,
                       minHeight: 3,
                     }}
@@ -4519,16 +4519,24 @@ function Z3DeviationCell({ row, isStrongest, smallN }: { row: Z3LedgerRow; isStr
   const mPos = hasMedian ? clamp((row.medianVal as number) / domainMax) : null
   const refPos = row.absoluteRef ? clamp(row.absoluteRef.value / domainMax) : null
   const overNorm = hasMedian && row.vendorVal > (row.medianVal as number)
-  const wedgeColor = row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-muted)'
+  // Color semantics (warms the band out of an all-grey read): the avg-risk metric
+  // carries its own risk-level hue (medium/high → amber, critical → red, low →
+  // muted); any alarm goes critical; any metric running OVER the sector norm takes
+  // the ochre deviation accent. Below-norm non-risk metrics stay ink/muted — never
+  // green for low risk (Bible §3.10).
+  const riskHue = row.key === 'risk' ? RISK_COLORS[getRiskLevelFromScore(row.vendorVal / 100)] : null
+  const hue = row.alarm ? RISK_COLORS.critical : (riskHue ?? (overNorm ? OCHRE : null))
+  const wedgeColor = hue ?? 'var(--color-text-muted)'
   // Compact money for the readout — abbreviate even below 1M (formatCompactMXN
   // returns full pesos under 1M, which overflows the narrow cell).
   const fmtMoney = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)} MDP` : v >= 1e3 ? `${Math.round(v / 1e3)}K` : `$${Math.round(v)}`)
   const fmt = (v: number) => (row.kind === 'mxn' ? fmtMoney(v) : `${v.toFixed(0)}%`)
   const lo = mPos != null ? Math.min(vPos, mPos) : vPos
   const hi = mPos != null ? Math.max(vPos, mPos) : vPos
-  const valColor = row.alarm ? RISK_COLORS.critical : (isStrongest && overNorm) ? OCHRE : 'var(--color-text-primary)'
-  const ratioColor = overNorm ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'var(--color-text-muted)'
-  const accentBorder = isStrongest ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'transparent'
+  const valColor = hue ?? 'var(--color-text-primary)'
+  const dotColor = hue ?? 'var(--color-text-secondary)'
+  const ratioColor = hue ?? 'var(--color-text-muted)'
+  const accentBorder = isStrongest ? (hue ?? OCHRE) : 'transparent'
 
   return (
     <div className="flex flex-col" style={{ borderTop: `2px solid ${accentBorder}`, paddingTop: 4 }}>
@@ -4553,7 +4561,7 @@ function Z3DeviationCell({ row, isStrongest, smallN }: { row: Z3LedgerRow; isStr
               transform: 'translateY(-50%)',
               background: smallN ? 'transparent' : wedgeColor,
               border: smallN ? `1px dashed ${wedgeColor}` : 'none',
-              opacity: smallN ? 0.7 : (overNorm ? 0.7 : 0.4),
+              opacity: smallN ? 0.7 : (overNorm ? 0.85 : 0.45),
               borderRadius: 1,
             }}
           />
@@ -4564,7 +4572,7 @@ function Z3DeviationCell({ row, isStrongest, smallN }: { row: Z3LedgerRow; isStr
         {mPos != null && (
           <span aria-hidden="true" className="absolute" style={{ left: `${mPos * 100}%`, top: 0, bottom: 0, width: 1, background: 'var(--color-text-secondary)', opacity: 0.7 }} />
         )}
-        <span className="absolute rounded-full" style={{ left: `${vPos * 100}%`, top: '50%', width: 7, height: 7, marginLeft: -3.5, transform: 'translateY(-50%)', background: row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-secondary)', boxShadow: '0 0 0 2px var(--color-background)' }} />
+        <span className="absolute rounded-full" style={{ left: `${vPos * 100}%`, top: '50%', width: 8, height: 8, marginLeft: -4, transform: 'translateY(-50%)', background: dotColor, boxShadow: '0 0 0 2px var(--color-background)' }} />
       </span>
       {/* readout — ratio (or vs-median when no ratio) · percentile */}
       <span className="flex items-baseline gap-1.5" style={{ marginTop: 4 }}>
