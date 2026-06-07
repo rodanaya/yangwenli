@@ -207,7 +207,8 @@ export function VendorNetworkTab({
                     type="vendor"
                     id={cb.vendor_id}
                     name={cb.vendor_name ?? `Vendor ${cb.vendor_id}`}
-                    size="xs"
+                    size="sm"
+                    fullName
                   />
                 </div>
                 <DotBar

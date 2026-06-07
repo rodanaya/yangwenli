@@ -146,11 +146,31 @@ export function VendorEvidenceTab({
             })()}
           </>
         ) : (
-          <p className="text-sm text-text-muted italic">
-            {isEs
-              ? 'No hay datos de descomposición disponibles.'
-              : 'No decomposition data available.'}
-          </p>
+          <div
+            className="px-4 py-4 rounded-sm"
+            style={{
+              borderLeft: '2px solid var(--color-border)',
+              background: 'var(--color-background-elevated)',
+            }}
+          >
+            <p
+              className="font-mono mb-2"
+              style={{
+                fontSize: 10,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: 'var(--color-text-muted)',
+                fontWeight: 600,
+              }}
+            >
+              {isEs ? 'Descomposición no disponible' : 'Decomposition unavailable'}
+            </p>
+            <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
+              {isEs
+                ? 'El modelo v0.8.5 no produjo una descomposición SHAP para este proveedor: sus contratos carecen de las variables normalizadas (z-scores) que requiere el análisis — típico de registros COMPRANET de 2002–2010 (Estructura A), donde la cobertura de RFC y precios es mínima. La ausencia de descomposición no implica ausencia de riesgo.'
+                : 'The v0.8.5 model produced no SHAP decomposition for this vendor: its contracts lack the normalized features (z-scores) the analysis requires — typical of 2002–2010 COMPRANET records (Structure A), where RFC and price coverage is minimal. Missing decomposition does not mean absence of risk.'}
+            </p>
+          </div>
         )}
       </section>
 

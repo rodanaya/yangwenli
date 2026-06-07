@@ -136,6 +136,14 @@ export interface EntityIdentityChipProps {
   /** Hide the type icon (when context already implies the type, e.g. inside a vendor list). */
   hideIcon?: boolean
 
+  /**
+   * Editorial-dossier opt-in: render the full (untruncated) entity name and
+   * allow it to wrap to two lines instead of single-line ellipsis. Use in
+   * narrative surfaces (institutional-capture list, co-bidding partners)
+   * where legibility of full Mexican entity names beats compact density.
+   */
+  fullName?: boolean
+
   className?: string
 }
 
@@ -150,13 +158,18 @@ export function EntityIdentityChip({
   sectorCode,
   narrative = false,
   hideIcon = false,
+  fullName = false,
   className,
 }: EntityIdentityChipProps) {
   const Icon = ICON_FOR_TYPE[type]
-  const displayName = formatEntityName(type, name, size)
+  const displayName = formatEntityName(type, name, fullName ? 'full' : size)
   const href = dossierHref(type, id, narrative)
 
-  const heightCls = size === 'xs' ? 'h-5 text-[11px]' : size === 'sm' ? 'h-6 text-xs' : 'h-8 text-sm'
+  // fullName mode lets the chip grow vertically (2-line wrap) rather than
+  // forcing a fixed single-line height that triggers ellipsis.
+  const heightCls = fullName
+    ? (size === 'xs' ? 'min-h-5 text-[11px]' : size === 'sm' ? 'min-h-6 text-xs' : 'min-h-8 text-sm')
+    : size === 'xs' ? 'h-5 text-[11px]' : size === 'sm' ? 'h-6 text-xs' : 'h-8 text-sm'
   const iconSize = size === 'xs' ? 'h-3 w-3' : size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'
   const dotSize = size === 'xs' ? 'h-1.5 w-1.5' : 'h-2 w-2'
   const tierSize = size === 'xs' ? 'text-[9px] px-1 py-px' : 'text-[10px] px-1 py-0.5'
@@ -168,7 +181,8 @@ export function EntityIdentityChip({
     <Link
       to={href}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-sm px-1.5 transition-colors',
+        fullName ? 'flex w-full items-center' : 'inline-flex items-center',
+        'gap-1.5 rounded-sm px-1.5 transition-colors',
         'hover:bg-background-elevated/60 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-1',
         heightCls,
         className,
@@ -185,7 +199,8 @@ export function EntityIdentityChip({
       {!hideIcon && <Icon className={cn(iconSize, 'flex-shrink-0 text-text-muted')} aria-hidden="true" />}
       <span
         className={cn(
-          'truncate font-medium',
+          'font-medium',
+          fullName ? 'break-words leading-snug min-w-0' : 'truncate',
           riskLevel ? RISK_COLOR_CLASS[riskLevel] : 'text-text-primary',
         )}
       >

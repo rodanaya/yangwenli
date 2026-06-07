@@ -168,14 +168,14 @@ export function ConcentricConstellation({
                       {cb.co_bid_count}
                     </span>
                     <span
-                      className="flex-1 min-w-0 truncate"
+                      className="flex-1 min-w-0 break-words leading-snug"
                       style={{
                         fontFamily: '"EB Garamond", Georgia, serif',
                         fontSize: 14,
                         color: 'var(--color-text-primary)',
                       }}
                     >
-                      {formatVendorName(cb.vendor_name, 80)}
+                      {formatVendorName(cb.vendor_name, 120)}
                     </span>
                     <span
                       className="font-mono flex-shrink-0"
@@ -252,16 +252,17 @@ export function ConcentricConstellation({
                 <li key={inst.institution_id}>
                   <div className="flex items-baseline justify-between mb-1">
                     <span
-                      className="font-mono uppercase tracking-[0.12em] truncate"
+                      className="font-mono uppercase tracking-[0.12em] leading-snug break-words"
                       style={{
                         fontSize: 11,
                         color: 'var(--color-text-secondary)',
                         fontWeight: 500,
-                        maxWidth: '60%',
+                        maxWidth: '72%',
+                        paddingRight: 12,
                       }}
                     >
-                      {inst.institution_name.length > 56
-                        ? inst.institution_name.slice(0, 56).trim() + '…'
+                      {inst.institution_name.length > 120
+                        ? inst.institution_name.slice(0, 120).trim() + '…'
                         : inst.institution_name}
                     </span>
                     <span className="font-mono tabular-nums" style={{ fontSize: 11, color: sectorAccent, fontWeight: 700 }}>
