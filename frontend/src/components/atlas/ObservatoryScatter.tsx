@@ -239,7 +239,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
       const name = toTitleCase(b.label)
       const pct = Math.round(b.highRiskPct * 100)
       const stat = `${formatNumber(b.vendors)} ${lang === 'es' ? 'prov' : 'vend'} · ${b.t1} T1 · ${pct}%`
-      const w = Math.max(name.length * 6.6, stat.length * 5.0) + 6, h = 24, g = 6
+      const w = Math.max(name.length * 8.5, stat.length * 6.7) + 6, h = 32, g = 6
       const cands: Array<{ x: number; y: number; anchor: 'start' | 'middle' | 'end' }> = [
         { x: b.cx - w / 2, y: b.cy - b.r - g - h, anchor: 'middle' },
         { x: b.cx - w / 2, y: b.cy + b.r + g, anchor: 'middle' },
@@ -521,13 +521,13 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           {yTicks.map((v) => (
             <g key={`y${v}`}>
               <line x1={M.left} y1={yFor(v)} x2={W - M.right} y2={yFor(v)} stroke={C.grid} strokeWidth={1} />
-              <text x={M.left - 12} y={yFor(v) + 3} textAnchor="end" fill={C.inkMuted} fontSize={11} fontFamily="var(--font-family-mono)">{Math.round(v * 100)}%</text>
+              <text x={M.left - 12} y={yFor(v) + 3} textAnchor="end" fill={C.inkMuted} fontSize={13} fontFamily="var(--font-family-mono)">{Math.round(v * 100)}%</text>
             </g>
           ))}
           {xTicks.map((v) => (
             <g key={`x${v}`}>
               <line x1={xFor(v)} y1={M.top} x2={xFor(v)} y2={H - M.bottom} stroke={C.grid} strokeWidth={1} />
-              <text x={xFor(v)} y={H - M.bottom + 20} textAnchor="middle" fill={C.inkMuted} fontSize={11} fontFamily="var(--font-family-mono)">{v >= 1000 ? `${v / 1000}k` : v}</text>
+              <text x={xFor(v)} y={H - M.bottom + 20} textAnchor="middle" fill={C.inkMuted} fontSize={13} fontFamily="var(--font-family-mono)">{v >= 1000 ? `${v / 1000}k` : v}</text>
             </g>
           ))}
           <rect x={M.left} y={M.top} width={PLOT_W} height={PLOT_H} fill="none" stroke={C.grid} strokeWidth={1} />
@@ -536,10 +536,10 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               <line x1={cx} y1={cy} x2={cx + sx * 12} y2={cy} /><line x1={cx} y1={cy} x2={cx} y2={cy + sy * 12} />
             </g>
           ))}
-          <text x={M.left + PLOT_W / 2} y={H - 20} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
+          <text x={M.left + PLOT_W / 2} y={H - 20} textAnchor="middle" fill={C.inkMuted} fontSize={14} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
             {lang === 'es' ? 'ESCALA · PROVEEDORES (log) →' : 'SCALE · VENDOR COUNT (log) →'}
           </text>
-          <text transform={`translate(28, ${M.top + PLOT_H / 2}) rotate(-90)`} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
+          <text transform={`translate(28, ${M.top + PLOT_H / 2}) rotate(-90)`} textAnchor="middle" fill={C.inkMuted} fontSize={14} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
             {lang === 'es' ? '↑ TASA DE ALTO RIESGO' : '↑ HIGH-RISK RATE'}
           </text>
 
@@ -548,7 +548,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 + i * 0.05, duration: 0.6 }} />
           ))}
           {labels.filter((l) => l.leader).map((l) => (
-            <line key={`ld-${l.code}`} x1={l.bx} y1={l.by} x2={l.tx} y2={l.ty + (l.ty < l.by ? 22 : 2)} stroke={l.fill} strokeWidth={1} opacity={0.5} />
+            <line key={`ld-${l.code}`} x1={l.bx} y1={l.by} x2={l.tx} y2={l.ty + (l.ty < l.by ? 30 : 2)} stroke={l.fill} strokeWidth={1} opacity={0.5} />
           ))}
           {bodies.map((b, i) => {
             const pct = Math.round(b.highRiskPct * 100)
@@ -579,8 +579,8 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           })}
           {labels.map((l, i) => (
             <motion.g key={`t-${l.code}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 + i * 0.05, duration: 0.5 }} style={{ pointerEvents: 'none' }}>
-              <text x={l.tx} y={l.ty + 11} textAnchor={l.anchor} fill={C.ink} fontSize={12.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600}>{l.name}</text>
-              <text x={l.tx} y={l.ty + 22} textAnchor={l.anchor} fill={C.inkMuted} fontSize={9} fontFamily="var(--font-family-mono)">{l.stat}</text>
+              <text x={l.tx} y={l.ty + 14} textAnchor={l.anchor} fill={C.ink} fontSize={16} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600}>{l.name}</text>
+              <text x={l.tx} y={l.ty + 30} textAnchor={l.anchor} fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)">{l.stat}</text>
             </motion.g>
           ))}
           {/* hover card — the always-discoverable name for any orb */}
@@ -590,15 +590,15 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
             const name = toTitleCase(b.label)
             const pct = Math.round(b.highRiskPct * 100)
             const stat = `${formatNumber(b.vendors)} ${lang === 'es' ? 'prov' : 'vend'} · ${b.t1} T1 · ${pct}%`
-            const w = Math.max(name.length * 7.4, stat.length * 5.4) + 18
+            const w = Math.max(name.length * 9.6, stat.length * 7.2) + 22
             const px = Math.max(M.left + w / 2, Math.min(W - M.right - w / 2, b.cx))
-            const py = b.cy - b.r - 32
+            const py = b.cy - b.r - 42
             return (
               <g style={{ pointerEvents: 'none' }}>
                 <circle cx={b.cx} cy={b.cy} r={b.r + 3} fill="none" stroke={b.fill} strokeWidth={1.5} opacity={0.55} />
-                <rect x={px - w / 2} y={py} width={w} height={30} rx={3} fill={C.plate0} stroke={b.fill} strokeWidth={1} />
-                <text x={px} y={py + 13} textAnchor="middle" fill={C.ink} fontSize={12.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700}>{name}</text>
-                <text x={px} y={py + 24} textAnchor="middle" fill={C.inkMuted} fontSize={9} fontFamily="var(--font-family-mono)">{stat}</text>
+                <rect x={px - w / 2} y={py} width={w} height={38} rx={3} fill={C.plate0} stroke={b.fill} strokeWidth={1} />
+                <text x={px} y={py + 16} textAnchor="middle" fill={C.ink} fontSize={16} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700}>{name}</text>
+                <text x={px} y={py + 31} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)">{stat}</text>
               </g>
             )
           })()}
@@ -880,10 +880,12 @@ function ReadItem({ glyph, title, body }: { glyph: string; title: string; body: 
   return (
     <div className="px-4 py-2.5" style={{ borderLeft: '1px solid var(--color-border)' }}>
       <div className="flex items-baseline gap-2">
-        <span aria-hidden="true" style={{ color: RISK_COLORS.high, fontSize: 12 }}>{glyph}</span>
-        <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 600 }}>{title}</span>
+        <span aria-hidden="true" className="flex-shrink-0 text-center" style={{ color: RISK_COLORS.high, fontSize: 12, width: 14 }}>{glyph}</span>
+        <div className="min-w-0">
+          <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 600 }}>{title}</span>
+          <p className="mt-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>{body}</p>
+        </div>
       </div>
-      <p className="mt-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>{body}</p>
     </div>
   )
 }

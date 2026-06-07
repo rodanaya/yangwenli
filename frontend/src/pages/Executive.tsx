@@ -408,6 +408,7 @@ export default function Executive() {
               : 'La tasa de adjudicación directa — contratos sin licitación — ha permanecido 2–3× por encima del umbral OCDE en cada administración mexicana desde 2001. El modelo entrenado en este patrón sistémico lo detecta automáticamente.'}
           </p>
           <PlateFrame
+            bleed
             lang={lang}
             folio="III"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -431,6 +432,7 @@ export default function Executive() {
             }
           </p>
           <PlateFrame
+            bleed
             lang={lang}
             folio="IV"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -453,6 +455,7 @@ export default function Executive() {
             connector ("of which …") that ties to the next step. ─── */}
         <section className="mb-8">
           <PlateFrame
+            bleed
             lang={lang}
             folio="V"
             contextLabel={{ en: 'Headline numbers', es: 'Cifras clave' }}
@@ -1339,6 +1342,7 @@ export default function Executive() {
               : 'Los puntajes cuentan contratos. Esto cuenta pesos. Para cada patrón ARIA estimamos la exposición financiera usando modelos específicos de sobrepago — sobrecargos directos (P5), volumen completo de redes fantasma (P2), premios de captura, descuentos monopólicos perdidos. Las estimaciones son ilustrativas; metodología en la nota.'}
           </p>
           <PlateFrame
+            bleed
             lang={lang}
             folio="VI"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -1372,6 +1376,7 @@ export default function Executive() {
               : 'Ancho de celda = gasto total; color de celda = paleta sectorial teñida por puntaje de riesgo. Las 8 categorías principales cubren la mayoría del gasto federal.'}
           </p>
           <PlateFrame
+            bleed
             lang={lang}
             folio="VII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -1395,6 +1400,7 @@ export default function Executive() {
           </p>
 
           <PlateFrame
+            bleed
             lang={lang}
             folio="VIII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -1706,6 +1712,7 @@ export default function Executive() {
               : 'Diez casos emblemáticos — empresas fantasma IMSS, Segalmex, Odebrecht, compras de emergencia COVID-19 — forman la base de verdad del modelo. El modelo detecta estos patrones años antes de que el escándalo se haga público.'}
           </p>
           <PlateFrame
+            bleed
             lang={lang}
             folio="IX"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}

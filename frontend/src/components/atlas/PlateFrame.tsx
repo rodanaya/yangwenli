@@ -60,6 +60,18 @@ interface PlateFrameProps {
    * Used by /atlas to claim back ~30px of vertical space inside the canvas.
    */
   minimal?: boolean
+  /**
+   * Executive briefing surfaces: extend the frame into the column gutters so
+   * interior text aligns to the editorial column grid. Safe for containers with
+   * ≥24px horizontal padding at sm+.
+   *
+   * When true: the <figure> gains sm:-ml-[24px] sm:-mr-[24px] negative margins
+   * and interior padding narrows from 28px to 23px, so text lands exactly on
+   * the column grid (−24 margin + 1 border + 23 padding = 0 offset vs grid).
+   * Below sm there is no bleed — mobile keeps the padded inset.
+   * Default false — Atlas.tsx and CaptureCreep.tsx call sites render pixel-identical.
+   */
+  bleed?: boolean
 }
 
 /** Plate caption — bilingual, lens-aware (atlas default). */
@@ -106,6 +118,7 @@ export function PlateFrame({
   folio: folioOverride,
   contextLabel,
   minimal = false,
+  bleed = false,
 }: PlateFrameProps) {
   // Use overrides when provided (non-atlas surfaces); fall back to atlas defaults.
   const folio = folioOverride ?? getAtlasFolioNumber(lens ?? 'patterns')
@@ -128,11 +141,13 @@ export function PlateFrame({
 
   return (
     <figure
-      className="relative"
+      className={bleed ? 'relative sm:-ml-[24px] sm:-mr-[24px]' : 'relative'}
       style={{
         // Generous interior margin so the chart breathes within the frame.
         // When `minimal`, drop the top header strip — the canvas claims its space.
-        padding: minimal ? '14px 28px 22px' : '36px 28px 22px',
+        // When `bleed`, reduce horizontal padding from 28px to 23px so interior
+        // text lands on the column grid: −24px margin + 1px border + 23px = 0.
+        padding: minimal ? `14px ${bleed ? '23px' : '28px'} 22px` : `36px ${bleed ? '23px' : '28px'} 22px`,
         background: 'var(--color-background-elevated, var(--color-background))',
         border: '1px solid var(--color-border)',
         // Slight inset shadow so the plate feels tactile — like a printed page
@@ -153,7 +168,10 @@ export function PlateFrame({
           IBM Plex Mono italic 300 / 400 — quiet, archival, never shouting.
           Suppressed when `minimal` — Atlas surfaces its own masthead/toolbar. */}
       {!minimal && (<div
-        className="absolute top-3 left-7 right-7 flex items-center justify-between pointer-events-none"
+        className={bleed
+          ? 'absolute top-3 left-[23px] right-[23px] flex items-center justify-between pointer-events-none'
+          : 'absolute top-3 left-7 right-7 flex items-center justify-between pointer-events-none'
+        }
         style={{
           fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
           fontSize: '9.5px',
