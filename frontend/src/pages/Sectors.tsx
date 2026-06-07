@@ -21,6 +21,7 @@ import {
   SECTOR_COLORS,
   SECTOR_TEXT_COLORS,
   RISK_COLORS,
+  RISK_TEXT_COLORS,
   getRiskLevelFromScore,
   getSectorName,
 } from '@/lib/constants'
@@ -30,8 +31,6 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 import { CompetitionSlopeChart } from '@/components/sectors/CompetitionSlopeChart'
-import { SectorTreemap } from '@/components/sectors/SectorTreemap'
-import { SectorRadialTree } from '@/components/sectors/SectorRadialTree'
 import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
 import { RiskSpendBeeswarm } from '@/components/sectors/RiskSpendBeeswarm'
@@ -1005,9 +1004,15 @@ export function Sectors() {
         {!isLoading && sectors.length > 0 && (() => {
           const topRiskSector = [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score)[0]
           const exceedingOECD = sectors.filter((s) => (s.direct_award_pct ?? 0) > 25).length
-          const topSectorColor = SECTOR_COLORS[topRiskSector.sector_code] ?? '#dc2626'
-          // AA-safe text variant for kicker/meta text on warm-white
-          const topSectorTextColor = SECTOR_TEXT_COLORS[topRiskSector.sector_code] ?? topSectorColor
+          // The lede is a RISK finding, so its accent (left border / kicker / meta
+          // value) tracks the leader's risk TIER — not its sector color. The risk
+          // leader is dynamic; when it lands on a green-coded sector (Treasury =
+          // hacienda green) the old sector-color accent painted the single most
+          // prominent risk statement reassuring-green. Risk-tier accent scales with
+          // severity and never reads as "all clear" (Bible §3.10).
+          const topRiskLevel = getRiskLevelFromScore(topRiskSector.avg_risk_score)
+          const ledeAccent = RISK_COLORS[topRiskLevel]
+          const ledeAccentText = RISK_TEXT_COLORS[topRiskLevel]
           const topSectorName = t(topRiskSector.sector_code) as string
           const topRiskPct = (topRiskSector.avg_risk_score * 100).toFixed(1)
           const topDaPct = (topRiskSector.direct_award_pct ?? 0).toFixed(0)
@@ -1022,8 +1027,8 @@ export function Sectors() {
             <>
               <FeaturedFinding
                 kicker={t('featured.kicker', { sector: topSectorName.toUpperCase() })}
-                accent={topSectorColor}
-                textAccent={topSectorTextColor}
+                accent={ledeAccent}
+                textAccent={ledeAccentText}
                 headline={
                   <>
                     {/* Sector name in INK-BLACK, not sector color. The headline is a
@@ -1067,104 +1072,14 @@ export function Sectors() {
             removed. P2-P4 will reintroduce one slope chart, one treemap,
             one beeswarm. See docs/SECTORS_REDESIGN_PLAN.md. */}
 
-        {/* ── § 2 HERO 1: Sector Overview (Tree or Map) ────────────────────
-            Tree = radial node-link; Map = squarified treemap.
-            Default is Tree (more visually distinctive). */}
-        {!isLoading && sectors.length > 0 && (() => {
-          const sectorMapParam = searchParams.get('smap') as 'tree' | 'map' | null
-          const sectorMap: 'tree' | 'map' =
-            sectorMapParam === 'map' ? 'map' : 'tree'
-          const setSectorMap = (v: 'tree' | 'map') => {
-            const next = new URLSearchParams(searchParams)
-            if (v === 'tree') next.delete('smap')
-            else next.set('smap', v)
-            setSearchParams(next, { replace: true })
-          }
-          return (
-            <section
-              aria-labelledby="treemap-heading"
-              className="mb-10 pb-8 border-b border-border"
-            >
-              <div className="flex items-end justify-between gap-4 flex-wrap mb-2">
-                <div>
-                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
-                    {t('treemap.kicker')}
-                  </p>
-                  <h2
-                    id="treemap-heading"
-                    className="text-text-primary leading-[1.1]"
-                    style={{
-                      fontFamily: 'var(--font-family-serif)',
-                      fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-                      fontWeight: 800,
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
-                    {t('treemap.headline')}
-                  </h2>
-                </div>
-                {/* View toggle: Tree / Map */}
-                <div className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0">
-                  {(['tree', 'map'] as const).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setSectorMap(v)}
-                      className={cn(
-                        'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
-                        sectorMap === v
-                          ? 'bg-text-primary text-background'
-                          : 'text-text-muted hover:text-text-secondary',
-                      )}
-                      aria-pressed={sectorMap === v}
-                    >
-                      {v === 'tree'
-                        ? (i18n.language === 'es' ? 'Árbol' : 'Tree')
-                        : (i18n.language === 'es' ? 'Mapa' : 'Map')}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <p className="text-sm text-text-secondary leading-relaxed max-w-2xl mb-3">
-                {sectorMap === 'tree'
-                  ? (i18n.language === 'es'
-                      ? 'Doce sectores vinculados al gasto federal total. Tamaño del nodo = gasto; saturación de color = indicador de riesgo. ⚠ = supera el umbral OCDE del 25% en adjudicación directa.'
-                      : 'Twelve sectors linked to the federal procurement total. Node size = spend; color saturation = risk indicator. ⚠ = exceeds the OECD 25% direct-award threshold.')
-                  : t('treemap.deck')
-                }
-              </p>
-              {sectorMap === 'tree' ? (
-                <div className="max-w-4xl mx-auto">
-                  <SectorRadialTree sectors={sectors} />
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
-                      <span
-                        className="inline-block h-2.5 w-4 rounded-sm border border-risk-high"
-                        style={{ background: 'var(--color-risk-high-muted, rgba(245,158,11,0.15))' }}
-                        aria-hidden="true"
-                      />
-                      {t('treemap.oecdViolatorNote')}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
-                      <span
-                        className="inline-block h-2.5 w-4 rounded-sm"
-                        style={{ background: 'linear-gradient(90deg, rgba(220,38,38,0.35) 0%, rgba(220,38,38,0.90) 100%)' }}
-                        aria-hidden="true"
-                      />
-                      {t('treemap.saturationNote')}
-                    </div>
-                  </div>
-                  <div className="max-w-4xl mx-auto">
-                    <SectorTreemap sectors={sectors} />
-                  </div>
-                </>
-              )}
-            </section>
-          )
-        })()}
+        {/* § 2 HERO 1 (treemap + radial tree) REMOVED 2026-06-04 — DESIGNUS /sectors
+            focused refinement. Its encoding (node size = spend, color = risk) duplicated
+            HERO 3's risk×spend beeswarm, which is the analytically precise one (priority
+            quadrant + OECD reference line + exact positions). The radial-tree default was
+            decorative. Spend magnitude still reads on the beeswarm Y-axis and in the ranked
+            cards below; cutting this removes a full hero + ~1.5 screens of preamble before
+            the directory. (treemap.* i18n keys + SectorTreemap/SectorRadialTree components
+            retained on disk for reference.) */}
 
         {/* ── § 3 HERO 2: Competition Slope Chart ──────────────────────────
             docs/SECTORS_REDESIGN_PLAN.md §5 HERO 2.
