@@ -39,6 +39,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RISK_COLORS, getRiskLevelFromScore, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { DotBar } from '@/components/ui/DotBar'
+import { SubSectionTitle } from '@/components/dossier/SubSectionTitle'
 
 // Forensic-ink ochre for the flag gutter glyphs (matches the dashboard amber /
 // EL DESVÍO ledger). Applied via inline style — a hex in className is stripped
@@ -187,9 +188,9 @@ export function VendorActivityTab({
     <div className="space-y-8">
       {/* § Indicador de riesgo — Risk year-over-year area chart */}
       <section aria-labelledby="trend-title">
-        <SectionTitle id="trend-title">
+        <SubSectionTitle id="trend-title">
           {isEs ? '§ · Indicador de riesgo anual' : '§ · Annual risk indicator'}
-        </SectionTitle>
+        </SubSectionTitle>
         {riskTrend.length > 1 ? (
           <EditorialAreaChart
             data={riskTrend}
@@ -216,9 +217,9 @@ export function VendorActivityTab({
           aria-labelledby="cronologia-title"
           className="pt-6 border-t border-border/40"
         >
-          <SectionTitle id="cronologia-title">
+          <SubSectionTitle id="cronologia-title">
             {isEs ? '§ 6 · La Cronología' : '§ 6 · Timeline'}
-          </SectionTitle>
+          </SubSectionTitle>
           <EditorialTimeline
             events={timelineEvents}
             showSexenios={true}
@@ -258,9 +259,9 @@ export function VendorActivityTab({
             aria-labelledby="dinero-title"
             className="pt-6 border-t border-border/40"
           >
-            <SectionTitle id="dinero-title">
+            <SubSectionTitle id="dinero-title">
               {isEs ? '§ 5 · El Dinero' : '§ 5 · The Money'}
-            </SectionTitle>
+            </SubSectionTitle>
             <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
               {isEs
                 ? `Concentración financiera frente a la mediana del sector ${vendor.primary_sector_name ?? ''}.`
@@ -333,9 +334,9 @@ export function VendorActivityTab({
           aria-labelledby="inst-title"
           className="pt-6 border-t border-border/40"
         >
-          <SectionTitle id="inst-title">
+          <SubSectionTitle id="inst-title">
             {isEs ? '§ 2 · La Captura institucional' : '§ 2 · Institutional capture'}
-          </SectionTitle>
+          </SubSectionTitle>
           {/* Capture pill — shown if top institution > 40% of total vendor value */}
           {(() => {
             const topInst = institutionRows[0]
@@ -343,15 +344,22 @@ export function VendorActivityTab({
             const share = topInst.total_value_mxn / vendor.total_value_mxn
             if (share < 0.40) return null
             return (
-              <div className="mb-3">
+              <div className="mb-3 flex items-center gap-2 flex-wrap">
                 <span
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em]"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0"
                   style={{ color: '#fb923c', backgroundColor: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.3)' }}
                 >
-                  {isEs
-                    ? `Capturado por ${topInst.institution_name.split(' ').slice(0, 3).join(' ')} · ${(share * 100).toFixed(0)}%`
-                    : `Captured by ${topInst.institution_name.split(' ').slice(0, 3).join(' ')} · ${(share * 100).toFixed(0)}%`}
+                  {isEs ? 'Capturado ·' : 'Captured ·'} {(share * 100).toFixed(0)}%
                 </span>
+                <div className="min-w-0">
+                  <EntityIdentityChip
+                    type="institution"
+                    id={topInst.institution_id}
+                    name={topInst.institution_name}
+                    size="sm"
+                    fullName
+                  />
+                </div>
               </div>
             )
           })()}
@@ -396,9 +404,9 @@ export function VendorActivityTab({
           return (
             <>
               <div className="mb-1 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
-                <SectionTitle id="contracts-title" className="mb-0">
+                <SubSectionTitle id="contracts-title" className="mb-0">
                   {isEs ? '§ · El Expediente' : '§ · The Register'}
-                </SectionTitle>
+                </SubSectionTitle>
                 <div className="flex flex-wrap items-baseline gap-x-2 text-[11px] font-mono tabular-nums text-text-muted">
                   <span className="text-text-secondary">
                     {popTotal.toLocaleString(loc)} {isEs ? 'contratos' : 'contracts'}
@@ -517,8 +525,10 @@ export function VendorActivityTab({
                           )}
                         </div>
                       </td>
-                      <td className="hidden lg:table-cell px-3 py-2 max-w-[180px] truncate text-text-secondary align-top">
-                        {c.institution_name ?? '—'}
+                      <td className="hidden lg:table-cell px-3 py-2 text-text-secondary align-top" style={{ maxWidth: 220 }}>
+                        <span style={{ display: 'block', wordBreak: 'break-word', lineHeight: 1.35 }}>
+                          {c.institution_name ?? '—'}
+                        </span>
                       </td>
                       <td
                         className="px-3 py-2 text-right font-mono tabular-nums whitespace-nowrap align-top"
@@ -621,21 +631,3 @@ function FlagGutter({ flags, isEs }: { flags?: ContractFlags; isEs: boolean }) {
   )
 }
 
-function SectionTitle({
-  id,
-  children,
-  className,
-}: {
-  id: string
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <h2
-      id={id}
-      className={`text-[11px] font-mono font-semibold text-text-muted uppercase tracking-[0.15em] mb-3 ${className ?? ''}`}
-    >
-      {children}
-    </h2>
-  )
-}

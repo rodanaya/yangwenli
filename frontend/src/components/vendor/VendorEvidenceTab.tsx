@@ -24,6 +24,7 @@ import { getVerdictForVendor } from '@/lib/entity/verdict'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { VendorDeviationLedger } from './VendorDeviationLedger'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { SubSectionTitle } from '@/components/dossier/SubSectionTitle'
 
 interface VendorEvidenceTabProps {
   vendor: VendorDetailResponse
@@ -105,9 +106,9 @@ export function VendorEvidenceTab({
 
       {/* Risk waterfall */}
       <section aria-labelledby="waterfall-title">
-        <SectionTitle id="waterfall-title">
+        <SubSectionTitle id="waterfall-title">
           {isEs ? 'Descomposición del riesgo' : 'Risk decomposition'}
-        </SectionTitle>
+        </SubSectionTitle>
         <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
           {t('vendors:waterfall.description')}
         </p>
@@ -182,9 +183,9 @@ export function VendorEvidenceTab({
           aria-labelledby="shap-protect-title"
           className="pt-6 border-t border-border/40"
         >
-          <SectionTitle id="shap-protect-title">
+          <SubSectionTitle id="shap-protect-title">
             {isEs ? 'Factores protectores' : 'Protective factors'}
-          </SectionTitle>
+          </SubSectionTitle>
           <div className="space-y-3">
             {protectFactors.map((f) => {
               const label = isEs ? f.label_es : parseFactorLabel(f.factor).label
@@ -211,9 +212,9 @@ export function VendorEvidenceTab({
           aria-labelledby="peer-title"
           className="pt-6 border-t border-border/40"
         >
-          <SectionTitle id="peer-title">
+          <SubSectionTitle id="peer-title">
             {isEs ? '§ 9 · El Desvío (vs sector)' : '§ 9 · The Deviation (vs sector)'}
-          </SectionTitle>
+          </SubSectionTitle>
           <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
             {isEs
               ? `Qué tan lejos opera de la mediana de ${vendor.primary_sector_name ?? 'su sector'} — adjudicación directa, único postor, riesgo y precio por contrato. Sobre la población completa de contratos.`
@@ -233,9 +234,9 @@ export function VendorEvidenceTab({
           aria-labelledby="signos-title"
           className="pt-6 border-t border-border/40"
         >
-          <SectionTitle id="signos-title">
+          <SubSectionTitle id="signos-title">
             {isEs ? '§ 7 · Los Signos' : '§ 7 · External Signals'}
-          </SectionTitle>
+          </SubSectionTitle>
           <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
             {isEs
               ? 'Registros documentados en fuentes externas: casos de corrupción confirmados, listas negras fiscales, sanciones administrativas.'
@@ -345,9 +346,9 @@ export function VendorEvidenceTab({
             aria-labelledby="verdict-title"
             className="pt-6 border-t border-border/40"
           >
-            <SectionTitle id="verdict-title">
+            <SubSectionTitle id="verdict-title">
               {isEs ? '§ 8 · El Veredicto' : '§ 8 · Verdict'}
-            </SectionTitle>
+            </SubSectionTitle>
             <div className="flex items-start gap-3">
               <span
                 className="inline-flex items-center px-2.5 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] shrink-0"
@@ -368,9 +369,9 @@ export function VendorEvidenceTab({
         aria-labelledby="method-title"
         className="pt-6 border-t border-border/40"
       >
-        <SectionTitle id="method-title">
+        <SubSectionTitle id="method-title">
           {isEs ? 'Metodología' : 'Methodology'}
-        </SectionTitle>
+        </SubSectionTitle>
         <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
           {t('vendors:flags.disclaimer')}
         </p>
@@ -456,9 +457,9 @@ function VendorBenchmarkBars({
 
   return (
     <section aria-labelledby="benchmark-title">
-      <SectionTitle id="benchmark-title">
+      <SubSectionTitle id="benchmark-title">
         {isEs ? 'Desviación de benchmarks · OCDE / sector' : 'Deviation from benchmarks · OECD / sector'}
-      </SectionTitle>
+      </SubSectionTitle>
       <p className="text-[10px] font-mono text-text-muted mb-3 leading-relaxed">
         {isEs
           ? 'Barras a la derecha del centro = por encima del límite (peor). Izquierda = por debajo (mejor).'
@@ -475,24 +476,5 @@ function VendorBenchmarkBars({
           : 'OECD: direct award ≤30%, single-bid ≤10%'}
       </p>
     </section>
-  )
-}
-
-function SectionTitle({
-  id,
-  children,
-  className,
-}: {
-  id: string
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <h2
-      id={id}
-      className={`text-[11px] font-semibold text-text-muted uppercase tracking-widest mb-3 ${className ?? ''}`}
-    >
-      {children}
-    </h2>
   )
 }

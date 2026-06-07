@@ -244,7 +244,7 @@ export function TopEntitiesList({ items, shareThreshold = 10 }: { items: TopEnti
       {items.map((it) => (
         <li key={`${it.type}-${it.id}`} className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <EntityIdentityChip type={it.type} id={it.id} name={it.name} size="sm" />
+            <EntityIdentityChip type={it.type} id={it.id} name={it.name} size="sm" fullName />
           </div>
           <div className="flex items-baseline gap-2.5 flex-shrink-0 font-mono tabular-nums" style={{ fontSize: 11 }}>
             <span style={{ color: it.share >= shareThreshold ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: 600 }}>{Math.round(it.share)}%</span>

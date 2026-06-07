@@ -16,6 +16,8 @@ import type {
 } from '@/api/types'
 import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { SubSectionTitle } from '@/components/dossier/SubSectionTitle'
+import { RISK_COLORS } from '@/lib/constants'
 import { ExternalLink, Network } from 'lucide-react'
 
 const FACTOR_LABELS_ES: Record<string, string> = {
@@ -85,31 +87,100 @@ export function VendorNetworkTab({
 
   return (
     <div className="space-y-8">
-      {aria && (
+      {aria && (() => {
+        const tierColor =
+          aria.ips_tier === 1 ? RISK_COLORS.critical :
+          aria.ips_tier === 2 ? RISK_COLORS.high :
+          aria.ips_tier === 3 ? RISK_COLORS.medium :
+          'var(--color-text-muted)'
+        return (
         <section aria-labelledby="aria-title">
-          <SectionTitle id="aria-title">
+          <SubSectionTitle id="aria-title">
             {isEs ? 'Cola de Investigación ARIA' : 'ARIA Investigation Queue'}
-          </SectionTitle>
-          <div className="grid sm:grid-cols-3 gap-4">
-            <StatCell label={isEs ? 'Nivel' : 'Tier'} value={`T${aria.ips_tier}`} />
-            <StatCell label="IPS" value={aria.ips_final?.toFixed(2) ?? '—'} />
-            <StatCell label={isEs ? 'Estado' : 'Status'} value={aria.review_status} />
-          </div>
-          {aria.primary_pattern && (
-            <p className="mt-3 text-sm text-text-secondary">
-              <span className="text-text-muted">
-                {isEs ? 'Patrón principal:' : 'Primary pattern:'}
-              </span>{' '}
-              <span className="font-medium text-text-primary">
-                {aria.primary_pattern}
+          </SubSectionTitle>
+          {/* Editorial investigation plate — the headline finding for a T1
+              vendor, read like one: tier badge + focal IPS numeral. */}
+          <div
+            style={{
+              border: '1px solid var(--color-border)',
+              borderLeft: `2px solid ${tierColor}`,
+              borderRadius: 2,
+              padding: 14,
+              background: 'var(--color-background-card)',
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span
+                className="font-mono font-bold tabular-nums"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: '0.1em',
+                  color: tierColor,
+                  border: `1px solid ${tierColor}`,
+                  borderRadius: 2,
+                  padding: '2px 7px',
+                }}
+              >
+                T{aria.ips_tier}
               </span>
-              {aria.pattern_confidence != null && (
-                <span className="text-text-muted ml-2 font-mono tabular-nums">
-                  ({(aria.pattern_confidence * 100).toFixed(0)}%)
-                </span>
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                {isEs ? 'Cola de investigación' : 'Investigation queue'}
+              </span>
+            </div>
+
+            <div className="mt-3">
+              <span
+                className="tabular-nums"
+                style={{
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 800,
+                  fontSize: 32,
+                  lineHeight: 1,
+                  color: tierColor,
+                }}
+              >
+                {aria.ips_final?.toFixed(2) ?? '—'}
+              </span>
+              <div
+                className="font-mono mt-1.5"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                {isEs ? 'IPS final · prioridad de investigación' : 'IPS final · investigation priority'}
+              </div>
+            </div>
+
+            <div className="mt-3 space-y-1 text-[11px] font-mono tabular-nums">
+              <div>
+                <span className="text-text-muted">{isEs ? 'Estado: ' : 'Status: '}</span>
+                <span className="text-text-secondary uppercase tracking-wider">{aria.review_status}</span>
+              </div>
+              {aria.primary_pattern && (
+                <div>
+                  <span className="text-text-muted">{isEs ? 'Patrón: ' : 'Pattern: '}</span>
+                  <span className="text-text-secondary">{aria.primary_pattern}</span>
+                  {aria.pattern_confidence != null && (
+                    <span className="text-text-muted ml-1.5">
+                      ({(aria.pattern_confidence * 100).toFixed(0)}%)
+                    </span>
+                  )}
+                </div>
               )}
-            </p>
-          )}
+            </div>
+          </div>
           {/* § 3 · El Patrón — top SHAP risk drivers */}
           {shap && shap.top_risk_factors.length > 0 && (() => {
             const topFactors = shap.top_risk_factors.slice(0, 3)
@@ -149,16 +220,17 @@ export function VendorNetworkTab({
             <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
         </section>
-      )}
+        )
+      })()}
 
       {scandalList.length > 0 && (
         <section
           aria-labelledby="scandals-title"
           className="pt-6 border-t border-border/40"
         >
-          <SectionTitle id="scandals-title">
+          <SubSectionTitle id="scandals-title">
             {isEs ? 'Casos documentados vinculados' : 'Linked documented cases'}
-          </SectionTitle>
+          </SubSectionTitle>
           <ul className="space-y-1.5">
             {scandalList.slice(0, 10).map((s) => (
               <li key={s.scandal_slug} className="flex items-center gap-2">
@@ -185,9 +257,9 @@ export function VendorNetworkTab({
           className="pt-6 border-t border-border/40"
         >
           <div className="flex items-center justify-between mb-3">
-            <SectionTitle id="cobid-title" className="mb-0">
+            <SubSectionTitle id="cobid-title" className="mb-0">
               {isEs ? 'Socios co-licitantes' : 'Co-bidding partners'}
-            </SectionTitle>
+            </SubSectionTitle>
             {onOpenNetworkGraph && (
               <button
                 type="button"
@@ -234,9 +306,9 @@ export function VendorNetworkTab({
             aria-labelledby="ext-title"
             className="pt-6 border-t border-border/40"
           >
-            <SectionTitle id="ext-title">
+            <SubSectionTitle id="ext-title">
               {isEs ? 'Registros externos' : 'External registries'}
-            </SectionTitle>
+            </SubSectionTitle>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
               {externalFlags.sat_efos && (
                 <ExtCell label="SAT EFOS" value={externalFlags.sat_efos.stage} />
@@ -259,38 +331,6 @@ export function VendorNetworkTab({
             </div>
           </section>
         )}
-    </div>
-  )
-}
-
-function SectionTitle({
-  id,
-  children,
-  className,
-}: {
-  id: string
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <h2
-      id={id}
-      className={`text-[11px] font-semibold text-text-muted uppercase tracking-widest mb-3 ${className ?? ''}`}
-    >
-      {children}
-    </h2>
-  )
-}
-
-function StatCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-sm border border-border p-3 bg-background-card">
-      <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
-        {label}
-      </div>
-      <div className="text-lg font-bold font-mono tabular-nums text-text-primary mt-0.5">
-        {value}
-      </div>
     </div>
   )
 }
