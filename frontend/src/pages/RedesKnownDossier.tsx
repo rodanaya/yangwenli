@@ -22,20 +22,24 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { Network, ShieldAlert, Search, Pin } from 'lucide-react'
-import { networkApi, type CommunityIndexItem } from '@/api/client'
+import { Network, ShieldAlert, Search, Pin, Building2 } from 'lucide-react'
+import { networkApi, type CommunityIndexItem, type InstitutionCaptureItem } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { RISK_COLORS, PATTERN_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { CommunityForceGraph } from '@/components/network/CommunityForceGraph'
+import { InstitutionStarGraph } from '@/components/network/InstitutionStarGraph'
 import { VendorNetworkView } from '@/components/network/VendorNetworkView'
 
 const OECD_DA_CEILING = 0.25
 const PINS_KEY = 'rubli_trama_pins_v1'
 
 type SortKey = 'value' | 'risk' | 'size' | 'sb' | 'gt'
+type LensKey = 'clusters' | 'institutions'
+type InstSortKey = 'value' | 'top1_share' | 'hhi' | 'risk'
+const HHI_CONCENTRATED = 2500 // DOJ/FTC threshold: highly concentrated market
 
 function readPins(): number[] {
   try {
@@ -105,6 +109,34 @@ function DeviationRow({
   )
 }
 
+/** Well-disc — the institution rail glyph ("El Sitio" graft). Three
+ *  channels, cover-the-captions clean: radius = total value, fill = risk
+ *  band, arc sweep = top-1 vendor share of the buyer's spend. */
+function WellDisc({ inst, maxValue }: { inst: InstitutionCaptureItem; maxValue: number }) {
+  const r = 5 + 7 * Math.sqrt(inst.total_value_mxn / Math.max(maxValue, 1))
+  const fill = inst.avg_risk_score != null ? RISK_COLORS[getRiskLevelFromScore(inst.avg_risk_score)] : 'var(--color-text-muted)'
+  const share = Math.min((inst.top1_share_pct ?? 0) / 100, 1)
+  const arcR = r + 2.5
+  const circumference = 2 * Math.PI * arcR
+  return (
+    <svg width={30} height={30} viewBox="0 0 30 30" className="shrink-0" aria-hidden="true">
+      <circle cx={15} cy={15} r={r} fill={fill} fillOpacity={0.78} />
+      {share > 0 && (
+        <circle
+          cx={15}
+          cy={15}
+          r={arcR}
+          fill="none"
+          stroke="var(--color-accent)"
+          strokeWidth={1.8}
+          strokeDasharray={`${circumference * share} ${circumference}`}
+          transform="rotate(-90 15 15)"
+        />
+      )}
+    </svg>
+  )
+}
+
 /** Pattern-mix micro-bar — the council's best new primitive. Suppressed
  *  below 30% labeled coverage (locked decision). */
 function PatternMixBar({ c, isEs }: { c: CommunityIndexItem; isEs: boolean }) {
@@ -145,12 +177,21 @@ export default function RedesKnownDossier() {
   const vendorParam = searchParams.get('vendor')
   const vendorId = vendorParam ? parseInt(vendorParam, 10) : null
 
-  // Selected community — lazy-init from URL so deep links survive mount.
+  // Lens + selections — lazy-init from URL so deep links survive mount.
+  const [lens, setLens] = useState<LensKey>(() =>
+    searchParams.get('lens') === 'institutions' ? 'institutions' : 'clusters',
+  )
   const [commId, setCommId] = useState<number | null>(() => {
     const raw = searchParams.get('comm')
     const n = raw ? parseInt(raw, 10) : NaN
     return Number.isFinite(n) && n >= 0 ? n : null
   })
+  const [instId, setInstId] = useState<number | null>(() => {
+    const raw = searchParams.get('inst')
+    const n = raw ? parseInt(raw, 10) : NaN
+    return Number.isFinite(n) && n > 0 ? n : null
+  })
+  const [instSort, setInstSort] = useState<InstSortKey>('value')
   const [selectedVendor, setSelectedVendor] = useState<number | null>(null)
   const [sortBy, setSortBy] = useState<SortKey>('value')
   const [patternFilter, setPatternFilter] = useState<string | null>(null)
@@ -182,16 +223,20 @@ export default function RedesKnownDossier() {
     }
   }
 
-  // Write comm back to the URL (replace — no history spam).
+  // Write lens/comm/inst back to the URL (replace — no history spam).
   useEffect(() => {
     const next = new URLSearchParams(searchParams)
+    if (lens === 'institutions') next.set('lens', 'institutions')
+    else next.delete('lens')
     if (commId != null) next.set('comm', String(commId))
     else next.delete('comm')
+    if (instId != null) next.set('inst', String(instId))
+    else next.delete('inst')
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commId])
+  }, [lens, commId, instId])
 
   const { data: index, isLoading: indexLoading, isError: indexError } = useQuery({
     queryKey: ['trama-index'],
@@ -210,8 +255,61 @@ export default function RedesKnownDossier() {
     queryFn: () => networkApi.getCommunityGraph(effectiveComm as number),
     staleTime: 60 * 60 * 1000,
     retry: 2,
-    enabled: vendorId == null && effectiveComm != null,
+    enabled: vendorId == null && lens === 'clusters' && effectiveComm != null,
   })
+
+  // Institution lens ("El Sitio" graft) — fetched once, sorted client-side.
+  const { data: capture, isLoading: captureLoading, isError: captureError } = useQuery({
+    queryKey: ['trama-capture'],
+    queryFn: () => networkApi.getInstitutionCapture(120, 'value'),
+    staleTime: 60 * 60 * 1000,
+    retry: 2,
+    enabled: vendorId == null && lens === 'institutions',
+  })
+
+  const sortedInstitutions = useMemo(() => {
+    if (!capture) return []
+    let list = capture.institutions
+    if (query.trim() && lens === 'institutions') {
+      const q = query.trim().toLowerCase()
+      list = list.filter((i) => i.name.toLowerCase().includes(q))
+    }
+    const sorted = [...list]
+    switch (instSort) {
+      case 'top1_share':
+        sorted.sort((a, b) => (b.top1_share_pct ?? 0) - (a.top1_share_pct ?? 0))
+        break
+      case 'hhi':
+        sorted.sort((a, b) => (b.latest_hhi ?? 0) - (a.latest_hhi ?? 0))
+        break
+      case 'risk':
+        sorted.sort((a, b) => (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
+        break
+      default:
+        sorted.sort((a, b) => b.total_value_mxn - a.total_value_mxn)
+    }
+    return sorted
+  }, [capture, instSort, query, lens])
+
+  const maxInstValue = useMemo(
+    () => Math.max(...(capture?.institutions.map((i) => i.total_value_mxn) ?? [1]), 1),
+    [capture],
+  )
+
+  const effectiveInst = instId ?? capture?.institutions[0]?.institution_id ?? null
+
+  const { data: star, isLoading: starLoading, isError: starError } = useQuery({
+    queryKey: ['trama-star', effectiveInst],
+    queryFn: () => networkApi.getInstitutionStar(effectiveInst as number),
+    staleTime: 60 * 60 * 1000,
+    retry: 2,
+    enabled: vendorId == null && lens === 'institutions' && effectiveInst != null,
+  })
+
+  const selectedCaptureItem = useMemo(
+    () => capture?.institutions.find((i) => i.institution_id === effectiveInst) ?? null,
+    [capture, effectiveInst],
+  )
 
   const filtered = useMemo(() => {
     if (!index) return []
@@ -274,6 +372,20 @@ export default function RedesKnownDossier() {
     setCommId(id)
     setSelectedVendor(null)
     plateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const selectInstitution = (id: number) => {
+    setInstId(id)
+    setSelectedVendor(null)
+    plateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  /** Cross-lens jump: a "feeding clan" chip opens that community's mesh. */
+  const jumpToClan = (cid: number) => {
+    setLens('clusters')
+    setCommId(cid)
+    setSelectedVendor(null)
+    setQuery('')
   }
 
   const sortLabels: Record<SortKey, { en: string; es: string }> = {
@@ -420,14 +532,54 @@ export default function RedesKnownDossier() {
 
         {/* ── Instrument: index rail ←→ mesh plate ─────────────────── */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-[370px_1fr] gap-6 items-start">
-          {/* RUNG 0 — cluster index */}
+          {/* RUNG 0 — index rail (two lenses) */}
           <aside className="order-2 lg:order-1 lg:sticky lg:top-4">
+            {/* Lens tabs — CÚMULOS (default) | INSTITUCIONES */}
+            <div className="mb-3 flex items-stretch rounded-sm border border-border overflow-hidden" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={lens === 'clusters'}
+                onClick={() => {
+                  setLens('clusters')
+                  setQuery('')
+                }}
+                className={cn(
+                  'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.14em] transition-colors',
+                  lens === 'clusters' ? 'bg-accent/12 text-accent' : 'text-text-muted/60 hover:text-text-secondary',
+                )}
+              >
+                <Network className="h-3 w-3" aria-hidden="true" />
+                {isEs ? 'Cúmulos' : 'Clusters'}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={lens === 'institutions'}
+                onClick={() => {
+                  setLens('institutions')
+                  setQuery('')
+                }}
+                className={cn(
+                  'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.14em] border-l border-border transition-colors',
+                  lens === 'institutions' ? 'bg-accent/12 text-accent' : 'text-text-muted/60 hover:text-text-secondary',
+                )}
+              >
+                <Building2 className="h-3 w-3" aria-hidden="true" />
+                {isEs ? 'Instituciones' : 'Institutions'}
+              </button>
+            </div>
+
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-accent/90">
-                {isEs ? '§ Índice de cúmulos' : '§ Cluster index'}
+                {lens === 'clusters'
+                  ? isEs ? '§ Índice de cúmulos' : '§ Cluster index'
+                  : isEs ? '§ Compradores sitiados' : '§ Besieged buyers'}
               </span>
               <span className="text-[10px] font-mono text-text-muted/50">
-                {filtered.length}/{index?.communities.length ?? 0}
+                {lens === 'clusters'
+                  ? `${filtered.length}/${index?.communities.length ?? 0}`
+                  : `${sortedInstitutions.length}/${capture?.total ?? 0}`}
               </span>
               <button
                 type="button"
@@ -444,13 +596,149 @@ export default function RedesKnownDossier() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={isEs ? 'Buscar firma eje o C-NNN…' : 'Search hub firm or C-NNN…'}
-                aria-label={isEs ? 'Buscar cúmulo' : 'Search cluster'}
+                placeholder={
+                  lens === 'clusters'
+                    ? isEs ? 'Buscar firma eje o C-NNN…' : 'Search hub firm or C-NNN…'
+                    : isEs ? 'Buscar institución…' : 'Search institution…'
+                }
+                aria-label={
+                  lens === 'clusters'
+                    ? isEs ? 'Buscar cúmulo' : 'Search cluster'
+                    : isEs ? 'Buscar institución' : 'Search institution'
+                }
                 className="w-full rounded-sm border border-border bg-background px-8 py-1.5 text-[12px] font-mono text-text-primary placeholder:text-text-muted/40 focus:border-accent/50 focus:outline-none"
               />
             </div>
 
-            {/* Sort + pattern filter */}
+            {/* Institution sort pills */}
+            {lens === 'institutions' && (
+              <div className="mb-3 flex flex-wrap items-center gap-1">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
+                  {isEs ? 'Ordenar:' : 'Sort:'}
+                </span>
+                {(
+                  [
+                    ['value', isEs ? 'Valor' : 'Value'],
+                    ['top1_share', 'Top-1'],
+                    ['hhi', 'HHI'],
+                    ['risk', isEs ? 'Riesgo' : 'Risk'],
+                  ] as Array<[InstSortKey, string]>
+                ).map(([k, label]) => (
+                  <button
+                    key={k}
+                    onClick={() => setInstSort(k)}
+                    className={cn(
+                      'px-2 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider border transition-colors',
+                      instSort === k
+                        ? 'bg-text-primary/8 border-text-primary/20 text-text-primary'
+                        : 'border-border text-text-muted/50 hover:border-border-hover hover:text-text-secondary',
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Institution rail */}
+            {lens === 'institutions' && (
+              <>
+                {captureLoading && (
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="h-14 rounded-sm border border-border/40 bg-border/20 animate-pulse" />
+                    ))}
+                  </div>
+                )}
+                {captureError && (
+                  <div className="rounded-sm border border-border/60 bg-background px-4 py-6 text-center">
+                    <p className="text-[12px] font-mono text-text-muted">
+                      {isEs
+                        ? 'No se pudo cargar el índice de instituciones.'
+                        : 'Institution index could not be loaded.'}
+                    </p>
+                  </div>
+                )}
+                {!captureLoading && !captureError && (
+                  <div className="max-h-[72vh] overflow-y-auto pr-1 space-y-1" role="list">
+                    {sortedInstitutions.map((inst, rank) => {
+                      const active = inst.institution_id === effectiveInst
+                      const daHot = (inst.direct_award_pct ?? 0) > OECD_DA_CEILING * 100
+                      const hhiHot = (inst.latest_hhi ?? 0) >= HHI_CONCENTRATED
+                      return (
+                        <div
+                          key={inst.institution_id}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={active}
+                          onClick={() => selectInstitution(inst.institution_id)}
+                          onKeyDown={(ev) => {
+                            if (ev.key === 'Enter' || ev.key === ' ') {
+                              ev.preventDefault()
+                              selectInstitution(inst.institution_id)
+                            }
+                          }}
+                          className={cn(
+                            'w-full text-left rounded-sm border px-2.5 py-2 transition-colors cursor-pointer flex items-center gap-2',
+                            active
+                              ? 'border-accent/50 bg-accent/8'
+                              : 'border-border/60 bg-background-card hover:border-border-hover',
+                          )}
+                          style={active ? { boxShadow: 'inset 2px 0 0 var(--color-accent)' } : undefined}
+                        >
+                          <WellDisc inst={inst} maxValue={maxInstValue} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span className="min-w-0 truncate text-[11px] font-mono font-bold text-text-primary">
+                                <span className="text-[10px] font-mono font-bold text-text-muted/60 mr-1.5">{rank + 1}</span>
+                                {formatEntityName('institution', inst.name, 'sm')}
+                              </span>
+                              <span className="shrink-0 text-[11px] font-mono font-bold text-text-primary">
+                                {formatCompactMXN(inst.total_value_mxn)}
+                              </span>
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-2.5 text-[9.5px] font-mono text-text-muted/70">
+                              <span>
+                                DA{' '}
+                                <span style={daHot ? { color: RISK_COLORS.high, fontWeight: 700 } : undefined}>
+                                  {inst.direct_award_pct != null ? `${Math.round(inst.direct_award_pct)}%` : '—'}
+                                </span>
+                              </span>
+                              <span>
+                                Top-1{' '}
+                                <span className={cn((inst.top1_share_pct ?? 0) >= 50 && 'text-accent font-bold')}>
+                                  {inst.top1_share_pct != null ? `${Math.round(inst.top1_share_pct)}%` : '—'}
+                                </span>
+                              </span>
+                              <span>
+                                HHI{' '}
+                                <span style={hhiHot ? { color: RISK_COLORS.high, fontWeight: 700 } : undefined}>
+                                  {inst.latest_hhi != null ? formatNumber(Math.round(inst.latest_hhi)) : '—'}
+                                </span>
+                              </span>
+                              {inst.feeding_communities.length > 0 && (
+                                <span className="text-accent font-bold">
+                                  {inst.feeding_communities.length} {isEs ? 'clanes' : 'clans'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                    {sortedInstitutions.length === 0 && (
+                      <p className="py-8 text-center text-[11px] font-mono text-text-muted/50">
+                        {isEs ? 'Sin instituciones para esta búsqueda' : 'No institutions match this search'}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Cluster sort + pattern filter */}
+            {lens === 'clusters' && (
+            <>
             <div className="mb-3 space-y-1.5">
               <div className="flex flex-wrap items-center gap-1">
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
@@ -630,18 +918,20 @@ export default function RedesKnownDossier() {
                 )}
               </div>
             )}
+            </>
+            )}
           </aside>
 
           {/* RUNG 1 — the mesh plate + dossier */}
           <div ref={plateRef} className="order-1 lg:order-2 min-w-0 scroll-mt-4">
-            {graphLoading && (
+            {lens === 'clusters' && graphLoading && (
               <div className="h-[540px] rounded-sm border border-border/40 bg-border/10 animate-pulse flex items-center justify-center">
                 <p className="text-[11px] font-mono text-text-muted/60">
                   {isEs ? 'Trazando la trama…' : 'Drawing the mesh…'}
                 </p>
               </div>
             )}
-            {graphError && (
+            {lens === 'clusters' && graphError && (
               <div className="rounded-sm border border-border/60 bg-background px-6 py-10 text-center">
                 <Network className="mx-auto mb-3 h-7 w-7 text-text-muted/40" aria-hidden="true" />
                 <p className="text-[12px] font-mono text-text-muted">
@@ -651,7 +941,7 @@ export default function RedesKnownDossier() {
                 </p>
               </div>
             )}
-            {graph && !graphLoading && (
+            {lens === 'clusters' && graph && !graphLoading && (
               <>
                 <PlateFrame
                   lang={lang}
@@ -806,13 +1096,219 @@ export default function RedesKnownDossier() {
                 </div>
               </>
             )}
-            {!graph && !graphLoading && !graphError && !indexLoading && (
+            {lens === 'clusters' && !graph && !graphLoading && !graphError && !indexLoading && (
               <div className="rounded-sm border border-border/60 bg-background px-6 py-10 text-center">
                 <Network className="mx-auto mb-3 h-7 w-7 text-text-muted/40" aria-hidden="true" />
                 <p className="text-[12px] font-mono text-text-muted">
                   {isEs ? 'Selecciona un cúmulo del índice para trazar su trama.' : 'Select a cluster from the index to draw its mesh.'}
                 </p>
               </div>
+            )}
+
+            {/* ── Institution lens: the siege plate ─────────────────── */}
+            {lens === 'institutions' && (starLoading || captureLoading) && (
+              <div className="h-[540px] rounded-sm border border-border/40 bg-border/10 animate-pulse flex items-center justify-center">
+                <p className="text-[11px] font-mono text-text-muted/60">
+                  {isEs ? 'Levantando el sitio…' : 'Raising the siege…'}
+                </p>
+              </div>
+            )}
+            {lens === 'institutions' && starError && (
+              <div className="rounded-sm border border-border/60 bg-background px-6 py-10 text-center">
+                <Building2 className="mx-auto mb-3 h-7 w-7 text-text-muted/40" aria-hidden="true" />
+                <p className="text-[12px] font-mono text-text-muted">
+                  {isEs
+                    ? 'No se pudo cargar la telaraña de esta institución.'
+                    : 'This institution web could not be loaded.'}
+                </p>
+              </div>
+            )}
+            {lens === 'institutions' && star && !starLoading && (
+              <>
+                <PlateFrame
+                  lang={lang}
+                  folio="XIV"
+                  contextLabel={{ en: 'The siege · institution capture web', es: 'El sitio · telaraña de captura' }}
+                  caption={
+                    isEs
+                      ? `Lámina — ${star.name}: sus ${star.vendors.length} proveedores principales por valor contratado, de ${formatNumber(star.total_vendors)} totales. Aros de color agrupan firmas del mismo clan de co-licitación.`
+                      : `Plate — ${star.name}: its top ${star.vendors.length} vendors by contracted value, of ${formatNumber(star.total_vendors)} total. Colored rings group firms from the same co-bidding clan.`
+                  }
+                >
+                  <InstitutionStarGraph
+                    data={star}
+                    lang={lang}
+                    selectedVendorId={selectedVendor}
+                    onSelectVendor={setSelectedVendor}
+                  />
+                </PlateFrame>
+
+                {/* Siege dossier */}
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div
+                    className="rounded-sm border border-border bg-background-card px-4 py-3.5"
+                    style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
+                  >
+                    <p className="mb-2.5 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+                      {isEs ? '§ Firma del sitio' : '§ Siege signature'}
+                    </p>
+                    {selectedCaptureItem ? (
+                      <>
+                        <div className="space-y-2.5">
+                          <DeviationRow
+                            label={isEs ? 'Adjudicación directa' : 'Direct award'}
+                            value={(selectedCaptureItem.direct_award_pct ?? 0) / 100}
+                            benchmark={OECD_DA_CEILING}
+                            benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
+                            maxDelta={0.75}
+                          />
+                          <DeviationRow
+                            label={isEs ? 'Propuesta única' : 'Single bid'}
+                            value={(selectedCaptureItem.single_bid_pct ?? 0) / 100}
+                            benchmark={OECD_DA_CEILING}
+                            benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
+                            maxDelta={0.75}
+                          />
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] font-mono text-text-muted">
+                          <span>
+                            {isEs ? 'Gasto total' : 'Total spend'}{' '}
+                            <span className="text-text-primary font-bold">
+                              {formatCompactMXN(selectedCaptureItem.total_value_mxn)}
+                            </span>
+                          </span>
+                          <span>
+                            {isEs ? 'Proveedores' : 'Vendors'}{' '}
+                            <span className="text-text-primary font-bold">{formatNumber(selectedCaptureItem.vendor_count)}</span>
+                          </span>
+                          <span>
+                            HHI{' '}
+                            <span
+                              style={
+                                (selectedCaptureItem.latest_hhi ?? 0) >= HHI_CONCENTRATED
+                                  ? { color: RISK_COLORS.high, fontWeight: 700 }
+                                  : { fontWeight: 700 }
+                              }
+                              className="text-text-primary"
+                            >
+                              {selectedCaptureItem.latest_hhi != null
+                                ? formatNumber(Math.round(selectedCaptureItem.latest_hhi))
+                                : '—'}
+                            </span>{' '}
+                            <span className="text-text-muted/50">
+                              {isEs ? '(≥2,500 concentrado)' : '(≥2,500 concentrated)'}
+                            </span>
+                          </span>
+                          <span>
+                            {isEs ? 'Riesgo medio' : 'Avg risk'}{' '}
+                            <span
+                              style={{
+                                color: RISK_COLORS[getRiskLevelFromScore(selectedCaptureItem.avg_risk_score ?? 0)],
+                                fontWeight: 700,
+                              }}
+                            >
+                              {selectedCaptureItem.avg_risk_score != null
+                                ? `${Math.round(selectedCaptureItem.avg_risk_score * 100)}%`
+                                : '—'}
+                            </span>
+                          </span>
+                        </div>
+                        {selectedCaptureItem.top1_vendor && (
+                          <div className="mt-3 border-t border-border/50 pt-2.5">
+                            <p className="mb-1.5 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
+                              {isEs ? 'Proveedor dominante' : 'Dominant vendor'}
+                              {selectedCaptureItem.top1_share_pct != null && (
+                                <span className="text-accent font-bold ml-1.5">
+                                  {Math.round(selectedCaptureItem.top1_share_pct)}% {isEs ? 'del gasto' : 'of spend'}
+                                </span>
+                              )}
+                            </p>
+                            <EntityIdentityChip
+                              type="vendor"
+                              id={selectedCaptureItem.top1_vendor.vendor_id}
+                              name={selectedCaptureItem.top1_vendor.vendor_name}
+                              size="sm"
+                              riskScore={selectedCaptureItem.top1_vendor.avg_risk_score}
+                            />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-[11px] font-mono text-text-muted/60">
+                        {isEs ? 'Sin métricas para esta institución.' : 'No metrics for this institution.'}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Clans + roster */}
+                  <div
+                    className="rounded-sm border border-border bg-background-card px-4 py-3.5"
+                    style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
+                  >
+                    <p className="mb-2.5 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+                      {isEs ? '§ Los clanes que se alimentan' : '§ The feeding clans'}
+                    </p>
+                    {selectedCaptureItem && selectedCaptureItem.feeding_communities.length > 0 ? (
+                      <div className="mb-3 flex flex-wrap gap-1.5">
+                        {selectedCaptureItem.feeding_communities.map((f) => (
+                          <button
+                            key={f.community_id}
+                            type="button"
+                            onClick={() => jumpToClan(f.community_id)}
+                            className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[9.5px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
+                            title={isEs ? 'Abrir el cúmulo en la trama' : 'Open the cluster in the mesh'}
+                          >
+                            C-{f.community_id} · {f.vendor_count} {isEs ? 'firmas' : 'firms'} →
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mb-3 text-[10px] font-mono text-text-muted/60">
+                        {isEs
+                          ? 'Ningún clan con ≥2 firmas entre sus proveedores principales.'
+                          : 'No clan with ≥2 firms among its top vendors.'}
+                      </p>
+                    )}
+                    <p className="mb-2 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
+                      {isEs ? 'Quiénes se llevan el gasto' : 'Who takes the spend'}
+                    </p>
+                    <ul className="space-y-1.5">
+                      {star.vendors.slice(0, 8).map((v) => (
+                        <li key={v.vendor_id} className="flex items-center justify-between gap-2 min-w-0">
+                          <EntityIdentityChip
+                            type="vendor"
+                            id={v.vendor_id}
+                            name={v.vendor_name}
+                            size="xs"
+                            riskScore={v.avg_risk_score}
+                          />
+                          <span className="shrink-0 text-[9px] font-mono text-text-muted/60">
+                            {formatCompactMXN(v.total_value_mxn)}
+                            {v.community_id != null && <span> · C-{v.community_id}</span>}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    {selectedVendor != null && (
+                      <div className="mt-3 border-t border-border/50 pt-2.5 flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-mono text-text-muted/70">
+                          {isEs ? 'Actor seleccionado en el sitio' : 'Actor selected in the siege'}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const next = new URLSearchParams(searchParams)
+                            next.set('vendor', String(selectedVendor))
+                            setSearchParams(next)
+                          }}
+                          className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[9.5px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
+                        >
+                          {isEs ? 'Ver su red →' : 'View its ring →'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>

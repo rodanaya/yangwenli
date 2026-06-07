@@ -1549,3 +1549,332 @@ def get_community_graph(
 
     _network_cache.set(cache_key, result, ttl=3600)
     return result
+
+
+# =============================================================================
+# La Trama — Phase C: institution capture lens ("El Sitio" graft)
+# =============================================================================
+
+_trama_capture_compute_lock = threading.Lock()
+_TRAMA_CAPTURE_DB_KEY = "network_trama_capture_v1"
+_CAPTURE_INDEX_SIZE = 120
+
+
+class CaptureTopVendor(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    total_value_mxn: float
+    avg_risk_score: Optional[float]
+
+
+class CaptureCommunityRef(BaseModel):
+    community_id: int
+    vendor_count: int
+
+
+class InstitutionCaptureItem(BaseModel):
+    institution_id: int
+    name: str
+    sector_id: Optional[int]
+    total_value_mxn: float
+    total_contracts: int
+    vendor_count: int
+    direct_award_pct: Optional[float]  # 0-100 scale (institution_stats convention)
+    single_bid_pct: Optional[float]    # 0-100 scale
+    avg_risk_score: Optional[float]
+    top1_vendor: Optional[CaptureTopVendor]
+    top1_share_pct: Optional[float]    # 0-100: top vendor value / institution value
+    latest_hhi: Optional[float]
+    feeding_communities: List[CaptureCommunityRef]
+
+
+class InstitutionCaptureResponse(BaseModel):
+    institutions: List[InstitutionCaptureItem]
+    total: int
+    generated_at: str
+
+
+def _build_institution_capture(conn: sqlite3.Connection) -> InstitutionCaptureResponse:
+    """Top federal buyers as capture targets — entirely from precomputed
+    tables (institution_stats, institution_top_vendors, institution_hhi,
+    vendor_graph_features). No raw-contracts query, no edge query."""
+    import datetime
+    from collections import Counter
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT s.institution_id, i.name, i.sector_id,
+               s.total_value_mxn, s.total_contracts, s.vendor_count,
+               s.direct_award_pct, s.single_bid_pct, s.avg_risk_score
+        FROM institution_stats s
+        JOIN institutions i ON i.id = s.institution_id
+        ORDER BY s.total_value_mxn DESC
+        LIMIT ?
+        """,
+        (_CAPTURE_INDEX_SIZE,),
+    )
+    base_rows = [dict(r) for r in cursor.fetchall()]
+    inst_ids = [r["institution_id"] for r in base_rows]
+    if not inst_ids:
+        return InstitutionCaptureResponse(
+            institutions=[], total=0,
+            generated_at=datetime.datetime.utcnow().isoformat() + "Z",
+        )
+
+    # All top-vendor rows for these institutions (~20 per institution)
+    inst_placeholders = ",".join("?" * len(inst_ids))
+    cursor.execute(
+        f"""
+        SELECT institution_id, vendor_id, vendor_name, total_value_mxn, avg_risk_score
+        FROM institution_top_vendors
+        WHERE institution_id IN ({inst_placeholders})
+        """,
+        inst_ids,
+    )
+    top_by_inst: Dict[int, List[dict]] = {}
+    all_top_vendor_ids: set = set()
+    for r in cursor.fetchall():
+        top_by_inst.setdefault(r["institution_id"], []).append(dict(r))
+        all_top_vendor_ids.add(r["vendor_id"])
+    for rows in top_by_inst.values():
+        rows.sort(key=lambda v: v["total_value_mxn"] or 0.0, reverse=True)
+
+    # Latest HHI per institution
+    cursor.execute(
+        f"""
+        SELECT institution_id, hhi, contract_year
+        FROM institution_hhi
+        WHERE institution_id IN ({inst_placeholders})
+        ORDER BY institution_id, contract_year DESC
+        """,
+        inst_ids,
+    )
+    latest_hhi: Dict[int, float] = {}
+    for r in cursor.fetchall():
+        if r["institution_id"] not in latest_hhi and r["hhi"] is not None:
+            latest_hhi[r["institution_id"]] = float(r["hhi"])
+
+    # community_id per top vendor (chunked)
+    vendor_ids = list(all_top_vendor_ids)
+    community_of: Dict[int, int] = {}
+    for i in range(0, len(vendor_ids), _TRAMA_IN_CHUNK):
+        chunk = vendor_ids[i:i + _TRAMA_IN_CHUNK]
+        chunk_placeholders = ",".join("?" * len(chunk))
+        cursor.execute(
+            f"SELECT vendor_id, community_id FROM vendor_graph_features WHERE vendor_id IN ({chunk_placeholders})",
+            chunk,
+        )
+        for r in cursor.fetchall():
+            community_of[r["vendor_id"]] = r["community_id"]
+
+    items = []
+    for row in base_rows:
+        iid = row["institution_id"]
+        tops = top_by_inst.get(iid, [])
+        top1 = tops[0] if tops else None
+        inst_value = float(row["total_value_mxn"] or 0.0)
+        top1_share = None
+        top1_model = None
+        if top1 and inst_value > 0:
+            top1_share = round(min(float(top1["total_value_mxn"] or 0.0) / inst_value, 1.0) * 100, 2)
+            top1_model = CaptureTopVendor(
+                vendor_id=top1["vendor_id"],
+                vendor_name=top1["vendor_name"],
+                total_value_mxn=float(top1["total_value_mxn"] or 0.0),
+                avg_risk_score=top1["avg_risk_score"],
+            )
+
+        # Feeding clans: communities with >= 2 of this institution's top vendors
+        comm_counter = Counter(
+            community_of[v["vendor_id"]] for v in tops if v["vendor_id"] in community_of
+        )
+        feeding = [
+            CaptureCommunityRef(community_id=cid, vendor_count=n)
+            for cid, n in comm_counter.most_common(3)
+            if n >= 2
+        ]
+
+        items.append(InstitutionCaptureItem(
+            institution_id=iid,
+            name=row["name"],
+            sector_id=row["sector_id"],
+            total_value_mxn=inst_value,
+            total_contracts=row["total_contracts"] or 0,
+            vendor_count=row["vendor_count"] or 0,
+            direct_award_pct=row["direct_award_pct"],
+            single_bid_pct=row["single_bid_pct"],
+            avg_risk_score=row["avg_risk_score"],
+            top1_vendor=top1_model,
+            top1_share_pct=top1_share,
+            latest_hhi=latest_hhi.get(iid),
+            feeding_communities=feeding,
+        ))
+
+    return InstitutionCaptureResponse(
+        institutions=items,
+        total=len(items),
+        generated_at=datetime.datetime.utcnow().isoformat() + "Z",
+    )
+
+
+@router.get("/institution-capture", response_model=InstitutionCaptureResponse)
+@_rate_limit("20/minute")
+def get_institution_capture(
+    request: Request,
+    limit: int = Query(40, ge=1, le=120),
+    sort: str = Query("value", pattern="^(value|top1_share|hhi|risk)$"),
+):
+    """
+    La Trama institution lens — top federal buyers as capture targets.
+
+    Served from precomputed_stats (key network_trama_capture_v1).
+    Sort/limit applied over the precomputed top-120-by-value corpus.
+    """
+    full: Optional[InstitutionCaptureResponse] = _network_cache.get("trama_capture")
+
+    if full is None:
+        try:
+            with get_db() as pconn:
+                row = pconn.execute(
+                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+                    (_TRAMA_CAPTURE_DB_KEY,),
+                ).fetchone()
+            if row and row["stat_value"]:
+                full = InstitutionCaptureResponse(**json.loads(row["stat_value"]))
+                _network_cache.set("trama_capture", full, ttl=3600)
+        except Exception:
+            full = None
+
+    if full is None:
+        with _trama_capture_compute_lock:
+            full = _network_cache.get("trama_capture")
+            if full is None:
+                with get_db() as conn:
+                    full = _build_institution_capture(conn)
+                _network_cache.set("trama_capture", full, ttl=3600)
+                try:
+                    payload = full.model_dump()
+                    with get_db() as wconn:
+                        wconn.execute(
+                            "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) "
+                            "VALUES(?, ?, datetime('now'))",
+                            (_TRAMA_CAPTURE_DB_KEY, json.dumps(payload, default=str)),
+                        )
+                        wconn.commit()
+                except Exception as e:
+                    logger.warning("trama capture persist failed: %s", e)
+
+    items = list(full.institutions)
+    if sort == "top1_share":
+        items.sort(key=lambda x: x.top1_share_pct or 0.0, reverse=True)
+    elif sort == "hhi":
+        items.sort(key=lambda x: x.latest_hhi or 0.0, reverse=True)
+    elif sort == "risk":
+        items.sort(key=lambda x: x.avg_risk_score or 0.0, reverse=True)
+    # default: already value-ordered
+
+    return InstitutionCaptureResponse(
+        institutions=items[:limit],
+        total=full.total,
+        generated_at=full.generated_at,
+    )
+
+
+class StarVendor(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    total_value_mxn: float
+    avg_risk_score: Optional[float]
+    contract_count: int
+    community_id: Optional[int]
+    is_sanctioned: bool
+
+
+class InstitutionStarResponse(BaseModel):
+    institution_id: int
+    name: str
+    sector_id: Optional[int]
+    total_value_mxn: float
+    total_vendors: int
+    vendors: List[StarVendor]
+
+
+@router.get("/institution-capture/{institution_id}/star", response_model=InstitutionStarResponse)
+@_rate_limit("30/minute")
+def get_institution_star(
+    request: Request,
+    institution_id: int = Path(..., description="Institution ID"),
+):
+    """
+    La Trama institution star — the top-30 vendor orbit around one buyer.
+    Vendors carry their Louvain community_id so the web can be colored by clan.
+    """
+    cache_key = f"institution_star:{institution_id}"
+    cached = _network_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        base = cursor.execute(
+            """
+            SELECT s.institution_id, i.name, i.sector_id, s.total_value_mxn, s.vendor_count
+            FROM institution_stats s
+            JOIN institutions i ON i.id = s.institution_id
+            WHERE s.institution_id = ?
+            """,
+            (institution_id,),
+        ).fetchone()
+        if not base:
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+
+        cursor.execute(
+            """
+            SELECT vendor_id, vendor_name, rfc, total_value_mxn, avg_risk_score, contract_count
+            FROM institution_top_vendors
+            WHERE institution_id = ?
+            ORDER BY total_value_mxn DESC
+            LIMIT 30
+            """,
+            (institution_id,),
+        )
+        top_rows = [dict(r) for r in cursor.fetchall()]
+
+        vid_list = [r["vendor_id"] for r in top_rows]
+        community_of: Dict[int, int] = {}
+        if vid_list:
+            vid_placeholders = ",".join("?" * len(vid_list))
+            cursor.execute(
+                f"SELECT vendor_id, community_id FROM vendor_graph_features WHERE vendor_id IN ({vid_placeholders})",
+                vid_list,
+            )
+            for r in cursor.fetchall():
+                community_of[r["vendor_id"]] = r["community_id"]
+
+        sanction_keys = _get_sanction_keys(conn)
+
+    vendors = [
+        StarVendor(
+            vendor_id=r["vendor_id"],
+            vendor_name=r["vendor_name"],
+            total_value_mxn=float(r["total_value_mxn"] or 0.0),
+            avg_risk_score=r["avg_risk_score"],
+            contract_count=r["contract_count"] or 0,
+            community_id=community_of.get(r["vendor_id"]),
+            is_sanctioned=_is_sanctioned(r["rfc"], r["vendor_name"], sanction_keys),
+        )
+        for r in top_rows
+    ]
+
+    result = InstitutionStarResponse(
+        institution_id=base["institution_id"],
+        name=base["name"],
+        sector_id=base["sector_id"],
+        total_value_mxn=float(base["total_value_mxn"] or 0.0),
+        total_vendors=base["vendor_count"] or 0,
+        vendors=vendors,
+    )
+    _network_cache.set(cache_key, result, ttl=3600)
+    return result

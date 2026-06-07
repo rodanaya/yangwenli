@@ -20,10 +20,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 DB_PATH = Path(__file__).resolve().parent.parent / "RUBLI_NORMALIZED.db"
 TRAMA_INDEX_DB_KEY = "network_trama_index_v1"
+TRAMA_CAPTURE_DB_KEY = "network_trama_capture_v1"
 
 
 def main() -> None:
-    from api.routers.network import _build_community_index  # noqa: E402
+    from api.routers.network import _build_community_index, _build_institution_capture  # noqa: E402
 
     t0 = time.time()
     conn = sqlite3.connect(DB_PATH)
@@ -35,6 +36,12 @@ def main() -> None:
             "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) "
             "VALUES(?, ?, datetime('now'))",
             (TRAMA_INDEX_DB_KEY, json.dumps(payload, default=str)),
+        )
+        capture = _build_institution_capture(conn)
+        conn.execute(
+            "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) "
+            "VALUES(?, ?, datetime('now'))",
+            (TRAMA_CAPTURE_DB_KEY, json.dumps(capture.model_dump(), default=str)),
         )
         conn.commit()
     finally:
@@ -55,6 +62,13 @@ def main() -> None:
     empty_hubs = [c for c in comms if not c.hub_vendor_name.strip()]
     if empty_hubs:
         print(f"WARNING: {len(empty_hubs)} communities have empty hub names")
+
+    print(f"Institution capture index: {capture.total} institutions. Top 3 by value:")
+    for it in capture.institutions[:3]:
+        share = f"{it.top1_share_pct:.0f}%" if it.top1_share_pct is not None else "—"
+        clans = ", ".join(f"C-{f.community_id}({f.vendor_count})" for f in it.feeding_communities) or "—"
+        val_bn = it.total_value_mxn / 1e9
+        print(f"  {it.name[:44]:<46} {val_bn:>9.1f}B  top1={share}  clans: {clans}")
 
 
 if __name__ == "__main__":

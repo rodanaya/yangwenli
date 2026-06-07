@@ -148,3 +148,64 @@ class TestCommunityGraph:
         response = client.get(f"{base_url}/network/communities/index")
         assert response.status_code == 200
         assert "communities" in response.json()
+
+
+class TestInstitutionCapture:
+    """Tests for GET /network/institution-capture (Phase C lens)."""
+
+    def test_capture_returns_200_with_shape(self, client, base_url):
+        response = client.get(f"{base_url}/network/institution-capture?limit=10")
+        assert response.status_code == 200
+        data = response.json()
+        assert "institutions" in data and "total" in data
+        assert 0 < len(data["institutions"]) <= 10
+
+    def test_capture_item_fields(self, client, base_url):
+        response = client.get(f"{base_url}/network/institution-capture?limit=5")
+        item = response.json()["institutions"][0]
+        for field in (
+            "institution_id", "name", "sector_id", "total_value_mxn",
+            "total_contracts", "vendor_count", "direct_award_pct",
+            "single_bid_pct", "avg_risk_score", "top1_vendor",
+            "top1_share_pct", "latest_hhi", "feeding_communities",
+        ):
+            assert field in item
+
+    def test_capture_sort_top1_share(self, client, base_url):
+        response = client.get(f"{base_url}/network/institution-capture?limit=20&sort=top1_share")
+        shares = [i["top1_share_pct"] or 0 for i in response.json()["institutions"]]
+        assert shares == sorted(shares, reverse=True)
+
+    def test_capture_invalid_sort_422(self, client, base_url):
+        response = client.get(f"{base_url}/network/institution-capture?sort=bogus")
+        assert response.status_code == 422
+
+    def test_capture_top1_share_bounded(self, client, base_url):
+        response = client.get(f"{base_url}/network/institution-capture?limit=120")
+        for i in response.json()["institutions"]:
+            if i["top1_share_pct"] is not None:
+                assert 0 <= i["top1_share_pct"] <= 100
+
+
+class TestInstitutionStar:
+    """Tests for GET /network/institution-capture/{id}/star."""
+
+    def test_star_returns_200_with_shape(self, client, base_url):
+        cap = client.get(f"{base_url}/network/institution-capture?limit=1")
+        iid = cap.json()["institutions"][0]["institution_id"]
+        response = client.get(f"{base_url}/network/institution-capture/{iid}/star")
+        assert response.status_code == 200
+        data = response.json()
+        for field in ("institution_id", "name", "sector_id", "total_value_mxn", "total_vendors", "vendors"):
+            assert field in data
+        assert 0 < len(data["vendors"]) <= 30
+        v = data["vendors"][0]
+        for field in (
+            "vendor_id", "vendor_name", "total_value_mxn", "avg_risk_score",
+            "contract_count", "community_id", "is_sanctioned",
+        ):
+            assert field in v
+
+    def test_star_unknown_institution_404(self, client, base_url):
+        response = client.get(f"{base_url}/network/institution-capture/99999999/star")
+        assert response.status_code == 404

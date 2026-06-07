@@ -1748,6 +1748,23 @@ export const networkApi = {
     const { data } = await api.get<CommunityGraphResponse>(`/network/communities/${communityId}/graph`)
     return data
   },
+
+  /**
+   * La Trama institution lens — top federal buyers as capture targets.
+   */
+  async getInstitutionCapture(limit = 120, sort: 'value' | 'top1_share' | 'hhi' | 'risk' = 'value'): Promise<InstitutionCaptureResponse> {
+    const { data } = await api.get<InstitutionCaptureResponse>(`/network/institution-capture?limit=${limit}&sort=${sort}`)
+    return data
+  },
+
+  /**
+   * La Trama institution star — top-30 vendor orbit around one buyer,
+   * with Louvain community_id per vendor for clan coloring.
+   */
+  async getInstitutionStar(institutionId: number): Promise<InstitutionStarResponse> {
+    const { data } = await api.get<InstitutionStarResponse>(`/network/institution-capture/${institutionId}/star`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -1822,6 +1839,59 @@ export interface CommunityIndexResponse {
   communities: CommunityIndexItem[]
   total_communities: number
   generated_at: string
+}
+
+export interface CaptureTopVendor {
+  vendor_id: number
+  vendor_name: string
+  total_value_mxn: number
+  avg_risk_score: number | null
+}
+
+export interface CaptureCommunityRef {
+  community_id: number
+  vendor_count: number
+}
+
+export interface InstitutionCaptureItem {
+  institution_id: number
+  name: string
+  sector_id: number | null
+  total_value_mxn: number
+  total_contracts: number
+  vendor_count: number
+  direct_award_pct: number | null // 0-100 scale
+  single_bid_pct: number | null // 0-100 scale
+  avg_risk_score: number | null
+  top1_vendor: CaptureTopVendor | null
+  top1_share_pct: number | null // 0-100 scale
+  latest_hhi: number | null
+  feeding_communities: CaptureCommunityRef[]
+}
+
+export interface InstitutionCaptureResponse {
+  institutions: InstitutionCaptureItem[]
+  total: number
+  generated_at: string
+}
+
+export interface StarVendor {
+  vendor_id: number
+  vendor_name: string
+  total_value_mxn: number
+  avg_risk_score: number | null
+  contract_count: number
+  community_id: number | null
+  is_sanctioned: boolean
+}
+
+export interface InstitutionStarResponse {
+  institution_id: number
+  name: string
+  sector_id: number | null
+  total_value_mxn: number
+  total_vendors: number
+  vendors: StarVendor[]
 }
 
 // ============================================================================
