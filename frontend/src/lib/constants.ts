@@ -179,7 +179,7 @@ export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1554
 
 
 
-export const BUILD_ID = '2026-06-07-starfox-m3v2-exposure-ledger'
+export const BUILD_ID = '2026-06-07-trama-rename-aa-oecd'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)

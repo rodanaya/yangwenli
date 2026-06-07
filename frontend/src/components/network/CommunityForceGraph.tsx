@@ -31,7 +31,7 @@ import {
   type SimulationNodeDatum,
 } from 'd3-force'
 import type { CommunityGraphResponse, CommunityGraphNode } from '@/api/client'
-import { RISK_COLORS, PATTERN_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, PATTERN_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 
@@ -63,6 +63,12 @@ interface CommunityForceGraphProps {
 function riskFill(score: number | null): string {
   if (score == null) return 'var(--color-text-muted)'
   return RISK_COLORS[getRiskLevelFromScore(score)]
+}
+
+/** AA-safe risk color for small TEXT (RISK_COLORS fail WCAG as numerals). */
+function riskText(score: number | null): string {
+  if (score == null) return 'var(--color-text-muted)'
+  return RISK_TEXT_COLORS[getRiskLevelFromScore(score)]
 }
 
 export function CommunityForceGraph({
@@ -271,7 +277,7 @@ export function CommunityForceGraph({
           <div className="space-y-0.5 text-[10px] font-mono text-text-muted">
             <p>
               {isEs ? 'Indicador de riesgo' : 'Risk indicator'}{' '}
-              <span style={{ color: riskFill(hoverNode.node.risk_score), fontWeight: 700 }}>
+              <span style={{ color: riskText(hoverNode.node.risk_score), fontWeight: 700 }}>
                 {hoverNode.node.risk_score != null ? `${Math.round(hoverNode.node.risk_score * 100)}%` : '—'}
               </span>
               {hoverNode.node.primary_pattern && (
@@ -292,7 +298,7 @@ export function CommunityForceGraph({
             <p>
               {isEs ? 'Conexiones' : 'Ties'} {hoverNode.node.degree}
               {hoverNode.node.is_sanctioned && (
-                <span style={{ color: RISK_COLORS.critical }}> · {isEs ? 'SANCIONADO SFP' : 'SFP SANCTIONED'}</span>
+                <span style={{ color: RISK_TEXT_COLORS.critical }}> · {isEs ? 'SANCIONADO SFP' : 'SFP SANCTIONED'}</span>
               )}
               {hoverNode.node.gt_case_count > 0 && (
                 <span className="text-accent"> · {hoverNode.node.gt_case_count} {isEs ? 'caso(s) GT' : 'GT case(s)'}</span>

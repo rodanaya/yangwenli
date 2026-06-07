@@ -25,7 +25,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Network, ShieldAlert, Search, Pin, Building2 } from 'lucide-react'
 import { networkApi, type CommunityIndexItem, type InstitutionCaptureItem } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { RISK_COLORS, PATTERN_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import {
+  RISK_COLORS,
+  RISK_TEXT_COLORS,
+  PATTERN_COLORS,
+  getRiskLevelFromScore,
+  OECD_DIRECT_AWARD_LIMIT,
+  OECD_SINGLE_BID_LIMIT,
+} from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -33,7 +40,6 @@ import { CommunityForceGraph } from '@/components/network/CommunityForceGraph'
 import { InstitutionStarGraph } from '@/components/network/InstitutionStarGraph'
 import { VendorNetworkView } from '@/components/network/VendorNetworkView'
 
-const OECD_DA_CEILING = 0.25
 const PINS_KEY = 'rubli_trama_pins_v1'
 
 type SortKey = 'value' | 'risk' | 'size' | 'sb' | 'gt'
@@ -79,15 +85,17 @@ function DeviationRow({
   const isAbove = delta > 0
   const halfPct = Math.min(Math.abs(delta) / maxDelta, 1) * 50
   const fill = isAbove ? RISK_COLORS.critical : 'var(--color-text-muted)'
+  // AA-safe variant for small text (RISK_COLORS fail WCAG as numerals)
+  const textFill = isAbove ? RISK_TEXT_COLORS.critical : 'var(--color-text-muted)'
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2 mb-1">
         <span className="text-[10px] font-mono text-text-secondary">{label}</span>
         <span className="text-[9.5px] font-mono text-text-muted">
-          <span style={{ color: fill, fontWeight: 700 }}>{Math.round(value * 100)}%</span>
+          <span style={{ color: textFill, fontWeight: 700 }}>{Math.round(value * 100)}%</span>
           {' · '}
           {benchmarkLabel} {Math.round(benchmark * 100)}%{' '}
-          <span style={{ color: fill }}>
+          <span style={{ color: textFill }}>
             {isAbove ? '↑' : '↓'}{Math.abs(Math.round(delta * 100))}pp
           </span>
         </span>
@@ -663,7 +671,7 @@ export default function RedesKnownDossier() {
                   <div className="max-h-[72vh] overflow-y-auto pr-1 space-y-1" role="list">
                     {sortedInstitutions.map((inst, rank) => {
                       const active = inst.institution_id === effectiveInst
-                      const daHot = (inst.direct_award_pct ?? 0) > OECD_DA_CEILING * 100
+                      const daHot = (inst.direct_award_pct ?? 0) > OECD_DIRECT_AWARD_LIMIT * 100
                       const hhiHot = (inst.latest_hhi ?? 0) >= HHI_CONCENTRATED
                       return (
                         <div
@@ -700,7 +708,7 @@ export default function RedesKnownDossier() {
                             <div className="mt-0.5 flex items-center gap-2.5 text-[9.5px] font-mono text-text-muted/70">
                               <span>
                                 DA{' '}
-                                <span style={daHot ? { color: RISK_COLORS.high, fontWeight: 700 } : undefined}>
+                                <span style={daHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
                                   {inst.direct_award_pct != null ? `${Math.round(inst.direct_award_pct)}%` : '—'}
                                 </span>
                               </span>
@@ -712,7 +720,7 @@ export default function RedesKnownDossier() {
                               </span>
                               <span>
                                 HHI{' '}
-                                <span style={hhiHot ? { color: RISK_COLORS.high, fontWeight: 700 } : undefined}>
+                                <span style={hhiHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
                                   {inst.latest_hhi != null ? formatNumber(Math.round(inst.latest_hhi)) : '—'}
                                 </span>
                               </span>
@@ -813,7 +821,7 @@ export default function RedesKnownDossier() {
                   const lbl = clusterLabel(c, isEs)
                   const active = c.community_id === effectiveComm
                   const pinned = pins.includes(c.community_id)
-                  const daHot = (c.da_rate ?? 0) > OECD_DA_CEILING
+                  const daHot = (c.da_rate ?? 0) > OECD_DIRECT_AWARD_LIMIT
                   return (
                     <div
                       key={c.community_id}
@@ -874,7 +882,7 @@ export default function RedesKnownDossier() {
                         </span>
                         <span>
                           DA{' '}
-                          <span style={daHot ? { color: RISK_COLORS.high, fontWeight: 700 } : undefined}>
+                          <span style={daHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
                             {c.da_rate != null ? `${Math.round(c.da_rate * 100)}%` : '—'}
                           </span>
                         </span>
@@ -883,7 +891,7 @@ export default function RedesKnownDossier() {
                         </span>
                         <span>
                           {isEs ? 'riesgo' : 'risk'}{' '}
-                          <span style={{ color: RISK_COLORS[getRiskLevelFromScore(c.avg_risk)], fontWeight: 700 }}>
+                          <span style={{ color: RISK_TEXT_COLORS[getRiskLevelFromScore(c.avg_risk)], fontWeight: 700 }}>
                             {Math.round(c.avg_risk * 100)}%
                           </span>
                         </span>
@@ -891,7 +899,7 @@ export default function RedesKnownDossier() {
                           <span className="text-accent font-bold">{c.gt_vendor_count} GT</span>
                         )}
                         {c.sanctioned_count > 0 && (
-                          <span style={{ color: RISK_COLORS.critical }} className="inline-flex items-center gap-0.5 font-bold">
+                          <span style={{ color: RISK_TEXT_COLORS.critical }} className="inline-flex items-center gap-0.5 font-bold">
                             <ShieldAlert className="h-2.5 w-2.5" aria-hidden="true" />
                             {c.sanctioned_count}
                           </span>
@@ -953,21 +961,23 @@ export default function RedesKnownDossier() {
                       : `Plate — Cluster C-${graph.community_id}: ${graph.rendered_members}${graph.truncated ? ` of ${formatNumber(graph.total_members)}` : ''} actors and ${formatNumber(graph.edges.length)} real co-bidding edges. Force-directed positions over co_bidding_stats; no tie is illustrative.`
                   }
                 >
-                  {/* Truncation honesty strip (locked decision: giants → top-100) */}
-                  {graph.truncated && (
-                    <p className="mb-2 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
-                      {isEs
-                        ? `Mostrando los 100 actores más centrales (pagerank) de ${formatNumber(graph.total_members)}`
-                        : `Showing the 100 most central actors (pagerank) of ${formatNumber(graph.total_members)}`}
-                      {graph.edges_truncated && (isEs ? ' · aristas recortadas a 2,500' : ' · edges capped at 2,500')}
-                    </p>
-                  )}
                   <CommunityForceGraph
                     data={graph}
                     lang={lang}
                     selectedVendorId={selectedVendor}
                     onSelectVendor={setSelectedVendor}
                   />
+                  {/* Truncation honesty strip (locked decision: giants → top-100).
+                      Below the canvas — above it, it collides with the
+                      PlateFrame header at mobile widths. */}
+                  {graph.truncated && (
+                    <p className="mt-2 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
+                      {isEs
+                        ? `Mostrando los 100 actores más centrales (pagerank) de ${formatNumber(graph.total_members)}`
+                        : `Showing the 100 most central actors (pagerank) of ${formatNumber(graph.total_members)}`}
+                      {graph.edges_truncated && (isEs ? ' · aristas recortadas a 2,500' : ' · edges capped at 2,500')}
+                    </p>
+                  )}
                 </PlateFrame>
 
                 {/* Dossier strip — stats + roster */}
@@ -983,14 +993,14 @@ export default function RedesKnownDossier() {
                       <DeviationRow
                         label={isEs ? 'Adjudicación directa' : 'Direct award'}
                         value={graph.stats.da_rate ?? 0}
-                        benchmark={OECD_DA_CEILING}
+                        benchmark={OECD_DIRECT_AWARD_LIMIT}
                         benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
                         maxDelta={0.75}
                       />
                       <DeviationRow
                         label={isEs ? 'Propuesta única' : 'Single bid'}
                         value={graph.stats.sb_rate ?? 0}
-                        benchmark={OECD_DA_CEILING}
+                        benchmark={OECD_SINGLE_BID_LIMIT}
                         benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
                         maxDelta={0.75}
                       />
@@ -1002,7 +1012,7 @@ export default function RedesKnownDossier() {
                       </span>
                       <span>
                         {isEs ? 'Riesgo medio' : 'Avg risk'}{' '}
-                        <span style={{ color: RISK_COLORS[getRiskLevelFromScore(graph.stats.avg_risk)], fontWeight: 700 }}>
+                        <span style={{ color: RISK_TEXT_COLORS[getRiskLevelFromScore(graph.stats.avg_risk)], fontWeight: 700 }}>
                           {Math.round(graph.stats.avg_risk * 100)}%
                         </span>
                       </span>
@@ -1012,7 +1022,7 @@ export default function RedesKnownDossier() {
                       </span>
                       <span>
                         {isEs ? 'Sancionados' : 'Sanctioned'}{' '}
-                        <span style={{ color: RISK_COLORS.critical, fontWeight: 700 }}>{graph.stats.sanctioned_count}</span>
+                        <span style={{ color: RISK_TEXT_COLORS.critical, fontWeight: 700 }}>{graph.stats.sanctioned_count}</span>
                       </span>
                     </div>
                     {graph.stats.labeled_count / Math.max(graph.total_members, 1) >= 0.3 &&
@@ -1066,7 +1076,7 @@ export default function RedesKnownDossier() {
                             <span className="shrink-0 text-[9px] font-mono text-text-muted/60">
                               {n.degree} {isEs ? 'conexiones' : 'ties'}
                               {n.is_sanctioned && (
-                                <span style={{ color: RISK_COLORS.critical }}> · SFP</span>
+                                <span style={{ color: RISK_TEXT_COLORS.critical }}> · SFP</span>
                               )}
                             </span>
                           </li>
@@ -1158,14 +1168,14 @@ export default function RedesKnownDossier() {
                           <DeviationRow
                             label={isEs ? 'Adjudicación directa' : 'Direct award'}
                             value={(selectedCaptureItem.direct_award_pct ?? 0) / 100}
-                            benchmark={OECD_DA_CEILING}
+                            benchmark={OECD_DIRECT_AWARD_LIMIT}
                             benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
                             maxDelta={0.75}
                           />
                           <DeviationRow
                             label={isEs ? 'Propuesta única' : 'Single bid'}
                             value={(selectedCaptureItem.single_bid_pct ?? 0) / 100}
-                            benchmark={OECD_DA_CEILING}
+                            benchmark={OECD_SINGLE_BID_LIMIT}
                             benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
                             maxDelta={0.75}
                           />
@@ -1186,7 +1196,7 @@ export default function RedesKnownDossier() {
                             <span
                               style={
                                 (selectedCaptureItem.latest_hhi ?? 0) >= HHI_CONCENTRATED
-                                  ? { color: RISK_COLORS.high, fontWeight: 700 }
+                                  ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 }
                                   : { fontWeight: 700 }
                               }
                               className="text-text-primary"
@@ -1203,7 +1213,7 @@ export default function RedesKnownDossier() {
                             {isEs ? 'Riesgo medio' : 'Avg risk'}{' '}
                             <span
                               style={{
-                                color: RISK_COLORS[getRiskLevelFromScore(selectedCaptureItem.avg_risk_score ?? 0)],
+                                color: RISK_TEXT_COLORS[getRiskLevelFromScore(selectedCaptureItem.avg_risk_score ?? 0)],
                                 fontWeight: 700,
                               }}
                             >

@@ -14,7 +14,7 @@
  */
 import { useMemo, useState } from 'react'
 import type { InstitutionStarResponse } from '@/api/client'
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 
@@ -32,6 +32,12 @@ const NO_CLAN = 'var(--color-border)'
 function riskFill(score: number | null): string {
   if (score == null) return 'var(--color-text-muted)'
   return RISK_COLORS[getRiskLevelFromScore(score)]
+}
+
+/** AA-safe risk color for small TEXT (RISK_COLORS fail WCAG as numerals). */
+function riskText(score: number | null): string {
+  if (score == null) return 'var(--color-text-muted)'
+  return RISK_TEXT_COLORS[getRiskLevelFromScore(score)]
 }
 
 interface InstitutionStarGraphProps {
@@ -228,14 +234,14 @@ export function InstitutionStarGraph({
             </p>
             <p>
               {isEs ? 'Indicador de riesgo' : 'Risk indicator'}{' '}
-              <span style={{ color: riskFill(hoverNode.v.avg_risk_score), fontWeight: 700 }}>
+              <span style={{ color: riskText(hoverNode.v.avg_risk_score), fontWeight: 700 }}>
                 {hoverNode.v.avg_risk_score != null ? `${Math.round(hoverNode.v.avg_risk_score * 100)}%` : '—'}
               </span>
               {hoverNode.v.community_id != null && (
                 <span> · {isEs ? 'clan' : 'clan'} C-{hoverNode.v.community_id}</span>
               )}
               {hoverNode.v.is_sanctioned && (
-                <span style={{ color: RISK_COLORS.critical }}> · {isEs ? 'SANCIONADO' : 'SANCTIONED'}</span>
+                <span style={{ color: RISK_TEXT_COLORS.critical }}> · {isEs ? 'SANCIONADO' : 'SANCTIONED'}</span>
               )}
             </p>
           </div>
