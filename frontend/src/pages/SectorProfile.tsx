@@ -1909,7 +1909,7 @@ export function SectorProfile() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
                 >
                   <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
-                  Ver en el Observatorio
+                  Ver en el Atlas
                   <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
                 </Link>
                 <span className="text-[10px] text-text-muted font-mono ml-auto">

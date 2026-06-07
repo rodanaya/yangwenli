@@ -177,13 +177,14 @@ ANÁLISIS   Captura · Administraciones · La Intersección
 PLATAFORMA Metodología
 ```
 
-El Observatorio (formerly "El Atlas") was promoted from PLATAFORMA to
-DESCUBRIR (centerpiece) on 2026-04-28 and renamed on the same day. The
-canonical route stays `/atlas` to preserve URL identity and the
+El Atlas was promoted from PLATAFORMA to DESCUBRIR (centerpiece) on
+2026-04-28 and briefly renamed "El Observatorio" (2026-04-28 →
+2026-06-07); the user reverted the public name to **"El Atlas" / "The
+Atlas"** on 2026-06-07. The canonical route stays `/atlas`, matching the
 `rubli_atlas_visited_v1` localStorage flag; `/observatorio` and
-`/observatory` redirect to it. Internal symbol names (Atlas component,
-ATLAS_STORIES, atlasMode state) keep the legacy `atlas` prefix —
-renaming them is pure churn.
+`/observatory` still redirect to it. Internal symbol names (Atlas
+component, ATLAS_STORIES, atlasMode, ObservatoryScatter) are not churned
+on rename — only user-visible strings change.
 
 ### `/atlas` — long-form storytelling surface (Apr 2026)
 

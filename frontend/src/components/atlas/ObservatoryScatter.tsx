@@ -579,7 +579,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           })}
           {labels.map((l, i) => (
             <motion.g key={`t-${l.code}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 + i * 0.05, duration: 0.5 }} style={{ pointerEvents: 'none' }}>
-              <text x={l.tx} y={l.ty + 14} textAnchor={l.anchor} fill={C.ink} fontSize={16} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600}>{l.name}</text>
+              <text x={l.tx} y={l.ty + 14} textAnchor={l.anchor} fill={C.ink} fontSize={16} fontFamily='"EB Garamond",Georgia,serif' fontWeight={600}>{l.name}</text>
               <text x={l.tx} y={l.ty + 30} textAnchor={l.anchor} fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)">{l.stat}</text>
             </motion.g>
           ))}
@@ -597,7 +597,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               <g style={{ pointerEvents: 'none' }}>
                 <circle cx={b.cx} cy={b.cy} r={b.r + 3} fill="none" stroke={b.fill} strokeWidth={1.5} opacity={0.55} />
                 <rect x={px - w / 2} y={py} width={w} height={38} rx={3} fill={C.plate0} stroke={b.fill} strokeWidth={1} />
-                <text x={px} y={py + 16} textAnchor="middle" fill={C.ink} fontSize={16} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700}>{name}</text>
+                <text x={px} y={py + 16} textAnchor="middle" fill={C.ink} fontSize={16} fontFamily='"EB Garamond",Georgia,serif' fontWeight={700}>{name}</text>
                 <text x={px} y={py + 31} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)">{stat}</text>
               </g>
             )
@@ -625,7 +625,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                 : (lang === 'es' ? '↑ RIESGO' : '↑ RISK')}
             </text>
             {/* cluster identity — top-left kicker (the orb you flew into) */}
-            <text x={focusedBody.cx - SUB_HALF_W + 2} y={focusedBody.cy - SUB_HALF_H - 13} fill={C.ink} fontSize={11} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.4} strokeLinejoin="round">
+            <text x={focusedBody.cx - SUB_HALF_W + 2} y={focusedBody.cy - SUB_HALF_H - 13} fill={C.ink} fontSize={11} fontFamily='"EB Garamond",Georgia,serif' fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.4} strokeLinejoin="round">
               {toTitleCase(focusedBody.label)}
             </text>
             {/* HONESTY: these are the top-N by RISK (backend orders avg_risk_score
@@ -682,7 +682,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
             {/* fit-only labels — collision-free, NEVER stacked. The active vendor's
                 label is dropped here; its name moves to the opaque hover card below. */}
             {subLabels.filter((l) => l.id !== (hoverVendor ?? focusVendorId)).map((l) => (
-              <text key={l.id} x={l.x} y={l.y} textAnchor={l.anchor} fill={C.ink} fontSize={6.8} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600} paintOrder="stroke" stroke={C.plate0} strokeWidth={1.4} strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+              <text key={l.id} x={l.x} y={l.y} textAnchor={l.anchor} fill={C.ink} fontSize={6.8} fontFamily='"EB Garamond",Georgia,serif' fontWeight={600} paintOrder="stroke" stroke={C.plate0} strokeWidth={1.4} strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
                 {l.name}
               </text>
             ))}
@@ -707,7 +707,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                 <g style={{ pointerEvents: 'none' }}>
                   <circle cx={s.x} cy={s.y} r={s.r + 2.5} fill="none" stroke={s.fill} strokeWidth={1} opacity={0.7} />
                   <rect x={cardX - w / 2} y={cardY} width={w} height={h} rx={3} fill={C.plate0} stroke={s.fill} strokeWidth={0.8} />
-                  <text x={cardX} y={cardY + 9} textAnchor="middle" fill={C.ink} fontSize={8} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700}>{name}</text>
+                  <text x={cardX} y={cardY + 9} textAnchor="middle" fill={C.ink} fontSize={8} fontFamily='"EB Garamond",Georgia,serif' fontWeight={700}>{name}</text>
                   <text x={cardX} y={cardY + 17.5} textAnchor="middle" fill={C.inkMuted} fontSize={6} fontFamily="var(--font-family-mono)">{sub}</text>
                 </g>
               )

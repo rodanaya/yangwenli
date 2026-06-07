@@ -51,7 +51,7 @@
     "empty": "No investigations match this filter.",
     "featuredAbove": "{{count}} matching investigation appears in the featured section above ↑",
     "featuredAbove_plural": "{{count}} matching investigations appear in the featured section above ↑",
-    "fromObservatory": "From the Observatory:",
+    "fromObservatory": "From the Atlas:",
     "clear": "CLEAR"
   },
   "lead": {

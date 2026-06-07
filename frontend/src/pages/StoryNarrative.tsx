@@ -592,8 +592,8 @@ function ObservatoryTrailerCTA({ longformSlug, lang }: { longformSlug: string; l
   if (!tour) return null
   const href = `/atlas?story=${tour.id}`
   const headline = lang === 'en'
-    ? 'Watch this investigation in the Observatory'
-    : 'Mira esta investigación en El Observatorio'
+    ? 'Watch this investigation in the Atlas'
+    : 'Mira esta investigación en El Atlas'
   const body = lang === 'en'
     ? `${tour.duration} · ${tour.chapters.length} chapters · the visual trailer for the article you just read.`
     : `${tour.duration} · ${tour.chapters.length} capítulos · el tráiler visual del artículo que acabas de leer.`
@@ -1021,8 +1021,8 @@ function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: 
           lens="patterns"
           lang={lang}
           caption={{
-            en: 'Explore this chart\'s data live in The Observatory — toggle lenses, scrub years.',
-            es: 'Explora los datos de este gráfico en vivo en El Observatorio — alterna lentes, desplaza años.',
+            en: 'Explore this chart\'s data live in The Atlas — toggle lenses, scrub years.',
+            es: 'Explora los datos de este gráfico en vivo en El Atlas — alterna lentes, desplaza años.',
           }}
         />
       </div>
@@ -1255,8 +1255,8 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
           lens="patterns"
           lang={lang}
           caption={{
-            en: 'Open this story\'s patterns live in The Observatory — scrub years, pin clusters, run your own investigation.',
-            es: 'Abre los patrones de esta historia en vivo en El Observatorio — desplaza años, fija cúmulos, lleva tu propia investigación.',
+            en: 'Open this story\'s patterns live in The Atlas — scrub years, pin clusters, run your own investigation.',
+            es: 'Abre los patrones de esta historia en vivo en El Atlas — desplaza años, fija cúmulos, lleva tu propia investigación.',
           }}
         />
       </div>
@@ -1492,8 +1492,8 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           <span
             className="text-[11px] text-text-muted font-mono"
             title={lang === 'en'
-              ? 'Stories are static analyses of a COMPRANET snapshot dated through this period. Live data updates in the Observatory and ARIA queue, not in the story body.'
-              : 'Las historias son análisis estáticos de un corte de CompraNet hasta esta fecha. Los datos en vivo se actualizan en el Observatorio y la cola ARIA, no en el cuerpo del artículo.'}
+              ? 'Stories are static analyses of a COMPRANET snapshot dated through this period. Live data updates in the Atlas and ARIA queue, not in the story body.'
+              : 'Las historias son análisis estáticos de un corte de CompraNet hasta esta fecha. Los datos en vivo se actualizan en el Atlas y la cola ARIA, no en el cuerpo del artículo.'}
           >
             {lang === 'en' ? 'Analysis as of May 2026' : 'Análisis a mayo de 2026'}
           </span>

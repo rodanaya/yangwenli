@@ -2020,7 +2020,7 @@ export default function CategoryProfile() {
                 to={`/atlas?lens=CATEGORIES&pin=${catId}`}
                 className="inline-flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors border border-border/40 hover:border-border px-2.5 py-1 rounded-sm"
               >
-                {isEs ? 'Ver en el Observatorio' : 'View in Observatory'}
+                {isEs ? 'Ver en el Atlas' : 'View in Atlas'}
               </Link>
               <span className="text-[10px] font-mono text-text-muted/50 uppercase tracking-wider">
                 {isEs ? 'Indicador estadístico · no prueba de irregularidades' : 'Statistical indicator · not evidence of wrongdoing'}

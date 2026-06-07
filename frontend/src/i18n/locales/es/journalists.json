@@ -51,7 +51,7 @@
     "empty": "No hay investigaciones que coincidan con este filtro.",
     "featuredAbove": "{{count}} investigación coincidente aparece en la sección destacada arriba ↑",
     "featuredAbove_plural": "{{count}} investigaciones coincidentes aparecen en la sección destacada arriba ↑",
-    "fromObservatory": "Del Observatorio:",
+    "fromObservatory": "Del Atlas:",
     "clear": "BORRAR"
   },
   "lead": {

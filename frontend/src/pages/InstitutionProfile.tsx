@@ -1750,7 +1750,7 @@ export function InstitutionProfile() {
                 to={`/atlas?lens=SECTORS&pin=${institution.sector_id ?? ''}`}
                 className="inline-flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors border border-border/40 hover:border-border px-2.5 py-1 rounded-sm"
               >
-                {lang === 'es' ? 'Ver en el Observatorio' : 'View in Observatory'}
+                {lang === 'es' ? 'Ver en el Atlas' : 'View in Atlas'}
               </Link>
               <span className="text-[10px] font-mono text-text-muted/50 uppercase tracking-wider">
                 {lang === 'es' ? 'Indicador estadístico · no prueba de irregularidades' : 'Statistical indicator · not evidence of wrongdoing'}

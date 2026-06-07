@@ -275,7 +275,7 @@ export function AtlasLeftRail({
 
         {/* ── LENS ──────────────────────────────────────────────────── */}
         <RailSection label={lang === 'en' ? 'LENS' : 'LENTE'} />
-        <div className="px-2 pb-1" role="radiogroup" aria-label={lang === 'en' ? 'Observatory lens' : 'Lente del Observatorio'}>
+        <div className="px-2 pb-1" role="radiogroup" aria-label={lang === 'en' ? 'Atlas lens' : 'Lente del Atlas'}>
           {LENSES.map((lens) => {
             const isActive = state.lens === lens.id
             return (

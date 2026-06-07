@@ -309,7 +309,7 @@ function ObservatoryTourBadge({ slug, accent, lang }: { slug: string; accent: st
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); navigate(`/atlas?story=${tour.id}`) } }}
       className="inline-flex items-center gap-1.5 px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] rounded-sm border transition-opacity hover:opacity-80"
       style={{ borderColor: `${accent}55`, color: accent, background: `${accent}0d` }}
-      aria-label={lang === 'en' ? `${tour.duration} Observatory tour: ${tour.title.en}` : `Tour de ${tour.duration} en El Observatorio: ${tour.title.es}`}
+      aria-label={lang === 'en' ? `${tour.duration} Atlas tour: ${tour.title.en}` : `Tour de ${tour.duration} en El Atlas: ${tour.title.es}`}
     >
       <span>◆</span>
       <span>{lang === 'en' ? `${tour.duration} TOUR · OBSERVATORY` : `TOUR ${tour.duration} · OBSERVATORIO`}</span>
@@ -1024,7 +1024,7 @@ export default function Journalists() {
           {lensFilterActive && (
             <div className="mt-4 flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
-                ◆ {t('grid.fromObservatory', { defaultValue: 'From the Observatory:' })}
+                ◆ {t('grid.fromObservatory', { defaultValue: 'From the Atlas:' })}
               </span>
               <button
                 type="button"
@@ -1081,7 +1081,7 @@ export default function Journalists() {
           </span>
           <p className="text-[12px] font-mono text-text-secondary flex-1 min-w-0">
             <span className="font-bold text-text-primary">
-              {isEs ? 'El Observatorio' : 'El Observatorio'}
+              {isEs ? 'El Atlas' : 'The Atlas'}
             </span>
             {' — '}
             {isEs

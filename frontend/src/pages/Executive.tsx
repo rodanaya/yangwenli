@@ -321,14 +321,14 @@ export default function Executive() {
         >
           <div className="flex items-start justify-between mb-1 gap-3 flex-wrap">
             <div id="atlas-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
-              {lang === 'en' ? '§ 1 · The Observatory — every contract in one view' : '§ 1 · El Observatorio — cada contrato en una vista'}
+              {lang === 'en' ? '§ 1 · The Atlas — every contract in one view' : '§ 1 · El Atlas — cada contrato en una vista'}
             </div>
 
             {/* Mode toggle */}
             <div
               className="flex items-center text-[9px] font-mono uppercase tracking-[0.1em] rounded-sm overflow-hidden"
               role="tablist"
-              aria-label={lang === 'en' ? 'Constellation mode' : 'Modo del Observatorio'}
+              aria-label={lang === 'en' ? 'Atlas mode' : 'Modo del Atlas'}
               style={{ border: '1px solid var(--color-border)' }}
             >
               {(
@@ -385,7 +385,7 @@ export default function Executive() {
               to={`/atlas${atlasMode !== 'patterns' ? `?lens=${atlasMode}` : ''}`}
               className="text-[10px] font-mono uppercase tracking-[0.12em] font-bold text-text-secondary hover:text-text-primary inline-flex items-center gap-1.5 transition-colors"
             >
-              {lang === 'en' ? 'Open full Observatory' : 'Abrir Observatorio completo'}
+              {lang === 'en' ? 'Open full Atlas' : 'Abrir Atlas completo'}
               <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
             </Link>
           </div>

@@ -28,7 +28,7 @@ export function AtlasBreadcrumb({
   clusterLabel,
   onGoHome,
 }: AtlasBreadcrumbProps) {
-  const observatory = lang === 'en' ? 'The Observatory' : 'El Observatorio'
+  const observatory = lang === 'en' ? 'The Atlas' : 'El Atlas'
 
   const handleGoHome = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation()
