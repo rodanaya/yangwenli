@@ -24,7 +24,6 @@ import type { ContractListItem } from '@/api/types'
 import {
   RISK_COLORS,
   getRiskLevelFromScore,
-  riskRamp,
   SECTOR_COLORS,
   SECTORS,
   PATTERN_COLORS,
@@ -3700,22 +3699,6 @@ function Z3Panel({
     return { map: m, seq, maxAmt: Math.max(...Array.from(m.values()).map((v) => v.amount), 1), span: hi - lo }
   })()
 
-  // (amount, risk) pairs for the amount dot-field — each contract a risk-colored
-  // dot on a log axis (NYT Upshot named-outlier mechanic).
-  const contractPoints = contracts.map((c) => ({
-    amount: Number(c.amount_mxn ?? 0),
-    risk: Number(c.risk_score ?? 0),
-  }))
-  // Gate the amount dot-field: only show when there are enough valued contracts
-  // AND enough spread to be a real distribution — else omit (don't shrink to a
-  // few stranded dots). ≥20 contracts & ≥1.3 decades of amount span.
-  const showAmountField = (() => {
-    const amts = contractPoints.map((p) => p.amount).filter((a) => a > 0)
-    if (amts.length < 20) return false
-    const span = Math.log10(Math.max(...amts) / Math.min(...amts))
-    return span >= 1.3
-  })()
-
   // Monthly buckets — only used when the vendor spans ≤3 years (a yearly
   // strip would be 2–3 giant blocks; monthly resolution shows the burst).
   // Built from contract_date (YYYY-MM-DD); falls back to caption if no dates.
@@ -3920,29 +3903,25 @@ function Z3Panel({
               normalize away), then self-suppressing evidence modules. */}
           {!isLoading && !isError && contracts.length > 0 && (
             <>
-              <Z3IndictmentFinding
+              <Z3VerdictLine
                 strongest={strongest}
                 vendorName={editorialName}
                 smallN={smallN}
+                ctxCount={ctxCount}
+                ctxValue={ctxValue}
                 lang={lang}
               />
-              <Z3DeviationLedger rows={ledgerRows} smallN={smallN} multiSector={multiSector} lang={lang} />
-              <Z3ContextStrip
-                count={ctxCount}
-                totalSpend={ctxValue}
-                yearMin={yearMin}
-                yearMax={yearMax}
-                sampled={isSample}
-                shownCount={sampleCount}
-                lang={lang}
-              />
+              <Z3DeviationBand rows={ledgerRows} strongestKey={strongest?.key ?? null} smallN={smallN} multiSector={multiSector} lang={lang} />
 
-              {/* WHEN — temporal evidence. With the population aggregate we show
-                  the REAL year histogram (read-only — the register below is a
-                  sample, so year-click can't filter it). Without it, fall back to
-                  the sample logic, still suppressed when the sample is partial. */}
+              {/* WHEN — temporal evidence (compressed strip). With the population
+                  aggregate we show the REAL year histogram (read-only — the
+                  register below is a sample, so year-click can't filter it).
+                  Without it, fall back to the sample logic, still suppressed when
+                  the sample is partial. The amount dot-field that used to sit
+                  below was cut — its signal lives in the per-row magnitude ticks
+                  of the register and the census peak/×mult line. */}
               {popYear ? (
-                <div className="mt-3 px-1">
+                <div className="mt-2 px-4 sm:px-6">
                   <Z3TimelineStrip
                     yearSequence={popYear.seq}
                     byYear={popYear.map}
@@ -3953,7 +3932,7 @@ function Z3Panel({
                   />
                 </div>
               ) : !isSample ? (
-                <div className="mt-3 px-1">
+                <div className="mt-2 px-4 sm:px-6">
                   {activityShape?.concentrated ? (
                     <Z3ConcentrationStat shape={activityShape} lang={lang} />
                   ) : yearSpan > 3 && byYear.size > 0 ? (
@@ -3970,15 +3949,6 @@ function Z3Panel({
                   ) : null}
                 </div>
               ) : null}
-
-              {/* AMOUNT — gated dot-field. Renders ONLY with enough contracts and
-                  spread to be a real distribution (≥20 valued & ≥1.3 decades);
-                  below that it is omitted, not shrunk to a few stranded dots. */}
-              {showAmountField && (
-                <div className="mt-3 px-1">
-                  <Z3Fingerprint points={contractPoints} lang={lang} />
-                </div>
-              )}
             </>
           )}
 
@@ -4189,20 +4159,20 @@ function Z3TimelineStrip({
   const widthPct = (n: number) => (n / Math.max(totalYears, 1)) * 100
 
   return (
-    <div className="pt-4 pb-2">
-      <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-text-muted)' }}>
+    <div className="pt-1 pb-1">
+      <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: 'var(--color-text-muted)' }}>
         {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
       </div>
-      <div className="relative" style={{ height: 72 }}>
+      <div className="relative" style={{ height: 40 }}>
         {/* Admin band — full-width strip labeled with sexenio short names */}
-        <div className="absolute top-0 left-0 right-0 flex" style={{ height: 12 }}>
+        <div className="absolute top-0 left-0 right-0 flex" style={{ height: 9 }}>
           {segments.map((seg) => {
             const span = seg.to - seg.from + 1
             const offset = seg.from - yearSequence[0]
             return (
               <div
                 key={seg.key + '-' + seg.from}
-                className="font-mono text-[8px] uppercase tracking-[0.12em] flex items-center px-1.5"
+                className="font-mono text-[7px] uppercase tracking-[0.12em] flex items-center px-1"
                 style={{
                   position: 'absolute',
                   left: `${widthPct(offset)}%`,
@@ -4221,7 +4191,7 @@ function Z3TimelineStrip({
           })}
         </div>
         {/* Spend bars — one column per year, click to filter */}
-        <div className="absolute left-0 right-0 flex items-end" style={{ top: 16, bottom: 14 }}>
+        <div className="absolute left-0 right-0 flex items-end" style={{ top: 11, bottom: 10 }}>
           {yearSequence.map((yr) => {
             const cell = byYear.get(yr) ?? { count: 0, amount: 0, riskSum: 0, riskN: 0 }
             const heightPct = cell.amount > 0 ? Math.max(4, (cell.amount / maxYearAmt) * 100) : 0
@@ -4257,8 +4227,8 @@ function Z3TimelineStrip({
                       height: `${heightPct}%`,
                       background: 'var(--color-text-muted)',
                       opacity: 0.4,
-                      borderTop: `3px solid ${capColor}`,
-                      minHeight: 4,
+                      borderTop: `2px solid ${capColor}`,
+                      minHeight: 3,
                     }}
                   />
                 ) : (
@@ -4269,7 +4239,7 @@ function Z3TimelineStrip({
           })}
         </div>
         {/* Year labels — show every 2nd or 4th to avoid crowding */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-end" style={{ height: 12 }}>
+        <div className="absolute bottom-0 left-0 right-0 flex items-end" style={{ height: 9 }}>
           {yearSequence.map((yr, i) => {
             // Show first, last, and every 2-4 years depending on density
             const step = totalYears > 16 ? 4 : totalYears > 10 ? 2 : 1
@@ -4278,7 +4248,7 @@ function Z3TimelineStrip({
               <div
                 key={yr}
                 className="flex-1 text-center font-mono"
-                style={{ fontSize: 8, color: 'var(--color-text-muted)', visibility: showLabel ? 'visible' : 'hidden' }}
+                style={{ fontSize: 7.5, color: 'var(--color-text-muted)', visibility: showLabel ? 'visible' : 'hidden' }}
               >
                 '{String(yr).slice(-2)}
               </div>
@@ -4438,129 +4408,6 @@ function Z3ContractRow({
   )
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Z3Fingerprint — the vendor's pattern at a glance. Three compact bars
-// (procedure mix · risk · amount distribution) that turn the stat-line
-// numbers into pictures. A ghost/burst vendor (100% direct award, 100%
-// high-risk, amounts clustered near a threshold) reads instantly here,
-// where a flat contract list hides it.
-// ────────────────────────────────────────────────────────────────────────────
-function Z3Fingerprint({
-  points,
-  lang,
-}: {
-  points: Array<{ amount: number; risk: number }>
-  lang: 'en' | 'es'
-}) {
-  if (points.length === 0) return null
-
-  // Amount dot-field — each contract a risk-coloured dot positioned by log10
-  // amount on the x-axis, with deterministic vertical jitter. A pile of dots
-  // at one x = many awards of similar size (the ghost signature); a lone dot
-  // far right = the single large outlier. Reference: Reuters *Forever
-  // Pollution* strip plot + NYT Upshot named-outlier callout.
-  const valued = points.filter((p) => p.amount > 0)
-  const field = (() => {
-    if (valued.length === 0) return null
-    const lo = Math.min(...valued.map((p) => p.amount))
-    const hi = Math.max(...valued.map((p) => p.amount))
-    const logLo = Math.log10(lo)
-    const logHi = Math.log10(hi)
-    const span = logHi - logLo || 1
-    // Deterministic [0,1) jitter so the field is stable across renders.
-    const jitter = (i: number) => {
-      const v = Math.sin((i + 1) * 12.9898) * 43758.5453
-      return v - Math.floor(v)
-    }
-    const dots = valued
-      .map((p, i) => ({
-        xPct: Math.min(100, Math.max(0, ((Math.log10(p.amount) - logLo) / span) * 100)),
-        yFrac: jitter(i),
-        amount: p.amount,
-        risk: p.risk,
-        isMax: p.amount === hi,
-      }))
-      // Draw the cluster first, outliers last so the big dot sits on top.
-      .sort((a, b) => a.amount - b.amount)
-    // Power-of-ten gridlines inside the range.
-    const ticks: number[] = []
-    for (let p = Math.ceil(logLo); p <= Math.floor(logHi); p++) {
-      ticks.push(((p - logLo) / span) * 100)
-    }
-    return { lo, hi, dots, ticks }
-  })()
-
-  return (
-    <div className="flex flex-col gap-3.5">
-      {/* Amount dot-field */}
-      {field && (
-        <div>
-          <div className="flex items-baseline justify-between mb-1.5">
-            <span className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
-              {lang === 'en' ? 'Amount per contract' : 'Monto por contrato'}
-            </span>
-            <span className="font-mono" style={{ fontSize: 9, fontStyle: 'italic', color: 'var(--color-text-muted)', opacity: 0.8 }}>
-              {lang === 'en' ? 'log scale' : 'escala log'}
-            </span>
-          </div>
-          <div className="relative w-full" style={{ height: 64 }}>
-            {/* power-of-ten gridlines */}
-            {field.ticks.map((t, i) => (
-              <span
-                key={`t${i}`}
-                aria-hidden="true"
-                className="absolute top-0 bottom-0"
-                style={{ left: `${t}%`, width: 1, background: 'var(--color-border)', opacity: 0.6 }}
-              />
-            ))}
-            {/* baseline */}
-            <span aria-hidden="true" className="absolute left-0 right-0" style={{ bottom: 0, height: 1, background: 'var(--color-border)' }} />
-            {/* dots — centred in a tight band so the field reads as a
-                distribution strip (overlap = density), not a 2D scatter cloud */}
-            {field.dots.map((d, i) => {
-              const color = riskRamp(d.risk)
-              const r = d.isMax ? 4 : 2.5
-              // centre 30px (above the baseline at 64), band ±15px
-              const top = 30 + (d.yFrac - 0.5) * 30
-              return (
-                <span
-                  key={i}
-                  className="absolute rounded-full"
-                  title={`${formatCompactMXN(d.amount)} · ${(d.risk * 100).toFixed(0)}% ${lang === 'en' ? 'risk' : 'riesgo'}`}
-                  style={{
-                    left: `${d.xPct}%`,
-                    top: `${top}px`,
-                    width: r * 2,
-                    height: r * 2,
-                    marginLeft: -r,
-                    background: color,
-                    opacity: d.isMax ? 1 : 0.55,
-                    boxShadow: d.isMax ? '0 0 0 2px var(--color-background-elevated), 0 0 0 3px #a06820' : undefined,
-                  }}
-                />
-              )
-            })}
-            {/* named outlier callout — the single largest award */}
-            <span
-              className="absolute font-mono tabular-nums whitespace-nowrap"
-              style={{ right: 0, top: -2, fontSize: 9, fontWeight: 700, color: '#a06820' }}
-            >
-              {formatCompactMXN(field.hi)} →
-            </span>
-          </div>
-          <div className="flex items-baseline justify-between mt-1">
-            <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
-              {formatCompactMXN(field.lo)}
-            </span>
-            <span className="font-mono" style={{ fontSize: 9, fontStyle: 'italic', color: 'var(--color-text-muted)', opacity: 0.7 }}>
-              {lang === 'en' ? 'each dot = one contract' : 'cada punto = un contrato'}
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ════════════════════════════════════════════════════════════════════════════
 // EL DESVÍO — the deviation-ledger spine. A vendor is a row of DEVIATIONS from
@@ -4585,18 +4432,24 @@ export type Z3LedgerRow = {
 const OCHRE = '#a06820'
 const OECD_CYAN = '#0891b2'
 
-// One prose finding sentence under the headline — the strongest deviation,
-// stated once. Numbers in strong weight + deviation hue. Below ~5 contracts the
-// verb softens to "se desvía" (a true ratio, but not an accusation).
-function Z3IndictmentFinding({
+// The verdict line — one prose finding (the strongest deviation, stated once)
+// with the population count·spend tail folded in on the right (ex-Z3ContextStrip,
+// so scale rides alongside the ratio and the old standalone context line dies).
+// Numbers in strong weight + deviation hue. Below ~5 contracts the verb softens
+// to "se desvía" (a true ratio, but not an accusation).
+function Z3VerdictLine({
   strongest,
   vendorName,
   smallN,
+  ctxCount,
+  ctxValue,
   lang,
 }: {
   strongest: Z3LedgerRow | null
   vendorName: string
   smallN: boolean
+  ctxCount: number
+  ctxValue: number
   lang: 'en' | 'es'
 }) {
   const accent = strongest?.alarm ? RISK_COLORS.critical : OCHRE
@@ -4640,13 +4493,14 @@ function Z3IndictmentFinding({
   }
 
   return (
-    <div className="px-4 sm:px-6 pt-1 pb-3">
-      <div className="flex items-start gap-3 max-w-3xl">
-        <span className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm" style={{ background: accent }} aria-hidden="true" />
-        <p className="text-text-secondary leading-snug" style={{ fontSize: 15, fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic' }}>
-          {body}
-        </p>
-      </div>
+    <div className="px-4 sm:px-6 pt-1 pb-2 flex items-start gap-3">
+      <span className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm" style={{ background: accent }} aria-hidden="true" />
+      <p className="text-text-secondary leading-snug flex-1 min-w-0" style={{ fontSize: 14, fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic' }}>
+        {body}
+      </p>
+      <span className="hidden min-[480px]:inline-block flex-shrink-0 font-mono tabular-nums text-right whitespace-nowrap" style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 3 }}>
+        {formatNumber(ctxCount)} · {formatCompactMXN(ctxValue)} ≈ {formatCompactUSD(ctxValue)}
+      </span>
     </div>
   )
 }
@@ -4655,7 +4509,7 @@ function Z3IndictmentFinding({
 // deviation WEDGE between the vendor marker and the sector median tick IS the
 // finding. Dual-anchored: a sector-median tick AND (where relevant) an absolute
 // reference (OECD 25%), so a captured sector's norm can't read as exoneration.
-function Z3DeviationRow({ row, smallN, lang }: { row: Z3LedgerRow; smallN: boolean; lang: 'en' | 'es' }) {
+function Z3DeviationCell({ row, isStrongest, smallN }: { row: Z3LedgerRow; isStrongest: boolean; smallN: boolean }) {
   const hasMedian = row.medianVal != null
   const domainMax = row.kind === 'pct'
     ? 100
@@ -4666,29 +4520,36 @@ function Z3DeviationRow({ row, smallN, lang }: { row: Z3LedgerRow; smallN: boole
   const refPos = row.absoluteRef ? clamp(row.absoluteRef.value / domainMax) : null
   const overNorm = hasMedian && row.vendorVal > (row.medianVal as number)
   const wedgeColor = row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-muted)'
-  const showPctile = row.percentile != null
   // Compact money for the readout — abbreviate even below 1M (formatCompactMXN
-  // returns full pesos under 1M, which overflows the 150px readout column).
+  // returns full pesos under 1M, which overflows the narrow cell).
   const fmtMoney = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)} MDP` : v >= 1e3 ? `${Math.round(v / 1e3)}K` : `$${Math.round(v)}`)
   const fmt = (v: number) => (row.kind === 'mxn' ? fmtMoney(v) : `${v.toFixed(0)}%`)
   const lo = mPos != null ? Math.min(vPos, mPos) : vPos
   const hi = mPos != null ? Math.max(vPos, mPos) : vPos
+  const valColor = row.alarm ? RISK_COLORS.critical : (isStrongest && overNorm) ? OCHRE : 'var(--color-text-primary)'
+  const ratioColor = overNorm ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'var(--color-text-muted)'
+  const accentBorder = isStrongest ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'transparent'
 
   return (
-    <div className="flex items-center gap-3 py-1.5">
-      <span className="flex-shrink-0 font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.08em', color: 'var(--color-text-muted)', width: 104 }}>
+    <div className="flex flex-col" style={{ borderTop: `2px solid ${accentBorder}`, paddingTop: 4 }}>
+      {/* eyebrow */}
+      <span className="font-mono uppercase truncate" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {row.label}
       </span>
-      <span className="flex-1 relative" style={{ height: 22 }}>
-        {/* baseline track */}
+      {/* value */}
+      <span className="font-mono tabular-nums" style={{ fontSize: 14, fontWeight: 700, color: valColor, lineHeight: 1, marginTop: 2 }}>
+        {fmt(row.vendorVal)}
+      </span>
+      {/* mini bullet track — same five layers as the old full-width row, at a
+          quarter of the width so the vendor marker lands meaningfully */}
+      <span className="relative block" style={{ height: 13, marginTop: 4 }}>
         <span aria-hidden="true" className="absolute left-0 right-0" style={{ top: '50%', height: 2, background: 'var(--color-border)', borderRadius: 1, transform: 'translateY(-50%)' }} />
-        {/* deviation wedge between median and vendor */}
         {mPos != null && hi > lo && (
           <span
             aria-hidden="true"
             className="absolute"
             style={{
-              left: `${lo * 100}%`, width: `${(hi - lo) * 100}%`, top: '50%', height: 9,
+              left: `${lo * 100}%`, width: `${(hi - lo) * 100}%`, top: '50%', height: 6,
               transform: 'translateY(-50%)',
               background: smallN ? 'transparent' : wedgeColor,
               border: smallN ? `1px dashed ${wedgeColor}` : 'none',
@@ -4697,29 +4558,22 @@ function Z3DeviationRow({ row, smallN, lang }: { row: Z3LedgerRow; smallN: boole
             }}
           />
         )}
-        {/* OECD absolute reference tick (cyan) */}
         {refPos != null && (
-          <span aria-hidden="true" className="absolute" style={{ left: `${refPos * 100}%`, top: 1, bottom: 1, width: 1.5, background: OECD_CYAN }} title={`${row.absoluteRef?.label} ${row.absoluteRef?.value}%`} />
+          <span aria-hidden="true" className="absolute" style={{ left: `${refPos * 100}%`, top: 0, bottom: 0, width: 1.5, background: OECD_CYAN }} title={`${row.absoluteRef?.label} ${row.absoluteRef?.value}%`} />
         )}
-        {/* sector median tick */}
         {mPos != null && (
           <span aria-hidden="true" className="absolute" style={{ left: `${mPos * 100}%`, top: 0, bottom: 0, width: 1, background: 'var(--color-text-secondary)', opacity: 0.7 }} />
         )}
-        {/* vendor marker */}
-        <span className="absolute rounded-full" style={{ left: `${vPos * 100}%`, top: '50%', width: 9, height: 9, marginLeft: -4.5, transform: 'translateY(-50%)', background: row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-secondary)', boxShadow: '0 0 0 2px var(--color-background-elevated)' }} />
+        <span className="absolute rounded-full" style={{ left: `${vPos * 100}%`, top: '50%', width: 7, height: 7, marginLeft: -3.5, transform: 'translateY(-50%)', background: row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-secondary)', boxShadow: '0 0 0 2px var(--color-background)' }} />
       </span>
-      {/* readout — value · ratio (or vs-median when no ratio) · percentile.
-          The ratio is shorter and more meaningful than a long peso median. */}
-      <span className="flex-shrink-0 text-right flex items-baseline justify-end gap-1.5" style={{ width: 132 }}>
-        <span className="font-mono tabular-nums" style={{ fontSize: 12.5, fontWeight: 700, color: row.alarm ? RISK_COLORS.critical : 'var(--color-text-primary)' }}>
-          {fmt(row.vendorVal)}
+      {/* readout — ratio (or vs-median when no ratio) · percentile */}
+      <span className="flex items-baseline gap-1.5" style={{ marginTop: 4 }}>
+        <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: ratioColor }}>
+          {row.ratio != null ? `${row.ratio.toFixed(1)}×` : hasMedian ? `vs ${fmt(row.medianVal as number)}` : '·'}
         </span>
-        <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: overNorm ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'var(--color-text-muted)' }}>
-          {row.ratio != null ? `${row.ratio.toFixed(1)}×` : hasMedian ? (lang === 'en' ? `vs ${fmt(row.medianVal as number)}` : `vs ${fmt(row.medianVal as number)}`) : '·'}
-        </span>
-        {showPctile && (
+        {row.percentile != null && (
           <span className="font-mono tabular-nums" style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-muted)' }}>
-            p{Math.round(row.percentile as number)}
+            p{Math.round(row.percentile)}
           </span>
         )}
       </span>
@@ -4727,11 +4581,11 @@ function Z3DeviationRow({ row, smallN, lang }: { row: Z3LedgerRow; smallN: boole
   )
 }
 
-function Z3DeviationLedger({ rows, smallN, multiSector, lang }: { rows: Z3LedgerRow[]; smallN: boolean; multiSector: boolean; lang: 'en' | 'es' }) {
+function Z3DeviationBand({ rows, strongestKey, smallN, multiSector, lang }: { rows: Z3LedgerRow[]; strongestKey: Z3LedgerRow['key'] | null; smallN: boolean; multiSector: boolean; lang: 'en' | 'es' }) {
   return (
-    <section className="mt-3 mb-2 rounded-sm overflow-hidden" style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)', background: 'var(--color-background-elevated)' }}>
-      <div className="flex items-baseline justify-between px-4 py-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
-        <div className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+    <div className="px-4 sm:px-6 pb-1">
+      <div className="flex items-baseline justify-between mb-2">
+        <div className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}>
           <span style={{ color: OCHRE, fontStyle: 'italic', fontWeight: 600 }}>§ {lang === 'en' ? 'The deviation' : 'El desvío'}</span>
           <span style={{ margin: '0 7px', opacity: 0.45 }}>·</span>
           <span style={{ fontWeight: 300 }}>{lang === 'en' ? 'vs the sector norm' : 'frente a la norma del sector'}</span>
@@ -4741,35 +4595,19 @@ function Z3DeviationLedger({ rows, smallN, multiSector, lang }: { rows: Z3Ledger
           <span className="flex items-center gap-1"><span style={{ width: 8, height: 2, background: OECD_CYAN, display: 'inline-block' }} /> OECD 25%</span>
         </div>
       </div>
-      <div className="px-4 py-2.5">
-        {rows.map((r) => <Z3DeviationRow key={r.key} row={r} smallN={smallN} lang={lang} />)}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
+        {rows.map((r) => <Z3DeviationCell key={r.key} row={r} isStrongest={r.key === strongestKey} smallN={smallN} />)}
       </div>
       {(smallN || multiSector) && (
-        <div className="px-4 pb-2 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+        <div className="mt-2 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
           {smallN && (lang === 'en' ? 'few contracts — interpret deviations with caution. ' : 'pocos contratos — interpretar los desvíos con cautela. ')}
           {multiSector && (lang === 'en' ? 'multi-sector vendor — sector baseline approximate.' : 'proveedor multi-sector — base sectorial aproximada.')}
         </div>
       )}
-    </section>
-  )
-}
-
-// One-line magnitude context the deviation ratios normalize away — so scale is
-// never hidden, especially when a dramatic ratio comes from a tiny vendor.
-function Z3ContextStrip({ count, totalSpend, yearMin, yearMax, sampled, shownCount, lang }: { count: number; totalSpend: number; yearMin: number; yearMax: number; sampled: boolean; shownCount: number; lang: 'en' | 'es' }) {
-  const range = yearMin === yearMax ? `${yearMin}` : `${yearMin}–${yearMax}`
-  const cLabel = lang === 'en' ? 'contracts' : 'contratos'
-  const sep = <span style={{ margin: '0 7px', opacity: 0.5 }}>·</span>
-  return (
-    <div className="px-4 sm:px-6 pb-1 font-mono" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
-      <span className="tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>{formatNumber(count)} {cLabel}</span>
-      {sep}<span className="tabular-nums">{formatCompactMXN(totalSpend)} ≈ {formatCompactUSD(totalSpend)}</span>
-      {/* span is sample-derived (the ≤100 rows) — only honest for non-sampled vendors */}
-      {!sampled && <>{sep}<span>{lang === 'en' ? `active ${range}` : `activo ${range}`}</span></>}
-      {sampled && <>{sep}<span style={{ fontStyle: 'italic' }}>{lang === 'en' ? `${formatNumber(shownCount)} sampled below` : `${formatNumber(shownCount)} en muestra abajo`}</span></>}
     </div>
   )
 }
+
 
 // ────────────────────────────────────────────────────────────────────────────
 // Z3ConcentrationStat — the ADAPTIVE activity module for concentrated vendors.
@@ -5050,6 +4888,35 @@ function Z4Drawer({
     })
   }
 
+  // Localized risk-level label + a one-sentence editorial lede assembled from
+  // the contract's own fields — gives the drawer a voice on first read and lets
+  // the amount be the single Playfair hero (risk demotes to a chip beside it).
+  const levelLabel = lang === 'en'
+    ? level
+    : (({ low: 'bajo', medium: 'medio', high: 'alto', critical: 'crítico' } as Record<string, string>)[level] ?? level)
+  const ledeText = (() => {
+    const amountStr = formatCompactMXN(Number(contract?.amount_mxn ?? 0))
+    const procPhrase = contract?.is_direct_award
+      ? (lang === 'en' ? 'by direct award' : 'por adjudicación directa')
+      : contract?.is_single_bid
+        ? (lang === 'en' ? 'as a single bid' : 'como único postor')
+        : (lang === 'en' ? 'by open bid' : 'por licitación')
+    const inst = contract?.institution_name ? toEditorialCase(contract.institution_name) : null
+    const vend = contract?.vendor_name ? toEditorialCase(formatVendorName(contract.vendor_name, 60)) : null
+    const riskClause = riskPct != null
+      ? (lang === 'en' ? ` The model scores it ${riskPct}/100 — ${levelLabel}.` : ` El modelo lo califica ${riskPct}/100 — ${levelLabel}.`)
+      : ''
+    if (inst && vend) return lang === 'en'
+      ? `${inst} awarded ${amountStr} to ${vend} ${procPhrase}.${riskClause}`
+      : `${inst} adjudicó ${amountStr} a ${vend} ${procPhrase}.${riskClause}`
+    if (vend) return lang === 'en'
+      ? `${vend} received ${amountStr} ${procPhrase}.${riskClause}`
+      : `${vend} recibió ${amountStr} ${procPhrase}.${riskClause}`
+    return lang === 'en'
+      ? `${amountStr} contract, ${procPhrase}.${riskClause}`
+      : `Contrato de ${amountStr}, ${procPhrase}.${riskClause}`
+  })()
+
   return (
     <>
       {/* Dismiss-on-outside-click overlay — invisible scrim, clicking it
@@ -5115,278 +4982,220 @@ function Z4Drawer({
         {/* Body */}
         {!isLoading && contract && (
           <div className="flex-1 overflow-y-auto px-4 sm:px-5 pb-4">
-            {/* Contract number + amount headline */}
-            <div className="pt-2 pb-3">
-              {contract.contract_number && (
-                <div
-                  className="font-mono text-[10px] tabular-nums mb-1"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  #{contract.contract_number}
-                </div>
-              )}
-              <div
-                className="font-serif tabular-nums leading-tight"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 28,
-                  fontWeight: 800,
-                  fontStyle: 'italic',
-                  color: fill,
-                  letterSpacing: '-0.015em',
-                }}
-              >
-                {formatCompactMXN(Number(contract.amount_mxn ?? 0))}
+            {/* Contract number */}
+            {contract.contract_number && (
+              <div className="font-mono text-[10px] tabular-nums pt-2 mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                #{contract.contract_number}
               </div>
-              <div className="font-mono text-[10px] tabular-nums mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                ≈ {formatCompactUSD(Number(contract.amount_mxn ?? 0))} · {contract.contract_year ?? '—'}
+            )}
+
+            {/* Verdict lede — one editorial sentence (sector-rule) */}
+            <p
+              className="leading-snug mb-3"
+              style={{
+                fontFamily: "'EB Garamond', Georgia, serif",
+                fontStyle: 'italic',
+                fontSize: 14,
+                color: 'var(--color-text-secondary)',
+                borderLeft: `2px solid ${sectorAccent}`,
+                paddingLeft: 10,
+              }}
+            >
+              {ledeText}
+            </p>
+
+            {/* Fused fact-strip — amount is the lone Playfair hero; risk demotes
+                to a number + level chip + thin bar on the right (no second hero) */}
+            <div
+              className="flex items-stretch justify-between gap-4 py-2.5"
+              style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}
+            >
+              <div className="min-w-0">
+                <div
+                  className="font-serif tabular-nums leading-none"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 800, fontStyle: 'italic', color: fill, letterSpacing: '-0.015em' }}
+                >
+                  {formatCompactMXN(Number(contract.amount_mxn ?? 0))}
+                </div>
+                <div className="font-mono text-[10px] tabular-nums mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  ≈ {formatCompactUSD(Number(contract.amount_mxn ?? 0))} · {contract.contract_year ?? '—'}
+                </div>
+              </div>
+              <div className="flex-shrink-0 flex flex-col items-end justify-center" style={{ minWidth: 132 }}>
+                <div className="font-mono text-[8px] uppercase tracking-[0.14em] mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'Risk' : 'Riesgo'}
+                </div>
+                {riskPct == null ? (
+                  <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                    {lang === 'en' ? 'Not scored' : 'Sin puntuación'}
+                  </span>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-mono tabular-nums" style={{ fontSize: 15, fontWeight: 700, color: fill, lineHeight: 1 }}>{riskPct}</span>
+                      <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>/100</span>
+                      <span
+                        className="font-mono text-[8px] uppercase tracking-[0.10em] px-1 py-0.5 rounded-sm"
+                        style={{ background: `${fill}1f`, color: fill, fontWeight: 700, border: `1px solid ${fill}44` }}
+                      >
+                        {levelLabel}
+                      </span>
+                    </div>
+                    <div className="relative mt-1.5 rounded-sm overflow-hidden" style={{ height: 4, width: 128, background: 'var(--color-background-elevated)' }} aria-hidden="true">
+                      <div className="absolute inset-y-0 left-0 rounded-sm" style={{ width: `${Math.min(100, riskPct)}%`, background: fill, opacity: 0.92 }} />
+                      {[25, 40, 60].map((t) => (
+                        <span key={t} className="absolute inset-y-0 w-px" style={{ left: `${t}%`, background: 'rgba(0,0,0,0.10)' }} />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Description / title — COMPRANET ships these ALL-CAPS. Run
-                through shortenContractName (the canonical sentence-case +
-                institution-abbrev treatment used across the app) so the
-                drawer reads as editorial prose, not a shouting wall of caps.
-                Upright (not italic): 280 chars of italic serif is too much —
-                italic is for short pulls; the left-rule carries the quote feel. */}
+            {/* Description — COMPRANET ships ALL-CAPS; shortenContractName gives
+                the canonical sentence-case + institution-abbrev treatment. */}
             {(contract.description ?? contract.title) && (
               <p
                 className="leading-snug"
-                style={{
-                  fontFamily: "'EB Garamond', Georgia, serif",
-                  fontSize: 13,
-                  color: 'var(--color-text-secondary)',
-                  borderLeft: `2px solid ${sectorAccent}`,
-                  paddingLeft: 10,
-                  marginBottom: 16,
-                }}
+                style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 14, marginBottom: 14 }}
               >
-                {shortenContractName((contract.description ?? contract.title) ?? '', 280)}
+                {shortenContractName((contract.description ?? contract.title) ?? '', 240)}
               </p>
             )}
 
-            {/* Parties */}
-            <div className="pb-4">
-              <div
-                className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                {lang === 'en' ? 'Parties' : 'Partes'}
-              </div>
-              <div className="space-y-2">
-                {contract.vendor_id && contract.vendor_name && (
-                  <button
-                    type="button"
-                    onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: contract.vendor_id!, vendorName: contract.vendor_name! })}
-                    className="w-full text-left flex items-start gap-2 cursor-pointer hover:opacity-70 transition-opacity"
-                  >
-                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)', width: 72 }}>
-                      {lang === 'en' ? 'Vendor' : 'Proveedor'}
-                    </span>
-                    <span className="flex-1 text-[12px] leading-snug" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
-                      {toEditorialCase(formatVendorName(contract.vendor_name, 200))}
-                    </span>
-                  </button>
-                )}
-                {contract.institution_id && contract.institution_name && (
-                  <button
-                    type="button"
-                    onClick={() => dispatch({ type: 'drill-into-institution', institutionId: contract.institution_id!, institutionName: contract.institution_name! })}
-                    className="w-full text-left flex items-start gap-2 cursor-pointer hover:opacity-70 transition-opacity"
-                  >
-                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)', width: 72 }}>
-                      {lang === 'en' ? 'Institution' : 'Institución'}
-                    </span>
-                    <span className="flex-1 text-[12px] leading-snug" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
-                      {toEditorialCase(contract.institution_name)}
-                    </span>
-                  </button>
-                )}
-                {contract.sector_name && (
-                  <div className="flex items-start gap-2">
-                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)', width: 72 }}>
-                      {lang === 'en' ? 'Sector' : 'Sector'}
-                    </span>
-                    <span className="flex-1 text-[12px] leading-snug" style={{ color: 'var(--color-text-secondary)' }}>
-                      {contract.sector_name}
-                    </span>
+            {/* Parties + Procedure — one 2-column grid (was two stacked sections) */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3" style={{ borderTop: '1px solid var(--color-border)', paddingTop: 12 }}>
+              {/* Parties column */}
+              <div className="min-w-0">
+                <div className="font-mono text-[8px] uppercase tracking-[0.14em] mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'Parties' : 'Partes'}
+                </div>
+                <div className="space-y-1.5">
+                  {contract.vendor_id && contract.vendor_name && (
+                    <button
+                      type="button"
+                      onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: contract.vendor_id!, vendorName: contract.vendor_name! })}
+                      className="block w-full text-left cursor-pointer hover:opacity-70 transition-opacity"
+                    >
+                      <span className="block font-mono text-[8px] uppercase tracking-[0.10em]" style={{ color: 'var(--color-text-muted)' }}>
+                        {lang === 'en' ? 'Vendor' : 'Proveedor'}
+                      </span>
+                      <span className="block text-[11.5px] leading-snug" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
+                        {toEditorialCase(formatVendorName(contract.vendor_name, 200))} ↗
+                      </span>
+                    </button>
+                  )}
+                  {contract.institution_id && contract.institution_name && (
+                    <button
+                      type="button"
+                      onClick={() => dispatch({ type: 'drill-into-institution', institutionId: contract.institution_id!, institutionName: contract.institution_name! })}
+                      className="block w-full text-left cursor-pointer hover:opacity-70 transition-opacity"
+                    >
+                      <span className="block font-mono text-[8px] uppercase tracking-[0.10em]" style={{ color: 'var(--color-text-muted)' }}>
+                        {lang === 'en' ? 'Institution' : 'Institución'}
+                      </span>
+                      <span className="block text-[11.5px] leading-snug" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
+                        {toEditorialCase(contract.institution_name)} ↗
+                      </span>
+                    </button>
+                  )}
+                  {contract.sector_name && (
+                    <div>
+                      <span className="block font-mono text-[8px] uppercase tracking-[0.10em]" style={{ color: 'var(--color-text-muted)' }}>
+                        {lang === 'en' ? 'Sector' : 'Sector'}
+                      </span>
+                      <span className="block text-[11.5px] leading-snug" style={{ color: 'var(--color-text-secondary)' }}>
+                        {contract.sector_name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {signals.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {signals.map((s, i) => (
+                      <span
+                        key={i}
+                        className="font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm"
+                        style={{ background: `${s.color}1f`, color: s.color, border: `1px solid ${s.color}44`, fontWeight: 700 }}
+                        title={s.tooltip}
+                      >
+                        {s.label}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
+
+              {/* Procedure column */}
+              <div className="min-w-0">
+                <div className="font-mono text-[8px] uppercase tracking-[0.14em] mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'Procedure' : 'Procedimiento'}
+                </div>
+                <dl className="space-y-1">
+                  {contract.procedure_number && (
+                    <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'No.' : 'Núm.'} value={contract.procedure_number} mono />
+                  )}
+                  {(contract.procedure_type_normalized ?? contract.procedure_type) && (
+                    <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Type' : 'Tipo'} value={contract.procedure_type_normalized ?? contract.procedure_type ?? '—'} />
+                  )}
+                  {contract.award_date && (
+                    <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Awarded' : 'Otorgado'} value={contract.award_date} mono />
+                  )}
+                  {contract.contract_date && !contract.award_date && (
+                    <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Date' : 'Fecha'} value={contract.contract_date} mono />
+                  )}
+                  {contract.publication_date && (
+                    <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Published' : 'Publicado'} value={contract.publication_date} mono />
+                  )}
+                  {contract.data_quality_grade && (
+                    <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Quality' : 'Calidad'} value={contract.data_quality_grade} />
+                  )}
+                </dl>
+                {contract.url && (
+                  <a
+                    href={contract.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-1.5 font-mono text-[9px] uppercase tracking-[0.12em] hover:opacity-70 transition-opacity"
+                    style={{ color: 'var(--color-text-secondary)' }}
+                  >
+                    {lang === 'en' ? 'Source' : 'Fuente'} ↗
+                  </a>
+                )}
+              </div>
             </div>
 
-            {/* Signals row */}
-            {signals.length > 0 && (
-              <div className="pb-4">
-                <div
-                  className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  {lang === 'en' ? 'Procurement signals' : 'Señales de contratación'}
+            {/* Why the model scored it — SHAP as inline pills (top 3) */}
+            {explanation?.explanation_available && topContributors.length > 0 && (
+              <div className="mt-3" style={{ borderTop: '1px solid var(--color-border)', paddingTop: 12 }}>
+                <div className="font-mono text-[8px] uppercase tracking-[0.14em] mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'Why the model scored it' : 'Por qué el modelo lo puntuó'}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {signals.map((s, i) => (
-                    <span
-                      key={i}
-                      className="font-mono text-[9px] uppercase tracking-[0.10em] px-1.5 py-0.5 rounded-sm"
-                      style={{
-                        background: `${s.color}1f`,
-                        color: s.color,
-                        border: `1px solid ${s.color}44`,
-                        fontWeight: 700,
-                      }}
-                      title={s.tooltip}
-                    >
-                      {s.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Risk verdict */}
-            <div className="pb-4">
-              <div
-                className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                {lang === 'en' ? 'Risk verdict' : 'Veredicto de riesgo'}
-              </div>
-              {riskPct == null ? (
-                <div className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-                  {lang === 'en' ? 'Not scored' : 'Sin puntuación'}
-                </div>
-              ) : (
-                <div className="flex items-baseline gap-3">
-                  <span
-                    className="font-serif tabular-nums"
-                    style={{
-                      fontFamily: "'Playfair Display', Georgia, serif",
-                      fontSize: 36,
-                      fontWeight: 800,
-                      color: fill,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {riskPct}
-                  </span>
-                  <span className="font-mono text-[10px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                    / 100
-                  </span>
-                  <span
-                    className="font-mono text-[10px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
-                    style={{ background: `${fill}1f`, color: fill, fontWeight: 700, border: `1px solid ${fill}44` }}
-                  >
-                    {level}
-                  </span>
-                </div>
-              )}
-              {/* Risk bar */}
-              {riskPct != null && (
-                <div
-                  className="relative mt-2 rounded-sm overflow-hidden"
-                  style={{ height: 6, background: 'var(--color-background-elevated)' }}
-                  aria-hidden="true"
-                >
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-sm"
-                    style={{ width: `${Math.min(100, riskPct)}%`, background: fill, opacity: 0.92 }}
-                  />
-                  {[25, 40, 60].map((t) => (
-                    <span
-                      key={t}
-                      className="absolute inset-y-0 w-px"
-                      style={{ left: `${t}%`, background: 'rgba(0,0,0,0.10)' }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Why the model flagged it — SHAP contributors */}
-            {explanation?.explanation_available && topContributors.length > 0 && (
-              <div className="pb-4">
-                <div
-                  className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  {lang === 'en' ? 'Why the model flagged it' : 'Por qué el modelo lo marcó'}
-                </div>
-                <ul className="space-y-1.5">
-                  {topContributors.map((f, i) => {
+                  {topContributors.slice(0, 3).map((f, i) => {
                     const isPositive = f.contribution > 0
                     const factorColor = isPositive ? fill : 'var(--color-text-muted)'
                     const sign = isPositive ? '+' : ''
                     return (
-                      <li key={i} className="flex items-baseline gap-2">
-                        <span
-                          aria-hidden="true"
-                          className="font-mono"
-                          style={{ fontSize: 10, color: factorColor, fontWeight: 700 }}
-                        >
-                          {isPositive ? '▲' : '▽'}
-                        </span>
-                        <span className="flex-1 text-[12px] leading-snug" style={{ color: 'var(--color-text-primary)' }}>
-                          {f.label}
-                        </span>
-                        <span
-                          className="font-mono tabular-nums text-right"
-                          style={{ fontSize: 10, color: factorColor, fontWeight: 700, minWidth: 48 }}
-                        >
-                          {sign}{f.contribution.toFixed(2)}
-                        </span>
-                      </li>
+                      <span
+                        key={i}
+                        className="inline-flex items-baseline gap-1 font-mono text-[9px] px-1.5 py-0.5 rounded-sm"
+                        style={{ background: `${factorColor}14`, border: `1px solid ${factorColor}33`, color: 'var(--color-text-primary)' }}
+                      >
+                        <span aria-hidden="true" style={{ color: factorColor, fontWeight: 700 }}>{isPositive ? '▲' : '▽'}</span>
+                        <span>{f.label}</span>
+                        <span className="tabular-nums" style={{ color: factorColor, fontWeight: 700 }}>{sign}{f.contribution.toFixed(2)}</span>
+                      </span>
                     )
                   })}
-                </ul>
+                </div>
                 {explanation.model_version && (
-                  <div className="font-mono text-[8px] mt-2" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>
+                  <div className="font-mono text-[8px] mt-1.5" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>
                     {lang === 'en' ? 'model' : 'modelo'} {explanation.model_version}
                   </div>
                 )}
               </div>
             )}
-
-            {/* Procedure */}
-            <div className="pb-4">
-              <div
-                className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                {lang === 'en' ? 'Procedure' : 'Procedimiento'}
-              </div>
-              <dl className="space-y-1.5">
-                {contract.procedure_number && (
-                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Number' : 'Número'} value={contract.procedure_number} />
-                )}
-                {(contract.procedure_type_normalized ?? contract.procedure_type) && (
-                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Type' : 'Tipo'} value={contract.procedure_type_normalized ?? contract.procedure_type ?? '—'} />
-                )}
-                {contract.award_date && (
-                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Awarded' : 'Otorgado'} value={contract.award_date} mono />
-                )}
-                {contract.contract_date && !contract.award_date && (
-                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Contract date' : 'Fecha'} value={contract.contract_date} mono />
-                )}
-                {contract.publication_date && (
-                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Published' : 'Publicado'} value={contract.publication_date} mono />
-                )}
-                {contract.data_quality_grade && (
-                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Data quality' : 'Calidad de datos'} value={contract.data_quality_grade} />
-                )}
-              </dl>
-              {contract.url && (
-                <a
-                  href={contract.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-2 font-mono text-[10px] uppercase tracking-[0.12em] hover:opacity-70 transition-opacity"
-                  style={{ color: 'var(--color-text-secondary)' }}
-                >
-                  {lang === 'en' ? 'Source document' : 'Documento fuente'} ↗
-                </a>
-              )}
-            </div>
           </div>
         )}
 
@@ -5396,8 +5205,8 @@ function Z4Drawer({
             className="px-4 sm:px-5 py-3 flex-shrink-0 flex items-center justify-between"
             style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-background)' }}
           >
-            <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-              #{contract.id}
+            <span className="font-mono text-[9px] tabular-nums truncate" style={{ color: 'var(--color-text-muted)', maxWidth: '45%' }}>
+              #{contract.id}{contract.sector_name ? ` · ${contract.sector_name}` : ''}
             </span>
             <button
               type="button"
@@ -5414,18 +5223,20 @@ function Z4Drawer({
   )
 }
 
-/** Procedure-row helper used inside Z4Drawer. Label + value pair. */
+/** Procedure-row helper used inside Z4Drawer. Label stacked over value so the
+ *  long procedure number gets the full (narrow) grid-cell width and wraps
+ *  cleanly instead of being crushed beside a fixed-width label. */
 function Z4ProcedureRow({ label, value, mono = false }: { lang: 'en' | 'es'; label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex items-start gap-2">
+    <div className="min-w-0">
       <dt
-        className="font-mono text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5"
-        style={{ color: 'var(--color-text-muted)', width: 90 }}
+        className="font-mono text-[8px] uppercase tracking-[0.10em]"
+        style={{ color: 'var(--color-text-muted)' }}
       >
         {label}
       </dt>
       <dd
-        className="flex-1 text-[11px] leading-snug"
+        className="text-[11px] leading-snug break-words"
         style={{
           color: 'var(--color-text-primary)',
           fontFamily: mono ? 'var(--font-family-mono, monospace)' : undefined,
