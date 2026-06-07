@@ -26,6 +26,11 @@ class SectorStatistics(BaseModel):
     total_vendors: int
     total_institutions: int
 
+    # Value-at-risk (M3v2 Exposure Ledger): MXN through model-flagged contracts.
+    # Optional so stale precomputed blobs (pre-patch) don't 500.
+    high_critical_value_mxn: Optional[float] = None
+    critical_value_mxn: Optional[float] = None
+
     # Averages
     avg_contract_value: float
     avg_risk_score: float

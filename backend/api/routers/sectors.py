@@ -134,6 +134,8 @@ def list_sectors(
                             total_value_mxn=val,
                             total_vendors=s.get("total_vendors", 0),
                             total_institutions=s.get("total_institutions", 0),
+                            high_critical_value_mxn=s.get("high_critical_value_mxn"),
+                            critical_value_mxn=s.get("critical_value_mxn"),
                             avg_contract_value=round(val / total, 2) if total > 0 else 0,
                             avg_risk_score=round(s.get("avg_risk_score", 0) or 0, 4),
                             low_risk_count=s.get("low_risk_count", 0) or 0,
@@ -176,7 +178,11 @@ def list_sectors(
                     SUM(CASE WHEN c.risk_level = 'high' THEN 1 ELSE 0 END) as high_risk,
                     SUM(CASE WHEN c.risk_level = 'critical' THEN 1 ELSE 0 END) as critical_risk,
                     SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
-                    SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids
+                    SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids,
+                    COALESCE(SUM(CASE WHEN c.risk_level IN ('high', 'critical')
+                                      THEN c.amount_mxn ELSE 0 END), 0) as high_critical_value,
+                    COALESCE(SUM(CASE WHEN c.risk_level = 'critical'
+                                      THEN c.amount_mxn ELSE 0 END), 0) as critical_value
                 FROM sectors s
                 LEFT JOIN contracts c ON s.id = c.sector_id {year_filter}
                 GROUP BY s.id, s.code, s.name_es
@@ -206,6 +212,8 @@ def list_sectors(
                     total_value_mxn=row[4] or 0,
                     total_vendors=row[5] or 0,
                     total_institutions=row[6] or 0,
+                    high_critical_value_mxn=row[15] or 0,
+                    critical_value_mxn=row[16] or 0,
                     avg_contract_value=row[7] or 0,
                     avg_risk_score=round(row[8] or 0, 4),
                     low_risk_count=row[9] or 0,
@@ -418,6 +426,8 @@ def get_sector(
                     total_value_mxn=s.get("total_value_mxn", 0) or 0,
                     total_vendors=s.get("total_vendors", 0) or 0,
                     total_institutions=s.get("total_institutions", 0) or 0,
+                    high_critical_value_mxn=s.get("high_critical_value_mxn"),
+                    critical_value_mxn=s.get("critical_value_mxn"),
                     avg_contract_value=round((s.get("total_value_mxn", 0) or 0) / total, 2) if total > 0 else 0,
                     avg_risk_score=round(s.get("avg_risk_score", 0) or 0, 4),
                     low_risk_count=s.get("low_risk_count", 0) or 0,
@@ -445,7 +455,11 @@ def get_sector(
                         SUM(CASE WHEN risk_level = 'high' THEN 1 ELSE 0 END) as high_risk,
                         SUM(CASE WHEN risk_level = 'critical' THEN 1 ELSE 0 END) as critical_risk,
                         SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
-                        SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids
+                        SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids,
+                        COALESCE(SUM(CASE WHEN risk_level IN ('high', 'critical')
+                                          THEN amount_mxn ELSE 0 END), 0) as high_critical_value,
+                        COALESCE(SUM(CASE WHEN risk_level = 'critical'
+                                          THEN amount_mxn ELSE 0 END), 0) as critical_value
                     FROM contracts
                     WHERE sector_id = ?
                 """
@@ -463,6 +477,8 @@ def get_sector(
                     total_value_mxn=stats_row[1] or 0,
                     total_vendors=stats_row[2] or 0,
                     total_institutions=stats_row[3] or 0,
+                    high_critical_value_mxn=stats_row[12] or 0,
+                    critical_value_mxn=stats_row[13] or 0,
                     avg_contract_value=stats_row[4] or 0,
                     avg_risk_score=round(stats_row[5] or 0, 4),
                     low_risk_count=stats_row[6] or 0,

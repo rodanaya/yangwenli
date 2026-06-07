@@ -41,6 +41,8 @@ export interface SectorStatistics {
   total_value_mxn: number
   total_vendors: number
   total_institutions: number
+  high_critical_value_mxn?: number | null
+  critical_value_mxn?: number | null
   avg_contract_value: number
   avg_risk_score: number
   low_risk_count: number

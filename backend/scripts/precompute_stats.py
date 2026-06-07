@@ -542,7 +542,11 @@ def precompute_stats():
             SUM(CASE WHEN c.risk_level = 'high' THEN 1 ELSE 0 END) as high_risk,
             SUM(CASE WHEN c.risk_level = 'critical' THEN 1 ELSE 0 END) as critical_risk,
             SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
-            SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids
+            SUM(CASE WHEN c.is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids,
+            COALESCE(SUM(CASE WHEN c.risk_level IN ('high', 'critical')
+                              THEN c.amount_mxn ELSE 0 END), 0) as high_critical_value,
+            COALESCE(SUM(CASE WHEN c.risk_level = 'critical'
+                              THEN c.amount_mxn ELSE 0 END), 0) as critical_value
         FROM sectors s
         LEFT JOIN contracts c ON s.id = c.sector_id
         GROUP BY s.id, s.code, s.name_es
@@ -566,6 +570,11 @@ def precompute_stats():
             'critical_risk_count': row['critical_risk'] or 0,
             'direct_award_count': row['direct_awards'] or 0,
             'single_bid_count': row['single_bids'] or 0,
+            # VaR (value-at-risk) for the M3v2 Exposure Ledger: MXN through
+            # model-flagged contracts. No amount filter — contracts table is
+            # already ETL-cleaned to the 100B reject ceiling.
+            'high_critical_value_mxn': row['high_critical_value'] or 0,
+            'critical_value_mxn': row['critical_value'] or 0,
         })
     stats['sectors'] = sectors
     print(f"   Done ({time.time() - start:.1f}s)")
