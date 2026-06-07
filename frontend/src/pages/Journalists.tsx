@@ -752,7 +752,6 @@ function AriaLiveTicker() {
                 riskScore={risk}
                 ariaTier={item.ips_tier}
                 flags={flags.length > 0 ? flags : undefined}
-                narrative={true}
                 size="xs"
                 className="w-full"
               />

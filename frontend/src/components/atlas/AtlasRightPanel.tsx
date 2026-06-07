@@ -333,7 +333,7 @@ function RiskPill({ score }: { score: number }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // VendorRow — single row in the zoomed-cluster vendor list
 //
-// 2026-05-08: row click now routes to /thread/:id (Red Thread = the
+// 2026-05-08: row click now routes to /vendors/:id (Red Thread = the
 // "Investigate" surface) rather than /vendors/:id. Two reasons:
 //   1. The user clicked from the cluster INVESTIGATION context, so the
 //      narrative thread is what they want, not the static vendor profile.
@@ -363,7 +363,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
       dispatch({ type: 'toggle-vendor-selection', id: vendorIdStr })
       return
     }
-    navigate(`/thread/${vendor.vendor_id}`)
+    navigate(`/vendors/${vendor.vendor_id}`)
   }
 
   return (
@@ -412,7 +412,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
         )}
 
         {/* Entity chip — canonical, no plain <Link>. `narrative` so the
-            chip's link target matches the row's onClick (/thread/:id). */}
+            chip's link target matches the row's onClick (/vendors/:id). */}
         <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
           <EntityIdentityChip
             type="vendor"
@@ -421,7 +421,6 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
             size="xs"
             riskScore={vendor.risk_score}
             ariaTier={vendor.tier as 1 | 2 | 3 | 4}
-            narrative
             hideIcon
           />
         </div>

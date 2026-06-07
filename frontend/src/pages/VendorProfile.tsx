@@ -27,7 +27,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
   ArrowLeft,
-  BookOpen,
   Download,
   ExternalLink,
   Loader2,
@@ -170,21 +169,6 @@ export function VendorProfile() {
         ariaTier={data.aria.data?.ips_tier ?? null}
         actions={
           <>
-            {/* Thread CTA — only for T1 ARIA vendors that have a full investigation narrative */}
-            {data.aria.data?.ips_tier === 1 && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => navigate(`/thread/${vendorId}`)}
-                className="h-8 text-xs"
-                title={isEs ? 'Abrir narrativa de investigación' : 'Open investigation narrative'}
-              >
-                <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                <span className="ml-1.5 hidden sm:inline">
-                  {isEs ? 'Hilo' : 'Thread'}
-                </span>
-              </Button>
-            )}
             <Button
               variant="outline"
               size="sm"

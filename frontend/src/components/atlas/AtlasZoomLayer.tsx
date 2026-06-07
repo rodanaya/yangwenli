@@ -1092,7 +1092,7 @@ function VendorDotOverlay({
                   e.stopPropagation()
                   if (!dot.isMock) {
                     dispatch({ type: 'toggle-vendor-selection', id: dot.id })
-                    navigate(`/thread/${dot.id}`)
+                    navigate(`/vendors/${dot.id}`)
                   }
                 }}
                 onMouseEnter={() => setHoveredId(dot.id)}

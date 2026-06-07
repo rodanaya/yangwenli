@@ -12,7 +12,7 @@
  *   └──────────┴──────────────────────────┴───────────────────────┘
  *
  * Auto-opens on desktop when a cluster is selected; collapses to the 40px
- * header on click. Click row → /thread/{vendorId} (vendor profile).
+ * header on click. Click row → /vendors/{vendorId} (vendor profile).
  *
  * Behaviour replaces three earlier surfaces:
  *   - ClusterFloatingCard (top-right glance card) — DELETED from render
@@ -311,7 +311,7 @@ export function AtlasVendorDrawer({
                   <li key={v.vendorId}>
                     <button
                       type="button"
-                      onClick={() => navigate(`/thread/${v.vendorId}`)}
+                      onClick={() => navigate(`/vendors/${v.vendorId}`)}
                       className="w-full h-7 px-3 flex items-center gap-3 hover:bg-background-elevated/60 transition-colors text-left"
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
                       title={formatVendorName(v.name, 80)}

@@ -406,7 +406,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
   const overflowCount = allBadges.length - 2
 
   const handleClick = () => {
-    navigate(`/thread/${item.vendor_id}`)
+    navigate(`/vendors/${item.vendor_id}`)
   }
 
   return (
@@ -438,7 +438,6 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               riskScore={item.avg_risk_score}
               sectorCode={item.primary_sector_name ?? null}
               ariaTier={item.ips_tier}
-              narrative
               hideIcon
             />
           </div>

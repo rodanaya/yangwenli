@@ -943,7 +943,7 @@ export function InvestigationCaseDetail() {
                         {t('caseDetail.contractsLabel')}
                       </Link>
                       <Link
-                        to={`/thread/${v.vendor_id}`}
+                        to={`/vendors/${v.vendor_id}`}
                         className="inline-flex items-center gap-1 transition-colors hover:opacity-80"
                         style={{
                           fontSize: 10,

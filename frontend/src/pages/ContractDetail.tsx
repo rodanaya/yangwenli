@@ -609,7 +609,7 @@ export default function ContractDetail() {
               )}
               {contract.vendor_id && (
                 <Link
-                  to={`/thread/${contract.vendor_id}`}
+                  to={`/vendors/${contract.vendor_id}`}
                   className="flex items-center justify-between group py-2 text-risk-high hover:text-accent"
                 >
                   <div className="flex items-center gap-2">

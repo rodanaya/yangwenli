@@ -16,8 +16,7 @@
  *     flags={['gt', 'efos']} />
  *
  * Renders: type icon · formatted name · right-aligned context badge.
- * Click → navigates to canonical dossier route /{type}/:id (or
- * /thread/:id for vendors per the dossier scheme).
+ * Click → navigates to the canonical dossier route /{type}/:id.
  */
 import { Link } from 'react-router-dom'
 import {
@@ -41,16 +40,15 @@ const ICON_FOR_TYPE = {
 } as const
 
 /**
- * Canonical route for an entity dossier. /thread/:id is the narrative
- * format for vendors (co-exists with /vendors/:id structured-tabs view).
- * The chip routes to /vendors/:id by default; opt-in `narrative` flag
- * routes to /thread/:id instead.
+ * Canonical route for an entity dossier. Vendors resolve to the single
+ * /vendors/:id dossier. (The /thread/:id narrative format was retired
+ * 2026-06-07 and folded into that dossier; /thread now redirects there.)
  */
-function dossierHref(type: EntityType, id: string | number, narrative = false): string {
+function dossierHref(type: EntityType, id: string | number): string {
   const idStr = String(id)
   switch (type) {
     case 'vendor':
-      return narrative ? `/thread/${idStr}` : `/vendors/${idStr}`
+      return `/vendors/${idStr}`
     case 'institution':
       return `/institutions/${idStr}`
     case 'sector':
@@ -130,7 +128,7 @@ export interface EntityIdentityChipProps {
   /** Sector code for vendor/institution/category — sets a left-edge color dot. */
   sectorCode?: string | null
 
-  /** If true (and type=vendor), routes to /thread/:id instead of /vendors/:id. */
+  /** @deprecated Narrative (/thread/:id) retired 2026-06-07; vendors now have a single /vendors/:id dossier. Accepted for back-compat but ignored. */
   narrative?: boolean
 
   /** Hide the type icon (when context already implies the type, e.g. inside a vendor list). */
@@ -156,14 +154,13 @@ export function EntityIdentityChip({
   ariaTier,
   flags,
   sectorCode,
-  narrative = false,
   hideIcon = false,
   fullName = false,
   className,
 }: EntityIdentityChipProps) {
   const Icon = ICON_FOR_TYPE[type]
   const displayName = formatEntityName(type, name, fullName ? 'full' : size)
-  const href = dossierHref(type, id, narrative)
+  const href = dossierHref(type, id)
 
   // fullName mode lets the chip grow vertically (2-line wrap) rather than
   // forcing a fixed single-line height that triggers ellipsis.

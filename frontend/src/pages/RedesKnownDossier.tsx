@@ -750,7 +750,7 @@ function TopVendorsPanel({
               {i + 1}
             </span>
             <div className="flex-1 min-w-0">
-              <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" narrative />
+              <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" />
             </div>
             <span
               className="text-[10px] font-mono font-bold tabular-nums flex-shrink-0"
@@ -1028,7 +1028,7 @@ function CommunityDossier({
           {/* Deep-link to top vendor's Red Thread if available */}
           {patternSpotlight?.top_vendors?.[0] && (
             <Link
-              to={`/thread/${patternSpotlight.top_vendors[0].vendor_id}`}
+              to={`/vendors/${patternSpotlight.top_vendors[0].vendor_id}`}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-text-secondary transition-colors border border-border hover:border-border-hover"
               title={isEs ? `Abrir hilo rojo: ${patternSpotlight.top_vendors[0].vendor_name}` : `Open red thread: ${patternSpotlight.top_vendors[0].vendor_name}`}
               onClick={(e) => e.stopPropagation()}

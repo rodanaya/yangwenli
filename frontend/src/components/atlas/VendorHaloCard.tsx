@@ -84,7 +84,7 @@ export function VendorHaloCard({
   const handleOpen = () => {
     if (dot.isMock) return
     const id = dot.vendorId ?? dot.id
-    navigate(`/thread/${id}`)
+    navigate(`/vendors/${id}`)
   }
 
   return (

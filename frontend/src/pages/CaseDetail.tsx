@@ -891,7 +891,7 @@ function ModelProvenancePanel({
 // Queries /aria/queue for vendors with the same primary_pattern as this
 // case's mapped ARIA code. Closes the data-flow loop: documented case
 // → pattern label → model trained → vendors NOW flagged. Top 3 by IPS,
-// each linkable to /thread.
+// each linkable to /vendors.
 // ─────────────────────────────────────────────────────────────────────────────
 function SimilarPatternsTeaser({
   ariaPatternCode,
@@ -943,8 +943,8 @@ function SimilarPatternsTeaser({
                 key={v.vendor_id}
                 role="link"
                 tabIndex={0}
-                onClick={() => navigate(`/thread/${v.vendor_id}`)}
-                onKeyDown={(e) => e.key === 'Enter' && navigate(`/thread/${v.vendor_id}`)}
+                onClick={() => navigate(`/vendors/${v.vendor_id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/vendors/${v.vendor_id}`)}
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr auto auto',
@@ -968,7 +968,6 @@ function SimilarPatternsTeaser({
                     riskScore={v.avg_risk_score}
                     ariaTier={v.ips_tier}
                     flags={flags.length > 0 ? flags : undefined}
-                    narrative={true}
                     size="sm"
                   />
                   <div style={{ fontSize: 10, ...MONO, color: TEXT_MUTED, marginTop: 2, letterSpacing: '0.04em' }}>
@@ -2065,7 +2064,7 @@ function CaseBody({
                         )}
                         {vendor.vendor_id && (
                           <Link
-                            to={`/thread/${vendor.vendor_id}`}
+                            to={`/vendors/${vendor.vendor_id}`}
                             style={{
                               fontSize: 10,
                               ...MONO,

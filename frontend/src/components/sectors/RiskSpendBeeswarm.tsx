@@ -577,7 +577,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   fill={SECTOR_TEXT_COLORS.agricultura}
                   fillOpacity={0.65}
                 >
-                  {isEs ? '→ ver /thread/segalmex' : '→ see /thread/segalmex'}
+                  {isEs ? '→ ver /vendors/segalmex' : '→ see /vendors/segalmex'}
                 </text>
               </g>
             )

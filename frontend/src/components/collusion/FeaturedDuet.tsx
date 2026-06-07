@@ -208,7 +208,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
           {pair.is_potential_collusion && (
             <button
               type="button"
-              onClick={() => navigate(`/thread/${leadVendor.id}`)}
+              onClick={() => navigate(`/vendors/${leadVendor.id}`)}
               className="inline-flex items-center gap-1.5 transition-colors"
               style={{ color: accent }}
             >

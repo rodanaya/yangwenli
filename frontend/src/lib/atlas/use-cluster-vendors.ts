@@ -4,7 +4,7 @@
  * Atlas P6 Frontier B (2026-05-21). The macro view used to be 1,200 synthetic
  * lattice dots + ~5 named outliers per cluster. This hook fetches a real
  * cohort per cluster (default limit=30) so the galaxy is built from actual
- * vendor IDs — every dot is clickable and lands on /thread/{vendorId}.
+ * vendor IDs — every dot is clickable and lands on /vendors/{vendorId}.
  *
  * The data shape returned mirrors `NamedVendorDot` so existing consumers
  * (AtlasVendorDrawer, ClusterFloatingCard) work unchanged.

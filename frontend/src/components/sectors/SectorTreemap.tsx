@@ -454,8 +454,8 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
           const es = lang === 'es'
           const chipLabel = es ? 'GT' : 'GT'
           const chipTitle = es
-            ? 'Artefacto · Segalmex — score inflado por caso GT. Ver /thread/segalmex.'
-            : 'Artifact · Segalmex — score inflated by GT case. See /thread/segalmex.'
+            ? 'Artefacto · Segalmex — score inflado por caso GT. Ver /vendors/segalmex.'
+            : 'Artifact · Segalmex — score inflated by GT case. See /vendors/segalmex.'
           // Position chip in bottom-right of the agriculture cell
           const chipW = 22
           const chipH = 14

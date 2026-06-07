@@ -173,7 +173,7 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
                 label={isEs ? 'valor total' : 'total value'}
               />
               <Link
-                to={`/thread/${vendorId}`}
+                to={`/vendors/${vendorId}`}
                 className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-text-secondary hover:text-text-primary transition-colors border border-border rounded-sm px-3 py-1.5"
               >
                 <GitBranch className="w-3 h-3" aria-hidden="true" />
@@ -774,7 +774,7 @@ function CoBidderRow({
 
   return (
     <Link
-      to={`/thread/${cb.vendor_id}`}
+      to={`/vendors/${cb.vendor_id}`}
       className="block px-4 py-2.5 hover:bg-background-elevated/40 transition-colors group"
     >
       <div className="grid grid-cols-[1fr_auto] gap-x-3 items-baseline mb-1.5">

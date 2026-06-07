@@ -6,7 +6,7 @@
  * Z0 — 12 sectors as bodies, sized by total spend, colored by sector palette
  * Z1 — institutions inside the focused sector (loaded via existing
  *      /api/v1/atlas/sector-institutions endpoint)
- * Z2 — placeholder: institution-focus state. Click navigates to /thread/:id
+ * Z2 — placeholder: institution-focus state. Click navigates to /vendors/:id
  *      until we have a real vendor sub-constellation endpoint.
  *
  * Drag-to-pan + wheel-zoom are universal — work at every level.

@@ -105,7 +105,6 @@ export default function RedaccionWidget() {
                 name={story.vendorName}
                 riskScore={story.avgRiskScore}
                 ariaTier={story.tier}
-                narrative={true}
                 size="sm"
               />
 
@@ -134,7 +133,7 @@ export default function RedaccionWidget() {
 
               {/* Investigate link */}
               <Link
-                to={`/thread/${story.vendorId}`}
+                to={`/vendors/${story.vendorId}`}
                 className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-primary mt-1.5 transition-colors"
               >
                 Red Thread <ArrowRight className="h-3 w-3" />

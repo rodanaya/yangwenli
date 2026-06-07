@@ -15,9 +15,11 @@
  *   Network         — ARIA / external registries / linked cases / co-bidders
  *   Methodology     — provenance footer
  *
- * The scroll-driven narrative version still lives at /thread/:vendorId; the
- * thread chapter components (TimelineHourglass, MoneyStaircase, …) are no
- * longer imported here. /print/vendors/:id retains the legacy VendorProfile.
+ * The Red Thread narrative (/thread/:vendorId) was RETIRED 2026-06-07 and
+ * folded into this single dossier — its six chapters duplicated the reference
+ * sections below. /thread/:vendorId now redirects here; its one additive
+ * element (civic-scale equivalences) is ported as <VendorEquivalences>.
+ * /print/vendors/:id retains the legacy VendorProfile.
  */
 
 import { lazy, Suspense, useState } from 'react'
@@ -114,6 +116,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
   const navigate = useNavigate()
   return (
     <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+      {/* (a) Honesty movement — what this dossier can't tell you */}
       <p
         className="font-mono mb-2"
         style={{
@@ -124,7 +127,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           fontWeight: 500,
         }}
       >
-        § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
+        § {lang === 'es' ? 'Lo que este expediente no puede decir' : "What this dossier can't tell you"}
       </p>
       <p
         style={{
@@ -137,24 +140,56 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         }}
       >
         {lang === 'es'
-          ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
-          : 'COMPRANET data 2002–2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'}
+          ? 'Este expediente analiza cómo se adjudicaron los contratos, no cómo se ejecutaron. Un indicador de riesgo alto señala anomalías estadísticas en la contratación, no prueba de un delito, que solo los tribunales determinan.'
+          : 'This dossier reads how contracts were awarded — not how they were performed. A high risk indicator marks statistical anomalies in procurement, not proof of wrongdoing, which only courts establish.'}
       </p>
-      <button
-        type="button"
-        onClick={() => navigate('/methodology')}
-        className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
+      <p
         style={{
-          fontSize: 10,
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
+          fontFamily: '"EB Garamond", Georgia, serif',
+          fontStyle: 'italic',
+          fontSize: 13.5,
           color: 'var(--color-text-secondary)',
-          background: 'none',
-          border: 'none',
+          maxWidth: '72ch',
+          lineHeight: 1.55,
         }}
       >
-        {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
-      </button>
+        {lang === 'es'
+          ? 'El fraude en la ejecución, los acuerdos fuera de libros y las necesidades legítimas de fuente única son invisibles para estos datos; la cobertura disminuye antes de 2010 y se congela en septiembre de 2025.'
+          : 'Execution-phase fraud, off-book arrangements, and legitimate sole-source needs are invisible to this data; coverage thins before 2010 and freezes at September 2025.'}
+      </p>
+
+      {/* (b) Provenance movement — demoted beneath the honesty note */}
+      <div className="mt-4">
+        <p
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontStyle: 'italic',
+            fontSize: 13.5,
+            color: 'var(--color-text-secondary)',
+            maxWidth: '72ch',
+            lineHeight: 1.55,
+          }}
+        >
+          {lang === 'es'
+            ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
+            : 'COMPRANET data 2002–2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'}
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/methodology')}
+          className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-secondary)',
+            background: 'none',
+            border: 'none',
+          }}
+        >
+          {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
+        </button>
+      </div>
     </section>
   )
 }
@@ -300,6 +335,18 @@ export default function VendorDossier() {
 
       {/* COMMAND PANEL — the operational at-a-glance (replaces 6 chapters) */}
       <div className="mt-6">
+        <p
+          className="font-mono mb-3"
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: sectorAccent,
+            fontWeight: 700,
+          }}
+        >
+          § {lang === 'es' ? 'El diagnóstico' : 'The diagnosis'}
+        </p>
         <VendorStatStrip vendor={vendor} lang={lang} />
       </div>
       <div className="mt-7">

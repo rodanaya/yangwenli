@@ -772,7 +772,7 @@ function CanvasAtlasView({
         name: v.name,
         riskScore: v.riskScore,
         sectorColor: sectorHex,
-        // All real-vendor dots are clickable (route to /thread/{id}).
+        // All real-vendor dots are clickable (route to /vendors/{id}).
         // Top-tier (T1) and zoomed-cluster dots render as outliers (larger radius).
         isOutlier: v.tier === 1 || isZoomedHere,
       }
@@ -895,7 +895,7 @@ function CanvasAtlasView({
       if (pendingNavRef.current !== null) window.clearTimeout(pendingNavRef.current)
       pendingNavRef.current = window.setTimeout(() => {
         pendingNavRef.current = null
-        navigate(`/thread/${dotId}`)
+        navigate(`/vendors/${dotId}`)
       }, 320)
     },
     [navigate, contractById, enterPlanetaryMode],

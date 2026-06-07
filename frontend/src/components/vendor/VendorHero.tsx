@@ -49,6 +49,7 @@ import {
   formatNumber,
 } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { VendorEquivalences } from '@/components/vendor/VendorEquivalences'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
 
 // Dossier section anchors — must match the id="..." attributes on the
@@ -264,6 +265,12 @@ export function VendorHero({
 
         {/* ─── Row 5: the lede, with drop cap ───────────────────────── */}
         <Lede text={lede} sectorAccent={sectorAccent} />
+
+        {/* ─── Row 5b: human-scale coda — closing movement of the editorial
+            block. Shares the lede's sector left-rule so the synthesized prose
+            flows straight into its human translation (relocated from the
+            operational command panel, spec Change 1). ───────────────── */}
+        <VendorEquivalences flush totalMxn={vendor.total_value_mxn} lang={lang} accent={sectorAccent} />
 
         {/* ─── Row 6: ON THE PAGE TOC strip ─────────────────────────── */}
         {showTOC && (

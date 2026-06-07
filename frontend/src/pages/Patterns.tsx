@@ -496,7 +496,6 @@ function PatternCard({
                   size="xs"
                   riskScore={v.avg_risk_score}
                   sectorCode={v.primary_sector_name ?? null}
-                  narrative
                 />
               </div>
             ))}
