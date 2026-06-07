@@ -51,17 +51,32 @@ if ! $COMPOSE up -d --build --remove-orphans; then
   $COMPOSE up -d --remove-orphans || { echo "[deploy] retry FAILED"; docker ps -a --format '{{.Names}}\t{{.Status}}'; exit 1; }
 fi
 
-# ── Verify edge + backend health ──────────────────────────────────────────────
+# ── Verify edge + backend health. When the backend container is recreated it
+#    runs a 30–60s cold-start DB scan (3.1M rows) before it answers, so poll
+#    patiently (~96s) — but break the instant it's healthy so good deploys stay
+#    fast. ───────────────────────────────────────────────────────────────────
 sleep 4
-for i in 1 2 3 4 5; do
+healthy=0
+for i in $(seq 1 24); do
   if curl -sf -o /dev/null "$HEALTH_URL"; then
-    echo "[deploy] OK — backend healthy"
+    echo "[deploy] OK — backend healthy (after ~$((i * 4))s)"
+    healthy=1
     break
   fi
-  [ "$i" = 5 ] && echo "[deploy] WARN — health check still failing after retries"
-  sleep 3
+  sleep 4
 done
 
 echo "[deploy] containers:"
 docker ps --format '{{.Names}}\t{{.Status}}'
+
+# ── A failed health check is a FAILED deploy — exit non-zero. Previously this
+#    path only printed a WARN and still exited 0, so a broken deploy reported
+#    success and the caller trusted it; that masked a brief prod outage on
+#    2026-06-04 (the container-collision retry left the stack down but the
+#    script returned 0). Callers (ssh, CI) can now rely on the exit code. ──────
+if [ "$healthy" != 1 ]; then
+  echo "[deploy] FAILED — backend never became healthy (~96s); site may be down"
+  docker ps -a --format '{{.Names}}\t{{.Status}}'
+  exit 1
+fi
 echo "[deploy] done ($(date -u +%H:%M:%SZ))"
