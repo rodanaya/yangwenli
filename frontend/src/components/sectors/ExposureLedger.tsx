@@ -24,7 +24,7 @@
  */
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -47,7 +47,9 @@ export interface LedgerRow {
 const DAGGER_SECTORS = new Set(['salud', 'agricultura', 'trabajo'])
 
 // OECD direct-award ceiling, as a percentage (0–100) for this surface's copy.
-const OECD_DA_CEILING = 25
+// Single source: constants.ts OECD_DIRECT_AWARD_LIMIT (anti-pattern A7 — never
+// retype the limit per surface; the legacy slope chart's hardcoded 25% is gone).
+const OECD_DA_CEILING = OECD_DIRECT_AWARD_LIMIT * 100
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tiny local helpers
