@@ -16,6 +16,20 @@ export const ADMINISTRATIONS: readonly AdminMeta[] = [
   { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum Pardo',          start: 2024, end: 2030, dataStart: 2024, color: '#14b8a6', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
 ] as const
 
+/**
+ * Display names with correct diacritics, keyed on the ASCII `name`
+ * identifier. Single source of truth — the page, the matrix, and the
+ * summary card all import this (2026-06-07; matrix previously rendered
+ * raw ASCII "Calderon" / "Pena Nieto").
+ */
+export const ADMIN_DISPLAY_NAMES: Record<string, string> = {
+  Fox: 'Fox',
+  Calderon: 'Calderón',
+  'Pena Nieto': 'Peña Nieto',
+  AMLO: 'AMLO',
+  Sheinbaum: 'Sheinbaum',
+}
+
 /** Party color mapping for badge/stripe. */
 export const PARTY_COLORS: Record<string, string> = {
   PAN: '#002395',
@@ -71,4 +85,14 @@ export const DOSSIER_DATA: Record<string, DossierEntry> = {
     scandals: [],
     topSectorKeys: ['infraestructura', 'salud', 'energia', 'educacion', 'gobernacion'],
   },
+}
+
+/** Public-record year for each scandal key, per administration — used by
+ *  ExpedienteSpine to merge scandals into the chronological case-file. */
+export const SCANDAL_YEARS: Record<string, Record<string, number>> = {
+  Fox: { pemexgate: 2004 },
+  Calderon: { odebrecht: 2010 },
+  'Pena Nieto': { casa_blanca: 2014, grupo_higa: 2014, imss_ghost: 2015, odebrecht: 2016, estafa_maestra: 2017 },
+  AMLO: { covid_procurement: 2020, segalmex: 2021, efos_sat: 2022, tren_maya: 2023 },
+  Sheinbaum: {},
 }

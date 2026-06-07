@@ -181,10 +181,12 @@ export function EditorialChartFrame({
         </div>
       )}
 
-      {/* Footer attribution */}
-      <p className="text-[10px] text-text-muted font-mono">
+      {/* Footer attribution — div, not p: callers may pass block content
+          (e.g. a flex row with a download button), and <div> inside <p> is
+          invalid HTML (React validateDOMNesting warning). */}
+      <div className="text-[10px] text-text-muted font-mono">
         {footer}
-      </p>
+      </div>
     </Wrapper>
   )
 }

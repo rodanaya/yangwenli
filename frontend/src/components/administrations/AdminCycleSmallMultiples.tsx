@@ -25,6 +25,8 @@ interface AdminCycleEntry {
 interface AdminCycleSmallMultiplesProps {
   administrations: AdminCycleEntry[]
   isEs: boolean
+  /** National-average risk (percent) — drawn as a dashed reference rule on each panel. */
+  referencePct?: number
 }
 
 const PANEL_W = 220
@@ -50,7 +52,7 @@ function calcArea(data: AdminYearDatum[], xScale: (v: number) => number, yScale:
   return `${line} L${xScale(last.termYear).toFixed(1)},${bottomY.toFixed(1)} L${xScale(first.termYear).toFixed(1)},${bottomY.toFixed(1)} Z`
 }
 
-export function AdminCycleSmallMultiples({ administrations, isEs }: AdminCycleSmallMultiplesProps) {
+export function AdminCycleSmallMultiples({ administrations, isEs, referencePct }: AdminCycleSmallMultiplesProps) {
   const { t } = useTranslation('administrations')
 
   if (administrations.length === 0) return null
@@ -96,7 +98,7 @@ export function AdminCycleSmallMultiples({ administrations, isEs }: AdminCycleSm
       </div>
       <div className="px-4 py-4 bg-background-card">
         <div className={cn('grid grid-cols-2 md:grid-cols-3 gap-4')}>
-          {administrations.map((admin) => {
+          {administrations.map((admin, panelIdx) => {
             const hasData = admin.yearData.length >= 2
             const sorted = [...admin.yearData].sort((a, b) => a.termYear - b.termYear)
 
@@ -106,6 +108,15 @@ export function AdminCycleSmallMultiples({ administrations, isEs }: AdminCycleSm
               : 0
             const year5 = sorted.find((d) => d.termYear === 5)
             const isOutlier = year5 && mean > 0 && year5.risk > mean * 1.5
+
+            const first = sorted[0]
+            const last = sorted[sorted.length - 1]
+            const delta = hasData ? last.risk - first.risk : 0
+            const hasYear6 = sorted.some((d) => d.termYear === 6)
+            // Lame-duck band: from the year-6 column midpoint minus half a step to the panel right edge.
+            const stepW = innerW / 5
+            const bandX = xScale(6) - stepW / 2
+            const refClamped = referencePct != null && referencePct >= yMin && referencePct <= yMax
 
             return (
               <div key={admin.name} className="space-y-1.5">
@@ -118,6 +129,14 @@ export function AdminCycleSmallMultiples({ administrations, isEs }: AdminCycleSm
                   <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
                     {admin.displayName}
                   </span>
+                  {hasData && (
+                    <span
+                      className="font-mono text-[9px] tabular-nums ml-auto flex-shrink-0"
+                      style={{ color: delta >= 0 ? 'var(--color-risk-high)' : 'var(--color-text-muted)' }}
+                    >
+                      {delta >= 0 ? '+' : ''}{delta.toFixed(1)} pp
+                    </span>
+                  )}
                 </div>
 
                 {/* SVG panel */}
@@ -132,6 +151,17 @@ export function AdminCycleSmallMultiples({ administrations, isEs }: AdminCycleSm
                     role="img"
                     aria-label={`${admin.displayName} risk trajectory by term year`}
                   >
+                    {/* Year-6 lame-duck band (completed terms only) */}
+                    {hasYear6 && (
+                      <rect
+                        x={bandX}
+                        y={MARGIN.top}
+                        width={(PANEL_W - MARGIN.right) - bandX}
+                        height={innerH}
+                        fill="rgba(0,0,0,0.04)"
+                      />
+                    )}
+
                     {/* Y-axis ticks */}
                     {yTicks.map((tick) => (
                       <g key={tick}>
@@ -173,13 +203,39 @@ export function AdminCycleSmallMultiples({ administrations, isEs }: AdminCycleSm
                       </text>
                     ))}
 
+                    {/* National-average reference rule (labeled only on the first panel) */}
+                    {refClamped && referencePct != null && (
+                      <g>
+                        <line
+                          x1={MARGIN.left}
+                          y1={yScale(referencePct)}
+                          x2={PANEL_W - MARGIN.right}
+                          y2={yScale(referencePct)}
+                          stroke="var(--color-text-muted)"
+                          strokeDasharray="3 3"
+                          strokeWidth={0.75}
+                          opacity={0.6}
+                        />
+                        {panelIdx === 0 && (
+                          <text
+                            x={MARGIN.left + 2}
+                            y={yScale(referencePct) - 2}
+                            fill="var(--color-text-muted)"
+                            fontSize={7.5}
+                            fontFamily="monospace"
+                          >
+                            {`${isEs ? 'Prom. nacional' : 'Natl. avg'} ${referencePct.toFixed(1)}%`}
+                          </text>
+                        )}
+                      </g>
+                    )}
+
                     {hasData ? (
                       <>
-                        {/* Area fill at 15% opacity */}
+                        {/* Area fill — uniform ochre wash (no identity-green lawns) */}
                         <path
                           d={calcArea(sorted, xScale, yScale, bottomY)}
-                          fill={admin.color}
-                          fillOpacity={0.15}
+                          fill="rgba(160,104,32,0.07)"
                         />
 
                         {/* Line path */}
@@ -203,6 +259,26 @@ export function AdminCycleSmallMultiples({ administrations, isEs }: AdminCycleSm
                             fillOpacity={0.9}
                           />
                         ))}
+
+                        {/* End-of-term value label at the final data point (clamped inside viewBox) */}
+                        {(() => {
+                          const lx = xScale(last.termYear)
+                          const ly = yScale(last.risk)
+                          const placeLeft = lx > PANEL_W - MARGIN.right - 24
+                          return (
+                            <text
+                              x={placeLeft ? lx - 5 : lx + 5}
+                              y={Math.max(MARGIN.top + 6, Math.min(ly + 3, PANEL_H - MARGIN.bottom))}
+                              fill={admin.color}
+                              fontSize={8}
+                              fontFamily="monospace"
+                              className="tabular-nums"
+                              textAnchor={placeLeft ? 'end' : 'start'}
+                            >
+                              {last.risk.toFixed(1)}%
+                            </text>
+                          )
+                        })()}
 
                         {/* Outlier annotation for Year 5 */}
                         {isOutlier && year5 && (
@@ -249,8 +325,13 @@ export function AdminCycleSmallMultiples({ administrations, isEs }: AdminCycleSm
           })}
         </div>
 
+        {/* Year-6 band caption */}
+        <p className="mt-2 text-[9px] text-text-muted font-mono">
+          {isEs ? 'Año 6 = año electoral / salida' : 'Year 6 = election / exit year'}
+        </p>
+
         {/* Footer note */}
-        <p className="mt-3 text-[10px] text-text-muted font-mono leading-relaxed">
+        <p className="mt-1 text-[10px] text-text-muted font-mono leading-relaxed">
           {isEs
             ? 'Riesgo promedio por año relativo de mandato. Eje Y compartido — las alturas son comparables entre paneles.'
             : 'Average risk by relative term year. Shared Y-axis — heights are comparable across panels.'}

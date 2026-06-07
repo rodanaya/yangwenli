@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { scaleToColor } from '@/components/charts/editorial'
-import { ADMINISTRATIONS, PARTY_COLORS } from './data'
+import { ADMINISTRATIONS, ADMIN_DISPLAY_NAMES, PARTY_COLORS } from './data'
 import type { AdminName } from './types'
 
 export type MatrixMetric = 'risk' | 'da' | 'hr' | 'sb'
@@ -61,9 +61,11 @@ interface MatrixCellProps {
   displayText: string
   min: number
   max: number
+  /** Whether this cell is the worst (max-value) sector in its administration row. */
+  isRowMax?: boolean
 }
 
-function MatrixCell({ adminName, sector, value, displayText, min, max }: MatrixCellProps) {
+function MatrixCell({ adminName, sector, value, displayText, min, max, isRowMax }: MatrixCellProps) {
   const t = intensityOf(value, min, max)
   const bgColor = scaleToColor(value, min, max, 'risk')
   return (
@@ -76,6 +78,7 @@ function MatrixCell({ adminName, sector, value, displayText, min, max }: MatrixC
           backgroundColor: bgColor,
           border: '1px solid var(--color-border)',
           borderRadius: 3,
+          boxShadow: isRowMax ? 'inset 0 0 0 1.5px var(--color-accent)' : undefined,
         }}
         title={`${sector.name} · ${adminName}: ${displayText}`}
         aria-label={`${sector.name} under ${adminName}: ${displayText}`}
@@ -169,8 +172,24 @@ export function AdminSectorMatrix({
       }
     }
   }
-  const maxValueAcrossAll = allCellValues.length > 0 ? Math.max(...allCellValues) : 1
-  const minValueAcrossAll = allCellValues.length > 0 ? Math.min(...allCellValues) : 0
+  // F2 — normalize the intensity ramp to the P10–P90 of visible cell values
+  // (per metric) instead of absolute min–max, so the 21–27% mid-band spreads
+  // legibly instead of collapsing to one saturated orange.
+  const percentile = (vals: number[], p: number): number => {
+    if (vals.length === 0) return 0
+    const sorted = [...vals].sort((a, b) => a - b)
+    const idx = (sorted.length - 1) * p
+    const lo = Math.floor(idx)
+    const hi = Math.ceil(idx)
+    if (lo === hi) return sorted[lo]
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo)
+  }
+  const p10 = allCellValues.length > 0 ? percentile(allCellValues, 0.10) : 0
+  const p90Raw = allCellValues.length > 0 ? percentile(allCellValues, 0.90) : 1
+  // Guard against a degenerate flat ramp (all cells equal).
+  const p90 = p90Raw > p10 ? p90Raw : p10 + 1
+  const minValueAcrossAll = p10
+  const maxValueAcrossAll = p90
 
   // The OVERALL standings column gets its own intensity scale (5 admin values)
   // so the worst administration reads reddest regardless of the cell-grid range.
@@ -298,6 +317,15 @@ export function AdminSectorMatrix({
               const overall = summary?.[admin.name] ?? null
               const overallVal = overall ? getCellValue(metric, overall) : 0
               const overallT = intensityOf(overallVal, overallMin, overallMax)
+              // Worst (max-value) sector cell in this row — gets the accent ring.
+              let rowMaxKey: string | null = null
+              let rowMaxVal = -Infinity
+              for (const sector of MATRIX_SECTORS) {
+                const cd = liveRow?.[sector.key]
+                if (!cd) continue
+                const v = getCellValue(metric, cd)
+                if (v > rowMaxVal) { rowMaxVal = v; rowMaxKey = sector.key }
+              }
               return (
                 <tr
                   key={admin.name}
@@ -320,7 +348,7 @@ export function AdminSectorMatrix({
                           isSelected ? 'text-accent font-semibold' : 'text-text-muted'
                         )}
                       >
-                        {admin.name}
+                        {ADMIN_DISPLAY_NAMES[admin.name] ?? admin.name}
                       </span>
                     </div>
                   </td>
@@ -357,6 +385,7 @@ export function AdminSectorMatrix({
                         displayText={getCellDisplay(metric, cellData)}
                         min={minValueAcrossAll}
                         max={maxValueAcrossAll}
+                        isRowMax={rowMaxKey === sector.key && rowMaxVal > 0}
                       />
                     )
                   })}

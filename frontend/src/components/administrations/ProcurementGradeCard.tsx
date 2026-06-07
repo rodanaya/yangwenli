@@ -53,6 +53,8 @@ interface Props {
 
 export function ProcurementGradeCard({ agg }: Props) {
   const { t } = useTranslation('administrations')
+  // Tier labels live in the institutionleague namespace ("Crítico" ES / "Critical" EN)
+  const { t: tTier } = useTranslation('institutionleague')
   const result = useMemo(() => computeProcurementGrade(agg), [agg])
   const gradeColor = GRADE_COLORS[result.grade] || '#64748b'
 
@@ -74,7 +76,7 @@ export function ProcurementGradeCard({ agg }: Props) {
                 className="inline-flex items-center px-2.5 py-1 rounded text-[11px] font-bold font-mono uppercase tracking-wider border"
                 style={{ color: ts.color, backgroundColor: `${ts.color}18`, borderColor: `${ts.color}40` }}
               >
-                {tk}
+                {tTier(`tiers.${tk}`, tk)}
               </span>
             ) : (
               <div className="text-4xl font-mono font-black leading-none" style={{ color: gradeColor }}>
