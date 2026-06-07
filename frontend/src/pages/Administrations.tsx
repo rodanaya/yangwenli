@@ -512,7 +512,7 @@ export default function Administrations() {
           </div>
         </header>
 
-        <div className="space-y-8 max-w-[1600px] mx-auto">
+        <div className="space-y-6 max-w-[1600px] mx-auto">
 
           {/* ════════════════════════════════════════════════════════════════
               MÓDULO 1 · EL EXPEDIENTE — one bounded folder. EVERYTHING inside
@@ -541,7 +541,7 @@ export default function Administrations() {
           />
 
           {/* ── § I · LA TRAYECTORIA — yearly deep dive (editorial rebuild R1) ── */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
             {selectedAgg && selectedAgg.years.length > 0 ? (() => {
               const years = selectedAgg.years
               // Worst-year claim for the headline (max high_risk_pct).
@@ -692,8 +692,8 @@ export default function Administrations() {
           </div>
 
           {/* ── § II · LA HUELLA SECTORIAL — sector risk profile ── */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
-            <div className="mb-4">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
+            <div className="mb-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <ChapterKicker numeral="II" es="LA HUELLA SECTORIAL" en="THE SECTOR FOOTPRINT" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
@@ -726,13 +726,21 @@ export default function Administrations() {
                 const adminAvgHR = selectedAgg?.highRiskPct ?? 0
                 const top = ranked[0]
                 const scaleMax = Math.max(...ranked.map((s) => s.hr), adminAvgHR, 1) * 1.15
-                const rows: DotStripRow[] = ranked.map((s) => ({
+                const toRow = (s: typeof ranked[number]): DotStripRow => ({
                   label: s.name,
                   sublabel: `DA ${s.da.toFixed(0)}% · ${formatNumber(s.contracts)}`,
                   fraction: s.hr / scaleMax,
                   colorRaw: s.color,
                   valueLabel: s.hr.toFixed(1) + '%',
-                }))
+                })
+                // Density (M7c whitespace pass): 12 ranked rows split into two
+                // side-by-side strips (1–6 / 7–12) — half the height, full width.
+                const mid = Math.ceil(ranked.length / 2)
+                const halves = ranked.length > 6 ? [ranked.slice(0, mid), ranked.slice(mid)] : [ranked]
+                const oecdMark = {
+                  fraction: adminAvgHR / scaleMax,
+                  label: `${isEs ? 'Prom. sexenio' : 'Term avg'} · ${adminAvgHR.toFixed(1)}%`,
+                }
                 return (
                   <>
                     {adminAvgHR > 0 && (
@@ -741,15 +749,17 @@ export default function Administrations() {
                         <span style={{ color: 'var(--color-accent)' }}>{(top.hr / adminAvgHR).toFixed(1)}×</span> {isEs ? 'el promedio del sexenio' : 'the term average'}
                       </p>
                     )}
-                    <DotStrip
-                      rows={rows}
-                      labelWidth={150}
-                      rowHeight={30}
-                      oecdMark={{
-                        fraction: adminAvgHR / scaleMax,
-                        label: `${isEs ? 'Promedio del sexenio' : 'Term average'} · ${adminAvgHR.toFixed(1)}%`,
-                      }}
-                    />
+                    <div className={halves.length > 1 ? 'grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-1' : ''}>
+                      {halves.map((half, h) => (
+                        <DotStrip
+                          key={h}
+                          rows={half.map(toRow)}
+                          labelWidth={140}
+                          rowHeight={26}
+                          oecdMark={oecdMark}
+                        />
+                      ))}
+                    </div>
                   </>
                 )
               })()}
@@ -757,8 +767,8 @@ export default function Administrations() {
           </div>
 
           {/* ── § III · EL EXPEDIENTE — chronological case-file spine (R3) ── */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-5" id="expediente">
-            <div className="mb-4">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-4" id="expediente">
+            <div className="mb-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <ChapterKicker numeral="III" es="EL EXPEDIENTE" en="THE CASE FILE" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
@@ -783,8 +793,8 @@ export default function Administrations() {
           </div>
 
           {/* ── § IV · LOS BENEFICIARIOS — top vendors + top sectors ── */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
-            <div className="mb-4">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
+            <div className="mb-3">
               <ChapterKicker numeral="IV" es="LOS BENEFICIARIOS" en="THE BENEFICIARIES" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
               <h3 className="text-sm font-mono text-text-primary">{t('vendorSection.subtitle')}</h3>
             </div>
@@ -845,7 +855,7 @@ export default function Administrations() {
           </div>
 
           {/* ── Folder colophon — explicit module end ── */}
-          <div className="border-t border-border/40 px-5 py-3 text-center">
+          <div className="border-t border-border/40 px-5 py-2 text-center">
             <span
               className="text-[9px] font-mono uppercase tracking-[0.3em] text-text-muted"
               style={{ fontStyle: 'italic' }}
@@ -870,7 +880,7 @@ export default function Administrations() {
             }}
           >
           {/* Module header */}
-          <div className="px-4 sm:px-5 py-5">
+          <div className="px-4 sm:px-5 py-4">
             <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1.5">
               § V · {isEs ? 'EL PATRÓN · CINCO SEXENIOS COMPARADOS' : 'THE PATTERN · FIVE TERMS COMPARED'}
             </div>
@@ -898,7 +908,7 @@ export default function Administrations() {
           </div>
 
           {/* 25-year systemic trend */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
           <EditorialChartFrame
             kicker={isEs ? '§ TENDENCIAS 25 AÑOS' : '§ 25-YEAR SYSTEMIC TRENDS'}
             headline={isEs
@@ -993,7 +1003,7 @@ export default function Administrations() {
           </div>
 
           {/* Five presidents ranked by risk */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
             <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
               {isEs ? '§ CINCO PRESIDENTES · RIESGO COMPARADO' : '§ FIVE PRESIDENTS · RISK COMPARED'}
             </div>

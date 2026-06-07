@@ -120,22 +120,16 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
     )
   }
 
-  const scroll = entries.length > 12
+  // Density (M7c whitespace pass): ≥6 entries flow as TWO side-by-side spines
+  // at lg — chronology runs down the left rail, then continues on the right.
+  // A single 70ch column left ~40% of the folder width empty.
+  const split = entries.length >= 5
+  const midpoint = Math.ceil(entries.length / 2)
+  const halves: SpineEntry[][] = split
+    ? [entries.slice(0, midpoint), entries.slice(midpoint)]
+    : [entries]
 
-  return (
-    <motion.div
-      key={adminName}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="max-w-[70ch]"
-    >
-      <ol
-        className={`relative border-l-2 border-border pl-4 ${
-          scroll ? 'max-h-[420px] overflow-y-auto pr-1' : ''
-        }`}
-      >
-        {entries.map((entry, i) => {
+  const renderEntry = (entry: SpineEntry, i: number) => {
           const isScandal = entry.kind === 'scandal'
           const markerColor = isScandal
             ? SEVERITY_COLORS[entry.severity]
@@ -154,7 +148,7 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
           return (
             <li
               key={`${entry.kind}-${entry.year}-${i}`}
-              className="relative flex items-start gap-2 py-1.5 min-h-[34px]"
+              className="relative flex items-start gap-2 py-1 min-h-[30px]"
             >
               {/* Marker dot on the rail */}
               <span
@@ -213,8 +207,22 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
               </span>
             </li>
           )
-        })}
-      </ol>
+  }
+
+  return (
+    <motion.div
+      key={adminName}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+    >
+      <div className={split ? 'grid grid-cols-1 lg:grid-cols-2 gap-x-10' : 'max-w-[70ch]'}>
+        {halves.map((half, h) => (
+          <ol key={h} className="relative border-l-2 border-border pl-4">
+            {half.map((entry, i) => renderEntry(entry, h * midpoint + i))}
+          </ol>
+        ))}
+      </div>
       {groundTruthNote}
     </motion.div>
   )
