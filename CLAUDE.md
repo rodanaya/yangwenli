@@ -118,6 +118,8 @@ COMPRANET has 4 structures with varying quality:
 | C | 2018–2022 | 30.3% | Mixed case, 78% direct award |
 | D | 2023–2025 | 47.4% | 100% Partida codes, best |
 
+**Data horizon — Sep 28 2025 (upstream frozen).** The federal bulk feed (`Contratos_CompraNet{year}.csv`) froze at Last-Modified `2025-09-29` after CompraNet's legal abolition (Apr 2025); our DB is current to it (`publication_date` max `2025-09-28`; 2025 partial, ~92.6K vs ~143K full-year). **No comprehensive replacement exists** — ComprasMX (Secretaría Anticorrupción) publishes fragmented per-agency feeds on `repodatos.atdt.gob.mx` (cataloged in datos.gob.mx CKAN `/api/3/action/package_search`; `comprasmx`=0 datasets, the lone `compranet` match is a frozen historical archive; CFE current to Jan 2026, most big buyers absent). **Nothing new to ingest via `refresh_comprasmx_2025.py`**; extending past Sep 2025 needs new ETL (ComprasMX portal API reverse-engineer, or per-agency CKAN crawler). Verified 2026-06-04 · surfaced on `/methodology § Data sources`.
+
 ---
 
 ## ARIA — Investigation Pipeline
