@@ -805,6 +805,213 @@ class CommunityDetailResponse(BaseModel):
     graph_ready: bool
 
 
+# =============================================================================
+# La Trama — Phase A endpoints
+# =============================================================================
+
+# Mutex preventing multiple workers computing the trama index simultaneously.
+_trama_index_compute_lock = threading.Lock()
+_TRAMA_INDEX_DB_KEY = "network_trama_index_v1"
+# Sanity threshold: warn if any community total value exceeds 10T MXN
+_TRAMA_VALUE_WARNING_THRESHOLD = 10_000_000_000_000
+
+# SQLite variable-limit-safe chunk size for IN(...) fetches.
+_TRAMA_IN_CHUNK = 900
+
+
+def _get_sanction_keys(conn: sqlite3.Connection) -> tuple:
+    """Sanction match keys loaded once into Python sets.
+
+    sfp_sanctions is tiny (2,395 rows) but the SQL name-match
+    (UPPER(TRIM(v.name)) = UPPER(TRIM(sfp.company_name))) is unindexable
+    and cost 21s when joined against an 11,923-member community. Set
+    lookups in Python make the same match O(1) per vendor.
+    """
+    cached = _network_cache.get("trama_sanction_keys")
+    if cached is not None:
+        return cached
+    cursor = conn.cursor()
+    cursor.execute("SELECT rfc, company_name FROM sfp_sanctions")
+    rfc_keys = set()
+    name_keys = set()
+    for r in cursor.fetchall():
+        rfc = r["rfc"]
+        if rfc and str(rfc).strip():
+            rfc_keys.add(str(rfc).strip().upper())
+        name = r["company_name"]
+        if name and str(name).strip():
+            name_keys.add(str(name).strip().upper())
+    result = (rfc_keys, name_keys)
+    _network_cache.set("trama_sanction_keys", result, ttl=86400)
+    return result
+
+
+def _is_sanctioned(rfc, name, sanction_keys) -> bool:
+    rfc_keys, name_keys = sanction_keys
+    if rfc and str(rfc).strip() and str(rfc).strip().upper() in rfc_keys:
+        return True
+    return bool(name) and str(name).strip().upper() in name_keys
+
+
+def _get_gt_vendor_counts(conn: sqlite3.Connection) -> Dict[int, int]:
+    """vendor_id → distinct GT case count (FP-flagged links excluded)."""
+    cached = _network_cache.get("trama_gt_counts")
+    if cached is not None:
+        return cached
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT vendor_id, COUNT(DISTINCT case_id) as case_count
+        FROM ground_truth_vendors
+        WHERE (is_false_positive IS NULL OR is_false_positive = 0)
+        GROUP BY vendor_id
+        """
+    )
+    result: Dict[int, int] = {r["vendor_id"]: r["case_count"] for r in cursor.fetchall()}
+    _network_cache.set("trama_gt_counts", result, ttl=3600)
+    return result
+
+
+def _fetch_vendor_identity(conn: sqlite3.Connection, vendor_ids: List[int]) -> Dict[int, dict]:
+    """id → {name, rfc} for arbitrary id lists, chunked under the variable limit."""
+    cursor = conn.cursor()
+    out: Dict[int, dict] = {}
+    for i in range(0, len(vendor_ids), _TRAMA_IN_CHUNK):
+        chunk = vendor_ids[i:i + _TRAMA_IN_CHUNK]
+        chunk_placeholders = ",".join("?" * len(chunk))
+        cursor.execute(
+            f"SELECT id, name, rfc FROM vendors WHERE id IN ({chunk_placeholders})",
+            chunk,
+        )
+        for r in cursor.fetchall():
+            out[r["id"]] = {"name": r["name"], "rfc": r["rfc"]}
+    return out
+
+
+class TramaEdge(BaseModel):
+    a: int
+    b: int
+    shared_procedures: int
+    co_bid_rate: float
+    is_potential_collusion: bool
+
+
+class TramaNodeStats(BaseModel):
+    total_value_mxn: float
+    da_rate: Optional[float]
+    sb_rate: Optional[float]
+    avg_risk: float
+    pattern_mix: List[Dict[str, Any]]
+    labeled_count: int
+    gt_vendor_count: int
+    sanctioned_count: int
+
+
+class TramaNode(BaseModel):
+    vendor_id: int
+    name: str
+    pagerank: float
+    degree: int
+    risk_score: Optional[float]
+    total_value_mxn: Optional[float]
+    contract_count: Optional[int]
+    is_sanctioned: bool
+    primary_pattern: Optional[str]
+    gt_case_count: int
+
+
+class CommunityGraphResponse(BaseModel):
+    community_id: int
+    total_members: int
+    rendered_members: int
+    truncated: bool
+    nodes: List[TramaNode]
+    edges: List[TramaEdge]
+    edges_truncated: bool
+    stats: TramaNodeStats
+
+
+class TramaIndexItem(BaseModel):
+    community_id: int
+    size: int
+    hub_vendor_id: int
+    hub_vendor_name: str
+    avg_risk: float
+    total_value_mxn: float
+    da_rate: Optional[float]
+    sb_rate: Optional[float]
+    dominant_sector_name: Optional[str]
+    pattern_mix: List[Dict[str, Any]]
+    labeled_count: int
+    gt_vendor_count: int
+    sanctioned_count: int
+
+
+class CommunityIndexResponse(BaseModel):
+    communities: List[TramaIndexItem]
+    total_communities: int
+    generated_at: str
+
+
+@router.get("/communities/index", response_model=CommunityIndexResponse)
+@_rate_limit("20/minute")
+def get_community_index(request: Request):
+    """
+    La Trama community index — all communities with size >= 5.
+
+    Returns up to 250 communities ordered by total_value_mxn DESC.
+    Served from precomputed_stats (key network_trama_index_v1); computed
+    on first request under a mutex and persisted for subsequent cold starts.
+    IMPORTANT: must be registered before /communities/{community_id} to avoid
+    FastAPI routing conflict (literal "index" would fail int coercion → 422).
+    """
+    # In-memory cache check
+    cached = _network_cache.get("trama_index")
+    if cached is not None:
+        return cached
+
+    # Persistent fallback — survives container restarts
+    try:
+        with get_db() as pconn:
+            row = pconn.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+                (_TRAMA_INDEX_DB_KEY,),
+            ).fetchone()
+        if row and row["stat_value"]:
+            persisted = CommunityIndexResponse(**json.loads(row["stat_value"]))
+            _network_cache.set("trama_index", persisted, ttl=3600)
+            return persisted
+    except Exception:
+        pass
+
+    # Compute under mutex
+    with _trama_index_compute_lock:
+        # Double-check after acquiring lock
+        cached2 = _network_cache.get("trama_index")
+        if cached2 is not None:
+            return cached2
+
+        with get_db() as conn:
+            result = _build_community_index(conn)
+
+        _network_cache.set("trama_index", result, ttl=3600)
+
+        # Persist to DB
+        try:
+            payload = result.model_dump()
+            with get_db() as wconn:
+                wconn.execute(
+                    "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) "
+                    "VALUES(?, ?, datetime('now'))",
+                    (_TRAMA_INDEX_DB_KEY, json.dumps(payload, default=str)),
+                )
+                wconn.commit()
+        except Exception as e:
+            logger.warning("trama index persist failed: %s", e)
+
+    return result
+
+
 @router.get("/communities/{community_id}", response_model=CommunityDetailResponse)
 def get_community_detail(
     community_id: int = Path(..., description="Community ID from Louvain clustering"),
@@ -924,6 +1131,420 @@ def get_community_detail(
         total_contracts=total_contracts,
         total_value=total_value,
         graph_ready=True,
+    )
+
+    _network_cache.set(cache_key, result, ttl=3600)
+    return result
+
+
+def _build_community_index(conn: sqlite3.Connection) -> CommunityIndexResponse:
+    """Compute community index from aria_queue aggregates.
+
+    Uses aria_queue rates exclusively (vendor_stats.direct_award_pct is KNOWN
+    CORRUPTED with >100% values). Never queries the raw contracts table here.
+    """
+    import datetime
+    from collections import Counter
+
+    cursor = conn.cursor()
+
+    # All communities with size >= 5
+    cursor.execute("""
+        SELECT community_id, COUNT(*) as size
+        FROM vendor_graph_features
+        GROUP BY community_id
+        HAVING size >= 5
+    """)
+    community_sizes = {r["community_id"]: r["size"] for r in cursor.fetchall()}
+
+    if not community_sizes:
+        return CommunityIndexResponse(
+            communities=[],
+            total_communities=0,
+            generated_at=datetime.datetime.utcnow().isoformat() + "Z",
+        )
+
+    community_ids = list(community_sizes.keys())
+
+    # Fetch all member vendor_ids per community in one pass
+    placeholders = ",".join("?" * len(community_ids))
+    cursor.execute(
+        f"SELECT vendor_id, community_id FROM vendor_graph_features WHERE community_id IN ({placeholders})",
+        community_ids,
+    )
+    community_members: Dict[int, List[int]] = {}
+    for r in cursor.fetchall():
+        community_members.setdefault(r["community_id"], []).append(r["vendor_id"])
+
+    # Fetch hub (highest pagerank) per community in one pass
+    cursor.execute(
+        f"""
+        SELECT community_id, vendor_id, pagerank
+        FROM vendor_graph_features
+        WHERE community_id IN ({placeholders})
+        ORDER BY community_id, pagerank DESC
+        """,
+        community_ids,
+    )
+    community_hub: Dict[int, int] = {}
+    for r in cursor.fetchall():
+        if r["community_id"] not in community_hub:
+            community_hub[r["community_id"]] = r["vendor_id"]
+
+    # Bulk fetch all aria_queue rows for relevant vendors — CHUNKED.
+    # 46,948 vendors live in size>=5 communities (verified 2026-06-07);
+    # a single IN(...) exceeds SQLite's 32,766-variable limit and crashes.
+    all_vendor_ids = [vid for ids in community_members.values() for vid in ids]
+    aq_by_vendor: Dict[int, dict] = {}
+    CHUNK = 900
+    for i in range(0, len(all_vendor_ids), CHUNK):
+        chunk = all_vendor_ids[i:i + CHUNK]
+        chunk_placeholders = ",".join("?" * len(chunk))
+        cursor.execute(
+            f"""
+            SELECT vendor_id, total_value_mxn, direct_award_rate, single_bid_rate,
+                   avg_risk_score, primary_pattern, primary_sector_name
+            FROM aria_queue
+            WHERE vendor_id IN ({chunk_placeholders})
+            """,
+            chunk,
+        )
+        for r in cursor.fetchall():
+            aq_by_vendor[r["vendor_id"]] = dict(r)
+
+    # Vendor identities (name + rfc) for all members, chunked — feeds hub
+    # names AND the Python-set sanction match below.
+    identities = _fetch_vendor_identity(conn, all_vendor_ids)
+    vendor_names: Dict[int, str] = {
+        vid: (identities.get(vid) or {}).get("name") or f"Vendor {vid}"
+        for vid in community_hub.values()
+    }
+
+    # GT vendor counts per community — Python membership over the tiny
+    # ground_truth_vendors table (1,679 rows), FP-flagged links excluded.
+    gt_counts = _get_gt_vendor_counts(conn)
+    gt_count_by_community: Dict[int, int] = {}
+    for cid, member_ids in community_members.items():
+        n = sum(1 for vid in member_ids if vid in gt_counts)
+        if n:
+            gt_count_by_community[cid] = n
+
+    # Sanctioned counts per community — set match in Python. The SQL
+    # UPPER(TRIM(name)) join is unindexable and dominated the build time.
+    sanction_keys = _get_sanction_keys(conn)
+    sanctioned_by_community: Dict[int, int] = {}
+    for cid, member_ids in community_members.items():
+        n = 0
+        for vid in member_ids:
+            ident = identities.get(vid)
+            if ident and _is_sanctioned(ident["rfc"], ident["name"], sanction_keys):
+                n += 1
+        if n:
+            sanctioned_by_community[cid] = n
+
+    items = []
+    for cid, size in community_sizes.items():
+        members = community_members.get(cid, [])
+        hub_id = community_hub.get(cid, members[0] if members else 0)
+        hub_name = vendor_names.get(hub_id, f"Vendor {hub_id}")
+
+        total_value = 0.0
+        da_values: List[float] = []
+        sb_values: List[float] = []
+        risk_values: List[float] = []
+        patterns: List[str] = []
+        sector_names: List[str] = []
+
+        for vid in members:
+            aq = aq_by_vendor.get(vid)
+            if aq:
+                v = aq.get("total_value_mxn") or 0.0
+                total_value += float(v)
+                da = aq.get("direct_award_rate")
+                if da is not None:
+                    da_values.append(float(da))
+                sb = aq.get("single_bid_rate")
+                if sb is not None:
+                    sb_values.append(float(sb))
+                risk = aq.get("avg_risk_score")
+                if risk is not None:
+                    risk_values.append(float(risk))
+                pat = aq.get("primary_pattern")
+                if pat:
+                    patterns.append(pat)
+                sec = aq.get("primary_sector_name")
+                if sec:
+                    sector_names.append(sec)
+
+        if total_value > _TRAMA_VALUE_WARNING_THRESHOLD:
+            logger.warning(
+                "community %d total_value_mxn=%.2e exceeds 10T MXN — possible data error",
+                cid, total_value,
+            )
+
+        pattern_counter = Counter(patterns)
+        pattern_mix = [
+            {"pattern": p, "count": c}
+            for p, c in pattern_counter.most_common(3)
+        ]
+        dominant_sector: Optional[str] = None
+        if sector_names:
+            dominant_sector = Counter(sector_names).most_common(1)[0][0]
+
+        items.append(TramaIndexItem(
+            community_id=cid,
+            size=size,
+            hub_vendor_id=hub_id,
+            hub_vendor_name=hub_name or f"Vendor {hub_id}",
+            avg_risk=round(sum(risk_values) / len(risk_values), 4) if risk_values else 0.0,
+            total_value_mxn=round(total_value, 2),
+            da_rate=round(sum(da_values) / len(da_values), 4) if da_values else None,
+            sb_rate=round(sum(sb_values) / len(sb_values), 4) if sb_values else None,
+            dominant_sector_name=dominant_sector,
+            pattern_mix=pattern_mix,
+            labeled_count=len(patterns),
+            gt_vendor_count=gt_count_by_community.get(cid, 0),
+            sanctioned_count=sanctioned_by_community.get(cid, 0),
+        ))
+
+    # Sort by total_value_mxn DESC, cap at 250
+    items.sort(key=lambda x: x.total_value_mxn, reverse=True)
+    items = items[:250]
+
+    return CommunityIndexResponse(
+        communities=items,
+        total_communities=len(community_sizes),
+        generated_at=datetime.datetime.utcnow().isoformat() + "Z",
+    )
+
+
+# get_community_index is registered before get_community_detail (see below)
+# to prevent FastAPI routing conflict: /communities/index must be registered
+# before /communities/{community_id:int} or the literal "index" hits the int
+# path and returns 422.
+
+
+@router.get("/communities/{community_id}/graph", response_model=CommunityGraphResponse)
+@_rate_limit("30/minute")
+def get_community_graph(
+    request: Request,
+    community_id: int = Path(..., description="Community ID from Louvain clustering"),
+):
+    """
+    La Trama community graph — nodes + edges for force-directed layout.
+
+    Node budget: up to 100 nodes (top by pagerank) for communities > 150 members.
+    Edge budget: up to 2,500 edges (top by shared_procedures).
+    Uses aria_queue aggregates for vendor stats (never raw contracts table).
+    """
+    cache_key = f"community_graph:{community_id}"
+    cached = _network_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Guard: table must exist
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vendor_graph_features'"
+        )
+        if not cursor.fetchone():
+            raise HTTPException(
+                status_code=503,
+                detail="Graph features not yet computed. Run build_vendor_graph.py first.",
+            )
+
+        # Verify community exists
+        cursor.execute(
+            "SELECT COUNT(*) FROM vendor_graph_features WHERE community_id = ?",
+            (community_id,),
+        )
+        total_members = cursor.fetchone()[0]
+        if total_members == 0:
+            raise HTTPException(status_code=404, detail=f"Community {community_id} not found")
+
+        # Fetch ALL member graph features (lightweight — just IDs + pagerank + degree)
+        cursor.execute(
+            """
+            SELECT vendor_id, pagerank, degree
+            FROM vendor_graph_features
+            WHERE community_id = ?
+            ORDER BY pagerank DESC
+            """,
+            (community_id,),
+        )
+        all_members_rows = cursor.fetchall()
+
+        # Node budget
+        truncated = total_members > 150
+        if truncated:
+            render_rows = all_members_rows[:100]
+        else:
+            render_rows = all_members_rows
+
+        rendered_ids = [r["vendor_id"] for r in render_rows]
+        rendered_set = set(rendered_ids)
+
+        # Vendor identities (name + rfc) for rendered members
+        identities = _fetch_vendor_identity(conn, rendered_ids)
+        vendor_names: Dict[int, str] = {
+            vid: (identities.get(vid) or {}).get("name") or f"Vendor {vid}"
+            for vid in rendered_ids
+        }
+
+        # Fetch aria_queue stats for rendered members
+        v_placeholders = ",".join("?" * len(rendered_ids))
+        cursor.execute(
+            f"""
+            SELECT vendor_id, avg_risk_score, total_value_mxn, total_contracts,
+                   primary_pattern
+            FROM aria_queue
+            WHERE vendor_id IN ({v_placeholders})
+            """,
+            rendered_ids,
+        )
+        aq_map: Dict[int, dict] = {r["vendor_id"]: dict(r) for r in cursor.fetchall()}
+
+        # GT case counts + sanctions for rendered members — Python sets
+        # (the SQL name-match join cost 21s on the giant community)
+        gt_map: Dict[int, int] = _get_gt_vendor_counts(conn)
+        sanction_keys = _get_sanction_keys(conn)
+        sanctioned_ids = set()
+        for vid in rendered_ids:
+            ident = identities.get(vid)
+            if ident and _is_sanctioned(ident["rfc"], ident["name"], sanction_keys):
+                sanctioned_ids.add(vid)
+
+        # Build nodes
+        nodes = []
+        for r in render_rows:
+            vid = r["vendor_id"]
+            aq = aq_map.get(vid, {})
+            nodes.append(TramaNode(
+                vendor_id=vid,
+                name=vendor_names.get(vid) or f"Vendor {vid}",
+                pagerank=round(float(r["pagerank"]), 6),
+                degree=int(r["degree"]),
+                risk_score=aq.get("avg_risk_score"),
+                total_value_mxn=aq.get("total_value_mxn"),
+                contract_count=aq.get("total_contracts"),
+                is_sanctioned=vid in sanctioned_ids,
+                primary_pattern=aq.get("primary_pattern"),
+                gt_case_count=gt_map.get(vid, 0),
+            ))
+
+        # Fetch edges using SAFE query (vendor_id_a IN only, intersect in Python)
+        # CRITICAL: double-IN takes 51s on big communities; single-IN + Python-filter = 0.05s
+        cursor.execute(
+            f"""
+            SELECT vendor_id_a, vendor_id_b, shared_procedures, co_bid_rate, is_potential_collusion
+            FROM co_bidding_stats
+            WHERE vendor_id_a IN ({v_placeholders})
+            ORDER BY shared_procedures DESC
+            """,
+            rendered_ids,
+        )
+        raw_edges = cursor.fetchall()
+
+        edges = []
+        edges_truncated = False
+        EDGE_CAP = 2500
+        for er in raw_edges:
+            if er["vendor_id_b"] not in rendered_set:
+                continue
+            edges.append(TramaEdge(
+                a=er["vendor_id_a"],
+                b=er["vendor_id_b"],
+                shared_procedures=er["shared_procedures"],
+                co_bid_rate=round(float(er["co_bid_rate"]), 4),
+                is_potential_collusion=bool(er["is_potential_collusion"]),
+            ))
+            if len(edges) >= EDGE_CAP:
+                edges_truncated = True
+                break
+
+        # Compute stats over ALL members (not just rendered) — chunked
+        # under the SQLite variable limit (giant community = 11,923 ids).
+        all_ids = [r["vendor_id"] for r in all_members_rows]
+        all_aq = []
+        for i in range(0, len(all_ids), _TRAMA_IN_CHUNK):
+            chunk = all_ids[i:i + _TRAMA_IN_CHUNK]
+            chunk_placeholders = ",".join("?" * len(chunk))
+            cursor.execute(
+                f"""
+                SELECT total_value_mxn, direct_award_rate, single_bid_rate,
+                       avg_risk_score, primary_pattern
+                FROM aria_queue
+                WHERE vendor_id IN ({chunk_placeholders})
+                """,
+                chunk,
+            )
+            all_aq.extend(cursor.fetchall())
+
+        total_value_sum = 0.0
+        da_vals: List[float] = []
+        sb_vals: List[float] = []
+        risk_vals: List[float] = []
+        all_patterns: List[str] = []
+
+        for aq_row in all_aq:
+            v = aq_row["total_value_mxn"]
+            if v is not None:
+                total_value_sum += float(v)
+            da = aq_row["direct_award_rate"]
+            if da is not None:
+                da_vals.append(float(da))
+            sb = aq_row["single_bid_rate"]
+            if sb is not None:
+                sb_vals.append(float(sb))
+            risk = aq_row["avg_risk_score"]
+            if risk is not None:
+                risk_vals.append(float(risk))
+            pat = aq_row["primary_pattern"]
+            if pat:
+                all_patterns.append(pat)
+
+        from collections import Counter
+        pattern_counter = Counter(all_patterns)
+        pattern_mix = [
+            {"pattern": p, "count": c}
+            for p, c in pattern_counter.most_common()
+        ]
+
+        # GT and sanctioned counts over ALL members — Python sets again;
+        # identity fetch is chunked so the giant community stays cheap.
+        gt_vendor_count = sum(1 for vid in all_ids if vid in gt_map)
+        if truncated:
+            all_identities = _fetch_vendor_identity(conn, all_ids)
+        else:
+            all_identities = identities
+        sanctioned_count = 0
+        for vid in all_ids:
+            ident = all_identities.get(vid)
+            if ident and _is_sanctioned(ident["rfc"], ident["name"], sanction_keys):
+                sanctioned_count += 1
+
+        stats = TramaNodeStats(
+            total_value_mxn=round(total_value_sum, 2),
+            da_rate=round(sum(da_vals) / len(da_vals), 4) if da_vals else None,
+            sb_rate=round(sum(sb_vals) / len(sb_vals), 4) if sb_vals else None,
+            avg_risk=round(sum(risk_vals) / len(risk_vals), 4) if risk_vals else 0.0,
+            pattern_mix=pattern_mix,
+            labeled_count=len(all_patterns),
+            gt_vendor_count=gt_vendor_count,
+            sanctioned_count=sanctioned_count,
+        )
+
+    result = CommunityGraphResponse(
+        community_id=community_id,
+        total_members=total_members,
+        rendered_members=len(nodes),
+        truncated=truncated,
+        nodes=nodes,
+        edges=edges,
+        edges_truncated=edges_truncated,
+        stats=stats,
     )
 
     _network_cache.set(cache_key, result, ttl=3600)

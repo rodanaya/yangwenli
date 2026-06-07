@@ -1730,6 +1730,98 @@ export const networkApi = {
     const { data } = await api.get<PatternSpotlightResponse>('/network/pattern-spotlight')
     return data
   },
+
+  /**
+   * La Trama — enriched community index (RUNG 0).
+   * Precomputed: per-community value, DA/SB rates, hub vendor, pattern mix.
+   */
+  async getCommunitiesIndex(): Promise<CommunityIndexResponse> {
+    const { data } = await api.get<CommunityIndexResponse>('/network/communities/index')
+    return data
+  },
+
+  /**
+   * La Trama — real co-bidding force graph for one Louvain community (RUNG 1).
+   * Nodes = members (top-100 by pagerank when >150), edges = co_bidding_stats pairs.
+   */
+  async getCommunityGraph(communityId: number): Promise<CommunityGraphResponse> {
+    const { data } = await api.get<CommunityGraphResponse>(`/network/communities/${communityId}/graph`)
+    return data
+  },
+}
+
+// ============================================================================
+// La Trama (/network) types — frozen contract with backend Phase A
+// ============================================================================
+
+export interface PatternMixItem {
+  pattern: string
+  count: number
+}
+
+export interface CommunityGraphNode {
+  vendor_id: number
+  name: string
+  pagerank: number
+  degree: number
+  risk_score: number | null
+  total_value_mxn: number | null
+  contract_count: number | null
+  is_sanctioned: boolean
+  primary_pattern: string | null
+  gt_case_count: number
+}
+
+export interface CommunityGraphEdge {
+  a: number
+  b: number
+  shared_procedures: number
+  co_bid_rate: number
+  is_potential_collusion: boolean
+}
+
+export interface CommunityGraphStats {
+  total_value_mxn: number
+  da_rate: number | null
+  sb_rate: number | null
+  avg_risk: number
+  pattern_mix: PatternMixItem[]
+  labeled_count: number
+  gt_vendor_count: number
+  sanctioned_count: number
+}
+
+export interface CommunityGraphResponse {
+  community_id: number
+  total_members: number
+  rendered_members: number
+  truncated: boolean
+  nodes: CommunityGraphNode[]
+  edges: CommunityGraphEdge[]
+  edges_truncated: boolean
+  stats: CommunityGraphStats
+}
+
+export interface CommunityIndexItem {
+  community_id: number
+  size: number
+  hub_vendor_id: number
+  hub_vendor_name: string
+  avg_risk: number
+  total_value_mxn: number
+  da_rate: number | null
+  sb_rate: number | null
+  dominant_sector_name: string | null
+  pattern_mix: PatternMixItem[]
+  labeled_count: number
+  gt_vendor_count: number
+  sanctioned_count: number
+}
+
+export interface CommunityIndexResponse {
+  communities: CommunityIndexItem[]
+  total_communities: number
+  generated_at: string
 }
 
 // ============================================================================
