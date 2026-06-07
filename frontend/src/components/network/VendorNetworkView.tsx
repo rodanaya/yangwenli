@@ -98,6 +98,51 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
     setSearchParams(params, { replace: true })
   }
 
+  // ── La Trama ladder (Phase B) — shareable trail in the URL ─────────────
+  // /network?vendor=A&comm=N&trail=X,Y records the reader's hop history so
+  // a colleague opening the link lands at the exact investigative position.
+  const commParam = searchParams.get('comm')
+  const trailIds = useMemo(() => {
+    const raw = searchParams.get('trail')
+    if (!raw) return [] as number[]
+    return raw
+      .split(',')
+      .map((s) => parseInt(s, 10))
+      .filter((n) => Number.isFinite(n) && n > 0)
+      .slice(-10)
+  }, [searchParams])
+
+  /** Hop to a co-bidder's ring, appending the current vendor to the trail. */
+  const buildHopTo = (nextVendorId: number) => {
+    const params = new URLSearchParams()
+    if (commParam) params.set('comm', commParam)
+    params.set('vendor', String(nextVendorId))
+    params.set('trail', [...trailIds, vendorId].slice(-10).join(','))
+    return `/network?${params.toString()}`
+  }
+
+  /** Rewind one hop (pop the trail). */
+  const prevHopTo = useMemo(() => {
+    if (trailIds.length === 0) return null
+    const params = new URLSearchParams()
+    if (commParam) params.set('comm', commParam)
+    params.set('vendor', String(trailIds[trailIds.length - 1]))
+    const rest = trailIds.slice(0, -1)
+    if (rest.length) params.set('trail', rest.join(','))
+    return `/network?${params.toString()}`
+  }, [trailIds, commParam])
+
+  const [linkCopied, setLinkCopied] = useState(false)
+  const copyTrailLink = () => {
+    try {
+      void navigator.clipboard.writeText(window.location.href)
+      setLinkCopied(true)
+      window.setTimeout(() => setLinkCopied(false), 1800)
+    } catch {
+      /* clipboard unavailable — no-op */
+    }
+  }
+
   const [instSort, setInstSort] = useState<InstSortKey>('value')
 
   const { data: vendor, isLoading: vendorLoading } = useQuery({
@@ -131,13 +176,51 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
       {/* Header */}
       <header className="border-b border-border bg-background-card/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-5">
-          <Link
-            to="/network"
-            className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors mb-3"
-          >
-            <ArrowLeft className="w-3 h-3" aria-hidden="true" />
-            {isEs ? 'Volver al Atlas de Redes' : 'Back to Network Atlas'}
-          </Link>
+          {/* Breadcrumb ladder: Índice › C-NNN › (rewind hop) › current */}
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <nav
+              className="flex items-center gap-1.5 min-w-0 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted"
+              aria-label={isEs ? 'Ruta de investigación' : 'Investigation trail'}
+            >
+              <Link
+                to="/network"
+                className="inline-flex items-center gap-1.5 hover:text-text-primary transition-colors shrink-0"
+              >
+                <ArrowLeft className="w-3 h-3" aria-hidden="true" />
+                {isEs ? 'Índice' : 'Index'}
+              </Link>
+              {commParam && (
+                <>
+                  <span className="opacity-40 shrink-0">›</span>
+                  <Link
+                    to={`/network?comm=${commParam}`}
+                    className="hover:text-text-primary transition-colors shrink-0"
+                  >
+                    C-{commParam}
+                  </Link>
+                </>
+              )}
+              {prevHopTo && (
+                <>
+                  <span className="opacity-40 shrink-0">›</span>
+                  <Link to={prevHopTo} className="hover:text-text-primary transition-colors shrink-0">
+                    {isEs ? `‹ salto ${trailIds.length}` : `‹ hop ${trailIds.length}`}
+                  </Link>
+                </>
+              )}
+              <span className="opacity-40 shrink-0">›</span>
+              <span className="text-text-primary truncate" title={vendorName}>
+                {vendorName}
+              </span>
+            </nav>
+            <button
+              type="button"
+              onClick={copyTrailLink}
+              className="shrink-0 rounded-sm border border-border px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-border/20 transition-colors"
+            >
+              {linkCopied ? (isEs ? 'Copiado ✓' : 'Copied ✓') : isEs ? 'Copiar enlace' : 'Copy link'}
+            </button>
+          </div>
 
           <div className="flex items-baseline gap-3 flex-wrap mb-3">
             <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
@@ -173,11 +256,11 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
                 label={isEs ? 'valor total' : 'total value'}
               />
               <Link
-                to={`/thread/${vendorId}`}
+                to={`/vendors/${vendorId}`}
                 className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-text-secondary hover:text-text-primary transition-colors border border-border rounded-sm px-3 py-1.5"
               >
                 <GitBranch className="w-3 h-3" aria-hidden="true" />
-                {isEs ? 'Hilo de investigación' : 'Investigation thread'}
+                {isEs ? 'Dossier del proveedor' : 'Vendor dossier'}
               </Link>
             </div>
           )}
@@ -219,6 +302,7 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
             coBidders={coBiddersList}
             t={t}
             isEs={isEs}
+            buildHopTo={buildHopTo}
           />
         )}
       </main>
@@ -669,10 +753,12 @@ function CoBiddersView({
   coBidders,
   t,
   isEs,
+  buildHopTo,
 }: {
   coBidders: CoBidderItem[]
   t: (k: string) => string
   isEs: boolean
+  buildHopTo: (vendorId: number) => string
 }) {
   const byTier = useMemo(() => {
     const buckets: Record<RoleTier, CoBidderItem[]> = {
@@ -747,7 +833,14 @@ function CoBiddersView({
               </div>
               <div className="rounded-sm border border-border bg-background-card divide-y divide-border/60">
                 {items.map((cb) => (
-                  <CoBidderRow key={cb.vendor_id} cb={cb} maxCoBids={maxCoBids} color={color} isEs={isEs} />
+                  <CoBidderRow
+                    key={cb.vendor_id}
+                    cb={cb}
+                    maxCoBids={maxCoBids}
+                    color={color}
+                    isEs={isEs}
+                    hopTo={buildHopTo(cb.vendor_id)}
+                  />
                 ))}
               </div>
             </div>
@@ -763,20 +856,26 @@ function CoBidderRow({
   maxCoBids,
   color,
   isEs,
+  hopTo,
 }: {
   cb: CoBidderItem
   maxCoBids: number
   color: string
   isEs: boolean
+  hopTo: string
 }) {
   const winRate = cb.co_bid_count > 0 ? cb.win_count / cb.co_bid_count : 0
   const barPct = Math.max(2, (Math.log(cb.co_bid_count + 1) / Math.log(maxCoBids + 1)) * 100)
 
   return (
-    <Link
-      to={`/thread/${cb.vendor_id}`}
-      className="block px-4 py-2.5 hover:bg-background-elevated/40 transition-colors group"
-    >
+    // Row click HOPS within the mesh (trail appended); the corner icon
+    // escapes to the vendor dossier. Sibling links — never nested <a>.
+    <div className="relative">
+      <Link
+        to={hopTo}
+        title={isEs ? 'Saltar a su red de co-licitación' : 'Hop to its co-bidding ring'}
+        className="block px-4 py-2.5 pr-10 hover:bg-background-elevated/40 transition-colors group"
+      >
       <div className="grid grid-cols-[1fr_auto] gap-x-3 items-baseline mb-1.5">
         <span className="text-sm text-text-primary group-hover:text-accent transition-colors leading-snug break-words">
           {cb.vendor_name}
@@ -804,7 +903,16 @@ function CoBidderRow({
           )}
         </div>
       </div>
-    </Link>
+      </Link>
+      <Link
+        to={`/vendors/${cb.vendor_id}`}
+        aria-label={isEs ? `Abrir dossier de ${cb.vendor_name}` : `Open dossier for ${cb.vendor_name}`}
+        title={isEs ? 'Dossier del proveedor' : 'Vendor dossier'}
+        className="absolute right-2.5 top-2.5 p-1 rounded-sm text-text-muted/50 hover:text-text-primary hover:bg-border/30 transition-colors"
+      >
+        <ExternalLink className="w-3 h-3" aria-hidden="true" />
+      </Link>
+    </div>
   )
 }
 

@@ -22,7 +22,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { Network, ShieldAlert, Search } from 'lucide-react'
+import { Network, ShieldAlert, Search, Pin } from 'lucide-react'
 import { networkApi, type CommunityIndexItem } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { RISK_COLORS, PATTERN_COLORS, getRiskLevelFromScore } from '@/lib/constants'
@@ -33,8 +33,19 @@ import { CommunityForceGraph } from '@/components/network/CommunityForceGraph'
 import { VendorNetworkView } from '@/components/network/VendorNetworkView'
 
 const OECD_DA_CEILING = 0.25
+const PINS_KEY = 'rubli_trama_pins_v1'
 
 type SortKey = 'value' | 'risk' | 'size' | 'sb' | 'gt'
+
+function readPins(): number[] {
+  try {
+    const raw = localStorage.getItem(PINS_KEY)
+    const arr = raw ? JSON.parse(raw) : []
+    return Array.isArray(arr) ? arr.filter((n) => typeof n === 'number') : []
+  } catch {
+    return []
+  }
+}
 
 /** Hybrid cluster label (locked decision): "C-333 · órbita de GRUPO X". */
 function clusterLabel(c: CommunityIndexItem, isEs: boolean): { code: string; orbit: string } {
@@ -145,7 +156,31 @@ export default function RedesKnownDossier() {
   const [patternFilter, setPatternFilter] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [showAll, setShowAll] = useState(false)
+  const [pins, setPins] = useState<number[]>(readPins)
+  const [linkCopied, setLinkCopied] = useState(false)
   const plateRef = useRef<HTMLDivElement | null>(null)
+
+  const togglePin = (id: number) => {
+    setPins((prev) => {
+      const next = prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id].slice(-12)
+      try {
+        localStorage.setItem(PINS_KEY, JSON.stringify(next))
+      } catch {
+        /* storage unavailable — pin survives the session only */
+      }
+      return next
+    })
+  }
+
+  const copyTrailLink = () => {
+    try {
+      void navigator.clipboard.writeText(window.location.href)
+      setLinkCopied(true)
+      window.setTimeout(() => setLinkCopied(false), 1800)
+    } catch {
+      /* clipboard unavailable — no-op */
+    }
+  }
 
   // Write comm back to the URL (replace — no history spam).
   useEffect(() => {
@@ -207,8 +242,16 @@ export default function RedesKnownDossier() {
       default:
         sorted.sort((a, b) => b.total_value_mxn - a.total_value_mxn)
     }
+    // Pinned clusters surface first (stable within their own sort order).
+    if (pins.length > 0) {
+      const pinSet = new Set(pins)
+      return [
+        ...sorted.filter((c) => pinSet.has(c.community_id)),
+        ...sorted.filter((c) => !pinSet.has(c.community_id)),
+      ]
+    }
     return sorted
-  }, [index, patternFilter, query, sortBy])
+  }, [index, patternFilter, query, sortBy, pins])
 
   const visible = showAll ? filtered : filtered.slice(0, 60)
 
@@ -386,6 +429,13 @@ export default function RedesKnownDossier() {
               <span className="text-[10px] font-mono text-text-muted/50">
                 {filtered.length}/{index?.communities.length ?? 0}
               </span>
+              <button
+                type="button"
+                onClick={copyTrailLink}
+                className="ml-auto rounded-sm border border-border px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-border/20 transition-colors"
+              >
+                {linkCopied ? (isEs ? 'Copiado ✓' : 'Copied ✓') : isEs ? 'Copiar enlace' : 'Copy link'}
+              </button>
             </div>
 
             {/* Search */}
@@ -474,14 +524,23 @@ export default function RedesKnownDossier() {
                 {visible.map((c, rank) => {
                   const lbl = clusterLabel(c, isEs)
                   const active = c.community_id === effectiveComm
+                  const pinned = pins.includes(c.community_id)
                   const daHot = (c.da_rate ?? 0) > OECD_DA_CEILING
                   return (
-                    <button
+                    <div
                       key={c.community_id}
-                      role="listitem"
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={active}
                       onClick={() => selectCommunity(c.community_id)}
+                      onKeyDown={(ev) => {
+                        if (ev.key === 'Enter' || ev.key === ' ') {
+                          ev.preventDefault()
+                          selectCommunity(c.community_id)
+                        }
+                      }}
                       className={cn(
-                        'w-full text-left rounded-sm border px-3 py-2 transition-colors',
+                        'w-full text-left rounded-sm border px-3 py-2 transition-colors cursor-pointer',
                         active
                           ? 'border-accent/50 bg-accent/8'
                           : 'border-border/60 bg-background-card hover:border-border-hover',
@@ -496,8 +555,29 @@ export default function RedesKnownDossier() {
                           <span className="text-[11px] font-mono font-bold text-text-primary">{lbl.code}</span>
                           <span className="text-[10.5px] font-mono text-text-muted/70 ml-1.5 italic">{lbl.orbit}</span>
                         </span>
-                        <span className="shrink-0 text-[11px] font-mono font-bold text-text-primary">
-                          {formatCompactMXN(c.total_value_mxn)}
+                        <span className="shrink-0 inline-flex items-center gap-1.5">
+                          <span className="text-[11px] font-mono font-bold text-text-primary">
+                            {formatCompactMXN(c.total_value_mxn)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(ev) => {
+                              ev.stopPropagation()
+                              togglePin(c.community_id)
+                            }}
+                            aria-label={
+                              pinned
+                                ? isEs ? `Desfijar ${lbl.code}` : `Unpin ${lbl.code}`
+                                : isEs ? `Fijar ${lbl.code}` : `Pin ${lbl.code}`
+                            }
+                            aria-pressed={pinned}
+                            className={cn(
+                              'p-0.5 rounded-sm transition-colors',
+                              pinned ? 'text-accent' : 'text-text-muted/30 hover:text-text-muted',
+                            )}
+                          >
+                            <Pin className="h-3 w-3" aria-hidden="true" fill={pinned ? 'currentColor' : 'none'} />
+                          </button>
                         </span>
                       </div>
                       <div className="mt-1 flex items-center gap-2.5 text-[9.5px] font-mono text-text-muted/70">
@@ -532,7 +612,7 @@ export default function RedesKnownDossier() {
                       <div className="mt-1.5">
                         <PatternMixBar c={c} isEs={isEs} />
                       </div>
-                    </button>
+                    </div>
                   )
                 })}
                 {!showAll && filtered.length > 60 && (
@@ -711,6 +791,9 @@ export default function RedesKnownDossier() {
                           onClick={() => {
                             const next = new URLSearchParams(searchParams)
                             next.set('vendor', String(selectedVendor))
+                            // Anchor the breadcrumb ladder: the C-NNN crumb
+                            // needs comm in the URL even on the default view.
+                            if (effectiveComm != null) next.set('comm', String(effectiveComm))
                             setSearchParams(next)
                           }}
                           className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[9.5px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
