@@ -111,6 +111,7 @@ export function AdminSectorMatrix({
   summary,
   metric,
   onMetricChange,
+  bare,
 }: {
   selectedAdmin: AdminName
   liveMatrix: Record<string, Record<string, { risk: number; da: number; hr: number; sb: number }>> | null
@@ -118,6 +119,8 @@ export function AdminSectorMatrix({
   summary: Record<string, { risk: number; da: number; hr: number; sb: number }> | null
   metric: MatrixMetric
   onMetricChange: (m: MatrixMetric) => void
+  /** Drop the outer card chrome when embedded inside the PATRÓN folder (M7c). */
+  bare?: boolean
 }) {
   const { t } = useTranslation('administrations')
   const isLive = liveMatrix !== null
@@ -203,8 +206,8 @@ export function AdminSectorMatrix({
   const overallMax = overallValues.length > 0 ? Math.max(...overallValues) : 1
 
   return (
-    <div className="card-elevated">
-      <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+    <div className={bare ? '' : 'card-elevated'}>
+      <div className={cn('px-4 py-3', !bare && 'border-b border-border/60 bg-background-card')}>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h3 className="text-sm font-mono text-text-primary">
@@ -270,7 +273,7 @@ export function AdminSectorMatrix({
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto px-4 py-3 bg-background-card">
+      <div className={cn('overflow-x-auto px-4 py-3', !bare && 'bg-background-card')}>
         <table className="border-separate" style={{ borderSpacing: 3 }} aria-label="Administration sector comparison matrix">
           <thead>
             <tr>

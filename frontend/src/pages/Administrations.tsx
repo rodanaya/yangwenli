@@ -37,8 +37,6 @@ import type {
 } from '@/components/administrations/types'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { ScrollReveal } from '@/hooks/useAnimations'
-
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
@@ -143,11 +141,24 @@ function computeZScore(values: number[], value: number): number {
 /** URL-friendly slug for ?admin= deep links: "Pena Nieto" → "pena-nieto". */
 const adminSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-')
 
-/** Chapter kicker — Spanish § kicker with Roman numeral, editorial accent. */
-function ChapterKicker({ numeral, es, en, isEs }: { numeral: string; es: string; en: string; isEs: boolean }) {
+/**
+ * Chapter kicker — Spanish § kicker with Roman numeral, editorial accent.
+ * `adminTag`/`tagColor` bind the chapter to the selected administration
+ * (M7c cohesion: every per-admin chapter announces WHOSE file it belongs to).
+ */
+function ChapterKicker({
+  numeral, es, en, isEs, adminTag, tagColor,
+}: {
+  numeral: string; es: string; en: string; isEs: boolean; adminTag?: string; tagColor?: string
+}) {
   return (
     <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
       § {numeral} · {isEs ? es : en}
+      {adminTag && (
+        <span className="font-semibold" style={{ color: tagColor ?? 'var(--color-text-muted)' }}>
+          {' '}— {adminTag}
+        </span>
+      )}
     </div>
   )
 }
@@ -416,6 +427,12 @@ export default function Administrations() {
   const adminLabels: Record<number, string> = { 2006: 'Calderón', 2012: 'Peña', 2018: 'AMLO', 2024: 'Sheinbaum' }
   const breaksData = breaksResp
 
+  // ── M7c module identity — the EXPEDIENTE folder carries the selected
+  // administration's party color; the PATRÓN folder carries the platform ochre.
+  const folderColor = PARTY_COLORS[selectedMeta.party] || '#64748b'
+  const selectedDisplay = ADMIN_DISPLAY_NAMES[selectedAdmin] ?? selectedAdmin
+  const adminTag = `${selectedDisplay} · ${selectedMeta.dataStart}–${Math.min(selectedMeta.end, 2025)}`
+
   return (
     <div className="min-h-screen bg-background relative">
       {/* Page paper-grain */}
@@ -497,7 +514,21 @@ export default function Administrations() {
 
         <div className="space-y-8 max-w-[1600px] mx-auto">
 
-          {/* ── █ ADMIN SUMMARY CARD — the page's organizing element ── */}
+          {/* ════════════════════════════════════════════════════════════════
+              MÓDULO 1 · EL EXPEDIENTE — one bounded folder. EVERYTHING inside
+              (summary + chapters § I–IV) belongs to the SELECTED administration.
+              The party-color spine runs the full height (M7c cohesion refactor).
+              ════════════════════════════════════════════════════════════════ */}
+          <section
+            aria-label={isEs ? `Expediente · ${selectedDisplay}` : `Case file · ${selectedDisplay}`}
+            className="rounded-sm border border-border/50 bg-background-card overflow-hidden"
+            style={{
+              borderLeftWidth: 4,
+              borderLeftColor: folderColor,
+              boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
+              transition: 'border-color 0.3s ease',
+            }}
+          >
           <AdminSummaryCard
             aggs={adminAggs}
             selected={selectedAdmin}
@@ -506,10 +537,11 @@ export default function Administrations() {
             displayNames={ADMIN_DISPLAY_NAMES}
             isEs={isEs}
             eraExtras={selectedEraExtras}
+            embedded
           />
 
           {/* ── § I · LA TRAYECTORIA — yearly deep dive (editorial rebuild R1) ── */}
-          <div>
+          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
             {selectedAgg && selectedAgg.years.length > 0 ? (() => {
               const years = selectedAgg.years
               // Worst-year claim for the headline (max high_risk_pct).
@@ -533,11 +565,21 @@ export default function Administrations() {
                 .sort((a, b) => (impactRank[a.impact] ?? 3) - (impactRank[b.impact] ?? 3))
               const seenEventYears = new Set<number>()
               const eventAnnos: ChartAnnotation[] = []
+              // Bilingual fallbacks for backend event types not in the i18n map
+              // (the live temporal-events API emits free strings like 'election').
+              const evTypeFallback: Record<string, string> = {
+                election: isEs ? 'Elección' : 'Election',
+                crisis: 'Crisis',
+                reform: isEs ? 'Reforma' : 'Reform',
+                audit: isEs ? 'Auditoría' : 'Audit',
+                scandal: isEs ? 'Escándalo' : 'Scandal',
+                pandemic: isEs ? 'Pandemia' : 'Pandemic',
+              }
               for (const ev of topEvents) {
                 if (eventAnnos.length >= 3) break
                 if (seenEventYears.has(ev.year)) continue
                 seenEventYears.add(ev.year)
-                const typeLabel = ev.type ? t(`eventTypes.${ev.type}`, ev.type) : ''
+                const typeLabel = ev.type ? t(`eventTypes.${ev.type}`, evTypeFallback[ev.type] ?? ev.type) : ''
                 eventAnnos.push({
                   kind: 'vrule',
                   x: ev.year,
@@ -560,7 +602,7 @@ export default function Administrations() {
               ]
               return (
                 <EditorialChartFrame
-                  kicker={`§ I · ${isEs ? 'LA TRAYECTORIA' : 'THE YEARLY RECORD'}`}
+                  kicker={`§ I · ${isEs ? 'LA TRAYECTORIA' : 'THE YEARLY RECORD'} — ${adminTag}`}
                   headline={isEs
                     ? `${worstYear}: el año de mayor riesgo del sexenio — ${worstHR.toFixed(1)}% de contratos de alto riesgo`
                     : `${worstYear}: the term's highest-risk year — ${worstHR.toFixed(1)}% high-risk contracts`}
@@ -569,7 +611,7 @@ export default function Administrations() {
                       COMPRANET · RUBLI v0.8.5
                     </span>
                   }
-                  tone="card"
+                  tone="bare"
                 >
                   <EditorialLineChart
                     data={years}
@@ -608,11 +650,9 @@ export default function Administrations() {
                 </EditorialChartFrame>
               )
             })() : (
-              <div className="card">
-                <div className="px-4 py-3 border-b border-border/60 bg-background-card">
-                  <ChapterKicker numeral="I" es="LA TRAYECTORIA" en="THE YEARLY RECORD" isEs={isEs} />
-                </div>
-                <div className="h-[320px] flex items-center justify-center text-text-muted text-sm bg-background-card">
+              <div>
+                <ChapterKicker numeral="I" es="LA TRAYECTORIA" en="THE YEARLY RECORD" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
+                <div className="h-[320px] flex items-center justify-center text-text-muted text-sm">
                   {t('noData')}
                 </div>
               </div>
@@ -652,12 +692,11 @@ export default function Administrations() {
           </div>
 
           {/* ── § II · LA HUELLA SECTORIAL — sector risk profile ── */}
-          <ScrollReveal direction="fade">
-          <div className="card-elevated">
-            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
+            <div className="mb-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <ChapterKicker numeral="II" es="LA HUELLA SECTORIAL" en="THE SECTOR FOOTPRINT" isEs={isEs} />
+                  <ChapterKicker numeral="II" es="LA HUELLA SECTORIAL" en="THE SECTOR FOOTPRINT" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
                   <h3 className="text-sm font-mono text-text-primary">
                     {t('sectorProfile', { admin: selectedAdmin })}
                   </h3>
@@ -678,7 +717,7 @@ export default function Administrations() {
                 />
               </div>
             </div>
-            <div className="px-4 py-3 bg-background-card">
+            <div>
               {(() => {
                 const ranked = sectorHeatmap.filter((s) => s.contracts > 0).sort((a, b) => b.hr - a.hr)
                 if (ranked.length === 0) {
@@ -716,14 +755,13 @@ export default function Administrations() {
               })()}
             </div>
           </div>
-          </ScrollReveal>
 
           {/* ── § III · EL EXPEDIENTE — chronological case-file spine (R3) ── */}
-          <div className="card" id="expediente">
-            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-5" id="expediente">
+            <div className="mb-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <ChapterKicker numeral="III" es="EL EXPEDIENTE" en="THE CASE FILE" isEs={isEs} />
+                  <ChapterKicker numeral="III" es="EL EXPEDIENTE" en="THE CASE FILE" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
                   <h3 className="text-sm font-mono text-text-primary">
                     {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
                   </h3>
@@ -736,23 +774,21 @@ export default function Administrations() {
                 )}
               </div>
             </div>
-            <div className="px-4 py-3 bg-background-card">
-              <ExpedienteSpine
-                adminName={selectedAdmin}
-                isEs={isEs}
-                gtCaseCount={selectedEraExtras.gtCaseCount}
-                events={HARDCODED_EVENTS[selectedAdmin] ?? []}
-              />
-            </div>
+            <ExpedienteSpine
+              adminName={selectedAdmin}
+              isEs={isEs}
+              gtCaseCount={selectedEraExtras.gtCaseCount}
+              events={HARDCODED_EVENTS[selectedAdmin] ?? []}
+            />
           </div>
 
           {/* ── § IV · LOS BENEFICIARIOS — top vendors + top sectors ── */}
-          <div className="card">
-            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
-              <ChapterKicker numeral="IV" es="LOS BENEFICIARIOS" en="THE BENEFICIARIES" isEs={isEs} />
+          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
+            <div className="mb-4">
+              <ChapterKicker numeral="IV" es="LOS BENEFICIARIOS" en="THE BENEFICIARIES" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
               <h3 className="text-sm font-mono text-text-primary">{t('vendorSection.subtitle')}</h3>
             </div>
-            <div className="px-4 py-3 bg-background-card">
+            <div>
               <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
                 <AdminVendorBreakdown
                   vendors={selectedVendors}
@@ -808,22 +844,61 @@ export default function Administrations() {
             </div>
           </div>
 
-          {/* ── § EL CONTEXTO SISTÉMICO divider ── */}
-          <div className="pt-2">
-            <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted font-semibold flex items-center gap-3">
-              <span className="h-px flex-1 bg-border" />
-              <span>{isEs ? '§ EL CONTEXTO SISTÉMICO · 2002–2025' : '§ THE SYSTEMIC CONTEXT · 2002–2025'}</span>
-              <span className="h-px flex-1 bg-border" />
+          {/* ── Folder colophon — explicit module end ── */}
+          <div className="border-t border-border/40 px-5 py-3 text-center">
+            <span
+              className="text-[9px] font-mono uppercase tracking-[0.3em] text-text-muted"
+              style={{ fontStyle: 'italic' }}
+            >
+              — {isEs ? 'fin del expediente' : 'end of file'} · <span style={{ color: folderColor, fontWeight: 700 }}>{selectedDisplay}</span> —
+            </span>
+          </div>
+          </section>
+
+          {/* ════════════════════════════════════════════════════════════════
+              MÓDULO 2 · EL PATRÓN — the systemic folder. Five terms compared;
+              the SELECTED administration is threaded through every chart as a
+              ▶ highlight. Ochre spine = platform voice (M7c cohesion refactor).
+              ════════════════════════════════════════════════════════════════ */}
+          <section
+            aria-label={isEs ? 'El patrón — cinco sexenios comparados' : 'The pattern — five terms compared'}
+            className="rounded-sm border border-border/50 bg-background-card overflow-hidden"
+            style={{
+              borderLeftWidth: 4,
+              borderLeftColor: 'var(--color-accent)',
+              boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
+            }}
+          >
+          {/* Module header */}
+          <div className="px-4 sm:px-5 py-5">
+            <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1.5">
+              § V · {isEs ? 'EL PATRÓN · CINCO SEXENIOS COMPARADOS' : 'THE PATTERN · FIVE TERMS COMPARED'}
             </div>
-            <p className="text-center text-[10px] text-text-muted mt-2 font-mono">
+            <h2
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(20px, 2.6vw, 28px)',
+                lineHeight: 1.1,
+              }}
+              className="text-text-primary"
+            >
+              {isEs ? (
+                <>¿Cómo se sitúa <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span> frente a los otros cuatro?</>
+              ) : (
+                <>How does <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span> compare against the other four?</>
+              )}
+            </h2>
+            <p className="mt-1.5 text-xs text-text-muted max-w-[64ch] leading-relaxed">
               {isEs
-                ? 'Cómo se compara cada sexenio contra el patrón de 25 años'
-                : 'How each administration compares against the 25-year pattern'}
+                ? 'Las gráficas de este módulo comparan los cinco sexenios; la administración seleccionada aparece marcada con ▶.'
+                : 'Charts in this module compare all five terms; the selected administration is marked with ▶.'}
             </p>
           </div>
 
           {/* 25-year systemic trend */}
-          <ScrollReveal direction="fade">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
           <EditorialChartFrame
             kicker={isEs ? '§ TENDENCIAS 25 AÑOS' : '§ 25-YEAR SYSTEMIC TRENDS'}
             headline={isEs
@@ -837,17 +912,28 @@ export default function Administrations() {
                 <ChartDownloadButton targetRef={systemicChartRef} filename="systemic-patterns-25yr" />
               </div>
             }
-            tone="card"
+            tone="bare"
           >
             {yoyData.length > 0 ? (
               <div ref={systemicChartRef}>
                 {(() => {
+                  // Era bands — the page-selected administration gets a ▶ marker
+                  // so the systemic chart visibly threads back to the selection.
+                  const eraBands: Array<{ name: AdminName; label: string; x1: number; x2: number }> = [
+                    { name: 'Fox', label: 'Fox · PAN', x1: 2002, x2: 2006 },
+                    { name: 'Calderon', label: 'Calderón · PAN', x1: 2006, x2: 2012 },
+                    { name: 'Pena Nieto', label: 'EPN · PRI', x1: 2012, x2: 2018 },
+                    { name: 'AMLO', label: 'AMLO · MORENA', x1: 2018, x2: 2024 },
+                    { name: 'Sheinbaum', label: 'Sheinbaum · MORENA', x1: 2024, x2: 2026 },
+                  ]
                   const annotations: ChartAnnotation[] = [
-                    { kind: 'band', x1: 2002, x2: 2006, label: 'Fox · PAN', tone: 'admin' },
-                    { kind: 'band', x1: 2006, x2: 2012, label: 'Calderón · PAN', tone: 'admin' },
-                    { kind: 'band', x1: 2012, x2: 2018, label: 'EPN · PRI', tone: 'admin' },
-                    { kind: 'band', x1: 2018, x2: 2024, label: 'AMLO · MORENA', tone: 'admin' },
-                    { kind: 'band', x1: 2024, x2: 2026, label: 'Sheinbaum · MORENA', tone: 'admin' },
+                    ...eraBands.map<ChartAnnotation>((b) => ({
+                      kind: 'band',
+                      x1: b.x1,
+                      x2: b.x2,
+                      label: b.name === selectedAdmin ? `▶ ${b.label}` : b.label,
+                      tone: 'admin',
+                    })),
                     { kind: 'hrule', y: 65.3, label: t('patternsView.nationalAvgLabel'), tone: 'oecd' },
                     ...transitionYears.map<ChartAnnotation>((year) => ({
                       kind: 'vrule', x: year, label: adminLabels[year] ?? '', tone: 'info',
@@ -904,10 +990,10 @@ export default function Administrations() {
               </p>
             )}
           </EditorialChartFrame>
-          </ScrollReveal>
+          </div>
 
           {/* Five presidents ranked by risk */}
-          <div className="bg-background-card rounded-sm border border-border/40 p-5">
+          <div className="border-t border-border/40 px-4 sm:px-5 py-5">
             <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
               {isEs ? '§ CINCO PRESIDENTES · RIESGO COMPARADO' : '§ FIVE PRESIDENTS · RISK COMPARED'}
             </div>
@@ -921,12 +1007,15 @@ export default function Administrations() {
               const scaleMax = Math.max(...adminAggs.map((ag) => ag.highRiskPct), allTimeAvg.hr, 1) * 1.15
               const rows: DotStripRow[] = ranked.map((a) => {
                 const isAmlo = a.name === 'AMLO'
+                const isSelected = a.name === selectedAdmin
                 const adminMeta = ADMINISTRATIONS.find((ad) => ad.name === a.name)
                 const partyColor = PARTY_COLORS[adminMeta?.party || ''] || '#64748b'
                 const multiple = allTimeAvg.hr > 0 ? a.highRiskPct / allTimeAvg.hr : 0
                 const party = adminMeta?.party ?? ''
+                const baseLabel = ADMIN_DISPLAY_NAMES[a.name] ?? a.name
                 return {
-                  label: ADMIN_DISPLAY_NAMES[a.name] ?? a.name,
+                  // ▶ threads the page selection through the systemic ranking (M7c)
+                  label: isSelected ? `▶ ${baseLabel}` : baseLabel,
                   sublabel: isAmlo
                     ? `${party} · ${multiple.toFixed(1)}× ${isEs ? 'promedio' : 'avg'}`
                     : party,
@@ -955,25 +1044,32 @@ export default function Administrations() {
           </div>
 
           {/* Admin × Sector matrix */}
-          <AdminSectorMatrix
-            selectedAdmin={selectedAdmin}
-            liveMatrix={liveAdminSectorMatrix}
-            summary={adminSummary}
-            metric={matrixMetric}
-            onMetricChange={setMatrixMetric}
-          />
+          <div className="border-t border-border/40">
+            <AdminSectorMatrix
+              selectedAdmin={selectedAdmin}
+              liveMatrix={liveAdminSectorMatrix}
+              summary={adminSummary}
+              metric={matrixMetric}
+              onMetricChange={setMatrixMetric}
+              bare
+            />
+          </div>
 
-          {/* Lame-duck / term-year small multiples */}
-          <AdminCycleSmallMultiples
-            administrations={adminCycleData}
-            isEs={isEs}
-            referencePct={allTimeAvg.risk * 100}
-          />
+          {/* Lame-duck / term-year small multiples — selected panel ringed */}
+          <div className="border-t border-border/40">
+            <AdminCycleSmallMultiples
+              administrations={adminCycleData}
+              isEs={isEs}
+              referencePct={allTimeAvg.risk * 100}
+              selectedName={selectedAdmin}
+              bare
+            />
+          </div>
 
           {/* Period Comparison tool (collapsed footer utility) */}
-          <div className="border border-border/40 rounded-sm">
+          <div className="border-t border-border/40">
             <button
-              className="w-full flex items-center justify-between px-4 py-3 bg-background-card text-left hover:bg-background-elevated/40 transition-colors"
+              className="w-full flex items-center justify-between px-4 sm:px-5 py-3 text-left hover:bg-background-elevated/40 transition-colors"
               onClick={() => setCompareOpen((v) => !v)}
               aria-expanded={compareOpen}
             >
@@ -983,11 +1079,12 @@ export default function Administrations() {
               <span className="text-text-muted text-xs font-mono">{compareOpen ? '−' : '+'}</span>
             </button>
             {compareOpen && (
-              <div className="px-4 pb-4">
+              <div className="px-4 sm:px-5 pb-4">
                 <ComparePeriodView />
               </div>
             )}
           </div>
+          </section>
 
           <PageFooter />
         </div>

@@ -34,6 +34,11 @@ export interface AdminSummaryCardProps {
   isEs: boolean
   /** Per-era extras for the verdict lede (FALCO passes from the page). */
   eraExtras?: { gtCaseCount?: number; decSpikePct?: number }
+  /**
+   * When true the card drops its own border/shadow chrome — the parent
+   * EXPEDIENTE folder provides the module boundary (M7c cohesion refactor).
+   */
+  embedded?: boolean
 }
 
 /** Tiny inline sparkline — high-risk % across the term's years. */
@@ -142,6 +147,7 @@ export function AdminSummaryCard({
   displayNames,
   isEs,
   eraExtras,
+  embedded,
 }: AdminSummaryCardProps) {
   const { t } = useTranslation('administrations')
   const meta = ADMINISTRATIONS.find((a) => a.name === selected) ?? ADMINISTRATIONS[0]
@@ -170,12 +176,20 @@ export function AdminSummaryCard({
   return (
     <section
       aria-label={isEs ? 'Resumen de la administración seleccionada' : 'Selected administration summary'}
-      className="rounded-sm border border-border/50 bg-background-card overflow-hidden"
-      style={{
-        borderLeftWidth: 4,
-        borderLeftColor: partyColor,
-        boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
-      }}
+      className={
+        embedded
+          ? 'overflow-hidden' // folder provides border + spine + shadow
+          : 'rounded-sm border border-border/50 bg-background-card overflow-hidden'
+      }
+      style={
+        embedded
+          ? undefined
+          : {
+              borderLeftWidth: 4,
+              borderLeftColor: partyColor,
+              boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
+            }
+      }
     >
       {/* ── Switcher rail ── */}
       <div

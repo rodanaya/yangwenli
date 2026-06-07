@@ -27,6 +27,10 @@ interface AdminCycleSmallMultiplesProps {
   isEs: boolean
   /** National-average risk (percent) — drawn as a dashed reference rule on each panel. */
   referencePct?: number
+  /** Name of the page-selected administration — its panel gets an identity ring (M7c). */
+  selectedName?: string
+  /** Drop the outer card chrome when embedded inside the PATRÓN folder (M7c). */
+  bare?: boolean
 }
 
 const PANEL_W = 220
@@ -52,7 +56,7 @@ function calcArea(data: AdminYearDatum[], xScale: (v: number) => number, yScale:
   return `${line} L${xScale(last.termYear).toFixed(1)},${bottomY.toFixed(1)} L${xScale(first.termYear).toFixed(1)},${bottomY.toFixed(1)} Z`
 }
 
-export function AdminCycleSmallMultiples({ administrations, isEs, referencePct }: AdminCycleSmallMultiplesProps) {
+export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, selectedName, bare }: AdminCycleSmallMultiplesProps) {
   const { t } = useTranslation('administrations')
 
   if (administrations.length === 0) return null
@@ -80,8 +84,8 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct }
   const yTicks = [yMin, (yMin + yMax) / 2, yMax].map((v) => Math.round(v))
 
   return (
-    <div className="card mt-6">
-      <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+    <div className={bare ? '' : 'card mt-6'}>
+      <div className={cn('px-4 py-3', !bare && 'border-b border-border/60 bg-background-card')}>
         <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
           {isEs ? 'TRAYECTORIA DE RIESGO POR SEXENIO' : 'RISK TRAJECTORY BY TERM YEAR'}
         </div>
@@ -96,7 +100,7 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct }
             : 'Year 1 = first year in office; Year 6 = pre-election year. Shared Y-axis scale.'}
         </p>
       </div>
-      <div className="px-4 py-4 bg-background-card">
+      <div className={cn('px-4 py-4', !bare && 'bg-background-card')}>
         <div className={cn('grid grid-cols-2 md:grid-cols-3 gap-4')}>
           {administrations.map((admin, panelIdx) => {
             const hasData = admin.yearData.length >= 2
@@ -118,8 +122,13 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct }
             const bandX = xScale(6) - stepW / 2
             const refClamped = referencePct != null && referencePct >= yMin && referencePct <= yMax
 
+            const isSelectedPanel = selectedName != null && admin.name === selectedName
             return (
-              <div key={admin.name} className="space-y-1.5">
+              <div
+                key={admin.name}
+                className={cn('space-y-1.5', isSelectedPanel && 'rounded-sm p-1.5 -m-1.5')}
+                style={isSelectedPanel ? { boxShadow: `inset 0 0 0 1.5px ${admin.color}66` } : undefined}
+              >
                 {/* Panel header */}
                 <div className="flex items-center gap-1.5">
                   <span
