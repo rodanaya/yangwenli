@@ -141,8 +141,18 @@ i18n
     interpolation: { escapeValue: false },
   })
 
-// Sync <html lang="..."> on init and on every language change so screen readers
-// and browser spell-check pick up the correct language immediately.
+// Sync <html lang="..."> with the active language so screen readers + browser
+// spell-check pick up the correct language immediately.
+//
+// IMPORTANT: resources are bundled (no async backend), so i18n.init() above
+// resolves SYNCHRONOUSLY — the 'initialized' event fires *inside* init(),
+// before the listener below can attach. On a first load in a detected
+// non-default language (e.g. a returning ES visitor, or a shared ES deep
+// link) <html lang> therefore stayed at the index.html default 'en' while the
+// whole UI rendered Spanish (paw-patrol LOW finding, 2026-06-04). The direct
+// assignment here covers that synchronous case; the listeners cover the async
+// path and runtime language toggles.
+if (i18n.language) document.documentElement.lang = i18n.language
 i18n.on('initialized', () => {
   document.documentElement.lang = i18n.language
 })
