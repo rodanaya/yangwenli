@@ -3578,3 +3578,47 @@ Grep output reviewed; all matches are false positives:
 
 ### Overall: WARN
 All HTTP and API checks blocked by cloud egress CDN policy (persistent infrastructure constraint — server-side IP allowlist). TLS cert valid; this is not a site failure. Bilingual scan clean with no new gaps. No regression detected.
+---
+## Visual Review — 2026-06-07T18:04:12Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /atlas | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /aria | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /sectors | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /sectors/salud | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /cases | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /methodology | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /stories/el-ejercito-fantasma | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+
+Note: All 403s carry `x-deny-reason: host_not_allowed`. TLS handshake succeeds; this is a server-side IP allowlist rejecting the cloud runner's egress IP — persistent infrastructure constraint, not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 cloud egress block — no JSON body | WARN |
+| /api/v1/cases?limit=5 | 403 cloud egress block — no JSON body | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 cloud egress block — no JSON body | WARN |
+| /api/v1/sectors | 403 cloud egress block — no JSON body | WARN |
+
+Note: Same CDN IP-allowlist restriction as HTTP routes. Backend not reachable from cloud runner egress IP.
+
+### Bilingual Gaps
+Grep scans reviewed; all matches confirmed false positives:
+- `TIER_STYLES[tierName as TierKey]` in `InstitutionScorecards.tsx:441` — style constant lookup, not rendered string. OK.
+- `CaseLibrary.tsx:220` — code comment referencing ADMINISTRATIONS.FOO. OK.
+- Academic citation in `Methodology.tsx:120` — untranslatable bibliographic reference. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — internal fixture data (`target_type` property). Not user-facing. OK.
+- `ExploreCanvas.tsx:1417-1432` — comment block + corporate-form token array (S.A., C.V., etc.). OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155-167` — all pattern labels correctly bilingual (`isEs ? ES : EN`). OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+All HTTP and API checks blocked by cloud egress CDN policy (persistent infrastructure constraint — server-side IP allowlist rejects cloud runner IP with `x-deny-reason: host_not_allowed`). Not a site failure — same pattern as prior runs. Bilingual scan clean. No regressions detected.
+
