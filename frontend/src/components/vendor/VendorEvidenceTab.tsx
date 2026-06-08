@@ -367,7 +367,7 @@ export function VendorEvidenceTab({
       {/* Methodology disclosure */}
       <section
         aria-labelledby="method-title"
-        className="pt-6 border-t border-border/40"
+        className="pt-2"
       >
         <SubSectionTitle id="method-title">
           {isEs ? 'Metodología' : 'Methodology'}

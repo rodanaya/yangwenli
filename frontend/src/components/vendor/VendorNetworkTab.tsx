@@ -226,7 +226,7 @@ export function VendorNetworkTab({
       {scandalList.length > 0 && (
         <section
           aria-labelledby="scandals-title"
-          className="pt-6 border-t border-border/40"
+          className="pt-2"
         >
           <SubSectionTitle id="scandals-title">
             {isEs ? 'Casos documentados vinculados' : 'Linked documented cases'}
@@ -254,7 +254,7 @@ export function VendorNetworkTab({
       {coBidList.length > 0 && (
         <section
           aria-labelledby="cobid-title"
-          className="pt-6 border-t border-border/40"
+          className="pt-2"
         >
           <div className="flex items-center justify-between mb-3">
             <SubSectionTitle id="cobid-title" className="mb-0">
@@ -304,7 +304,7 @@ export function VendorNetworkTab({
           externalFlags.rupc) && (
           <section
             aria-labelledby="ext-title"
-            className="pt-6 border-t border-border/40"
+            className="pt-2"
           >
             <SubSectionTitle id="ext-title">
               {isEs ? 'Registros externos' : 'External registries'}

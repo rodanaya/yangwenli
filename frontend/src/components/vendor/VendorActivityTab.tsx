@@ -215,7 +215,7 @@ export function VendorActivityTab({
       {timelineEvents.length > 0 && (
         <section
           aria-labelledby="cronologia-title"
-          className="pt-6 border-t border-border/40"
+          className="pt-2"
         >
           <SubSectionTitle id="cronologia-title">
             {isEs ? '§ 6 · La Cronología' : '§ 6 · Timeline'}
@@ -257,7 +257,7 @@ export function VendorActivityTab({
         return (
           <section
             aria-labelledby="dinero-title"
-            className="pt-6 border-t border-border/40"
+            className="pt-2"
           >
             <SubSectionTitle id="dinero-title">
               {isEs ? '§ 5 · El Dinero' : '§ 5 · The Money'}
@@ -332,7 +332,7 @@ export function VendorActivityTab({
       {institutionRows.length > 0 && (
         <section
           aria-labelledby="inst-title"
-          className="pt-6 border-t border-border/40"
+          className="pt-2"
         >
           <SubSectionTitle id="inst-title">
             {isEs ? '§ 2 · La Captura institucional' : '§ 2 · Institutional capture'}
