@@ -19,8 +19,11 @@ import { Copy, Check } from 'lucide-react'
 import type { InstitutionDetailResponse } from '@/api/types'
 import {
   RISK_COLORS,
+  RISK_TEXT_COLORS,
   SECTOR_COLORS,
   SECTORS,
+  OECD_DIRECT_AWARD_LIMIT,
+  OECD_SINGLE_BID_LIMIT,
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import {
@@ -54,14 +57,6 @@ export function InstitutionHero({
   const sectorCode = SECTORS.find((s) => s.id === institution.sector_id)?.code ?? 'otros'
   const sectorAccent = SECTOR_COLORS[sectorCode] ?? SECTOR_COLORS.otros ?? '#64748b'
   const sectorName = lang === 'es' ? SECTORS.find((s) => s.code === sectorCode)?.name : SECTORS.find((s) => s.code === sectorCode)?.nameEN
-
-  // Verdict number = high-risk contract percentage (the institutional signal)
-  const hrPct = institution.high_risk_pct ?? institution.high_risk_percentage ?? 0
-  const avgRisk = institution.avg_risk_score ?? 0
-  const riskLevel = avgRisk > 0 ? getRiskLevelFromScore(avgRisk) : 'low'
-  const hrLevel: 'critical' | 'high' | 'medium' | 'low' =
-    hrPct >= 25 ? 'critical' : hrPct >= 15 ? 'high' : hrPct >= 5 ? 'medium' : 'low'
-  const verdictColor = RISK_COLORS[hrLevel]
 
   const editorialName = toTitleCase(institution.name)
   const lede = buildInstitutionLede({ institution, sectorName, lang })
@@ -155,30 +150,24 @@ export function InstitutionHero({
             </div>
           </div>
 
-          {/* Verdict card seal */}
-          <VerdictCard
-            hrPct={hrPct}
-            hrLevel={hrLevel}
-            verdictColor={verdictColor}
-            avgRisk={avgRisk}
-            riskLevel={riskLevel}
-            lang={lang}
-          />
+          {/* Dual verdict seal — model risk + process integrity (the two lenses) */}
+          <DualSeal institution={institution} lang={lang} />
         </div>
 
         {/* Hairline */}
         <div aria-hidden="true" className="mt-6" style={{ height: 1, background: 'var(--color-border)' }} />
 
-        {/* Lede */}
-        <div className="mt-6" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
+        {/* Lede — roman serif at 18px for legibility (was italic 17px with a
+            name-splice drop-cap that read as a typo). Drop-cap now lands on the
+            lede's own first letter (the institution name). */}
+        <div className="mt-6" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '66ch' }}>
           <p
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
-              fontStyle: 'italic',
-              fontSize: 17,
-              lineHeight: 1.55,
+              fontSize: 18,
+              lineHeight: 1.6,
               color: 'var(--color-text-secondary)',
-              letterSpacing: '0.005em',
+              letterSpacing: '0.003em',
             }}
           >
             <span
@@ -187,19 +176,18 @@ export function InstitutionHero({
                 fontFamily: '"Playfair Display", Georgia, serif',
                 fontStyle: 'italic',
                 fontWeight: 800,
-                fontSize: '3.5em',
+                fontSize: '3.2em',
                 float: 'left',
-                lineHeight: 0.85,
+                lineHeight: 0.82,
                 color: sectorAccent,
-                marginRight: '0.08em',
-                marginTop: '0.05em',
-                marginBottom: '-0.05em',
+                marginRight: '0.09em',
+                marginTop: '0.04em',
+                marginBottom: '-0.04em',
               }}
             >
-              {editorialName.charAt(0)}
+              {lede.charAt(0)}
             </span>
-            {editorialName.slice(1) + ' '}
-            {lede.replace(/^[^.]+\.\s*/, '')}
+            {lede.slice(1)}
           </p>
         </div>
 
@@ -214,77 +202,156 @@ export function InstitutionHero({
 
 // ───────────────────── subcomponents ────────────────────────────────────────
 
-function VerdictCard({
-  hrPct,
-  hrLevel,
-  verdictColor,
-  avgRisk,
-  riskLevel,
+/**
+ * DualSeal — the two integrity lenses, side by side. The old VerdictCard
+ * hardcoded high-risk % (lens 1's quietest derivative) and mis-framed
+ * institutions whose pathology is process, not pricing. This shows BOTH:
+ *   1. Model risk  — statistical similarity to known corruption cases.
+ *   2. Process integrity — the worst OECD/Prozorro deviation (adaptive).
+ * Low model-risk renders muted, never green (a procurement model cannot
+ * certify integrity — Bible §3.10).
+ */
+function DualSeal({
+  institution,
   lang,
 }: {
-  hrPct: number
-  hrLevel: 'critical' | 'high' | 'medium' | 'low'
-  verdictColor: string
-  avgRisk: number
-  riskLevel: 'critical' | 'high' | 'medium' | 'low'
+  institution: InstitutionDetailResponse
   lang: 'en' | 'es'
 }) {
-  const avgRiskPct = Math.round(avgRisk * 100)
+  const isEs = lang === 'es'
+
+  // ── Lens 1 · Model risk ──
+  const avgRisk = institution.avg_risk_score ?? 0
+  const modelLevel = avgRisk > 0 ? getRiskLevelFromScore(avgRisk) : 'low'
+  const avgRisk100 = Math.round(avgRisk * 100)
+  const hrPct = Math.round(institution.high_risk_pct ?? institution.high_risk_percentage ?? 0)
+
+  // ── Lens 2 · Process integrity — worst OECD/Prozorro deviation ──
+  const da = institution.direct_award_pct ?? institution.direct_award_rate ?? 0
+  const sb = institution.single_bid_pct ?? 0
+  const hhi5 = institution.supplier_diversity?.hhi_5yr_avg ?? null
+  const daLim = OECD_DIRECT_AWARD_LIMIT * 100
+  const sbLim = OECD_SINGLE_BID_LIMIT * 100
+  const HHI_LIM = 4000 // Prozorro concentrated-purchasing line
+  const dims = [
+    { key: 'da' as const, ratio: daLim > 0 ? da / daLim : 0 },
+    { key: 'sb' as const, ratio: sbLim > 0 ? sb / sbLim : 0 },
+    { key: 'conc' as const, ratio: hhi5 != null ? hhi5 / HHI_LIM : 0 },
+  ]
+  const top = dims.reduce((m, d) => (d.ratio > m.ratio ? d : m), dims[0])
+  const flagged = top.ratio >= 1
+  const critical = top.ratio >= 2
+  const integFill = critical ? RISK_COLORS.critical : flagged ? RISK_COLORS.high : 'var(--color-border)'
+  const integText = critical ? RISK_TEXT_COLORS.critical : flagged ? RISK_TEXT_COLORS.high : 'var(--color-text-muted)'
+  const integGrade = critical
+    ? (isEs ? 'DÉBIL' : 'WEAK')
+    : flagged
+      ? (isEs ? 'IRREGULAR' : 'IRREGULAR')
+      : (isEs ? 'SIN DESVIACIÓN' : 'NO DEVIATION')
+
+  let integBig: string
+  let integLabel: string
+  let integSub: string
+  if (top.key === 'conc') {
+    integBig = hhi5 != null ? formatNumber(Math.round(hhi5)) : '—'
+    integLabel = isEs ? 'HHI · concentración' : 'HHI · concentration'
+    integSub = hhi5 != null ? `${top.ratio.toFixed(1)}× ${isEs ? 'umbral 4,000' : '4,000 line'}` : ''
+  } else if (top.key === 'sb') {
+    integBig = `${Math.round(sb)}%`
+    integLabel = isEs ? 'único postor' : 'single-bid'
+    integSub = flagged ? `${top.ratio.toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? '≤ límite OCDE' : '≤ OECD limit')
+  } else {
+    integBig = `${Math.round(da)}%`
+    integLabel = isEs ? 'sin licitación' : 'no open bid'
+    integSub = flagged ? `${top.ratio.toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? '≤ límite OCDE' : '≤ OECD limit')
+  }
+
   return (
-    <aside
-      className="flex-shrink-0 relative"
-      style={{ width: 168, paddingTop: 6, paddingBottom: 8, paddingLeft: 18, paddingRight: 18 }}
+    <aside className="flex-shrink-0 flex flex-col gap-3" style={{ width: 188 }}>
+      <SealCard
+        ruleColor={RISK_COLORS[modelLevel]}
+        textColor={RISK_TEXT_COLORS[modelLevel]}
+        big={`${avgRisk100}`}
+        bigUnit="/100"
+        label={isEs ? 'Riesgo del modelo' : 'Model risk'}
+        grade={isEs ? localizeLevel(modelLevel, 'es') : modelLevel.toUpperCase()}
+        sub={`${hrPct}% ${isEs ? 'alto riesgo' : 'high-risk'}`}
+      />
+      <SealCard
+        ruleColor={integFill}
+        textColor={integText}
+        big={integBig}
+        label={isEs ? `Integridad · ${integLabel}` : `Process · ${integLabel}`}
+        grade={integGrade}
+        sub={integSub}
+      />
+    </aside>
+  )
+}
+
+/** One seal plate — top rule (fill colour) + big numeral + grade + sub. */
+function SealCard({
+  ruleColor,
+  textColor,
+  big,
+  bigUnit,
+  label,
+  grade,
+  sub,
+}: {
+  ruleColor: string
+  textColor: string
+  big: string
+  bigUnit?: string
+  label: string
+  grade: string
+  sub: string
+}) {
+  return (
+    <div
+      className="relative"
+      style={{ paddingTop: 9, paddingBottom: 10, paddingLeft: 16, paddingRight: 16, border: '1px solid var(--color-border)', borderRadius: 3 }}
     >
       <div
         aria-hidden="true"
         className="absolute top-0 left-0 right-0"
-        style={{ height: 2, background: verdictColor }}
+        style={{ height: 2, background: ruleColor, borderTopLeftRadius: 3, borderTopRightRadius: 3 }}
       />
       <div className="text-center">
         <div
           className="tabular-nums"
-          style={{
-            fontFamily: '"Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
-            fontWeight: 800,
-            fontSize: 46,
-            lineHeight: 1,
-            color: verdictColor,
-            letterSpacing: '-0.02em',
-          }}
+          style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 38, lineHeight: 1, color: textColor, letterSpacing: '-0.02em' }}
         >
-          {hrPct.toFixed(0)}
-          <span className="font-mono" style={{ fontSize: 18, fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: 2 }}>%</span>
+          {big}
+          {bigUnit && (
+            <span className="font-mono" style={{ fontSize: 14, fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: 1 }}>
+              {bigUnit}
+            </span>
+          )}
         </div>
         <div
-          className="font-mono mt-1"
-          style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.6, letterSpacing: '0.10em', textTransform: 'uppercase' }}
+          className="font-mono"
+          style={{ fontSize: 10, color: 'var(--color-text-muted)', letterSpacing: '0.10em', textTransform: 'uppercase', marginTop: 5 }}
         >
-          {lang === 'es' ? 'contratos de alto riesgo' : 'high-risk contracts'}
+          {label}
         </div>
       </div>
-      <div aria-hidden="true" className="my-3 mx-auto" style={{ height: 1, width: '60%', background: 'var(--color-border)' }} />
+      <div aria-hidden="true" className="my-2 mx-auto" style={{ height: 1, width: '55%', background: 'var(--color-border)' }} />
       <div
         className="font-mono text-center"
-        style={{
-          fontSize: 10,
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          color: verdictColor,
-          fontWeight: 700,
-        }}
+        style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: textColor, fontWeight: 700 }}
       >
-        {lang === 'es' ? localizeLevel(hrLevel, 'es') : hrLevel.toUpperCase()}
+        {grade}
       </div>
-      {avgRisk > 0 && (
+      {sub && (
         <div
-          className="font-mono text-center mt-1"
-          style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}
+          className="font-mono text-center"
+          style={{ fontSize: 10, color: 'var(--color-text-secondary)', letterSpacing: '0.04em', marginTop: 3 }}
         >
-          {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {avgRiskPct} ({riskLevel})
+          {sub}
         </div>
       )}
-    </aside>
+    </div>
   )
 }
 

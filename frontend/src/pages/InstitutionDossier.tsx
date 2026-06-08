@@ -24,11 +24,12 @@ import { institutionApi } from '@/api/client'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 
 import { InstitutionHero } from '@/components/institution/InstitutionHero'
+import { InstitutionStatStrip } from '@/components/institution/InstitutionCommandPanel'
 import {
-  InstitutionStatStrip,
-  InstitutionDiagnosticGrid,
-  InstitutionSupplierTable,
-} from '@/components/institution/InstitutionCommandPanel'
+  InstitutionReading,
+  InstitutionConcentration,
+  InstitutionRecord,
+} from '@/components/institution/InstitutionDossierBody'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -134,9 +135,16 @@ export default function InstitutionDossier() {
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: vendors } = useQuery({
-    queryKey: ['institution-dossier', institutionId, 'vendors', 50],
-    queryFn: () => institutionApi.getVendors(institutionId, 50),
+  const { data: vendorPool } = useQuery({
+    queryKey: ['institution-dossier', institutionId, 'vendor-pool', 50],
+    queryFn: () => institutionApi.getVendorPool(institutionId, 50),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: waterfall } = useQuery({
+    queryKey: ['institution-dossier', institutionId, 'risk-waterfall'],
+    queryFn: () => institutionApi.getRiskWaterfall(institutionId),
     enabled: validId,
     staleTime: 5 * 60 * 1000,
   })
@@ -144,6 +152,23 @@ export default function InstitutionDossier() {
   const { data: timeline } = useQuery({
     queryKey: ['institution-dossier', institutionId, 'risk-timeline'],
     queryFn: () => institutionApi.getRiskTimeline(institutionId),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: categories } = useQuery({
+    queryKey: ['institution-dossier', institutionId, 'top-categories'],
+    // 404s for institutions with thin partida coverage — swallow to null so the
+    // section renders a graceful empty note instead of erroring.
+    queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 8 }).catch(() => null),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+
+  const { data: contracts } = useQuery({
+    queryKey: ['institution-dossier', institutionId, 'contracts', 'largest'],
+    queryFn: () => institutionApi.getContracts(institutionId, { per_page: 8, sort_by: 'amount_mxn', sort_order: 'desc' }),
     enabled: validId,
     staleTime: 5 * 60 * 1000,
   })
@@ -184,16 +209,15 @@ export default function InstitutionDossier() {
     year: item.year,
     avg_risk_score: item.avg_risk_score,
   }))
-  const vendorRows = vendors?.data ?? []
+  // Risk-over-time trend ({year, avg}) for the §3 RiskOverTimePanel — finite + sorted.
+  const trendForRecord = timelineForGrid
+    .map((p) => ({ year: p.year, avg: (p.avg_risk_score ?? 0) as number }))
+    .filter((p) => Number.isFinite(p.avg))
+    .sort((a, b) => a.year - b.year)
 
-  // Honest supplier-count meta: the vendors query is capped at 50, so when the
-  // detail payload has no true vendor_count we label the table as "top N" rather
-  // than implying the institution has only 50 suppliers.
   const supplierMeta = institution.vendor_count
     ? `${institution.vendor_count.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')} ${lang === 'es' ? 'proveedores' : 'suppliers'}`
-    : lang === 'es'
-      ? `Los ${vendorRows.length} principales`
-      : `Top ${vendorRows.length}`
+    : undefined
 
   const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
 
@@ -212,32 +236,65 @@ export default function InstitutionDossier() {
       {/* HERO */}
       <InstitutionHero institution={institution} showTOC={false} />
 
-      {/* COMMAND PANEL */}
+      {/* COMMAND PANEL — decisive numbers */}
       <div className="mt-6">
         <InstitutionStatStrip institution={institution} timeline={timelineForGrid} lang={lang} />
       </div>
-      <div className="mt-7">
-        <InstitutionDiagnosticGrid
-          institution={institution}
-          riskProfile={riskProfile ?? null}
-          vendors={vendorRows}
-          timeline={timelineForGrid}
-          sectorAccent={sectorAccent}
-          lang={lang}
-        />
+
+      {/* §1 — The reading: why the two seals read as they do */}
+      <div className="mt-12">
+        <section id="reading" className="scroll-mt-20">
+          <DossierSectionHeader
+            id="reading"
+            eyebrow={lang === 'es' ? 'La lectura' : 'The reading'}
+            title={lang === 'es' ? 'Cómo se leen las dos señales' : 'How the two signals read'}
+            accent={sectorAccent}
+          />
+          <InstitutionReading
+            institution={institution}
+            riskProfile={riskProfile ?? null}
+            waterfall={waterfall ?? null}
+            lang={lang}
+          />
+        </section>
       </div>
 
-      {/* REFERENCE — full supplier table */}
-      <div className="mt-14">
-        <section id="suppliers" className="scroll-mt-20">
+      {/* §2 — Concentration: who gets the money, how concentrated */}
+      <div className="mt-12">
+        <section id="concentration" className="scroll-mt-20">
           <DossierSectionHeader
-            id="suppliers"
-            eyebrow={lang === 'es' ? 'Proveedores' : 'Suppliers'}
+            id="concentration"
+            eyebrow={lang === 'es' ? 'La concentración' : 'Concentration'}
             title={lang === 'es' ? 'Quién recibe el dinero' : 'Who gets the money'}
             meta={supplierMeta}
             accent={sectorAccent}
           />
-          <InstitutionSupplierTable vendors={vendorRows} totalSpend={institution.total_amount_mxn ?? 0} lang={lang} />
+          <InstitutionConcentration
+            institution={institution}
+            vendorPool={vendorPool ?? null}
+            sectorAccent={sectorAccent}
+            lang={lang}
+          />
+        </section>
+      </div>
+
+      {/* §3 — The record: activity, incumbency, categories, contracts */}
+      <div className="mt-12">
+        <section id="record" className="scroll-mt-20">
+          <DossierSectionHeader
+            id="record"
+            eyebrow={lang === 'es' ? 'El expediente' : 'The record'}
+            title={lang === 'es' ? 'Actividad, permanencia y contratos' : 'Activity, incumbency & contracts'}
+            accent={sectorAccent}
+          />
+          <InstitutionRecord
+            institution={institution}
+            timeline={trendForRecord}
+            categories={categories ?? null}
+            contracts={contracts ?? null}
+            sectorAccent={sectorAccent}
+            lang={lang}
+          />
         </section>
       </div>
 

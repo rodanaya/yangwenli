@@ -35,6 +35,7 @@ import type {
   InstitutionTopListResponse,
   InstitutionVendorListResponse,
   VendorPoolResponse,
+  InstitutionWaterfallResponse,
   InstitutionFilterParams,
   SectorListResponse,
   TreemapResponse,
@@ -835,6 +836,16 @@ export const institutionApi = {
    */
   async getVendorPool(institutionId: number, limit = 50): Promise<VendorPoolResponse> {
     const { data } = await api.get<VendorPoolResponse>(`/institutions/${institutionId}/vendor-pool?limit=${limit}`)
+    return data
+  },
+
+  /**
+   * Per-feature risk attribution (avg z-score × global coefficient across the
+   * institution's contracts). Positive = risk-increasing, negative = protective.
+   * Server returns label_en only; ES labels are mapped client-side.
+   */
+  async getRiskWaterfall(institutionId: number): Promise<InstitutionWaterfallResponse> {
+    const { data } = await api.get<InstitutionWaterfallResponse>(`/institutions/${institutionId}/risk-waterfall`)
     return data
   },
 

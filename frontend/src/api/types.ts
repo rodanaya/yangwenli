@@ -645,6 +645,25 @@ export interface VendorPoolResponse {
   generated_at: string
 }
 
+// ─── Institution risk waterfall (per-feature risk attribution) ──────────────
+// Average z-score × global coefficient across the institution's contracts.
+// Server returns label_en only (no label_es) — the ES label is mapped
+// client-side from `feature`. Shape matches WaterfallRiskChart's prop.
+
+export interface InstitutionWaterfallContribution {
+  feature: string
+  z_score: number
+  coefficient: number
+  contribution: number
+  label_en: string
+}
+
+export interface InstitutionWaterfallResponse {
+  institution_id: number
+  items: InstitutionWaterfallContribution[]
+  total_contracts: number
+}
+
 // ============================================================================
 // Fast Dashboard Types (from /stats/dashboard/fast precomputed endpoint)
 // ============================================================================
