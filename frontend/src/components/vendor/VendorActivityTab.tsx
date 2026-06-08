@@ -392,7 +392,7 @@ export function VendorActivityTab({
       {/* § · El Expediente — forensic contract register (flag gutter) */}
       <section
         aria-labelledby="contracts-title"
-        className="pt-6 border-t border-border/40"
+        className="pt-2"
       >
         {(() => {
           const loc = isEs ? 'es-MX' : 'en-US'
