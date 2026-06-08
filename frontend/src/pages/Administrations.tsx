@@ -501,7 +501,6 @@ export default function Administrations() {
               const worst = years.reduce((m, y) => (y.high_risk_pct > m.high_risk_pct ? y : m), years[0])
               const worstYear = worst.year
               const worstHR = worst.high_risk_pct
-              const maxC = Math.max(...years.map((y) => y.contracts), 1)
               const maxSeries = Math.max(
                 ...years.map((y) => Math.max(y.direct_award_pct, y.single_bid_pct, y.high_risk_pct)),
                 allTimeAvg.da, 1,
@@ -575,31 +574,6 @@ export default function Administrations() {
                     annotations={annotations}
                     height={300}
                   />
-                  {/* Contract-volume micro bar-strip — LINEAR scale (kills the old sqrt lie) */}
-                  <svg viewBox="0 0 620 28" width="100%" height={28} role="img" aria-label="Contracts per year — linear scale" className="mt-2 block">
-                    {years.map((yr, i) => {
-                      const n = years.length
-                      const slot = 620 / n
-                      const bw = Math.max(2, slot * 0.62)
-                      const x = i * slot + (slot - bw) / 2
-                      const h = (yr.contracts / maxC) * 24
-                      return <rect key={yr.year} x={x} y={28 - h} width={bw} height={h} fill={selectedMeta.color} fillOpacity={0.45} rx={0.5} />
-                    })}
-                    {[0, years.length - 1].map((i) => {
-                      const n = years.length
-                      const slot = 620 / n
-                      const x = i * slot + slot / 2
-                      const anchor = i === 0 ? 'start' : 'end'
-                      return (
-                        <text key={`lbl-${i}`} x={i === 0 ? x - slot / 2 + 1 : x + slot / 2 - 1} y={8} fill="var(--color-text-muted)" fontSize={8.5} fontFamily="monospace" textAnchor={anchor}>
-                          {formatNumber(years[i].contracts)}
-                        </text>
-                      )
-                    })}
-                  </svg>
-                  <p className="text-[9px] font-mono text-text-muted mt-0.5">
-                    {isEs ? 'Contratos por año · escala lineal' : 'Contracts per year · linear scale'}
-                  </p>
                 </EditorialChartFrame>
               )
             })() : (
@@ -641,6 +615,68 @@ export default function Administrations() {
               <p className="mt-3 pt-3 border-t border-border/20 text-[10px] text-text-muted leading-relaxed">
                 {t('evidenceSection.inflationNote')}
               </p>
+
+              {/* § VOLUMEN — contracts per year. Relocated to the foot of §I and
+                  rebuilt from the old floating skeleton-strip: a full-width row
+                  of labelled era-coloured bars (honest linear-from-zero scale),
+                  every year named, the peak emphasised. */}
+              {selectedAgg && selectedAgg.years.length > 1 && (() => {
+                const years = selectedAgg.years
+                const maxC = Math.max(...years.map((y) => y.contracts), 1)
+                const peak = years.reduce((m, y) => (y.contracts > m.contracts ? y : m), years[0])
+                const total = years.reduce((s, y) => s + y.contracts, 0)
+                return (
+                  <div className="mt-4 pt-3 border-t border-border/20">
+                    <div className="flex items-baseline justify-between gap-2 mb-2.5">
+                      <span className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent">
+                        {isEs ? '§ VOLUMEN · CONTRATOS POR AÑO' : '§ VOLUME · CONTRACTS PER YEAR'}
+                      </span>
+                      <span className="text-[10px] font-mono text-text-muted tabular-nums">
+                        {formatNumber(total)} {isEs ? 'total' : 'total'}
+                      </span>
+                    </div>
+                    {/* Bars — flex-1 so the row fills the full width */}
+                    <div className="flex items-end gap-1.5 sm:gap-2" style={{ height: 84 }}>
+                      {years.map((yr) => {
+                        const h = Math.max(3, (yr.contracts / maxC) * 72)
+                        const isPeak = yr.year === peak.year
+                        return (
+                          <div key={yr.year} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full">
+                            <span
+                              className="text-[8.5px] font-mono tabular-nums mb-1 whitespace-nowrap"
+                              style={{ color: isPeak ? selectedMeta.color : 'var(--color-text-muted)', fontWeight: isPeak ? 700 : 400 }}
+                            >
+                              {formatNumber(yr.contracts)}
+                            </span>
+                            <div
+                              className="w-full rounded-t-sm"
+                              style={{
+                                height: h,
+                                backgroundColor: selectedMeta.color,
+                                opacity: isPeak ? 0.95 : 0.5,
+                              }}
+                              title={`${yr.year}: ${formatNumber(yr.contracts)} ${isEs ? 'contratos' : 'contracts'}`}
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {/* Year axis — aligned 1:1 under the bars */}
+                    <div className="flex gap-1.5 sm:gap-2 mt-1 pt-1 border-t border-border/30">
+                      {years.map((yr) => (
+                        <span key={yr.year} className="flex-1 min-w-0 text-center text-[9px] font-mono text-text-muted tabular-nums">
+                          {yr.year}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-text-muted mt-2 leading-relaxed">
+                      {isEs
+                        ? `Volumen anual de contratos · escala lineal desde cero. Pico en ${peak.year} (${formatNumber(peak.contracts)}).`
+                        : `Annual contract volume · linear scale from zero. Peak in ${peak.year} (${formatNumber(peak.contracts)}).`}
+                    </p>
+                  </div>
+                )
+              })()}
             </div>
           </div>
 
@@ -795,7 +831,7 @@ export default function Administrations() {
                                 emptyStroke="var(--color-border-hover)"
                                 dots={20}
                                 dotR={3}
-                                dotGap={6}
+                                dotGap={8}
                               />
                             </div>
                           </div>

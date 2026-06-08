@@ -56,14 +56,17 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
     : eraColor
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {displayList.map((v, i) => {
         const pct = Math.min(100, (v.total_mxn / maxTotal) * 100)
         const formattedName = formatVendorName(v.name, 60)
         const riskScore = v.risk_pct > 1 ? v.risk_pct / 100 : v.risk_pct
         return (
-          <div key={v.vendor_id ?? i} className="group">
-            <div className="flex items-center justify-between text-xs mb-0.5 gap-2">
+          // Single row — name (flex, absorbs the slack) · bar · value. The bar
+          // and value cluster on the right at a fixed width, so there's no dead
+          // gutter between a short left-aligned bar and a far-right value.
+          <div key={v.vendor_id ?? i} className="group flex items-center gap-3">
+            <div className="min-w-0 flex-1">
               {v.vendor_id != null ? (
                 <EntityIdentityChip
                   type="vendor"
@@ -71,19 +74,16 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
                   name={v.name}
                   size="xs"
                   riskScore={riskScore}
-                  className="min-w-0 flex-1"
+                  className="min-w-0"
                 />
               ) : (
-                <span
-                  className="font-medium text-text-primary truncate"
-                  title={v.name}
-                >
+                <span className="text-xs font-medium text-text-primary truncate block" title={v.name}>
                   {formattedName}
                 </span>
               )}
-              <span className="font-mono tabular-nums text-text-muted ml-2 shrink-0">
-                {formatCompactMXN(v.total_mxn)}
-              </span>
+              <div className="text-[11px] text-text-muted mt-0.5">
+                <span className="font-mono tabular-nums">{v.contracts.toLocaleString()}</span> {t('vendorSection.contracts')} &middot; <span className="font-mono tabular-nums">{v.risk_pct.toFixed(0)}%</span> {t('vendorSection.riskScore')}
+              </div>
             </div>
             <DotBar
               value={pct}
@@ -91,13 +91,13 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
               color={eraColorResolved}
               emptyColor="var(--color-background-elevated)"
               emptyStroke="var(--color-border)"
-              dots={30}
+              dots={20}
               dotR={3}
               dotGap={8}
             />
-            <div className="text-xs text-text-muted mt-0.5">
-              <span className="font-mono tabular-nums">{v.contracts.toLocaleString()}</span> {t('vendorSection.contracts')} &middot; <span className="font-mono tabular-nums">{v.risk_pct.toFixed(0)}%</span> {t('vendorSection.riskScore')}
-            </div>
+            <span className="font-mono tabular-nums text-xs text-text-muted shrink-0 w-[78px] text-right">
+              {formatCompactMXN(v.total_mxn)}
+            </span>
           </div>
         )
       })}
