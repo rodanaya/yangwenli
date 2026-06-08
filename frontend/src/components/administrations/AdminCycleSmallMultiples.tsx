@@ -99,7 +99,7 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
 
   return (
     <div className={bare ? '' : 'card mt-6'}>
-      <div className={cn('px-4 py-3', !bare && 'border-b border-border/60 bg-background-card')}>
+      <div className={cn('py-3', bare ? '' : 'px-4 border-b border-border/60 bg-background-card')}>
         <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
           {isEs ? 'TRAYECTORIA DE RIESGO POR AÑO DE MANDATO' : 'RISK TRAJECTORY BY TERM YEAR'}
         </div>
@@ -116,8 +116,8 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
             : 'Year 1 = first year in office; Year 6 = pre-election year.'}
         </p>
       </div>
-      <div className={cn('px-4 py-4', !bare && 'bg-background-card')}>
-        <div className={cn(isFocus ? 'max-w-2xl' : 'grid grid-cols-2 md:grid-cols-3 gap-4')}>
+      <div className={cn('py-4', bare ? '' : 'px-4 bg-background-card')}>
+        <div className={cn(isFocus ? 'w-full' : 'grid grid-cols-2 md:grid-cols-3 gap-4')}>
           {panels.map((admin, panelIdx) => {
             const hasData = admin.yearData.length >= 2
             const sorted = [...admin.yearData].sort((a, b) => a.termYear - b.termYear)

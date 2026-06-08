@@ -686,10 +686,13 @@ export default function Administrations() {
                   colorRaw: s.color,
                   valueLabel: s.hr.toFixed(1) + '%',
                 })
-                // Single full-width column — uniform, battened-down dots. (The
-                // former two-column split squeezed the 50-dot track below its
-                // native width, so dots overflowed into neighbours and rendered
-                // at inconsistent sizes between columns.)
+                // Two dense columns that fill the width — with N trimmed to 40
+                // so each 40·GAP=320px track fits inside its half-column. (The
+                // old bug was N=50's 400px track overflowing the ~194px cell;
+                // fitting N keeps native uniform dots AND kills the dead space a
+                // single full-width column left on the right.)
+                const mid = Math.ceil(ranked.length / 2)
+                const halves = ranked.length > 6 ? [ranked.slice(0, mid), ranked.slice(mid)] : [ranked]
                 const oecdMark = {
                   fraction: adminAvgHR / scaleMax,
                   label: `${isEs ? 'Prom. sexenio' : 'Term avg'} · ${adminAvgHR.toFixed(1)}%`,
@@ -702,12 +705,18 @@ export default function Administrations() {
                         <span style={{ color: 'var(--color-accent)' }}>{(top.hr / adminAvgHR).toFixed(1)}×</span> {isEs ? 'el promedio del sexenio' : 'the term average'}
                       </p>
                     )}
-                    <DotStrip
-                      rows={ranked.map(toRow)}
-                      labelWidth={150}
-                      rowHeight={28}
-                      oecdMark={oecdMark}
-                    />
+                    <div className={halves.length > 1 ? 'grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1' : ''}>
+                      {halves.map((half, h) => (
+                        <DotStrip
+                          key={h}
+                          rows={half.map(toRow)}
+                          N={40}
+                          labelWidth={140}
+                          rowHeight={28}
+                          oecdMark={oecdMark}
+                        />
+                      ))}
+                    </div>
                   </>
                 )
               })()}
@@ -859,109 +868,115 @@ export default function Administrations() {
             </p>
           </div>
 
-          {/* Term-year trajectory — single enlarged panel for the selected admin */}
-          <div className="border-t border-border/40">
-            <AdminCycleSmallMultiples
-              administrations={adminCycleData}
-              isEs={isEs}
-              referencePct={allTimeAvg.risk * 100}
-              selectedName={selectedAdmin}
-              focusName={selectedAdmin}
-              bare
-            />
-          </div>
-
-          {/* Sector scorecard — selected admin × sectors × four metrics */}
+          {/* Term-year trajectory + sector scorecard — side by side so the
+              module fills its full width (kills the right-half dead space the
+              stacked narrow blocks left behind). */}
           <div className="border-t border-border/40 px-4 sm:px-5 py-4">
-            <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
-              {isEs ? '§ TARJETA SECTORIAL' : '§ SECTOR SCORECARD'}
-            </div>
-            <p className="text-xs text-text-muted mb-3 max-w-[62ch] leading-relaxed">
-              {isEs
-                ? `Cuatro métricas por sector bajo ${selectedDisplay}. La intensidad colorea cada columna por separado — más rojo = peor entre los sectores de esta administración.`
-                : `Four metrics per sector under ${selectedDisplay}. Intensity is column-relative — redder = worst among this administration's sectors.`}
-            </p>
-            <div className="overflow-x-auto">
-              {(() => {
-                const order = [...sectorHeatmap].filter((s) => s.contracts > 0).sort((a, b) => b.hr - a.hr)
-                if (order.length === 0) {
-                  return <div className="h-20 flex items-center justify-center text-text-muted text-sm">{t('noData')}</div>
-                }
-                const metrics = [
-                  { key: 'risk', label: isEs ? 'Riesgo' : 'Risk', get: (s: typeof order[number]) => s.risk * 100 },
-                  { key: 'da',   label: isEs ? 'Adj. Dir.' : 'Direct', get: (s: typeof order[number]) => s.da },
-                  { key: 'sb',   label: isEs ? 'Lic. Única' : 'Single Bid', get: (s: typeof order[number]) => s.sb },
-                  { key: 'hr',   label: isEs ? 'Alto Riesgo' : 'High Risk', get: (s: typeof order[number]) => s.hr },
-                ]
-                const ranges = metrics.map((m) => {
-                  const vals = order.map(m.get)
-                  return { min: Math.min(...vals), max: Math.max(...vals) }
-                })
-                return (
-                  <table className="border-separate" style={{ borderSpacing: 3 }} aria-label={isEs ? 'Tarjeta sectorial' : 'Sector scorecard'}>
-                    <thead>
-                      <tr>
-                        <th scope="col" className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal whitespace-nowrap">
-                          {isEs ? 'Sector' : 'Sector'}
-                        </th>
-                        {metrics.map((m) => (
-                          <th key={m.key} scope="col" className="text-center pb-1 px-1 text-[9px] font-mono font-semibold tracking-wider text-text-muted" style={{ minWidth: 68 }}>
-                            {m.label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {order.map((s) => (
-                        <tr key={s.sectorId}>
-                          <td className="pr-3 py-0.5">
-                            <div className="flex items-center gap-1.5">
-                              <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                              <span className="text-[10px] font-mono text-text-secondary whitespace-nowrap">{s.name}</span>
-                            </div>
-                          </td>
-                          {metrics.map((m, mi) => {
-                            const val = m.get(s)
-                            const { min, max } = ranges[mi]
-                            const t01 = max === min ? 0 : Math.max(0, Math.min(1, (val - min) / (max - min)))
-                            return (
-                              <td key={m.key} className="p-0">
-                                <div
-                                  className="flex items-center justify-center select-none"
-                                  style={{
-                                    minWidth: 68,
-                                    minHeight: 34,
-                                    backgroundColor: scaleToColor(val, min, max, 'risk'),
-                                    border: '1px solid var(--color-border)',
-                                    borderRadius: 3,
-                                  }}
-                                  title={`${s.name} · ${m.label}: ${val.toFixed(1)}%`}
-                                >
-                                  <span
-                                    className="font-bold tabular-nums leading-none"
-                                    style={{ fontFamily: 'var(--font-family-serif)', fontSize: 15, color: t01 > 0.62 ? '#ffffff' : 'var(--color-text-primary)' }}
-                                  >
-                                    {val.toFixed(0)}%
-                                  </span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-8 items-start">
+              {/* LEFT — term-year trajectory */}
+              <div className="min-w-0">
+                <AdminCycleSmallMultiples
+                  administrations={adminCycleData}
+                  isEs={isEs}
+                  referencePct={allTimeAvg.risk * 100}
+                  selectedName={selectedAdmin}
+                  focusName={selectedAdmin}
+                  bare
+                />
+              </div>
+
+              {/* RIGHT — sector scorecard */}
+              <div className="min-w-0">
+                <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
+                  {isEs ? '§ TARJETA SECTORIAL' : '§ SECTOR SCORECARD'}
+                </div>
+                <p className="text-xs text-text-muted mb-3 leading-relaxed">
+                  {isEs
+                    ? `Cuatro métricas por sector bajo ${selectedDisplay}. La intensidad colorea cada columna por separado — más rojo = peor entre los sectores.`
+                    : `Four metrics per sector under ${selectedDisplay}. Intensity is column-relative — redder = worst among the sectors.`}
+                </p>
+                <div className="overflow-x-auto">
+                  {(() => {
+                    const order = [...sectorHeatmap].filter((s) => s.contracts > 0).sort((a, b) => b.hr - a.hr)
+                    if (order.length === 0) {
+                      return <div className="h-20 flex items-center justify-center text-text-muted text-sm">{t('noData')}</div>
+                    }
+                    const metrics = [
+                      { key: 'risk', label: isEs ? 'Riesgo' : 'Risk', get: (s: typeof order[number]) => s.risk * 100 },
+                      { key: 'da',   label: isEs ? 'Adj. Dir.' : 'Direct', get: (s: typeof order[number]) => s.da },
+                      { key: 'sb',   label: isEs ? 'Lic. Única' : 'Single Bid', get: (s: typeof order[number]) => s.sb },
+                      { key: 'hr',   label: isEs ? 'Alto Riesgo' : 'High Risk', get: (s: typeof order[number]) => s.hr },
+                    ]
+                    const ranges = metrics.map((m) => {
+                      const vals = order.map(m.get)
+                      return { min: Math.min(...vals), max: Math.max(...vals) }
+                    })
+                    return (
+                      <table className="w-full border-separate" style={{ borderSpacing: 3 }} aria-label={isEs ? 'Tarjeta sectorial' : 'Sector scorecard'}>
+                        <thead>
+                          <tr>
+                            <th scope="col" className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal whitespace-nowrap w-px">
+                              {isEs ? 'Sector' : 'Sector'}
+                            </th>
+                            {metrics.map((m) => (
+                              <th key={m.key} scope="col" className="text-center pb-1 px-1 text-[9px] font-mono font-semibold tracking-wider text-text-muted">
+                                {m.label}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {order.map((s) => (
+                            <tr key={s.sectorId}>
+                              <td className="pr-3 py-0.5 w-px">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                                  <span className="text-[10px] font-mono text-text-secondary whitespace-nowrap">{s.name}</span>
                                 </div>
                               </td>
-                            )
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )
-              })()}
-            </div>
-            <div className="mt-2.5 flex items-center gap-1.5 text-[9px] font-mono text-text-muted">
-              <span>{isEs ? 'menor' : 'lower'}</span>
-              <span
-                className="h-2.5 w-20 rounded-sm"
-                style={{ background: 'linear-gradient(90deg, #f3f1ec, #f59e0b, #ef4444)', border: '1px solid var(--color-border)' }}
-                aria-hidden="true"
-              />
-              <span>{isEs ? 'mayor' : 'higher'}</span>
+                              {metrics.map((m, mi) => {
+                                const val = m.get(s)
+                                const { min, max } = ranges[mi]
+                                const t01 = max === min ? 0 : Math.max(0, Math.min(1, (val - min) / (max - min)))
+                                return (
+                                  <td key={m.key} className="p-0">
+                                    <div
+                                      className="flex items-center justify-center select-none w-full"
+                                      style={{
+                                        minHeight: 36,
+                                        backgroundColor: scaleToColor(val, min, max, 'risk'),
+                                        border: '1px solid var(--color-border)',
+                                        borderRadius: 3,
+                                      }}
+                                      title={`${s.name} · ${m.label}: ${val.toFixed(1)}%`}
+                                    >
+                                      <span
+                                        className="font-bold tabular-nums leading-none"
+                                        style={{ fontFamily: 'var(--font-family-serif)', fontSize: 15, color: t01 > 0.62 ? '#ffffff' : 'var(--color-text-primary)' }}
+                                      >
+                                        {val.toFixed(0)}%
+                                      </span>
+                                    </div>
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )
+                  })()}
+                </div>
+                <div className="mt-2.5 flex items-center gap-1.5 text-[9px] font-mono text-text-muted">
+                  <span>{isEs ? 'menor' : 'lower'}</span>
+                  <span
+                    className="h-2.5 w-20 rounded-sm"
+                    style={{ background: 'linear-gradient(90deg, #f3f1ec, #f59e0b, #ef4444)', border: '1px solid var(--color-border)' }}
+                    aria-hidden="true"
+                  />
+                  <span>{isEs ? 'mayor' : 'higher'}</span>
+                </div>
+              </div>
             </div>
           </div>
 
