@@ -941,9 +941,14 @@ export default function InstitutionLeague() {
     return t('finding.normal', { pct: aboveBPct, total: formatNumber(totalScored) })
   }, [statsData, t])
 
+  // "At-risk" headline stat = the bottom two tiers (Deficiente D/D- + Crítico
+  // F/F-). Under the reformed ABSOLUTE grades no federal buyer reaches the
+  // Crítico floor, so counting only F/F- would read a misleading "0"; the
+  // honest figure is everyone graded Deficient or worse.
   const failingCount = useMemo(() => {
-    if (!statsData?.grade_distribution) return 0
-    return (statsData.grade_distribution['F'] ?? 0) + (statsData.grade_distribution['F-'] ?? 0)
+    const d = statsData?.grade_distribution
+    if (!d) return 0
+    return (d['D'] ?? 0) + (d['D-'] ?? 0) + (d['F'] ?? 0) + (d['F-'] ?? 0)
   }, [statsData])
 
   const sectorOptions = useMemo(
