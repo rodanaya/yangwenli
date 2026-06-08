@@ -3669,3 +3669,47 @@ Grep scans reviewed; all matches confirmed false positives:
 ### Overall: WARN
 All HTTP and API checks blocked by cloud egress CDN policy (persistent infrastructure constraint — server-side IP allowlist rejects cloud runner IP with `x-deny-reason: host_not_allowed`). Not a site failure — same pattern as prior runs. Bilingual scan clean. No regressions detected.
 
+
+---
+## Visual Review — 2026-06-08T06:06:08Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/atlas | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/aria | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/sectors | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/sectors/salud | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/cases | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/methodology | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (host_not_allowed) | WARN |
+
+> **Note**: All 403s carry `x-deny-reason: host_not_allowed` (Cloudflare/WAF allowlist rejects cloud runner egress IP). Persistent infrastructure constraint — not a site outage. Consistent with all prior automated runs from this environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — host not in allowlist (same WAF policy) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — host not in allowlist | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — host not in allowlist | WARN |
+| /api/v1/sectors | BLOCKED — host not in allowlist | WARN |
+
+> All API endpoints share the same Cloudflare WAF restriction. No JSON returned; checks could not be evaluated. Not indicative of backend failure.
+
+### Bilingual Gaps
+Grep scans reviewed; all matches confirmed false positives:
+- `TIER_STYLES[tierName as TierKey]` in `InstitutionScorecards.tsx:441` — style constant lookup, not rendered string. OK.
+- `CaseLibrary.tsx:220` — code comment referencing ADMINISTRATIONS.FOO. OK.
+- Academic citation in `Methodology.tsx:120` — untranslatable bibliographic reference. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — internal fixture data (`target_type` property). Not user-facing. OK.
+- `ExploreCanvas.tsx:1417-1432` — comment block + corporate-form token array (S.A., C.V., etc.). OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155-167` — all pattern labels correctly bilingual (`isEs ? ES : EN`). OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+All HTTP and API checks blocked by cloud egress CDN policy (persistent infrastructure constraint — server-side IP allowlist rejects cloud runner IP with `x-deny-reason: host_not_allowed`). Not a site failure — same pattern as prior runs. Bilingual scan clean. No regressions detected.
