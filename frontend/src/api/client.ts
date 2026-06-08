@@ -3340,7 +3340,7 @@ export interface IntersectionVendor {
   is_disappeared: boolean
 }
 
-/** The Corroboration Ladder + Ghost Ledger (v2 — honest reconciliation). */
+/** Two Worlds — RUBLI model flags × the official record (v3, Venn-centric). */
 export interface IntersectionSummary {
   thresholds: {
     rubli_flags: number
@@ -3350,14 +3350,23 @@ export interface IntersectionSummary {
     set_aside_value_floor: number
   }
   high_risk_total: number
-  ladder: {
-    external_corroborated: number
+  /** The five Venn regions of model-flags × official-record (EFOS/SFP). */
+  worlds: {
+    model_flags: number
+    official_record: number
+    overlap: number
+    model_only: number
+    blind_spots: number
     self_documented: number
-    uncorroborated: number
+    ghost_signature: number
   }
-  ghost: { count: number; vendors: IntersectionVendor[] }
+  /** One ranked vendor list per clickable Venn zone. */
+  zones: {
+    ghost: { count: number; vendors: IntersectionVendor[] }
+    confirmed: { count: number; vendors: IntersectionVendor[] }
+    blindspot: { count: number; vendors: IntersectionVendor[] }
+  }
   set_aside: { count: number; sample: IntersectionVendor[] }
-  external_sample: IntersectionVendor[]
   registry_breakdown: {
     efos_definitivo: number
     sfp_sanctioned: number

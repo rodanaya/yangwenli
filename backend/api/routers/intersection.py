@@ -157,13 +157,13 @@ def get_intersection_summary(
     """
     conn.row_factory = sqlite3.Row
 
-    cache_key = f"summary_v3:{top_n}"
+    cache_key = f"summary_v4:{top_n}"
     cached = app_cache.get("intersection", cache_key)
     if cached is not None:
         return cached
 
     # Persistent fallback: survives container restarts (the full scan is ~10-20s cold).
-    db_key = f"intersection_summary_v3_{top_n}"
+    db_key = f"intersection_summary_v4_{top_n}"
     try:
         row = conn.execute(
             "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?", (db_key,)
@@ -183,26 +183,26 @@ def get_intersection_summary(
 
         flags = _RUBLI_FLAGS_THRESHOLD
 
-        # ── The ladder: one pass over the high-risk census ──────────────────
-        ladder_row = conn.execute(
+        # ── Two Worlds: RUBLI model flags × the official record ─────────────
+        # The official record is EFOS + SFP ONLY — NOT ground truth, which is
+        # RUBLI's own training corpus (counting it as "agreement" is circular).
+        # One pass yields all five Venn regions.
+        worlds_row = conn.execute(
             f"""
             SELECT
-                SUM(CASE WHEN {_REG} THEN 1 ELSE 0 END) AS external_corroborated,
-                SUM(CASE WHEN in_ground_truth=1 AND NOT {_REG} THEN 1 ELSE 0 END) AS self_documented,
-                SUM(CASE WHEN {_NOREG} THEN 1 ELSE 0 END) AS uncorroborated,
-                COUNT(*) AS high_risk_total
+                SUM(CASE WHEN avg_risk_score >= {flags} THEN 1 ELSE 0 END) AS model_flags,
+                SUM(CASE WHEN {_REG} THEN 1 ELSE 0 END) AS official_record,
+                SUM(CASE WHEN avg_risk_score >= {flags} AND {_REG} THEN 1 ELSE 0 END) AS overlap,
+                SUM(CASE WHEN avg_risk_score >= {flags} AND NOT {_REG} THEN 1 ELSE 0 END) AS model_only,
+                SUM(CASE WHEN avg_risk_score < {flags} AND {_REG} THEN 1 ELSE 0 END) AS blind_spots,
+                SUM(CASE WHEN avg_risk_score >= {flags} AND in_ground_truth=1 AND NOT {_REG}
+                         THEN 1 ELSE 0 END) AS self_documented
             FROM aria_queue
-            WHERE avg_risk_score >= {flags}
             """
         ).fetchone()
-        ladder = {
-            "external_corroborated": ladder_row["external_corroborated"] or 0,
-            "self_documented": ladder_row["self_documented"] or 0,
-            "uncorroborated": ladder_row["uncorroborated"] or 0,
-        }
-        high_risk_total = ladder_row["high_risk_total"] or 0
+        high_risk_total = worlds_row["model_flags"] or 0
 
-        # ── The Ghost Ledger: the pitch ─────────────────────────────────────
+        # ── The Ghost Ledger: the actionable core of the model-only crescent ─
         ghost_where = (
             f"avg_risk_score >= {flags} AND {_NOREG} "
             f"AND total_contracts >= {_MIN_CONTRACTS} "
@@ -237,13 +237,25 @@ def get_intersection_summary(
             ).fetchall()
         ]
 
-        # ── External sample: what genuine corroboration looks like ──────────
-        external_sample = [
+        # ── Overlap zone (the 46): genuine model↔state agreement ────────────
+        confirmed_vendors = [
             _vendor_row(r)
             for r in conn.execute(
                 f"SELECT {_BASE_COLS} FROM aria_queue "
                 f"WHERE avg_risk_score >= {flags} AND {_REG} "
-                f"ORDER BY avg_risk_score DESC, total_value_mxn DESC LIMIT 6"
+                f"ORDER BY avg_risk_score DESC, total_value_mxn DESC LIMIT ?",
+                (top_n,),
+            ).fetchall()
+        ]
+
+        # ── Blind-spot crescent: state flagged, model clear (humility) ──────
+        blindspot_vendors = [
+            _vendor_row(r)
+            for r in conn.execute(
+                f"SELECT {_BASE_COLS} FROM aria_queue "
+                f"WHERE avg_risk_score < {flags} AND {_REG} "
+                f"ORDER BY total_value_mxn DESC LIMIT ?",
+                (top_n,),
             ).fetchall()
         ]
 
@@ -268,10 +280,23 @@ def get_intersection_summary(
                 "set_aside_value_floor": _SET_ASIDE_VALUE_FLOOR,
             },
             "high_risk_total": high_risk_total,
-            "ladder": ladder,
-            "ghost": {"count": ghost_count, "vendors": ghost_vendors},
+            # The Venn: five regions of RUBLI-model-flags × official-record.
+            "worlds": {
+                "model_flags": high_risk_total,
+                "official_record": worlds_row["official_record"] or 0,
+                "overlap": worlds_row["overlap"] or 0,
+                "model_only": worlds_row["model_only"] or 0,
+                "blind_spots": worlds_row["blind_spots"] or 0,
+                "self_documented": worlds_row["self_documented"] or 0,
+                "ghost_signature": ghost_count,
+            },
+            # Drill-downs — one ranked list per clickable Venn zone.
+            "zones": {
+                "ghost": {"count": ghost_count, "vendors": ghost_vendors},
+                "confirmed": {"count": worlds_row["overlap"] or 0, "vendors": confirmed_vendors},
+                "blindspot": {"count": worlds_row["blind_spots"] or 0, "vendors": blindspot_vendors},
+            },
             "set_aside": {"count": set_aside_count, "sample": set_aside_sample},
-            "external_sample": external_sample,
             "registry_breakdown": {
                 "efos_definitivo": rb["efos_hits"] or 0,
                 "sfp_sanctioned": rb["sfp_hits"] or 0,
