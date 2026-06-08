@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import type { SectorDetailResponse } from '@/api/types'
 import {
   RISK_COLORS,
+  RISK_TEXT_COLORS,
   SECTOR_COLORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
@@ -60,7 +61,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
         style={{ top: 0, height: 6, background: sectorAccent }}
       />
 
-      <div className="pt-8 pb-8">
+      <div className="pt-8 pb-6">
         {/* Row 1 — index strip + actions */}
         <div className="flex items-baseline justify-between gap-4 mb-5">
           <div
@@ -214,37 +215,48 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
         {/* Hairline */}
         <div aria-hidden="true" className="mt-6" style={{ height: 1, background: 'var(--color-border)' }} />
 
-        {/* Lede with drop cap */}
-        <div className="mt-6" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
-          <p
-            style={{
-              fontFamily: '"EB Garamond", Georgia, serif',
-              fontStyle: 'italic',
-              fontSize: 17,
-              lineHeight: 1.55,
-              color: 'var(--color-text-secondary)',
-              letterSpacing: '0.005em',
-            }}
-          >
-            <span
-              aria-hidden="true"
+        {/* Editorial block — lede (left) + exposure ledger companion (right).
+            The lede used to run full-width-left under the hairline, leaving the
+            right ~40% of the cover blank. The two-column spread fills the width
+            and lets the sector's money scale read as a bold numeric panel that
+            does NOT duplicate the verdict seal (HR%). Falls back to a single
+            stacked column below `lg`. Mirrors VendorHero's lede + companion. */}
+        <div className="mt-6 grid items-start gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          {/* Lede with drop cap */}
+          <div style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
+            <p
               style={{
-                fontFamily: '"Playfair Display", Georgia, serif',
+                fontFamily: '"EB Garamond", Georgia, serif',
                 fontStyle: 'italic',
-                fontWeight: 800,
-                fontSize: '3.5em',
-                float: 'left',
-                lineHeight: 0.85,
-                color: sectorAccent,
-                marginRight: '0.08em',
-                marginTop: '0.05em',
-                marginBottom: '-0.05em',
+                fontSize: 17,
+                lineHeight: 1.55,
+                color: 'var(--color-text-secondary)',
+                letterSpacing: '0.005em',
               }}
             >
-              {lede.charAt(0)}
-            </span>
-            {lede.slice(1)}
-          </p>
+              <span
+                aria-hidden="true"
+                style={{
+                  fontFamily: '"Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 800,
+                  fontSize: '3.5em',
+                  float: 'left',
+                  lineHeight: 0.85,
+                  color: sectorAccent,
+                  marginRight: '0.08em',
+                  marginTop: '0.05em',
+                  marginBottom: '-0.05em',
+                }}
+              >
+                {lede.charAt(0)}
+              </span>
+              {lede.slice(1)}
+            </p>
+          </div>
+
+          {/* Exposure & scale companion */}
+          <ExposureLedger sector={sector} sectorAccent={sectorAccent} lang={lang} />
         </div>
 
         {/* TOC */}
@@ -311,6 +323,248 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
         )}
       </div>
     </header>
+  )
+}
+
+/**
+ * ExposureLedger — the right-column companion to the lede. A compact, bold
+ * numeric panel built ONLY from `sector.statistics`. Three registers:
+ *   1. Gasto total — the anchor (Playfair Italic 800 tabular, like the verdict
+ *      number) so the sector's money scale reads at cover-headline weight.
+ *   2. High+critical and critical-only exposure (MXN) — gated when null.
+ *   3. The risk-band split (critical/high/medium/low contract counts) rendered
+ *      as one full-width stacked proportion bar spanning the column.
+ * Does NOT duplicate the verdict seal: the seal states HR% (a rate); this
+ * states absolute exposure (pesos) + the count distribution behind it.
+ */
+function ExposureLedger({
+  sector,
+  sectorAccent,
+  lang,
+}: {
+  sector: SectorDetailResponse
+  sectorAccent: string
+  lang: 'en' | 'es'
+}) {
+  const stats = sector.statistics
+
+  const totalMxn = stats.total_value_mxn ?? 0
+  const hiCritMxn = stats.high_critical_value_mxn ?? null
+  const critMxn = stats.critical_value_mxn ?? null
+
+  // Risk-band counts → stacked proportion bar. Order high→low risk so the
+  // dangerous mass reads left-to-right.
+  const bands: Array<{ key: 'critical' | 'high' | 'medium' | 'low'; count: number; es: string; en: string }> = [
+    { key: 'critical', count: stats.critical_risk_count ?? 0, es: 'Crítico', en: 'Critical' },
+    { key: 'high',     count: stats.high_risk_count ?? 0,     es: 'Alto',    en: 'High'     },
+    { key: 'medium',   count: stats.medium_risk_count ?? 0,   es: 'Medio',   en: 'Medium'   },
+    { key: 'low',      count: stats.low_risk_count ?? 0,      es: 'Bajo',    en: 'Low'      },
+  ]
+  const bandTotal = bands.reduce((s, b) => s + b.count, 0)
+  const hasBands = bandTotal > 0
+
+  // Share of exposure that is high+critical, for the inline caption.
+  const exposureShare = totalMxn > 0 && hiCritMxn != null ? (hiCritMxn / totalMxn) * 100 : null
+
+  return (
+    <aside
+      aria-label={lang === 'es' ? 'Exposición y escala del sector' : 'Sector exposure and scale'}
+      className="min-w-0"
+      style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20 }}
+    >
+      {/* Eyebrow */}
+      <div
+        className="font-mono"
+        style={{
+          fontSize: 10,
+          fontStyle: 'italic',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: sectorAccent,
+          fontWeight: 500,
+          marginBottom: 8,
+        }}
+      >
+        {lang === 'es' ? 'Exposición y escala' : 'Exposure & scale'}
+      </div>
+
+      {/* Anchor — Gasto total */}
+      <div
+        className="tabular-nums"
+        style={{
+          fontFamily: '"Playfair Display", Georgia, serif',
+          fontStyle: 'italic',
+          fontWeight: 800,
+          fontSize: 'clamp(30px, 3.6vw, 40px)',
+          lineHeight: 1,
+          letterSpacing: '-0.02em',
+          color: 'var(--color-text-primary)',
+        }}
+      >
+        {formatCompactMXN(totalMxn)}
+      </div>
+      <div
+        className="font-mono"
+        style={{
+          fontSize: 10,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          marginTop: 4,
+        }}
+      >
+        {lang === 'es' ? 'Gasto total del sector' : 'Total sector spend'}
+        <span className="mx-1.5" style={{ opacity: 0.5 }}>·</span>
+        ≈{formatCompactUSD(totalMxn)}
+      </div>
+
+      {/* Exposure tiers — two stat lines, gated when the backend leaves the
+          field null (older sector_stats rows lack the band-value columns). */}
+      {(hiCritMxn != null || critMxn != null) && (
+        <div
+          className="mt-4 grid gap-x-6 gap-y-3"
+          style={{ gridTemplateColumns: hiCritMxn != null && critMxn != null ? '1fr 1fr' : '1fr' }}
+        >
+          {hiCritMxn != null && (
+            <ExposureStat
+              value={formatCompactMXN(hiCritMxn)}
+              valueColor={RISK_TEXT_COLORS.high}
+              label={lang === 'es' ? 'Alto + crítico' : 'High + critical'}
+              caption={exposureShare != null
+                ? `${exposureShare.toFixed(0)}% ${lang === 'es' ? 'del gasto' : 'of spend'}`
+                : undefined}
+            />
+          )}
+          {critMxn != null && (
+            <ExposureStat
+              value={formatCompactMXN(critMxn)}
+              valueColor={RISK_TEXT_COLORS.critical}
+              label={lang === 'es' ? 'Solo crítico' : 'Critical only'}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Risk-band split — full-width stacked proportion bar + legend. */}
+      {hasBands && (
+        <div className="mt-5">
+          <div
+            className="font-mono"
+            style={{
+              fontSize: 9.5,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              marginBottom: 6,
+            }}
+          >
+            {lang === 'es'
+              ? `${formatNumber(bandTotal)} contratos por banda de riesgo`
+              : `${formatNumber(bandTotal)} contracts by risk band`}
+          </div>
+          <div
+            role="img"
+            aria-label={lang === 'es' ? 'Distribución de contratos por banda de riesgo' : 'Contract distribution by risk band'}
+            className="flex w-full overflow-hidden"
+            style={{ height: 10, borderRadius: 2, background: 'var(--color-border)' }}
+          >
+            {bands.map((b) =>
+              b.count > 0 ? (
+                <div
+                  key={b.key}
+                  style={{
+                    width: `${(b.count / bandTotal) * 100}%`,
+                    background: b.key === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[b.key],
+                    opacity: b.key === 'low' ? 0.4 : 1,
+                  }}
+                  title={`${lang === 'es' ? b.es : b.en} · ${formatNumber(b.count)}`}
+                />
+              ) : null
+            )}
+          </div>
+          {/* Legend — only bands that fire, high→low */}
+          <div className="mt-2.5 flex flex-wrap gap-x-3.5 gap-y-1">
+            {bands.map((b) =>
+              b.count > 0 ? (
+                <span
+                  key={b.key}
+                  className="font-mono inline-flex items-center gap-1.5 tabular-nums"
+                  style={{ fontSize: 10, color: 'var(--color-text-secondary)', letterSpacing: '0.02em' }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: 1,
+                      flexShrink: 0,
+                      background: b.key === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[b.key],
+                      opacity: b.key === 'low' ? 0.5 : 1,
+                    }}
+                  />
+                  <span style={{ color: b.key === 'low' ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[b.key] }}>
+                    {lang === 'es' ? b.es : b.en}
+                  </span>
+                  <span style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>
+                    {((b.count / bandTotal) * 100).toFixed(0)}%
+                  </span>
+                </span>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+    </aside>
+  )
+}
+
+/** A single exposure stat line — value (risk-coloured Playfair) + label + caption. */
+function ExposureStat({
+  value,
+  valueColor,
+  label,
+  caption,
+}: {
+  value: string
+  valueColor: string
+  label: string
+  caption?: string
+}) {
+  return (
+    <div className="min-w-0">
+      <div
+        className="tabular-nums"
+        style={{
+          fontFamily: '"Playfair Display", Georgia, serif',
+          fontStyle: 'italic',
+          fontWeight: 800,
+          fontSize: 22,
+          lineHeight: 1.05,
+          letterSpacing: '-0.015em',
+          color: valueColor,
+        }}
+      >
+        {value}
+      </div>
+      <div
+        className="font-mono"
+        style={{
+          fontSize: 9.5,
+          letterSpacing: '0.10em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          marginTop: 3,
+        }}
+      >
+        {label}
+        {caption && (
+          <>
+            <span className="mx-1" style={{ opacity: 0.5 }}>·</span>
+            {caption}
+          </>
+        )}
+      </div>
+    </div>
   )
 }
 

@@ -333,10 +333,10 @@ export default function SectorDossier() {
       )}
 
       {/* COMMAND PANEL */}
-      <div className="mt-6">
+      <div className="mt-5">
         <SectorStatStrip stats={sector.statistics} trends={sector.trends ?? []} lang={lang} />
       </div>
-      <div className="mt-7">
+      <div className="mt-6">
         <SectorDiagnosticGrid
           stats={sector.statistics}
           institutions={institutions}
@@ -348,7 +348,7 @@ export default function SectorDossier() {
 
       {/* PROVEEDORES — top vendors by sector spend */}
       {topVendors.length > 0 && (
-        <div className="mt-14">
+        <div className="mt-11">
           <section id="vendors" className="scroll-mt-20">
             <DossierSectionHeader
               id="vendors"
@@ -364,7 +364,7 @@ export default function SectorDossier() {
 
       {/* CATEGORÍAS — composition of sector spend */}
       {sectorCategories.length > 0 && (
-        <div className="mt-14">
+        <div className="mt-11">
           <section id="categories" className="scroll-mt-20">
             <DossierSectionHeader
               id="categories"
@@ -380,7 +380,7 @@ export default function SectorDossier() {
 
       {/* ADMINISTRACIONES — spend by sexenio */}
       {(sector.trends ?? []).length > 0 && (
-        <div className="mt-14">
+        <div className="mt-11">
           <section id="administrations" className="scroll-mt-20">
             <DossierSectionHeader
               id="administrations"
@@ -395,7 +395,7 @@ export default function SectorDossier() {
 
       {/* SEÑALES DEL MODELO — concentration · coefficients · anomalies */}
       {hasForensics && (
-        <div className="mt-14">
+        <div className="mt-11">
           <section id="signals" className="scroll-mt-20">
             <DossierSectionHeader
               id="signals"
@@ -420,7 +420,7 @@ export default function SectorDossier() {
 
       {/* CASOS — documented corruption cases linked to the sector */}
       {sectorCases.length > 0 && (
-        <div className="mt-14">
+        <div className="mt-11">
           <section id="cases" className="scroll-mt-20">
             <DossierSectionHeader
               id="cases"
@@ -436,7 +436,7 @@ export default function SectorDossier() {
 
       {/* LA COLA — ARIA investigation queue */}
       {tiers.reduce((s, x) => s + x.count, 0) > 0 && (
-        <div className="mt-14">
+        <div className="mt-11">
           <section id="queue" className="scroll-mt-20">
             <DossierSectionHeader
               id="queue"
@@ -451,7 +451,7 @@ export default function SectorDossier() {
 
       {/* CONTRATOS — largest single contracts in the sector */}
       {largestContracts.length > 0 && (
-        <div className="mt-14">
+        <div className="mt-11">
           <section id="contracts" className="scroll-mt-20">
             <DossierSectionHeader
               id="contracts"
@@ -466,7 +466,7 @@ export default function SectorDossier() {
       )}
 
       {/* REFERENCE — full institution table (demoted below the richer sections) */}
-      <div className="mt-14">
+      <div className="mt-11">
         <section id="institutions" className="scroll-mt-20">
           <DossierSectionHeader
             id="institutions"

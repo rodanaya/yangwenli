@@ -12,14 +12,23 @@
  * italics, RISK_COLORS fills, dot-strip primitives, no green for low risk).
  *
  * Every section receives already-fetched data; the page owns the queries. Each
- * reuses the command primitives (Panel / DotBar / EntityIdentityChip) — none
- * reinvents chrome.
+ * reuses the command primitives (Panel / EntityIdentityChip) and the local
+ * FullBar / SignedBar full-width proportional bars — none reinvents chrome.
+ *
+ * 2026-06-08 (DESIGNUS density squadron — SLIPPY). Killed the hollow rows: the
+ * fixed-width 22-dot DotBar left a void beside every row-spanning metric, so
+ * each metric now uses a full-width <FullBar> that stretches its flex-1 track
+ * (mirrors ExposureLedger VaRBar / OecdDeviationPanel). Category composition is
+ * a full-width Upshot-style bar list; the sexenio strip and largest contracts
+ * are dense full-width bar rows with EB-Garamond anchor numbers; the model
+ * ladder uses diverging <SignedBar>; the case roll tiles two-up and fills the
+ * middle with fraud-type/administration/years; the ARIA ribbon enlarges the
+ * tier counts to 30px Garamond CTAs.
  */
 import { Link } from 'react-router-dom'
 import type { VendorTopItem } from '@/api/types'
 import type { ScandalListItem } from '@/api/types'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { DotBar } from '@/components/ui/DotBar'
 import { EditorialAreaChart } from '@/components/charts/editorial'
 import { Panel, EmptyNote } from '@/components/dossier/command/primitives'
 import {
@@ -31,6 +40,93 @@ import { ADMIN_ORDER, ADMIN_DISPLAY, type AdministrationKey } from '@/lib/admini
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 
 const t = (lang: 'en' | 'es', es: string, en: string) => (lang === 'es' ? es : en)
+
+const BIGNUM_STYLE = {
+  fontFamily: '"EB Garamond", Georgia, serif',
+  fontStyle: 'italic',
+  fontWeight: 700,
+} as const
+
+// ─── FullBar — canonical full-width proportional bar ─────────────────────────
+// Replaces the fixed-width DotBar across every row-spanning metric. A track that
+// stretches to fill its flex-1 container, with a single fill segment and an
+// optional benchmark tick. Mirrors OecdDeviationPanel / VaRBar anatomy.
+
+function FullBar({
+  pct,
+  color,
+  height = 6,
+  track = 'var(--color-border)',
+  tickPct,
+  minFill = '3px',
+  ariaLabel,
+}: {
+  pct: number
+  color: string
+  height?: number
+  track?: string
+  tickPct?: number
+  minFill?: string
+  ariaLabel?: string
+}) {
+  const clamped = Math.max(0, Math.min(100, pct))
+  return (
+    <div
+      className="relative flex-1 overflow-hidden"
+      style={{ height, background: track, borderRadius: 999, minWidth: 24 }}
+      role={ariaLabel ? 'img' : undefined}
+      aria-label={ariaLabel}
+      aria-hidden={ariaLabel ? undefined : true}
+    >
+      <div
+        className="absolute inset-y-0 left-0"
+        style={{ width: `max(${minFill}, ${clamped.toFixed(2)}%)`, background: color, borderRadius: 999 }}
+      />
+      {tickPct != null && (
+        <div
+          aria-hidden="true"
+          style={{ position: 'absolute', top: -2, bottom: -2, left: `${Math.min(100, tickPct)}%`, width: 1, background: 'var(--color-text-muted)' }}
+        />
+      )}
+    </div>
+  )
+}
+
+// SignedBar — diverging full-width bar for model coefficients. A centre baseline
+// with the fill extending right (positive / risk-raising) or left (protective).
+function SignedBar({
+  pct,
+  positive,
+  color,
+  height = 7,
+}: {
+  pct: number
+  positive: boolean
+  color: string
+  height?: number
+}) {
+  const half = Math.max(0, Math.min(50, (pct / 100) * 50))
+  return (
+    <div
+      className="relative overflow-hidden flex-1"
+      style={{ height, background: 'var(--color-border)', borderRadius: 999, minWidth: 24 }}
+      aria-hidden="true"
+    >
+      <div aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1, background: 'var(--color-text-muted)', opacity: 0.5 }} />
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: positive ? '50%' : `${50 - half}%`,
+          width: `max(2px, ${half}%)`,
+          background: color,
+          borderRadius: 999,
+        }}
+      />
+    </div>
+  )
+}
 
 // ─── 1 · Vendor reference table ──────────────────────────────────────────────
 // Mirrors CategoryVendorTable, fed by /vendors/top?sector_id (precomputed).
@@ -82,13 +178,20 @@ export function SectorVendorTable({
               const riskPct = risk > 0 ? Math.round(risk * 100) : null
               const riskColor = riskPct == null ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[lvl]
               return (
-                <tr key={v.vendor_id} className="border-t border-border/30">
-                  <td className="px-3 py-2 font-mono tabular-nums text-text-muted">{i + 1}</td>
-                  <td className="px-3 py-2"><EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" /></td>
-                  <td className="px-3 py-2 text-right font-mono tabular-nums text-text-muted">{formatNumber(v.total_contracts ?? 0)}</td>
-                  <td className="px-3 py-2 text-right font-mono tabular-nums">{formatCompactMXN(v.total_value_mxn ?? 0)}</td>
-                  <td className="px-3 py-2 text-right font-mono tabular-nums" style={{ color: share >= 10 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: share >= 10 ? 600 : 400 }}>{share.toFixed(1)}%</td>
-                  <td className="px-3 py-2 text-right font-mono tabular-nums" style={{ color: riskColor, fontWeight: 600 }}>{riskPct ?? '—'}</td>
+                <tr key={v.vendor_id} className="border-t border-border/30 hover:bg-background-elevated transition-colors">
+                  <td className="px-3 py-1.5 font-mono tabular-nums text-text-muted">{i + 1}</td>
+                  <td className="px-3 py-1.5"><EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" /></td>
+                  <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-muted">{formatNumber(v.total_contracts ?? 0)}</td>
+                  <td className="px-3 py-1.5 text-right font-mono tabular-nums">{formatCompactMXN(v.total_value_mxn ?? 0)}</td>
+                  <td className="px-3 py-1.5">
+                    <div className="flex items-center gap-2 justify-end">
+                      <div className="hidden sm:block w-16">
+                        <FullBar pct={Math.min(100, share)} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} height={4} ariaLabel={`${share.toFixed(1)}%`} />
+                      </div>
+                      <span className="font-mono tabular-nums shrink-0 w-12 text-right" style={{ color: share >= 10 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: share >= 10 ? 600 : 400 }}>{share.toFixed(1)}%</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-1.5 text-right font-mono tabular-nums" style={{ color: riskColor, fontWeight: 600 }}>{riskPct ?? '—'}</td>
                 </tr>
               )
             })}
@@ -129,37 +232,58 @@ export function SectorCategoryComposition({
   const maxVal = Math.max(1, ...rows.map((r) => r.total_value ?? 0))
 
   return (
-    <div className="space-y-3">
-      <p className="font-mono" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+    <div>
+      <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {t(
           lang,
-          `${rows.length} canasta${rows.length === 1 ? '' : 's'} de gasto componen el sector.`,
-          `${rows.length} spending basket${rows.length === 1 ? '' : 's'} compose the sector.`,
+          `${rows.length} canasta${rows.length === 1 ? '' : 's'} de gasto componen el sector · barra = cuota del gasto sectorial.`,
+          `${rows.length} spending basket${rows.length === 1 ? '' : 's'} compose the sector · bar = share of sector spend.`,
         )}
       </p>
-      {rows.map((c) => {
-        const share = totalSpend > 0 ? ((c.total_value ?? 0) / totalSpend) * 100 : 0
-        const risk = c.avg_risk ?? 0
-        const lvl = risk > 0 ? getRiskLevelFromScore(risk) : 'low'
-        const riskPct = risk > 0 ? Math.round(risk * 100) : null
-        return (
-          <div key={c.category_id} className="grid items-center gap-3" style={{ gridTemplateColumns: 'minmax(0, 1.6fr) 1fr auto' }}>
-            <div className="min-w-0">
-              <EntityIdentityChip type="category" id={c.category_id} name={lang === 'es' ? c.name_es : c.name_en} size="sm" />
+      <div className="divide-y divide-border/40 border border-border rounded-sm overflow-hidden">
+        {rows.map((c) => {
+          const share = totalSpend > 0 ? ((c.total_value ?? 0) / totalSpend) * 100 : 0
+          const barPct = ((c.total_value ?? 0) / maxVal) * 100
+          const risk = c.avg_risk ?? 0
+          const lvl = risk > 0 ? getRiskLevelFromScore(risk) : 'low'
+          const riskPct = risk > 0 ? Math.round(risk * 100) : null
+          return (
+            <div key={c.category_id} className="px-3 py-2 hover:bg-background-elevated transition-colors">
+              {/* Line 1 — name · full-width bar · big spend */}
+              <div className="flex items-center gap-3">
+                <div className="shrink-0 w-32 sm:w-44 min-w-0">
+                  <EntityIdentityChip type="category" id={c.category_id} name={lang === 'es' ? c.name_es : c.name_en} size="sm" />
+                </div>
+                <FullBar pct={barPct} color={accent} ariaLabel={lang === 'es' ? c.name_es : c.name_en} />
+                <span
+                  className="shrink-0 text-right tabular-nums"
+                  style={{ ...BIGNUM_STYLE, fontSize: 16, width: 92, color: 'var(--color-text-primary)' }}
+                >
+                  {formatCompactMXN(c.total_value ?? 0)}
+                </span>
+              </div>
+              {/* Line 2 — sublabel: share · contracts · risk */}
+              <div className="flex items-center gap-2.5 mt-0.5 pl-[8.5rem] sm:pl-[11.75rem] font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+                <span style={{ color: share >= 20 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: share >= 20 ? 600 : 400 }}>
+                  {share.toFixed(1)}% {t(lang, 'del sector', 'of sector')}
+                </span>
+                <span style={{ opacity: 0.5 }}>·</span>
+                <span>{formatNumber(c.total_contracts ?? 0)} {t(lang, 'contratos', 'contracts')}</span>
+                {riskPct != null && (
+                  <>
+                    <span style={{ opacity: 0.5 }}>·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: RISK_COLORS[lvl] }} />
+                      <span style={{ color: RISK_TEXT_COLORS[lvl], fontWeight: 600 }}>{riskPct}</span>
+                      <span>{t(lang, 'riesgo', 'risk')}</span>
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <DotBar value={c.total_value ?? 0} max={maxVal} color={accent} ariaLabel={lang === 'es' ? c.name_es : c.name_en} />
-              <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{Math.round(share)}%</span>
-            </div>
-            <div className="text-right font-mono tabular-nums flex-shrink-0" style={{ fontSize: 11 }}>
-              <span style={{ color: 'var(--color-text-secondary)' }}>{formatCompactMXN(c.total_value ?? 0)}</span>
-              {riskPct != null && (
-                <span className="ml-2" style={{ color: RISK_TEXT_COLORS[lvl], fontWeight: 600 }}>{riskPct}</span>
-              )}
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -222,33 +346,42 @@ export function SectorSexenioStrip({
   const peak = rows.reduce((mx, r) => (r.value > mx.value ? r : mx), rows[0])
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {rows.map((r) => {
         const lvl = r.risk > 0 ? getRiskLevelFromScore(r.risk) : 'low'
         const isPeak = r.key === peak.key
+        const barPct = (r.value / maxVal) * 100
         return (
-          <div key={r.key}>
-            <div className="flex items-baseline justify-between mb-1">
-              <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}>
+          <div key={r.key} className="flex items-center gap-3">
+            <div className="shrink-0 w-28 sm:w-36 min-w-0">
+              <div className="font-mono truncate" style={{ fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-primary)', fontWeight: isPeak ? 600 : 400 }}>
                 {ADMIN_DISPLAY[r.key]}
-                <span style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}> · {ADMIN_YEARS[r.key]}</span>
-              </span>
-              <span className="font-mono tabular-nums" style={{ fontSize: 11 }}>
-                <span style={{ color: isPeak ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: isPeak ? 600 : 400 }}>{formatCompactMXN(r.value)}</span>
-                {r.risk > 0 && (
-                  <span className="ml-2" style={{ color: RISK_TEXT_COLORS[lvl], fontWeight: 600 }}>{Math.round(r.risk * 100)}</span>
-                )}
-              </span>
+                {isPeak && <span className="ml-1" style={{ color: RISK_TEXT_COLORS.high, fontSize: 9 }}>▲</span>}
+              </div>
+              <div className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{ADMIN_YEARS[r.key]} · {formatNumber(r.contracts)}</div>
             </div>
-            <DotBar value={r.value} max={maxVal} color={isPeak ? RISK_COLORS.high : accent} ariaLabel={ADMIN_DISPLAY[r.key]} />
+            <FullBar pct={barPct} color={isPeak ? RISK_COLORS.high : accent} height={7} ariaLabel={ADMIN_DISPLAY[r.key]} />
+            <span
+              className="shrink-0 text-right tabular-nums"
+              style={{ ...BIGNUM_STYLE, fontSize: 16, width: 92, color: isPeak ? RISK_TEXT_COLORS.high : 'var(--color-text-primary)' }}
+            >
+              {formatCompactMXN(r.value)}
+            </span>
+            <span
+              className="shrink-0 w-7 text-right font-mono tabular-nums"
+              style={{ fontSize: 11, fontWeight: 600, color: r.risk > 0 ? RISK_TEXT_COLORS[lvl] : 'var(--color-text-muted)' }}
+              title={t(lang, 'indicador de riesgo', 'risk indicator')}
+            >
+              {r.risk > 0 ? Math.round(r.risk * 100) : '—'}
+            </span>
           </div>
         )
       })}
-      <p className="font-mono" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+      <p className="font-mono pt-0.5" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {t(
           lang,
-          `Pico de gasto · ${ADMIN_DISPLAY[peak.key]} (${ADMIN_YEARS[peak.key]}).`,
-          `Peak spend · ${ADMIN_DISPLAY[peak.key]} (${ADMIN_YEARS[peak.key]}).`,
+          `Pico de gasto · ${ADMIN_DISPLAY[peak.key]} (${ADMIN_YEARS[peak.key]}). Última columna = indicador de riesgo medio.`,
+          `Peak spend · ${ADMIN_DISPLAY[peak.key]} (${ADMIN_YEARS[peak.key]}). Last column = mean risk indicator.`,
         )}
       </p>
     </div>
@@ -343,28 +476,29 @@ export function SectorModelLadder({
   return (
     <Panel label={t(lang, 'Por qué marca riesgo', 'Why it flags risk')} accent={RISK_COLORS.critical}>
       {rows.length > 0 ? (
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {rows.map((c) => {
             const positive = c.coefficient > 0
             const color = positive ? RISK_COLORS.critical : 'var(--color-text-muted)'
             const sign = positive ? '+' : ''
+            const barPct = (Math.abs(c.coefficient) / maxAbs) * 100
             return (
-              <div key={c.feature}>
-                <div className="flex items-baseline justify-between mb-1">
-                  <span className="font-mono truncate" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>{featureLabel(c.feature, lang)}</span>
-                  <span className="font-mono tabular-nums flex-shrink-0 ml-2" style={{ fontSize: 10, fontWeight: 600, color }}>{sign}{c.coefficient.toFixed(2)}</span>
-                </div>
-                <DotBar value={Math.abs(c.coefficient)} max={maxAbs} color={color} ariaLabel={featureLabel(c.feature, lang)} />
+              <div key={c.feature} className="flex items-center gap-3">
+                <span className="font-mono truncate shrink-0 w-28 sm:w-40" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>{featureLabel(c.feature, lang)}</span>
+                <SignedBar pct={barPct} positive={positive} color={color} />
+                <span className="font-mono tabular-nums shrink-0 w-12 text-right" style={{ fontSize: 11, fontWeight: 600, color }}>{sign}{c.coefficient.toFixed(2)}</span>
               </div>
             )
           })}
-          <p className="font-mono pt-1" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+          <p className="font-mono pt-1.5" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
             {t(lang, 'Modelo v0.8.5 · ', 'v0.8.5 model · ')}
             {usesGlobal
               ? t(lang, 'global (sin modelo sectorial)', 'global (no sector model)')
               : t(lang, 'sectorial', 'sector-specific')}
             {' · '}
-            <span style={{ color: RISK_TEXT_COLORS.critical }}>{t(lang, 'rojo = aumenta riesgo', 'red = raises risk')}</span>
+            <span style={{ color: RISK_TEXT_COLORS.critical }}>{t(lang, 'derecha/rojo = aumenta riesgo', 'right/red = raises risk')}</span>
+            {' · '}
+            <span>{t(lang, 'izquierda = protector', 'left = protective')}</span>
           </p>
         </div>
       ) : (
@@ -405,11 +539,12 @@ export function SectorAnomalyStrip({
               return recent.map((r) => {
                 const isWorst = r.year === worst.year
                 const color = isWorst ? RISK_COLORS.critical : RISK_COLORS.high
+                const barPct = (r.overall_anomaly_score / maxScore) * 100
                 return (
-                  <div key={r.year} className="grid items-center gap-3" style={{ gridTemplateColumns: '38px 1fr 28px' }}>
-                    <span className="font-mono tabular-nums" style={{ fontSize: 10, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)', fontWeight: isWorst ? 600 : 400 }}>{r.year}</span>
-                    <DotBar value={r.overall_anomaly_score} max={maxScore} color={color} ariaLabel={`${r.year}`} />
-                    <span className="font-mono tabular-nums text-right" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{r.overall_anomaly_score.toFixed(1)}</span>
+                  <div key={r.year} className="flex items-center gap-3">
+                    <span className="font-mono tabular-nums shrink-0 w-10" style={{ fontSize: 11, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)', fontWeight: isWorst ? 600 : 400 }}>{r.year}</span>
+                    <FullBar pct={barPct} color={color} height={isWorst ? 8 : 6} ariaLabel={`${r.year}`} />
+                    <span className="font-mono tabular-nums text-right shrink-0 w-9" style={{ fontSize: 11, fontWeight: isWorst ? 600 : 400, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)' }}>{r.overall_anomaly_score.toFixed(1)}</span>
                   </div>
                 )
               })
@@ -443,6 +578,32 @@ function legalLabel(status: string, lang: 'en' | 'es'): string {
   return status.replace(/_/g, ' ')
 }
 
+const FRAUD_TYPE_LABEL: Record<string, [string, string]> = {
+  ghost_company: ['Empresa fantasma', 'Ghost company'],
+  overpricing: ['Sobreprecio', 'Overpricing'],
+  bid_rigging: ['Colusión', 'Bid rigging'],
+  embezzlement: ['Desvío', 'Embezzlement'],
+  bribery: ['Soborno', 'Bribery'],
+  conflict_of_interest: ['Conflicto de interés', 'Conflict of interest'],
+  shell_network: ['Red de fachadas', 'Shell network'],
+  phantom_delivery: ['Entrega fantasma', 'Phantom delivery'],
+  influence_peddling: ['Tráfico de influencias', 'Influence peddling'],
+  money_laundering: ['Lavado', 'Money laundering'],
+}
+
+function fraudLabel(ft: string | undefined, lang: 'en' | 'es'): string | null {
+  if (!ft) return null
+  const pair = FRAUD_TYPE_LABEL[ft]
+  if (pair) return lang === 'es' ? pair[0] : pair[1]
+  return ft.replace(/_/g, ' ')
+}
+
+function adminLabel(a: string | undefined): string | null {
+  if (!a) return null
+  const key = a as AdministrationKey
+  return ADMIN_DISPLAY[key] ?? a.charAt(0).toUpperCase() + a.slice(1)
+}
+
 export function SectorCaseRoll({
   cases,
   lang,
@@ -454,23 +615,45 @@ export function SectorCaseRoll({
     return <EmptyNote text={t(lang, 'Sin casos documentados ligados al sector.', 'No documented cases linked to the sector.')} />
   }
   const rows = [...cases].sort((a, b) => (b.severity ?? 0) - (a.severity ?? 0))
+  const maxAmount = Math.max(1, ...rows.map((c) => c.amount_mxn_high ?? c.amount_mxn_low ?? 0))
 
   return (
-    <ul className="divide-y divide-border/40 border border-border rounded-sm overflow-hidden">
+    <ul className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-border border border-border rounded-sm overflow-hidden">
       {rows.map((c) => {
         const amount = c.amount_mxn_high ?? c.amount_mxn_low ?? 0
+        const barPct = (amount / maxAmount) * 100
         const years = c.contract_year_start
           ? `${c.contract_year_start}${c.contract_year_end && c.contract_year_end !== c.contract_year_start ? `–${c.contract_year_end}` : ''}`
           : null
+        const fraud = fraudLabel(c.fraud_type, lang)
+        const admin = adminLabel(c.administration)
+        const statusColor = c.legal_status === 'prosecuted' ? RISK_TEXT_COLORS.critical : c.legal_status === 'impunity' ? RISK_TEXT_COLORS.high : 'var(--color-text-muted)'
         return (
-          <li key={c.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
-            <div className="min-w-0 flex items-center gap-2">
-              <EntityIdentityChip type="case" id={c.slug} name={lang === 'es' ? c.name_es : c.name_en} size="sm" />
+          <li key={c.id} className="bg-background px-3 py-2.5 hover:bg-background-elevated transition-colors">
+            {/* Line 1 — case · amount */}
+            <div className="flex items-baseline justify-between gap-3">
+              <div className="min-w-0">
+                <EntityIdentityChip type="case" id={c.slug} name={lang === 'es' ? c.name_es : c.name_en} size="sm" />
+              </div>
+              {amount > 0 && (
+                <span className="shrink-0 tabular-nums" style={{ ...BIGNUM_STYLE, fontSize: 15, color: 'var(--color-text-primary)' }}>
+                  {formatCompactMXN(amount)}
+                </span>
+              )}
             </div>
-            <div className="flex items-baseline gap-3 flex-shrink-0 font-mono tabular-nums" style={{ fontSize: 10.5 }}>
-              {years && <span style={{ color: 'var(--color-text-muted)' }}>{years}</span>}
-              {amount > 0 && <span style={{ color: 'var(--color-text-secondary)' }}>{formatCompactMXN(amount)}</span>}
-              <span className="uppercase tracking-wider" style={{ fontSize: 9, color: c.legal_status === 'prosecuted' ? RISK_TEXT_COLORS.critical : c.legal_status === 'impunity' ? RISK_TEXT_COLORS.high : 'var(--color-text-muted)' }}>
+            {/* Line 2 — full-width severity bar fills the void */}
+            {amount > 0 && (
+              <div className="mt-1.5">
+                <FullBar pct={barPct} color={RISK_COLORS.high} height={4} ariaLabel={formatCompactMXN(amount)} />
+              </div>
+            )}
+            {/* Line 3 — fraud type · administration · years · status */}
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-1.5 font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+              {fraud && <span style={{ color: 'var(--color-text-secondary)' }}>{fraud}</span>}
+              {admin && (<><span style={{ opacity: 0.5 }}>·</span><span>{admin}</span></>)}
+              {years && (<><span style={{ opacity: 0.5 }}>·</span><span>{years}</span></>)}
+              <span style={{ opacity: 0.5 }}>·</span>
+              <span className="uppercase tracking-wider" style={{ fontSize: 9, color: statusColor, fontWeight: statusColor === 'var(--color-text-muted)' ? 400 : 600 }}>
                 {legalLabel(c.legal_status, lang)}
               </span>
             </div>
@@ -521,20 +704,31 @@ export function SectorQueueRibbon({
           {t(lang, 'Ver la cola', 'Open the queue')} →
         </Link>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
         {([1, 2, 3, 4] as const).map((tier) => {
           const tc = tiers.find((x) => x.tier === tier)
           const count = tc?.count ?? 0
+          const maxCount = Math.max(1, ...tiers.map((x) => x.count))
+          const barPct = (count / maxCount) * 100
+          const sharePct = total > 0 ? (count / total) * 100 : 0
           return (
-            <div key={tier} className="flex flex-col gap-1.5">
-              <div className="flex items-baseline gap-1.5">
-                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: TIER_COLOR[tier], display: 'inline-block' }} />
-                <span className="font-mono tabular-nums" style={{ fontSize: 16, fontWeight: 600, color: count > 0 ? 'var(--color-text-primary)' : 'var(--color-text-muted)' }}>{formatNumber(count)}</span>
+            <div key={tier} className="flex flex-col gap-1">
+              <div className="flex items-baseline gap-2">
+                <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 999, background: TIER_COLOR[tier], display: 'inline-block', flexShrink: 0 }} />
+                <span
+                  className="tabular-nums leading-none"
+                  style={{ ...BIGNUM_STYLE, fontSize: 30, color: count > 0 ? 'var(--color-text-primary)' : 'var(--color-text-muted)' }}
+                >
+                  {formatNumber(count)}
+                </span>
               </div>
-              <span className="font-mono uppercase tracking-wider" style={{ fontSize: 8.5, color: 'var(--color-text-muted)' }}>
+              <span className="font-mono uppercase tracking-wider" style={{ fontSize: 9, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
                 T{tier} · {lang === 'es' ? TIER_LABEL[tier][0] : TIER_LABEL[tier][1]}
               </span>
-              <DotBar value={count} max={Math.max(1, ...tiers.map((x) => x.count))} color={TIER_COLOR[tier]} ariaLabel={`T${tier}`} />
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <FullBar pct={barPct} color={TIER_COLOR[tier]} height={5} ariaLabel={`T${tier}`} />
+                <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{Math.round(sharePct)}%</span>
+              </div>
             </div>
           )
         })}
@@ -575,38 +769,42 @@ export function SectorLargestContracts({
         const lvl = c.risk_level && ['critical', 'high', 'medium', 'low'].includes(c.risk_level)
           ? (c.risk_level as 'critical' | 'high' | 'medium' | 'low')
           : 'low'
+        const barPct = ((c.amount_mxn ?? 0) / maxAmt) * 100
         return (
-          <li key={c.contract_id} className="px-3 py-2.5">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-baseline gap-2.5 min-w-0">
-                <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{String(i + 1).padStart(2, '0')}</span>
-                <span
-                  className="tabular-nums flex-shrink-0"
-                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: RISK_TEXT_COLORS[lvl] }}
-                >
-                  {formatCompactMXN(c.amount_mxn ?? 0)}
-                </span>
-                {c.year != null && <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{c.year}</span>}
-              </div>
-              {c.institution_id != null && c.institution_name && (
-                <div className="flex-shrink-0 min-w-0">
-                  <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="sm" />
-                </div>
-              )}
+          <li key={c.contract_id} className="px-3 py-2 hover:bg-background-elevated transition-colors" style={{ borderLeft: `2px solid ${RISK_COLORS[lvl]}` }}>
+            {/* Line 1 — rank · full-width amount bar · big amount */}
+            <div className="flex items-center gap-3">
+              <span className="font-mono tabular-nums shrink-0 w-5 text-right" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{String(i + 1).padStart(2, '0')}</span>
+              <FullBar pct={barPct} color={RISK_COLORS[lvl]} height={7} ariaLabel={formatCompactMXN(c.amount_mxn ?? 0)} />
+              <span
+                className="tabular-nums shrink-0 text-right"
+                style={{ ...BIGNUM_STYLE, fontSize: 18, width: 96, color: RISK_TEXT_COLORS[lvl] }}
+              >
+                {formatCompactMXN(c.amount_mxn ?? 0)}
+              </span>
             </div>
-            <div className="flex items-center gap-2 mt-1 pl-7">
+            {/* Line 2 — vendor · institution · year · title fill the middle */}
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-1 pl-8">
               {c.vendor_id != null && c.vendor_name ? (
                 <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" />
               ) : (
                 <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{t(lang, 'proveedor no identificado', 'unidentified vendor')}</span>
               )}
+              {c.institution_id != null && c.institution_name && (
+                <>
+                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.5 }}>→</span>
+                  <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="xs" />
+                </>
+              )}
+              {c.year != null && (
+                <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>{c.year}</span>
+              )}
               {c.title && (
-                <span className="truncate" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11.5, color: 'var(--color-text-muted)' }}>
+                <span className="truncate min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11.5, color: 'var(--color-text-muted)' }}>
                   · {c.title}
                 </span>
               )}
             </div>
-            <DotBar value={c.amount_mxn ?? 0} max={maxAmt} color={RISK_COLORS[lvl]} ariaLabel={formatCompactMXN(c.amount_mxn ?? 0)} className="mt-1.5 ml-7" />
           </li>
         )
       })}
