@@ -248,22 +248,25 @@ export function SectorCategoryComposition({
           const lvl = risk > 0 ? getRiskLevelFromScore(risk) : 'low'
           const riskPct = risk > 0 ? Math.round(risk * 100) : null
           return (
-            <div key={c.category_id} className="px-3 py-2 hover:bg-background-elevated transition-colors">
-              {/* Line 1 — name · full-width bar · big spend */}
-              <div className="flex items-center gap-3">
-                <div className="shrink-0 w-32 sm:w-44 min-w-0">
-                  <EntityIdentityChip type="category" id={c.category_id} name={lang === 'es' ? c.name_es : c.name_en} size="sm" />
+            <div key={c.category_id} className="px-3 py-2.5 hover:bg-background-elevated transition-colors">
+              {/* Line 1 — full category name · big spend */}
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="min-w-0">
+                  <EntityIdentityChip type="category" id={c.category_id} name={lang === 'es' ? c.name_es : c.name_en} size="sm" fullName />
                 </div>
-                <FullBar pct={barPct} color={accent} ariaLabel={lang === 'es' ? c.name_es : c.name_en} />
                 <span
                   className="shrink-0 text-right tabular-nums"
-                  style={{ ...BIGNUM_STYLE, fontSize: 16, width: 92, color: 'var(--color-text-primary)' }}
+                  style={{ ...BIGNUM_STYLE, fontSize: 16, color: 'var(--color-text-primary)' }}
                 >
                   {formatCompactMXN(c.total_value ?? 0)}
                 </span>
               </div>
-              {/* Line 2 — sublabel: share · contracts · risk */}
-              <div className="flex items-center gap-2.5 mt-0.5 pl-[8.5rem] sm:pl-[11.75rem] font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+              {/* Line 2 — full-width bar */}
+              <div className="flex mt-1.5">
+                <FullBar pct={barPct} color={accent} ariaLabel={lang === 'es' ? c.name_es : c.name_en} />
+              </div>
+              {/* Line 3 — sublabel: share · contracts · risk */}
+              <div className="flex items-center gap-2.5 mt-1 font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
                 <span style={{ color: share >= 20 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: share >= 20 ? 600 : 400 }}>
                   {share.toFixed(1)}% {t(lang, 'del sector', 'of sector')}
                 </span>
@@ -783,28 +786,32 @@ export function SectorLargestContracts({
                 {formatCompactMXN(c.amount_mxn ?? 0)}
               </span>
             </div>
-            {/* Line 2 — vendor · institution · year · title fill the middle */}
-            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-1 pl-8">
+            {/* Line 2 — vendor (full name) */}
+            <div className="flex min-w-0 mt-1.5 pl-8">
               {c.vendor_id != null && c.vendor_name ? (
-                <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" />
+                <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" fullName />
               ) : (
                 <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{t(lang, 'proveedor no identificado', 'unidentified vendor')}</span>
               )}
-              {c.institution_id != null && c.institution_name && (
-                <>
-                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.5 }}>→</span>
-                  <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="xs" />
-                </>
-              )}
-              {c.year != null && (
-                <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>{c.year}</span>
-              )}
-              {c.title && (
-                <span className="truncate min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11.5, color: 'var(--color-text-muted)' }}>
-                  · {c.title}
-                </span>
-              )}
             </div>
+            {/* Line 3 — buyer institution (full name) */}
+            {c.institution_id != null && c.institution_name && (
+              <div className="flex items-center gap-1.5 min-w-0 mt-0.5 pl-8">
+                <span className="font-mono shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.6 }} aria-hidden="true">→</span>
+                <div className="min-w-0">
+                  <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="xs" fullName />
+                </div>
+              </div>
+            )}
+            {/* Line 4 — year · title (title may truncate; it's a description, not a name) */}
+            {(c.year != null || c.title) && (
+              <div className="flex items-baseline gap-2 mt-0.5 pl-8 font-mono" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+                {c.year != null && <span className="tabular-nums shrink-0">{c.year}</span>}
+                {c.title && (
+                  <span className="truncate min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11.5 }}>· {c.title}</span>
+                )}
+              </div>
+            )}
           </li>
         )
       })}
