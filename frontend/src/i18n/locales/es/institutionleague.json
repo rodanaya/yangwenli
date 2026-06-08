@@ -48,10 +48,13 @@
   },
   "scope": {
     "label": "Alcance",
-    "federalOnly": "Solo dependencias federales",
-    "all": "Todas las instituciones",
-    "disclaimerFederal": "Análisis enfocado en instituciones de escala federal. Las instituciones estatales se excluyen por defecto — sus bajos volúmenes de contratación inflan las puntuaciones de transparencia y no pueden compararse con los estándares de adquisiciones federales.",
-    "disclaimerAll": "Se muestran todas las instituciones de CompraNet, incluidas las estatales. Nota: las entidades estatales tienen muestras pequeñas y pueden ubicarse artificialmente alto en métricas de adjudicación directa y competencia."
+    "federal": "Federal (APF)",
+    "subnational": "Subnacional",
+    "all": "Todas",
+    "federalOnly": "Federal (APF)",
+    "disclaimerFederal": "Alcance federal — las dependencias de la Administración Pública Federal validadas (IMSS · PEMEX · CFE · secretarías). Las calificaciones son absolutas, no en curva: ninguna dependencia federal mexicana alcanza 'Excelente' por mérito. El Cuadro de Honor y las Banderas Rojas excluyen instituciones con menos de 30 contratos.",
+    "disclaimerSubnational": "Instituciones estatales y municipales, en su propio tablero — sus muestras pequeñas y procedimientos locales no son comparables con los estándares federales. Nunca se mezclan con el ranking federal.",
+    "disclaimerAll": "Todas las instituciones de CompraNet, federales y subnacionales juntas. Usa los tableros separados para rankings comparables."
   },
   "filters": {
     "searchPlaceholder": "Buscar instituciones…",
@@ -122,5 +125,10 @@
     "ranking": "Ranking",
     "fichas": "Fichas",
     "reporte": "Reporte"
+  },
+  "exposure": {
+    "kicker": "Dinero en riesgo",
+    "headline": "Las mayores exposiciones que la calificación no revela",
+    "sub": "Ordenado por el valor que fluye por contratos de riesgo alto y crítico — un eje distinto de la transparencia. Instituciones con 100+ contratos."
   }
 }

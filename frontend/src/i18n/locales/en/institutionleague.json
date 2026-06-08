@@ -58,10 +58,13 @@
   },
   "scope": {
     "label": "Scope",
-    "federalOnly": "Federal agencies only",
-    "all": "All institutions",
-    "disclaimerFederal": "Analysis scoped to federal-scale institutions. State agencies are excluded by default — their low contract volumes inflate transparency scores and they cannot be benchmarked against federal-procurement norms.",
-    "disclaimerAll": "Showing every institution in COMPRANET, including state-level agencies. Note: state entities have small sample sizes and may rank artificially high on direct-award and competition metrics."
+    "federal": "Federal (APF)",
+    "subnational": "Subnational",
+    "all": "All",
+    "federalOnly": "Federal (APF)",
+    "disclaimerFederal": "Federal scope — the validated federal-administration buyers (IMSS · PEMEX · CFE · secretariats). Grades are absolute, not a curve: no Mexican federal buyer earns 'Excellent' on merit. The Honor Roll and Red Flags exclude institutions with fewer than 30 contracts.",
+    "disclaimerSubnational": "State and municipal institutions, ranked on their own board — their small samples and locally-set procedures cannot be benchmarked against federal-procurement norms. Never co-mingled with the federal ranking.",
+    "disclaimerAll": "Every institution in COMPRANET, federal and subnational together. Use the separate boards for comparable rankings."
   },
   "stats": {
     "totalScored": "Scored Institutions",
@@ -122,5 +125,10 @@
     "ranking": "Ranking",
     "fichas": "Scorecards",
     "reporte": "Report"
+  },
+  "exposure": {
+    "kicker": "Money-at-Risk",
+    "headline": "The biggest exposures the integrity score can't see",
+    "sub": "Ranked by value flowing through high- and critical-risk contracts — a distinct axis from transparency. Institutions with 100+ contracts."
   }
 }

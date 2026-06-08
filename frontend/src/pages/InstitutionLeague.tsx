@@ -51,7 +51,7 @@ import {
   INSTITUTION_PILLAR_LETTERS,
   pillarLabel,
 } from '@/lib/institution-pillars'
-import { formatNumber } from '@/lib/utils'
+import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { PageFooter } from '@/components/layout/PageFooter'
 
 // Reverse-lookup: sector display name (Spanish or English) → canonical code,
@@ -101,6 +101,8 @@ interface InstitutionScorecardItem {
   trend_direction: string | null
   peer_percentile_sector: number | null
   signal_count_red: number | null
+  money_at_risk_mxn: number | null
+  total_contracts: number | null
 }
 
 interface ScorecardListResponse {
@@ -826,12 +828,14 @@ export default function InstitutionLeague() {
   const search = searchParams.get('q') || ''
   const sortBy = (searchParams.get('sort') || 'total_score') as SortKey
   const sortOrder = (searchParams.get('order') || 'desc') as 'asc' | 'desc'
-  // Federal-only toggle — defaults to true.
-  // COMPRANET is a federal procurement registry, but a handful of state
-  // institutions slip in. Including them skews the league because their
-  // sample sizes are tiny and their procedures aren't directly comparable.
-  // URL param `all=1` flips to "include state-level" for power users.
-  const federalOnly = searchParams.get('all') !== '1'
+  // Scope — Federal (validated is_federal classifier, default) vs the separate
+  // Subnational board (state/municipal), never co-mingled. `all` includes both.
+  // Legacy `all=1` links map to the All scope.
+  const scope = (searchParams.get('scope')
+    || (searchParams.get('all') === '1' ? 'all' : 'federal')) as 'federal' | 'subnational' | 'all'
+  // Reliability gate: the headline (Honor Roll / Red Flags) excludes tiny-sample
+  // institutions whose scores are noise; the full table still lists everyone.
+  const RELIABLE_MIN = 30
   const PER_PAGE = 50
 
   const updateParams = useCallback(
@@ -857,13 +861,13 @@ export default function InstitutionLeague() {
   // Data fetching — every query is federal-aware so the headline numbers
   // (median, total_scored, top/worst) match the table population below.
   const { data: statsData } = useQuery<InstitutionStats>({
-    queryKey: ['institution-scorecard-stats', federalOnly],
-    queryFn: () => scorecardApi.getInstitutionStats({ federal_only: federalOnly }),
+    queryKey: ['institution-scorecard-stats', scope],
+    queryFn: () => scorecardApi.getInstitutionStats({ scope }),
     staleTime: 10 * 60 * 1000,
   })
 
   const { data: listData, isLoading, isError } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards', federalOnly, page, sectorFilter, gradeFilter, search, sortBy, sortOrder],
+    queryKey: ['institution-scorecards', scope, page, sectorFilter, gradeFilter, search, sortBy, sortOrder],
     queryFn: () =>
       scorecardApi.getInstitutions({
         page,
@@ -873,30 +877,41 @@ export default function InstitutionLeague() {
         grade: gradeFilter || undefined,
         sector: sectorFilter || undefined,
         search: search || undefined,
-        federal_only: federalOnly,
+        scope,
       }),
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   })
 
-  // Top 5 champions (first page, sorted by score desc, no filters)
+  // Top 5 champions — reliability-gated (>=30 contracts) so tiny-sample noise
+  // does not headline the Honor Roll.
   const { data: championsData } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards-top5', federalOnly],
+    queryKey: ['institution-scorecards-top5', scope],
     queryFn: () =>
-      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'desc', federal_only: federalOnly }),
+      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'desc', scope, min_contracts: RELIABLE_MIN }),
     staleTime: 30 * 60 * 1000,
   })
 
-  // Bottom 5 red flags (first page, sorted by score asc, no filters)
+  // Bottom 5 red flags — reliability-gated, the editorial lead.
   const { data: redFlagsData } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards-bottom5', federalOnly],
+    queryKey: ['institution-scorecards-bottom5', scope],
     queryFn: () =>
-      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'asc', federal_only: federalOnly }),
+      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'asc', scope, min_contracts: RELIABLE_MIN }),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  // Top 5 by Money-at-Risk — the EXPOSURE lens (the outliers the integrity
+  // score structurally cannot rank). Reliability-gated.
+  const { data: exposureData } = useQuery<ScorecardListResponse>({
+    queryKey: ['institution-scorecards-var', scope],
+    queryFn: () =>
+      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'money_at_risk', order: 'desc', scope, min_contracts: 100 }),
     staleTime: 30 * 60 * 1000,
   })
 
   const championItems = championsData?.data ?? []
   const redFlagItems = redFlagsData?.data ?? []
+  const exposureItems = exposureData?.data ?? []
 
   // Row expansion for pillar radar
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
@@ -1122,37 +1137,33 @@ export default function InstitutionLeague() {
                   aria-label={t('scope.label')}
                   className="inline-flex rounded-sm border border-border bg-background overflow-hidden"
                 >
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={federalOnly}
-                    onClick={() => updateParams({ all: undefined, page: '1' })}
-                    className={`px-3 py-1 text-[10px] font-mono uppercase tracking-[0.12em] transition-colors ${
-                      federalOnly
-                        ? 'bg-accent/15 text-accent border-r border-border'
-                        : 'text-text-muted hover:text-text-secondary border-r border-border'
-                    }`}
-                  >
-                    {t('scope.federalOnly')}
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={!federalOnly}
-                    onClick={() => updateParams({ all: '1', page: '1' })}
-                    className={`px-3 py-1 text-[10px] font-mono uppercase tracking-[0.12em] transition-colors ${
-                      !federalOnly
-                        ? 'bg-accent/15 text-accent'
-                        : 'text-text-muted hover:text-text-secondary'
-                    }`}
-                  >
-                    {t('scope.all')}
-                  </button>
+                  {(['federal', 'subnational', 'all'] as const).map((sc, i) => (
+                    <button
+                      key={sc}
+                      type="button"
+                      role="radio"
+                      aria-checked={scope === sc}
+                      onClick={() => updateParams({ scope: sc === 'federal' ? undefined : sc, all: undefined, page: '1' })}
+                      className={`px-3 py-1 text-[10px] font-mono uppercase tracking-[0.12em] transition-colors ${
+                        i < 2 ? 'border-r border-border' : ''
+                      } ${
+                        scope === sc
+                          ? 'bg-accent/15 text-accent'
+                          : 'text-text-muted hover:text-text-secondary'
+                      }`}
+                    >
+                      {t(`scope.${sc}`)}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
             <p className="text-[10px] font-mono leading-relaxed text-text-muted mt-2 max-w-3xl">
-              {federalOnly ? t('scope.disclaimerFederal') : t('scope.disclaimerAll')}
+              {t(scope === 'federal'
+                ? 'scope.disclaimerFederal'
+                : scope === 'subnational'
+                  ? 'scope.disclaimerSubnational'
+                  : 'scope.disclaimerAll')}
             </p>
           </div>
         </header>
@@ -1234,6 +1245,53 @@ export default function InstitutionLeague() {
                   onNavigate={(id) => navigate(`/institutions/${id}`, { state: { institutionName: item.institution_name } })}
                 />
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* ─── Money-at-Risk — THE EXPOSURE LENS ────────────────────────────
+            The integrity score ranks transparency; this ranks EXPOSURE — the
+            value flowing through high/critical-risk contracts. Surfaces the
+            billion-peso outliers (IMSS, PEMEX, GACM/NAICM, FONATUR) that a
+            clean transparency score structurally cannot rank. nc>=100 only. */}
+        {!hasFilters && exposureItems.length >= 3 && (
+          <section aria-labelledby="exposure-heading" className="space-y-3 pt-2">
+            <div className="border-l-2 border-accent pl-4">
+              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-accent mb-1 flex items-center gap-2">
+                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                {t('exposure.kicker')}
+              </p>
+              <h2
+                id="exposure-heading"
+                className="text-xl sm:text-2xl text-text-primary leading-tight"
+                style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500 }}
+              >
+                {t('exposure.headline')}
+              </h2>
+              <p className="text-text-secondary text-sm mt-1 italic max-w-2xl">{t('exposure.sub')}</p>
+            </div>
+            <div className="rounded-sm border border-border/60 bg-background-elevated/20 divide-y divide-border/40" role="list">
+              {exposureItems.slice(0, 5).map((item, idx) => {
+                const maxVar = exposureItems[0]?.money_at_risk_mxn || 1
+                const pct = Math.max(2, ((item.money_at_risk_mxn || 0) / maxVar) * 100)
+                const tier = getTier(item.grade)
+                return (
+                  <button
+                    key={item.institution_id}
+                    role="listitem"
+                    onClick={() => navigate(`/institutions/${item.institution_id}`, { state: { institutionName: item.institution_name } })}
+                    className="w-full text-left group flex items-center gap-3 px-3 py-2.5 hover:bg-background-elevated/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/40 transition-colors"
+                  >
+                    <span className="text-[11px] font-mono font-bold tabular-nums w-5 flex-shrink-0 text-text-muted">{idx + 1}</span>
+                    <span className="flex-1 min-w-0 truncate text-text-secondary text-[13px] group-hover:text-text-primary transition-colors">{item.institution_name}</span>
+                    <div className="hidden sm:block flex-shrink-0">
+                      <DotBar value={pct} max={100} color="var(--color-accent)" emptyColor="var(--color-background-elevated)" emptyStroke="var(--color-border-hover)" dots={18} />
+                    </div>
+                    <span className="font-mono tabular-nums text-[12px] text-text-primary w-24 text-right flex-shrink-0">{formatCompactMXN(item.money_at_risk_mxn || 0)}</span>
+                    <span className="text-[9px] font-mono font-bold uppercase tracking-[0.1em] w-20 text-right flex-shrink-0 hidden md:block" style={{ color: tier.color }}>{tier.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </section>
         )}

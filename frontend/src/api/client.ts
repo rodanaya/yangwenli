@@ -3226,12 +3226,14 @@ export const scorecardApi = {
     max_score?: number
     search?: string
     federal_only?: boolean
+    scope?: 'federal' | 'subnational' | 'all'
+    min_contracts?: number
   } = {}) {
     const q = buildQueryParams(params)
     const { data } = await api.get(`/scorecards/institutions?${q}`)
     return data
   },
-  async getInstitutionStats(params: { federal_only?: boolean } = {}) {
+  async getInstitutionStats(params: { federal_only?: boolean; scope?: 'federal' | 'subnational' | 'all'; min_contracts?: number } = {}) {
     const q = buildQueryParams(params)
     const suffix = q ? `?${q}` : ''
     const { data } = await api.get(`/scorecards/institutions/stats${suffix}`)
