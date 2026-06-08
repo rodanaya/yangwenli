@@ -70,11 +70,19 @@ export function SectorStatStrip({
   const riskLvl = stats.avg_risk_score != null ? getRiskLevelFromScore(stats.avg_risk_score) : 'low'
   const avgRiskColor = avgRisk == null ? undefined : riskLvl === 'critical' ? RISK_TEXT_COLORS.critical : riskLvl === 'high' ? RISK_TEXT_COLORS.high : undefined
 
+  const totalVal = stats.total_value_mxn ?? 0
+  const exposure = stats.high_critical_value_mxn
   const cells: Array<StatCell | null> = [
     {
       label: isEs ? 'Gasto total' : 'Total spend',
-      value: formatCompactMXN(stats.total_value_mxn ?? 0),
-      sub: !isEs ? formatCompactUSD(stats.total_value_mxn ?? 0) : undefined,
+      value: formatCompactMXN(totalVal),
+      sub: !isEs ? formatCompactUSD(totalVal) : undefined,
+    },
+    exposure == null || exposure <= 0 ? null : {
+      label: isEs ? 'Exposición a+c' : 'High+crit. exposure',
+      value: formatCompactMXN(exposure),
+      sub: totalVal > 0 ? `${Math.round((exposure / totalVal) * 100)}% ${isEs ? 'del gasto' : 'of spend'}` : undefined,
+      color: RISK_TEXT_COLORS.high,
     },
     { label: isEs ? 'Contratos' : 'Contracts', value: formatNumber(stats.total_contracts ?? 0) },
     !stats.total_institutions ? null : { label: isEs ? 'Instituciones' : 'Institutions', value: formatNumber(stats.total_institutions) },
