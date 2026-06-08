@@ -433,7 +433,7 @@ export function SectorInstitutionTable({
               return (
                 <tr key={inst.institution_id} className="border-t border-border/30">
                   <td className="px-3 py-1.5 font-mono tabular-nums text-text-muted">{i + 1}</td>
-                  <td className="px-3 py-1.5"><EntityIdentityChip type="institution" id={inst.institution_id} name={inst.name} size="sm" /></td>
+                  <td className="px-3 py-1.5"><EntityIdentityChip type="institution" id={inst.institution_id} name={inst.name} size="sm" fullName /></td>
                   <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-muted">{formatNumber(inst.total_contracts ?? 0)}</td>
                   <td className="px-3 py-1.5 text-right font-mono tabular-nums">{formatCompactMXN(value)}</td>
                   {/* Share column carries a full-width track so the column fills, not floats. */}
