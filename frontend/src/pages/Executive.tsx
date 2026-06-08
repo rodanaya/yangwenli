@@ -82,14 +82,14 @@ export default function Executive() {
       totalContracts > 0
         ? Math.round((highCriticalCount / totalContracts) * 1000) / 10
         : 11.01
-    // Estimated value-at-risk: high+critical contract count / total contract
-    // count × total spend. This is an approximation that assumes uniform value
-    // distribution across risk bands (which is NOT exact — high-risk contracts
-    // skew larger). Labeled as ESTIMATED in the UI; the only honest alternative
-    // is a backend high_risk_value field that doesn't exist yet.
-    const highRiskShare =
-      totalContracts > 0 ? highCriticalCount / totalContracts : 0.139
-    const valueAtRisk = totalValue * highRiskShare
+    // Value-at-risk = summed MXN through high+critical contracts, sourced from
+    // the precomputed `overview.high_risk_value_mxn` (the "backend high_risk_value
+    // field that doesn't exist yet" now exists — added with the M3v2 sector VaR
+    // work). Replaces the old count-share × spend approximation, which understated
+    // it ~5× (its uniform-value assumption is wrong — high-risk contracts skew
+    // large). Now consistent with the /sectors Exposure Ledger total (~5.5T).
+    // Fallback ≈55.9% of spend matches the real share when the bundle is absent.
+    const valueAtRisk = d?.overview?.high_risk_value_mxn ?? totalValue * 0.559
     return {
       totalContracts,
       totalValue,
