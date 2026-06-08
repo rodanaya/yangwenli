@@ -278,6 +278,17 @@ export default function SectorDossier() {
   const largestContracts = topContractsResp?.contracts ?? []
   const gtCases = gtLinkageResp?.cases ?? 0
   const gtVendors = gtLinkageResp?.vendors ?? 0
+  // The GT chip jumps to the most relevant section that actually rendered —
+  // editorial cases when present (e.g. salud), else the investigation queue or
+  // vendor roster. Sectors like "otros" have 0 editorial cases, so a bare
+  // #cases target would be a dead scroll.
+  const gtTarget = sectorCases.length > 0
+    ? 'cases'
+    : tiers.reduce((s, x) => s + x.count, 0) > 0
+      ? 'queue'
+      : topVendors.length > 0
+        ? 'vendors'
+        : null
 
   // The institution list is always a top-by-spend capped subset (limit 60,
   // ≥50 contracts) keyed on the institution's home sector — a smaller set than
@@ -308,15 +319,16 @@ export default function SectorDossier() {
       {gtCases > 0 && (
         <button
           type="button"
-          onClick={() => document.getElementById('cases')?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => gtTarget && document.getElementById(gtTarget)?.scrollIntoView({ behavior: 'smooth' })}
+          disabled={!gtTarget}
           className="font-mono uppercase tracking-widest hover:opacity-70 transition-opacity -mt-3 mb-1"
-          style={{ fontSize: 10.5, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+          style={{ fontSize: 10.5, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: 0, cursor: gtTarget ? 'pointer' : 'default' }}
         >
           <span style={{ color: 'var(--color-risk-critical)', fontWeight: 700 }}>{gtCases.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}</span>{' '}
           {lang === 'es' ? 'casos GT' : 'GT cases'}
           <span style={{ opacity: 0.5, margin: '0 6px' }}>·</span>
           <span style={{ color: 'var(--color-text-primary)', fontWeight: 700 }}>{gtVendors.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}</span>{' '}
-          {lang === 'es' ? 'proveedores con vínculo documentado operan aquí' : 'GT-linked vendors operate here'} ↓
+          {lang === 'es' ? 'proveedores con vínculo documentado operan aquí' : 'GT-linked vendors operate here'}{gtTarget ? ' ↓' : ''}
         </button>
       )}
 
