@@ -24,8 +24,10 @@
  */
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS, OECD_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
+import { EditorialSparkline } from '@/components/charts/editorial'
+import type { SectorTrajectoryPoint } from '@/api/types'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Frozen contract — PEPPY (Sectors.tsx) imports these.
@@ -41,6 +43,11 @@ export interface LedgerRow {
   sbPct: number        // single_bid_pct (0-100)
   contracts: number
   vendors: number
+  // ── Non-value axes (rev 2) ──────────────────────────────────────────────
+  avgRiskScore: number // intensity (0–1) — model's mean risk, size-independent
+  criticalCount: number // # critical-level contracts (composition numerator; contracts = denominator)
+  topInstitution: { id: number; name: string; siglas?: string | null; sharePct: number } | null // capture / WHO
+  trajectory: SectorTrajectoryPoint[] // risk-by-year series for the per-row sparkline
 }
 
 // Sectors that carry a marginalia dagger (†) on the index.
@@ -99,6 +106,28 @@ const MARGIN_NOTE_STYLE: CSSProperties = {
   fontSize: 11,
   lineHeight: 1.45,
   color: 'var(--color-text-secondary)',
+}
+
+// Direction of a risk trajectory over its series — rising risk is the signal we tint.
+function trajectoryDirection(traj: SectorTrajectoryPoint[]): { glyph: string; rising: boolean } {
+  if (!traj || traj.length < 2) return { glyph: '·', rising: false }
+  const delta = traj[traj.length - 1].avg_risk - traj[0].avg_risk
+  if (delta > 0.02) return { glyph: '↑', rising: true }
+  if (delta < -0.02) return { glyph: '↓', rising: false }
+  return { glyph: '→', rising: false }
+}
+
+// Intensity dot colour — RISK_COLORS by level, but never green for low (Bible §3.10).
+function intensityColor(score: number): string {
+  const level = getRiskLevelFromScore(score)
+  return level === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[level]
+}
+
+// Intensity level word, localized + compact.
+function intensityWord(score: number, lang: 'en' | 'es'): string {
+  const level = getRiskLevelFromScore(score)
+  if (lang === 'es') return { critical: 'crít', high: 'alto', medium: 'med', low: 'bajo' }[level]
+  return level
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -305,25 +334,27 @@ function LedgerRowItem({
   row,
   rank,
   maxVar,
-  nationalMeanPct,
   lang,
 }: {
   row: LedgerRow
   rank: number
   maxVar: number
-  nationalMeanPct: number
   lang: 'en' | 'es'
 }) {
   const fill = sectorFill(row.sectorCode)
-  const ownVarPct = row.totalMxn > 0 ? (row.varMxn / row.totalMxn) * 100 : 0
-  const aboveMean = ownVarPct >= nationalMeanPct
   const sbHot = row.sbPct > 25
   const hasDagger = DAGGER_SECTORS.has(row.sectorCode)
+  const intensity = row.avgRiskScore ?? 0
+  const critPct = row.contracts > 0 ? (row.criticalCount / row.contracts) * 100 : 0
+  const dir = trajectoryDirection(row.trajectory)
+  const hasTraj = Boolean(row.trajectory && row.trajectory.length > 1)
+  const cap = row.topInstitution
+  const capName = cap ? (cap.siglas || cap.name) : null
 
   const ariaLabel =
     lang === 'es'
-      ? `${row.name} — ${formatCompactMXN(row.varMxn)} exposición señalada`
-      : `${row.name} — ${formatCompactMXN(row.varMxn)} model-flagged exposure`
+      ? `${row.name} — ${formatCompactMXN(row.varMxn)} exposición señalada, intensidad ${intensity.toFixed(2)}`
+      : `${row.name} — ${formatCompactMXN(row.varMxn)} model-flagged exposure, intensity ${intensity.toFixed(2)}`
 
   const counts = `${compactCount(row.contracts)} · ${compactCount(row.vendors)}`
 
@@ -335,9 +366,8 @@ function LedgerRowItem({
       className="group block transition-colors hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
       style={{ borderLeft: `3px solid ${fill}` }}
     >
-      {/* ≥lg single line; <lg wraps gracefully. */}
-      <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2.5 lg:py-2">
-        {/* Rank */}
+      {/* Line 1 — primary scan: rank · name · size bar · VaR · intensity · trajectory */}
+      <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 pt-2.5 pb-1 lg:pt-2 lg:pb-0.5">
         <span
           className="font-mono tabular-nums shrink-0 w-6 text-right"
           style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
@@ -345,35 +375,19 @@ function LedgerRowItem({
           {String(rank).padStart(2, '0')}
         </span>
 
-        {/* Sector name (+ counts sublabel on md) */}
-        <div className="shrink-0 w-28 sm:w-36 min-w-0">
-          <div className="flex items-baseline gap-0.5 min-w-0">
-            <span
-              className="truncate group-hover:underline decoration-1 underline-offset-2"
-              style={{ ...SERIF_NAME_STYLE, fontSize: 15, color: 'var(--color-text-primary)' }}
-            >
-              {row.name}
-            </span>
-            {hasDagger && (
-              <sup
-                className="font-mono"
-                style={{ fontSize: 8, color: 'var(--color-text-muted)' }}
-                aria-hidden="true"
-              >
-                †
-              </sup>
-            )}
-          </div>
-          {/* md-only counts sublabel (rail hidden, counts column hidden). */}
+        <div className="shrink-0 w-28 sm:w-36 min-w-0 flex items-baseline gap-0.5">
           <span
-            className="hidden md:inline lg:hidden font-mono tabular-nums"
-            style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}
+            className="truncate group-hover:underline decoration-1 underline-offset-2"
+            style={{ ...SERIF_NAME_STYLE, fontSize: 15, color: 'var(--color-text-primary)' }}
           >
-            {counts}
+            {row.name}
           </span>
+          {hasDagger && (
+            <sup className="font-mono" style={{ fontSize: 8, color: 'var(--color-text-muted)' }} aria-hidden="true">†</sup>
+          )}
         </div>
 
-        {/* VaR bar — full-width on its own line below sm; inline from sm up. */}
+        {/* Size bar (SIZE) */}
         <div className="hidden sm:flex flex-1 min-w-0 items-center">
           <VaRBar row={row} maxVar={maxVar} />
         </div>
@@ -386,59 +400,73 @@ function LedgerRowItem({
           {formatCompactMXN(row.varMxn)}
         </span>
 
-        {/* %SECTOR — above national mean in full ink, else muted. */}
+        {/* Intensity dot + score (INTENSITY — size-independent) */}
         <span
-          className="hidden sm:inline shrink-0 w-14 text-right font-mono tabular-nums"
-          style={{
-            fontSize: 11,
-            color: aboveMean ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-          }}
+          className="hidden sm:flex shrink-0 w-[70px] items-center justify-end gap-1.5"
+          title={lang === 'es' ? `Intensidad de riesgo ${intensity.toFixed(2)}` : `Risk intensity ${intensity.toFixed(2)}`}
         >
-          {ownVarPct.toFixed(1)}%
+          <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 9999, background: intensityColor(intensity), flexShrink: 0 }} />
+          <span className="font-mono tabular-nums" style={{ fontSize: 11, color: 'var(--color-text-primary)' }}>
+            {intensity.toFixed(2)}
+          </span>
         </span>
 
-        {/* DA% — plain ink (all 12 exceed; per-row tint would be noise). */}
-        <span
-          className="hidden md:inline shrink-0 w-12 text-right font-mono tabular-nums"
-          style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}
-        >
-          {row.daPct.toFixed(0)}%
-        </span>
-
-        {/* 1P% — risk-critical tint only when single-bid > 25%. */}
-        <span
-          className="hidden md:inline shrink-0 w-14 text-right font-mono tabular-nums"
-          style={{
-            fontSize: 11,
-            color: sbHot ? RISK_COLORS.critical : 'var(--color-text-secondary)',
-          }}
-        >
-          {row.sbPct.toFixed(1)}%
-        </span>
-
-        {/* CONTRATOS · PROV. — lg only (md folds into sublabel). */}
-        <span
-          className="hidden lg:inline shrink-0 w-28 text-right font-mono tabular-nums"
-          style={{ fontSize: 10.5, color: 'var(--color-text-muted)' }}
-        >
-          {counts}
+        {/* Trajectory sparkline + direction glyph (TIME) */}
+        <span className="hidden lg:flex shrink-0 w-24 items-center gap-1">
+          {hasTraj ? (
+            <>
+              <span className="flex-1 min-w-0">
+                <EditorialSparkline data={row.trajectory} yKey="avg_risk" colorToken="text-muted" height={24} kind="line" />
+              </span>
+              <span
+                className="font-mono shrink-0"
+                style={{ fontSize: 12, color: dir.rising ? RISK_COLORS.high : 'var(--color-text-muted)' }}
+                aria-hidden="true"
+              >
+                {dir.glyph}
+              </span>
+            </>
+          ) : (
+            <span className="font-mono w-full text-center" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>—</span>
+          )}
         </span>
       </div>
 
-      {/* <sm: bar on its own line + wrapped readouts (line 2). */}
-      <div className="sm:hidden px-2 pb-2.5 -mt-1 space-y-1.5">
+      {/* Line 2 — dossier sublabel (sm+): capture · composition · DA · 1P · counts */}
+      <div
+        className="hidden sm:flex items-center flex-wrap gap-x-2.5 gap-y-0.5 pl-10 sm:pl-12 pb-2 lg:pb-1.5 font-mono tabular-nums"
+        style={{ fontSize: 10, color: 'var(--color-text-muted)' }}
+      >
+        {capName && (
+          <span className="whitespace-nowrap" style={{ color: 'var(--color-text-secondary)' }}>
+            {capName}<span style={{ opacity: 0.5, margin: '0 3px' }}>·</span>{cap!.sharePct.toFixed(0)}% {lang === 'es' ? 'capt.' : 'capt.'}
+          </span>
+        )}
+        <span className="whitespace-nowrap inline-flex items-center gap-1">
+          <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 1, background: RISK_COLORS.critical, flexShrink: 0 }} />
+          {lang === 'es' ? 'crít' : 'crit'} {critPct.toFixed(1)}%
+        </span>
+        <span className="whitespace-nowrap">DA {row.daPct.toFixed(0)}%</span>
+        <span className="whitespace-nowrap" style={{ color: sbHot ? RISK_COLORS.critical : undefined }}>
+          1P {row.sbPct.toFixed(1)}%
+        </span>
+        <span className="whitespace-nowrap">{counts}</span>
+      </div>
+
+      {/* <sm: bar + key readouts on their own lines */}
+      <div className="sm:hidden px-2 pb-2.5 -mt-0.5 space-y-1.5">
         <div className="flex items-center">
           <VaRBar row={row} maxVar={maxVar} />
         </div>
-        <div className="flex items-center gap-3 font-mono tabular-nums" style={{ fontSize: 10 }}>
-          <span style={{ color: aboveMean ? 'var(--color-text-primary)' : 'var(--color-text-muted)' }}>
-            {ownVarPct.toFixed(1)}% {lang === 'es' ? 'sect' : 'sect'}
+        <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+          <span className="inline-flex items-center gap-1">
+            <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 9999, background: intensityColor(intensity), flexShrink: 0 }} />
+            {intensity.toFixed(2)} {intensityWord(intensity, lang)}
           </span>
-          <span style={{ color: 'var(--color-text-secondary)' }}>DA {row.daPct.toFixed(0)}%</span>
-          <span style={{ color: sbHot ? RISK_COLORS.critical : 'var(--color-text-secondary)' }}>
-            1P {row.sbPct.toFixed(1)}%
-          </span>
-          <span style={{ color: 'var(--color-text-muted)' }}>{counts}</span>
+          {capName && <span style={{ color: 'var(--color-text-secondary)' }}>{capName} {cap!.sharePct.toFixed(0)}%</span>}
+          <span style={{ color: RISK_COLORS.critical }}>{lang === 'es' ? 'crít' : 'crit'} {critPct.toFixed(1)}%</span>
+          <span>DA {row.daPct.toFixed(0)}%</span>
+          <span style={{ color: sbHot ? RISK_COLORS.critical : undefined }}>1P {row.sbPct.toFixed(1)}%</span>
         </div>
       </div>
     </Link>
@@ -460,8 +488,6 @@ export function ExposureLedger({
   const totalSpend = sum(rows, (r) => r.totalMxn)
   const totalContracts = sum(rows, (r) => r.contracts)
 
-  // National waterline — total VaR over total spend (the column-header phrase).
-  const nationalMeanPct = totalSpend > 0 ? (totalVaR / totalSpend) * 100 : 0
   // VaR as share of all spend, for the ∑ rule.
   const varSharePct = totalSpend > 0 ? (totalVaR / totalSpend) * 100 : 0
   // Count of sectors exceeding the OECD direct-award ceiling.
@@ -472,169 +498,122 @@ export function ExposureLedger({
   // Column-header labels (mono, micro, muted).
   const exposureHeader =
     lang === 'es' ? 'Exposición señalada · escala lineal' : 'Model-flagged exposure · linear scale'
-  const sectorMeanPhrase =
-    lang === 'es'
-      ? `% sector · media nacional ${nationalMeanPct.toFixed(1)}%`
-      : `% sector · national mean ${nationalMeanPct.toFixed(1)}%`
   const daPhrase =
     lang === 'es'
       ? `OCDE ≤${OECD_DA_CEILING} · las ${daExceedCount} exceden`
       : `OECD ≤${OECD_DA_CEILING} · ${daExceedCount} exceed`
-  const countsHeader = lang === 'es' ? 'Contratos · prov.' : 'Contracts · vend.'
 
   return (
     <section aria-label={lang === 'es' ? 'El Libro Mayor de la Exposición' : 'The Exposure Ledger'}>
-      {/* lg: ledger + marginalia rail; <lg: single column. */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_230px] lg:gap-6">
-        {/* ── Ledger column ── */}
-        <div className="min-w-0">
-          {/* Column header row (lg+ single line; collapses below). */}
-          <div
-            className="hidden sm:flex items-center gap-2 sm:gap-3 px-2 sm:px-3 pb-2 mb-1"
-            style={{ borderBottom: '1px solid var(--color-border)' }}
-            aria-hidden="true"
-          >
-            <span className="font-mono w-6 text-right" style={KICKER_STYLE}>
-              #
-            </span>
-            <span className="font-mono w-28 sm:w-36" style={KICKER_STYLE}>
-              {lang === 'es' ? 'Sector' : 'Sector'}
-            </span>
-            <span className="font-mono flex-1 min-w-0 truncate" style={KICKER_STYLE}>
-              {exposureHeader}
-            </span>
-            <span className="font-mono w-20 sm:w-24 text-right" style={KICKER_STYLE}>
-              VaR
-            </span>
-            <span className="hidden sm:inline font-mono w-14 text-right truncate" style={KICKER_STYLE} title={sectorMeanPhrase}>
-              {lang === 'es' ? `% sec` : `% sec`}
-            </span>
-            <span className="hidden md:inline font-mono w-12 text-right" style={KICKER_STYLE} title={daPhrase}>
-              DA%
-            </span>
-            <span className="hidden md:inline font-mono w-14 text-right" style={KICKER_STYLE}>
-              1P%
-            </span>
-            <span className="hidden lg:inline font-mono w-28 text-right truncate" style={KICKER_STYLE}>
-              {countsHeader}
-            </span>
-          </div>
-
-          {/* Sub-header phrase strip — waterline + OECD count, once. */}
-          <div
-            className="hidden sm:flex items-center justify-between gap-3 px-3 pb-2 mb-1 font-mono"
-            style={{ fontSize: 9, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}
-            aria-hidden="true"
-          >
-            <span>{sectorMeanPhrase}</span>
-            <span>{daPhrase}</span>
-          </div>
-
-          {/* Rows */}
-          <div role="list">
-            {rows.map((r, i) => (
-              <div key={r.sectorId} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                <LedgerRowItem
-                  row={r}
-                  rank={i + 1}
-                  maxVar={maxVar}
-                  nationalMeanPct={nationalMeanPct}
-                  lang={lang}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* ── §4 ∑ Sum rule — double hairline, the ONLY home of platform totals. ── */}
-          <div
-            className="mt-3 py-2.5"
-            style={{
-              borderTop: '3px double var(--color-text-muted)',
-              borderBottom: '3px double var(--color-text-muted)',
-            }}
-          >
-            <p
-              className="font-mono tabular-nums px-3"
-              style={{ fontSize: 11, letterSpacing: '0.02em', color: 'var(--color-text-primary)', lineHeight: 1.55 }}
-            >
-              {lang === 'es' ? (
-                <>
-                  ∑ {rows.length} SECTORES · {formatCompactMXN(totalVaR)} exposición señalada (
-                  {varSharePct.toFixed(1)}% del valor) · {formatCompactMXN(totalSpend)} gasto ·{' '}
-                  {totalContracts.toLocaleString('es-MX')} contratos
-                </>
-              ) : (
-                <>
-                  ∑ {rows.length} SECTORS · {formatCompactMXN(totalVaR)} model-flagged exposure (
-                  {varSharePct.toFixed(1)}% of value) · {formatCompactMXN(totalSpend)} spend ·{' '}
-                  {totalContracts.toLocaleString('en-US')} contracts
-                </>
-              )}
-            </p>
-          </div>
-
-          {/* Model note line. */}
-          <p
-            className="mt-2.5 px-3 font-mono"
-            style={{ fontSize: 10, letterSpacing: '0.02em', color: 'var(--color-text-muted)', lineHeight: 1.5 }}
-          >
-            {lang === 'es'
-              ? 'Modelo v0.8.5 · exposición = MXN vía contratos alto+crítico · indicador estadístico, no determinación legal · clic en fila → dossier · '
-              : 'Model v0.8.5 · exposure = MXN via high+critical contracts · statistical indicator, not a legal determination · click a row → dossier · '}
-            <Link
-              to="/methodology"
-              className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
-              {lang === 'es' ? 'metodología ↗' : 'methodology ↗'}
-            </Link>
-          </p>
-
-          {/* Legend microline. */}
-          <p
-            className="mt-1.5 px-3 font-mono"
-            style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
-          >
-            {lang === 'es'
-              ? 'barra = escala lineal · tono saturado = crítico · tono claro = alto'
-              : 'bar = linear scale · saturated tone = critical · light tone = high'}
-          </p>
-
-          {/* <lg: numbered notes register (same strings as the rail). */}
-          <ol className="lg:hidden mt-4 px-3 space-y-2" style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
-            {notes.map((n, i) => (
-              <li key={n.id} className="flex gap-2">
-                <span
-                  className="font-mono shrink-0 tabular-nums"
-                  style={{ fontSize: 9.5, color: 'var(--color-text-muted)', marginTop: 2 }}
-                >
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span style={MARGIN_NOTE_STYLE}>{n.text}</span>
-              </li>
-            ))}
-          </ol>
+      <div className="min-w-0">
+        {/* Column header row (sm+). */}
+        <div
+          className="hidden sm:flex items-center gap-2 sm:gap-3 px-2 sm:px-3 pb-2 mb-1"
+          style={{ borderBottom: '1px solid var(--color-border)' }}
+          aria-hidden="true"
+        >
+          <span className="font-mono w-6 text-right" style={KICKER_STYLE}>#</span>
+          <span className="font-mono w-28 sm:w-36" style={KICKER_STYLE}>{lang === 'es' ? 'Sector' : 'Sector'}</span>
+          <span className="font-mono flex-1 min-w-0 truncate" style={KICKER_STYLE}>{exposureHeader}</span>
+          <span className="font-mono w-20 sm:w-24 text-right" style={KICKER_STYLE}>VaR</span>
+          <span className="font-mono w-[70px] text-right" style={KICKER_STYLE}>{lang === 'es' ? 'Intens.' : 'Intens.'}</span>
+          <span className="hidden lg:inline font-mono w-24 text-right truncate" style={KICKER_STYLE}>
+            {lang === 'es' ? 'Trayectoria' : 'Trajectory'}
+          </span>
         </div>
 
-        {/* ── §3 Marginalia rail (≥lg only) ── */}
-        <aside className="hidden lg:block relative" aria-label={lang === 'es' ? 'Notas al margen' : 'Marginalia'}>
-          <p className="font-mono mb-3" style={{ ...KICKER_STYLE, fontSize: 9 }}>
-            {lang === 'es' ? 'Al margen' : 'In the margin'}
+        {/* Sub-header legend strip — explains the line-2 atoms + OECD count, once. */}
+        <div
+          className="hidden sm:flex items-center justify-between gap-3 px-3 pb-2 mb-1 font-mono"
+          style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+          aria-hidden="true"
+        >
+          <span>
+            {lang === 'es'
+              ? 'fila 2 · capt. = institución dominante · crít = % de contratos · ↑ riesgo en aumento'
+              : 'row 2 · capt. = top institution · crit = % of contracts · ↑ risk rising'}
+          </span>
+          <span>{daPhrase}</span>
+        </div>
+
+        {/* Rows */}
+        <div role="list">
+          {rows.map((r, i) => (
+            <div key={r.sectorId} style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <LedgerRowItem row={r} rank={i + 1} maxVar={maxVar} lang={lang} />
+            </div>
+          ))}
+        </div>
+
+        {/* ── §4 ∑ Sum rule — double hairline, the ONLY home of platform totals. ── */}
+        <div
+          className="mt-3 py-2.5"
+          style={{
+            borderTop: '3px double var(--color-text-muted)',
+            borderBottom: '3px double var(--color-text-muted)',
+          }}
+        >
+          <p
+            className="font-mono tabular-nums px-3"
+            style={{ fontSize: 11, letterSpacing: '0.02em', color: 'var(--color-text-primary)', lineHeight: 1.55 }}
+          >
+            {lang === 'es' ? (
+              <>
+                ∑ {rows.length} SECTORES · {formatCompactMXN(totalVaR)} exposición señalada (
+                {varSharePct.toFixed(1)}% del valor) · {formatCompactMXN(totalSpend)} gasto ·{' '}
+                {totalContracts.toLocaleString('es-MX')} contratos
+              </>
+            ) : (
+              <>
+                ∑ {rows.length} SECTORS · {formatCompactMXN(totalVaR)} model-flagged exposure (
+                {varSharePct.toFixed(1)}% of value) · {formatCompactMXN(totalSpend)} spend ·{' '}
+                {totalContracts.toLocaleString('en-US')} contracts
+              </>
+            )}
           </p>
-          <div className="space-y-5">
-            {notes.map((n) => (
-              <div key={n.id} className="relative pl-3">
-                {/* Hairline connector stub. */}
-                <span
-                  aria-hidden="true"
-                  className="absolute left-0 top-1.5"
-                  style={{ width: 8, height: 1, background: 'var(--color-border-hover)' }}
-                />
-                <p style={MARGIN_NOTE_STYLE}>{n.text}</p>
-              </div>
-            ))}
-          </div>
-        </aside>
+        </div>
+
+        {/* Model note line. */}
+        <p
+          className="mt-2.5 px-3 font-mono"
+          style={{ fontSize: 10, letterSpacing: '0.02em', color: 'var(--color-text-muted)', lineHeight: 1.5 }}
+        >
+          {lang === 'es'
+            ? 'Modelo v0.8.5 · exposición = MXN vía contratos alto+crítico · intensidad = riesgo medio del sector · indicador estadístico, no determinación legal · clic en fila → dossier · '
+            : 'Model v0.8.5 · exposure = MXN via high+critical contracts · intensity = sector mean risk · statistical indicator, not a legal determination · click a row → dossier · '}
+          <Link
+            to="/methodology"
+            className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--color-text-secondary)' }}
+          >
+            {lang === 'es' ? 'metodología ↗' : 'methodology ↗'}
+          </Link>
+        </p>
+
+        {/* Legend microline — size bar · intensity dot · trajectory line. */}
+        <p
+          className="mt-1.5 px-3 font-mono"
+          style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+        >
+          {lang === 'es'
+            ? 'barra = tamaño (lineal) · tono saturado = crítico, claro = alto · ● = intensidad · línea = trayectoria de riesgo'
+            : 'bar = size (linear) · saturated = critical, light = high · ● = intensity · line = risk trajectory'}
+        </p>
+
+        {/* Footnote register — caveat notes, shown at all breakpoints. */}
+        <ol className="mt-4 px-3 space-y-2" style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
+          {notes.map((n, i) => (
+            <li key={n.id} className="flex gap-2">
+              <span
+                className="font-mono shrink-0 tabular-nums"
+                style={{ fontSize: 9.5, color: 'var(--color-text-muted)', marginTop: 2 }}
+              >
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span style={MARGIN_NOTE_STYLE}>{n.text}</span>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   )

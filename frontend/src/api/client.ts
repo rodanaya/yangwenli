@@ -39,6 +39,7 @@ import type {
   SectorListResponse,
   TreemapResponse,
   SectorDetailResponse,
+  SectorTrendsBundleResponse,
   AnalysisOverview,
   RiskDistribution,
   YearOverYearChange,
@@ -331,6 +332,15 @@ export const sectorApi = {
   },
 
   /**
+   * Get bundled risk-trajectory series for all 12 sectors in one call.
+   * Feeds the Exposure Ledger per-row sparkline. Cached server-side 2h.
+   */
+  async getTrendsBundle(): Promise<SectorTrendsBundleResponse> {
+    const { data } = await api.get<SectorTrendsBundleResponse>('/sectors/trends-bundle')
+    return data
+  },
+
+  /**
    * Get risk distribution for a sector
    */
   async getRiskDistribution(sectorId: number): Promise<{ data: RiskDistribution[] }> {
@@ -354,17 +364,31 @@ export const sectorApi = {
   },
 
   /**
-   * P2 #50: Get temporal anomaly for a sector
+   * P2 #50: Get temporal anomaly for a sector. Returns per-year z-scores of
+   * key procurement factors vs the sector's own historical baseline. Shape
+   * matches backend/api/routers/sectors.py get_sector_temporal_anomaly.
    */
-  async getTemporalAnomaly(sectorId: number, year = 2024): Promise<{
+  async getTemporalAnomaly(sectorId: number): Promise<{
     sector_id: number
-    sector_code: string
     sector_name: string
-    current_year: number
-    contract_count: number
-    anomalies: Array<{ feature: string; label: string; z_score: number; direction: 'above' | 'below'; severity: 'high' | 'moderate' }>
+    year_filter: number | null
+    anomalies: Array<{ year: number; overall_anomaly_score: number; feature_scores: Record<string, number> }>
   }> {
-    const { data } = await api.get(`/sectors/${sectorId}/temporal-anomaly?year=${year}`)
+    const { data } = await api.get(`/sectors/${sectorId}/temporal-anomaly`)
+    return data
+  },
+
+  /**
+   * Per-year vendor-concentration history for a sector (Gini + top-vendor
+   * share). Instant — served from factor_baselines, no contracts scan.
+   * Shape matches backend get_sector_concentration_history.
+   */
+  async getConcentrationHistory(sectorId: number): Promise<{
+    sector_id: number
+    sector_name: string
+    history: Array<{ year: number; gini: number; top_vendor_share: number; total_value: number; vendor_count: number }>
+  }> {
+    const { data } = await api.get(`/sectors/${sectorId}/concentration-history`)
     return data
   },
 }

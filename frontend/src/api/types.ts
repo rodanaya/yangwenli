@@ -76,6 +76,17 @@ export interface SectorListResponse {
   total_value_mxn: number
 }
 
+// Bundled per-sector risk trajectory (one call for all 12) — feeds the Exposure
+// Ledger's per-row sparkline. Keyed by sector_id (string) → year series.
+export interface SectorTrajectoryPoint {
+  year: number
+  avg_risk: number
+}
+
+export interface SectorTrendsBundleResponse {
+  sectors: Record<string, SectorTrajectoryPoint[]>
+}
+
 // El Reparto treemap response — bundled for the Z0 entry page.
 export interface TreemapSectorItem {
   sector_id: number

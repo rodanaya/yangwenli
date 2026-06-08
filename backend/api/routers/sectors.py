@@ -372,6 +372,55 @@ def get_sectors_treemap():
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+@router.get("/sectors/trends-bundle")
+def get_sectors_trends_bundle():
+    """
+    Bundled risk-trajectory series for all 12 sectors in one call.
+
+    Returns { "sectors": { "<sector_id>": [{"year", "avg_risk"}, ...] } } sorted by
+    year, sourced from the precomputed_stats 'sector_year_breakdown' key (same source
+    as the per-sector /sectors/{id}/trends endpoint). One endpoint avoids N+1 fan-out
+    from 12 per-sector trend requests. Cached 2h.
+
+    Static route — declared BEFORE /sectors/{sector_id} so the int path converter
+    does not shadow it.
+    """
+    cache_key = "sectors_trends_bundle_v1"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_year_breakdown'"
+            ).fetchone()
+            if not row:
+                raise HTTPException(status_code=503, detail="Precomputed sector trends unavailable")
+
+            breakdown = json.loads(row[0])
+            sectors: Dict[str, List[Dict[str, Any]]] = {}
+            for r in breakdown:
+                sid = r.get("sector_id")
+                if sid is None or r.get("year") is None:
+                    continue
+                sectors.setdefault(str(sid), []).append({
+                    "year": r["year"],
+                    "avg_risk": round(r.get("avg_risk", 0) or 0, 4),
+                })
+            for sid in sectors:
+                sectors[sid].sort(key=lambda p: p["year"])
+
+            response = {"sectors": sectors}
+            _cache.set(cache_key, response, SECTORS_CACHE_TTL)
+            return response
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sectors_trends_bundle: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
 @router.get("/sectors/{sector_id}", response_model=SectorDetailResponse)
 def get_sector(
     sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),

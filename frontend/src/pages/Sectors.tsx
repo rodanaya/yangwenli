@@ -266,6 +266,21 @@ export function Sectors() {
     enabled: view === 'categories',
   })
 
+  // WHO-view enrichment — capture (treemap top institutions) + trajectory (bundled
+  // trends). Both bundled & cached server-side; only fetched on the WHO tab.
+  const { data: treemapData } = useQuery({
+    queryKey: ['sectors', 'treemap'],
+    queryFn: () => sectorApi.getTreemap(),
+    staleTime: 5 * 60 * 1000,
+    enabled: view === 'sectors',
+  })
+  const { data: trendsBundle } = useQuery({
+    queryKey: ['sectors', 'trends-bundle'],
+    queryFn: () => sectorApi.getTrendsBundle(),
+    staleTime: 5 * 60 * 1000,
+    enabled: view === 'sectors',
+  })
+
   const sectors: SectorStatistics[] = data?.data ?? []
 
   // For tree view: sectors ordered by spend (replaces the old `sorted` memo that
@@ -285,6 +300,21 @@ export function Sectors() {
   // Typed to handle optional SLIPPY fields gracefully — if not present yet,
   // high_critical_value_mxn will be undefined (→ filtered out by != null check).
   const ledgerRows: LedgerRow[] = useMemo(() => {
+    // Capture: sector_id → top institution (first of the treemap's top_institutions).
+    const capBySector = new Map<number, { id: number; name: string; siglas?: string | null; sharePct: number }>()
+    for (const ts of treemapData?.sectors ?? []) {
+      const top = ts.top_institutions?.[0]
+      if (top) {
+        capBySector.set(ts.sector_id, {
+          id: top.institution_id,
+          name: top.name,
+          siglas: top.siglas ?? null,
+          sharePct: top.share_pct ?? 0,
+        })
+      }
+    }
+    const trajBySector = trendsBundle?.sectors ?? {}
+
     return sectors
       .filter((s) => (s as SectorStatistics & { high_critical_value_mxn?: number | null }).high_critical_value_mxn != null)
       .map((s) => {
@@ -303,10 +333,14 @@ export function Sectors() {
           sbPct: s.single_bid_pct ?? 0,
           contracts: s.total_contracts,
           vendors: s.total_vendors ?? 0,
+          avgRiskScore: s.avg_risk_score ?? 0,
+          criticalCount: s.critical_risk_count ?? 0,
+          topInstitution: capBySector.get(s.sector_id) ?? null,
+          trajectory: trajBySector[String(s.sector_id)] ?? [],
         }
       })
       .sort((a, b) => b.varMxn - a.varMxn)
-  }, [sectors, t])
+  }, [sectors, t, treemapData, trendsBundle])
 
   // ── WHO lede strip computations ───────────────────────────────────────────────
   const ledeStats = useMemo(() => {
@@ -1043,8 +1077,8 @@ export function Sectors() {
                       </p>
                     </div>
 
-                    {/* Right: CumulativeRibbon — proof-of-lede */}
-                    <div aria-hidden="true">
+                    {/* Right: CumulativeRibbon — proof-of-lede (centered vs the taller lede) */}
+                    <div aria-hidden="true" className="lg:self-center">
                       <CumulativeRibbon rows={ledgerRows} lang={lang} />
                     </div>
                   </div>
