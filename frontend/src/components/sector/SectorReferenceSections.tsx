@@ -180,7 +180,7 @@ export function SectorVendorTable({
               return (
                 <tr key={v.vendor_id} className="border-t border-border/30 hover:bg-background-elevated transition-colors">
                   <td className="px-3 py-1.5 font-mono tabular-nums text-text-muted">{i + 1}</td>
-                  <td className="px-3 py-1.5"><EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" /></td>
+                  <td className="px-3 py-1.5"><EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" fullName /></td>
                   <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-muted">{formatNumber(v.total_contracts ?? 0)}</td>
                   <td className="px-3 py-1.5 text-right font-mono tabular-nums">{formatCompactMXN(v.total_value_mxn ?? 0)}</td>
                   <td className="px-3 py-1.5">
@@ -633,7 +633,7 @@ export function SectorCaseRoll({
             {/* Line 1 — case · amount */}
             <div className="flex items-baseline justify-between gap-3">
               <div className="min-w-0">
-                <EntityIdentityChip type="case" id={c.slug} name={lang === 'es' ? c.name_es : c.name_en} size="sm" />
+                <EntityIdentityChip type="case" id={c.slug} name={lang === 'es' ? c.name_es : c.name_en} size="sm" fullName />
               </div>
               {amount > 0 && (
                 <span className="shrink-0 tabular-nums" style={{ ...BIGNUM_STYLE, fontSize: 15, color: 'var(--color-text-primary)' }}>
