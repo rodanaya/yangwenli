@@ -89,7 +89,6 @@ const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
 const Terms = lazy(() => import('@/pages/Terms'))
 const ChartCatalog = lazy(() => import('@/pages/_dev/ChartCatalog'))
-const Patterns = lazy(() => import('@/pages/Patterns'))
 const PatternDossier = lazy(() => import('@/pages/PatternDossier'))
 const PatternConstellation = lazy(() => import('@/pages/PatternConstellation'))
 const AtlasStoryPlayer = lazy(() => import('@/pages/AtlasStoryPlayer'))
@@ -305,14 +304,11 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="patterns"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Patterns />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* /patterns index retired 2026-06-07 — Atlas (default lens =
+                  patterns) is the canonical pattern index and already deep-links
+                  into the dossiers. Index content migrated into PatternDossier
+                  (§ How to investigate + § Los Siete Patrones). */}
+              <Route path="patterns" element={<Navigate to="/atlas" replace />} />
               {/* UX-2: isolated full-screen constellation — MUST precede patterns/:code */}
               <Route
                 path="patterns/:code/constellation"

@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { networkApi, ariaApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
+import { CrossPatternComparison } from '@/components/patterns/CrossPatternComparison'
 import { getRiskLevelFromScore, SECTOR_COLORS, PATTERN_COLORS } from '@/lib/constants'
 import { formatCompactMXN, formatDualCurrency } from '@/lib/utils'
 
@@ -126,6 +127,42 @@ const META_BY_CODE = PATTERN_EDITORIAL.reduce<Record<string, PatternEditorial>>(
 )
 
 // ---------------------------------------------------------------------------
+// Investigative hooks — migrated from the retired /patterns index (2026-06-07).
+// P1/P2/P3/P6 copied verbatim; P4/P5/P7 REWRITTEN to match canonical ARIA
+// definitions (the index page had them mislabeled as Kickback/Rotation/Dump).
+// ---------------------------------------------------------------------------
+const PATTERN_HOOKS: Record<string, { en: string; es: string }> = {
+  P1: {
+    en: 'Cross-reference with direct-award procedure codes. If the same institution–vendor pair appears across 10+ years, run a co-bidding network analysis to find who else is in the ring.',
+    es: 'Crucen con códigos de adjudicación directa. Si el mismo par institución-proveedor aparece en 10+ años, ejecuten análisis de co-licitación para encontrar quién más está en el anillo.',
+  },
+  P2: {
+    en: 'Verify RFC registration date in SAT vs. first contract date. A company winning contracts before its RFC is formally registered is an automatic T1 lead.',
+    es: 'Verifiquen la fecha de registro RFC en el SAT vs. el primer contrato. Una empresa que gana contratos antes de registrar su RFC es un lead T1 automático.',
+  },
+  P3: {
+    en: 'Look for cascade contracts: company A wins a large procedure, then company B — registered weeks later at the same address — wins identical procedures the following year.',
+    es: 'Busquen contratos en cascada: empresa A gana un procedimiento grande, luego empresa B — registrada semanas después en la misma dirección — gana procedimientos idénticos el año siguiente.',
+  },
+  P4: {
+    en: 'Map the co-bidding graph. When the same 3–5 vendors appear on each other’s losing-bid rosters across dozens of procedures at one institution — and the winner rotates almost deterministically — you have a cartel, not competition. Filter the ARIA queue by P4 and open the Network view on the top co-bidder.',
+    es: 'Mapeen el grafo de co-licitación. Cuando los mismos 3–5 proveedores aparecen en las listas de ofertas perdedoras unos de otros en docenas de procedimientos de una institución — y el ganador rota de forma casi determinista — hay un cártel, no competencia. Filtren la cola ARIA por P4 y abran la vista de Red sobre el principal co-licitante.',
+  },
+  P5: {
+    en: 'Compare unit prices against the sector-median benchmark. Two shapes matter: persistent overpricing (average price-ratio well above the sector median across many contracts) and spike overpricing (occasional contracts at multiples of the going rate — the single-contract lede a journalist can use). Pharma, construction supplies and IT services are where benchmarking is feasible.',
+    es: 'Comparen los precios unitarios contra la mediana del sector. Importan dos formas: el sobreprecio persistente (ratio de precio promedio muy por encima de la mediana sectorial en muchos contratos) y el sobreprecio puntual (contratos ocasionales a múltiplos de la tarifa vigente — el gancho de un solo contrato que un periodista puede usar). Farmacéutica, suministros de construcción y TI son donde el benchmarking es factible.',
+  },
+  P6: {
+    en: 'Open the vendor dossier’s network view on the top vendor for each captured institution. Capture typically begins with a single direct award that becomes the de-facto preferred vendor for all subsequent competitive procedures.',
+    es: 'Abran la vista de red del expediente del proveedor principal de cada institución capturada. La captura típicamente comienza con una adjudicación directa que se convierte en el proveedor preferido de facto para todos los procedimientos competitivos posteriores.',
+  },
+  P7: {
+    en: 'Cross-reference the vendor against external registries: SAT EFOS (tax-fraud blacklist), SFP sanction records, and the curated ground-truth case library. A match on any of these is documented external evidence — the strongest signal in the model. Then check for family or political ties between the vendor’s officers and the contracting institution’s procurement staff.',
+    es: 'Crucen al proveedor con registros externos: EFOS del SAT (lista negra por fraude fiscal), sanciones de la SFP y la biblioteca curada de casos ground-truth. Una coincidencia en cualquiera de ellos es evidencia externa documentada — la señal más fuerte del modelo. Luego revisen vínculos familiares o políticos entre los directivos del proveedor y el personal de contratación de la institución.',
+  },
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -222,10 +259,10 @@ export default function PatternDossier() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
         <Link
-          to="/patterns"
+          to="/atlas"
           className="text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors"
         >
-          {isEs ? '← Patrones' : '← Patterns'}
+          {isEs ? '← El Atlas · lente Patrones' : '← The Atlas · Patterns lens'}
         </Link>
         <p className="mt-4 text-sm text-text-secondary font-mono">
           {isEs ? `Patrón "${code}" no encontrado.` : `Pattern "${code}" not found.`}
@@ -241,15 +278,29 @@ export default function PatternDossier() {
   const codeUpper = code?.toUpperCase() ?? ''
   const caseType = CASE_TYPE_BY_PATTERN[codeUpper]
   const patternColor = PATTERN_COLORS[codeUpper] ?? 'var(--color-risk-critical)'
+  const hook = PATTERN_HOOKS[codeUpper]
+    ? (isEs ? PATTERN_HOOKS[codeUpper].es : PATTERN_HOOKS[codeUpper].en)
+    : null
+
+  // Universe totals across all 7 patterns — reuses the already-fetched
+  // pattern-spotlight query (zero new API calls). Powers the § Los Siete
+  // Patrones footer strip migrated from the retired /patterns index.
+  const allPatterns = spotlightData?.patterns ?? []
+  const universe = {
+    vendors: allPatterns.reduce((s, p) => s + (p.vendor_count ?? 0), 0),
+    t1: allPatterns.reduce((s, p) => s + (p.t1_count ?? 0), 0),
+    gt: allPatterns.reduce((s, p) => s + (p.gt_case_count ?? 0), 0),
+    value: allPatterns.reduce((s, p) => s + (p.total_value_mxn ?? 0), 0),
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       {/* Breadcrumb */}
       <Link
-        to="/patterns"
+        to="/atlas"
         className="inline-block text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors"
       >
-        {isEs ? '← Todos los patrones' : '← All patterns'}
+        {isEs ? '← El Atlas · lente Patrones' : '← The Atlas · Patterns lens'}
       </Link>
 
       {/* §0 Cabecera */}
@@ -498,6 +549,27 @@ export default function PatternDossier() {
         <p className="text-sm text-text-secondary leading-relaxed">{signal}</p>
       </section>
 
+      {/* §5 How to investigate — migrated from the retired /patterns index */}
+      {hook && (
+        <section aria-label={isEs ? 'Cómo investigar' : 'How to investigate'}>
+          <SectionKicker label={isEs ? '§ 5 · CÓMO INVESTIGAR' : '§ 5 · HOW TO INVESTIGATE'} />
+          <div
+            className="rounded-sm px-4 py-3.5"
+            style={{
+              backgroundColor: `${patternColor}0d`,
+              borderLeft: `2px solid ${patternColor}60`,
+            }}
+          >
+            <p
+              className="text-sm italic text-text-secondary leading-relaxed"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              {hook}
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* §5 GT Cases Callout */}
       {spotlight && spotlight.gt_case_count > 0 && caseType && (
         <section
@@ -544,6 +616,53 @@ export default function PatternDossier() {
             <span aria-hidden="true">→</span>
             {isEs ? 'Ver casos de corrupción' : 'View corruption cases'}
           </Link>
+        </section>
+      )}
+
+      {/* §6 Los Siete Patrones — cross-pattern navigation strip migrated from
+          the retired /patterns index. Universe totals + ranked sibling links. */}
+      {allPatterns.length > 0 && (
+        <section
+          aria-label={isEs ? 'Los siete patrones' : 'The seven patterns'}
+          className="pt-6 border-t border-border"
+        >
+          <SectionKicker label={isEs ? '§ 6 · LOS SIETE PATRONES' : '§ 6 · THE SEVEN PATTERNS'} />
+
+          {/* Universe totals — one dense line */}
+          <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4 mt-1">
+            {[
+              { v: universe.vendors.toLocaleString(), l: isEs ? 'Proveedores marcados' : 'Vendors flagged', c: undefined },
+              { v: universe.t1.toLocaleString(), l: isEs ? 'En Tier 1' : 'In Tier 1', c: 'var(--color-risk-critical)' },
+              { v: universe.gt.toLocaleString(), l: isEs ? 'Casos GT' : 'GT cases', c: undefined },
+              ...(universe.value > 0 ? [{ v: formatCompactMXN(universe.value), l: isEs ? 'Gasto en riesgo' : 'Spend at risk', c: '#a06820' }] : []),
+            ].map(({ v, l, c }) => (
+              <div key={l} className="flex flex-col gap-0.5">
+                <span
+                  className="tabular-nums leading-none"
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    fontSize: '20px',
+                    color: c ?? 'var(--color-text-primary)',
+                  }}
+                >
+                  {v}
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+                  {l}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <CrossPatternComparison patterns={allPatterns} currentCode={codeUpper} isEs={isEs} />
+
+          <p className="mt-4 text-[11px] text-text-muted leading-relaxed">
+            {isEs
+              ? 'Un proveedor puede coincidir con varios patrones a la vez. Esos cruces son donde suelen empezar las investigaciones.'
+              : 'A vendor can match several patterns at once. Those intersections are where investigations usually begin.'}
+          </p>
         </section>
       )}
     </div>
