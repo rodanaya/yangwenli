@@ -11,6 +11,7 @@ Run:  cd backend && python -m scripts._precompute_network_trama
 """
 
 import json
+import os
 import sqlite3
 import sys
 import time
@@ -18,7 +19,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-DB_PATH = Path(__file__).resolve().parent.parent / "RUBLI_NORMALIZED.db"
+# DB resolution mirrors the backend (dependencies.py): explicit argv wins, then
+# the DATABASE_PATH env the prod container sets (/app/RUBLI_DEPLOY.db), then the
+# local source DB. Without this, a prod run would target a non-existent
+# RUBLI_NORMALIZED.db inside the container.
+_DEFAULT_DB = Path(__file__).resolve().parent.parent / "RUBLI_NORMALIZED.db"
+DB_PATH = Path(
+    sys.argv[1]
+    if len(sys.argv) > 1
+    else os.environ.get("DATABASE_PATH", str(_DEFAULT_DB))
+)
 TRAMA_INDEX_DB_KEY = "network_trama_index_v1"
 TRAMA_CAPTURE_DB_KEY = "network_trama_capture_v1"
 
