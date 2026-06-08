@@ -22,7 +22,6 @@ import {
   Sparkles,
   Tag,
   Map,
-  Scale,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -98,7 +97,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.analysis',
     items: [
       { i18nKey: 'capture', href: '/captura', icon: GitCompareArrows },
-      { i18nKey: 'intersection', href: '/intersection', icon: Scale },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
     ],
   },

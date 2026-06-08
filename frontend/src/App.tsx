@@ -82,7 +82,6 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const Relationships = lazy(() => import('@/pages/Relationships'))
-const Intersection = lazy(() => import('@/pages/Intersection'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
@@ -336,14 +335,10 @@ function App() {
               />
               {/* Legacy aliases → canonical /captura */}
               <Route path="relationships" element={<Navigate to="/captura" replace />} />
-              <Route
-                path="intersection"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Intersection />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* /intersection retired 2026-06-08 — its value (the model-vs-
+                  official-record near-miss) is a credibility argument, now an
+                  exhibit on /methodology; the leads live in /aria. */}
+              <Route path="intersection" element={<Navigate to="/methodology#two-worlds" replace />} />
               <Route path="capture" element={<Navigate to="/captura" replace />} />
               {/* v1.0 launch cut — CorruptionClusters subsumed by /atlas. */}
               <Route path="clusters" element={<Navigate to="/atlas" replace />} />

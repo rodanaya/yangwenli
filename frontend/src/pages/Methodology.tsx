@@ -8,6 +8,7 @@ import { staggerContainer, staggerItem } from '@/lib/animations'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
+import { TwoWorldsExhibit } from '@/components/methodology/TwoWorldsExhibit'
 import {
   ChevronDown,
   ChevronRight,
@@ -960,6 +961,12 @@ export function Methodology() {
           initial="initial"
           animate="animate"
         >
+
+          {/* Featured exhibit — formerly the standalone /intersection page,
+              retired 2026-06-08 and folded in here as a credibility argument. */}
+          <motion.div variants={staggerItem}>
+            <TwoWorldsExhibit />
+          </motion.div>
 
           {/* Section 2: Model Overview */}
           <motion.div variants={staggerItem}>
