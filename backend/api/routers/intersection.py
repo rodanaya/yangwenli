@@ -74,11 +74,23 @@ _SET_ASIDE_VALUE_FLOOR = 5_000_000_000  # 5B MXN — above this, "ghost" is impl
 _STRUCTURAL_FP_NAMES = (
     'SANOFI', 'ASTRAZENECA', 'BOEHRINGER', 'ROCHE', 'NOVARTIS',
     'GILEAD', 'JANSSEN', 'AMGEN', 'TAKEDA', 'BAYER', 'KEDRION',
-    'GRIFOLS', 'NOVO NORDISK', 'PFIZER',
+    'GRIFOLS', 'NOVO NORDISK', 'PFIZER', 'WYETH', 'MERCK', 'GLAXO',
+    'ABBVIE', 'LILLY',
+)
+# Public-sector entities that occasionally receive contracts (inter-agency
+# transfers) and trip the ghost/intermediary patterns — a police force or
+# ministry is not a shell company. Tokens are ASCII-prefix-safe: SQLite
+# UPPER/LIKE is ASCII-only, so 'POLIC' (not 'POLICÍA') matches "Policía …".
+_PUBLIC_ENTITY_NAMES = (
+    'POLIC', 'GUARDIA NACIONAL', 'GOBIERNO DE', 'MUNICIPIO',
+    'AYUNTAMIENTO', 'PODER JUDICIAL',
 )
 # Module-level constants only (not user input) — f-string interpolation is safe.
 _no_structural_fp = " AND ".join(
     f"UPPER(vendor_name) NOT LIKE '%{name}%'" for name in _STRUCTURAL_FP_NAMES
+)
+_no_public_entity = " AND ".join(
+    f"UPPER(vendor_name) NOT LIKE '%{name}%'" for name in _PUBLIC_ENTITY_NAMES
 )
 
 # SQL fragments — module constants only.
@@ -145,13 +157,13 @@ def get_intersection_summary(
     """
     conn.row_factory = sqlite3.Row
 
-    cache_key = f"summary_v2:{top_n}"
+    cache_key = f"summary_v3:{top_n}"
     cached = app_cache.get("intersection", cache_key)
     if cached is not None:
         return cached
 
     # Persistent fallback: survives container restarts (the full scan is ~10-20s cold).
-    db_key = f"intersection_summary_v2_{top_n}"
+    db_key = f"intersection_summary_v3_{top_n}"
     try:
         row = conn.execute(
             "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?", (db_key,)
@@ -195,7 +207,7 @@ def get_intersection_summary(
             f"avg_risk_score >= {flags} AND {_NOREG} "
             f"AND total_contracts >= {_MIN_CONTRACTS} "
             f"AND primary_pattern IN ({_ghost_in}) "
-            f"AND {_FP_CLEAN} AND {_no_structural_fp}"
+            f"AND {_FP_CLEAN} AND {_no_structural_fp} AND {_no_public_entity}"
         )
         ghost_count = conn.execute(
             f"SELECT COUNT(*) FROM aria_queue WHERE {ghost_where}"
@@ -305,7 +317,7 @@ def get_quadrant_page(
             f"avg_risk_score >= {flags} AND {_NOREG} "
             f"AND total_contracts >= {_MIN_CONTRACTS} "
             f"AND primary_pattern IN ({_ghost_in}) "
-            f"AND {_FP_CLEAN} AND {_no_structural_fp}"
+            f"AND {_FP_CLEAN} AND {_no_structural_fp} AND {_no_public_entity}"
         )
         order = "ORDER BY ips_final DESC"
     elif quadrant == "uncorroborated":
