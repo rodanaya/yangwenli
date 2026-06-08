@@ -1049,7 +1049,7 @@ export default function InstitutionLeague() {
             </div>
           </div>
           {totalInstitutions > 0 && (
-            <p className="text-xs text-text-muted mt-2 max-w-2xl">
+            <p className="text-sm sm:text-[15px] text-text-secondary mt-3.5 max-w-3xl leading-relaxed">
               {t('lede', { total: formatNumber(totalInstitutions) })}
             </p>
           )}
