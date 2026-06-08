@@ -18,10 +18,9 @@
  *   compare tool (collapsed) · PageFooter
  */
 
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AdminSummaryCard } from '@/components/administrations/AdminSummaryCard'
-import { AdminSectorMatrix, MATRIX_SECTORS } from '@/components/administrations/AdminSectorMatrix'
 import { ComparePeriodView } from '@/components/administrations/ComparePeriodView'
 import { AdminCycleSmallMultiples } from '@/components/administrations/AdminCycleSmallMultiples'
 import { ExpedienteSpine } from '@/components/administrations/ExpedienteSpine'
@@ -33,20 +32,16 @@ import {
 import type {
   AdminName,
   AdminAgg,
-  MatrixMetric,
 } from '@/components/administrations/types'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber } from '@/lib/utils'
-import { SECTORS, RISK_COLORS } from '@/lib/constants'
+import { SECTORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import type { YearOverYearChange } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
-import {
-  AlertTriangle,
-  Activity,
-} from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { PageFooter } from '@/components/layout/PageFooter'
@@ -56,12 +51,12 @@ import { DotBar } from '@/components/ui/DotBar'
 import {
   EditorialLineChart,
   DotStrip,
+  scaleToColor,
   type ChartAnnotation,
   type LineSeries,
   type DotStripRow,
 } from '@/components/charts/editorial'
 import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
-import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 
 // =============================================================================
 // Constants
@@ -172,9 +167,7 @@ export default function Administrations() {
     const match = p ? ADMINISTRATIONS.find((a) => adminSlug(a.name) === p) : undefined
     return (match?.name ?? 'AMLO') as AdminName
   })
-  const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
   const [compareOpen, setCompareOpen] = useState(false)
-  const systemicChartRef = useRef<HTMLDivElement>(null)
 
   // Keep ?admin= synced with the selection so a chosen administration is a
   // shareable, reload-safe deep link (e.g. /administrations?admin=amlo).
@@ -240,15 +233,6 @@ export default function Administrations() {
       risk: yoyData.reduce((s, y) => s + y.avg_risk * y.contracts, 0) / total,
     }
   }, [yoyData])
-
-  // Per-admin "standings" summary for the matrix overall column.
-  const adminSummary = useMemo(() => {
-    const out: Record<string, { risk: number; da: number; hr: number; sb: number }> = {}
-    for (const a of adminAggs) {
-      out[a.name] = { risk: a.avgRisk, da: a.directAwardPct, hr: a.highRiskPct, sb: a.singleBidPct }
-    }
-    return out
-  }, [adminAggs])
 
   const selectedAgg = adminAggs.find((a) => a.name === selectedAdmin)
   const selectedMeta = ADMINISTRATIONS.find((a) => a.name === selectedAdmin) ?? ADMINISTRATIONS[0]
@@ -326,32 +310,6 @@ export default function Administrations() {
     [sectorHeatmap],
   )
 
-  // Live Admin × Sector Matrix — computed from sectorYearData (all administrations at once)
-  const liveAdminSectorMatrix = useMemo(() => {
-    if (sectorYearData.length === 0) return null
-    const result: Record<string, Record<string, { risk: number; da: number; hr: number; sb: number }>> = {}
-    for (const admin of ADMINISTRATIONS) {
-      const adminRows = sectorYearData.filter(
-        (sy) => sy.year >= admin.dataStart && sy.year < admin.end
-      )
-      result[admin.name] = {}
-      MATRIX_SECTORS.forEach((sector, idx) => {
-        const sectorId = idx + 1 // MATRIX_SECTORS is ordered exactly sector_id 1–12
-        const rows = adminRows.filter((r) => r.sector_id === sectorId)
-        const totalContracts = rows.reduce((s, r) => s + r.contracts, 0)
-        result[admin.name][sector.key] = totalContracts === 0
-          ? { risk: 0, da: 0, hr: 0, sb: 0 }
-          : {
-              risk: rows.reduce((s, r) => s + r.avg_risk * r.contracts, 0) / totalContracts,
-              da: rows.reduce((s, r) => s + r.direct_award_pct * r.contracts, 0) / totalContracts,
-              hr: rows.reduce((s, r) => s + r.high_risk_pct * r.contracts, 0) / totalContracts,
-              sb: rows.reduce((s, r) => s + (r.single_bid_pct ?? 0) * r.contracts, 0) / totalContracts,
-            }
-      })
-    }
-    return result
-  }, [sectorYearData])
-
   // Events filtered to selected admin
   const adminEvents = useMemo(
     () => events.filter((e) => e.year >= selectedMeta.dataStart && e.year < selectedMeta.end),
@@ -421,11 +379,6 @@ export default function Administrations() {
   }
 
   const isEs = (i18n.language?.startsWith('es') ?? false)
-
-  // Derived data for the 25-yr trend chart (systemic closing section)
-  const transitionYears = [2006, 2012, 2018, 2024]
-  const adminLabels: Record<number, string> = { 2006: 'Calderón', 2012: 'Peña', 2018: 'AMLO', 2024: 'Sheinbaum' }
-  const breaksData = breaksResp
 
   // ── M7c module identity — the EXPEDIENTE folder carries the selected
   // administration's party color; the PATRÓN folder carries the platform ochre.
@@ -733,10 +686,10 @@ export default function Administrations() {
                   colorRaw: s.color,
                   valueLabel: s.hr.toFixed(1) + '%',
                 })
-                // Density (M7c whitespace pass): 12 ranked rows split into two
-                // side-by-side strips (1–6 / 7–12) — half the height, full width.
-                const mid = Math.ceil(ranked.length / 2)
-                const halves = ranked.length > 6 ? [ranked.slice(0, mid), ranked.slice(mid)] : [ranked]
+                // Single full-width column — uniform, battened-down dots. (The
+                // former two-column split squeezed the 50-dot track below its
+                // native width, so dots overflowed into neighbours and rendered
+                // at inconsistent sizes between columns.)
                 const oecdMark = {
                   fraction: adminAvgHR / scaleMax,
                   label: `${isEs ? 'Prom. sexenio' : 'Term avg'} · ${adminAvgHR.toFixed(1)}%`,
@@ -749,17 +702,12 @@ export default function Administrations() {
                         <span style={{ color: 'var(--color-accent)' }}>{(top.hr / adminAvgHR).toFixed(1)}×</span> {isEs ? 'el promedio del sexenio' : 'the term average'}
                       </p>
                     )}
-                    <div className={halves.length > 1 ? 'grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-1' : ''}>
-                      {halves.map((half, h) => (
-                        <DotStrip
-                          key={h}
-                          rows={half.map(toRow)}
-                          labelWidth={140}
-                          rowHeight={26}
-                          oecdMark={oecdMark}
-                        />
-                      ))}
-                    </div>
+                    <DotStrip
+                      rows={ranked.map(toRow)}
+                      labelWidth={150}
+                      rowHeight={28}
+                      oecdMark={oecdMark}
+                    />
                   </>
                 )
               })()}
@@ -837,8 +785,8 @@ export default function Administrations() {
                                 emptyColor="var(--color-background-elevated)"
                                 emptyStroke="var(--color-border-hover)"
                                 dots={20}
-                                dotR={1.75}
-                                dotGap={4.5}
+                                dotR={3}
+                                dotGap={6}
                               />
                             </div>
                           </div>
@@ -866,12 +814,16 @@ export default function Administrations() {
           </section>
 
           {/* ════════════════════════════════════════════════════════════════
-              MÓDULO 2 · EL PATRÓN — the systemic folder. Five terms compared;
-              the SELECTED administration is threaded through every chart as a
-              ▶ highlight. Ochre spine = platform voice (M7c cohesion refactor).
+              MÓDULO 2 · EL CICLO — single-administration analytical folder.
+              The dossier is about ONE term, so this module focuses entirely on
+              the selected administration: its term-cycle trajectory + its
+              sector scorecard. (Was "EL PATRÓN", a five-term comparison —
+              retired 2026-06-08: it diluted the single-admin focus and
+              duplicated §I/§II. Cross-term comparison lives in the on-demand
+              "Comparar dos periodos" tool below.) Ochre spine = analytical voice.
               ════════════════════════════════════════════════════════════════ */}
           <section
-            aria-label={isEs ? 'El patrón — cinco sexenios comparados' : 'The pattern — five terms compared'}
+            aria-label={isEs ? `El ciclo — ${selectedDisplay}` : `The cycle — ${selectedDisplay}`}
             className="rounded-sm border border-border/50 bg-background-card overflow-hidden"
             style={{
               borderLeftWidth: 4,
@@ -882,7 +834,7 @@ export default function Administrations() {
           {/* Module header */}
           <div className="px-4 sm:px-5 py-4">
             <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1.5">
-              § V · {isEs ? 'EL PATRÓN · CINCO SEXENIOS COMPARADOS' : 'THE PATTERN · FIVE TERMS COMPARED'}
+              § V · {isEs ? 'EL CICLO DEL SEXENIO' : 'THE TERM CYCLE'} — {adminTag}
             </div>
             <h2
               style={{
@@ -895,185 +847,122 @@ export default function Administrations() {
               className="text-text-primary"
             >
               {isEs ? (
-                <>¿Cómo se sitúa <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span> frente a los otros cuatro?</>
+                <>El sexenio de <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span>, año por año.</>
               ) : (
-                <>How does <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span> compare against the other four?</>
+                <>The <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span> term, year by year.</>
               )}
             </h2>
             <p className="mt-1.5 text-xs text-text-muted max-w-[64ch] leading-relaxed">
               {isEs
-                ? 'Las gráficas de este módulo comparan los cinco sexenios; la administración seleccionada aparece marcada con ▶.'
-                : 'Charts in this module compare all five terms; the selected administration is marked with ▶.'}
+                ? 'Trayectoria de riesgo por año de mandato y huella por sector — solo esta administración, contra el promedio nacional.'
+                : 'Risk trajectory by year in office and the sector scorecard — this administration only, against the national average.'}
             </p>
           </div>
 
-          {/* 25-year systemic trend */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
-          <EditorialChartFrame
-            kicker={isEs ? '§ TENDENCIAS 25 AÑOS' : '§ 25-YEAR SYSTEMIC TRENDS'}
-            headline={isEs
-              ? '65.3% de contratos federales adjudicados sin competencia — en cada administración'
-              : '65.3% of federal contracts awarded without open competition — every administration'}
-            footer={
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  COMPRANET 2000–2025 · RUBLI v0.8.5
-                </span>
-                <ChartDownloadButton targetRef={systemicChartRef} filename="systemic-patterns-25yr" />
-              </div>
-            }
-            tone="bare"
-          >
-            {yoyData.length > 0 ? (
-              <div ref={systemicChartRef}>
-                {(() => {
-                  // Era bands — the page-selected administration gets a ▶ marker
-                  // so the systemic chart visibly threads back to the selection.
-                  const eraBands: Array<{ name: AdminName; label: string; x1: number; x2: number }> = [
-                    { name: 'Fox', label: 'Fox · PAN', x1: 2002, x2: 2006 },
-                    { name: 'Calderon', label: 'Calderón · PAN', x1: 2006, x2: 2012 },
-                    { name: 'Pena Nieto', label: 'EPN · PRI', x1: 2012, x2: 2018 },
-                    { name: 'AMLO', label: 'AMLO · MORENA', x1: 2018, x2: 2024 },
-                    { name: 'Sheinbaum', label: 'Sheinbaum · MORENA', x1: 2024, x2: 2026 },
-                  ]
-                  const annotations: ChartAnnotation[] = [
-                    ...eraBands.map<ChartAnnotation>((b) => ({
-                      kind: 'band',
-                      x1: b.x1,
-                      x2: b.x2,
-                      label: b.name === selectedAdmin ? `▶ ${b.label}` : b.label,
-                      tone: 'admin',
-                    })),
-                    { kind: 'hrule', y: 65.3, label: t('patternsView.nationalAvgLabel'), tone: 'oecd' },
-                    ...transitionYears.map<ChartAnnotation>((year) => ({
-                      kind: 'vrule', x: year, label: adminLabels[year] ?? '', tone: 'info',
-                    })),
-                    ...((breaksData?.breakpoints ?? [])
-                      .filter((bp, i, arr) => arr.findIndex(b => b.year === bp.year) === i)
-                      .map<ChartAnnotation>((bp) => ({
-                        kind: 'vrule', x: bp.year, label: `~${bp.year}`, tone: 'warn',
-                      }))),
-                    // F4 — name the all-time peak direct-award year (M7-3 debt).
-                    ...(yoyData.length > 0 ? (() => {
-                      const peak = yoyData.reduce((m, r) => (r.direct_award_pct > m.direct_award_pct ? r : m), yoyData[0])
-                      return [{
-                        kind: 'vrule' as const,
-                        x: peak.year,
-                        label: `${isEs ? 'Máximo histórico' : 'All-time peak'} · ${peak.direct_award_pct.toFixed(1)}%`,
-                        tone: 'warn' as const,
-                      }]
-                    })() : []),
-                  ]
-                  const seriesData = yoyData.map((r) => ({
-                    ...r,
-                    avg_risk_x100: (r.avg_risk ?? 0) * 100,
-                  }))
-                  const series: LineSeries<typeof seriesData[number]>[] = [
-                    { key: 'direct_award_pct', label: isEs ? 'Adj. Directa %' : 'Direct Award %', colorToken: 'risk-critical' },
-                    { key: 'single_bid_pct', label: isEs ? 'Licitación Única %' : 'Single Bid %', colorToken: 'text-muted' },
-                    { key: 'high_risk_pct', label: isEs ? 'Alto Riesgo %' : 'High Risk %', colorToken: 'risk-medium' },
-                  ]
-                  return (
-                    <EditorialLineChart
-                      data={seriesData}
-                      xKey="year"
-                      series={series}
-                      yFormat="pct"
-                      yDomain={[35, 90]}
-                      annotations={annotations}
-                      height={360}
-                    />
-                  )
-                })()}
-              </div>
-            ) : (
-              <div className="h-[360px] flex items-center justify-center text-text-muted text-sm">
-                {t('patternsView.noData')}
-              </div>
-            )}
-            <p className="mt-3 text-xs text-text-muted leading-relaxed">
-              {t('patternsView.chartFootnote')}
-            </p>
-            {breaksData?.breakpoints && breaksData.breakpoints.length > 0 && (
-              <p className="text-[10px] text-risk-high/80 font-mono mt-1">
-                <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" aria-hidden="true" /> {t('patternsView.regimeShiftNote')}
-              </p>
-            )}
-          </EditorialChartFrame>
-          </div>
-
-          {/* Five presidents ranked by risk */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
-            <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
-              {isEs ? '§ CINCO PRESIDENTES · RIESGO COMPARADO' : '§ FIVE PRESIDENTS · RISK COMPARED'}
-            </div>
-            <p className="text-xs text-text-muted mb-4 max-w-[62ch] leading-relaxed">
-              {isEs
-                ? 'Proporción de contratos de alto riesgo por administración, de mayor a menor. La línea cian marca el promedio nacional.'
-                : 'Share of high-risk contracts by administration, ranked high to low. The cyan line marks the national average.'}
-            </p>
-            {adminAggs.length > 0 && (() => {
-              const ranked = [...adminAggs].sort((a, b) => b.highRiskPct - a.highRiskPct)
-              const scaleMax = Math.max(...adminAggs.map((ag) => ag.highRiskPct), allTimeAvg.hr, 1) * 1.15
-              const rows: DotStripRow[] = ranked.map((a) => {
-                const isAmlo = a.name === 'AMLO'
-                const isSelected = a.name === selectedAdmin
-                const adminMeta = ADMINISTRATIONS.find((ad) => ad.name === a.name)
-                const partyColor = PARTY_COLORS[adminMeta?.party || ''] || '#64748b'
-                const multiple = allTimeAvg.hr > 0 ? a.highRiskPct / allTimeAvg.hr : 0
-                const party = adminMeta?.party ?? ''
-                const baseLabel = ADMIN_DISPLAY_NAMES[a.name] ?? a.name
-                return {
-                  // ▶ threads the page selection through the systemic ranking (M7c)
-                  label: isSelected ? `▶ ${baseLabel}` : baseLabel,
-                  sublabel: isAmlo
-                    ? `${party} · ${multiple.toFixed(1)}× ${isEs ? 'promedio' : 'avg'}`
-                    : party,
-                  fraction: a.highRiskPct / scaleMax,
-                  colorRaw: isAmlo ? RISK_COLORS.critical : partyColor,
-                  valueLabel: a.highRiskPct.toFixed(1) + '%',
-                }
-              })
-              return (
-                <DotStrip
-                  rows={rows}
-                  labelWidth={150}
-                  rowHeight={32}
-                  oecdMark={{
-                    fraction: allTimeAvg.hr / scaleMax,
-                    label: isEs
-                      ? `Promedio nacional · ${allTimeAvg.hr.toFixed(1)}%`
-                      : `National average · ${allTimeAvg.hr.toFixed(1)}%`,
-                  }}
-                />
-              )
-            })()}
-            <p className="mt-3 text-[10px] text-text-muted italic leading-relaxed">
-              {t('evidenceSection.registryNote')}
-            </p>
-          </div>
-
-          {/* Admin × Sector matrix */}
-          <div className="border-t border-border/40">
-            <AdminSectorMatrix
-              selectedAdmin={selectedAdmin}
-              liveMatrix={liveAdminSectorMatrix}
-              summary={adminSummary}
-              metric={matrixMetric}
-              onMetricChange={setMatrixMetric}
-              bare
-            />
-          </div>
-
-          {/* Lame-duck / term-year small multiples — selected panel ringed */}
+          {/* Term-year trajectory — single enlarged panel for the selected admin */}
           <div className="border-t border-border/40">
             <AdminCycleSmallMultiples
               administrations={adminCycleData}
               isEs={isEs}
               referencePct={allTimeAvg.risk * 100}
               selectedName={selectedAdmin}
+              focusName={selectedAdmin}
               bare
             />
+          </div>
+
+          {/* Sector scorecard — selected admin × sectors × four metrics */}
+          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
+            <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
+              {isEs ? '§ TARJETA SECTORIAL' : '§ SECTOR SCORECARD'}
+            </div>
+            <p className="text-xs text-text-muted mb-3 max-w-[62ch] leading-relaxed">
+              {isEs
+                ? `Cuatro métricas por sector bajo ${selectedDisplay}. La intensidad colorea cada columna por separado — más rojo = peor entre los sectores de esta administración.`
+                : `Four metrics per sector under ${selectedDisplay}. Intensity is column-relative — redder = worst among this administration's sectors.`}
+            </p>
+            <div className="overflow-x-auto">
+              {(() => {
+                const order = [...sectorHeatmap].filter((s) => s.contracts > 0).sort((a, b) => b.hr - a.hr)
+                if (order.length === 0) {
+                  return <div className="h-20 flex items-center justify-center text-text-muted text-sm">{t('noData')}</div>
+                }
+                const metrics = [
+                  { key: 'risk', label: isEs ? 'Riesgo' : 'Risk', get: (s: typeof order[number]) => s.risk * 100 },
+                  { key: 'da',   label: isEs ? 'Adj. Dir.' : 'Direct', get: (s: typeof order[number]) => s.da },
+                  { key: 'sb',   label: isEs ? 'Lic. Única' : 'Single Bid', get: (s: typeof order[number]) => s.sb },
+                  { key: 'hr',   label: isEs ? 'Alto Riesgo' : 'High Risk', get: (s: typeof order[number]) => s.hr },
+                ]
+                const ranges = metrics.map((m) => {
+                  const vals = order.map(m.get)
+                  return { min: Math.min(...vals), max: Math.max(...vals) }
+                })
+                return (
+                  <table className="border-separate" style={{ borderSpacing: 3 }} aria-label={isEs ? 'Tarjeta sectorial' : 'Sector scorecard'}>
+                    <thead>
+                      <tr>
+                        <th scope="col" className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal whitespace-nowrap">
+                          {isEs ? 'Sector' : 'Sector'}
+                        </th>
+                        {metrics.map((m) => (
+                          <th key={m.key} scope="col" className="text-center pb-1 px-1 text-[9px] font-mono font-semibold tracking-wider text-text-muted" style={{ minWidth: 68 }}>
+                            {m.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {order.map((s) => (
+                        <tr key={s.sectorId}>
+                          <td className="pr-3 py-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                              <span className="text-[10px] font-mono text-text-secondary whitespace-nowrap">{s.name}</span>
+                            </div>
+                          </td>
+                          {metrics.map((m, mi) => {
+                            const val = m.get(s)
+                            const { min, max } = ranges[mi]
+                            const t01 = max === min ? 0 : Math.max(0, Math.min(1, (val - min) / (max - min)))
+                            return (
+                              <td key={m.key} className="p-0">
+                                <div
+                                  className="flex items-center justify-center select-none"
+                                  style={{
+                                    minWidth: 68,
+                                    minHeight: 34,
+                                    backgroundColor: scaleToColor(val, min, max, 'risk'),
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: 3,
+                                  }}
+                                  title={`${s.name} · ${m.label}: ${val.toFixed(1)}%`}
+                                >
+                                  <span
+                                    className="font-bold tabular-nums leading-none"
+                                    style={{ fontFamily: 'var(--font-family-serif)', fontSize: 15, color: t01 > 0.62 ? '#ffffff' : 'var(--color-text-primary)' }}
+                                  >
+                                    {val.toFixed(0)}%
+                                  </span>
+                                </div>
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )
+              })()}
+            </div>
+            <div className="mt-2.5 flex items-center gap-1.5 text-[9px] font-mono text-text-muted">
+              <span>{isEs ? 'menor' : 'lower'}</span>
+              <span
+                className="h-2.5 w-20 rounded-sm"
+                style={{ background: 'linear-gradient(90deg, #f3f1ec, #f59e0b, #ef4444)', border: '1px solid var(--color-border)' }}
+                aria-hidden="true"
+              />
+              <span>{isEs ? 'mayor' : 'higher'}</span>
+            </div>
           </div>
 
           {/* Period Comparison tool (collapsed footer utility) */}

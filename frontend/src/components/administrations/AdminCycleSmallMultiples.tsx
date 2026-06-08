@@ -29,6 +29,12 @@ interface AdminCycleSmallMultiplesProps {
   referencePct?: number
   /** Name of the page-selected administration — its panel gets an identity ring (M7c). */
   selectedName?: string
+  /**
+   * Single-administration focus mode. When set, ONLY this administration's
+   * panel renders, full-width and enlarged — the dossier is about one term, so
+   * the systemic five-panel comparison collapses to the selected file.
+   */
+  focusName?: string
   /** Drop the outer card chrome when embedded inside the PATRÓN folder (M7c). */
   bare?: boolean
 }
@@ -56,13 +62,21 @@ function calcArea(data: AdminYearDatum[], xScale: (v: number) => number, yScale:
   return `${line} L${xScale(last.termYear).toFixed(1)},${bottomY.toFixed(1)} L${xScale(first.termYear).toFixed(1)},${bottomY.toFixed(1)} Z`
 }
 
-export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, selectedName, bare }: AdminCycleSmallMultiplesProps) {
+export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, selectedName, focusName, bare }: AdminCycleSmallMultiplesProps) {
   const { t } = useTranslation('administrations')
 
   if (administrations.length === 0) return null
 
+  // Single-administration focus: collapse the five-panel grid to one enlarged panel.
+  const isFocus = focusName != null
+  const panels = isFocus
+    ? administrations.filter((a) => a.name === focusName)
+    : administrations
+  if (panels.length === 0) return null
+  const focusDisplay = isFocus ? (panels[0]?.displayName ?? focusName) : ''
+
   // Compute shared Y-axis scale across all panels
-  const allRiskValues = administrations.flatMap((a) => a.yearData.map((d) => d.risk))
+  const allRiskValues = panels.flatMap((a) => a.yearData.map((d) => d.risk))
   const maxRisk = allRiskValues.length > 0 ? Math.max(...allRiskValues) : 50
   const minRisk = allRiskValues.length > 0 ? Math.min(...allRiskValues) : 0
   const yPad = (maxRisk - minRisk) * 0.15
@@ -87,22 +101,24 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
     <div className={bare ? '' : 'card mt-6'}>
       <div className={cn('px-4 py-3', !bare && 'border-b border-border/60 bg-background-card')}>
         <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
-          {isEs ? 'TRAYECTORIA DE RIESGO POR SEXENIO' : 'RISK TRAJECTORY BY TERM YEAR'}
+          {isEs ? 'TRAYECTORIA DE RIESGO POR AÑO DE MANDATO' : 'RISK TRAJECTORY BY TERM YEAR'}
         </div>
         <h3 className="text-sm font-mono text-text-primary">
-          {isEs
-            ? 'Riesgo por año del sexenio — cinco administraciones'
-            : t('trajectoryChart.title', 'Risk by Term Year — Five Administrations')}
+          {isFocus
+            ? (isEs ? `Riesgo por año del sexenio — ${focusDisplay}` : `Risk by term year — ${focusDisplay}`)
+            : (isEs
+              ? 'Riesgo por año del sexenio — cinco administraciones'
+              : t('trajectoryChart.title', 'Risk by Term Year — Five Administrations'))}
         </h3>
         <p className="text-xs text-text-muted mt-0.5">
           {isEs
-            ? 'Año 1 = primer año de gobierno; Año 6 = año previo a la elección. Eje Y compartido.'
-            : 'Year 1 = first year in office; Year 6 = pre-election year. Shared Y-axis scale.'}
+            ? 'Año 1 = primer año de gobierno; Año 6 = año previo a la elección.'
+            : 'Year 1 = first year in office; Year 6 = pre-election year.'}
         </p>
       </div>
       <div className={cn('px-4 py-4', !bare && 'bg-background-card')}>
-        <div className={cn('grid grid-cols-2 md:grid-cols-3 gap-4')}>
-          {administrations.map((admin, panelIdx) => {
+        <div className={cn(isFocus ? 'max-w-2xl' : 'grid grid-cols-2 md:grid-cols-3 gap-4')}>
+          {panels.map((admin, panelIdx) => {
             const hasData = admin.yearData.length >= 2
             const sorted = [...admin.yearData].sort((a, b) => a.termYear - b.termYear)
 
@@ -122,7 +138,7 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
             const bandX = xScale(6) - stepW / 2
             const refClamped = referencePct != null && referencePct >= yMin && referencePct <= yMax
 
-            const isSelectedPanel = selectedName != null && admin.name === selectedName
+            const isSelectedPanel = !isFocus && selectedName != null && admin.name === selectedName
             return (
               <div
                 key={admin.name}
@@ -341,9 +357,13 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
 
         {/* Footer note */}
         <p className="mt-1 text-[10px] text-text-muted font-mono leading-relaxed">
-          {isEs
-            ? 'Riesgo promedio por año relativo de mandato. Eje Y compartido — las alturas son comparables entre paneles.'
-            : 'Average risk by relative term year. Shared Y-axis — heights are comparable across panels.'}
+          {isFocus
+            ? (isEs
+              ? 'Riesgo promedio por año relativo de mandato. La línea discontinua marca el promedio nacional.'
+              : 'Average risk by relative term year. The dashed line marks the national average.')
+            : (isEs
+              ? 'Riesgo promedio por año relativo de mandato. Eje Y compartido — las alturas son comparables entre paneles.'
+              : 'Average risk by relative term year. Shared Y-axis — heights are comparable across panels.')}
         </p>
       </div>
     </div>

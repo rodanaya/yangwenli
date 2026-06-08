@@ -117,13 +117,14 @@ export function DotStrip({
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 overflow-x-auto">
                   <svg
                     width={dotsWidth}
                     height={R * 2 + 2}
                     viewBox={`0 0 ${dotsWidth} ${R * 2 + 2}`}
                     role="img"
                     aria-label={`${row.label}: ${row.valueLabel ?? Math.round(row.fraction * 100) + '%'}`}
+                    style={{ maxWidth: 'none', display: 'block' }}
                   >
                     {oecdX !== null && (
                       <line
