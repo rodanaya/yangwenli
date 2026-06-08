@@ -1,4 +1,51 @@
 ---
+## Visual Review — 2026-06-08T00:05:28Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /atlas | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /aria | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /sectors | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /sectors/salud | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /cases | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /methodology | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+| /stories/el-ejercito-fantasma | 403 | WARN — cloud egress IP blocked by CDN allowlist |
+
+Note: Persistent CDN/WAF block on cloud egress IP — consistent with all prior runs. TLS handshake completes; block is at application/proxy layer. Not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 cloud egress block — empty body | WARN |
+| /api/v1/cases?limit=5 | 403 cloud egress block — empty body | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 cloud egress block — empty body | WARN |
+| /api/v1/sectors | 403 cloud egress block — empty body | WARN |
+
+Note: Same CDN IP-allowlist restriction as HTTP routes. Backend not reachable from cloud runner egress IP.
+
+### Bilingual Gaps
+Grep output reviewed; all matches are false positives (stable baseline, no new regressions):
+- `TIER_STYLES[tierName as TierKey]` in `InstitutionScorecards.tsx:441` — style lookup constant, not a rendered string. OK.
+- `never see "ADMINISTRATIONS.FOO"` in `CaseLibrary.tsx:220` — JSX comment, not rendered. OK.
+- Academic citation in `Methodology.tsx:120` — untranslatable bibliographic reference. OK.
+- `target_name: 'Maypo S.A.'` in `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data, vendor proper name. OK.
+- `JSX.Element` return type in `ExpedienteSpine.tsx:72` — TypeScript type annotation, not rendered. OK.
+- Comments and corporate-form token constants in `ExploreCanvas.tsx:1417-1432` — code data (S.A., C.V., etc.), not rendered UI labels. OK.
+- JSDoc example string in `VendorHero.tsx:717` — code comment, not rendered text. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ES : EN` throughout). OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx` — `label="Risk Score"` / `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+All HTTP and API checks blocked by cloud egress CDN policy (persistent infrastructure constraint — server-side IP allowlist). TLS connects successfully — server alive. Bilingual scan clean — no new gaps detected. No regression vs. 2026-06-07 run.
+
+
+---
 ## Visual Review — 2026-06-07T12:05:15Z
 
 ### HTTP Status
