@@ -236,10 +236,10 @@ def _fallback_institution_scorecards(
     params: list = []
 
     if federal_only:
-        where_clauses.append(
-            "(i.institution_scope = 'federal' "
-            "AND COALESCE(i.gobierno_nivel, '') NOT IN ('GE', 'GEM', 'GM'))"
-        )
+        # Federal = the validated is_federal classifier (backend/scripts/
+        # _classify_federal.py). The old scope/gobierno_nivel clause leaked
+        # ~500 sub-national entities while NULL-tagging the federal giants.
+        where_clauses.append("i.is_federal = 1")
     if search:
         where_clauses.append("i.name LIKE ?")
         params.append(f"%{search}%")
@@ -423,10 +423,8 @@ def list_institution_scorecards(
         params: list = []
 
         if federal_only:
-            where_clauses.append(
-                "(i.institution_scope = 'federal' "
-                "AND COALESCE(i.gobierno_nivel, '') NOT IN ('GE', 'GEM', 'GM'))"
-            )
+            # Federal = validated is_federal classifier (see _classify_federal.py).
+            where_clauses.append("i.is_federal = 1")
         if grade:
             where_clauses.append("s.grade = ?")
             params.append(grade)
@@ -552,10 +550,7 @@ def get_institution_scorecard_stats(
                 "institution_scorecards s "
                 "JOIN institutions i ON i.id = s.institution_id"
             )
-            where_clause = (
-                "WHERE i.institution_scope = 'federal' "
-                "AND COALESCE(i.gobierno_nivel, '') NOT IN ('GE', 'GEM', 'GM')"
-            )
+            where_clause = "WHERE i.is_federal = 1"  # validated classifier
             join_params: tuple = ()
         else:
             base_from = "institution_scorecards s"
