@@ -89,6 +89,8 @@ class InstitutionScorecardListItem(BaseModel):
     trend_direction: Optional[str] = None
     peer_percentile_sector: Optional[float] = None
     signal_count_red: Optional[int] = None
+    money_at_risk_mxn: Optional[float] = None  # exposure axis (high+critical contract value)
+    total_contracts: Optional[int] = None      # for the min-N reliability gate
 
 
 class VendorScorecardListItem(BaseModel):
@@ -399,7 +401,7 @@ def _fallback_vendor_scorecards(
 def list_institution_scorecards(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
-    sort_by: str = Query("total_score", pattern="^(total_score|grade|national_percentile|institution_name|pillar_openness|pillar_price|pillar_vendors|pillar_process|pillar_external)$"),
+    sort_by: str = Query("total_score", pattern="^(total_score|grade|national_percentile|institution_name|money_at_risk|pillar_openness|pillar_price|pillar_vendors|pillar_process|pillar_external)$"),
     order: str = Query("desc", pattern="^(asc|desc)$"),
     grade: Optional[str] = Query(None),
     sector: Optional[str] = Query(None),
@@ -407,8 +409,14 @@ def list_institution_scorecards(
     max_score: Optional[float] = Query(None, ge=0, le=100),
     search: Optional[str] = Query(None),
     federal_only: bool = Query(False),
+    scope: str = Query("federal", pattern="^(federal|subnational|all)$"),
+    min_contracts: int = Query(0, ge=0, description="Reliability gate — exclude institutions below N contracts"),
 ):
-    """Ranked list of institution scorecards."""
+    """Ranked list of institution scorecards.
+
+    scope: 'federal' (is_federal=1, default) · 'subnational' (state/municipal) ·
+    'all'. `federal_only=true` is a legacy alias that forces scope='federal'.
+    """
     with get_db() as conn:
         exists = conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='institution_scorecards'"
@@ -422,9 +430,15 @@ def list_institution_scorecards(
         where_clauses = ["1=1"]
         params: list = []
 
-        if federal_only:
-            # Federal = validated is_federal classifier (see _classify_federal.py).
+        # Scope (validated is_federal classifier; federal_only is a legacy alias).
+        eff_scope = "federal" if federal_only else scope
+        if eff_scope == "federal":
             where_clauses.append("i.is_federal = 1")
+        elif eff_scope == "subnational":
+            where_clauses.append("COALESCE(i.is_federal, 0) = 0")
+        if min_contracts > 0:
+            where_clauses.append("COALESCE(ist.total_contracts, 0) >= ?")
+            params.append(min_contracts)
         if grade:
             where_clauses.append("s.grade = ?")
             params.append(grade)
@@ -442,12 +456,24 @@ def list_institution_scorecards(
             params.append(f"%{search}%")
 
         where_sql = " AND ".join(where_clauses)
-        order_sql = f"s.{sort_by} {'DESC' if order == 'desc' else 'ASC'}"
+        # safe: sort_by is whitelisted by the Query pattern, mapped here to a column.
+        _SORT_MAP = {
+            "total_score": "s.total_score", "grade": "s.grade",
+            "national_percentile": "s.national_percentile",
+            "institution_name": "i.name",
+            "money_at_risk": "ist.high_critical_value_mxn",
+            "pillar_openness": "s.pillar_openness", "pillar_price": "s.pillar_price",
+            "pillar_vendors": "s.pillar_vendors", "pillar_process": "s.pillar_process",
+            "pillar_external": "s.pillar_external",
+        }
+        order_col = _SORT_MAP.get(sort_by, "s.total_score")
+        order_sql = f"{order_col} {'DESC' if order == 'desc' else 'ASC'} NULLS LAST"
 
         total = conn.execute(f"""
             SELECT COUNT(*)
             FROM institution_scorecards s
             JOIN institutions i ON s.institution_id = i.id
+            LEFT JOIN institution_stats ist ON ist.institution_id = s.institution_id
             LEFT JOIN sectors sec ON i.sector_id = sec.id
             WHERE {where_sql}
         """, params).fetchone()[0]
@@ -462,9 +488,11 @@ def list_institution_scorecards(
                    s.pillar_process, s.pillar_external,
                    s.top_risk_driver, s.key_metrics,
                    s.confidence_band, s.p90_risk_score,
-                   s.trend_direction, s.peer_percentile_sector
+                   s.trend_direction, s.peer_percentile_sector,
+                   ist.high_critical_value_mxn, ist.total_contracts
             FROM institution_scorecards s
             JOIN institutions i ON s.institution_id = i.id
+            LEFT JOIN institution_stats ist ON ist.institution_id = s.institution_id
             LEFT JOIN sectors sec ON i.sector_id = sec.id
             WHERE {where_sql}
             ORDER BY {order_sql}
@@ -478,6 +506,7 @@ def list_institution_scorecards(
             SELECT s.grade, COUNT(*)
             FROM institution_scorecards s
             JOIN institutions i ON s.institution_id = i.id
+            LEFT JOIN institution_stats ist ON ist.institution_id = s.institution_id
             LEFT JOIN sectors sec ON i.sector_id = sec.id
             WHERE {where_no_grade}
             GROUP BY s.grade
@@ -499,6 +528,8 @@ def list_institution_scorecards(
             trend_direction=r[18],
             peer_percentile_sector=round(r[19], 3) if r[19] is not None else None,
             signal_count_red=_extract_signal_count_red(r[15]),
+            money_at_risk_mxn=float(r[20]) if r[20] is not None else None,
+            total_contracts=int(r[21]) if r[21] is not None else None,
         )
         for r in rows
     ]
@@ -534,6 +565,8 @@ def get_institution_scorecard_stats(
             "avoids state institutions skewing the league averages."
         ),
     ),
+    scope: str = Query("federal", pattern="^(federal|subnational|all)$"),
+    min_contracts: int = Query(0, ge=0),
 ):
     """Aggregate statistics across institution scorecards.
 
@@ -545,17 +578,22 @@ def get_institution_scorecard_stats(
         # Build a shared federal WHERE clause + JOIN once so every aggregate
         # query below sees the same population. When federal_only is false we
         # fall back to the original "all scorecards" path.
-        if federal_only:
-            base_from = (
-                "institution_scorecards s "
-                "JOIN institutions i ON i.id = s.institution_id"
-            )
-            where_clause = "WHERE i.is_federal = 1"  # validated classifier
-            join_params: tuple = ()
-        else:
-            base_from = "institution_scorecards s"
-            where_clause = ""
-            join_params = ()
+        # Resolve scope (federal_only is a legacy alias: true->federal, false->all).
+        eff_scope = scope if scope != "federal" else ("federal" if federal_only else "all")
+        conds = []
+        if eff_scope == "federal":
+            conds.append("i.is_federal = 1")
+        elif eff_scope == "subnational":
+            conds.append("COALESCE(i.is_federal, 0) = 0")
+        if min_contracts > 0:
+            conds.append("COALESCE(ist.total_contracts, 0) >= %d" % int(min_contracts))
+        base_from = (
+            "institution_scorecards s "
+            "JOIN institutions i ON i.id = s.institution_id "
+            "LEFT JOIN institution_stats ist ON ist.institution_id = s.institution_id"
+        )
+        where_clause = ("WHERE " + " AND ".join(conds)) if conds else ""
+        join_params: tuple = ()
 
         agg = conn.execute(
             f"SELECT COUNT(*), AVG(s.total_score) FROM {base_from} {where_clause}",
@@ -577,10 +615,9 @@ def get_institution_scorecard_stats(
         ).fetchone()
         median_score = round(median_row[0], 1) if median_row else 0.0
 
-        # Top + worst must always join institutions (we need the name) so we
-        # use the federal-aware FROM directly. For the non-federal path we
-        # still join institutions to surface the name.
-        top_from = "institution_scorecards s JOIN institutions i ON i.id = s.institution_id"
+        # Top + worst reuse base_from (institutions + institution_stats joins),
+        # so the scope/min_contracts where_clause resolves consistently.
+        top_from = base_from
         top_row = conn.execute(
             f"""
             SELECT s.institution_id, i.name, s.total_score
