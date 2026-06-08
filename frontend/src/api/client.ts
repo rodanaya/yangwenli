@@ -3332,16 +3332,30 @@ export interface IntersectionVendor {
   is_efos_definitivo: boolean
   is_sfp_sanctioned: boolean
   in_ground_truth: boolean
+  // WHY fields — turn a ledger row into a mini-case
+  direct_award_rate: number | null
+  single_bid_rate: number | null
+  is_disappeared: boolean
 }
 
+/** The Corroboration Ladder + Ghost Ledger (v2 — honest reconciliation). */
 export interface IntersectionSummary {
-  thresholds: { rubli_flags: number; rubli_clean: number; min_contracts: number }
-  counts: { novelty: number; confirmed: number; blindspot: number; clean: number }
-  rankings: {
-    novelty: IntersectionVendor[]
-    confirmed: IntersectionVendor[]
-    blindspot: IntersectionVendor[]
+  thresholds: {
+    rubli_flags: number
+    rubli_clean: number
+    min_contracts: number
+    ghost_patterns: string[]
+    set_aside_value_floor: number
   }
+  high_risk_total: number
+  ladder: {
+    external_corroborated: number
+    self_documented: number
+    uncorroborated: number
+  }
+  ghost: { count: number; vendors: IntersectionVendor[] }
+  set_aside: { count: number; sample: IntersectionVendor[] }
+  external_sample: IntersectionVendor[]
   registry_breakdown: {
     efos_definitivo: number
     sfp_sanctioned: number
@@ -3356,16 +3370,14 @@ export interface IntersectionQuadrantPage {
 }
 
 export const intersectionApi = {
-  async getSummary(topN = 10, sector?: string): Promise<IntersectionSummary> {
-    const params = new URLSearchParams({ top_n_per_quadrant: String(topN) })
-    if (sector) params.set('sector', sector)
+  async getSummary(topN = 20): Promise<IntersectionSummary> {
     const { data } = await api.get<IntersectionSummary>(
-      `/intersection/summary?${params.toString()}`,
+      `/intersection/summary?top_n=${topN}`,
     )
     return data
   },
   async getQuadrant(
-    quadrant: 'novelty' | 'confirmed' | 'blindspot',
+    quadrant: 'ghost' | 'uncorroborated' | 'set_aside',
     params: { page?: number; per_page?: number; sector_id?: number } = {},
   ): Promise<IntersectionQuadrantPage> {
     const q = buildQueryParams(params as QueryParams)

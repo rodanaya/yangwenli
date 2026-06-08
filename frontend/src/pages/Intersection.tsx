@@ -1,94 +1,86 @@
 /**
- * Intersection — the RUBLI-vs-regulators contradiction surface.
+ * Intersection — the model-vs-official-record reconciliation surface.
  *
- * This is the pitch page: what does our model see that SAT EFOS / SFP /
- * ground-truth corpus have missed, and vice versa? Three quadrants:
+ * v2 (2026-06-08 redesign). The previous version sold three claims it
+ * couldn't back up: a "novelty" hero topped by Halliburton / the national
+ * insurers (legitimate scale, not ghosts regulators missed); a "confirmed"
+ * count that was ~93% self-confirmation against the model's own training
+ * corpus; and a "blind spot" that was the model's deliberate FP-suppression
+ * relabelled as failure. It also rendered the same red number three times
+ * and drew a 3-box pseudo-treemap that encoded nothing.
  *
- *  • Novelty   — RUBLI High+ risk, zero external registry hits
- *  • Confirmed — RUBLI High+ risk AND at least one external registry hit
- *  • Blind spot — RUBLI Low risk BUT at least one external registry hit
- *
- * The fourth quadrant (both clean) is just a number — no editorial
- * interest in a ranked list of unsuspicious vendors.
- *
- * 2026-05-15 redesign: replaced 2×2 scatter (broken: 99% of dots cluster
- * in one corner) with a proportional treemap; promoted Novelty count to
- * a single dominant hero ("1,808 vendors no regulator has touched"); added
- * editorial FINDING callout; removed paper-grain texture so this page
- * stops looking like Relationships.
+ * This version is honest and list-first:
+ *   1. THE LEDGER is the hero — the ghost-signature vendors (P2/P3 patterns,
+ *      cleaned of structural FPs) that carry SAT's own Art. 69-B fingerprint
+ *      but were never listed. Apples-to-apples; named vendors over aggregates.
+ *   2. THE CORROBORATION LADDER replaces the treemap — it splits the high-risk
+ *      census into genuine-external / self-documented / uncorroborated so the
+ *      circularity is visible, not sold past.
+ *   3. HONEST LIMITS promotes the caveats into content, including the
+ *      set-aside list (the giants we excluded — audit us).
  */
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { ChevronRight } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { intersectionApi, type IntersectionVendor, type IntersectionSummary } from '@/api/client'
 import { formatNumber, formatCompactMXN, cn } from '@/lib/utils'
-import { SECTOR_COLORS, SECTORS, CURRENT_MODEL_VERSION, getSectorName } from '@/lib/constants'
+import {
+  SECTOR_COLORS,
+  SECTORS,
+  RISK_COLORS,
+  CURRENT_MODEL_VERSION,
+  getSectorName,
+  getRiskLevelFromScore,
+} from '@/lib/constants'
 import { useGroundTruthCount } from '@/hooks/useGroundTruthCount'
-import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PageFooter } from '@/components/layout/PageFooter'
 
-function RegistryBadges({ v }: { v: IntersectionVendor }) {
-  const badges: Array<{ label: string; color: string; title: string }> = []
-  if (v.is_efos_definitivo) badges.push({
-    label: 'EFOS',
-    color: '#dc2626',
-    title: 'SAT-confirmed ghost company (Art. 69-B definitivo)',
-  })
-  if (v.is_sfp_sanctioned) badges.push({
-    label: 'SFP',
-    color: '#ea580c',
-    title: 'Federal comptroller sanction',
-  })
-  if (v.in_ground_truth) badges.push({
-    label: 'GT',
-    color: '#a06820',
-    title: 'Party to a documented corruption case',
-  })
-  if (badges.length === 0) return null
-  return (
-    <span className="inline-flex gap-1 flex-shrink-0">
-      {badges.map((b) => (
-        <span
-          key={b.label}
-          title={b.title}
-          className="text-[9px] font-mono font-bold tracking-wider uppercase px-1.5 py-0.5 rounded"
-          style={{
-            color: b.color,
-            background: `${b.color}14`,
-            border: `1px solid ${b.color}33`,
-          }}
-        >
-          {b.label}
-        </span>
-      ))}
-    </span>
-  )
+const EFOS_REGISTRY_SIZE = 13_960 // SAT Art. 69-B definitivo RFCs (national)
+
+const SERIF = '"Playfair Display", "EB Garamond", Georgia, serif'
+
+function pctText(n: number, total: number): string {
+  if (!total) return '0%'
+  const p = (n / total) * 100
+  return p < 1 ? p.toFixed(1) + '%' : Math.round(p) + '%'
 }
 
-function VendorRow({
-  v,
-  rank,
-  showSecondaryMetric,
-  lang,
-}: {
-  v: IntersectionVendor
-  rank: number
-  showSecondaryMetric: 'ips' | 'risk' | 'value'
-  lang: string
-}) {
+function patternLabel(p: string | null, lang: string): string | null {
+  if (!p) return null
+  const map: Record<string, [string, string]> = {
+    P2: ['Empresa fantasma', 'Ghost company'],
+    P3: ['Intermediario', 'Intermediary'],
+    P5: ['Red de proveedores', 'Vendor network'],
+    P6: ['Captura institucional', 'Institutional capture'],
+    P1: ['Concentración', 'Concentration'],
+  }
+  const e = map[p]
+  return e ? (lang === 'es' ? e[0] : e[1]) : p
+}
+
+// ─── Ledger row — a ghost-signature vendor as a mini-case ──────────────────
+
+function LedgerRow({ v, rank, lang }: { v: IntersectionVendor; rank: number; lang: string }) {
   const sectorColor = v.primary_sector_name
     ? SECTOR_COLORS[v.primary_sector_name.toLowerCase()] ?? '#64748b'
     : '#64748b'
-  const secondary =
-    showSecondaryMetric === 'ips'
-      ? `IPS ${(v.ips_final * 100).toFixed(1)}`
-      : showSecondaryMetric === 'risk'
-        ? `${(v.avg_risk_score * 100).toFixed(0)}/100`
-        : formatCompactMXN(v.total_value_mxn)
+  const riskColor = RISK_COLORS[getRiskLevelFromScore(v.avg_risk_score)]
+  const da = v.direct_award_rate != null ? Math.round(v.direct_award_rate * 100) : null
+  const sb = v.single_bid_rate != null ? Math.round(v.single_bid_rate * 100) : null
+  const pat = patternLabel(v.primary_pattern, lang)
+
+  // The strongest WHY chips — disappeared and high single-bid/direct-award are
+  // the shell signatures worth surfacing inline.
+  const whyChips: Array<{ label: string; strong?: boolean }> = []
+  if (v.is_disappeared) whyChips.push({ label: lang === 'es' ? 'Desaparecido' : 'Disappeared', strong: true })
+  if (sb != null && sb >= 50) whyChips.push({ label: (lang === 'es' ? 'Propuesta única ' : 'Single-bid ') + sb + '%' })
+  else if (da != null && da >= 70) whyChips.push({ label: (lang === 'es' ? 'Adj. directa ' : 'Direct-award ') + da + '%' })
+
   return (
     <div
       className="flex items-center gap-3 px-4 py-2.5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
@@ -100,7 +92,27 @@ function VendorRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" />
-          <RegistryBadges v={v} />
+          {pat && (
+            <span
+              className="text-[9px] font-mono font-bold tracking-wider uppercase px-1.5 py-0.5 rounded"
+              style={{ color: riskColor, background: `${riskColor}14`, border: `1px solid ${riskColor}33` }}
+            >
+              {pat}
+            </span>
+          )}
+          {whyChips.map((c) => (
+            <span
+              key={c.label}
+              className="text-[9px] font-mono font-bold tracking-wider uppercase px-1.5 py-0.5 rounded"
+              style={
+                c.strong
+                  ? { color: RISK_COLORS.critical, background: `${RISK_COLORS.critical}14`, border: `1px solid ${RISK_COLORS.critical}33` }
+                  : { color: 'var(--color-text-muted)', background: 'var(--color-background-elevated)', border: '1px solid var(--color-border)' }
+              }
+            >
+              {c.label}
+            </span>
+          ))}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[10px] font-mono text-text-muted">
           {v.primary_sector_name && (
@@ -112,17 +124,16 @@ function VendorRow({
           <span className="tabular-nums">
             {formatNumber(v.total_contracts)} {lang === 'es' ? 'contratos' : 'contracts'}
           </span>
-          {v.primary_pattern && (
-            <>
-              <span>·</span>
-              <span className="uppercase tracking-wider">{v.primary_pattern}</span>
-            </>
-          )}
+          <span>·</span>
+          <span className="tabular-nums">{formatCompactMXN(v.total_value_mxn)}</span>
         </div>
       </div>
-      <div className="flex-shrink-0 text-right min-w-[70px]">
-        <div className="font-mono text-sm font-bold tabular-nums text-text-primary">
-          {secondary}
+      <div className="flex-shrink-0 text-right">
+        <div className="font-mono text-sm font-bold tabular-nums" style={{ color: riskColor }}>
+          {v.avg_risk_score.toFixed(2)}
+        </div>
+        <div className="text-[9px] font-mono uppercase tracking-wider text-text-muted">
+          {lang === 'es' ? 'riesgo' : 'risk'}
         </div>
       </div>
       <ChevronRight className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
@@ -130,521 +141,271 @@ function VendorRow({
   )
 }
 
-function QuadrantCard({
-  eyebrow,
-  title,
-  deck,
+// ─── Corroboration ladder — replaces the empty 3-box treemap ───────────────
+// A literal ladder of rungs (not a width-proportional census bar that the
+// "other" mass would dominate). Three honest rungs over the high-risk census,
+// with the uncorroborated rung broken into ghost / network / set-aside.
+
+function Rung({
+  label,
+  gloss,
   count,
-  accent,
-  rows,
-  showSecondaryMetric,
-  lang,
-  ctaLabel,
-  ctaTo,
-  compact = false,
+  total,
+  color,
+  indent = false,
+  anchor,
 }: {
-  eyebrow: string
-  title: React.ReactNode
-  deck: React.ReactNode
+  label: string
+  gloss: string
   count: number
-  accent: string
-  rows: IntersectionVendor[]
-  showSecondaryMetric: 'ips' | 'risk' | 'value'
-  lang: string
-  ctaLabel: string
-  ctaTo: string
-  compact?: boolean
+  total: number
+  color: string
+  indent?: boolean
+  anchor?: React.ReactNode
 }) {
+  const widthPct = total ? Math.max(0.6, (count / total) * 100) : 0
   return (
-    <section
-      className="rounded-sm border border-border bg-background-card overflow-hidden"
-      style={{ borderLeft: `4px solid ${accent}` }}
-    >
-      <header className={cn('border-b border-border', compact ? 'px-4 py-3' : 'px-5 py-4')}>
-        <div className="flex items-baseline justify-between gap-4 flex-wrap">
-          <p
-            className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]"
-            style={{ color: accent }}
+    <div className={cn('py-2', indent && 'pl-5')}>
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="flex items-baseline gap-2 min-w-0">
+          <span
+            className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] truncate"
+            style={{ color: indent ? 'var(--color-text-secondary)' : color }}
           >
-            {eyebrow}
-          </p>
-          <p
+            {label}
+          </span>
+          {anchor}
+        </div>
+        <div className="flex items-baseline gap-2 flex-shrink-0">
+          <span
             className="tabular-nums leading-none"
-            style={{
-              fontFamily: 'var(--font-family-serif)',
-              fontStyle: 'italic',
-              fontWeight: 700,
-              fontSize: compact ? '1.5rem' : '2rem',
-              color: accent,
-            }}
+            style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 800, fontSize: indent ? '1rem' : '1.4rem', color: indent ? 'var(--color-text-secondary)' : color }}
           >
             {formatNumber(count)}
-          </p>
-        </div>
-        {!compact && (
-          <>
-            <h2
-              className="mt-1 text-text-primary leading-tight"
-              style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(1.125rem, 1.6vw, 1.5rem)',
-                fontWeight: 700,
-                letterSpacing: '-0.015em',
-              }}
-            >
-              {title}
-            </h2>
-            <p className="mt-2 text-[13px] text-text-secondary leading-[1.55] max-w-prose">
-              {deck}
-            </p>
-          </>
-        )}
-        {compact && (
-          <p className="text-[11px] text-text-secondary leading-[1.4] mt-1">
-            {title}
-          </p>
-        )}
-      </header>
-      {rows.length > 0 ? (
-        <div>
-          {rows.map((v, i) => (
-            <VendorRow
-              key={v.vendor_id}
-              v={v}
-              rank={i + 1}
-              showSecondaryMetric={showSecondaryMetric}
-              lang={lang}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="px-5 py-8 text-center text-sm text-text-muted" role="status" aria-live="polite">
-          {lang === 'es' ? 'Sin datos.' : 'No data.'}
-        </div>
-      )}
-      {count > rows.length && (
-        <Link
-          to={ctaTo}
-          className="flex items-center justify-between gap-2 px-5 py-3 border-t border-border text-[11px] font-mono tracking-[0.12em] uppercase text-text-muted hover:text-text-primary hover:bg-background-elevated transition-colors"
-        >
-          <span>{ctaLabel}</span>
-          <span>
-            {count - rows.length > 0
-              ? `+${formatNumber(count - rows.length)} ${lang === 'es' ? 'más' : 'more'}`
-              : ''}{' '}
-            →
           </span>
-        </Link>
-      )}
+          <span className="text-[10px] font-mono text-text-muted tabular-nums w-10 text-right">
+            {pctText(count, total)}
+          </span>
+        </div>
+      </div>
+      <div className="mt-1.5 h-[3px] w-full rounded-full bg-background-elevated overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${widthPct}%`, background: color }} />
+      </div>
+      <p className="mt-1 text-[10px] font-mono text-text-muted leading-[1.4]">{gloss}</p>
+    </div>
+  )
+}
+
+function CorroborationLadder({ data, lang }: { data: IntersectionSummary; lang: string }) {
+  const total = data.high_risk_total
+  const { external_corroborated, self_documented, uncorroborated } = data.ladder
+  const ghost = data.ghost.count
+  const setAside = data.set_aside.count
+  const other = Math.max(0, uncorroborated - ghost - setAside)
+
+  const C_EXTERNAL = RISK_COLORS.high // amber — genuine outside match
+  const C_SELF = RISK_COLORS.low // muted zinc — circular w/ training
+  const C_GHOST = RISK_COLORS.critical // red — the live leads
+  const C_OTHER = '#475569' // dim slate
+  const C_ASIDE = '#3f3f46' // dimmest — excluded
+
+  return (
+    <section className="rounded-sm border border-border bg-background-card overflow-hidden">
+      <div className="px-5 py-3 border-b border-border flex items-baseline justify-between gap-3 flex-wrap">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+          {lang === 'es' ? 'La escalera de corroboración' : 'The corroboration ladder'}
+        </p>
+        <p className="text-[10px] font-mono text-text-muted tabular-nums">
+          {formatNumber(total)} {lang === 'es' ? 'proveedores de alto riesgo' : 'high-risk vendors'}
+        </p>
+      </div>
+      <div className="px-5 py-3 divide-y divide-border/60">
+        <Rung
+          label={lang === 'es' ? 'Corroborado por registros' : 'Externally corroborated'}
+          gloss={lang === 'es' ? 'También en SAT EFOS o SFP — coincidencia externa genuina.' : 'Also on SAT EFOS or SFP — a genuine outside match.'}
+          count={external_corroborated}
+          total={total}
+          color={C_EXTERNAL}
+        />
+        <Rung
+          label={lang === 'es' ? 'Auto-documentado' : 'Self-documented'}
+          gloss={lang === 'es' ? 'Solo en el corpus de casos de RUBLI — y el modelo se entrenó con ellos (circular).' : "Only in RUBLI's own case corpus — and the model trained on these (circular)."}
+          count={self_documented}
+          total={total}
+          color={C_SELF}
+        />
+        <div className="pt-1">
+          <Rung
+            label={lang === 'es' ? 'Sin corroborar' : 'Uncorroborated'}
+            gloss={lang === 'es' ? 'En ningún registro oficial. Aquí vive la brecha:' : 'On no official registry. The gap lives here:'}
+            count={uncorroborated}
+            total={total}
+            color={C_OTHER}
+          />
+          <Rung
+            indent
+            label={lang === 'es' ? 'Huella fantasma → el expediente' : 'Ghost signature → the ledger'}
+            gloss={lang === 'es' ? 'Patrones P2/P3 con la huella del 69-B. Es la apuesta de abajo.' : "P2/P3 patterns carrying the 69-B fingerprint. The ledger below."}
+            count={ghost}
+            total={uncorroborated}
+            color={C_GHOST}
+          />
+          <Rung
+            indent
+            label={lang === 'es' ? 'Red / captura' : 'Network / capture'}
+            gloss={lang === 'es' ? 'Riesgo elevado por estructura de red — señal más blanda.' : 'Elevated by network structure — a softer signal.'}
+            count={other}
+            total={uncorroborated}
+            color={C_OTHER}
+          />
+          <Rung
+            indent
+            label={lang === 'es' ? 'Apartados (escala legítima)' : 'Set aside (legitimate scale)'}
+            gloss={lang === 'es' ? 'Aseguradoras y grandes contratistas — auditables abajo.' : 'Insurers and large contractors — auditable below.'}
+            count={setAside}
+            total={uncorroborated}
+            color={C_ASIDE}
+          />
+        </div>
+      </div>
     </section>
   )
 }
 
-// ─── Proportional quadrant treemap ────────────────────────────────────────────
-// Replaces the 2×2 scatter (which looked broken because 99% of dots stacked in
-// one corner). Three rectangles sized by vendor count, with the NOVELTY
-// rectangle dominating the top row — visually mirroring its 61% share of the
-// regulator-vs-model contradiction surface.
-//
-// Layout: top row = NOVELTY (full width). Bottom row = BLIND SPOT | CONFIRMED,
-// each width-proportional to its count.
-
-function ProportionalQuadrantMap({
-  data,
-  lang,
-}: {
-  data: IntersectionSummary
-  lang: string
-}) {
-  const { novelty, confirmed, blindspot } = data.counts
-  const total = novelty + confirmed + blindspot
-
-  // Top row gets ~61% of the height to mirror the 61% novelty share — but
-  // we cap the dominant row's height so the bottom row stays readable.
-  const noveltyHeightShare = Math.max(0.5, Math.min(0.7, novelty / total))
-  const topHeightPct = noveltyHeightShare * 100
-  const bottomHeightPct = 100 - topHeightPct
-  // Bottom row split: blindspot (left) vs confirmed (right), proportional.
-  const bottomTotal = blindspot + confirmed || 1
-  const blindspotWidthPct = (blindspot / bottomTotal) * 100
-  const confirmedWidthPct = (confirmed / bottomTotal) * 100
-
-  const NOVELTY_COLOR = '#ef4444'
-  const CONFIRMED_COLOR = '#a06820'
-  const BLINDSPOT_COLOR = '#64748b'
-
-  return (
-    <div className="rounded-sm border border-border bg-background-card overflow-hidden">
-      <div className="px-5 py-3 border-b border-border flex items-baseline justify-between gap-3 flex-wrap">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
-          {lang === 'es'
-            ? 'Mapa proporcional · cuadrantes por volumen'
-            : 'Proportional map · quadrants by volume'}
-        </p>
-        <p className="text-[10px] font-mono text-text-muted tabular-nums">
-          {formatNumber(total)} {lang === 'es' ? 'proveedores totales' : 'total vendors'}
-        </p>
-      </div>
-      <div className="p-4">
-        <div
-          className="w-full"
-          style={{ aspectRatio: '16 / 9', minHeight: 280, display: 'flex', flexDirection: 'column', gap: 6 }}
-        >
-          {/* Top row: NOVELTY dominates */}
-          <div
-            style={{ flex: topHeightPct, position: 'relative', minHeight: 160 }}
-            className="rounded-sm overflow-hidden"
-          >
-            <div
-              className="absolute inset-0 transition-colors"
-              style={{
-                background: `${NOVELTY_COLOR}14`,
-                borderLeft: `4px solid ${NOVELTY_COLOR}`,
-                border: `1px solid ${NOVELTY_COLOR}33`,
-                borderLeftWidth: 4,
-              }}
-            />
-            <div className="relative h-full flex flex-col justify-between p-4 sm:p-6">
-              <div className="flex items-baseline justify-between gap-3">
-                <p
-                  className="text-[10px] font-mono font-bold uppercase tracking-[0.20em]"
-                  style={{ color: NOVELTY_COLOR }}
-                >
-                  {lang === 'es' ? 'NOVEDAD · cuadrante I' : 'NOVELTY · quadrant I'}
-                </p>
-                <p className="text-[10px] font-mono tabular-nums text-text-muted">
-                  {((novelty / total) * 100).toFixed(0)}%
-                </p>
-              </div>
-              <div className="flex items-baseline justify-between gap-4 flex-wrap">
-                <div
-                  className="tabular-nums leading-none"
-                  style={{
-                    fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif',
-                    fontStyle: 'italic',
-                    fontWeight: 800,
-                    fontSize: 'clamp(40px, 7vw, 88px)',
-                    color: NOVELTY_COLOR,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {formatNumber(novelty)}
-                </div>
-                <p className="text-[11px] sm:text-xs font-mono text-text-secondary max-w-[40ch] leading-[1.55]">
-                  {lang === 'es'
-                    ? 'Alto riesgo del modelo · ningún registro oficial los toca.'
-                    : 'High model risk · no official registry has touched them.'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom row: BLIND SPOT | CONFIRMED, proportional */}
-          <div
-            style={{ flex: bottomHeightPct, display: 'flex', gap: 6, minHeight: 80 }}
-          >
-            <div
-              style={{
-                width: `${blindspotWidthPct}%`,
-                minWidth: 100,
-                position: 'relative',
-              }}
-              className="rounded-sm overflow-hidden"
-            >
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: `${BLINDSPOT_COLOR}14`,
-                  border: `1px solid ${BLINDSPOT_COLOR}33`,
-                  borderLeft: `4px solid ${BLINDSPOT_COLOR}`,
-                }}
-              />
-              <div className="relative h-full flex flex-col justify-between p-3 sm:p-4">
-                <p
-                  className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]"
-                  style={{ color: BLINDSPOT_COLOR }}
-                >
-                  {lang === 'es' ? 'PUNTO CIEGO · III' : 'BLIND SPOT · III'}
-                </p>
-                <div>
-                  <div
-                    className="tabular-nums leading-none"
-                    style={{
-                      fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 800,
-                      fontSize: 'clamp(28px, 4vw, 48px)',
-                      color: BLINDSPOT_COLOR,
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
-                    {formatNumber(blindspot)}
-                  </div>
-                  <p className="text-[10px] font-mono text-text-muted mt-1">
-                    {((blindspot / total) * 100).toFixed(0)}%
-                    <span className="mx-1.5">·</span>
-                    {lang === 'es' ? 'reguladores vieron · modelo no' : "regulators saw · model didn't"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                width: `${confirmedWidthPct}%`,
-                minWidth: 100,
-                position: 'relative',
-              }}
-              className="rounded-sm overflow-hidden"
-            >
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: `${CONFIRMED_COLOR}14`,
-                  border: `1px solid ${CONFIRMED_COLOR}33`,
-                  borderLeft: `4px solid ${CONFIRMED_COLOR}`,
-                }}
-              />
-              <div className="relative h-full flex flex-col justify-between p-3 sm:p-4">
-                <p
-                  className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]"
-                  style={{ color: CONFIRMED_COLOR }}
-                >
-                  {lang === 'es' ? 'CONFIRMADO · II' : 'CONFIRMED · II'}
-                </p>
-                <div>
-                  <div
-                    className="tabular-nums leading-none"
-                    style={{
-                      fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 800,
-                      fontSize: 'clamp(28px, 4vw, 48px)',
-                      color: CONFIRMED_COLOR,
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
-                    {formatNumber(confirmed)}
-                  </div>
-                  <p className="text-[10px] font-mono text-text-muted mt-1">
-                    {((confirmed / total) * 100).toFixed(0)}%
-                    <span className="mx-1.5">·</span>
-                    {lang === 'es' ? 'ambos métodos coinciden' : 'both methods agree'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="px-5 py-2.5 border-t border-border flex items-center gap-4 flex-wrap">
-        <span className="text-[10px] font-mono text-text-muted">
-          {lang === 'es' ? 'Área = recuento de proveedores' : 'Area = vendor count'}
-        </span>
-        <span className="text-[10px] font-mono text-text-muted ml-auto">
-          {lang === 'es'
-            ? 'Cuadrante IV (limpio) omitido — sin interés editorial'
-            : 'Quadrant IV (clean) omitted — no editorial interest'}
-        </span>
-      </div>
-    </div>
-  )
-}
+// ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function Intersection() {
   const { i18n } = useTranslation()
   const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const gtCount = useGroundTruthCount()
   const [selectedSector, setSelectedSector] = useState<string | null>(null)
+
   const { data, isLoading } = useQuery({
-    queryKey: ['intersection', 'summary', 50, selectedSector],
-    queryFn: () => intersectionApi.getSummary(50, selectedSector ?? undefined),
+    queryKey: ['intersection', 'summary-v2', 40],
+    queryFn: () => intersectionApi.getSummary(40),
     staleTime: 10 * 60 * 1000,
   })
 
-  // The Novelty number is the headline claim — keep it stable across renders
-  // so the hero doesn't flicker between loading and loaded states.
-  const noveltyCount = data?.counts.novelty ?? 0
-  const confirmedCount = data?.counts.confirmed ?? 0
-  const blindspotCount = data?.counts.blindspot ?? 0
-  const totalHighRisk = noveltyCount + confirmedCount
+  const ghostCount = data?.ghost.count ?? 0
+  const externalCount = data?.ladder.external_corroborated ?? 0
+  const uncorroboratedCount = data?.ladder.uncorroborated ?? 0
+
+  const ledgerRows = (
+    selectedSector
+      ? (data?.ghost.vendors ?? []).filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector)
+      : (data?.ghost.vendors ?? [])
+  ).slice(0, 18)
+
+  const setAsideNames = (data?.set_aside.sample ?? []).slice(0, 3).map((v) => v.vendor_name)
 
   return (
     <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Folio kicker — kept consistent with rest of site but lighter than
-          Relationships (no paper grain). */}
-      <header className="mb-10 pb-6 border-b border-border">
+      {/* ── Masthead — editorial headline, NOT a giant repeated number ── */}
+      <header className="mb-9 pb-6 border-b border-border">
         <div
           className="flex items-center gap-3 mb-5"
-          style={{
-            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-            fontSize: '10px',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-muted)',
-            fontWeight: 400,
-          }}
+          style={{ fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace', fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
         >
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
             <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIII</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
-            <span>
-              {lang === 'es' ? 'Informe de inteligencia · La brecha regulatoria' : 'Intelligence brief · The regulatory gap'}
-            </span>
+            <span>{lang === 'es' ? 'Informe de inteligencia · La brecha regulatoria' : 'Intelligence brief · The regulatory gap'}</span>
           </span>
         </div>
 
-        {/* HERO: the Novelty number is the headline claim. Playfair Display
-            Italic 800, ~88px, critical red. This is the platform's pitch. */}
         {isLoading ? (
           <div className="space-y-3">
-            <Skeleton className="h-24 w-72" />
-            <Skeleton className="h-4 w-96" />
-            <Skeleton className="h-3 w-[28rem]" />
+            <Skeleton className="h-12 w-[34rem] max-w-full" />
+            <Skeleton className="h-4 w-[40rem] max-w-full" />
+            <Skeleton className="h-3 w-96" />
           </div>
         ) : data ? (
           <div>
-            <div
-              className="tabular-nums leading-[0.95]"
-              style={{
-                fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
-                fontWeight: 800,
-                fontSize: 'clamp(64px, 12vw, 128px)',
-                color: 'var(--color-risk-critical)',
-                letterSpacing: '-0.025em',
-              }}
+            <h1
+              className="text-text-primary leading-[1.05]"
+              style={{ fontFamily: SERIF, fontWeight: 800, fontSize: 'clamp(30px, 5.2vw, 56px)', letterSpacing: '-0.02em', maxWidth: '18ch' }}
             >
-              {formatNumber(noveltyCount)}
-            </div>
+              {lang === 'es' ? 'Los proveedores que los registros olvidaron.' : 'The vendors the registries forgot.'}
+            </h1>
             <p
-              className="mt-3 sm:mt-4 max-w-[42ch]"
-              style={{
-                fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
-                fontSize: 'clamp(20px, 2.6vw, 30px)',
-                lineHeight: 1.18,
-                color: 'var(--color-text-primary)',
-                letterSpacing: '-0.005em',
-              }}
-            >
-              {lang === 'es'
-                ? <>proveedores que RUBLI marcó <span style={{ fontStyle: 'normal', fontWeight: 600 }}>y ningún regulador ha tocado.</span></>
-                : <>vendors RUBLI flagged <span style={{ fontStyle: 'normal', fontWeight: 600 }}>that no regulator has touched.</span></>}
-            </p>
-            <p
-              className="mt-5 text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-text-muted leading-[1.7] max-w-[78ch]"
+              className="mt-4 text-text-secondary max-w-[60ch]"
+              style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 'clamp(16px, 2vw, 20px)', lineHeight: 1.5 }}
             >
               {lang === 'es' ? (
                 <>
-                  De <span className="tabular-nums font-bold text-text-secondary">{formatNumber(totalHighRisk)}</span> proveedores de alto riesgo
-                  <span className="mx-2 opacity-50">·</span>
-                  <span className="tabular-nums font-bold text-text-secondary">{formatNumber(confirmedCount)}</span> confirmados por registros
-                  <span className="mx-2 opacity-50">·</span>
-                  <span className="tabular-nums font-bold text-text-secondary">{formatNumber(blindspotCount)}</span> marcados pero el modelo no
+                  El registro 69-B del SAT lista{' '}
+                  <span className="tabular-nums">{formatNumber(EFOS_REGISTRY_SIZE)}</span> empresas fantasma. RUBLI encuentra{' '}
+                  <strong className="tabular-nums text-text-primary" style={{ color: RISK_COLORS.critical }}>{formatNumber(ghostCount)}</strong>{' '}
+                  proveedores federales más con la misma huella — adjudicación única, desaparecidos, intermediarios — que la lista nunca nombró.
                 </>
               ) : (
                 <>
-                  Of <span className="tabular-nums font-bold text-text-secondary">{formatNumber(totalHighRisk)}</span> high-risk vendors
-                  <span className="mx-2 opacity-50">·</span>
-                  <span className="tabular-nums font-bold text-text-secondary">{formatNumber(confirmedCount)}</span> confirmed by registries
-                  <span className="mx-2 opacity-50">·</span>
-                  <span className="tabular-nums font-bold text-text-secondary">{formatNumber(blindspotCount)}</span> registry-flagged but model-clean
+                  SAT's 69-B registry lists{' '}
+                  <span className="tabular-nums">{formatNumber(EFOS_REGISTRY_SIZE)}</span> ghost companies. RUBLI finds{' '}
+                  <strong className="tabular-nums text-text-primary" style={{ color: RISK_COLORS.critical }}>{formatNumber(ghostCount)}</strong>{' '}
+                  more federal suppliers carrying the same fingerprint — single-bidder, disappeared, intermediary — the list never named.
                 </>
               )}
+            </p>
+            <p className="mt-5 text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.14em] text-text-muted leading-[1.7]">
+              <strong className="tabular-nums" style={{ color: RISK_COLORS.critical }}>{formatNumber(ghostCount)}</strong>{' '}
+              {lang === 'es' ? 'pistas con huella fantasma' : 'ghost-signature leads'}
+              <span className="mx-2 opacity-50">·</span>
+              <strong className="tabular-nums text-text-secondary">{formatNumber(externalCount)}</strong>{' '}
+              {lang === 'es' ? 'corroboradas por registros' : 'externally corroborated'}
+              <span className="mx-2 opacity-50">·</span>
+              <strong className="tabular-nums text-text-secondary">{formatNumber(uncorroboratedCount)}</strong>{' '}
+              {lang === 'es' ? 'de alto riesgo sin registro' : 'high-risk, no registry'}
             </p>
           </div>
         ) : null}
       </header>
 
-      <div>
-        {isLoading ? (
-          <div className="space-y-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-sm border border-border bg-background-card p-5">
-                <Skeleton className="h-3 w-32 mb-3" />
-                <Skeleton className="h-6 w-96 mb-2" />
-                <Skeleton className="h-4 w-full max-w-prose mb-4" />
-                <div className="space-y-2">
-                  {[1, 2, 3].map((j) => (
-                    <Skeleton key={j} className="h-10 w-full" />
-                  ))}
-                </div>
-              </div>
+      {isLoading ? (
+        <div className="space-y-6">
+          <div className="rounded-sm border border-border bg-background-card p-5 space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
-        ) : !data ? null : (
-          <div className="space-y-6">
-            {/* FINDING callout — left border in critical red, monospace, the
-                editorial framing. Sits above the chart so readers anchor to
-                the claim before parsing the geometry. */}
-            <div
-              className="px-5 py-4 rounded-sm bg-background-elevated"
-              style={{ borderLeft: '3px solid var(--color-risk-critical)' }}
-            >
-              <p
-                className="text-[10px] font-mono font-bold uppercase tracking-[0.20em] mb-2"
-                style={{ color: 'var(--color-risk-critical)' }}
-              >
-                {lang === 'es' ? 'HALLAZGO' : 'FINDING'}
-              </p>
-              <p
-                className="text-[13px] sm:text-[14px] leading-[1.65] text-text-primary max-w-[72ch]"
-                style={{ fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace' }}
-              >
-                {lang === 'es' ? (
-                  <>
-                    RUBLI identifica <strong>3× más proveedores de alto riesgo</strong> que los registros SAT EFOS + SFP combinados.
-                    De <strong className="tabular-nums">{formatNumber(totalHighRisk)}</strong> proveedores con patrones de riesgo elevado en su contratación,
-                    solo <strong className="tabular-nums">{formatNumber(confirmedCount)}</strong> aparecen en alguna lista oficial.
-                    La brecha regulatoria: <strong className="tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(noveltyCount)}</strong>.
-                  </>
-                ) : (
-                  <>
-                    RUBLI identifies <strong>3× more high-risk vendors</strong> than the combined SAT EFOS + SFP registries.
-                    Of <strong className="tabular-nums">{formatNumber(totalHighRisk)}</strong> vendors with elevated procurement-risk patterns,
-                    only <strong className="tabular-nums">{formatNumber(confirmedCount)}</strong> appear on any official watchlist.
-                    The regulatory gap: <strong className="tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(noveltyCount)}</strong>.
-                  </>
-                )}
-              </p>
-            </div>
+          <div className="rounded-sm border border-border bg-background-card p-5 space-y-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        </div>
+      ) : !data ? null : (
+        <div className="space-y-7">
+          {/* ── Corroboration ladder ── */}
+          <CorroborationLadder data={data} lang={lang} />
 
-            {/* Proportional quadrant map — replaces the old 2×2 scatter. */}
-            <ProportionalQuadrantMap data={data} lang={lang} />
-
-            {/* Methodology caveat */}
-            <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-card">
-              <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
-              <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
-                {lang === 'es' ? (
-                  <>
-                    Los cuadrantes son señales de investigación, no veredictos. Un proveedor en "novedad" coincide con patrones de corrupción documentados pero no aparece en registros externos — eso justifica revisión, no acusación. Umbrales: {(data.thresholds.rubli_flags * 100).toFixed(0)}% = alto riesgo; {(data.thresholds.rubli_clean * 100).toFixed(0)}% = bajo riesgo; ≥ {data.thresholds.min_contracts} contratos.
-                  </>
-                ) : (
-                  <>
-                    Quadrants are investigation signals, not verdicts. A vendor in "novelty" matches documented corruption patterns but does not appear on external registries — that warrants review, not accusation. Thresholds: {(data.thresholds.rubli_flags * 100).toFixed(0)}% = high risk; {(data.thresholds.rubli_clean * 100).toFixed(0)}% = low risk; ≥ {data.thresholds.min_contracts} contracts.
-                  </>
-                )}
+          {/* ── The Ledger — the payoff ── */}
+          <section className="rounded-sm border border-border bg-background-card overflow-hidden" style={{ borderLeft: `4px solid ${RISK_COLORS.critical}` }}>
+            <header className="px-5 py-4 border-b border-border">
+              <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]" style={{ color: RISK_COLORS.critical }}>
+                  {lang === 'es' ? 'El expediente · huella fantasma' : 'The ledger · ghost signature'}
+                </p>
+                <p className="text-[10px] font-mono text-text-muted tabular-nums">
+                  {formatNumber(ghostCount)} {lang === 'es' ? 'proveedores' : 'vendors'}
+                </p>
+              </div>
+              <h2 className="mt-1.5 text-text-primary leading-tight" style={{ fontFamily: SERIF, fontSize: 'clamp(1.05rem, 1.6vw, 1.4rem)', fontWeight: 700, letterSpacing: '-0.015em' }}>
+                {lang === 'es' ? 'Coinciden con la huella del 69-B — sin estar en la lista.' : 'They match the 69-B fingerprint — without being on the list.'}
+              </h2>
+              <p className="mt-2 text-[13px] text-text-secondary leading-[1.55] max-w-[72ch]">
+                {lang === 'es'
+                  ? <>Patrones de empresa fantasma (P2) e intermediario (P3), con adjudicación única o desaparición registral, depurados de falsos positivos estructurales. Ordenados por IPS — prioridad de investigación.</>
+                  : <>Ghost-company (P2) and intermediary (P3) patterns, with single-bidding or registry disappearance, cleaned of structural false positives. Ranked by IPS — investigation priority.</>}
               </p>
-            </div>
+            </header>
 
             {/* Sector filter chips */}
-            <div
-              className="flex items-center gap-1.5 overflow-x-auto pb-1"
-              role="group"
-              aria-label={lang === 'es' ? 'Filtrar por sector' : 'Filter by sector'}
-              style={{ scrollbarWidth: 'none' }}
-            >
+            <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-2.5 border-b border-border" role="group" aria-label={lang === 'es' ? 'Filtrar por sector' : 'Filter by sector'} style={{ scrollbarWidth: 'none' }}>
               <button
                 onClick={() => setSelectedSector(null)}
                 className="flex-shrink-0 px-2.5 py-1 rounded-sm font-mono text-[10px] uppercase tracking-[0.14em] transition-colors"
-                style={{
-                  border: `1px solid ${selectedSector === null ? 'var(--color-text-primary)' : 'var(--color-border)'}`,
-                  color: selectedSector === null ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-                  background: selectedSector === null ? 'var(--color-background-elevated)' : 'transparent',
-                  fontWeight: selectedSector === null ? 700 : 400,
-                }}
+                style={{ border: `1px solid ${selectedSector === null ? 'var(--color-text-primary)' : 'var(--color-border)'}`, color: selectedSector === null ? 'var(--color-text-primary)' : 'var(--color-text-muted)', background: selectedSector === null ? 'var(--color-background-elevated)' : 'transparent', fontWeight: selectedSector === null ? 700 : 400 }}
                 aria-pressed={selectedSector === null}
               >
                 {lang === 'es' ? 'Todos' : 'All'}
@@ -656,12 +417,7 @@ export default function Intersection() {
                     key={s.code}
                     onClick={() => setSelectedSector(active ? null : s.code)}
                     className="flex-shrink-0 px-2.5 py-1 rounded-sm font-mono text-[10px] uppercase tracking-[0.14em] transition-colors"
-                    style={{
-                      border: `1px solid ${active ? s.color : `${s.color}44`}`,
-                      color: active ? s.color : 'var(--color-text-muted)',
-                      background: active ? `${s.color}12` : 'transparent',
-                      fontWeight: active ? 700 : 400,
-                    }}
+                    style={{ border: `1px solid ${active ? s.color : `${s.color}44`}`, color: active ? s.color : 'var(--color-text-muted)', background: active ? `${s.color}12` : 'transparent', fontWeight: active ? 700 : 400 }}
                     aria-pressed={active}
                   >
                     {getSectorName(s.code, lang === 'es' ? 'es' : 'en')}
@@ -670,123 +426,87 @@ export default function Intersection() {
               })}
             </div>
 
-            {/* Quadrant cards — Novelty dominates (full width, 15 rows).
-                Confirmed + Blind Spot share a compact 2-column grid below.
-                This hierarchy mirrors the actual editorial weight: Novelty is
-                the platform's pitch; the other two are context + humility. */}
-            {selectedSector && (() => {
-              const sectorLower = selectedSector.toLowerCase()
-              const noveltyFiltered = data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
-              const confirmedFiltered = data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
-              const blindspotFiltered = data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
-              const allEmpty = noveltyFiltered.length === 0 && confirmedFiltered.length === 0 && blindspotFiltered.length === 0
-              if (!allEmpty) return null
-              return (
-                <div className="py-8 text-center text-text-muted text-sm font-mono">
-                  {lang === 'es'
-                    ? 'Sin proveedores clasificados en este sector para el umbral de riesgo actual.'
-                    : 'No vendors in this sector meet the current risk threshold.'}
-                </div>
-              )
-            })()}
-            <div className="space-y-5">
-              {/* NOVELTY — dominant, full width */}
-              <QuadrantCard
-                eyebrow={lang === 'es' ? 'Cuadrante I · Novedad' : 'Quadrant I · Novelty'}
-                accent="var(--color-risk-critical)"
-                count={data.counts.novelty}
-                title={
-                  lang === 'es'
-                    ? <>Proveedores que coinciden con patrones de corrupción — sin marca externa.</>
-                    : <>Vendors matching corruption patterns — not on any external registry.</>
-                }
-                deck={
-                  lang === 'es'
-                    ? <>Esta es la razón de ser del modelo: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> proveedores con score alto (≥ 40/100) cuyos RFC no aparecen en SAT EFOS, ni tienen sanción SFP, ni están en el corpus de casos documentados. Ordenados por IPS — prioridad integrada.</>
-                    : <>This is the model's reason to exist: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> vendors with high pattern-match (≥ 40/100) whose RFCs do not appear on SAT EFOS, carry no SFP sanction, and are absent from the documented-case corpus. Ranked by IPS (integrated priority score).</>
-                }
-                rows={(selectedSector ? data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.novelty).slice(0, 15)}
-                showSecondaryMetric="ips"
-                lang={lang}
-                ctaLabel={lang === 'es' ? 'Ver todos los proveedores de novedad' : 'View all novelty vendors'}
-                ctaTo="/aria"
-              />
+            {ledgerRows.length > 0 ? (
+              <div>
+                {ledgerRows.map((v, i) => (
+                  <LedgerRow key={v.vendor_id} v={v} rank={i + 1} lang={lang} />
+                ))}
+              </div>
+            ) : (
+              <div className="px-5 py-8 text-center text-sm text-text-muted font-mono" role="status" aria-live="polite">
+                {lang === 'es' ? 'Sin proveedores con huella fantasma en este sector.' : 'No ghost-signature vendors in this sector.'}
+              </div>
+            )}
 
-              {/* CONFIRMED + BLIND SPOT — compact, side by side */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* CONFIRMED — triangulation */}
-                <QuadrantCard
-                  compact
-                  eyebrow={lang === 'es' ? 'Cuadrante II · Confirmado' : 'Quadrant II · Confirmed'}
-                  accent="var(--color-accent)"
-                  count={data.counts.confirmed}
-                  title={
-                    lang === 'es'
-                      ? <>Ambas señales coinciden — modelo y reguladores de acuerdo.</>
-                      : <>Both signals agree — model and regulators converge.</>
-                  }
-                  deck={
-                    lang === 'es'
-                      ? <>Triangulación: {formatNumber(data.counts.confirmed)} proveedores con score alto que además aparecen en al menos un registro externo.</>
-                      : <>Triangulation: {formatNumber(data.counts.confirmed)} vendors with high pattern-match that also appear on at least one external registry.</>
-                  }
-                  rows={(selectedSector ? data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.confirmed).slice(0, 5)}
-                  showSecondaryMetric="risk"
-                  lang={lang}
-                  ctaLabel={lang === 'es' ? 'Ver todos los confirmados' : 'View all confirmed'}
-                  ctaTo="/aria"
-                />
+            <Link
+              to="/aria"
+              className="flex items-center justify-between gap-2 px-5 py-3 border-t border-border text-[11px] font-mono tracking-[0.12em] uppercase text-text-muted hover:text-text-primary hover:bg-background-elevated transition-colors"
+            >
+              <span>{lang === 'es' ? 'Investigar en La Cola (ARIA)' : 'Investigate in the Queue (ARIA)'}</span>
+              <span>
+                {ghostCount > ledgerRows.length ? `+${formatNumber(ghostCount - ledgerRows.length)} ${lang === 'es' ? 'más' : 'more'}` : ''} →
+              </span>
+            </Link>
+          </section>
 
-                {/* BLIND SPOT — humility */}
-                <QuadrantCard
-                  compact
-                  eyebrow={lang === 'es' ? 'Cuadrante III · Punto ciego' : 'Quadrant III · Blind spot'}
-                  accent="var(--color-text-muted)"
-                  count={data.counts.blindspot}
-                  title={
-                    lang === 'es'
-                      ? <>Lo que los reguladores vieron y el modelo no.</>
-                      : <>What regulators saw and the model didn't.</>
-                  }
-                  deck={
-                    lang === 'es'
-                      ? <>Honestidad metodológica: {formatNumber(data.counts.blindspot)} proveedores con bajo score RUBLI que sí aparecen en un registro externo.</>
-                      : <>Methodological honesty: {formatNumber(data.counts.blindspot)} vendors with low RUBLI score that do appear on an external registry.</>
-                  }
-                  rows={(selectedSector ? data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.blindspot).slice(0, 5)}
-                  showSecondaryMetric="value"
-                  lang={lang}
-                  ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
-                  ctaTo="/aria"
-                />
+          {/* ── Honest limits — caveats promoted to content ── */}
+          <section>
+            <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+              {lang === 'es' ? 'Límites honestos' : 'Honest limits'}
+            </p>
+            <div className="space-y-3">
+              {/* 1 — circularity */}
+              <div className="px-4 py-3 rounded-sm bg-background-elevated" style={{ borderLeft: `3px solid ${RISK_COLORS.low}` }}>
+                <p className="text-[12px] leading-[1.6] text-text-secondary max-w-[80ch]">
+                  {lang === 'es' ? (
+                    <><strong className="text-text-primary">«Corroborado» casi siempre somos nosotros.</strong> De {formatNumber(data.high_risk_total)} proveedores de alto riesgo, solo <strong className="tabular-nums">{formatNumber(externalCount)}</strong> tienen una coincidencia externa real (SAT EFOS / SFP). Los otros <strong className="tabular-nums">{formatNumber(data.ladder.self_documented)}</strong> solo aparecen en el corpus de casos de RUBLI — y el modelo se entrenó con ellos. No lo contamos como confirmación independiente.</>
+                  ) : (
+                    <><strong className="text-text-primary">"Corroborated" is mostly us.</strong> Of {formatNumber(data.high_risk_total)} high-risk vendors, only <strong className="tabular-nums">{formatNumber(externalCount)}</strong> carry a genuine outside match (SAT EFOS / SFP). The other <strong className="tabular-nums">{formatNumber(data.ladder.self_documented)}</strong> appear only in RUBLI's own case corpus — and the model trained on those. We don't count that as independent confirmation.</>
+                  )}
+                </p>
+              </div>
+              {/* 2 — set aside */}
+              <div className="px-4 py-3 rounded-sm bg-background-elevated" style={{ borderLeft: '3px solid #3f3f46' }}>
+                <p className="text-[12px] leading-[1.6] text-text-secondary max-w-[80ch]">
+                  {lang === 'es' ? (
+                    <><strong className="text-text-primary">{formatNumber(data.set_aside.count)} apartados como escala legítima.</strong> Aseguradoras nacionales y grandes contratistas {setAsideNames.length > 0 && <>(p. ej. {setAsideNames.join(', ')})</>} puntúan alto por volumen, pero obviamente no son fantasmas. Los mostramos para que audites lo que excluimos.</>
+                  ) : (
+                    <><strong className="text-text-primary">{formatNumber(data.set_aside.count)} set aside as legitimate scale.</strong> National insurers and large contractors {setAsideNames.length > 0 && <>(e.g. {setAsideNames.join(', ')})</>} score high on volume features but obviously aren't ghosts. We show them so you can audit what we excluded.</>
+                  )}
+                </p>
+              </div>
+              {/* 3 — flag ≠ verdict */}
+              <div className="px-4 py-3 rounded-sm bg-background-elevated" style={{ borderLeft: `3px solid ${RISK_COLORS.critical}` }}>
+                <p className="text-[12px] leading-[1.6] text-text-secondary max-w-[80ch]">
+                  {lang === 'es' ? (
+                    <><strong className="text-text-primary">Una huella es una pista, no un veredicto.</strong> Estos proveedores coinciden con patrones asociados a empresas fantasma; eso amerita revisión, no acusación.</>
+                  ) : (
+                    <><strong className="text-text-primary">A signature is a lead, not a verdict.</strong> These vendors match patterns associated with shell companies; that warrants review, not accusation.</>
+                  )}
+                </p>
               </div>
             </div>
+          </section>
 
-            {/* Methodology footer */}
-            <div className="mt-4 pt-6 border-t border-border">
-              <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
-                {lang === 'es' ? 'Metodología' : 'Methodology'}
-              </p>
-              <p className="text-[12px] leading-[1.7] text-text-secondary max-w-prose">
-                {lang === 'es' ? (
-                  <>
-                    Los cuadrantes se computan sobre aria_queue (318K proveedores federales). Puntaje RUBLI = score {CURRENT_MODEL_VERSION} calibrado OCDE por sector (ver <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">metodología</Link>). Registros externos: <span className="font-mono">SAT EFOS</span> (Art. 69-B definitivo, 13,960 RFCs), <span className="font-mono">SFP</span> (sanciones firmes del comptroller federal, 544 registros), <span className="font-mono">Corpus RUBLI</span> ({gtCount.cases.toLocaleString('es-MX')} casos de verdad fundamental con {gtCount.vendors} proveedores vinculados).
-                  </>
-                ) : (
-                  <>
-                    Quadrants computed over aria_queue (318K federal vendors). RUBLI score = {CURRENT_MODEL_VERSION} OECD-calibrated per-sector (see <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">methodology</Link>). External registries: <span className="font-mono">SAT EFOS</span> (Art. 69-B definitivo, 13,960 RFCs), <span className="font-mono">SFP</span> (final federal-comptroller sanctions, 544 records), <span className="font-mono">RUBLI corpus</span> ({gtCount.cases.toLocaleString()} ground-truth cases covering {gtCount.vendors} vendors).
-                  </>
-                )}
-              </p>
-              <p className="mt-3 text-[11px] font-mono text-text-muted">
-                {lang === 'es'
-                  ? <>Para acceso al dataset completo, consulta la <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">metodología RUBLI</Link>. Datos: contratos federales COMPRANET 2002–2025.</>
-                  : <>For full dataset access, see the <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">RUBLI methodology</Link>. Data: COMPRANET federal contracts 2002–2025.</>}
-              </p>
-            </div>
+          {/* ── Methodology ── */}
+          <div className="mt-2 pt-6 border-t border-border">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              {lang === 'es' ? 'Metodología' : 'Methodology'}
+            </p>
+            <p className="text-[12px] leading-[1.7] text-text-secondary max-w-prose">
+              {lang === 'es' ? (
+                <>
+                  Censo de alto riesgo computado sobre aria_queue ({formatNumber(data.high_risk_total)} proveedores con puntaje RUBLI ≥ {(data.thresholds.rubli_flags * 100).toFixed(0)}/100). Huella fantasma = patrones {data.thresholds.ghost_patterns.join('/')} con ≥ {data.thresholds.min_contracts} contratos, depurados de falsos positivos estructurales. Puntaje RUBLI = {CURRENT_MODEL_VERSION} calibrado OCDE por sector (ver <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">metodología</Link>). Registros: <span className="font-mono">SAT EFOS</span> (Art. 69-B, {formatNumber(EFOS_REGISTRY_SIZE)} RFCs), <span className="font-mono">SFP</span> (sanciones firmes), <span className="font-mono">Corpus RUBLI</span> ({gtCount.cases.toLocaleString('es-MX')} casos, {gtCount.vendors} proveedores).
+                </>
+              ) : (
+                <>
+                  High-risk census computed over aria_queue ({formatNumber(data.high_risk_total)} vendors at RUBLI score ≥ {(data.thresholds.rubli_flags * 100).toFixed(0)}/100). Ghost signature = patterns {data.thresholds.ghost_patterns.join('/')} with ≥ {data.thresholds.min_contracts} contracts, cleaned of structural false positives. RUBLI score = {CURRENT_MODEL_VERSION} OECD-calibrated per-sector (see <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">methodology</Link>). Registries: <span className="font-mono">SAT EFOS</span> (Art. 69-B, {formatNumber(EFOS_REGISTRY_SIZE)} RFCs), <span className="font-mono">SFP</span> (final sanctions), <span className="font-mono">RUBLI corpus</span> ({gtCount.cases.toLocaleString()} cases, {gtCount.vendors} vendors).
+                </>
+              )}
+            </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       <PageFooter />
     </div>
   )
