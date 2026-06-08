@@ -79,7 +79,7 @@ export function VendorEvidenceTab({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
 
       {/* §0 Benchmark bars — how this vendor's key rates diverge from OECD limits */}
       {showBenchmarks && (
@@ -181,7 +181,7 @@ export function VendorEvidenceTab({
       {protectFactors.length > 0 && (
         <section
           aria-labelledby="shap-protect-title"
-          className="pt-6 border-t border-border/40"
+          className="pt-2"
         >
           <SubSectionTitle id="shap-protect-title">
             {isEs ? 'Factores protectores' : 'Protective factors'}
@@ -210,7 +210,7 @@ export function VendorEvidenceTab({
       {peerComparison && peerComparison.metrics.length > 0 && (
         <section
           aria-labelledby="peer-title"
-          className="pt-6 border-t border-border/40"
+          className="pt-2"
         >
           <SubSectionTitle id="peer-title">
             {isEs ? '§ 9 · El Desvío (vs sector)' : '§ 9 · The Deviation (vs sector)'}
@@ -232,7 +232,7 @@ export function VendorEvidenceTab({
       {(groundTruth?.is_known_bad || aria?.is_efos_definitivo || aria?.is_sfp_sanctioned) && (
         <section
           aria-labelledby="signos-title"
-          className="pt-6 border-t border-border/40"
+          className="pt-2"
         >
           <SubSectionTitle id="signos-title">
             {isEs ? '§ 7 · Los Signos' : '§ 7 · External Signals'}
@@ -344,7 +344,7 @@ export function VendorEvidenceTab({
         return (
           <section
             aria-labelledby="verdict-title"
-            className="pt-6 border-t border-border/40"
+            className="pt-2"
           >
             <SubSectionTitle id="verdict-title">
               {isEs ? '§ 8 · El Veredicto' : '§ 8 · Verdict'}

@@ -23,7 +23,7 @@ export function SubSectionTitle({
     <div
       id={id}
       className={className}
-      style={{ borderTop: '1px solid var(--color-border)', paddingTop: 10, marginBottom: 12 }}
+      style={{ borderTop: '1px solid var(--color-border)', paddingTop: 6, marginBottom: 8 }}
       role="heading"
       aria-level={3}
     >

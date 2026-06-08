@@ -67,7 +67,7 @@ function DossierSectionHeader({
 }) {
   return (
     <div
-      className="flex items-baseline justify-between gap-4 pb-2 mb-5"
+      className="flex items-baseline justify-between gap-4 pb-1.5 mb-3.5"
       style={{ borderBottom: `1px solid ${accent}33` }}
     >
       <div className="flex items-baseline gap-3 min-w-0">
@@ -115,7 +115,7 @@ function DossierSectionHeader({
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
   const navigate = useNavigate()
   return (
-    <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+    <section id="methodology" className="mt-10 pt-5" style={{ borderTop: '1px solid var(--color-border)' }}>
       {/* (a) Honesty movement — what this dossier can't tell you */}
       <p
         className="font-mono mb-2"
@@ -334,9 +334,9 @@ export default function VendorDossier() {
       />
 
       {/* COMMAND PANEL — the operational at-a-glance (replaces 6 chapters) */}
-      <div className="mt-6">
+      <div className="mt-5">
         <p
-          className="font-mono mb-3"
+          className="font-mono mb-2"
           style={{
             fontSize: 10,
             letterSpacing: '0.18em',
@@ -349,7 +349,7 @@ export default function VendorDossier() {
         </p>
         <VendorStatStrip vendor={vendor} lang={lang} />
       </div>
-      <div className="mt-7">
+      <div className="mt-5">
         <VendorDiagnosticGrid
           vendor={vendor}
           shap={data.shap.data}
@@ -360,7 +360,7 @@ export default function VendorDossier() {
       </div>
 
       {/* REFERENCE — the full record, full-width, tight section headers */}
-      <div className="mt-14 space-y-14">
+      <div className="mt-7 space-y-6">
         <section id="evidence" className="scroll-mt-20">
           <DossierSectionHeader
             id="evidence"

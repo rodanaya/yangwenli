@@ -179,7 +179,7 @@ export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1554
 
 
 
-export const BUILD_ID = '2026-06-07-m3v2-exposure-ledger-deploy'
+export const BUILD_ID = '2026-06-07-dossier-density'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
@@ -242,4 +242,5 @@ export const RISK_THRESHOLDS_V3 = {
   medium: 0.20,
   low: 0,
 } as const
+
 
