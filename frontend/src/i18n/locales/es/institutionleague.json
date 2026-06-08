@@ -34,11 +34,11 @@
   "pillarRadar": {
     "ariaLabel": "Desglose por pilar de {{name}}",
     "title": "Desglose de los cinco pilares",
-    "openness": "Apertura",
-    "price": "Precios",
-    "vendors": "Proveedores",
-    "process": "Proceso",
-    "external": "Externo"
+    "openness": "Apertura y Competencia",
+    "price": "Integridad de Proceso",
+    "vendors": "Riesgo de Cola (P90)",
+    "process": "Alertas Externas",
+    "external": "Independencia de Proveedores"
   },
   "expandRow": "Mostrar desglose de pilares",
   "collapseRow": "Ocultar desglose de pilares",

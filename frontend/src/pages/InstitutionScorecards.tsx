@@ -28,6 +28,7 @@ import {
   type TierKey,
   type TierStyle,
 } from '@/lib/tiers'
+import { INSTITUTION_PILLARS, pillarLabel } from '@/lib/institution-pillars'
 
 const SORT_KEYS = ['total_score', 'national_percentile', 'institution_name'] as const
 const SORT_ORDERS = ['asc', 'desc'] as const
@@ -125,13 +126,8 @@ function aggregateTiers(
   }))
 }
 
-const PILLAR_MAXES: Record<string, number> = {
-  openness: 25,
-  price: 25,
-  vendors: 20,
-  process: 20,
-  external: 10,
-}
+// Pillar labels/maxes now come from the canonical INSTITUTION_PILLARS map
+// (@/lib/institution-pillars) so they cannot drift from compute_scorecards.py.
 
 // ---------------------------------------------------------------------------
 // Tier distribution bar (5-tier)
@@ -216,22 +212,29 @@ interface PillarBarsProps {
 }
 
 function PillarBars({ openness, price, vendors, process, external, t }: PillarBarsProps) {
-  const pillars = [
-    { key: 'openness', labelKey: 'pillars.apert', value: openness, max: PILLAR_MAXES.openness },
-    { key: 'price',    labelKey: 'pillars.prec',  value: price,    max: PILLAR_MAXES.price    },
-    { key: 'vendors',  labelKey: 'pillars.prov',  value: vendors,  max: PILLAR_MAXES.vendors  },
-    { key: 'process',  labelKey: 'pillars.proc',  value: process,  max: PILLAR_MAXES.process  },
-    { key: 'external', labelKey: 'pillars.ext',   value: external, max: PILLAR_MAXES.external },
-  ]
+  const { i18n } = useTranslation()
+  const lang = i18n.language
+  // Values arrive positionally in canonical pillar order (openness, price,
+  // vendors, process, external) — zip them onto INSTITUTION_PILLARS for the
+  // correct label + max. Visible label is the mnemonic letter (column is 32px);
+  // the full concept name is on the row tooltip.
+  const values = [openness, price, vendors, process, external]
+  const pillars = INSTITUTION_PILLARS.map((p, i) => ({
+    key: p.dbField,
+    letter: p.letter,
+    label: pillarLabel(p, lang),
+    value: values[i],
+    max: p.max,
+  }))
 
   return (
     <div className="space-y-1" aria-label={t('pillarsChart.ariaLabel')}>
-      {pillars.map(({ key, labelKey, value, max }) => {
+      {pillars.map(({ key, letter, label, value, max }) => {
         const pct = Math.min((value / max) * 100, 100)
         const color = pct > 70 ? 'var(--color-text-muted)' : pct > 40 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
         return (
-          <div key={key} className="flex items-center gap-2">
-            <span className="text-[9px] font-mono text-text-muted w-8 flex-shrink-0">{t(labelKey)}</span>
+          <div key={key} className="flex items-center gap-2" title={`${label}: ${value.toFixed(1)}/${max}`}>
+            <span className="text-[9px] font-mono text-text-muted w-8 flex-shrink-0">{letter}</span>
             <DotBar
               value={pct}
               max={100}

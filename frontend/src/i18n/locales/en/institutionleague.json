@@ -34,11 +34,11 @@
   "pillarRadar": {
     "ariaLabel": "Pillar breakdown for {{name}}",
     "title": "Five-pillar breakdown",
-    "openness": "Openness",
-    "price": "Price",
-    "vendors": "Vendors",
-    "process": "Process",
-    "external": "External"
+    "openness": "Competitive Openness",
+    "price": "Process Integrity",
+    "vendors": "Tail Risk (P90)",
+    "process": "External Flags",
+    "external": "Vendor Independence"
   },
   "expandRow": "Show pillar breakdown",
   "collapseRow": "Hide pillar breakdown",

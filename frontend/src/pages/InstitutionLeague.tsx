@@ -46,6 +46,11 @@ import {
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
+import {
+  INSTITUTION_PILLARS,
+  INSTITUTION_PILLAR_LETTERS,
+  pillarLabel,
+} from '@/lib/institution-pillars'
 import { formatNumber } from '@/lib/utils'
 import { PageFooter } from '@/components/layout/PageFooter'
 
@@ -163,15 +168,18 @@ function TrendIcon({ direction }: { direction: string | null }) {
   return <Minus className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
 }
 
-/** 5 mini vertical bars showing all pillars at a glance */
+/** 5 mini vertical bars showing all pillars at a glance.
+    Labels/maxes come from the canonical INSTITUTION_PILLARS map so they can
+    never drift from what compute_scorecards.py actually stores. */
 function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
-  const pillars = [
-    { key: 'O', label: 'Openness', value: item.pillar_openness, max: 20 },
-    { key: 'P', label: 'Price', value: item.pillar_price, max: 25 },
-    { key: 'V', label: 'Vendors', value: item.pillar_vendors, max: 20 },
-    { key: 'R', label: 'Process', value: item.pillar_process, max: 15 },
-    { key: 'E', label: 'External', value: item.pillar_external, max: 20 },
-  ]
+  const { i18n } = useTranslation('institutionleague')
+  const lang = i18n.language
+  const pillars = INSTITUTION_PILLARS.map((p) => ({
+    key: p.letter,
+    label: pillarLabel(p, lang),
+    value: (item[p.dbField] as number) ?? 0,
+    max: p.max,
+  }))
   const tooltip = pillars.map(p => `${p.label}: ${p.value.toFixed(0)}/${p.max}`).join(' · ')
   return (
     <div
@@ -611,15 +619,13 @@ function ScoreHistogram({
 // ---------------------------------------------------------------------------
 
 function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
-  const { t } = useTranslation('institutionleague')
-  // Normalize each pillar to 0-1 based on its max
-  const pillars = useMemo(() => [
-    { label: t('pillarRadar.openness'), value: item.pillar_openness / 20 },
-    { label: t('pillarRadar.price'), value: item.pillar_price / 25 },
-    { label: t('pillarRadar.vendors'), value: item.pillar_vendors / 20 },
-    { label: t('pillarRadar.process'), value: item.pillar_process / 15 },
-    { label: t('pillarRadar.external'), value: item.pillar_external / 20 },
-  ], [item, t])
+  const { t, i18n } = useTranslation('institutionleague')
+  const lang = i18n.language
+  // Normalize each pillar to 0-1 based on its TRUE max (canonical map).
+  const pillars = useMemo(() => INSTITUTION_PILLARS.map((p) => ({
+    label: pillarLabel(p, lang),
+    value: ((item[p.dbField] as number) ?? 0) / p.max,
+  })), [item, lang])
 
   const size = 200
   const center = size / 2
@@ -727,13 +733,11 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
           {t('pillarRadar.title')}
         </p>
-        {[
-          { label: t('pillarRadar.openness'), value: item.pillar_openness, max: 20 },
-          { label: t('pillarRadar.price'), value: item.pillar_price, max: 25 },
-          { label: t('pillarRadar.vendors'), value: item.pillar_vendors, max: 20 },
-          { label: t('pillarRadar.process'), value: item.pillar_process, max: 15 },
-          { label: t('pillarRadar.external'), value: item.pillar_external, max: 20 },
-        ].map((p) => {
+        {INSTITUTION_PILLARS.map((pillar) => ({
+          label: pillarLabel(pillar, lang),
+          value: (item[pillar.dbField] as number) ?? 0,
+          max: pillar.max,
+        })).map((p) => {
           const pct = (p.value / p.max) * 100
           const barColor = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
           return (
@@ -804,7 +808,12 @@ function SortHeader({
 // ---------------------------------------------------------------------------
 
 export default function InstitutionLeague() {
-  const { t } = useTranslation('institutionleague')
+  const { t, i18n } = useTranslation('institutionleague')
+  const lang = i18n.language
+  // Canonical pillar legend (letter = concept), bilingual tooltip.
+  const pillarLegendTitle = INSTITUTION_PILLARS
+    .map((p) => `${p.letter}=${pillarLabel(p, lang)}`)
+    .join(' · ')
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const getTier = useTierInfo()
@@ -1457,9 +1466,9 @@ export default function InstitutionLeague() {
                         {t('columns.grade')}
                       </span>
                     </th>
-                    <th scope="col" className="px-2 py-2 text-left hidden sm:table-cell w-28" title="O=Openness · P=Price · V=Vendors · R=Process · E=External">
+                    <th scope="col" className="px-2 py-2 text-left hidden sm:table-cell w-28" title={pillarLegendTitle}>
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
-                        {t('columns.pillars')} <span className="opacity-50 normal-case">O P V R E</span>
+                        {t('columns.pillars')} <span className="opacity-50 normal-case">{INSTITUTION_PILLAR_LETTERS}</span>
                       </span>
                     </th>
                     <th scope="col" className="px-2 py-2 text-center w-12 hidden sm:table-cell">

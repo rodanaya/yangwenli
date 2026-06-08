@@ -10,6 +10,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { DotBar } from './DotBar'
+import { INSTITUTION_PILLARS, pillarLabel } from '@/lib/institution-pillars'
 
 /** Convert a raw API enum string (e.g. "low_risk", "pillar_conduct") to a readable label */
 function formatRiskDriver(raw: string): string {
@@ -19,11 +20,11 @@ function formatRiskDriver(raw: string): string {
     pillar_spread: 'Diversification',
     pillar_behavior: 'Patterns',
     pillar_flags: 'External Alerts',
-    pillar_openness: 'Openness',
-    pillar_price: 'Price Integrity',
-    pillar_vendors: 'Vendor Independence',
-    pillar_process: 'Transparency',
-    pillar_external: 'External Alerts',
+    pillar_openness: 'Competitive Openness',
+    pillar_price: 'Process Integrity',
+    pillar_vendors: 'Tail Risk (P90)',
+    pillar_process: 'External Flags',
+    pillar_external: 'Vendor Independence',
     low_risk: 'Low Risk Score',
     avg_risk_elevated: 'Elevated Avg Risk',
     avg_risk_high: 'High Avg Risk',
@@ -226,14 +227,15 @@ export interface InstitutionScorecardData {
 }
 
 export function InstitutionScorecardCard({ sc }: { sc: InstitutionScorecardData }) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language
   const c = GRADE10_COLORS[sc.grade] ?? GRADE10_COLORS['F']
-  const pillars = [
-    { label: 'Apertura',      score: sc.pillar_openness, max: 20 },
-    { label: 'Int. Precios',  score: sc.pillar_price,    max: 20 },
-    { label: 'Ind. Proveed.', score: sc.pillar_vendors,  max: 20 },
-    { label: 'Transparencia', score: sc.pillar_process,  max: 20 },
-    { label: 'Alertas Ext.',  score: sc.pillar_external, max: 20 },
-  ]
+  // Canonical pillar map — correct label + true max per pillar.
+  const pillars = INSTITUTION_PILLARS.map((p) => ({
+    label: pillarLabel(p, lang),
+    score: (sc[p.dbField] as number) ?? 0,
+    max: p.max,
+  }))
   return (
     <div className="rounded-sm border p-4 space-y-3" style={{ borderColor: c.border, backgroundColor: c.bg + '40' }}>
       <div className="flex items-center gap-3">
