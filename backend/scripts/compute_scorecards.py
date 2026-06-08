@@ -159,14 +159,15 @@ def _load_institution_base(conn: sqlite3.Connection) -> list:
             ist.high_risk_pct,
             ist.direct_award_pct,
             ist.single_bid_pct,
-            ist.vendor_count
+            ist.vendor_count,
+            COALESCE(i.is_federal, 0) AS is_federal
         FROM institutions i
         JOIN institution_stats ist ON i.id = ist.institution_id
         WHERE ist.total_contracts >= 10
     """).fetchall()
     cols = ["id", "name", "sector_id", "inst_type",
             "total_contracts", "total_value", "avg_risk",
-            "high_risk_pct", "da_pct", "single_pct", "vendor_count"]
+            "high_risk_pct", "da_pct", "single_pct", "vendor_count", "is_federal"]
     return [dict(zip(cols, r)) for r in rows]
 
 
@@ -395,7 +396,10 @@ def score_institution(inst: dict, cm: dict, hhi: float, hhi_peer_pct: float,
             value_adj = -5.0
         else:
             value_adj = 2.0  # Value more competitive than count
-    single_bid_pen = min(10.0, single_frac * 25.0)
+    # Monotone single-bid penalty (REFORM 2026-06: was min(10, single_frac*25),
+    # which saturated at 40% single-bidding and could not rank the worst
+    # offenders — the #1 OECD/Fazekas CRI red flag. Now linear to 100%.)
+    single_bid_pen = single_frac * 10.0
     p_openness = max(0.0, min(30.0, base + value_adj - single_bid_pen))
 
     # --- Pillar 2: Process Integrity (0-25) ---
@@ -407,12 +411,22 @@ def score_institution(inst: dict, cm: dict, hhi: float, hhi_peer_pct: float,
     # --- Pillar 3: Tail Risk (0-20) ---
     p_tail = max(0.0, min(20.0, 20.0 - p90_risk * 25.0))
 
-    # --- Pillar 4: External Flags (0-15) ---
-    efos_pen     = min(8.0, efos_count * 2.0)
-    t1_pen       = min(5.0, aria["t1"] * 1.0)
-    t2_pen       = min(3.0, aria["t2"] * 0.5)
-    gt_pen       = min(8.0, gt_vendor_count * 2.0)
-    p_external   = max(0.0, min(15.0, 15.0 - efos_pen - t1_pen - t2_pen - gt_pen))
+    # --- Pillar 4: External Flags (0-15) — RATE-based (REFORM 2026-06) ---
+    # Was count-based (efos_count*2, gt_vendor_count*2, ...), which mechanically
+    # penalized large buyers for transacting with many vendors and pinned 460
+    # institutions at 0 (the dominant driver of the −0.49 score~size bias). Now
+    # every penalty is normalized by the institution's own vendor base, anchored
+    # to a meaningful share.
+    vc = max(1, vendor_count)
+    efos_rate = efos_count / vc
+    gt_rate   = gt_vendor_count / vc
+    t1_rate   = aria["t1"] / vc
+    t2_rate   = aria["t2"] / vc
+    efos_pen  = min(6.0, efos_rate / 0.03 * 6.0)   # 3% EFOS-listed vendors = full
+    gt_pen    = min(8.0, gt_rate   / 0.10 * 8.0)   # 10% GT-linked vendors  = full
+    t1_pen    = min(4.0, t1_rate   / 0.03 * 4.0)   # 3% ARIA-T1 vendors     = full
+    t2_pen    = min(3.0, t2_rate   / 0.08 * 3.0)   # 8% ARIA-T2 vendors     = full
+    p_external = max(0.0, min(15.0, 15.0 - efos_pen - gt_pen - t1_pen - t2_pen))
 
     # --- Pillar 5: Vendor Independence (0-10) ---
     p_independence = min(10.0, max(0.0, hhi_peer_pct * 10.0))
@@ -578,22 +592,30 @@ def compute_institution_scorecards(conn: sqlite3.Connection) -> list:
             vw_comp_map.get(iid, 0.5),
             trend_map.get(iid, []),
         )
+        rec["is_federal"] = int(inst.get("is_federal") or 0)
         results.append(rec)
 
-    # Assign grades by percentile rank
-    all_scores = [r["total_score"] for r in results]
-    all_scores_sorted = sorted(all_scores)
+    # Assign grades by ABSOLUTE bands (REFORM 2026-06): the old percentile curve
+    # called a 68/100 institution "Modelo" simply for beating its peers, and was
+    # computed over all 2,563 institutions while the UI shows a ~480 federal
+    # subset. Absolute grading is honest — a grade means the same thing
+    # everywhere, and the headline finding (no Mexican buyer reaches Modelo on
+    # absolute merit) is the correct one.
     for r in results:
-        code, label, color = _percentile_grade(all_scores_sorted, r["total_score"])
+        code, label, color = get_grade(r["total_score"])
         r["grade"] = code
         r["grade_label"] = label
         r["grade_color"] = color
 
-    # Compute national percentile — O(n log n) with binary search
-    n = len(all_scores_sorted)
-    for r in results:
-        rank_below = bisect.bisect_left(all_scores_sorted, r["total_score"])
-        r["national_percentile"] = round(rank_below / n, 3) if n > 0 else 0.5
+    # National percentile WITHIN population (federal vs sub-national), so the
+    # percentile shown matches the population the UI displays.
+    for pop in (1, 0):
+        pop_scores = sorted(r["total_score"] for r in results if r.get("is_federal") == pop)
+        npop = len(pop_scores)
+        for r in results:
+            if r.get("is_federal") == pop:
+                rank_below = bisect.bisect_left(pop_scores, r["total_score"])
+                r["national_percentile"] = round(rank_below / npop, 3) if npop else 0.5
 
     # Compute peer percentile within sector — O(n log n)
     by_sector = defaultdict(list)
