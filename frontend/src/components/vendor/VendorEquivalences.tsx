@@ -88,7 +88,6 @@ export function VendorEquivalences({
   if (flush) {
     return (
       <div
-        className="mt-3"
         style={{
           borderLeft: `2px solid ${accent}`,
           paddingLeft: 20,

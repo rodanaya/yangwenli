@@ -263,14 +263,15 @@ export function VendorHero({
           </aside>
         )}
 
-        {/* ─── Row 5: the lede, with drop cap ───────────────────────── */}
-        <Lede text={lede} sectorAccent={sectorAccent} />
-
-        {/* ─── Row 5b: human-scale coda — closing movement of the editorial
-            block. Shares the lede's sector left-rule so the synthesized prose
-            flows straight into its human translation (relocated from the
-            operational command panel, spec Change 1). ───────────────── */}
-        <VendorEquivalences flush totalMxn={vendor.total_value_mxn} lang={lang} accent={sectorAccent} />
+        {/* ─── Row 5: the editorial block — lede (left) and its human-scale
+            translation (right) as a two-column cover spread. They used to
+            stack down the left half, leaving the right ~40% of the cover
+            empty; side-by-side fills the width and shortens the hero. Falls
+            back to a single stacked column below `lg`. ──────────────── */}
+        <div className="mt-6 grid items-start gap-x-12 gap-y-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <Lede text={lede} sectorAccent={sectorAccent} />
+          <VendorEquivalences flush totalMxn={vendor.total_value_mxn} lang={lang} accent={sectorAccent} />
+        </div>
 
         {/* ─── Row 6: ON THE PAGE TOC strip ─────────────────────────── */}
         {showTOC && (
@@ -575,7 +576,6 @@ function Lede({ text, sectorAccent }: { text: string; sectorAccent: string }) {
   const rest = text.slice(1)
   return (
     <div
-      className="mt-6"
       style={{
         borderLeft: `2px solid ${sectorAccent}`,
         paddingLeft: 20,
