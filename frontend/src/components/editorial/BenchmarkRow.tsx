@@ -20,14 +20,17 @@ export interface BenchmarkRowProps {
 }
 
 export function BenchmarkRow({ label, value, benchmark, benchmarkLabel, maxDelta }: BenchmarkRowProps) {
-  const TRACK = 140       // half-track px each side
-  const CENTER = TRACK    // SVG center x
-  const TOTAL = TRACK * 2 // total SVG width
+  // Responsive diverging bar — the track is a flex-1 element that fills the row's
+  // available width instead of a fixed 280px SVG that stranded ~half the column
+  // blank. (Same lesson the SHAP waterfall learned when its fixed-348px SVG was
+  // rewritten to fill width.) Bar extends right of center (crimson) when the
+  // value exceeds the benchmark, left (zinc) when below; magnitude = |delta|/maxDelta.
   const delta = value - benchmark
-  const barLen = Math.min(Math.abs(delta) / maxDelta * TRACK, TRACK)
   const isAbove = delta > 0
   const fill = isAbove ? '#c41e3a' : '#52525b'
-  const barX = isAbove ? CENTER : CENTER - barLen
+  // Fraction of a half-track the bar fills (each side of center is 50% of the track).
+  const barFrac = Math.min(Math.abs(delta) / maxDelta, 1)
+  const barWidthPct = barFrac * 50
   const absPp = Math.abs(Math.round(delta * 100))
   const arrow = isAbove ? '↑' : '↓'
   const valuePct = Math.round(value * 100)
@@ -36,32 +39,34 @@ export function BenchmarkRow({ label, value, benchmark, benchmarkLabel, maxDelta
   return (
     <div className="flex items-center gap-3 py-1">
       <span className="text-[11px] font-mono text-text-secondary w-40 shrink-0 leading-tight">{label}</span>
-      <svg
-        width={TOTAL + 60}
-        height={22}
-        className="overflow-visible shrink-0"
-        aria-hidden="true"
-      >
+      {/* Diverging track — fills remaining width */}
+      <div className="flex-1 relative min-w-0" style={{ height: 22 }} aria-hidden="true">
         {/* Track */}
-        <rect x={0} y={9} width={TOTAL} height={4} fill="#27272a" rx={2} />
+        <div className="absolute left-0 right-0" style={{ top: '50%', height: 4, transform: 'translateY(-50%)', background: '#27272a', borderRadius: 2 }} />
         {/* Center baseline tick */}
-        <line x1={CENTER} y1={3} x2={CENTER} y2={19} stroke="#3f3f46" strokeWidth={1.5} />
+        <div className="absolute" style={{ left: '50%', top: 3, bottom: 3, width: 1.5, background: '#3f3f46' }} />
         {/* Bar */}
-        {barLen > 0 && (
-          <rect x={barX} y={8} width={barLen} height={6} fill={fill} rx={1} opacity={0.9} />
+        {barWidthPct > 0 && (
+          <div
+            className="absolute"
+            style={{
+              top: '50%',
+              transform: 'translateY(-50%)',
+              height: 6,
+              borderRadius: 1,
+              background: fill,
+              opacity: 0.9,
+              ...(isAbove
+                ? { left: '50%', width: `${barWidthPct}%` }
+                : { left: `${50 - barWidthPct}%`, width: `${barWidthPct}%` }),
+            }}
+          />
         )}
-        {/* Delta label right of track */}
-        <text
-          x={TOTAL + 6}
-          y={15}
-          fontSize={10}
-          fontFamily="var(--font-family-mono)"
-          fill={fill}
-        >
-          {arrow} {absPp}pp
-        </text>
-      </svg>
-      <span className="text-[9px] font-mono text-text-muted shrink-0 leading-tight">
+      </div>
+      <span className="text-[10px] font-mono shrink-0 text-right tabular-nums leading-tight" style={{ width: 52, color: fill }}>
+        {arrow} {absPp}pp
+      </span>
+      <span className="text-[9px] font-mono text-text-muted shrink-0 leading-tight w-32 text-right">
         {valuePct}% · {benchmarkLabel} {benchmarkPct}%
       </span>
     </div>

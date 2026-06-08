@@ -37,8 +37,7 @@ import {
 import { cleanContractDescription, computeContractFlags, type ContractFlags } from '@/lib/contract-audit'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { RISK_COLORS, getRiskLevelFromScore, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
-import { DotBar } from '@/components/ui/DotBar'
+import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { SubSectionTitle } from '@/components/dossier/SubSectionTitle'
 
 // Forensic-ink ochre for the flag gutter glyphs (matches the dashboard amber /
@@ -228,31 +227,17 @@ export function VendorActivityTab({
         </section>
       )}
 
-      {/* § 5 El Dinero — financial arc: DA rate, single bid, value percentile */}
+      {/* § 5 El Dinero — where this vendor ranks within its sector (value + risk
+          percentile). The direct-award / single-bid bars that used to live here
+          were a fourth copy of those two rates — already carried by the OECD
+          deviation panel, the §0 benchmark bars, and the §9 deviation ledger.
+          Collapsed to the two genuinely-unique rank callouts (2026-06-08). */}
       {peerComparison && peerComparison.metrics.length > 0 && (() => {
-        const daMetric = peerComparison.metrics.find(m => m.metric === 'direct_award_pct')
-        const sbMetric = peerComparison.metrics.find(m => m.metric === 'single_bid_pct')
         const valueMetric = peerComparison.metrics.find(m => m.metric === 'total_value_mxn')
         const riskMetric = peerComparison.metrics.find(m => m.metric === 'avg_risk_score')
-        if (!daMetric && !sbMetric) return null
-
-        const daVal = (daMetric?.value ?? 0) * 100
-        const daMed = (daMetric?.peer_median ?? 0) * 100
-        const daPct = daMetric?.percentile ?? 0
-        const sbVal = (sbMetric?.value ?? 0) * 100
-        const sbMed = (sbMetric?.peer_median ?? 0) * 100
         const valPct = valueMetric?.percentile ?? null
         const riskPct = riskMetric?.percentile ?? null
-        const daColor = daPct >= 75
-          ? RISK_COLORS.critical
-          : daPct >= 50
-            ? RISK_COLORS.high
-            : 'var(--color-text-muted)'
-        const sbColor = (sbMetric?.percentile ?? 0) >= 75
-          ? RISK_COLORS.critical
-          : (sbMetric?.percentile ?? 0) >= 50
-            ? RISK_COLORS.high
-            : 'var(--color-text-muted)'
+        if (valPct == null && riskPct == null) return null
 
         return (
           <section
@@ -264,44 +249,11 @@ export function VendorActivityTab({
             </SubSectionTitle>
             <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
               {isEs
-                ? `Concentración financiera frente a la mediana del sector ${vendor.primary_sector_name ?? ''}.`
-                : `Financial concentration versus the ${vendor.primary_sector_name ?? 'sector'} median.`}
+                ? `Posición de este proveedor dentro del sector ${vendor.primary_sector_name ?? ''} por valor total y riesgo.`
+                : `Where this vendor ranks within the ${vendor.primary_sector_name ?? 'sector'} by total value and risk.`}
             </p>
-            <div className="space-y-3">
-              {daMetric && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.12em]">
-                      {isEs ? 'Adjudicación directa' : 'Direct award rate'}
-                    </span>
-                    <span className="text-[11px] font-mono tabular-nums" style={{ color: daColor }}>
-                      {daVal.toFixed(0)}% {isEs ? 'vs' : 'vs'} {daMed.toFixed(0)}% {isEs ? 'mediana' : 'median'}
-                    </span>
-                  </div>
-                  <DotBar value={daPct} max={100} color={daColor} />
-                  {daVal > OECD_DIRECT_AWARD_LIMIT * 100 && (
-                    <p className="text-[10px] text-text-muted font-mono mt-1">
-                      {(daVal / (OECD_DIRECT_AWARD_LIMIT * 100)).toFixed(1)}× {isEs ? `el límite OCDE (${OECD_DIRECT_AWARD_LIMIT * 100}%)` : `OECD limit (${OECD_DIRECT_AWARD_LIMIT * 100}%)`}
-                    </p>
-                  )}
-                </div>
-              )}
-              {sbMetric && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.12em]">
-                      {isEs ? 'Licitación sin competencia' : 'Single-bid rate'}
-                    </span>
-                    <span className="text-[11px] font-mono tabular-nums" style={{ color: sbColor }}>
-                      {sbVal.toFixed(0)}% {isEs ? 'vs' : 'vs'} {sbMed.toFixed(0)}% {isEs ? 'mediana' : 'median'}
-                    </span>
-                  </div>
-                  <DotBar value={sbMetric?.percentile ?? 0} max={100} color={sbColor} />
-                </div>
-              )}
-            </div>
             {/* Percentile rank callouts */}
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3">
               {valPct != null && (
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-text-muted bg-background-elevated px-2.5 py-1.5 rounded-sm border border-border/40">
                   {isEs
@@ -363,7 +315,7 @@ export function VendorActivityTab({
               </div>
             )
           })()}
-          <ul className="space-y-2">
+          <ul className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-0.5">
             {institutionRows.slice(0, 10).map((inst) => {
               const share = vendor.total_value_mxn > 0
                 ? inst.total_value_mxn / vendor.total_value_mxn
@@ -371,7 +323,7 @@ export function VendorActivityTab({
               return (
                 <li
                   key={inst.institution_id}
-                  className="flex items-center justify-between gap-4 px-2 py-1.5 rounded-sm hover:bg-background-elevated/60 transition-colors"
+                  className="flex items-center justify-between gap-4 px-2 py-1.5 rounded-sm hover:bg-background-elevated/60 transition-colors min-w-0"
                 >
                   <div className="min-w-0 flex-1">
                     <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="sm" fullName />

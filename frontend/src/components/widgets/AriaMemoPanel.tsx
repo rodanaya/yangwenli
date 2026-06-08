@@ -226,7 +226,7 @@ function FormattedMemo({ text }: { text: string }) {
   const flushPara = () => {
     if (para.length) {
       out.push(
-        <p key={`p${k++}`} style={{ fontFamily: MEMO_SERIF, fontSize: 13, lineHeight: 1.55, color: 'var(--color-text-secondary)', maxWidth: '70ch' }}>
+        <p key={`p${k++}`} style={{ fontFamily: MEMO_SERIF, fontSize: 13.5, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
           {para.join(' ')}
         </p>,
       )
@@ -238,7 +238,7 @@ function FormattedMemo({ text }: { text: string }) {
       out.push(
         <ul key={`u${k++}`} className="space-y-1.5">
           {bullets.map((b, i) => (
-            <li key={i} className="flex gap-2.5" style={{ fontFamily: MEMO_SERIF, fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)', maxWidth: '70ch' }}>
+            <li key={i} className="flex gap-2.5" style={{ fontFamily: MEMO_SERIF, fontSize: 13.5, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
               <span aria-hidden="true" style={{ color: MEMO_OCHRE, flexShrink: 0 }}>›</span>
               <span>{b}</span>
             </li>
@@ -279,7 +279,7 @@ function FormattedMemo({ text }: { text: string }) {
     if (!titleDone) {
       titleDone = true
       out.push(
-        <p key={`t${k++}`} style={{ fontFamily: MEMO_SERIF, fontSize: 14.5, fontWeight: 600, lineHeight: 1.4, color: 'var(--color-text-primary)' }}>
+        <p key={`t${k++}`} style={{ fontFamily: MEMO_SERIF, fontSize: 15.5, fontWeight: 600, lineHeight: 1.4, color: 'var(--color-text-primary)', columnSpan: 'all' }}>
           {line}
         </p>,
       )
@@ -311,7 +311,19 @@ function FormattedMemo({ text }: { text: string }) {
     flushBullets(); flushKvs(); para.push(line)
   }
   flushAll()
-  return <div className="space-y-3">{out}</div>
+  // Newspaper flow: on wide viewports the memo runs in two balanced columns so
+  // it fills the dossier's full content width instead of stranding the right
+  // half blank (the previous 70ch cap left ~40% of the panel empty). The title
+  // spans both columns; headers / lists / paragraphs never split across a column
+  // break. Single column below lg.
+  return (
+    <div
+      className="space-y-3 lg:columns-2 [&>*]:break-inside-avoid"
+      style={{ columnGap: '2.75rem' }}
+    >
+      {out}
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------------------

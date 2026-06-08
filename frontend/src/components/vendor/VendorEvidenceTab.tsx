@@ -186,7 +186,7 @@ export function VendorEvidenceTab({
           <SubSectionTitle id="shap-protect-title">
             {isEs ? 'Factores protectores' : 'Protective factors'}
           </SubSectionTitle>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3">
             {protectFactors.map((f) => {
               const label = isEs ? f.label_es : parseFactorLabel(f.factor).label
               return (

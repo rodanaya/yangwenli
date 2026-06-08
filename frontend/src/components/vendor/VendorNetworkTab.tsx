@@ -231,9 +231,9 @@ export function VendorNetworkTab({
           <SubSectionTitle id="scandals-title">
             {isEs ? 'Casos documentados vinculados' : 'Linked documented cases'}
           </SubSectionTitle>
-          <ul className="space-y-1.5">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1.5">
             {scandalList.slice(0, 10).map((s) => (
-              <li key={s.scandal_slug} className="flex items-center gap-2">
+              <li key={s.scandal_slug} className="flex items-center gap-2 min-w-0">
                 <EntityIdentityChip
                   type="case"
                   id={s.scandal_slug}
@@ -271,9 +271,9 @@ export function VendorNetworkTab({
               </button>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-2">
             {coBidList.slice(0, 6).map((cb) => (
-              <div key={cb.vendor_id} className="flex items-center gap-3">
+              <div key={cb.vendor_id} className="flex items-center gap-3 min-w-0">
                 <div className="min-w-0 flex-1">
                   <EntityIdentityChip
                     type="vendor"
