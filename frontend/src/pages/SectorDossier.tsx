@@ -39,6 +39,7 @@ import {
   SectorAnomalyStrip,
   SectorCaseRoll,
   SectorQueueRibbon,
+  SectorLargestContracts,
   type SectorCategoryRow,
   type TierCount,
 } from '@/components/sector/SectorReferenceSections'
@@ -200,6 +201,20 @@ export default function SectorDossier() {
     staleTime: 10 * 60 * 1000,
     retry: false,
   })
+  const { data: topContractsResp } = useQuery({
+    queryKey: ['sector-dossier', sectorId, 'top-contracts'],
+    queryFn: () => sectorApi.getTopContracts(sectorId, 10),
+    enabled: validId,
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  })
+  const { data: gtLinkageResp } = useQuery({
+    queryKey: ['sector-dossier', sectorId, 'gt-linkage'],
+    queryFn: () => sectorApi.getGtLinkage(sectorId),
+    enabled: validId,
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  })
 
   if (!validId) {
     return (
@@ -260,6 +275,9 @@ export default function SectorDossier() {
   const anomalies = anomalyResp?.anomalies ?? []
   const tiers: TierCount[] = queueTiers ?? []
   const hasForensics = concentrationHistory.length > 1 || coefficients.length > 0 || anomalies.length > 0
+  const largestContracts = topContractsResp?.contracts ?? []
+  const gtCases = gtLinkageResp?.cases ?? 0
+  const gtVendors = gtLinkageResp?.vendors ?? 0
 
   // The institution list is always a top-by-spend capped subset (limit 60,
   // ≥50 contracts) keyed on the institution's home sector — a smaller set than
@@ -285,6 +303,22 @@ export default function SectorDossier() {
 
       {/* HERO */}
       <SectorHero sector={sector} showTOC={false} />
+
+      {/* GT linkage credibility line — documented cases + GT vendors in the sector */}
+      {gtCases > 0 && (
+        <button
+          type="button"
+          onClick={() => document.getElementById('cases')?.scrollIntoView({ behavior: 'smooth' })}
+          className="font-mono uppercase tracking-widest hover:opacity-70 transition-opacity -mt-3 mb-1"
+          style={{ fontSize: 10.5, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+        >
+          <span style={{ color: 'var(--color-risk-critical)', fontWeight: 700 }}>{gtCases.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}</span>{' '}
+          {lang === 'es' ? 'casos GT' : 'GT cases'}
+          <span style={{ opacity: 0.5, margin: '0 6px' }}>·</span>
+          <span style={{ color: 'var(--color-text-primary)', fontWeight: 700 }}>{gtVendors.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}</span>{' '}
+          {lang === 'es' ? 'proveedores con vínculo documentado operan aquí' : 'GT-linked vendors operate here'} ↓
+        </button>
+      )}
 
       {/* COMMAND PANEL */}
       <div className="mt-6">
@@ -399,6 +433,22 @@ export default function SectorDossier() {
               accent={sectorAccent}
             />
             <SectorQueueRibbon tiers={tiers} sectorId={sectorId} lang={lang} />
+          </section>
+        </div>
+      )}
+
+      {/* CONTRATOS — largest single contracts in the sector */}
+      {largestContracts.length > 0 && (
+        <div className="mt-14">
+          <section id="contracts" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="contracts"
+              eyebrow={lang === 'es' ? 'Contratos' : 'Contracts'}
+              title={lang === 'es' ? 'Los contratos más grandes' : 'The largest single contracts'}
+              meta={lang === 'es' ? `Top ${largestContracts.length}` : `Top ${largestContracts.length}`}
+              accent={sectorAccent}
+            />
+            <SectorLargestContracts contracts={largestContracts} lang={lang} />
           </section>
         </div>
       )}

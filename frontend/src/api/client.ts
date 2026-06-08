@@ -391,6 +391,38 @@ export const sectorApi = {
     const { data } = await api.get(`/sectors/${sectorId}/concentration-history`)
     return data
   },
+
+  /** Top-N single contracts by amount for a sector (precomputed, instant). */
+  async getTopContracts(sectorId: number, limit = 10): Promise<{
+    sector_id: number
+    sector_name: string
+    contracts: Array<{
+      contract_id: number
+      amount_mxn: number
+      year: number | null
+      risk_level: string | null
+      risk_score: number | null
+      vendor_id: number | null
+      vendor_name: string | null
+      institution_id: number | null
+      institution_name: string | null
+      title: string | null
+    }>
+  }> {
+    const { data } = await api.get(`/sectors/${sectorId}/top-contracts`, { params: { limit } })
+    return data
+  },
+
+  /** Ground-truth linkage for a sector (documented cases + GT vendors operating in it). */
+  async getGtLinkage(sectorId: number): Promise<{
+    sector_id: number
+    sector_name: string
+    cases: number
+    vendors: number
+  }> {
+    const { data } = await api.get(`/sectors/${sectorId}/gt-linkage`)
+    return data
+  },
 }
 
 // ============================================================================

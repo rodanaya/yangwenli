@@ -1553,5 +1553,102 @@ def get_sector_temporal_anomaly(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+@router.get("/sectors/{sector_id}/top-contracts")
+def get_sector_top_contracts(
+    sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
+    limit: int = Query(10, ge=1, le=10, description="Number of contracts"),
+):
+    """
+    Top single contracts by amount for a sector — the named, datable, clickable
+    artifacts (largest awards). Served from the precomputed
+    `sector_largest_contracts` key (a live ORDER BY over a sector's ~1M rows
+    takes ~17s and locks SQLite). Amounts are pre-filtered to <= 100B MXN.
+    """
+    cache_key = f"sector_top_contracts:{sector_id}:{limit}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name_es FROM sectors WHERE id = ?", (sector_id,))
+            sector_row = cursor.fetchone()
+            if not sector_row:
+                raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
+
+            row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_largest_contracts'"
+            ).fetchone()
+            contracts: List[Dict[str, Any]] = []
+            if row:
+                try:
+                    contracts = json.loads(row[0]).get(str(sector_id), [])[:limit]
+                except (json.JSONDecodeError, AttributeError) as e:
+                    logger.warning(f"sector_largest_contracts parse failed: {e}")
+
+            result = {
+                "sector_id": sector_id,
+                "sector_name": sector_row[0],
+                "contracts": contracts,
+            }
+            _cache.set(cache_key, result, SECTORS_CACHE_TTL)
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sector_top_contracts: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+@router.get("/sectors/{sector_id}/gt-linkage")
+def get_sector_gt_linkage(
+    sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
+):
+    """
+    Ground-truth linkage for a sector: how many documented corruption cases and
+    distinct GT vendors operate in it (a GT vendor "operates in" a sector if it
+    holds >=1 contract there). Served from the precomputed `sector_gt_linkage`
+    key — the underlying join takes ~4s live.
+    """
+    cache_key = f"sector_gt_linkage:{sector_id}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name_es FROM sectors WHERE id = ?", (sector_id,))
+            sector_row = cursor.fetchone()
+            if not sector_row:
+                raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
+
+            row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_gt_linkage'"
+            ).fetchone()
+            cases = 0
+            vendors = 0
+            if row:
+                try:
+                    entry = json.loads(row[0]).get(str(sector_id), {})
+                    cases = entry.get("cases", 0) or 0
+                    vendors = entry.get("vendors", 0) or 0
+                except (json.JSONDecodeError, AttributeError) as e:
+                    logger.warning(f"sector_gt_linkage parse failed: {e}")
+
+            result = {
+                "sector_id": sector_id,
+                "sector_name": sector_row[0],
+                "cases": cases,
+                "vendors": vendors,
+            }
+            _cache.set(cache_key, result, SECTORS_CACHE_TTL)
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sector_gt_linkage: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
 # NOTE: /analysis/anomalies endpoint removed from sectors router to avoid
 # duplicate route conflict with analysis.py router (which has cached version)

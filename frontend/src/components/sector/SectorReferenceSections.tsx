@@ -542,3 +542,74 @@ export function SectorQueueRibbon({
     </div>
   )
 }
+
+// ─── 9 · Largest single contracts ────────────────────────────────────────────
+
+export interface SectorContractRow {
+  contract_id: number
+  amount_mxn: number
+  year: number | null
+  risk_level: string | null
+  vendor_id: number | null
+  vendor_name: string | null
+  institution_id: number | null
+  institution_name: string | null
+  title: string | null
+}
+
+export function SectorLargestContracts({
+  contracts,
+  lang,
+}: {
+  contracts: SectorContractRow[]
+  lang: 'en' | 'es'
+}) {
+  if (contracts.length === 0) {
+    return <EmptyNote text={t(lang, 'Sin contratos registrados.', 'No contracts on record.')} />
+  }
+  const maxAmt = Math.max(1, ...contracts.map((c) => c.amount_mxn ?? 0))
+
+  return (
+    <ul className="divide-y divide-border/40 border border-border rounded-sm overflow-hidden">
+      {contracts.map((c, i) => {
+        const lvl = c.risk_level && ['critical', 'high', 'medium', 'low'].includes(c.risk_level)
+          ? (c.risk_level as 'critical' | 'high' | 'medium' | 'low')
+          : 'low'
+        return (
+          <li key={c.contract_id} className="px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-baseline gap-2.5 min-w-0">
+                <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{String(i + 1).padStart(2, '0')}</span>
+                <span
+                  className="tabular-nums flex-shrink-0"
+                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: RISK_TEXT_COLORS[lvl] }}
+                >
+                  {formatCompactMXN(c.amount_mxn ?? 0)}
+                </span>
+                {c.year != null && <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{c.year}</span>}
+              </div>
+              {c.institution_id != null && c.institution_name && (
+                <div className="flex-shrink-0 min-w-0">
+                  <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="sm" />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-1 pl-7">
+              {c.vendor_id != null && c.vendor_name ? (
+                <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" />
+              ) : (
+                <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{t(lang, 'proveedor no identificado', 'unidentified vendor')}</span>
+              )}
+              {c.title && (
+                <span className="truncate" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11.5, color: 'var(--color-text-muted)' }}>
+                  · {c.title}
+                </span>
+              )}
+            </div>
+            <DotBar value={c.amount_mxn ?? 0} max={maxAmt} color={RISK_COLORS[lvl]} ariaLabel={formatCompactMXN(c.amount_mxn ?? 0)} className="mt-1.5 ml-7" />
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
