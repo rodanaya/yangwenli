@@ -315,7 +315,7 @@ function ConcentrationRegister({
               ? 'Proveedores por monto contratado.'
               : 'Suppliers by contracted amount.'}
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <ControlGroup
             label={isEs ? 'Orden' : 'Sort'}
             options={[{ k: 'spend', t: isEs ? 'MONTO' : 'SPEND' }, { k: 'risk', t: isEs ? 'RIESGO' : 'RISK' }]}
@@ -353,7 +353,7 @@ function ConcentrationRegister({
                     {' · '}{isEs ? 'ÚP' : 'SB'} {fmtPct(v.single_bid_pct)}
                   </div>
                 </div>
-                <DotBar value={share} max={Math.max(20, share)} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} dots={18} ariaLabel={`${Math.round(share)}% share`} className="flex-shrink-0" />
+                <DotBar value={share} max={Math.max(20, share)} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} dots={18} ariaLabel={`${Math.round(share)}% share`} className="hidden sm:block flex-shrink-0" />
                 <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 78, fontSize: 11, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</span>
                 <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 30, fontSize: 11, fontWeight: 600, color: riskPct == null ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[lvl] }}>{riskPct ?? '—'}</span>
               </li>

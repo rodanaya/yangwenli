@@ -108,8 +108,10 @@ export function InstitutionHero({
           § {lang === 'es' ? 'EL EXPEDIENTE · INSTITUCIÓN' : 'EL EXPEDIENTE · INSTITUTION DOSSIER'}
         </div>
 
-        {/* Row 3 — headline + verdict card */}
-        <div className="grid gap-6 lg:gap-10" style={{ gridTemplateColumns: 'minmax(0, 1fr) auto' }}>
+        {/* Row 3 — headline + verdict card. Stacks on mobile; the fixed-width
+            DualSeal sits beside the headline only at md+ (avoids crushing the
+            headline into a ~130px column on phones). */}
+        <div className="grid gap-6 lg:gap-10 grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto]">
           <div className="min-w-0">
             <h1
               className="text-balance mb-1.5"
@@ -267,7 +269,7 @@ function DualSeal({
   }
 
   return (
-    <aside className="flex-shrink-0 flex flex-col gap-3" style={{ width: 188 }}>
+    <aside className="flex-shrink-0 flex flex-row md:flex-col gap-3 w-full md:w-[188px]">
       <SealCard
         ruleColor={RISK_COLORS[modelLevel]}
         textColor={RISK_TEXT_COLORS[modelLevel]}
@@ -309,7 +311,7 @@ function SealCard({
 }) {
   return (
     <div
-      className="relative"
+      className="relative flex-1 md:flex-none"
       style={{ paddingTop: 9, paddingBottom: 10, paddingLeft: 16, paddingRight: 16, border: '1px solid var(--color-border)', borderRadius: 3 }}
     >
       <div
