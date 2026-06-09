@@ -3851,3 +3851,48 @@ Grep scans reviewed; all matches confirmed false positives:
 
 ### Overall: WARN
 All HTTP and API checks blocked by cloud egress CDN policy (persistent infrastructure constraint — server-side IP allowlist rejects cloud runner IP with `x-deny-reason: host_not_allowed`). Not a site failure — same pattern as prior runs. Bilingual scan clean. No regressions detected.
+
+---
+## Visual Review — 2026-06-09T06:05:25Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/atlas | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/aria | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/sectors | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/sectors/salud | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/cases | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/methodology | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (host_not_allowed) | WARN |
+
+> **Note**: TLS inspection confirmed Anthropic Egress Gateway SDS intercepts all outbound TLS from this environment. Server responds `Host not in allowlist` — persistent cloud-runner network policy, not a site outage. Consistent with all prior automated runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — Anthropic egress gateway (host not in allowlist) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — Anthropic egress gateway | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — Anthropic egress gateway | WARN |
+| /api/v1/sectors | BLOCKED — Anthropic egress gateway | WARN |
+
+> All API endpoints share the same outbound network restriction from this execution environment. No JSON returned; checks could not be evaluated. Not indicative of backend failure.
+
+### Bilingual Gaps
+Grep scans reviewed; all matches confirmed false positives:
+- `TIER_STYLES[tierName as TierKey]` in `InstitutionScorecards.tsx:444` — style constant lookup, not rendered string. OK.
+- `CaseLibrary.tsx:220` — inline code comment referencing `ADMINISTRATIONS.FOO`. Not rendered. OK.
+- `Methodology.tsx:121` — academic citation (Mahalanobis 1936). Untranslatable bibliographic reference. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — internal fixture property `target_type: 'vendor'`. Not user-facing string. OK.
+- `ExploreCanvas.tsx:1417-1432` — comment block + corporate-form token array (`S.A.`, `C.V.`, etc.). OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155-167` — all pattern labels correctly bilingual (`isEs ? ES : EN`). OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+All HTTP and API checks blocked by Anthropic Egress Gateway network policy (cloud runner IP not in external allowlist — confirmed via TLS cert issuer `O=Anthropic; CN=Egress Gateway SDS Issuing CA`). Not a site failure — identical pattern to prior runs. Bilingual scan clean. No regressions detected.
+
