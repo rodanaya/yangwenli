@@ -247,56 +247,358 @@ function FindingCard({ finding, lang }: { finding: Finding; lang: 'en' | 'es' })
   )
 }
 
-// ── Concentration ribbon ──────────────────────────────────────────────────────
+// ── Concentration exhibit ─────────────────────────────────────────────────────
+// "The concentration spine" — an instrumented share bar. Each segment's WIDTH is
+// its slice of total spend, so the bar's x-axis IS cumulative spend: the ½ and
+// 80% marks fall at fixed 50% / 80% of the width, and editorial flags annotate
+// how FEW categories it takes to reach them. Reuters / FT annotated-bar grammar
+// + NYT Upshot named callouts; replaces the flat, un-hoverable 22px ribbon with
+// a real React hover dossier (the native `title` could barely be triggered),
+// a quartile ruler, inline named segments, and a sector legend.
 
-function ConcentrationRibbon({
+interface ConcSeg {
+  category_id: number
+  name_es: string
+  name_en: string
+  sector_code: string
+  value: number
+  contracts: number
+  rank: number
+  sharePct: number
+  startPct: number
+  cumPct: number
+}
+
+const CONC_BAR_H = 46
+
+function ConcentrationExhibit({
   items,
   lang,
 }: {
   items: CategorySummaryItem[]
   lang: 'en' | 'es'
 }) {
-  const sorted = useMemo(() => [...items].sort((a, b) => b.total_value - a.total_value), [items])
-  const total = useMemo(() => sorted.reduce((s, c) => s + c.total_value, 0), [sorted])
+  const isEs = lang === 'es'
+  const [hover, setHover] = useState<number | null>(null)
+
+  const { segs, tail, total, k50, k80 } = useMemo(() => {
+    const sorted = [...items].sort((a, b) => b.total_value - a.total_value)
+    const total = sorted.reduce((s, c) => s + c.total_value, 0)
+    let cum = 0
+    let k50 = 0
+    let k80 = 0
+    const cumArr: number[] = []
+    for (let i = 0; i < sorted.length; i++) {
+      cum += sorted[i].total_value
+      cumArr.push(cum)
+      if (k50 === 0 && total > 0 && cum / total >= 0.5) k50 = i + 1
+      if (k80 === 0 && total > 0 && cum / total >= 0.8) k80 = i + 1
+    }
+    // Render enough leading categories as discrete segments that the 80% flag
+    // lands comfortably inside the discrete region; lump the long tail into one.
+    const head = Math.min(sorted.length, Math.max((k80 || 15) + 3, 16))
+    const segs: ConcSeg[] = sorted.slice(0, head).map((c, i) => {
+      const sharePct = total > 0 ? (c.total_value / total) * 100 : 0
+      const cumPct = total > 0 ? (cumArr[i] / total) * 100 : 0
+      return {
+        category_id: c.category_id,
+        name_es: c.name_es,
+        name_en: c.name_en,
+        sector_code: c.sector_code,
+        value: c.total_value,
+        contracts: c.total_contracts,
+        rank: i + 1,
+        sharePct,
+        startPct: cumPct - sharePct,
+        cumPct,
+      }
+    })
+    const tailItems = sorted.slice(head)
+    const tailValue = tailItems.reduce((s, c) => s + c.total_value, 0)
+    const tail =
+      tailItems.length > 0
+        ? {
+            count: tailItems.length,
+            value: tailValue,
+            sharePct: total > 0 ? (tailValue / total) * 100 : 0,
+            startPct: segs.length ? segs[segs.length - 1].cumPct : 0,
+          }
+        : null
+    return { segs, tail, total, k50, k80 }
+  }, [items])
+
   if (total <= 0) return null
 
-  // smallest k whose cumulative share crosses 50% / 80%
-  let cum = 0
-  let k50 = 0
-  let k80 = 0
-  for (let i = 0; i < sorted.length; i++) {
-    cum += sorted[i].total_value
-    if (k50 === 0 && cum / total >= 0.5) k50 = i + 1
-    if (k80 === 0 && cum / total >= 0.8) k80 = i + 1
-  }
+  const TAIL_IDX = segs.length
+  const hoverCenter =
+    hover === null
+      ? null
+      : hover === TAIL_IDX && tail
+        ? (tail.startPct + 100) / 2
+        : segs[hover]
+          ? segs[hover].startPct + segs[hover].sharePct / 2
+          : null
 
-  const HEAD = 14 // leading categories rendered as discrete segments
-  const head = sorted.slice(0, HEAD)
-  const tailValue = sorted.slice(HEAD).reduce((s, c) => s + c.total_value, 0)
+  const legendSectors = Array.from(new Set(segs.map((s) => s.sector_code)))
+
+  const flagDefs = [
+    k50 > 0 ? { x: 50, big: '½', sub: isEs ? `${k50} categorías` : `${k50} categories` } : null,
+    k80 > 0 ? { x: 80, big: '80%', sub: isEs ? `${k80} categorías` : `${k80} categories` } : null,
+  ].filter(Boolean) as { x: number; big: string; sub: string }[]
 
   return (
-    <div>
-      <div className="flex overflow-hidden" style={{ height: 22, borderRadius: 3, background: 'var(--color-border)' }} aria-hidden="true">
-        {head.map((c) => (
+    <div className="relative">
+      {/* ── Threshold flags (above the bar) ──────────────────────────────────── */}
+      <div className="relative" style={{ height: 30 }} aria-hidden="true">
+        {flagDefs.map((f) => (
           <div
-            key={c.category_id}
-            title={`${lang === 'es' ? c.name_es : c.name_en} · ${formatCompactMXN(c.total_value)}`}
-            style={{
-              width: `${(c.total_value / total) * 100}%`,
-              background: SECTOR_COLORS[c.sector_code] ?? '#64748b',
-              borderRight: '1px solid var(--color-background)',
-            }}
-          />
+            key={f.x}
+            className="absolute bottom-0 flex flex-col items-center"
+            style={{ left: `${f.x}%`, transform: 'translateX(-50%)' }}
+          >
+            <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+              <span
+                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 15, lineHeight: 1, color: 'var(--color-text-primary)' }}
+              >
+                {f.big}
+              </span>
+              <span
+                className="font-mono"
+                style={{ fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+              >
+                {f.sub}
+              </span>
+            </div>
+            <div style={{ width: 1, height: 7, marginTop: 3, background: 'rgba(160, 104, 32, 0.7)' }} />
+          </div>
         ))}
-        {tailValue > 0 && (
-          <div style={{ width: `${(tailValue / total) * 100}%`, background: 'var(--color-text-muted)', opacity: 0.35 }} />
-        )}
       </div>
-      <p className="font-mono mt-2" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
-        {lang === 'es'
-          ? `Las ${k50} categorías más grandes concentran la mitad del gasto · las ${k80} mayores, el 80%. Las ${sorted.length - HEAD} restantes (gris) reparten el resto.`
-          : `The ${k50} largest categories hold half of all spend · the top ${k80} hold 80%. The remaining ${sorted.length - HEAD} (grey) split the rest.`}
-      </p>
+
+      {/* ── The bar (interactive segments) ───────────────────────────────────── */}
+      <div className="relative" onMouseLeave={() => setHover(null)}>
+        <div
+          className="flex w-full overflow-hidden"
+          style={{ height: CONC_BAR_H, borderRadius: 3, background: 'var(--color-border)' }}
+        >
+          {segs.map((s, i) => {
+            const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+            const active = hover === i
+            const dim = hover !== null && !active
+            const name = isEs ? s.name_es : s.name_en
+            return (
+              <button
+                key={s.category_id}
+                type="button"
+                onMouseEnter={() => setHover(i)}
+                onFocus={() => setHover(i)}
+                onBlur={() => setHover(null)}
+                aria-label={`#${s.rank} ${name} · ${s.sharePct.toFixed(1)}% ${isEs ? 'del gasto' : 'of spend'} · ${formatCompactMXN(s.value)}`}
+                className="relative h-full block p-0"
+                style={{
+                  width: `${s.sharePct}%`,
+                  minWidth: 2,
+                  background: color,
+                  border: 0,
+                  borderRight: '1px solid var(--color-background)',
+                  opacity: dim ? 0.42 : 1,
+                  boxShadow: active ? 'inset 0 3px 0 rgba(255,255,255,0.6)' : 'none',
+                  transition: 'opacity 140ms ease',
+                  cursor: 'pointer',
+                }}
+              >
+                {s.sharePct >= 7 && (
+                  <span
+                    className="absolute font-mono pointer-events-none"
+                    style={{
+                      left: 5,
+                      top: 5,
+                      right: 5,
+                      fontSize: 9,
+                      fontWeight: 600,
+                      letterSpacing: '0.01em',
+                      color: '#ffffff',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {name}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+          {tail && (
+            <button
+              type="button"
+              onMouseEnter={() => setHover(TAIL_IDX)}
+              onFocus={() => setHover(TAIL_IDX)}
+              onBlur={() => setHover(null)}
+              aria-label={`${tail.count} ${isEs ? 'categorías restantes' : 'remaining categories'} · ${tail.sharePct.toFixed(0)}% ${isEs ? 'del gasto' : 'of spend'} · ${formatCompactMXN(tail.value)}`}
+              className="relative h-full flex items-center justify-center p-0"
+              style={{
+                width: `${tail.sharePct}%`,
+                minWidth: 2,
+                background: 'var(--color-text-muted)',
+                border: 0,
+                opacity: hover !== null && hover !== TAIL_IDX ? 0.28 : 0.42,
+                boxShadow: hover === TAIL_IDX ? 'inset 0 3px 0 rgba(255,255,255,0.45)' : 'none',
+                transition: 'opacity 140ms ease',
+                cursor: 'pointer',
+              }}
+            >
+              <span
+                className="font-mono pointer-events-none"
+                style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-background)' }}
+              >
+                +{tail.count}
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* ── Hover dossier (DOM, anchored above the hovered segment) ─────────── */}
+        {hover !== null && hoverCenter !== null && (() => {
+          const transform =
+            hoverCenter > 72
+              ? 'translate(-88%, calc(-100% - 10px))'
+              : hoverCenter < 28
+                ? 'translate(-12%, calc(-100% - 10px))'
+                : 'translate(-50%, calc(-100% - 10px))'
+          const isTail = hover === TAIL_IDX && tail
+          if (isTail && tail) {
+            return (
+              <div
+                className="absolute z-20 pointer-events-none rounded-md border border-border bg-background-card p-3 shadow-xl"
+                style={{ left: `${hoverCenter}%`, top: 0, transform, minWidth: 200, maxWidth: 270 }}
+              >
+                <div
+                  className="font-mono mb-1.5"
+                  style={{ fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+                >
+                  {isEs ? 'La cola larga' : 'The long tail'}
+                </div>
+                <div
+                  className="tabular-nums"
+                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 28, lineHeight: 1, color: 'var(--color-text-secondary)' }}
+                >
+                  {tail.sharePct.toFixed(0)}%
+                </div>
+                <div className="font-mono mt-1" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                  {isEs
+                    ? `${tail.count} categorías más · ${formatCompactMXN(tail.value)}`
+                    : `${tail.count} smaller categories · ${formatCompactMXN(tail.value)}`}
+                </div>
+              </div>
+            )
+          }
+          const s = segs[hover]
+          if (!s) return null
+          const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+          const name = isEs ? s.name_es : s.name_en
+          return (
+            <div
+              className="absolute z-20 pointer-events-none rounded-md border border-border bg-background-card p-3 shadow-xl"
+              style={{ left: `${hoverCenter}%`, top: 0, transform, minWidth: 212, maxWidth: 280 }}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <span
+                  className="font-mono"
+                  style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color }}
+                >
+                  #{s.rank}
+                </span>
+                <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                  {getSectorName(s.sector_code, lang)}
+                </span>
+                <span className="h-px flex-1" style={{ background: `${color}55` }} />
+              </div>
+              <div className="mb-1.5">
+                <EntityIdentityChip
+                  type="category"
+                  id={s.category_id}
+                  name={name}
+                  size="sm"
+                  sectorCode={s.sector_code}
+                />
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span
+                  className="tabular-nums"
+                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 30, lineHeight: 1, color }}
+                >
+                  {s.sharePct.toFixed(1)}%
+                </span>
+                <span className="font-mono" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+                  {isEs ? 'del gasto total' : 'of total spend'}
+                </span>
+              </div>
+              <div className="font-mono mt-1.5 flex items-center gap-2" style={{ fontSize: 10.5, color: 'var(--color-text-secondary)' }}>
+                <span className="tabular-nums" style={{ color: 'var(--color-text-primary)' }}>{formatCompactMXN(s.value)}</span>
+                <span style={{ opacity: 0.5 }}>·</span>
+                <span className="tabular-nums">{formatNumber(s.contracts)} {isEs ? 'cont.' : 'contracts'}</span>
+              </div>
+              {/* cumulative-to-here readout */}
+              <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                    {isEs ? 'Acumulado hasta aquí' : 'Running total to here'}
+                  </span>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                    {s.cumPct.toFixed(0)}%
+                  </span>
+                </div>
+                <div className="relative h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                  <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${Math.min(100, s.cumPct)}%`, background: color, opacity: 0.85 }} />
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* ── Quartile ruler (turns the bar into a measuring rule) ─────────────── */}
+      <div className="relative mt-1.5" style={{ height: 14 }} aria-hidden="true">
+        {[0, 25, 50, 75, 100].map((t) => (
+          <div
+            key={t}
+            className="absolute top-0 flex flex-col items-center"
+            style={{ left: `${t}%`, transform: t === 0 ? 'translateX(0)' : t === 100 ? 'translateX(-100%)' : 'translateX(-50%)' }}
+          >
+            <div style={{ width: 1, height: 4, background: 'var(--color-border)' }} />
+            <span className="font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', marginTop: 1 }}>
+              {t}%
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Caption + sector legend ──────────────────────────────────────────── */}
+      <div className="mt-3 flex items-start justify-between gap-x-6 gap-y-2 flex-wrap">
+        <p
+          className="font-mono"
+          style={{ fontSize: 10.5, lineHeight: 1.55, letterSpacing: '0.02em', color: 'var(--color-text-muted)', maxWidth: '50ch' }}
+        >
+          {isEs
+            ? `Cada bloque es una categoría; su ancho, su tajada del gasto total. Solo ${k50} concentran la mitad y ${k80}, el 80% — pasa el cursor para ver cada una.`
+            : `Each block is one category; its width is its slice of total spend. Just ${k50} hold half — ${k80} hold 80%. Hover any block for the detail.`}
+        </p>
+        <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap">
+          {legendSectors.map((code) => (
+            <span key={code} className="flex items-center gap-1.5 font-mono" style={{ fontSize: 9, letterSpacing: '0.03em', color: 'var(--color-text-muted)' }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: SECTOR_COLORS[code] ?? '#64748b', flexShrink: 0 }} />
+              {getSectorName(code, lang)}
+            </span>
+          ))}
+          {tail && (
+            <span className="flex items-center gap-1.5 font-mono" style={{ fontSize: 9, letterSpacing: '0.03em', color: 'var(--color-text-muted)' }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-text-muted)', opacity: 0.42, flexShrink: 0 }} />
+              {isEs ? 'resto' : 'rest'}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -552,12 +854,12 @@ export default function CategoriesIndex() {
               </section>
             )}
 
-            {/* ── CONCENTRATION RIBBON ───────────────────────────────────────── */}
+            {/* ── CONCENTRATION EXHIBIT ──────────────────────────────────────── */}
             <section className="mb-6 pb-6 border-b border-border" aria-label={lang === 'es' ? 'Concentración del gasto' : 'Spend concentration'}>
-              <p className="font-mono mb-2.5" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+              <p className="font-mono mb-3.5" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
                 § {lang === 'es' ? 'Dónde se concentra el dinero' : 'Where the money concentrates'}
               </p>
-              <ConcentrationRibbon items={data.data} lang={lang} />
+              <ConcentrationExhibit items={data.data} lang={lang} />
             </section>
 
             {/* ── CONTROLS ───────────────────────────────────────────────────── */}
