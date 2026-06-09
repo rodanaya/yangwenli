@@ -120,6 +120,12 @@ def run(db_path: str) -> None:
         inserts
     )
     conn.commit()
+    # Merge the WAL into the main DB file. On prod RUBLI_DEPLOY.db is a SINGLE-FILE
+    # bind mount (./backend/RUBLI_DEPLOY.db:/app/RUBLI_DEPLOY.db) + WAL mode, so the
+    # -wal sidecar lives in the container's ephemeral layer and is LOST when the
+    # container is recreated. Without this checkpoint the rebuilt table sits in the
+    # WAL and vanishes on the next deploy/restart. (Learned the hard way 2026-06-09.)
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     conn.close()
 
     print(f"Done: {len(inserts)} rows inserted in {time.time()-t0:.1f}s total")

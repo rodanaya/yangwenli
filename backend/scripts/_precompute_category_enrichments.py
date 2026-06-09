@@ -284,6 +284,10 @@ def run(db_path: str) -> None:
     conn.commit()
     build_price_distribution(cur, cat_ids)
     conn.commit()
+    # Persist the WAL into the main DB file — prod is a SINGLE-FILE bind mount +
+    # WAL, so the -wal sidecar is ephemeral to the container and is lost on
+    # recreate. Checkpoint here so a completed run survives the next deploy.
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     conn.close()
     print(f"\n==> all category enrichments written ({time.time()-t_all:.1f}s total).")
 
