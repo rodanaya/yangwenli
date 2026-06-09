@@ -197,47 +197,48 @@ def build_top_institutions(cur, cat_totals) -> None:
 
 # ── 4. Price distribution / outliers ──────────────────────────────────────────
 def build_price_distribution(cur, cat_ids) -> None:
+    """Index-backed SQL approach — percentiles via OFFSET, tails via COUNT/SUM.
+
+    The earlier "pull every amount into Python and sort" approach was both slow
+    (~15 min over the 3.1M-row table) and memory-heavy enough to trip the prod
+    backend container's healthcheck mid-run. This version touches only a handful
+    of rows per category and relies on a (category_id, amount_mxn) composite
+    index (created below if missing) so each OFFSET/aggregate query is fast.
+    """
     print("[4/4] price distribution -> precomputed_stats[category_price_distribution] ...")
     t0 = time.time()
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_c_cat_amount ON contracts(category_id, amount_mxn)"
+    )
+    base = "FROM contracts WHERE category_id = ? AND amount_mxn > 0 AND amount_mxn < ?"
     out: dict = {}
     for cid in cat_ids:
-        amts = [
-            r[0]
-            for r in cur.execute(
-                """
-                SELECT amount_mxn FROM contracts
-                WHERE category_id = ? AND amount_mxn > 0 AND amount_mxn < ?
-                ORDER BY amount_mxn
-                """,
-                (cid, MAX_CONTRACT_VALUE),
-            ).fetchall()
-        ]
-        n = len(amts)
-        if n == 0:
+        n = cur.execute(f"SELECT COUNT(*) {base}", (cid, MAX_CONTRACT_VALUE)).fetchone()[0]
+        if not n:
             out[str(cid)] = {"n": 0}
             continue
-        total = sum(amts)
-        p25 = amts[max(0, n // 4)]
-        p50 = amts[max(0, n // 2)]
-        p75 = amts[max(0, (3 * n) // 4)]
-        mean = total / n
+
+        def _pct(k: int) -> float:
+            return cur.execute(
+                f"SELECT amount_mxn {base} ORDER BY amount_mxn LIMIT 1 OFFSET ?",
+                (cid, MAX_CONTRACT_VALUE, k),
+            ).fetchone()[0]
+
+        p25, p50, p75 = _pct(n // 4), _pct(n // 2), _pct((3 * n) // 4)
+        agg = cur.execute(
+            f"SELECT AVG(amount_mxn) m, SUM(amount_mxn) s {base}", (cid, MAX_CONTRACT_VALUE)
+        ).fetchone()
+        mean, total = agg["m"], agg["s"]
         iqr = p75 - p25
         fence = p75 + 1.5 * iqr
-        out_n = 0
-        out_v = 0.0
-        mega_n = 0
-        mega_v = 0.0
-        # amts is sorted asc — walk from the top for the two tail cuts.
-        for a in reversed(amts):
-            if a > fence:
-                out_n += 1
-                out_v += a
-            if a >= MEGA_THRESHOLD:
-                mega_n += 1
-                mega_v += a
-            elif a < fence:
-                # below both cuts and amounts only shrink from here
-                break
+        o = cur.execute(
+            f"SELECT COUNT(*) c, COALESCE(SUM(amount_mxn), 0) s {base} AND amount_mxn > ?",
+            (cid, MAX_CONTRACT_VALUE, fence),
+        ).fetchone()
+        mg = cur.execute(
+            f"SELECT COUNT(*) c, COALESCE(SUM(amount_mxn), 0) s {base} AND amount_mxn >= ?",
+            (cid, MAX_CONTRACT_VALUE, MEGA_THRESHOLD),
+        ).fetchone()
         out[str(cid)] = {
             "n": n,
             "p25": round(p25),
@@ -246,12 +247,12 @@ def build_price_distribution(cur, cat_ids) -> None:
             "mean": round(mean),
             "iqr": round(iqr),
             "mean_median_ratio": round(mean / p50, 2) if p50 > 0 else None,
-            "outlier_count": out_n,
-            "outlier_value": round(out_v),
-            "outlier_value_pct": round(out_v / total * 100, 1) if total > 0 else 0.0,
-            "mega_count": mega_n,
-            "mega_value": round(mega_v),
-            "mega_value_pct": round(mega_v / total * 100, 1) if total > 0 else 0.0,
+            "outlier_count": o["c"],
+            "outlier_value": round(o["s"]),
+            "outlier_value_pct": round(o["s"] / total * 100, 1) if total else 0.0,
+            "mega_count": mg["c"],
+            "mega_value": round(mg["s"]),
+            "mega_value_pct": round(mg["s"] / total * 100, 1) if total else 0.0,
             "total_value": round(total),
         }
     _set_stat(cur, "category_price_distribution", out)
