@@ -1,19 +1,19 @@
 /**
  * ARIA — Cola de Investigación
  *
- * Evenflow redesign: one eye-path down the page.
- *   1. Compact header (title · search · tier pills)
- *   2. Hero stat strip (4 small numbers)
- *   3. Tier navigation (horizontal clickable rows)
- *   4. Pattern filter chips
- *   5. Investigation rows — one row per vendor, ONE action
- *   6. Methodology footer
+ * Charter Archetype B (index) — one eye-path down the page.
+ *   B0. Folio — Playfair nameplate + dek + dateline (no seal)
+ *   B1. § EL SALDO — the queue's single finding as a sentence with numbers
+ *   B2. El Filtro — ONE unified header (tier pills · search · pattern · presets)
+ *   B3. El Registro — investigation rows, one per vendor, EntityIdentityChip-routed
+ *   Coda. § · ADÓNDE IR — pattern-dossier CTAs (P2/P6) + top-T1 vendor chips
+ *   Procedencia. Methodology footer
  *
  * Credo: "evenflow" — ONE obvious action per element.
  */
 
 import { useState, useRef, useEffect, Fragment } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
@@ -25,7 +25,7 @@ import { GhostSuspectsPanel } from '@/components/aria/GhostSuspectsPanel'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatCompactMXN, formatCompactUSDByYear, formatNumber } from '@/lib/utils'
+import { cn, formatCompactMXN, formatCompactUSDByYear, formatDualCurrency, formatNumber } from '@/lib/utils'
 import { getSectorName, SECTORS } from '@/lib/constants'
 import {
   Search,
@@ -564,6 +564,37 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
 }
 
 // ============================================================================
+// SaldoAnchor — Playfair Display Italic 800 tabular-nums anchor number for the
+// EL SALDO lede. Color is applied via style={{ color }} (never a hex className —
+// the April 2026 audit found that hex-as-className is silently stripped).
+// ============================================================================
+
+function SaldoAnchor({
+  children,
+  color,
+  small,
+}: {
+  children: React.ReactNode
+  color: string
+  small?: boolean
+}) {
+  return (
+    <span
+      className={cn('tabular-nums align-baseline', small ? 'text-xl' : 'text-2xl sm:text-[28px]')}
+      style={{
+        color,
+        fontFamily: '"Playfair Display", Georgia, serif',
+        fontStyle: 'italic',
+        fontWeight: 800,
+        lineHeight: 1,
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
+// ============================================================================
 // Helpers for editorial visualizations
 // ============================================================================
 
@@ -734,6 +765,15 @@ export default function AriaPage() {
     4: stats?.latest_run?.tier4_count ?? 0,
   }
 
+  // Coda exit-ramp chips — top T1 vendors drawn from the already-fetched page
+  // (no new API call). Prefer Tier-1 rows; fall back to the highest-IPS rows
+  // currently loaded so the coda is never empty under a non-T1 filter.
+  const codaVendors: AriaQueueItem[] = (() => {
+    const sorted = [...leadsItemsRaw].sort((a, b) => (b.ips_final ?? 0) - (a.ips_final ?? 0))
+    const t1 = sorted.filter((it) => (it.ips_tier ?? 4) === 1)
+    return (t1.length >= 3 ? t1 : sorted).slice(0, 3)
+  })()
+
   const isEs = i18n.language.startsWith('es')
 
   const clearAll = () => {
@@ -836,10 +876,10 @@ export default function AriaPage() {
   return (
     <div className="bg-background">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-        {/* Compressed header — title + dateline + tier counts in one row */}
-        <header className="mb-3 flex items-baseline gap-3 flex-wrap">
+        {/* ═══ B0 · FOLIO — surface nameplate: title + dek + dateline (no seal) ═══ */}
+        <header className="mb-3">
           <h1
-            className="text-text-primary shrink-0"
+            className="text-text-primary"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'italic',
@@ -851,22 +891,73 @@ export default function AriaPage() {
           >
             {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
           </h1>
-          {statsLoading ? (
-            <span className="h-2 w-32 rounded bg-background-elevated animate-pulse inline-block" />
-          ) : (
-            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5 flex-wrap">
-              <span className="tabular-nums">{formatNumber(stats?.queue_total ?? 0)}</span>
-              <span>{isEs ? 'proveedores' : 'vendors'}</span>
-              <span aria-hidden>·</span>
-              <span>v0.8.5</span>
-              <MetodologiaTooltip
-                title={t('methodology.title')}
-                body={t('methodology.body')}
-                link="/methodology"
-              />
-            </span>
-          )}
+          <p className="mt-1 text-sm text-text-secondary max-w-2xl leading-snug">
+            {isEs
+              ? 'La cola priorizada de ARIA — proveedores ordenados por indicador de riesgo del modelo y señales de patrón, listos para investigar.'
+              : 'ARIA’s prioritized queue — vendors ranked by the model’s risk indicator and pattern signals, ready to investigate.'}
+          </p>
+          <p className="mt-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5 flex-wrap">
+            <span>ARIA</span>
+            <span aria-hidden>·</span>
+            <span>{isEs ? 'Modelo v0.8.5' : 'Model v0.8.5'}</span>
+            <MetodologiaTooltip
+              title={t('methodology.title')}
+              body={t('methodology.body')}
+              link="/methodology"
+            />
+          </p>
         </header>
+
+        {/* ═══ B1 · EL SALDO — the queue's single most important finding, as a ═══ */}
+        {/* sentence with numbers (charter invariant #17: NOT a KPI grid).        */}
+        <section aria-label={isEs ? 'El saldo de la cola' : 'The queue’s bottom line'} className="mb-4">
+          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
+            {isEs ? '§ EL SALDO' : '§ THE BOTTOM LINE'}
+          </p>
+          {statsLoading ? (
+            <span className="h-3 w-3/4 max-w-lg rounded bg-background-elevated animate-pulse inline-block" />
+          ) : (
+            <p className="text-sm sm:text-[15px] text-text-secondary leading-relaxed max-w-3xl">
+              {isEs ? (
+                <>
+                  El modelo coloca{' '}
+                  <SaldoAnchor color="var(--color-risk-critical)">
+                    {formatNumber(stats?.latest_run?.tier1_count ?? 0)}
+                  </SaldoAnchor>{' '}
+                  proveedores en el Nivel 1 —{' '}
+                  <span className="text-text-muted">los anclados en casos de referencia más los descubrimientos del modelo</span>{' '}
+                  — de una cola total de{' '}
+                  <SaldoAnchor color="var(--color-text-primary)">
+                    {formatNumber(stats?.queue_total ?? 0)}
+                  </SaldoAnchor>{' '}
+                  proveedores. Suman{' '}
+                  <SaldoAnchor color="var(--color-risk-high)" small>
+                    {formatDualCurrency(stats?.elevated_value_mxn ?? 0)}
+                  </SaldoAnchor>{' '}
+                  en valor de contratos marcados para revisión.
+                </>
+              ) : (
+                <>
+                  The model places{' '}
+                  <SaldoAnchor color="var(--color-risk-critical)">
+                    {formatNumber(stats?.latest_run?.tier1_count ?? 0)}
+                  </SaldoAnchor>{' '}
+                  vendors in Tier 1 —{' '}
+                  <span className="text-text-muted">the ground-truth-anchored plus the model’s own discoveries</span>{' '}
+                  — out of a total queue of{' '}
+                  <SaldoAnchor color="var(--color-text-primary)">
+                    {formatNumber(stats?.queue_total ?? 0)}
+                  </SaldoAnchor>{' '}
+                  vendors. Together they carry{' '}
+                  <SaldoAnchor color="var(--color-risk-high)" small>
+                    {formatDualCurrency(stats?.elevated_value_mxn ?? 0)}
+                  </SaldoAnchor>{' '}
+                  in contract value flagged for review.
+                </>
+              )}
+            </p>
+          )}
+        </section>
 
         {/* ═══ FILTER BAR — Tier + Search (row 1), Patterns (row 2), VIEW presets (row 3) ═══ */}
         <div className="mb-4 space-y-2">
@@ -1455,10 +1546,65 @@ export default function AriaPage() {
         </div>
 
         {/* ============================================================== */}
+        {/* CODA · § ADÓNDE IR — exit ramps: pattern dossiers + top T1 chips */}
+        {/* ============================================================== */}
+        <section
+          aria-label={isEs ? 'Adónde ir' : 'Where to go next'}
+          className="mt-4 rounded-sm border border-border bg-background-card p-4"
+        >
+          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+            {isEs ? '§ · ADÓNDE IR' : '§ · WHERE TO GO NEXT'}
+          </p>
+
+          {/* Pattern-dossier CTAs — the two structural families behind the queue */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <Link
+              to="/patterns/P2"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-risk-high/30 bg-risk-high/10 text-risk-high text-[11px] font-mono uppercase tracking-[0.08em] hover:bg-risk-high/20 transition-colors"
+              title={isEs ? 'Patrón P2 · Empresa Fantasma' : 'Pattern P2 · Ghost Company'}
+            >
+              {isEs ? 'P2 · Empresa Fantasma' : 'P2 · Ghost Company'}
+              <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            </Link>
+            <Link
+              to="/patterns/P6"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-risk-critical/30 bg-risk-critical/10 text-risk-critical text-[11px] font-mono uppercase tracking-[0.08em] hover:bg-risk-critical/20 transition-colors"
+              title={isEs ? 'Patrón P6 · Captura Institucional' : 'Pattern P6 · Institutional Capture'}
+            >
+              {isEs ? 'P6 · Captura Institucional' : 'P6 · Institutional Capture'}
+              <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            </Link>
+          </div>
+
+          {/* Top T1 vendor chips — drawn from already-fetched queue data */}
+          {codaVendors.length > 0 && (
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5">
+                {isEs ? 'Encabezan la cola' : 'Leading the queue'}
+              </p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {codaVendors.map((v) => (
+                  <EntityIdentityChip
+                    key={v.vendor_id}
+                    type="vendor"
+                    id={v.vendor_id}
+                    name={v.vendor_name}
+                    size="sm"
+                    riskScore={v.avg_risk_score}
+                    sectorCode={v.primary_sector_name ?? null}
+                    ariaTier={v.ips_tier}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* ============================================================== */}
         {/* 6. METHODOLOGY FOOTER — minimal                                */}
         {/* ============================================================== */}
         <section>
-          <div className="rounded-sm border border-border bg-background-card p-4">
+          <div className="rounded-sm border border-border bg-background-card p-4 mt-4">
             <div className="flex items-start gap-3">
               <FileText className="h-3.5 w-3.5 text-text-muted shrink-0 mt-0.5" aria-hidden="true" />
               <div className="text-xs text-text-muted space-y-1 leading-relaxed">
