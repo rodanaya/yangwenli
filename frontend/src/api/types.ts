@@ -2640,6 +2640,55 @@ export interface AdminVendorEntry { vendor_name: string; total_mxn: number; cont
 export interface AdminEraStats { era: string; year_start: number; year_end: number; top_vendors: AdminVendorEntry[]; gt_case_count: number; est_fraud_mxn: number; hhi: number; dec_spike_pct: number }
 export interface AdminBreakdownResponse { eras: AdminEraStats[]; cached_at: string | null }
 
+// ── Admin deep-drill response types (§IV top-100 + §V buyers) ───────────────
+
+export interface AdminVendorDeep {
+  vendor_id: number
+  vendor_name: string
+  total_mxn: number
+  contracts: number
+  avg_risk: number | null
+  high_risk_pct: number
+  direct_award_pct: number
+  share_pct: number
+  yearly: { year: number; total_mxn: number }[]
+}
+
+export interface AdminVendorsDeepResponse {
+  era: string
+  year_start: number
+  year_end: number
+  term_total_mxn: number
+  vendor_count: number
+  vendors: AdminVendorDeep[]
+  cached_at: string | null
+}
+
+export interface AdminInstitutionBuyer {
+  institution_id: number
+  institution_name: string
+  siglas: string | null
+  is_federal: number | null
+  total_mxn: number
+  contracts: number
+  avg_risk: number | null
+  direct_award_pct: number
+  share_pct: number
+  top_sector_id: number | null
+  top_sector_code: string | null
+}
+
+export interface AdminInstitutionsResponse {
+  era: string
+  year_start: number
+  year_end: number
+  term_total_mxn: number
+  institution_count: number
+  top_n_share_pct: number
+  institutions: AdminInstitutionBuyer[]
+  cached_at: string | null
+}
+
 // ============================================================================
 // Collusion / Co-bidding Types
 // ============================================================================

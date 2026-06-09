@@ -112,6 +112,8 @@ import type {
   VendorNarrativeResponse,
   ContractHistogramResponse,
   AdminBreakdownResponse,
+  AdminVendorsDeepResponse,
+  AdminInstitutionsResponse,
 } from './types'
 
 // Re-export types that were moved from client.ts to types.ts for backward compatibility
@@ -1065,6 +1067,16 @@ export const analysisApi = {
 
   async getAdminBreakdown(): Promise<AdminBreakdownResponse> {
     const { data } = await api.get('/analysis/admin-breakdown')
+    return data
+  },
+
+  async getAdminVendorsDeep(era: string, limit = 100): Promise<AdminVendorsDeepResponse> {
+    const { data } = await api.get(`/analysis/admin-breakdown/${era}/vendors`, { params: { limit } })
+    return data
+  },
+
+  async getAdminInstitutions(era: string, limit = 12): Promise<AdminInstitutionsResponse> {
+    const { data } = await api.get(`/analysis/admin-breakdown/${era}/institutions`, { params: { limit } })
     return data
   },
 

@@ -12,9 +12,9 @@
  *   § I   La Trayectoria   — yearly chart + anomalies + inflation note
  *   § II  La Huella Sectorial — sector risk table
  *   § III El Expediente    — documented scandals + key events
- *   § IV  Los Beneficiarios — top vendors + top sectors
- *   ─── § El Contexto Sistémico · 2002–2025 ───
- *   25-yr trend · risk ranking · admin×sector matrix · term-year multiples ·
+ *   § IV  Los Beneficiarios — top vendors + top sectors (+ top-100 drill-down)
+ *   § V   Los Compradores  — top spending institutions for the term (the buyers)
+ *   § VI  El Ciclo del Sexenio — term-year trajectory + sector scorecard
  *   compare tool (collapsed) · PageFooter
  */
 
@@ -24,6 +24,8 @@ import { AdminSummaryCard } from '@/components/administrations/AdminSummaryCard'
 import { ComparePeriodView } from '@/components/administrations/ComparePeriodView'
 import { AdminCycleSmallMultiples } from '@/components/administrations/AdminCycleSmallMultiples'
 import { ExpedienteSpine } from '@/components/administrations/ExpedienteSpine'
+import { AdminVendorsDeepList } from '@/components/administrations/AdminVendorsDeepList'
+import { AdminBuyersSection } from '@/components/administrations/AdminBuyersSection'
 import {
   ADMINISTRATIONS,
   ADMIN_DISPLAY_NAMES,
@@ -168,6 +170,8 @@ export default function Administrations() {
     return (match?.name ?? 'AMLO') as AdminName
   })
   const [compareOpen, setCompareOpen] = useState(false)
+  // §IV drill-down: the top-100 beneficiaries archive drawer (lazy, mount-on-open)
+  const [vendorsDeepOpen, setVendorsDeepOpen] = useState(false)
 
   // Keep ?admin= synced with the selection so a chosen administration is a
   // shareable, reload-safe deep link (e.g. /administrations?admin=amlo).
@@ -179,6 +183,12 @@ export default function Administrations() {
       setSearchParams(next, { replace: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAdmin])
+
+  // Collapse the §IV drill-down drawer when the reader switches administration —
+  // the open archive of one term shouldn't bleed into the next.
+  useEffect(() => {
+    setVendorsDeepOpen(false)
   }, [selectedAdmin])
 
   // Data queries
@@ -890,6 +900,57 @@ export default function Administrations() {
                 )}
               </div>
             </div>
+
+            {/* ── §IV drill-down · the top-100 beneficiaries archive drawer ──
+                Front-of-house keeps the top-10 above; this is the full ledger,
+                lazy-mounted on open (clones the "Comparar dos periodos" toggle). */}
+            <div className="mt-4 border-t border-border/40">
+              <button
+                className="w-full flex items-center justify-between py-3 text-left hover:bg-background-elevated/40 transition-colors"
+                onClick={() => setVendorsDeepOpen((v) => !v)}
+                aria-expanded={vendorsDeepOpen}
+                aria-controls="beneficiarios-100"
+              >
+                <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-text-muted">
+                  {isEs ? '§ LOS 100 MAYORES BENEFICIARIOS' : '§ THE TOP 100 BENEFICIARIES'}
+                </span>
+                <span className="text-text-muted text-xs font-mono">{vendorsDeepOpen ? '−' : '+'}</span>
+              </button>
+              {vendorsDeepOpen && (
+                <div id="beneficiarios-100" className="pt-1 pb-1">
+                  <AdminVendorsDeepList
+                    era={ERA_KEYS[selectedAdmin]}
+                    eraColor={selectedMeta.color}
+                    isEs={isEs}
+                    selectedDisplay={selectedDisplay}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── § V · LOS COMPRADORES — the buyers (top spending institutions).
+              The reverse of §IV: who received → who signed. Closes MÓDULO 1. ── */}
+          <div className="border-t border-border/40 px-4 sm:px-5 py-4" id="compradores">
+            <div className="mb-3">
+              <ChapterKicker numeral="V" es="LOS COMPRADORES" en="THE BUYERS" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
+              <h3 className="text-sm font-mono text-text-primary">
+                {isEs ? 'Las dependencias que más gastaron' : 'The agencies that spent the most'}
+              </h3>
+              <p className="text-xs text-text-muted mt-1">
+                {isEs
+                  ? 'El reverso de los beneficiarios: quién firmó los contratos.'
+                  : 'The flip side of the beneficiaries: who signed the contracts.'}
+              </p>
+            </div>
+            <AdminBuyersSection
+              era={ERA_KEYS[selectedAdmin]}
+              eraColor={selectedMeta.color}
+              folderColor={folderColor}
+              adminTag={adminTag}
+              isEs={isEs}
+              selectedDisplay={selectedDisplay}
+            />
           </div>
 
           {/* ── Folder colophon — explicit module end ── */}
@@ -924,7 +985,7 @@ export default function Administrations() {
           {/* Module header */}
           <div className="px-4 sm:px-5 py-4">
             <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1.5">
-              § V · {isEs ? 'EL CICLO DEL SEXENIO' : 'THE TERM CYCLE'} — {adminTag}
+              § VI · {isEs ? 'EL CICLO DEL SEXENIO' : 'THE TERM CYCLE'} — {adminTag}
             </div>
             <h2
               style={{

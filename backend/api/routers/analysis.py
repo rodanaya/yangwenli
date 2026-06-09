@@ -4583,3 +4583,416 @@ def get_calendar_heatmap(year: int = Query(2024, ge=2002, le=2025)):
     except Exception as exc:
         logger.error("calendar-heatmap error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to fetch calendar heatmap")
+
+
+# =============================================================================
+# ADMIN DRILLDOWN — per-era top vendors and top institutions
+# =============================================================================
+
+_SECTOR_CODE_MAP: Dict[int, str] = {
+    1: "salud",
+    2: "educacion",
+    3: "infraestructura",
+    4: "energia",
+    5: "defensa",
+    6: "tecnologia",
+    7: "hacienda",
+    8: "gobernacion",
+    9: "agricultura",
+    10: "ambiente",
+    11: "trabajo",
+    12: "otros",
+}
+
+_ADMIN_ERA_MAP: Dict[str, Tuple[int, int]] = {
+    era: (yr_start, yr_end)
+    for era, yr_start, yr_end in _ADMIN_ERAS
+}
+
+
+class AdminVendorYearly(BaseModel):
+    year: int
+    total_mxn: float
+
+
+class AdminVendorDeepEntry(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    total_mxn: float
+    contracts: int
+    avg_risk: Optional[float] = None
+    high_risk_pct: float
+    direct_award_pct: float
+    share_pct: float
+    yearly: List[AdminVendorYearly]
+
+
+class AdminVendorsDeepResponse(BaseModel):
+    era: str
+    year_start: int
+    year_end: int
+    term_total_mxn: float
+    vendor_count: int
+    vendors: List[AdminVendorDeepEntry]
+    cached_at: Optional[str] = None
+
+
+class AdminInstitutionEntry(BaseModel):
+    institution_id: int
+    institution_name: str
+    siglas: Optional[str] = None
+    is_federal: Optional[int] = None
+    total_mxn: float
+    contracts: int
+    avg_risk: Optional[float] = None
+    direct_award_pct: float
+    share_pct: float
+    top_sector_id: Optional[int] = None
+    top_sector_code: Optional[str] = None
+
+
+class AdminInstitutionsResponse(BaseModel):
+    era: str
+    year_start: int
+    year_end: int
+    term_total_mxn: float
+    institution_count: int
+    top_n_share_pct: float
+    institutions: List[AdminInstitutionEntry]
+    cached_at: Optional[str] = None
+
+
+_admin_vendors_cache = SimpleCache()
+_admin_vendors_lock = threading.Lock()
+_admin_institutions_cache = SimpleCache()
+_admin_institutions_lock = threading.Lock()
+
+
+@router.get(
+    "/admin-breakdown/{era}/vendors",
+    response_model=AdminVendorsDeepResponse,
+)
+def get_admin_breakdown_vendors(
+    era: str = Path(...),
+    limit: int = Query(100, ge=1, le=200),
+    response: Response = None,
+):
+    """Top-N vendors by spend for a given administration era."""
+    if era not in _ADMIN_ERA_MAP:
+        raise HTTPException(status_code=404, detail=f"Unknown era '{era}'. Valid: {list(_ADMIN_ERA_MAP)}")
+
+    yr_start, yr_end = _ADMIN_ERA_MAP[era]
+    cache_key = f"admin_vendors_{era}_{limit}"
+
+    cached = _admin_vendors_cache.get(cache_key)
+    if cached is not None:
+        if response is not None:
+            response.headers["Cache-Control"] = "public, max-age=3600"
+        return cached
+
+    try:
+        with get_db() as _pc_conn:
+            row = _pc_conn.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+                (cache_key,),
+            ).fetchone()
+        if row and row["stat_value"]:
+            result = AdminVendorsDeepResponse(**json.loads(row["stat_value"]))
+            _admin_vendors_cache.set(cache_key, result, ttl_seconds=3600)
+            if response is not None:
+                response.headers["Cache-Control"] = "public, max-age=3600"
+            return result
+    except Exception as pc_err:
+        logger.debug("admin_vendors precomputed_stats skip: %s", pc_err)
+
+    with _admin_vendors_lock:
+        cached2 = _admin_vendors_cache.get(cache_key)
+        if cached2 is not None:
+            if response is not None:
+                response.headers["Cache-Control"] = "public, max-age=3600"
+            return cached2
+
+        with get_db() as conn:
+            # 1. Term totals
+            summary_row = conn.execute(
+                """
+                SELECT
+                    COALESCE(SUM(amount_mxn), 0) AS term_total,
+                    COUNT(DISTINCT vendor_id)     AS vendor_count
+                FROM contracts
+                WHERE contract_year BETWEEN ? AND ?
+                  AND amount_mxn > 0
+                  AND amount_mxn <= 100000000000
+                """,
+                (yr_start, yr_end),
+            ).fetchone()
+            term_total_mxn = float(summary_row["term_total"] or 0)
+            vendor_count = int(summary_row["vendor_count"] or 0)
+
+            # 2. Top-N vendors
+            vendor_rows = conn.execute(
+                """
+                SELECT
+                    c.vendor_id,
+                    v.name AS vendor_name,
+                    SUM(c.amount_mxn)  AS total_mxn,
+                    COUNT(*)           AS contracts,
+                    AVG(c.risk_score)  AS avg_risk,
+                    AVG(CASE WHEN c.risk_score >= 0.40 THEN 1.0 ELSE 0.0 END) * 100
+                        AS high_risk_pct,
+                    AVG(CASE WHEN c.is_direct_award = 1 THEN 1.0 ELSE 0.0 END) * 100
+                        AS direct_award_pct
+                FROM contracts c
+                JOIN vendors v ON c.vendor_id = v.id
+                WHERE c.contract_year BETWEEN ? AND ?
+                  AND c.amount_mxn > 0
+                  AND c.amount_mxn <= 100000000000
+                GROUP BY c.vendor_id
+                ORDER BY total_mxn DESC
+                LIMIT ?
+                """,
+                (yr_start, yr_end, limit),
+            ).fetchall()
+
+            top_vendor_ids = [r["vendor_id"] for r in vendor_rows]
+
+            # 3. Yearly breakdown for those top-N vendors only
+            yearly_rows: List[Any] = []
+            if top_vendor_ids:
+                placeholders = ",".join("?" * len(top_vendor_ids))
+                yearly_params = list(top_vendor_ids) + [yr_start, yr_end]
+                yearly_rows = conn.execute(
+                    f"""
+                    SELECT
+                        vendor_id,
+                        contract_year AS year,
+                        SUM(amount_mxn) AS total_mxn
+                    FROM contracts
+                    WHERE vendor_id IN ({placeholders})
+                      AND contract_year BETWEEN ? AND ?
+                      AND amount_mxn > 0
+                      AND amount_mxn <= 100000000000
+                    GROUP BY vendor_id, contract_year
+                    ORDER BY vendor_id, contract_year
+                    """,
+                    yearly_params,
+                ).fetchall()
+
+            # Index yearly data by vendor_id
+            yearly_by_vendor: Dict[int, List[AdminVendorYearly]] = {}
+            for yr in yearly_rows:
+                vid = int(yr["vendor_id"])
+                if vid not in yearly_by_vendor:
+                    yearly_by_vendor[vid] = []
+                yearly_by_vendor[vid].append(
+                    AdminVendorYearly(year=int(yr["year"]), total_mxn=float(yr["total_mxn"]))
+                )
+
+            safe_total = term_total_mxn if term_total_mxn > 0 else 1.0
+            vendors_out = [
+                AdminVendorDeepEntry(
+                    vendor_id=int(r["vendor_id"]),
+                    vendor_name=r["vendor_name"],
+                    total_mxn=float(r["total_mxn"]),
+                    contracts=int(r["contracts"]),
+                    avg_risk=float(r["avg_risk"]) if r["avg_risk"] is not None else None,
+                    high_risk_pct=round(float(r["high_risk_pct"] or 0), 2),
+                    direct_award_pct=round(float(r["direct_award_pct"] or 0), 2),
+                    share_pct=round(float(r["total_mxn"]) / safe_total * 100, 4),
+                    yearly=yearly_by_vendor.get(int(r["vendor_id"]), []),
+                )
+                for r in vendor_rows
+            ]
+
+        result = AdminVendorsDeepResponse(
+            era=era,
+            year_start=yr_start,
+            year_end=yr_end,
+            term_total_mxn=term_total_mxn,
+            vendor_count=vendor_count,
+            vendors=vendors_out,
+            cached_at=datetime.utcnow().isoformat(),
+        )
+        _admin_vendors_cache.set(cache_key, result, ttl_seconds=3600)
+        try:
+            with get_db() as wconn:
+                wconn.execute(
+                    "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at)"
+                    " VALUES(?,?,datetime('now'))",
+                    (cache_key, result.model_dump_json()),
+                )
+                wconn.commit()
+        except Exception as persist_err:
+            logger.warning("admin_vendors persist failed: %s", persist_err)
+
+    if response is not None:
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    return result
+
+
+@router.get(
+    "/admin-breakdown/{era}/institutions",
+    response_model=AdminInstitutionsResponse,
+)
+def get_admin_breakdown_institutions(
+    era: str = Path(...),
+    limit: int = Query(12, ge=1, le=50),
+    response: Response = None,
+):
+    """Top-N institutions by spend for a given administration era."""
+    if era not in _ADMIN_ERA_MAP:
+        raise HTTPException(status_code=404, detail=f"Unknown era '{era}'. Valid: {list(_ADMIN_ERA_MAP)}")
+
+    yr_start, yr_end = _ADMIN_ERA_MAP[era]
+    cache_key = f"admin_institutions_{era}_{limit}"
+
+    cached = _admin_institutions_cache.get(cache_key)
+    if cached is not None:
+        if response is not None:
+            response.headers["Cache-Control"] = "public, max-age=3600"
+        return cached
+
+    try:
+        with get_db() as _pc_conn:
+            row = _pc_conn.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+                (cache_key,),
+            ).fetchone()
+        if row and row["stat_value"]:
+            result = AdminInstitutionsResponse(**json.loads(row["stat_value"]))
+            _admin_institutions_cache.set(cache_key, result, ttl_seconds=3600)
+            if response is not None:
+                response.headers["Cache-Control"] = "public, max-age=3600"
+            return result
+    except Exception as pc_err:
+        logger.debug("admin_institutions precomputed_stats skip: %s", pc_err)
+
+    with _admin_institutions_lock:
+        cached2 = _admin_institutions_cache.get(cache_key)
+        if cached2 is not None:
+            if response is not None:
+                response.headers["Cache-Control"] = "public, max-age=3600"
+            return cached2
+
+        with get_db() as conn:
+            # 1. Term totals
+            summary_row = conn.execute(
+                """
+                SELECT
+                    COALESCE(SUM(amount_mxn), 0) AS term_total,
+                    COUNT(DISTINCT institution_id) AS institution_count
+                FROM contracts
+                WHERE contract_year BETWEEN ? AND ?
+                  AND amount_mxn > 0
+                  AND amount_mxn <= 100000000000
+                """,
+                (yr_start, yr_end),
+            ).fetchone()
+            term_total_mxn = float(summary_row["term_total"] or 0)
+            institution_count = int(summary_row["institution_count"] or 0)
+
+            # 2. Top-N institutions
+            inst_rows = conn.execute(
+                """
+                SELECT
+                    c.institution_id,
+                    i.name          AS institution_name,
+                    i.siglas        AS siglas,
+                    i.is_federal    AS is_federal,
+                    SUM(c.amount_mxn)  AS total_mxn,
+                    COUNT(*)           AS contracts,
+                    AVG(c.risk_score)  AS avg_risk,
+                    AVG(CASE WHEN c.is_direct_award = 1 THEN 1.0 ELSE 0.0 END) * 100
+                        AS direct_award_pct
+                FROM contracts c
+                JOIN institutions i ON c.institution_id = i.id
+                WHERE c.contract_year BETWEEN ? AND ?
+                  AND c.amount_mxn > 0
+                  AND c.amount_mxn <= 100000000000
+                GROUP BY c.institution_id
+                ORDER BY total_mxn DESC
+                LIMIT ?
+                """,
+                (yr_start, yr_end, limit),
+            ).fetchall()
+
+            top_inst_ids = [r["institution_id"] for r in inst_rows]
+
+            # 3. Dominant sector per institution (best-effort)
+            top_sector_by_inst: Dict[int, Tuple[Optional[int], Optional[str]]] = {}
+            if top_inst_ids:
+                placeholders = ",".join("?" * len(top_inst_ids))
+                sec_params = list(top_inst_ids) + [yr_start, yr_end]
+                sec_rows = conn.execute(
+                    f"""
+                    SELECT
+                        institution_id,
+                        sector_id,
+                        SUM(amount_mxn) AS sec_total
+                    FROM contracts
+                    WHERE institution_id IN ({placeholders})
+                      AND contract_year BETWEEN ? AND ?
+                      AND amount_mxn > 0
+                      AND amount_mxn <= 100000000000
+                      AND sector_id IS NOT NULL
+                    GROUP BY institution_id, sector_id
+                    ORDER BY institution_id, sec_total DESC
+                    """,
+                    sec_params,
+                ).fetchall()
+
+                seen_inst: set = set()
+                for sr in sec_rows:
+                    iid = int(sr["institution_id"])
+                    if iid not in seen_inst:
+                        sid = int(sr["sector_id"]) if sr["sector_id"] is not None else None
+                        scode = _SECTOR_CODE_MAP.get(sid) if sid is not None else None
+                        top_sector_by_inst[iid] = (sid, scode)
+                        seen_inst.add(iid)
+
+            safe_total = term_total_mxn if term_total_mxn > 0 else 1.0
+            top_n_spend = sum(float(r["total_mxn"]) for r in inst_rows)
+            top_n_share_pct = round(top_n_spend / safe_total * 100, 4)
+
+            institutions_out = [
+                AdminInstitutionEntry(
+                    institution_id=int(r["institution_id"]),
+                    institution_name=r["institution_name"],
+                    siglas=r["siglas"],
+                    is_federal=int(r["is_federal"]) if r["is_federal"] is not None else None,
+                    total_mxn=float(r["total_mxn"]),
+                    contracts=int(r["contracts"]),
+                    avg_risk=float(r["avg_risk"]) if r["avg_risk"] is not None else None,
+                    direct_award_pct=round(float(r["direct_award_pct"] or 0), 2),
+                    share_pct=round(float(r["total_mxn"]) / safe_total * 100, 4),
+                    top_sector_id=top_sector_by_inst.get(int(r["institution_id"]), (None, None))[0],
+                    top_sector_code=top_sector_by_inst.get(int(r["institution_id"]), (None, None))[1],
+                )
+                for r in inst_rows
+            ]
+
+        result = AdminInstitutionsResponse(
+            era=era,
+            year_start=yr_start,
+            year_end=yr_end,
+            term_total_mxn=term_total_mxn,
+            institution_count=institution_count,
+            top_n_share_pct=top_n_share_pct,
+            institutions=institutions_out,
+            cached_at=datetime.utcnow().isoformat(),
+        )
+        _admin_institutions_cache.set(cache_key, result, ttl_seconds=3600)
+        try:
+            with get_db() as wconn:
+                wconn.execute(
+                    "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at)"
+                    " VALUES(?,?,datetime('now'))",
+                    (cache_key, result.model_dump_json()),
+                )
+                wconn.commit()
+        except Exception as persist_err:
+            logger.warning("admin_institutions persist failed: %s", persist_err)
+
+    if response is not None:
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    return result
