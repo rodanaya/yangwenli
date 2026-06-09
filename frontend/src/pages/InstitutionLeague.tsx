@@ -170,9 +170,15 @@ function TrendIcon({ direction }: { direction: string | null }) {
   return <Minus className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
 }
 
-/** 5 mini vertical bars showing all pillars at a glance.
-    Labels/maxes come from the canonical INSTITUTION_PILLARS map so they can
-    never drift from what compute_scorecards.py actually stores. */
+/**
+ * Five-pillar heat strip — one calm row of solid cells, replacing the old
+ * multi-colour "equalizer" of partial-height vertical bars (illegible at
+ * 18px). Each cell's colour reads the 3-stop risk band (muted = strong,
+ * high = mid, critical = weak — no green per Bible §3.10); magnitude within
+ * the band is encoded as a gentle opacity ramp. Faint O/P/V/R/E axis below.
+ * Labels/maxes come from the canonical INSTITUTION_PILLARS map so they can
+ * never drift from what compute_scorecards.py actually stores.
+ */
 function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
   const { i18n } = useTranslation('institutionleague')
   const lang = i18n.language
@@ -185,19 +191,20 @@ function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
   const tooltip = pillars.map(p => `${p.label}: ${p.value.toFixed(0)}/${p.max}`).join(' · ')
   return (
     <div
-      className="flex items-end gap-[3px]"
+      className="flex items-center gap-[5px]"
       title={tooltip}
       aria-hidden="true"
     >
       {pillars.map(({ key, value, max }) => {
-        const pct = Math.min(100, Math.max(2, (value / max) * 100))
-        const bg = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
+        const frac = Math.min(1, Math.max(0, value / max))
+        const color = frac > 0.65 ? 'var(--color-text-muted)' : frac > 0.35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
         return (
-          <div key={key} className="flex flex-col items-center gap-[2px]">
-            <div className="w-[18px] h-7 bg-background-elevated rounded-[2px] flex flex-col justify-end overflow-hidden">
-              <div style={{ height: `${pct}%`, background: bg }} className="w-full rounded-[1px] transition-all" />
-            </div>
-            <span className="text-[7px] text-text-muted font-mono leading-none select-none">{key}</span>
+          <div key={key} className="flex flex-col items-center gap-1">
+            <span
+              className="block w-3.5 h-3.5 rounded-[3px] ring-1 ring-inset ring-border/40 transition-opacity"
+              style={{ backgroundColor: color, opacity: 0.42 + frac * 0.58 }}
+            />
+            <span className="text-[7px] font-mono leading-none text-text-muted/70 select-none">{key}</span>
           </div>
         )
       })}
@@ -806,6 +813,106 @@ function SortHeader({
 }
 
 // ---------------------------------------------------------------------------
+// HeroStatRail — bordered scorecard panel for the hero's right column.
+// Fills the empty right gutter that opened up when narrative text sat in a
+// narrow measure inside the xl container. Holds the three headline numbers
+// (evaluated / deficient-critical / median) as a compact 3-up, plus a tier
+// distribution spine — surfacing data that previously hid in the collapsed
+// Act III methodology drawer.
+// ---------------------------------------------------------------------------
+
+function HeroStatRail({
+  totalInstitutions,
+  highRiskInstitutions,
+  median,
+  distribution,
+}: {
+  totalInstitutions: number
+  highRiskInstitutions: number
+  median: number | null
+  distribution: Record<string, number> | undefined
+}) {
+  const { t } = useTranslation('institutionleague')
+  const getTier = useTierByKey()
+
+  const tiers = useMemo(
+    () =>
+      TIER_NAMES.map((key) => {
+        const grades = TIER_GRADE_MAP[key]
+        const count = grades.reduce((s, g) => s + (distribution?.[g] ?? 0), 0)
+        return { tier: getTier(key), count }
+      }),
+    [distribution, getTier],
+  )
+  const distTotal = tiers.reduce((s, x) => s + x.count, 0)
+
+  const stats = [
+    { value: formatNumber(totalInstitutions), label: t('stats.evaluated'), color: 'var(--color-text-primary)' },
+    { value: formatNumber(highRiskInstitutions), label: t('stats.critical'), color: 'var(--color-risk-critical)' },
+    { value: median != null ? median.toFixed(1) : '—', label: t('stats.median'), color: 'var(--color-text-primary)' },
+  ]
+
+  return (
+    <aside className="rounded-sm border border-border bg-background-elevated/30 divide-y divide-border/60">
+      {/* Three headline numbers — compact 3-up, hairline-divided */}
+      <div className="grid grid-cols-3 divide-x divide-border/60">
+        {stats.map((s) => (
+          <div key={s.label} className="flex flex-col px-3 py-3.5">
+            <span
+              className="leading-none tabular-nums"
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 800,
+                fontSize: 'clamp(26px, 2.6vw, 34px)',
+                color: s.color,
+                letterSpacing: '-0.015em',
+              }}
+            >
+              {s.value}
+            </span>
+            <span className="mt-1.5 text-[8px] font-mono uppercase tracking-[0.16em] text-text-muted leading-tight">
+              {s.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Tier distribution spine */}
+      {distTotal > 0 && (
+        <div className="px-3.5 py-3.5 space-y-2">
+          <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+            {t('distribution.title')}
+          </p>
+          {tiers.map(({ tier, count }) => {
+            const pct = (count / distTotal) * 100
+            return (
+              <div key={tier.key} className="flex items-center gap-2">
+                <span
+                  className="text-[9px] font-mono uppercase tracking-[0.1em] w-[78px] flex-shrink-0 truncate"
+                  style={{ color: tier.color }}
+                >
+                  {tier.label}
+                </span>
+                <span className="flex-1 h-1.5 rounded-full bg-background-elevated overflow-hidden">
+                  <span
+                    className="block h-full rounded-full"
+                    style={{ width: `${Math.max(pct, count > 0 ? 2 : 0)}%`, backgroundColor: tier.color, opacity: 0.85 }}
+                  />
+                </span>
+                <span className="text-[9px] font-mono tabular-nums text-text-muted w-7 text-right flex-shrink-0">
+                  {count}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </aside>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -1030,8 +1137,16 @@ export default function InstitutionLeague() {
             <span aria-hidden style={{ opacity: 0.5 }}>·</span>
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>{t('meta')}</span>
           </div>
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <div className="max-w-3xl">
+          {/* Asymmetric editorial hero — narrative measure on the left, a
+              bordered scorecard rail on the right. Replaces the old layout
+              where narrow text + a full-width triptych left the entire right
+              half of the xl container as dead space. */}
+          <div
+            className="mt-1 grid gap-x-12 gap-y-6 items-start lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]"
+            role="group"
+            aria-label={t('statsAriaLabel')}
+          >
+            <div>
               <h1
                 className="text-text-primary"
                 style={{
@@ -1046,83 +1161,22 @@ export default function InstitutionLeague() {
                 {t('headline.before')}{' '}
                 <span style={{ color: 'var(--color-accent)' }}>{t('headline.accent')}</span>
               </h1>
+              {totalInstitutions > 0 && (
+                <p className="text-sm sm:text-[15px] text-text-secondary mt-3 max-w-xl leading-relaxed">
+                  {t('lede', { total: formatNumber(totalInstitutions) })}
+                </p>
+              )}
             </div>
-          </div>
-          {totalInstitutions > 0 && (
-            <p className="text-sm sm:text-[15px] text-text-secondary mt-3.5 max-w-3xl leading-relaxed">
-              {t('lede', { total: formatNumber(totalInstitutions) })}
-            </p>
-          )}
 
-          {/* Triptych — three large editorial stats with Playfair Italic
-              numerals. Mirrors the ARIA queue / Dashboard rhythm: anchor
-              stat (total evaluated), accountability stat (high-risk, in
-              risk-critical color), reference stat (median). */}
-          {!isLoading && (
-            <div
-              className="mt-5 grid grid-cols-3 gap-6 sm:gap-10 border-t border-border/60 pt-5"
-              role="group"
-              aria-label={t('statsAriaLabel')}
-            >
-              <div className="flex flex-col">
-                <span
-                  className="leading-none tabular-nums"
-                  style={{
-                    fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                    fontStyle: 'italic',
-                    fontWeight: 800,
-                    fontSize: 'clamp(36px, 5vw, 48px)',
-                    color: 'var(--color-text-primary)',
-                    letterSpacing: '-0.015em',
-                  }}
-                >
-                  {formatNumber(totalInstitutions)}
-                </span>
-                <span className="mt-2 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
-                  {t('stats.evaluated')}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span
-                  className="leading-none tabular-nums"
-                  style={{
-                    fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                    fontStyle: 'italic',
-                    fontWeight: 800,
-                    fontSize: 'clamp(36px, 5vw, 48px)',
-                    color: 'var(--color-risk-critical)',
-                    letterSpacing: '-0.015em',
-                  }}
-                >
-                  {formatNumber(highRiskInstitutions)}
-                </span>
-                <span
-                  className="mt-2 text-[9px] font-mono uppercase tracking-[0.18em]"
-                  style={{ color: 'var(--color-risk-critical)', opacity: 0.85 }}
-                >
-                  {t('stats.critical')}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span
-                  className="leading-none tabular-nums"
-                  style={{
-                    fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                    fontStyle: 'italic',
-                    fontWeight: 800,
-                    fontSize: 'clamp(36px, 5vw, 48px)',
-                    color: 'var(--color-text-primary)',
-                    letterSpacing: '-0.015em',
-                  }}
-                >
-                  {statsData?.median_score?.toFixed(1) ?? '—'}
-                </span>
-                <span className="mt-2 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
-                  {t('stats.median')}
-                </span>
-              </div>
-            </div>
-          )}
+            {!isLoading && (
+              <HeroStatRail
+                totalInstitutions={totalInstitutions}
+                highRiskInstitutions={highRiskInstitutions}
+                median={statsData?.median_score ?? null}
+                distribution={statsData?.grade_distribution}
+              />
+            )}
+          </div>
 
           {/* Federal scope segmented control + disclaimer.
               Lifted out of the Act II filter row so it sits next to the
