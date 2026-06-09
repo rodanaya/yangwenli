@@ -3,10 +3,10 @@
   "meta": "FEDERAL · 2018–2025 · v0.8.5",
   "headline": {
     "before": "Cinco dependencias concentran",
-    "accent": "1.25 billones de pesos en contratos de alto riesgo."
+    "accent": "2.7 billones de pesos en adjudicaciones de alto riesgo."
   },
-  "lede": "Solo el IMSS acumula 799,600 millones MXN en adjudicaciones marcadas Crítico o Alto desde 2018 — más que las siguientes cuatro instituciones juntas. Su tasa de adjudicación directa es 81 por ciento, el triple del umbral OCDE. ISSSTE, IMSS-BIENESTAR, CONAGUA y el extinto INSABI — disuelto en 2023 pero aún con 3,560 contratos vigentes — completan el top cinco. La razón de alto riesgo del INSABI — 43 por ciento — es la peor de cualquier dependencia federal con más de 2,000 contratos.",
-  "lede_none": "Solo el IMSS acumula 799,600 millones MXN en adjudicaciones marcadas Crítico o Alto desde 2018 — más que las siguientes cuatro instituciones juntas. Su tasa de adjudicación directa es 81 por ciento, el triple del umbral OCDE.",
+  "lede": "El IMSS por sí solo acumula 996 mil millones de MXN en contratos de riesgo alto y crítico — más de un tercio de la exposición combinada del top cinco y más que Pemex Exploración, la siguiente mayor. Su tasa de adjudicación directa es del 68 por ciento, más del doble del techo de la OCDE. Pemex, CFE, ISSSTE y la Secretaría de Infraestructura completan el top cinco. El extinto INSABI — disuelto en 2023 pero aún con 3,560 contratos en los libros — tiene dos de cada cinco contratos marcados como de alto riesgo, una proporción del 40 por ciento.",
+  "lede_none": "El IMSS por sí solo acumula 996 mil millones de MXN en contratos de riesgo alto y crítico — más de un tercio del top cinco. Su tasa de adjudicación directa es del 68 por ciento, más del doble del techo de la OCDE.",
   "podiumAriaLabel": "#{{rank}}: {{name}}, puntuación {{score}}",
   "tableKicker": "Tabla general",
   "tableHeadline": "Clasificación completa — {{total}} instituciones",

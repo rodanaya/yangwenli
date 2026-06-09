@@ -3,10 +3,10 @@
   "meta": "FEDERAL · 2018–2025 · v0.8.5",
   "headline": {
     "before": "Five agencies account for",
-    "accent": "1.25 trillion pesos in high-risk awards."
+    "accent": "2.7 trillion pesos in high-risk awards."
   },
-  "lede": "IMSS alone carries 799.6 billion MXN in Critical or High-flagged contracts since 2018 — more than the next four institutions combined. Its direct-award rate is 81 percent, triple the OECD ceiling. ISSSTE, IMSS-BIENESTAR, CONAGUA, and the defunct INSABI — dissolved in 2023 but still holding 3,560 contracts on the books — fill out the top five. INSABI's 43 percent high-risk ratio is the worst of any federal agency above the 2,000-contract floor.",
-  "lede_none": "IMSS alone carries 799.6 billion MXN in Critical or High-flagged contracts since 2018 — more than the next four institutions combined. Its direct-award rate is 81 percent, triple the OECD ceiling.",
+  "lede": "IMSS alone carries 996 billion MXN in high- and critical-risk contracts — more than a third of the top five's combined exposure and larger than PEMEX Exploración, the next biggest. Its direct-award rate is 68 percent, more than double the OECD ceiling. PEMEX, CFE, ISSSTE and the Secretaría de Infraestructura round out the top five. The defunct INSABI — dissolved in 2023 but still holding 3,560 contracts on the books — has two in five of its contracts flagged high-risk, a 40 percent ratio.",
+  "lede_none": "IMSS alone carries 996 billion MXN in high- and critical-risk contracts — more than a third of the top five's combined exposure. Its direct-award rate is 68 percent, more than double the OECD ceiling.",
   "podiumAriaLabel": "#{{rank}}: {{name}}, score {{score}}",
   "tableKicker": "Full Table",
   "tableHeadline": "Complete ranking — {{total}} institutions",
