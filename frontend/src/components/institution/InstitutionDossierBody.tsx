@@ -380,7 +380,7 @@ function ControlGroup({
     <div className="flex items-center gap-1.5">
       <span className="font-mono" style={{ fontSize: 9.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{label}</span>
       <div className="flex items-center">
-        {options.map((o, i) => (
+        {options.map((o) => (
           <button
             key={o.k}
             type="button"
