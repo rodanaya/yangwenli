@@ -49,11 +49,11 @@ import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 import { ShareButton } from '@/components/ShareButton'
 import { DotBar } from '@/components/ui/DotBar'
 import {
-  EditorialLineChart,
+  EditorialSparkline,
   DotStrip,
   scaleToColor,
-  type ChartAnnotation,
-  type LineSeries,
+  tokenColor,
+  formatValue,
   type DotStripRow,
 } from '@/components/charts/editorial'
 import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
@@ -196,20 +196,6 @@ export default function Administrations() {
     retry: false,
   })
 
-  const { data: eventsResp } = useQuery({
-    queryKey: ['analysis', 'temporal-events'],
-    queryFn: () => analysisApi.getTemporalEvents(),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  })
-
-  const { data: breaksResp } = useQuery({
-    queryKey: ['analysis', 'structural-breaks'],
-    queryFn: () => analysisApi.getStructuralBreaks(),
-    staleTime: 30 * 60 * 1000,
-    retry: false,
-  })
-
   const { data: breakdownResp, isLoading: breakdownLoading } = useQuery({
     queryKey: ['analysis', 'admin-breakdown'],
     queryFn: () => analysisApi.getAdminBreakdown(),
@@ -219,7 +205,6 @@ export default function Administrations() {
 
   const yoyData = yoyResp?.data ?? []
   const sectorYearData = sectorYearResp?.data ?? []
-  const events = eventsResp?.events ?? []
 
   // Aggregations
   const adminAggs = useMemo(() => aggregateByAdmin(yoyData), [yoyData])
@@ -309,18 +294,6 @@ export default function Administrations() {
       .slice(0, 5),
     [sectorHeatmap],
   )
-
-  // Events filtered to selected admin
-  const adminEvents = useMemo(
-    () => events.filter((e) => e.year >= selectedMeta.dataStart && e.year < selectedMeta.end),
-    [events, selectedMeta]
-  )
-
-  // Structural breaks filtered to selected admin's year range
-  const adminBreaks = useMemo(() => {
-    const breaks = breaksResp?.breakpoints ?? []
-    return breaks.filter((b) => b.year >= selectedMeta.dataStart && b.year < selectedMeta.end)
-  }, [breaksResp, selectedMeta])
 
   // ── ML: Anomaly detection ─────────────────────────────────────────────────
   // Flag years in the selected admin where a metric deviates >1.8σ from the
@@ -501,57 +474,40 @@ export default function Administrations() {
               const worst = years.reduce((m, y) => (y.high_risk_pct > m.high_risk_pct ? y : m), years[0])
               const worstYear = worst.year
               const worstHR = worst.high_risk_pct
-              const maxSeries = Math.max(
-                ...years.map((y) => Math.max(y.direct_award_pct, y.single_bid_pct, y.high_risk_pct)),
-                allTimeAvg.da, 1,
-              )
-              const series: LineSeries<typeof years[number]>[] = [
-                { key: 'direct_award_pct', label: isEs ? 'Adj. Directa %' : 'Direct Award %', colorToken: 'risk-critical' },
-                { key: 'single_bid_pct', label: isEs ? 'Licitación Única %' : 'Single Bid %', colorToken: 'text-muted' },
-                { key: 'high_risk_pct', label: isEs ? 'Alto Riesgo %' : 'High Risk %', colorToken: 'risk-medium' },
-              ]
-              // Top-3 admin events by impact (high first), de-duplicated to one vrule per year.
-              const impactRank: Record<string, number> = { high: 0, medium: 1, low: 2 }
-              const topEvents = [...adminEvents]
-                .filter((ev) => years.some((y) => y.year === ev.year))
-                .sort((a, b) => (impactRank[a.impact] ?? 3) - (impactRank[b.impact] ?? 3))
-              const seenEventYears = new Set<number>()
-              const eventAnnos: ChartAnnotation[] = []
-              // Bilingual fallbacks for backend event types not in the i18n map
-              // (the live temporal-events API emits free strings like 'election').
-              const evTypeFallback: Record<string, string> = {
-                election: isEs ? 'Elección' : 'Election',
-                crisis: 'Crisis',
-                reform: isEs ? 'Reforma' : 'Reform',
-                audit: isEs ? 'Auditoría' : 'Audit',
-                scandal: isEs ? 'Escándalo' : 'Scandal',
-                pandemic: isEs ? 'Pandemia' : 'Pandemic',
+              // EL PULSO+ — lead-pair trajectory (small multiples). Each metric
+              // gets its OWN auto-scaled sparkline panel, so real per-metric
+              // movement is legible instead of three near-flat lines crushed
+              // onto one shared 0–93% axis (the Tufte multi-magnitude failure).
+              // Direct Award + High Risk are co-equal LEADS — HR is the metric
+              // the headline names, so it must not be the buried bottom line;
+              // Single Bid is a demoted support row.
+              // Reference: FT "small multiples" + NYT Upshot annotated single series.
+              const first = years[0]
+              const last = years[years.length - 1]
+              const mean = (k: 'direct_award_pct' | 'single_bid_pct' | 'high_risk_pct') =>
+                years.reduce((s, y) => s + y[k], 0) / years.length
+              const daAvg = mean('direct_award_pct')
+              const sbAvg = mean('single_bid_pct')
+              const hrAvg = mean('high_risk_pct')
+              const maxHR = Math.max(...years.map((y) => y.high_risk_pct))
+              const daDelta = daAvg - allTimeAvg.da
+              const sbDelta = sbAvg - allTimeAvg.sb
+              const hrDelta = hrAvg - allTimeAvg.hr
+              const yrSpan = `${first.year} → ${last.year}`
+              const multiYear = years.length >= 2
+              // Δ vs national average. Above-national is *worse* for DA/HR
+              // (→ risk-critical); SB is neutral (→ muted). NEVER green (Bible §3.10).
+              const renderDelta = (delta: number, worseWhenPositive: boolean) => {
+                const up = delta >= 0
+                const color = worseWhenPositive && up
+                  ? tokenColor('risk-critical')
+                  : tokenColor('text-muted')
+                return (
+                  <span className="text-[10px] font-mono tabular-nums whitespace-nowrap" style={{ color }}>
+                    {up ? '▲ +' : '▼ −'}{Math.abs(delta).toFixed(1)}
+                  </span>
+                )
               }
-              for (const ev of topEvents) {
-                if (eventAnnos.length >= 3) break
-                if (seenEventYears.has(ev.year)) continue
-                seenEventYears.add(ev.year)
-                const typeLabel = ev.type ? t(`eventTypes.${ev.type}`, evTypeFallback[ev.type] ?? ev.type) : ''
-                eventAnnos.push({
-                  kind: 'vrule',
-                  x: ev.year,
-                  label: typeLabel ? `${ev.year} · ${typeLabel}` : `${ev.year}`,
-                  tone: 'info',
-                })
-              }
-              const breakYears = new Set<number>()
-              const breakAnnos: ChartAnnotation[] = []
-              for (const b of adminBreaks) {
-                if (breakYears.has(b.year)) continue
-                if (!years.some((y) => y.year === b.year)) continue
-                breakYears.add(b.year)
-                breakAnnos.push({ kind: 'vrule', x: b.year, label: `~${b.year}`, tone: 'warn' })
-              }
-              const annotations: ChartAnnotation[] = [
-                { kind: 'hrule', y: allTimeAvg.da, label: `${isEs ? 'Promedio nacional' : 'National average'} ${allTimeAvg.da.toFixed(1)}%`, tone: 'oecd' },
-                ...eventAnnos,
-                ...breakAnnos,
-              ]
               return (
                 <EditorialChartFrame
                   kicker={`§ I · ${isEs ? 'LA TRAYECTORIA' : 'THE YEARLY RECORD'} — ${adminTag}`}
@@ -565,15 +521,104 @@ export default function Administrations() {
                   }
                   tone="bare"
                 >
-                  <EditorialLineChart
-                    data={years}
-                    xKey="year"
-                    series={series}
-                    yFormat="pct"
-                    yDomain={[0, Math.ceil(maxSeries) + 10]}
-                    annotations={annotations}
-                    height={300}
-                  />
+                  <div className="space-y-2.5">
+                    {/* ── LEAD PAIR · Direct Award + High Risk (co-equal) ── */}
+                    <div
+                      className="grid grid-cols-1 sm:grid-cols-2 gap-px rounded-sm overflow-hidden"
+                      style={{ backgroundColor: 'var(--color-border)' }}
+                    >
+                      {/* DA — lead structural fact */}
+                      <div className="bg-background-card p-3 space-y-1.5" style={{ borderLeft: `2px solid ${tokenColor('risk-critical')}` }}>
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted">
+                            {isEs ? 'ADJ. DIRECTA · RECTORA' : 'DIRECT AWARD · LEAD'}
+                          </span>
+                          <span className="text-[10px] font-mono text-text-muted/70 tabular-nums whitespace-nowrap">{yrSpan}</span>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-serif italic font-extrabold tabular-nums leading-none text-[24px]" style={{ color: tokenColor('risk-critical') }}>
+                            {formatValue(daAvg, 'pct')}
+                          </span>
+                          <span className="text-[10px] font-mono text-text-muted">{isEs ? 'prom. sexenio' : 'term avg'}</span>
+                          {renderDelta(daDelta, true)}
+                        </div>
+                        {multiYear && (
+                          <EditorialSparkline
+                            data={years}
+                            yKey="direct_award_pct"
+                            colorToken="risk-critical"
+                            kind="area"
+                            height={32}
+                            lastValue={`${formatValue(first.direct_award_pct, 'pct')}→${formatValue(last.direct_award_pct, 'pct')}`}
+                          />
+                        )}
+                        <p className="text-[10px] font-mono text-text-muted">
+                          {isEs ? 'vs. nacional ' : 'vs. national '}{allTimeAvg.da.toFixed(1)}%
+                        </p>
+                      </div>
+                      {/* HR — the headline metric, co-equal not demoted */}
+                      <div className="bg-background-card p-3 space-y-1.5" style={{ borderLeft: `2px solid ${tokenColor('risk-medium')}` }}>
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted">
+                            {isEs ? 'ALTO RIESGO · TITULAR' : 'HIGH RISK · HEADLINE'}
+                          </span>
+                          <span className="text-[10px] font-mono text-text-muted/70 tabular-nums whitespace-nowrap">{yrSpan}</span>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-serif italic font-extrabold tabular-nums leading-none text-[24px]" style={{ color: tokenColor('risk-medium') }}>
+                            {formatValue(hrAvg, 'pct')}
+                          </span>
+                          <span className="text-[10px] font-mono text-text-muted">{isEs ? 'prom. sexenio' : 'term avg'}</span>
+                          {renderDelta(hrDelta, true)}
+                        </div>
+                        {multiYear && (
+                          <EditorialSparkline
+                            data={years}
+                            yKey="high_risk_pct"
+                            colorToken="risk-medium"
+                            kind="line"
+                            height={32}
+                            lastValue={`${formatValue(first.high_risk_pct, 'pct')}→${formatValue(last.high_risk_pct, 'pct')}`}
+                          />
+                        )}
+                        <p className="text-[10px] font-mono text-text-muted">
+                          {isEs ? 'máx ' : 'peak '}{worstYear} · <span style={{ color: tokenColor('risk-medium'), fontWeight: 700 }}>{formatValue(maxHR, 'pct')}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* ── SUPPORT · Single Bid ── */}
+                    <div className="flex items-center gap-3 pt-2 border-t border-border/20">
+                      <span className="w-28 shrink-0 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+                        {isEs ? 'LICITACIÓN ÚNICA' : 'SINGLE BID'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        {multiYear ? (
+                          <EditorialSparkline
+                            data={years}
+                            yKey="single_bid_pct"
+                            colorToken="text-muted"
+                            kind="line"
+                            height={24}
+                            lastValue={`${formatValue(first.single_bid_pct, 'pct')}→${formatValue(last.single_bid_pct, 'pct')}`}
+                          />
+                        ) : (
+                          <span className="text-[11px] font-mono text-text-muted tabular-nums">{formatValue(last.single_bid_pct, 'pct')}</span>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-[10px] font-mono text-text-muted whitespace-nowrap">
+                        {isEs ? 'prom. ' : 'avg '}{sbAvg.toFixed(1)}%
+                      </span>
+                      {renderDelta(sbDelta, false)}
+                    </div>
+
+                    {/* auto-scale honesty disclosure (each panel owns its y-domain) */}
+                    <p className="text-[9px] font-mono text-text-muted/60 italic">
+                      {isEs
+                        ? 'cada panel se autoescala — compare la forma dentro de cada métrica, no entre ellas'
+                        : 'each panel auto-scales — compare the shape within a metric, not across them'}
+                    </p>
+                  </div>
                 </EditorialChartFrame>
               )
             })() : (
