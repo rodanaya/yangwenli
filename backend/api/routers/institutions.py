@@ -212,6 +212,8 @@ def get_institution(institution_id: int):
         direct_award_count = stats["direct_award_count"] if stats else 0
         direct_award_rate = stats["direct_award_pct"] if stats else 0.0
 
+        single_bid_pct = stats.get("single_bid_pct") if stats else None
+
         avg_risk_score = stats["avg_risk_score"] if stats else None
         if avg_risk_score is not None:
             avg_risk_score = round(avg_risk_score, 4)
@@ -337,6 +339,7 @@ def get_institution(institution_id: int):
             avg_risk_score=avg_risk_score,
             direct_award_rate=round(direct_award_rate, 2),
             direct_award_count=direct_award_count,
+            single_bid_pct=round(single_bid_pct, 2) if single_bid_pct is not None else None,
             longest_tenured_vendors=longest_tenured,
             supplier_diversity=supplier_diversity,
         )

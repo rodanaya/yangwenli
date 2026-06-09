@@ -181,7 +181,8 @@ class InstitutionService(BaseService):
                 ins.high_risk_count as stats_high_risk_count,
                 ins.high_risk_pct as stats_high_risk_pct,
                 ins.direct_award_count as stats_direct_award_count,
-                ins.direct_award_pct as stats_direct_award_pct
+                ins.direct_award_pct as stats_direct_award_pct,
+                ins.single_bid_pct as stats_single_bid_pct
             FROM institutions i
             LEFT JOIN institution_types it ON i.institution_type_id = it.id
             LEFT JOIN size_tiers st ON i.size_tier = st.code
@@ -200,6 +201,7 @@ class InstitutionService(BaseService):
             "stats_total_contracts", "stats_total_value_mxn", "stats_avg_risk_score",
             "stats_high_risk_count", "stats_high_risk_pct",
             "stats_direct_award_count", "stats_direct_award_pct",
+            "stats_single_bid_pct",
         ]
         has_stats = any(result.get(k) is not None for k in stats_keys)
         if has_stats:
@@ -211,6 +213,7 @@ class InstitutionService(BaseService):
                 "high_risk_pct": result.pop("stats_high_risk_pct"),
                 "direct_award_count": result.pop("stats_direct_award_count"),
                 "direct_award_pct": result.pop("stats_direct_award_pct"),
+                "single_bid_pct": result.pop("stats_single_bid_pct"),
             }
         else:
             for k in stats_keys:
