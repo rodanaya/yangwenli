@@ -22,7 +22,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
-import { SECTOR_COLORS, RISK_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
+import { formatVendorName } from '@/lib/vendor/formatName'
+import { SECTOR_COLORS, RISK_COLORS, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { type ConstellationMode } from '@/components/charts/ConcentrationConstellation'
@@ -100,6 +101,59 @@ export default function Executive() {
   }, [dashboard])
 
   const handlePrint = () => window.print()
+
+  // ─── § · ADÓNDE IR — coda exit-ramp chips, computed from ALREADY-FETCHED
+  //     bundle data only (no new API calls). The charter requires ≥2 navigable
+  //     EntityIdentityChips drawn from the cross-link graph. We resolve:
+  //       · top critical sector (executiveSummary.sectors, by high+ share)
+  //       · top exposed vendor (executiveSummary.top_vendors, by indicador)
+  //       · a second vendor from the live critical wire (recentCritical)
+  //     Each chip carries a real navigable id, so every coda link routes to a
+  //     live dossier. Case chips are intentionally omitted: the on-page case
+  //     payload (ground_truth.case_details) has no slug/id to route on. ───
+  const codaChips = useMemo(() => {
+    // Top critical sector — highest high+critical share, mapped code → numeric
+    // dossier id via the canonical SECTORS table.
+    const sectorsList = executiveSummary?.sectors ?? []
+    const topSector = sectorsList
+      .filter((s) => s.code && s.code !== 'otros')
+      .slice()
+      .sort((a, b) => (b.high_plus_pct ?? 0) - (a.high_plus_pct ?? 0))[0]
+    const topSectorId = topSector
+      ? SECTORS.find((s) => s.code === topSector.code)?.id ?? null
+      : null
+
+    // Top exposed vendor by indicador de riesgo (avg_risk).
+    const vendorsList = executiveSummary?.top_vendors ?? []
+    const topVendor = vendorsList
+      .slice()
+      .sort((a, b) => (b.avg_risk ?? 0) - (a.avg_risk ?? 0))[0]
+
+    // Second vendor from the live critical wire — first entry with a vendor_id
+    // distinct from topVendor so the two chips never collide.
+    const wireVendor = recentCritical.find(
+      (c) => typeof c.vendor_id === 'number' && c.vendor_id !== topVendor?.id,
+    )
+
+    return {
+      sector: topSector && topSectorId
+        ? { id: topSectorId, code: topSector.code, name: topSector.name }
+        : null,
+      vendor: topVendor && typeof topVendor.id === 'number'
+        ? { id: topVendor.id, name: topVendor.name, riskScore: topVendor.avg_risk }
+        : null,
+      wireVendor: wireVendor
+        ? { id: wireVendor.vendor_id as number, name: wireVendor.vendor_name ?? '', riskScore: wireVendor.risk_score ?? undefined }
+        : null,
+    }
+  }, [executiveSummary, recentCritical])
+
+  // Coda renders only when at least two navigable chips resolved — the charter
+  // floor. Below that, the existing CTA + credibility strip remain the exit.
+  const codaChipCount =
+    (codaChips.sector ? 1 : 0) +
+    (codaChips.vendor ? 1 : 0) +
+    (codaChips.wireVendor ? 1 : 0)
 
   // § 1 The Observatory — faithful-scatter cluster data (live per-cluster
   // aggregates with static-meta fallback), shared with /atlas via the hook so
@@ -1769,7 +1823,7 @@ export default function Executive() {
                       <div className="truncate" onClick={(e) => e.stopPropagation()}>
                         {c.vendor_id
                           ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} riskScore={c.risk_score ?? undefined} size="sm" />
-                          : <span className="text-sm font-semibold text-text-primary">{c.vendor_name || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}</span>
+                          : <span className="text-sm font-semibold text-text-primary">{formatVendorName(c.vendor_name) || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}</span>
                         }
                       </div>
                       <p className="text-xs text-text-muted truncate mt-0.5">
@@ -1839,6 +1893,72 @@ export default function Executive() {
             </div>
           </div>
         </section>
+
+        {/* ─── § · ADÓNDE IR — coda exit ramp (charter A∞/C3) ───
+            One amber-mono investigate CTA into the live ARIA queue + the
+            related-entity chips resolved above. Rendered only when ≥2 chips
+            carry navigable ids (the charter coda floor). All entity links
+            route exclusively through EntityIdentityChip. */}
+        {codaChipCount >= 2 && (
+          <section className="mb-8 print-hide" aria-labelledby="coda-title">
+            <div
+              id="coda-title"
+              className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2"
+            >
+              {lang === 'en' ? '§ · WHERE TO GO NEXT' : '§ · ADÓNDE IR'}
+            </div>
+            <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[64ch] text-pretty">
+              {lang === 'en'
+                ? 'The patterns above resolve to specific entities. Open the investigation queue, or pull the most exposed sector and vendors on record — each opens a live dossier with the evidence behind its risk indicator.'
+                : 'Los patrones de arriba se resuelven en entidades concretas. Abre la cola de investigación, o entra al sector y los proveedores más expuestos del registro — cada uno abre un dossier en vivo con la evidencia detrás de su indicador de riesgo.'}
+            </p>
+
+            {/* Investigate CTA — amber, mono, uppercase (charter coda rule) */}
+            <Link
+              to="/aria"
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] font-bold text-accent hover:text-accent transition-colors mb-4"
+              aria-label={lang === 'en'
+                ? 'Open the ARIA investigation queue — 299 Tier-1 vendors'
+                : 'Abrir la cola de investigación ARIA — 299 proveedores Nivel 1'}
+            >
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+              {lang === 'en'
+                ? 'Open the ARIA investigation queue →'
+                : 'Abrir la cola de investigación ARIA →'}
+            </Link>
+
+            {/* Related-entity chips — all on-page data, all navigable */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+              {codaChips.sector && (
+                <EntityIdentityChip
+                  type="sector"
+                  id={codaChips.sector.id}
+                  name={codaChips.sector.name}
+                  sectorCode={codaChips.sector.code}
+                  size="md"
+                />
+              )}
+              {codaChips.vendor && (
+                <EntityIdentityChip
+                  type="vendor"
+                  id={codaChips.vendor.id}
+                  name={codaChips.vendor.name}
+                  riskScore={codaChips.vendor.riskScore}
+                  size="md"
+                />
+              )}
+              {codaChips.wireVendor && (
+                <EntityIdentityChip
+                  type="vendor"
+                  id={codaChips.wireVendor.id}
+                  name={codaChips.wireVendor.name}
+                  riskScore={codaChips.wireVendor.riskScore}
+                  size="md"
+                />
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ─── Credibility strip ─── */}
         <footer className="pt-8 border-t border-border">
