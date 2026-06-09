@@ -27,8 +27,12 @@ import type { SectorStatistics } from '@/api/types'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
-import { ExposureLedger, CumulativeRibbon } from '@/components/sectors/ExposureLedger'
+import { ExposureLedger } from '@/components/sectors/ExposureLedger'
 import type { LedgerRow } from '@/components/sectors/ExposureLedger'
+import { ConfoundPlate } from '@/components/sectors/ConfoundPlate'
+import { SelfCaptureBand } from '@/components/sectors/SelfCaptureBand'
+import { ownSpendShare } from '@/components/sectors/confoundScales'
+import type { PlateLens } from '@/components/sectors/confoundScales'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -235,6 +239,16 @@ export function Sectors() {
     setSearchParams(next, { replace: true })
   }
 
+  // Confounded Ledger sort lens — URL-synced (?lens=intensity); shared by the
+  // §B plate's FLIP reorder and the §D register's sortable headers.
+  const lens: PlateLens = searchParams.get('lens') === 'intensity' ? 'intensity' : 'var'
+  const setLens = (l: PlateLens) => {
+    const next = new URLSearchParams(searchParams)
+    if (l === 'var') next.delete('lens')
+    else next.set('lens', l)
+    setSearchParams(next, { replace: true })
+  }
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['sectors', 'list'],
     queryFn: () => sectorApi.getAll(),
@@ -362,7 +376,15 @@ export function Sectors() {
     const sumContracts = sectors.reduce((acc, s) => acc + s.total_contracts, 0)
     const countPct = sumContracts > 0 ? ((sumHighCritCount / sumContracts) * 100).toFixed(1) : '0'
 
-    return { top3, sumVar, spendPct, varPct, valuePct, countPct }
+    // Intensity leader — the §A headline subject (computed argmax of
+    // own-spend share; today Hacienda, but never hardcoded).
+    const intLeader = ledgerRows.reduce(
+      (best, r) => (ownSpendShare(r) > ownSpendShare(best) ? r : best),
+      ledgerRows[0],
+    )
+    const intLeaderPct = (ownSpendShare(intLeader) * 100).toFixed(0)
+
+    return { top3, sumVar, spendPct, varPct, valuePct, countPct, intLeader, intLeaderPct }
   }, [ledgerRows, sectors])
 
   // Grand total model-flagged exposure for masthead anchor
@@ -986,106 +1008,132 @@ export function Sectors() {
               </>
             )}
 
-            {/* ── MAIN LEDGER CONTENT ──────────────────────────────────── */}
+            {/* ── MAIN LEDGER CONTENT — the Confounded Ledger ──────────── */}
             {!isLoading && !error && ledgerRows.length > 0 && ledeStats && (
               <>
-                {/* §1 — LEDE STRIP ──────────────────────────────────────── */}
+                {/* §A — THE CONFOUND LEDE (full-width; the ribbon died) ──── */}
                 <section
-                  aria-label={lang === 'es' ? 'Hallazgo de concentración' : 'Concentration finding'}
+                  aria-label={lang === 'es' ? 'Hallazgo: el confundido' : 'Finding: the confound'}
                   className="mb-6 pb-6 border-b border-border"
                 >
-                  <div className="grid lg:grid-cols-[3fr_2fr] gap-6 items-start">
-                    {/* Left: kicker + H2 lede + deck */}
-                    <div>
-                      <p
-                        className="mb-2"
-                        style={{
-                          fontFamily: '"IBM Plex Mono", monospace',
-                          fontSize: '10px',
-                          letterSpacing: '0.18em',
-                          textTransform: 'uppercase',
-                          color: 'var(--color-text-muted)',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {lang === 'es' ? 'HALLAZGO · CONCENTRACIÓN' : 'FINDING · CONCENTRATION'}
-                      </p>
+                  <p
+                    className="mb-2"
+                    style={{
+                      fontFamily: '"IBM Plex Mono", monospace',
+                      fontSize: '10px',
+                      letterSpacing: '0.18em',
+                      textTransform: 'uppercase',
+                      color: 'var(--color-text-muted)',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {lang === 'es' ? 'HALLAZGO · EL CONFUNDIDO' : 'FINDING · THE CONFOUND'}
+                  </p>
 
-                      <h2
-                        className="mb-3 text-text-primary"
-                        style={{
-                          fontFamily: 'var(--font-family-serif, "EB Garamond", Georgia, serif)',
-                          fontWeight: 700,
-                          fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-                          lineHeight: 1.15,
-                          letterSpacing: '-0.015em',
-                        }}
-                      >
-                        {lang === 'es' ? (
-                          <>
-                            <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.top3[0]?.sectorCode] ?? 'var(--color-text-primary)' }}>
-                              {t(ledeStats.top3[0]?.sectorCode ?? 'salud') as string}
-                            </span>
-                            {', '}
-                            <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.top3[1]?.sectorCode] ?? 'var(--color-text-primary)' }}>
-                              {t(ledeStats.top3[1]?.sectorCode ?? 'energia') as string}
-                            </span>
-                            {' e '}
-                            <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.top3[2]?.sectorCode] ?? 'var(--color-text-primary)' }}>
-                              {t(ledeStats.top3[2]?.sectorCode ?? 'infraestructura') as string}
-                            </span>
-                            {' concentran el '}
-                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{ledeStats.spendPct}%</span>
-                            {' del gasto y el '}
-                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{ledeStats.varPct}%</span>
-                            {' de la exposición señalada por el modelo.'}
-                          </>
-                        ) : (
-                          <>
-                            <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.top3[0]?.sectorCode] ?? 'var(--color-text-primary)' }}>
-                              {t(ledeStats.top3[0]?.sectorCode ?? 'salud') as string}
-                            </span>
-                            {', '}
-                            <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.top3[1]?.sectorCode] ?? 'var(--color-text-primary)' }}>
-                              {t(ledeStats.top3[1]?.sectorCode ?? 'energia') as string}
-                            </span>
-                            {' and '}
-                            <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.top3[2]?.sectorCode] ?? 'var(--color-text-primary)' }}>
-                              {t(ledeStats.top3[2]?.sectorCode ?? 'infraestructura') as string}
-                            </span>
-                            {' hold '}
-                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{ledeStats.spendPct}%</span>
-                            {' of spend and '}
-                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{ledeStats.varPct}%</span>
-                            {' of model-flagged exposure.'}
-                          </>
-                        )}
-                      </h2>
+                  <h2
+                    className="mb-3 text-text-primary"
+                    style={{
+                      fontFamily: 'var(--font-family-serif, "EB Garamond", Georgia, serif)',
+                      fontWeight: 700,
+                      fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                      lineHeight: 1.15,
+                      letterSpacing: '-0.015em',
+                      maxWidth: '48ch',
+                    }}
+                  >
+                    {lang === 'es' ? (
+                      <>
+                        {'El tamaño manda el orden. La intensidad lo desmiente: '}
+                        <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.intLeader.sectorCode] ?? 'var(--color-text-primary)' }}>
+                          {ledeStats.intLeader.name}
+                        </span>
+                        {' señala el '}
+                        <span style={{ color: 'var(--color-accent)', fontVariantNumeric: 'tabular-nums' }}>
+                          {ledeStats.intLeaderPct}%
+                        </span>
+                        {' de su propio gasto — la marca más alta del registro.'}
+                      </>
+                    ) : (
+                      <>
+                        {'Size sets the ranking. Intensity overturns it: '}
+                        <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.intLeader.sectorCode] ?? 'var(--color-text-primary)' }}>
+                          {ledeStats.intLeader.name}
+                        </span>
+                        {' has '}
+                        <span style={{ color: 'var(--color-accent)', fontVariantNumeric: 'tabular-nums' }}>
+                          {ledeStats.intLeaderPct}%
+                        </span>
+                        {' of its own spend model-flagged — the highest mark in the registry.'}
+                      </>
+                    )}
+                  </h2>
 
-                      {/* Integrity stat / deck */}
-                      <p
-                        className="max-w-prose"
-                        style={{
-                          fontSize: '0.875rem',
-                          lineHeight: 1.6,
-                          color: 'var(--color-text-secondary)',
-                        }}
-                      >
-                        {lang === 'es'
-                          ? `${ledeStats.valuePct}% del valor · ${ledeStats.countPct}% de los contratos — el modelo pondera anomalías de monto alto. Indicador de riesgo · no estimación de fraude.`
-                          : `${ledeStats.valuePct}% of value · ${ledeStats.countPct}% of contracts — the model weights high-value anomalies. Risk indicator · not a fraud estimate.`}
-                      </p>
-                    </div>
+                  {/* "Two questions" deck — the reading instruction for the plate */}
+                  <p
+                    style={{
+                      fontFamily: '"EB Garamond", Georgia, serif',
+                      fontSize: '15px',
+                      lineHeight: 1.55,
+                      color: 'var(--color-text-secondary)',
+                      maxWidth: '68ch',
+                    }}
+                  >
+                    {lang === 'es' ? (
+                      <>
+                        {'Dos preguntas, dos escalas. '}
+                        <strong className="text-text-primary">¿Cuánto dinero?</strong>
+                        {' ordena por VaR absoluto. '}
+                        <strong className="text-text-primary">¿Qué tan saturado?</strong>
+                        {' ordena por exposición sobre el gasto propio del sector. La lámina dibuja ambas en una sola línea.'}
+                      </>
+                    ) : (
+                      <>
+                        {'Two questions, two scales. '}
+                        <strong className="text-text-primary">How much money?</strong>
+                        {' ranks by absolute VaR. '}
+                        <strong className="text-text-primary">How saturated?</strong>
+                        {" ranks by exposure over the sector's own spend. The plate draws both on one line."}
+                      </>
+                    )}
+                  </p>
 
-                    {/* Right: CumulativeRibbon — proof-of-lede (centered vs the taller lede) */}
-                    <div aria-hidden="true" className="lg:self-center">
-                      <CumulativeRibbon rows={ledgerRows} lang={lang} />
-                    </div>
-                  </div>
+                  {/* The concentration finding survives as one mono line */}
+                  <p
+                    className="mt-2.5 font-mono tabular-nums"
+                    style={{ fontSize: '10px', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+                  >
+                    {lang === 'es'
+                      ? `top 3 = ${ledeStats.varPct}% de la exposición señalada · exposición total = ${ledeStats.valuePct}% del valor · ${ledeStats.countPct}% de los contratos · indicador de riesgo, no estimación de fraude`
+                      : `top 3 = ${ledeStats.varPct}% of model-flagged exposure · total exposure = ${ledeStats.valuePct}% of value · ${ledeStats.countPct}% of contracts · risk indicator, not a fraud estimate`}
+                  </p>
                 </section>
 
-                {/* §2 + §3 + §4 — ExposureLedger (table + marginalia + sum rule) */}
-                <ExposureLedger rows={ledgerRows} lang={lang} />
+                {/* §B — THE CONFOUND PLATE (centrepiece) ─────────────────── */}
+                <section
+                  aria-label={lang === 'es' ? 'La lámina del confundido' : 'The confound plate'}
+                  className="mb-6"
+                >
+                  <ConfoundPlate rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
+                </section>
+
+                {/* §C — SELF-CAPTURE HONOR ROLL ──────────────────────────── */}
+                <SelfCaptureBand rows={ledgerRows} lang={lang} />
+
+                {/* §D — EL REGISTRO AUDITADO ─────────────────────────────── */}
+                <p
+                  className="mb-2"
+                  style={{
+                    fontFamily: '"IBM Plex Mono", monospace',
+                    fontSize: 10,
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-text-muted)',
+                    fontWeight: 700,
+                  }}
+                >
+                  {lang === 'es' ? '§ El registro auditado' : '§ The audited register'}
+                </p>
+                <ExposureLedger rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
               </>
             )}
           </>

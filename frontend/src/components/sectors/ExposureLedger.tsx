@@ -1,36 +1,41 @@
 /**
- * ExposureLedger — M3v2 "El Libro Mayor de la Exposición / The Exposure Ledger".
+ * ExposureLedger — §D "El Registro Auditado / The Audited Register" of the
+ * /sectors WHO Confounded-Ledger redesign (DESIGNUS panel, winner [plate] +
+ * judge amendments; supersedes M3v2's single-table layout).
  *
- * Owner: FALCO (StarFox M3v2). Implements §1 (CumulativeRibbon) and §2–§4
- * (THE LEDGER · marginalia rail · ∑ sum rule) of `.claude/designs/M3v2-spec.md`.
+ * The page IS still a ranked exposure ledger — but the argument now lives in
+ * §B (ConfoundPlate, log-VaR × own-spend dumbbell registry) and this file is
+ * the auditable record: one clean ~36px line per sector, a single
+ * process-integrity FT-bullet cell (DA% vs the OECD ceiling — the overshoot
+ * silhouette is the geometry), sortable VaR/Intensity headers sharing the
+ * plate's ?lens state, and the praised /categories-style hover dossier
+ * (SectorDossierCard) with lazy top-contract + GT-linkage fetches.
  *
- * The page IS a ranked exposure ledger — an auditor's working paper. Every
- * per-sector metric lives in exactly one place on one table sorted by VaR
- * (model-flagged MXN through high+critical contracts). The ∑ sum rule is the
- * ONLY home of platform totals.
+ * What died here (Confounded Ledger §9): CumulativeRibbon (redundant proof
+ * bar), VaRBar (linear sliver-collapse), the line-2 five-atom mono run-on,
+ * the sub-header legend strip, and the Hacienda footnote (promoted to §A/§B).
  *
- * Contract (FROZEN — PEPPY imports these; do not deviate):
- *   - LedgerRow / CumulativeRibbon / ExposureLedger exported below.
- *   - `rows` arrive sorted varMxn-descending; both components tolerate any
- *     row count > 0.
- *
- * Design rules enforced:
- *   - Hex colours ONLY via style={{}} (className hex is silently stripped — FM-7).
- *   - Big numbers: EB Garamond italic 800 tabular.
+ * Contract notes:
+ *   - `LedgerRow` is FROZEN — Sectors.tsx builds it; do not change its shape.
+ *   - Rows arrive sorted varMxn-descending; display order derives from `lens`.
+ *   - Hex colours ONLY via style={{}} (className hex is silently stripped).
  *   - VaR is always "exposición señalada / model-flagged exposure" — never
- *     "probability of corruption".
- *   - No green anywhere for low/clean (Bible §3.10).
- *   - Currency via formatCompactMXN (bilingual; handles billones/MDP in ES).
+ *     "probability of corruption". No green anywhere (Bible §3.10).
+ *   - Currency via formatCompactMXN (bilingual; billones/MDP in ES).
  */
+import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
-import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS, OECD_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
+import { Link, useNavigate } from 'react-router-dom'
+import { SECTOR_COLORS, RISK_COLORS, OECD_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { EditorialSparkline } from '@/components/charts/editorial'
 import type { SectorTrajectoryPoint } from '@/api/types'
+import { SectorDossierCard } from './SectorHoverDossier'
+import { orderForLens } from './confoundScales'
+import type { PlateLens } from './confoundScales'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Frozen contract — PEPPY (Sectors.tsx) imports these.
+// Frozen contract — Sectors.tsx imports these.
 // ─────────────────────────────────────────────────────────────────────────────
 export interface LedgerRow {
   sectorId: number
@@ -55,22 +60,21 @@ const DAGGER_SECTORS = new Set(['salud', 'agricultura', 'trabajo'])
 
 // OECD direct-award ceiling, as a percentage (0–100) for this surface's copy.
 // Single source: constants.ts OECD_DIRECT_AWARD_LIMIT (anti-pattern A7 — never
-// retype the limit per surface; the legacy slope chart's hardcoded 25% is gone).
+// retype the limit per surface).
 const OECD_DA_CEILING = OECD_DIRECT_AWARD_LIMIT * 100
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Tiny local helpers
+// Tiny local helpers (intensityColor / compactCount shared with §B/§C/dossier)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Compact integer count: 1.08M · 65.7k · 942. Local per spec (not currency). */
-function compactCount(n: number): string {
+export function compactCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
   return `${Math.round(n)}`
 }
 
 const sectorFill = (code: string): string => SECTOR_COLORS[code] ?? SECTOR_COLORS.otros
-const sectorTextFill = (code: string): string => SECTOR_TEXT_COLORS[code] ?? SECTOR_TEXT_COLORS.otros
 
 const sum = (rows: LedgerRow[], pick: (r: LedgerRow) => number): number =>
   rows.reduce((acc, r) => acc + pick(r), 0)
@@ -84,7 +88,7 @@ const KICKER_STYLE: CSSProperties = {
   color: 'var(--color-text-muted)',
 }
 
-// Big-number typography — serif italic 800 tabular (FM-7 / spec §1).
+// Big-number typography — serif italic 800 tabular.
 const BIGNUM_STYLE: CSSProperties = {
   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
   fontStyle: 'italic',
@@ -118,199 +122,20 @@ function trajectoryDirection(traj: SectorTrajectoryPoint[]): { glyph: string; ri
 }
 
 // Intensity dot colour — RISK_COLORS by level, but never green for low (Bible §3.10).
-function intensityColor(score: number): string {
+export function intensityColor(score: number): string {
   const level = getRiskLevelFromScore(score)
   return level === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[level]
 }
 
-// Intensity level word, localized + compact.
-function intensityWord(score: number, lang: 'en' | 'es'): string {
-  const level = getRiskLevelFromScore(score)
-  if (lang === 'es') return { critical: 'crít', high: 'alto', medium: 'med', low: 'bajo' }[level]
-  return level
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// §1 — CumulativeRibbon (proof-of-lede)
+// Marginalia note strings — caveat register (Hacienda note promoted to §A/§B).
 // ─────────────────────────────────────────────────────────────────────────────
-export function CumulativeRibbon({
-  rows,
-  lang,
-}: {
-  rows: LedgerRow[]
-  lang: 'en' | 'es'
-}) {
-  const totalVaR = sum(rows, (r) => r.varMxn) || 1
+type MarginNote = { id: string; text: string }
 
-  // Top-3 share, computed (never hardcoded).
-  const top3Share = rows.slice(0, 3).reduce((acc, r) => acc + r.varMxn, 0) / totalVaR
-  const top3Pct = (top3Share * 100).toFixed(1)
-
-  // Labels: top-3 sector names, then a single "resto / rest" tail label.
-  const topThree = rows.slice(0, 3)
-
-  return (
-    <figure className="m-0">
-      <figcaption
-        className="font-mono flex items-baseline justify-between mb-1.5"
-        style={KICKER_STYLE}
-      >
-        <span>{lang === 'es' ? 'Exposición acumulada' : 'Cumulative exposure'}</span>
-        <span aria-hidden="true" style={{ letterSpacing: '0.1em' }}>
-          50% · 75%
-        </span>
-      </figcaption>
-
-      {/* The ribbon: 12 inline divs, widths ∝ VaR share, sector fills. */}
-      <div
-        className="relative flex w-full overflow-hidden rounded-[1px]"
-        style={{ height: 40, border: '1px solid var(--color-border)' }}
-        role="img"
-        aria-label={
-          lang === 'es'
-            ? `Tres sectores concentran el ${top3Pct}% de la exposición señalada.`
-            : `Three sectors hold ${top3Pct}% of model-flagged exposure.`
-        }
-      >
-        {rows.map((r) => {
-          const pct = (r.varMxn / totalVaR) * 100
-          return (
-            <div
-              key={r.sectorId}
-              style={{
-                width: `${pct}%`,
-                minWidth: pct > 0 ? 1 : 0,
-                background: sectorFill(r.sectorCode),
-              }}
-              title={`${r.name} · ${pct.toFixed(1)}%`}
-            />
-          )
-        })}
-
-        {/* Cumulative tick hairlines at 50% / 75%. */}
-        <span
-          aria-hidden="true"
-          className="absolute top-0 bottom-0"
-          style={{ left: '50%', width: 1, background: 'var(--color-text-primary)', opacity: 0.45 }}
-        />
-        <span
-          aria-hidden="true"
-          className="absolute top-0 bottom-0"
-          style={{ left: '75%', width: 1, background: 'var(--color-text-primary)', opacity: 0.3 }}
-        />
-      </div>
-
-      {/* Below: mono labels for top 3 + resto / rest. */}
-      <div className="mt-1.5 flex items-baseline justify-between gap-2">
-        <div className="flex items-baseline gap-3 min-w-0 flex-wrap">
-          {topThree.map((r) => (
-            <span
-              key={r.sectorId}
-              className="font-mono tabular-nums whitespace-nowrap"
-              style={{
-                fontSize: 9.5,
-                letterSpacing: '0.04em',
-                color: sectorTextFill(r.sectorCode),
-                fontWeight: 600,
-              }}
-            >
-              {r.name}
-            </span>
-          ))}
-          <span
-            className="font-mono whitespace-nowrap"
-            style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}
-          >
-            {lang === 'es' ? 'resto' : 'rest'}
-          </span>
-        </div>
-      </div>
-
-      {/* Annotation line — computed top-3 share. */}
-      <p
-        className="mt-1 font-mono text-center"
-        style={{ fontSize: 9.5, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}
-      >
-        {lang === 'es' ? `◄ top 3 = ${top3Pct}% ►` : `◄ top 3 = ${top3Pct}% ►`}
-      </p>
-    </figure>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// VaRBar — linear scale, two-tone in ONE bar (critical + high).
-// ─────────────────────────────────────────────────────────────────────────────
-function VaRBar({ row, maxVar }: { row: LedgerRow; maxVar: number }) {
-  // Filled width = varMxn / maxVar (linear; leader = 100%). Min 3px floor.
-  const fillFrac = maxVar > 0 ? Math.max(0, Math.min(1, row.varMxn / maxVar)) : 0
-  // Critical share of the filled portion (the leading saturated segment).
-  const critFrac =
-    row.varMxn > 0 ? Math.max(0, Math.min(1, row.criticalMxn / row.varMxn)) : 0
-
-  return (
-    <div
-      className="relative h-3 flex-1 overflow-hidden rounded-[1px]"
-      style={{ background: 'var(--color-background-elevated)', minWidth: 24 }}
-      aria-hidden="true"
-    >
-      {/* Filled track — min 3px so even `otros` reads as a mark, not nothing. */}
-      <div
-        className="absolute inset-y-0 left-0 flex overflow-hidden rounded-[1px]"
-        style={{ width: `max(3px, ${(fillFrac * 100).toFixed(3)}%)` }}
-      >
-        {/* Critical (saturated) leading segment. */}
-        <div
-          style={{
-            width: `${(critFrac * 100).toFixed(3)}%`,
-            background: RISK_COLORS.critical,
-          }}
-        />
-        {/* High (lighter) tail — same bar, no gap. */}
-        <div
-          className="flex-1"
-          style={{ background: RISK_COLORS.high, opacity: 0.65 }}
-        />
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Marginalia note strings — defined ONCE; rendered in the rail (≥lg) AND the
-// numbered register (<lg). No duplication of copy.
-// ─────────────────────────────────────────────────────────────────────────────
-type MarginNote = { id: string; anchorCode?: string; text: string }
-
-function buildMarginNotes(rows: LedgerRow[], lang: 'en' | 'es'): MarginNote[] {
-  const hacienda = rows.find((r) => r.sectorCode === 'hacienda')
-  const salud = rows.find((r) => r.sectorCode === 'salud')
-
-  // (1) Hacienda intensity — own-spend share, computed (don't hardcode).
-  const hacIntensity =
-    hacienda && hacienda.totalMxn > 0 ? (hacienda.varMxn / hacienda.totalMxn) * 100 : null
-  // Volume contrast vs Salud (× fewer CONTRACTS — "volumen" is contract volume,
-  // not VaR value; salud 1.08M vs hacienda 134k ≈ 8×).
-  const volRatio =
-    hacienda && salud && hacienda.contracts > 0
-      ? Math.round(salud.contracts / hacienda.contracts)
-      : null
-
-  const hacIntensityStr =
-    hacIntensity != null ? hacIntensity.toFixed(1) : '75.4'
-  const volRatioStr = volRatio != null ? `${volRatio}×` : '8×'
-
+function buildMarginNotes(lang: 'en' | 'es'): MarginNote[] {
   return [
     {
-      id: 'hacienda',
-      anchorCode: 'hacienda',
-      text:
-        lang === 'es'
-          ? `${hacIntensityStr}% de su propio gasto señalado — la mayor intensidad del registro, con ${volRatioStr} menos volumen que Salud.`
-          : `${hacIntensityStr}% of its own spend is model-flagged — the highest intensity in the ledger, on ${volRatioStr} less volume than Health.`,
-    },
-    {
       id: 'agricultura',
-      anchorCode: 'agricultura',
       text:
         lang === 'es'
           ? '† Agricultura: Segalmex domina el conjunto de entrenamiento (6,326 contratos GT).'
@@ -318,7 +143,6 @@ function buildMarginNotes(rows: LedgerRow[], lang: 'en' | 'es'): MarginNote[] {
     },
     {
       id: 'salud-trabajo',
-      anchorCode: 'salud',
       text:
         lang === 'es'
           ? '† Salud: riesgo ponderado por valor · † Trabajo: N pequeño.'
@@ -328,54 +152,95 @@ function buildMarginNotes(rows: LedgerRow[], lang: 'en' | 'es'): MarginNote[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// A single ledger row.
+// DABullet — single FT-bullet process-integrity cell: DA% fill vs the OECD
+// ceiling tick; overshoot tinted RISK_COLORS.high. Linear 0–100%, honest.
+// ─────────────────────────────────────────────────────────────────────────────
+function DABullet({ daPct }: { daPct: number }) {
+  const fill = Math.max(0, Math.min(100, daPct))
+  const within = Math.min(fill, OECD_DA_CEILING)
+  const over = Math.max(0, fill - OECD_DA_CEILING)
+  return (
+    <span
+      className="relative block h-[7px] flex-1 rounded-[1px] overflow-hidden"
+      style={{ background: 'var(--color-background-elevated)', minWidth: 40 }}
+      aria-hidden="true"
+    >
+      <span
+        className="absolute inset-y-0 left-0"
+        style={{ width: `${within}%`, background: 'var(--color-text-muted)', opacity: 0.5 }}
+      />
+      {over > 0 && (
+        <span
+          className="absolute inset-y-0"
+          style={{ left: `${OECD_DA_CEILING}%`, width: `${over}%`, background: RISK_COLORS.high, opacity: 0.9 }}
+        />
+      )}
+      <span
+        className="absolute inset-y-0"
+        style={{ left: `${OECD_DA_CEILING}%`, width: 1.5, background: 'var(--color-text-primary)', opacity: 0.75 }}
+      />
+    </span>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A single register row — one clean line; the detail lives in the dossier.
 // ─────────────────────────────────────────────────────────────────────────────
 function LedgerRowItem({
   row,
-  rank,
-  maxVar,
+  displayRank,
   lang,
+  expanded,
+  onToggleExpand,
+  rankVar,
+  totalRows,
 }: {
   row: LedgerRow
-  rank: number
-  maxVar: number
+  displayRank: number
   lang: 'en' | 'es'
+  expanded: boolean
+  onToggleExpand: () => void
+  rankVar: number
+  totalRows: number
 }) {
+  const navigate = useNavigate()
   const fill = sectorFill(row.sectorCode)
-  const sbHot = row.sbPct > 25
   const hasDagger = DAGGER_SECTORS.has(row.sectorCode)
   const intensity = row.avgRiskScore ?? 0
-  const critPct = row.contracts > 0 ? (row.criticalCount / row.contracts) * 100 : 0
   const dir = trajectoryDirection(row.trajectory)
   const hasTraj = Boolean(row.trajectory && row.trajectory.length > 1)
-  const cap = row.topInstitution
-  const capName = cap ? (cap.siglas || cap.name) : null
 
   const ariaLabel =
     lang === 'es'
-      ? `${row.name} — ${formatCompactMXN(row.varMxn)} exposición señalada, intensidad ${intensity.toFixed(2)}`
-      : `${row.name} — ${formatCompactMXN(row.varMxn)} model-flagged exposure, intensity ${intensity.toFixed(2)}`
-
-  const counts = `${compactCount(row.contracts)} · ${compactCount(row.vendors)}`
+      ? `${row.name} — ${formatCompactMXN(row.varMxn)} exposición señalada, intensidad ${intensity.toFixed(2)}, adjudicación directa ${row.daPct.toFixed(0)}%`
+      : `${row.name} — ${formatCompactMXN(row.varMxn)} model-flagged exposure, intensity ${intensity.toFixed(2)}, direct award ${row.daPct.toFixed(0)}%`
 
   return (
-    <Link
-      to={`/sectors/${row.sectorId}`}
-      role="listitem"
+    <div
+      role="button"
+      tabIndex={0}
+      data-wf-row={row.sectorId}
       aria-label={ariaLabel}
-      className="group block transition-colors hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      className="group cursor-pointer transition-colors hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
       style={{ borderLeft: `3px solid ${fill}` }}
+      onClick={() => navigate(`/sectors/${row.sectorId}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          navigate(`/sectors/${row.sectorId}`)
+        }
+      }}
     >
-      {/* Line 1 — primary scan: rank · name · size bar · VaR · intensity · trajectory */}
-      <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 pt-2.5 pb-1 lg:pt-2 lg:pb-0.5">
+      {/* The single register line */}
+      <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2">
         <span
           className="font-mono tabular-nums shrink-0 w-6 text-right"
           style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
         >
-          {String(rank).padStart(2, '0')}
+          {String(displayRank).padStart(2, '0')}
         </span>
 
-        <div className="shrink-0 w-28 sm:w-36 min-w-0 flex items-baseline gap-0.5">
+        <div className="flex-1 min-w-0 flex items-baseline gap-0.5">
           <span
             className="truncate group-hover:underline decoration-1 underline-offset-2"
             style={{ ...SERIF_NAME_STYLE, fontSize: 15, color: 'var(--color-text-primary)' }}
@@ -387,10 +252,13 @@ function LedgerRowItem({
           )}
         </div>
 
-        {/* Size bar (SIZE) */}
-        <div className="hidden sm:flex flex-1 min-w-0 items-center">
-          <VaRBar row={row} maxVar={maxVar} />
-        </div>
+        {/* Process-integrity bullet: DA% vs OECD ceiling */}
+        <span className="hidden sm:flex shrink-0 w-[120px] items-center gap-1.5">
+          <DABullet daPct={row.daPct} />
+          <span className="font-mono tabular-nums shrink-0 w-8 text-right" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+            {row.daPct.toFixed(0)}%
+          </span>
+        </span>
 
         {/* VaR readout */}
         <span
@@ -400,9 +268,9 @@ function LedgerRowItem({
           {formatCompactMXN(row.varMxn)}
         </span>
 
-        {/* Intensity dot + score (INTENSITY — size-independent) */}
+        {/* Intensity dot + score (size-independent) */}
         <span
-          className="hidden sm:flex shrink-0 w-[70px] items-center justify-end gap-1.5"
+          className="hidden sm:flex shrink-0 w-[64px] items-center justify-end gap-1.5"
           title={lang === 'es' ? `Intensidad de riesgo ${intensity.toFixed(2)}` : `Risk intensity ${intensity.toFixed(2)}`}
         >
           <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 9999, background: intensityColor(intensity), flexShrink: 0 }} />
@@ -411,7 +279,7 @@ function LedgerRowItem({
           </span>
         </span>
 
-        {/* Trajectory sparkline + direction glyph (TIME) */}
+        {/* Trajectory sparkline + direction glyph */}
         <span className="hidden lg:flex shrink-0 w-24 items-center gap-1">
           {hasTraj ? (
             <>
@@ -430,122 +298,189 @@ function LedgerRowItem({
             <span className="font-mono w-full text-center" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>—</span>
           )}
         </span>
+
+        {/* Mobile expand toggle (the dossier becomes an inline block on touch) */}
+        <button
+          type="button"
+          className="sm:hidden shrink-0 font-mono px-1.5 py-1"
+          style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
+          aria-expanded={expanded}
+          aria-label={
+            lang === 'es'
+              ? `${expanded ? 'Cerrar' : 'Abrir'} dossier de ${row.name}`
+              : `${expanded ? 'Close' : 'Open'} ${row.name} dossier`
+          }
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleExpand()
+          }}
+        >
+          {expanded ? '▴' : '▾'}
+        </button>
       </div>
 
-      {/* Line 2 — dossier sublabel (sm+): capture · composition · DA · 1P · counts */}
-      <div
-        className="hidden sm:flex items-center flex-wrap gap-x-2.5 gap-y-0.5 pl-10 sm:pl-12 pb-2 lg:pb-1.5 font-mono tabular-nums"
-        style={{ fontSize: 10, color: 'var(--color-text-muted)' }}
-      >
-        {capName && (
-          <span className="whitespace-nowrap" style={{ color: 'var(--color-text-secondary)' }}>
-            {capName}<span style={{ opacity: 0.5, margin: '0 3px' }}>·</span>{cap!.sharePct.toFixed(0)}% {lang === 'es' ? 'capt.' : 'capt.'}
-          </span>
-        )}
-        <span className="whitespace-nowrap inline-flex items-center gap-1">
-          <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 1, background: RISK_COLORS.critical, flexShrink: 0 }} />
-          {lang === 'es' ? 'crít' : 'crit'} {critPct.toFixed(1)}%
-        </span>
-        <span className="whitespace-nowrap">DA {row.daPct.toFixed(0)}%</span>
-        <span className="whitespace-nowrap" style={{ color: sbHot ? RISK_COLORS.critical : undefined }}>
-          1P {row.sbPct.toFixed(1)}%
-        </span>
-        <span className="whitespace-nowrap">{counts}</span>
-      </div>
-
-      {/* <sm: bar + key readouts on their own lines */}
-      <div className="sm:hidden px-2 pb-2.5 -mt-0.5 space-y-1.5">
-        <div className="flex items-center">
-          <VaRBar row={row} maxVar={maxVar} />
+      {/* Mobile inline dossier */}
+      {expanded && (
+        <div
+          className="sm:hidden px-3 pb-3"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="font-mono shrink-0" style={{ fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+              DA · {lang === 'es' ? 'OCDE' : 'OECD'} ≤{OECD_DA_CEILING.toFixed(0)}%
+            </span>
+            <DABullet daPct={row.daPct} />
+            <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+              {row.daPct.toFixed(0)}%
+            </span>
+          </div>
+          <SectorDossierCard row={row} rankVar={rankVar} totalRows={totalRows} lang={lang} active={expanded} />
+          <Link
+            to={`/sectors/${row.sectorId}`}
+            className="mt-2 inline-block font-mono underline decoration-1 underline-offset-2"
+            style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {lang === 'es' ? 'ver dossier del sector ↗' : 'view sector dossier ↗'}
+          </Link>
         </div>
-        <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
-          <span className="inline-flex items-center gap-1">
-            <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 9999, background: intensityColor(intensity), flexShrink: 0 }} />
-            {intensity.toFixed(2)} {intensityWord(intensity, lang)}
-          </span>
-          {capName && <span style={{ color: 'var(--color-text-secondary)' }}>{capName} {cap!.sharePct.toFixed(0)}%</span>}
-          <span style={{ color: RISK_COLORS.critical }}>{lang === 'es' ? 'crít' : 'crit'} {critPct.toFixed(1)}%</span>
-          <span>DA {row.daPct.toFixed(0)}%</span>
-          <span style={{ color: sbHot ? RISK_COLORS.critical : undefined }}>1P {row.sbPct.toFixed(1)}%</span>
-        </div>
-      </div>
-    </Link>
+      )}
+    </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// §2–§4 — ExposureLedger (table + marginalia rail + ∑ sum rule)
+// ExposureLedger — the audited register (+ floating dossier + ∑ sum rule)
 // ─────────────────────────────────────────────────────────────────────────────
 export function ExposureLedger({
   rows,
   lang,
+  lens = 'var',
+  onLensChange,
 }: {
   rows: LedgerRow[]
   lang: 'en' | 'es'
+  lens?: PlateLens
+  onLensChange?: (l: PlateLens) => void
 }) {
-  const maxVar = rows.length > 0 ? rows[0].varMxn : 1
+  const changeLens = onLensChange ?? (() => undefined)
   const totalVaR = sum(rows, (r) => r.varMxn)
   const totalSpend = sum(rows, (r) => r.totalMxn)
   const totalContracts = sum(rows, (r) => r.contracts)
 
   // VaR as share of all spend, for the ∑ rule.
   const varSharePct = totalSpend > 0 ? (totalVaR / totalSpend) * 100 : 0
-  // Count of sectors exceeding the OECD direct-award ceiling.
-  const daExceedCount = rows.filter((r) => r.daPct > OECD_DA_CEILING).length
 
-  const notes = buildMarginNotes(rows, lang)
+  const display = useMemo(() => orderForLens(rows, lens), [rows, lens])
+  const rankVarById = useMemo(() => new Map(rows.map((r, i) => [r.sectorId, i + 1])), [rows])
 
-  // Column-header labels (mono, micro, muted).
-  const exposureHeader =
-    lang === 'es' ? 'Exposición señalada · escala lineal' : 'Model-flagged exposure · linear scale'
-  const daPhrase =
-    lang === 'es'
-      ? `OCDE ≤${OECD_DA_CEILING} · las ${daExceedCount} exceden`
-      : `OECD ≤${OECD_DA_CEILING} · ${daExceedCount} exceed`
+  // Hover dossier state (desktop) + tap-to-expand state (mobile).
+  const [hover, setHover] = useState<{ id: number; top: number; bottom: number; containerH: number } | null>(null)
+  const [expandedId, setExpandedId] = useState<number | null>(null)
+
+  const hoverRow = hover ? rows.find((r) => r.sectorId === hover.id) ?? null : null
+  const dossierBelow = hover ? hover.top < hover.containerH / 2 : true
+
+  const notes = buildMarginNotes(lang)
+
+  const captureRect = (el: HTMLElement) => {
+    const parent = el.offsetParent as HTMLElement | null
+    return {
+      top: el.offsetTop,
+      bottom: el.offsetTop + el.offsetHeight,
+      containerH: parent?.offsetHeight ?? el.offsetTop + el.offsetHeight,
+    }
+  }
+
+  // Sortable header cell — shares the §B ?lens state (VaR / Intensity only).
+  const sortHeader = (key: PlateLens, label: string, widthClass: string) => (
+    <button
+      type="button"
+      onClick={() => changeLens(key)}
+      aria-pressed={lens === key}
+      className={`font-mono text-right ${widthClass} shrink-0 transition-opacity hover:opacity-70`}
+      style={{
+        ...KICKER_STYLE,
+        color: lens === key ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+        background: 'none',
+        border: 0,
+        padding: 0,
+        cursor: 'pointer',
+      }}
+    >
+      {label}
+      {lens === key ? ' ↓' : ''}
+    </button>
+  )
 
   return (
-    <section aria-label={lang === 'es' ? 'El Libro Mayor de la Exposición' : 'The Exposure Ledger'}>
+    <section aria-label={lang === 'es' ? 'El Registro Auditado' : 'The Audited Register'}>
       <div className="min-w-0">
         {/* Column header row (sm+). */}
         <div
           className="hidden sm:flex items-center gap-2 sm:gap-3 px-2 sm:px-3 pb-2 mb-1"
           style={{ borderBottom: '1px solid var(--color-border)' }}
-          aria-hidden="true"
         >
-          <span className="font-mono w-6 text-right" style={KICKER_STYLE}>#</span>
-          <span className="font-mono w-28 sm:w-36" style={KICKER_STYLE}>{lang === 'es' ? 'Sector' : 'Sector'}</span>
-          <span className="font-mono flex-1 min-w-0 truncate" style={KICKER_STYLE}>{exposureHeader}</span>
-          <span className="font-mono w-20 sm:w-24 text-right" style={KICKER_STYLE}>VaR</span>
-          <span className="font-mono w-[70px] text-right" style={KICKER_STYLE}>{lang === 'es' ? 'Intens.' : 'Intens.'}</span>
-          <span className="hidden lg:inline font-mono w-24 text-right truncate" style={KICKER_STYLE}>
+          <span className="font-mono w-6 text-right shrink-0" style={KICKER_STYLE} aria-hidden="true">#</span>
+          <span className="font-mono flex-1" style={KICKER_STYLE} aria-hidden="true">{lang === 'es' ? 'Sector' : 'Sector'}</span>
+          <span className="font-mono w-[120px] shrink-0" style={KICKER_STYLE} aria-hidden="true">
+            DA · {lang === 'es' ? 'OCDE' : 'OECD'} ≤{OECD_DA_CEILING.toFixed(0)}%
+          </span>
+          {sortHeader('var', 'VaR', 'w-20 sm:w-24')}
+          {sortHeader('intensity', 'Intens.', 'w-[64px]')}
+          <span className="hidden lg:inline font-mono w-24 text-right truncate shrink-0" style={KICKER_STYLE} aria-hidden="true">
             {lang === 'es' ? 'Trayectoria' : 'Trajectory'}
           </span>
         </div>
 
-        {/* Sub-header legend strip — explains the line-2 atoms + OECD count, once. */}
-        <div
-          className="hidden sm:flex items-center justify-between gap-3 px-3 pb-2 mb-1 font-mono"
-          style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
-          aria-hidden="true"
-        >
-          <span>
-            {lang === 'es'
-              ? 'fila 2 · capt. = institución dominante · crít = % de contratos · ↑ riesgo en aumento'
-              : 'row 2 · capt. = top institution · crit = % of contracts · ↑ risk rising'}
-          </span>
-          <span>{daPhrase}</span>
-        </div>
-
-        {/* Rows */}
-        <div role="list">
-          {rows.map((r, i) => (
-            <div key={r.sectorId} style={{ borderBottom: '1px solid var(--color-border)' }}>
-              <LedgerRowItem row={r} rank={i + 1} maxVar={maxVar} lang={lang} />
+        {/* Rows + floating dossier anchor */}
+        <div role="list" className="relative" onMouseLeave={() => setHover(null)}>
+          {display.map((r, i) => (
+            <div
+              key={r.sectorId}
+              style={{ borderBottom: '1px solid var(--color-border)' }}
+              onMouseEnter={(e) => setHover({ id: r.sectorId, ...captureRect(e.currentTarget) })}
+              onFocusCapture={(e) => setHover({ id: r.sectorId, ...captureRect(e.currentTarget as HTMLElement) })}
+              onBlurCapture={() => setHover(null)}
+            >
+              <LedgerRowItem
+                row={r}
+                displayRank={i + 1}
+                lang={lang}
+                expanded={expandedId === r.sectorId}
+                onToggleExpand={() => setExpandedId(expandedId === r.sectorId ? null : r.sectorId)}
+                rankVar={rankVarById.get(r.sectorId) ?? i + 1}
+                totalRows={rows.length}
+              />
             </div>
           ))}
+
+          {/* Floating dossier (desktop only) — edge-flips above/below mid-register */}
+          {hoverRow && hover && (
+            <div
+              className="hidden sm:block pointer-events-none absolute z-20"
+              style={{
+                right: 8,
+                ...(dossierBelow
+                  ? { top: hover.bottom + 6 }
+                  : { bottom: hover.containerH - hover.top + 6 }),
+              }}
+            >
+              <div className="rounded-md border border-border bg-background-card p-3 shadow-xl" style={{ width: 330 }}>
+                <SectorDossierCard
+                  row={hoverRow}
+                  rankVar={rankVarById.get(hoverRow.sectorId) ?? 0}
+                  totalRows={rows.length}
+                  lang={lang}
+                  active
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* ── §4 ∑ Sum rule — double hairline, the ONLY home of platform totals. ── */}
+        {/* ── ∑ Sum rule — double hairline, the ONLY home of platform totals. ── */}
         <div
           className="mt-3 py-2.5"
           style={{
@@ -590,14 +525,14 @@ export function ExposureLedger({
           </Link>
         </p>
 
-        {/* Legend microline — size bar · intensity dot · trajectory line. */}
+        {/* Legend microline — bullet rule · intensity dot · trajectory line. */}
         <p
           className="mt-1.5 px-3 font-mono"
           style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
         >
           {lang === 'es'
-            ? 'barra = tamaño (lineal) · tono saturado = crítico, claro = alto · ● = intensidad · línea = trayectoria de riesgo'
-            : 'bar = size (linear) · saturated = critical, light = high · ● = intensity · line = risk trajectory'}
+            ? `regla = adjudicación directa vs techo OCDE ${OECD_DA_CEILING.toFixed(0)}% (excedente en ámbar) · ● = intensidad · línea = trayectoria de riesgo`
+            : `rule = direct award vs OECD ${OECD_DA_CEILING.toFixed(0)}% ceiling (overshoot in amber) · ● = intensity · line = risk trajectory`}
         </p>
 
         {/* Footnote register — caveat notes, shown at all breakpoints. */}
