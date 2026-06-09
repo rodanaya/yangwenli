@@ -35,22 +35,28 @@ export interface TierStyle {
 // Audit fix 2026-05-07 — Bible §3.10: a procurement-only model cannot
 // certify integrity. Excelente was green (#16a34a) and Satisfactorio
 // was teal (#0d9488); both read as "this institution is good" — exactly
-// what the rule forbids on a corruption platform. Replaced with neutral
-// slate tones that read as "no immediate red flag" without certifying
-// anything. The warm-color escalation (amber → orange → red) for
-// Regular/Deficiente/Critico stays intact.
+// what the rule forbids on a corruption platform.
+//
+// Steel & Ember 2026-06-09 — the two top tiers were both flat slate gray
+// which, alongside the gold brand accent and three amber data colors,
+// made the page read gray+yellow on repeat. Moved them onto a deliberate
+// STEEL BLUE: a cool, measured "no immediate red flag" tone that is
+// emphatically not green (no integrity certification — §3.10 intact) and
+// turns the ladder into a real cool→hot ramp (steel → steel → amber →
+// orange → red). The warm escalation for Regular/Deficiente/Critico is
+// unchanged.
 export const TIER_STYLES: Record<TierKey, TierStyle> = {
   Excelente: {
     key: 'Excelente',
-    color: '#334155',  // slate-700 — neutral, not a certification
-    bg: 'rgba(51,65,85,0.10)',
-    border: 'rgba(51,65,85,0.30)',
+    color: '#3d5a80',  // steel blue (deep) — measured, not a certification
+    bg: 'rgba(61,90,128,0.10)',
+    border: 'rgba(61,90,128,0.32)',
   },
   Satisfactorio: {
     key: 'Satisfactorio',
-    color: '#64748b',  // slate-500 — slightly lighter neutral
-    bg: 'rgba(100,116,139,0.10)',
-    border: 'rgba(100,116,139,0.30)',
+    color: '#5e7fa8',  // steel blue (light) — one step up the cool ramp
+    bg: 'rgba(94,127,168,0.10)',
+    border: 'rgba(94,127,168,0.32)',
   },
   Regular: {
     key: 'Regular',

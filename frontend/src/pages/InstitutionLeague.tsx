@@ -165,7 +165,7 @@ function useTierByKey() {
 
 function TrendIcon({ direction }: { direction: string | null }) {
   const { t } = useTranslation('institutionleague')
-  if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-text-secondary" aria-label={t('trend.improving')} />
+  if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-accent-data" aria-label={t('trend.improving')} />
   if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-risk-critical" aria-label={t('trend.declining')} />
   return <Minus className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
 }
@@ -173,9 +173,11 @@ function TrendIcon({ direction }: { direction: string | null }) {
 /**
  * Five-pillar heat strip — one calm row of solid cells, replacing the old
  * multi-colour "equalizer" of partial-height vertical bars (illegible at
- * 18px). Each cell's colour reads the 3-stop risk band (muted = strong,
- * high = mid, critical = weak — no green per Bible §3.10); magnitude within
+ * 18px). Each cell's colour reads the 3-stop risk band (steel = strong,
+ * amber = mid, red = weak — no green per Bible §3.10); magnitude within
  * the band is encoded as a gentle opacity ramp. Faint O/P/V/R/E axis below.
+ * The "strong" band uses the Excelente steel tone (Steel & Ember) so a
+ * healthy pillar reads cool, not gray.
  * Labels/maxes come from the canonical INSTITUTION_PILLARS map so they can
  * never drift from what compute_scorecards.py actually stores.
  */
@@ -197,7 +199,7 @@ function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
     >
       {pillars.map(({ key, value, max }) => {
         const frac = Math.min(1, Math.max(0, value / max))
-        const color = frac > 0.65 ? 'var(--color-text-muted)' : frac > 0.35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
+        const color = frac > 0.65 ? TIER_STYLES.Excelente.color : frac > 0.35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
         return (
           <div key={key} className="flex flex-col items-center gap-1">
             <span
@@ -748,7 +750,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
           max: pillar.max,
         })).map((p) => {
           const pct = (p.value / p.max) * 100
-          const barColor = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
+          const barColor = pct > 65 ? TIER_STYLES.Excelente.color : pct > 35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
           return (
             <div key={p.label} className="flex items-center gap-2">
               <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted w-20">{p.label}</span>
@@ -795,7 +797,7 @@ function SortHeader({
   return (
     <button
       onClick={() => onSort(sortKey)}
-      className={`flex items-center gap-1 hover:text-text-primary transition-colors ${active ? 'text-text-primary' : 'text-text-muted'} ${className}`}
+      className={`flex items-center gap-1 hover:text-text-primary transition-colors ${active ? 'text-accent-data' : 'text-text-muted'} ${className}`}
       aria-label={t('sortAriaLabel', { label })}
     >
       <span className="text-[10px] font-mono font-bold tracking-[0.1em] uppercase">{label}</span>
@@ -1207,7 +1209,7 @@ export default function InstitutionLeague() {
                         i < 2 ? 'border-r border-border' : ''
                       } ${
                         scope === sc
-                          ? 'bg-accent/15 text-accent'
+                          ? 'bg-accent-data/15 text-accent-data'
                           : 'text-text-muted hover:text-text-secondary'
                       }`}
                     >
@@ -1411,7 +1413,7 @@ export default function InstitutionLeague() {
               value={search}
               onChange={(e) => updateParams({ q: e.target.value || undefined, page: '1' })}
               placeholder={t('filters.searchPlaceholder')}
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 font-mono"
+              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent-data/50 font-mono"
             />
           </div>
           <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide flex-shrink-0">
@@ -1430,7 +1432,7 @@ export default function InstitutionLeague() {
               onClick={() => updateParams({ grade: undefined, page: '1' })}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
                 !activeTierName
-                  ? 'bg-accent/15 border-accent/40 text-accent'
+                  ? 'bg-accent-data/15 border-accent-data/40 text-accent-data'
                   : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
               }`}
             >
@@ -1478,7 +1480,7 @@ export default function InstitutionLeague() {
               onClick={() => updateParams({ sector: undefined, page: '1' })}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
                 !sectorFilter
-                  ? 'bg-accent/15 border-accent/40 text-accent'
+                  ? 'bg-accent-data/15 border-accent-data/40 text-accent-data'
                   : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
               }`}
             >
@@ -1783,7 +1785,7 @@ export default function InstitutionLeague() {
                           <Link
                             to={`/print/institutions/${item.institution_id}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="shrink-0 p-1 rounded text-text-muted hover:text-accent hover:bg-accent/10 transition-colors inline-flex"
+                            className="shrink-0 p-1 rounded text-text-muted hover:text-accent-data hover:bg-accent-data/10 transition-colors inline-flex"
                             title="Open full dossier"
                             aria-label="Open full institution dossier"
                           >
