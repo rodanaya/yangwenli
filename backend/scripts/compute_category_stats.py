@@ -41,6 +41,7 @@ def compute_category_stats():
             total_contracts INTEGER NOT NULL DEFAULT 0,
             total_value REAL NOT NULL DEFAULT 0.0,
             avg_risk REAL DEFAULT 0.0,
+            high_risk_pct REAL DEFAULT 0.0,
             direct_award_pct REAL DEFAULT 0.0,
             single_bid_pct REAL DEFAULT 0.0,
             top_vendor_id INTEGER,
@@ -54,7 +55,8 @@ def compute_category_stats():
     cur.execute("""
         INSERT INTO category_stats (
             category_id, category_name, category_name_en, sector_id,
-            total_contracts, total_value, avg_risk, direct_award_pct, single_bid_pct
+            total_contracts, total_value, avg_risk, high_risk_pct,
+            direct_award_pct, single_bid_pct
         )
         SELECT
             cat.id,
@@ -64,6 +66,9 @@ def compute_category_stats():
             COUNT(c.id) as total_contracts,
             COALESCE(SUM(c.amount_mxn), 0) as total_value,
             COALESCE(AVG(c.risk_score), 0) as avg_risk,
+            CASE WHEN COUNT(c.id) > 0
+                 THEN ROUND(SUM(CASE WHEN c.risk_level IN ('high', 'critical') THEN 1.0 ELSE 0 END) / COUNT(c.id) * 100, 1)
+                 ELSE 0 END as high_risk_pct,
             CASE WHEN COUNT(c.id) > 0
                  THEN ROUND(SUM(CASE WHEN c.is_direct_award = 1 THEN 1.0 ELSE 0 END) / COUNT(c.id) * 100, 1)
                  ELSE 0 END as direct_award_pct,

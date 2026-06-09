@@ -21,6 +21,20 @@ class TestCategoriesSummary:
         item = items[0]
         assert "category_id" in item or "category_name" in item
 
+    def test_high_risk_pct_present_and_valid(self, client, base_url):
+        """high_risk_pct (% of a category's contracts at high|critical risk) is
+        exposed per category so the dossier verdict isn't limited to avg_risk.
+        The field is always present; its value may be null on deploy DBs that
+        predate the category_stats backfill, but is a [0,100] percentage when set.
+        """
+        items = client.get(f"{base_url}/categories/summary").json().get("data", [])
+        if not items:
+            pytest.skip("No category_stats data")
+        assert all("high_risk_pct" in it for it in items), "high_risk_pct missing from payload"
+        vals = [it["high_risk_pct"] for it in items if it["high_risk_pct"] is not None]
+        assert vals, "no category exposed a populated high_risk_pct"
+        assert all(0 <= v <= 100 for v in vals), "high_risk_pct out of [0,100] range"
+
 
 class TestCategoryContracts:
 

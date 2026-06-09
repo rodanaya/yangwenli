@@ -31,14 +31,26 @@ def _table_exists(conn, table_name: str) -> bool:
     return cur.fetchone() is not None
 
 
+def _column_exists(conn, table_name: str, column_name: str) -> bool:
+    """Check if a column exists on a table (used to stay backward-compatible
+    with deploy DBs that predate a column backfill — e.g. high_risk_pct)."""
+    cur = conn.cursor()
+    cur.execute(f"PRAGMA table_info({table_name})")
+    return any(row[1] == column_name for row in cur.fetchall())
+
+
 @router.get("/summary")
 def get_categories_summary():
     """Return all categories with aggregated stats, sorted by total_value desc."""
     with get_db() as conn:
         if not _table_exists(conn, "category_stats"):
             return {"data": [], "total": 0}
+        # high_risk_pct was added after the original category_stats schema; fall
+        # back to NULL on deploy DBs that predate the backfill so /summary never 500s.
+        has_hrp = _column_exists(conn, "category_stats", "high_risk_pct")
+        hrp_select = "cs.high_risk_pct" if has_hrp else "NULL"
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(f"""
             SELECT
                 cs.category_id,
                 cs.category_name,
@@ -48,6 +60,7 @@ def get_categories_summary():
                 cs.total_contracts,
                 cs.total_value,
                 cs.avg_risk,
+                {hrp_select} as high_risk_pct,
                 cs.direct_award_pct,
                 cs.single_bid_pct,
                 cs.top_vendor_id,
@@ -71,6 +84,7 @@ def get_categories_summary():
                 "total_contracts": r["total_contracts"],
                 "total_value": r["total_value"],
                 "avg_risk": round(r["avg_risk"] or 0, 4),
+                "high_risk_pct": round(r["high_risk_pct"], 1) if r["high_risk_pct"] is not None else None,
                 "direct_award_pct": r["direct_award_pct"] or 0,
                 "single_bid_pct": r["single_bid_pct"] or 0,
                 "top_vendor": {
