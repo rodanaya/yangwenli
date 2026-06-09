@@ -1,26 +1,42 @@
 /**
  * CategoriesIndex — "El Qué" / "What Was Bought"
  *
- * Editorial landmark listing all 72 spending categories in Mexican federal
- * procurement. The "WHAT" axis of the exploration space: filterable by
- * sector, sortable by spend / risk / contracts / direct-award.
+ * 2026-06-09 (DESIGNUS — category index rebuild). The page was a 3-column grid
+ * of 72 near-identical cards: near-zero information scent, no ranking, no
+ * comparison, endless scroll, a treemap bolted on as decoration. It read weaker
+ * than the category list already shipped on /sectors?view=categories.
  *
- * Design: dark editorial aesthetic — serif headers, mono kickers,
- * sector-color left borders, DotBar risk indicators.
+ * Rebuilt as the definitive category surface in the sibling Exposure-Ledger
+ * grammar (Sectors.tsx / InstitutionLeague.tsx): a newsroom FINDINGS BAND
+ * (computed "where to look first" leads) over a concentration ribbon and a dense
+ * ranked LEDGER — one row per category, every metric in one column, inline
+ * micro-viz (magnitude spine · risk · direct-award-vs-OECD · single-bid dot ·
+ * top vendor). The treemap survives, demoted to a collapsible disclosure.
+ * Runs entirely on the two fast endpoints (getSummary + getTrends).
  */
 
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
-import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { SECTOR_COLORS, SECTORS, getSectorName } from '@/lib/constants'
 import { CategoryTreemap } from '@/components/categories/CategoryTreemap'
-import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
+import {
+  formatCompactMXN,
+  formatDualCurrency,
+  formatNumber,
+  cn,
+} from '@/lib/utils'
+import {
+  SECTOR_COLORS,
+  RISK_COLORS,
+  RISK_TEXT_COLORS,
+  OECD_DIRECT_AWARD_LIMIT,
+  getRiskLevelFromScore,
+  getSectorName,
+  SECTORS,
+} from '@/lib/constants'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -38,6 +54,7 @@ interface CategorySummaryItem {
   total_contracts: number
   total_value: number
   avg_risk: number
+  high_risk_pct: number | null
   direct_award_pct: number
   single_bid_pct: number
   top_vendor: TopVendor | null
@@ -48,22 +65,15 @@ interface CategorySummaryResponse {
   total: number
 }
 
-// ── Sort / filter types ────────────────────────────────────────────────────────
-
 type SortKey = 'spend' | 'risk' | 'contracts' | 'direct_award'
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-// All sector codes used in filter pills — sourced from SECTORS constant so we
-// never drift from the canonical 12-sector taxonomy.
 const ALL_SECTOR_CODES = SECTORS.map((s) => s.code)
+const DA_LIMIT_PCT = OECD_DIRECT_AWARD_LIMIT * 100 // 30
+const CONTRACT_FLOOR = 200 // suppress tiny-base categories from the findings band
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function sortCategories(
-  items: CategorySummaryItem[],
-  key: SortKey
-): CategorySummaryItem[] {
+function sortCategories(items: CategorySummaryItem[], key: SortKey): CategorySummaryItem[] {
   const sorted = [...items]
   switch (key) {
     case 'spend':
@@ -77,422 +87,576 @@ function sortCategories(
   }
 }
 
-// ── Loading skeleton ──────────────────────────────────────────────────────────
+// ── Findings band ─────────────────────────────────────────────────────────────
 
-function LoadingGrid() {
+interface Finding {
+  key: string
+  eyebrowEs: string
+  eyebrowEn: string
+  item: CategorySummaryItem
+  anchor: string
+  anchorColor: string
+  proofPct: number
+  proofColor: string
+  deckEs: string
+  deckEn: string
+}
+
+function computeFindings(
+  items: CategorySummaryItem[],
+  risers: Map<number, number>,
+): Finding[] {
+  if (items.length === 0) return []
+  const qualified = items.filter((c) => c.total_contracts >= CONTRACT_FLOOR)
+  const pool = qualified.length >= 4 ? qualified : items
+  const out: Finding[] = []
+  // Each finding should surface a *different* category — "where to look first"
+  // is most useful pointing at four distinct places, not the same one twice.
+  const used = new Set<number>()
+  const pick = (list: CategorySummaryItem[], score: (c: CategorySummaryItem) => number) =>
+    [...list].filter((c) => !used.has(c.category_id)).sort((a, b) => score(b) - score(a))[0]
+
+  // 1 — Most captured (direct award)
+  const captured = pick(pool, (c) => c.direct_award_pct)
+  if (captured) {
+    used.add(captured.category_id)
+    out.push({
+      key: 'captured',
+      eyebrowEs: 'La más capturada',
+      eyebrowEn: 'Most captured',
+      item: captured,
+      anchor: `${Math.round(captured.direct_award_pct)}%`,
+      anchorColor: captured.direct_award_pct > DA_LIMIT_PCT * 2 ? RISK_TEXT_COLORS.critical : RISK_TEXT_COLORS.high,
+      proofPct: captured.direct_award_pct,
+      proofColor: RISK_COLORS.high,
+      deckEs: `adjudicación directa · ${Math.round(captured.single_bid_pct)}% único postor`,
+      deckEn: `direct award · ${Math.round(captured.single_bid_pct)}% single bid`,
+    })
+  }
+
+  // 2 — Highest risk indicator (model avg)
+  const riskiest = pick(pool, (c) => c.avg_risk)
+  if (riskiest) {
+    used.add(riskiest.category_id)
+    const lvl = getRiskLevelFromScore(riskiest.avg_risk)
+    out.push({
+      key: 'risk',
+      eyebrowEs: 'Mayor riesgo',
+      eyebrowEn: 'Highest risk',
+      item: riskiest,
+      anchor: `${Math.round(riskiest.avg_risk * 100)}`,
+      anchorColor: RISK_TEXT_COLORS[lvl] ?? 'var(--color-text-primary)',
+      proofPct: Math.min(100, riskiest.avg_risk * 100 * 2),
+      proofColor: RISK_COLORS[lvl] ?? RISK_COLORS.medium,
+      deckEs: 'indicador de riesgo medio · de 100',
+      deckEn: 'mean risk indicator · of 100',
+    })
+  }
+
+  // 3 — Heaviest exposure (high-risk share, value-floored)
+  const bigEnough = items.filter((c) => c.total_value >= 1e9 && c.high_risk_pct != null)
+  const exposed = pick(bigEnough.length ? bigEnough : items, (c) => c.high_risk_pct ?? 0)
+  if (exposed && exposed.high_risk_pct != null) {
+    used.add(exposed.category_id)
+    out.push({
+      key: 'exposure',
+      eyebrowEs: 'Mayor exposición',
+      eyebrowEn: 'Heaviest exposure',
+      item: exposed,
+      anchor: `${Math.round(exposed.high_risk_pct)}%`,
+      anchorColor: exposed.high_risk_pct >= 15 ? RISK_TEXT_COLORS.high : 'var(--color-text-primary)',
+      proofPct: Math.min(100, exposed.high_risk_pct * 3),
+      proofColor: RISK_COLORS.critical,
+      deckEs: `de contratos en alto riesgo · ${formatCompactMXN(exposed.total_value)}`,
+      deckEn: `of contracts high-risk · ${formatCompactMXN(exposed.total_value)}`,
+    })
+  }
+
+  // 4 — Fastest rising (recent vs prior spend) — only if trends present
+  if (risers.size > 0) {
+    const ranked = items
+      .filter((c) => risers.has(c.category_id))
+      .map((c) => ({ c, g: risers.get(c.category_id)! }))
+      .sort((a, b) => b.g - a.g)
+    const top = ranked.find((r) => !used.has(r.c.category_id))
+    if (top && top.g > 0.15) {
+      used.add(top.c.category_id)
+      out.push({
+        key: 'rising',
+        eyebrowEs: 'El alza',
+        eyebrowEn: 'Fastest rising',
+        item: top.c,
+        anchor: `+${Math.round(top.g * 100)}%`,
+        anchorColor: RISK_TEXT_COLORS.high,
+        proofPct: Math.min(100, top.g * 100),
+        proofColor: RISK_COLORS.high,
+        deckEs: 'gasto · últimos 3 años vs previos',
+        deckEn: 'spend · last 3 years vs prior',
+      })
+    }
+  }
+
+  return out.slice(0, 4)
+}
+
+function FindingCard({ finding, lang }: { finding: Finding; lang: 'en' | 'es' }) {
+  const name = lang === 'es' ? finding.item.name_es : finding.item.name_en
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {Array.from({ length: 12 }).map((_, i) => (
-        <Skeleton key={i} className="h-40 rounded-none" />
-      ))}
+    <article
+      className="p-3.5 flex flex-col gap-2"
+      style={{
+        border: '1px solid var(--color-border)',
+        boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
+        borderRadius: 3,
+        borderLeft: `3px solid ${SECTOR_COLORS[finding.item.sector_code] ?? '#64748b'}`,
+      }}
+    >
+      <p
+        className="font-mono"
+        style={{ fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+      >
+        {lang === 'es' ? finding.eyebrowEs : finding.eyebrowEn}
+      </p>
+      <div className="min-w-0">
+        <EntityIdentityChip
+          type="category"
+          id={finding.item.category_id}
+          name={name}
+          size="sm"
+          sectorCode={finding.item.sector_code}
+          riskScore={finding.item.avg_risk}
+        />
+      </div>
+      <div
+        className="tabular-nums"
+        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 34, lineHeight: 1, color: finding.anchorColor }}
+      >
+        {finding.anchor}
+      </div>
+      <div
+        className="relative overflow-hidden"
+        style={{ height: 4, background: 'var(--color-border)', borderRadius: 999 }}
+        aria-hidden="true"
+      >
+        <div style={{ position: 'absolute', inset: 0, width: `${Math.max(3, Math.min(100, finding.proofPct))}%`, background: finding.proofColor, borderRadius: 999 }} />
+      </div>
+      <p className="font-mono" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+        {lang === 'es' ? finding.deckEs : finding.deckEn}
+      </p>
+    </article>
+  )
+}
+
+// ── Concentration ribbon ──────────────────────────────────────────────────────
+
+function ConcentrationRibbon({
+  items,
+  lang,
+}: {
+  items: CategorySummaryItem[]
+  lang: 'en' | 'es'
+}) {
+  const sorted = useMemo(() => [...items].sort((a, b) => b.total_value - a.total_value), [items])
+  const total = useMemo(() => sorted.reduce((s, c) => s + c.total_value, 0), [sorted])
+  if (total <= 0) return null
+
+  // smallest k whose cumulative share crosses 50% / 80%
+  let cum = 0
+  let k50 = 0
+  let k80 = 0
+  for (let i = 0; i < sorted.length; i++) {
+    cum += sorted[i].total_value
+    if (k50 === 0 && cum / total >= 0.5) k50 = i + 1
+    if (k80 === 0 && cum / total >= 0.8) k80 = i + 1
+  }
+
+  const HEAD = 14 // leading categories rendered as discrete segments
+  const head = sorted.slice(0, HEAD)
+  const tailValue = sorted.slice(HEAD).reduce((s, c) => s + c.total_value, 0)
+
+  return (
+    <div>
+      <div className="flex overflow-hidden" style={{ height: 22, borderRadius: 3, background: 'var(--color-border)' }} aria-hidden="true">
+        {head.map((c) => (
+          <div
+            key={c.category_id}
+            title={`${lang === 'es' ? c.name_es : c.name_en} · ${formatCompactMXN(c.total_value)}`}
+            style={{
+              width: `${(c.total_value / total) * 100}%`,
+              background: SECTOR_COLORS[c.sector_code] ?? '#64748b',
+              borderRight: '1px solid var(--color-background)',
+            }}
+          />
+        ))}
+        {tailValue > 0 && (
+          <div style={{ width: `${(tailValue / total) * 100}%`, background: 'var(--color-text-muted)', opacity: 0.35 }} />
+        )}
+      </div>
+      <p className="font-mono mt-2" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+        {lang === 'es'
+          ? `Las ${k50} categorías más grandes concentran la mitad del gasto · las ${k80} mayores, el 80%. Las ${sorted.length - HEAD} restantes (gris) reparten el resto.`
+          : `The ${k50} largest categories hold half of all spend · the top ${k80} hold 80%. The remaining ${sorted.length - HEAD} (grey) split the rest.`}
+      </p>
     </div>
   )
 }
 
-// ── Category card ─────────────────────────────────────────────────────────────
+// ── Ledger row ────────────────────────────────────────────────────────────────
 
-interface CategoryCardProps {
+function LedgerRow({
+  item,
+  rank,
+  maxValue,
+  showVendor,
+  lang,
+}: {
   item: CategorySummaryItem
-  lang: string
-}
-
-function CategoryCard({ item, lang }: CategoryCardProps) {
-  const { t } = useTranslation('categories')
-  const sectorColor = SECTOR_COLORS[item.sector_code] ?? '#64748b'
-  const categoryName = lang === 'es' ? item.name_es : item.name_en
-  const isHighDirectAward = item.direct_award_pct > 70
+  rank: number
+  maxValue: number
+  showVendor: boolean
+  lang: 'en' | 'es'
+}) {
+  const sectorColor = item.sector_code ? SECTOR_COLORS[item.sector_code] ?? '#64748b' : '#64748b'
+  const riskLevel = getRiskLevelFromScore(item.avg_risk)
+  const sbPct = item.single_bid_pct ?? 0
+  const sbDotColor = sbPct > 25 ? RISK_COLORS.critical : sbPct >= 15 ? RISK_COLORS.high : RISK_COLORS.low
+  const spendPct = maxValue > 0 ? (item.total_value / maxValue) * 100 : 0
+  const daOver = item.direct_award_pct > DA_LIMIT_PCT
 
   return (
-    <Link
-      to={`/categories/${item.category_id}`}
-      className="block group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
-      aria-label={categoryName}
+    <div
+      className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-2 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
+      style={{ borderLeft: `3px solid ${sectorColor}` }}
     >
-      <article
-        className="h-full bg-background-card border border-border hover:border-border-hover transition-colors duration-150 pl-0"
-        style={{ borderLeftColor: sectorColor, borderLeftWidth: 3 }}
-      >
-        <div className="p-3 flex flex-col gap-2 h-full">
-          {/* Category name */}
-          <div className="flex-1">
-            <h3
-              className="font-serif text-base font-bold leading-snug text-text-primary transition-colors group-hover:text-accent"
-              style={{ fontFamily: 'Playfair Display, serif' }}
-            >
-              {categoryName}
-            </h3>
-          </div>
+      <span className="flex-shrink-0 w-7 font-mono text-[11px] font-bold text-text-muted tabular-nums">
+        {String(rank).padStart(2, '0')}
+      </span>
 
-          {/* Spend */}
-          <div
-            className="font-mono text-sm tabular-nums font-semibold"
-            style={{ color: 'var(--color-accent)' }}
-          >
-            {formatCompactMXN(item.total_value)}
-          </div>
-
-          {/* Risk DotBar */}
-          <div className="space-y-1">
-            <div
-              className="text-[10px] font-mono uppercase tracking-widest"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              {t('index.riskLabel')}
-            </div>
-            <DotBar
-              value={item.avg_risk}
-              max={1}
-              dots={8}
-              color={sectorColor}
-              ariaLabel={`${t('index.riskLabel')}: ${(item.avg_risk * 100).toFixed(1)}%`}
-            />
-          </div>
-
-          {/* Bottom row: contract count + direct award badge */}
-          <div className="flex items-center justify-between gap-2">
-            <span
-              className="font-mono text-[11px] tabular-nums"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
-              {formatNumber(item.total_contracts)}{' '}
-              <span style={{ color: 'var(--color-text-muted)' }}>
-                {t('index.contracts')}
-              </span>
-            </span>
-
-            {isHighDirectAward && (
-              <span
-                className="font-mono text-[10px] uppercase tracking-wide px-1.5 py-0.5 border"
-                style={{
-                  color: '#a06820',
-                  borderColor: '#a06820',
-                  background: 'rgba(160,104,32,0.08)',
-                }}
-              >
-                {t('index.directAwardBadge', {
-                  pct: Math.round(item.direct_award_pct),
-                })}
-              </span>
-            )}
-          </div>
-
-          {/* Top vendor chip */}
-          {item.top_vendor && (
-            <div className="pt-1 border-t border-border">
-              <div
-                className="text-[10px] font-mono uppercase tracking-widest mb-1"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                {t('index.topVendor')}
-              </div>
+      {/* Name + magnitude spine + top vendor */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <EntityIdentityChip
+            type="category"
+            id={item.category_id}
+            name={lang === 'es' ? item.name_es : item.name_en}
+            size="sm"
+            sectorCode={item.sector_code ?? null}
+            riskScore={item.avg_risk ?? null}
+          />
+          {showVendor && item.top_vendor && (
+            <span className="hidden md:flex items-center gap-1 text-[10px] text-text-muted/70 font-mono min-w-0">
               <EntityIdentityChip
                 type="vendor"
                 id={item.top_vendor.id}
                 name={item.top_vendor.name}
+                size="xs"
+                hideIcon
+                sectorCode={item.sector_code ?? null}
               />
-            </div>
+            </span>
           )}
         </div>
-      </article>
-    </Link>
+        {/* magnitude spine */}
+        <div className="mt-1 h-1 rounded-full bg-background-elevated overflow-hidden w-full max-w-[220px]" aria-hidden="true">
+          <div className="h-full rounded-full" style={{ width: `${Math.max(2, spendPct)}%`, background: sectorColor, opacity: 0.55 }} />
+        </div>
+      </div>
+
+      {/* Spend + contracts */}
+      <div className="flex-shrink-0 text-right min-w-[92px]">
+        <div className="font-mono text-sm tabular-nums text-text-primary">{formatCompactMXN(item.total_value)}</div>
+        <div className="text-[10px] font-mono text-text-muted mt-0.5">
+          {formatNumber(item.total_contracts)} {lang === 'es' ? 'cont.' : 'contracts'}
+        </div>
+      </div>
+
+      {/* Risk */}
+      <div className="flex-shrink-0 min-w-[78px]">
+        <div className="flex items-center justify-end gap-1.5">
+          <div className="w-12 h-1 rounded-full bg-background-elevated overflow-hidden hidden sm:block" aria-hidden="true">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, (item.avg_risk * 100) / 45 * 100)}%`, background: RISK_COLORS[riskLevel], opacity: 0.85 }} />
+          </div>
+          <div className="font-mono text-[11px] font-bold tabular-nums text-right" style={{ color: RISK_COLORS[riskLevel] }}>
+            {(item.avg_risk * 100).toFixed(0)}
+          </div>
+        </div>
+      </div>
+
+      {/* Direct award (with single-bid dot + OECD reference) */}
+      <div className="flex-shrink-0 min-w-[78px]">
+        <div className="flex items-center justify-end gap-1.5">
+          <span
+            className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+            style={{ background: sbDotColor }}
+            title={`${sbPct.toFixed(1)}% ${lang === 'es' ? 'único postor' : 'single bid'}`}
+            aria-label={`${sbPct.toFixed(1)}% ${lang === 'es' ? 'único postor' : 'single bid'}`}
+          />
+          <div className="hidden sm:block w-12 h-1 rounded-full bg-background-elevated overflow-hidden relative" aria-hidden="true">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, item.direct_award_pct)}%`, background: daOver ? RISK_COLORS.high : 'var(--color-text-muted)', opacity: 0.8 }} />
+            <div style={{ position: 'absolute', top: -1, bottom: -1, left: `${DA_LIMIT_PCT}%`, width: 1, background: 'var(--color-text-muted)' }} />
+          </div>
+          <div className="font-mono text-sm tabular-nums" style={{ color: daOver ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)' }}>
+            {item.direct_award_pct.toFixed(0)}%
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function CategoriesIndex() {
-  const { t, i18n } = useTranslation('categories')
-  const lang = i18n.language?.startsWith('es') ? 'es' : 'en'
+  const { i18n } = useTranslation('categories')
+  const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
 
   const [sortKey, setSortKey] = useState<SortKey>('spend')
   const [activeSector, setActiveSector] = useState<string | null>(null)
+  const [showMap, setShowMap] = useState(false)
 
   const { data, isLoading, isError } = useQuery<CategorySummaryResponse>({
     queryKey: ['categories', 'summary'],
     queryFn: () => categoriesApi.getSummary(),
     staleTime: 600_000,
   })
+  // Trends power the "fastest rising" finding only — gated on its own query so
+  // first paint never blocks on it.
+  const { data: trendsData } = useQuery({
+    queryKey: ['categories', 'trends', 2002, 2025],
+    queryFn: () => categoriesApi.getTrends(2002, 2025),
+    staleTime: 600_000,
+  })
 
-  // Derived totals for the stats row
-  const { totalContracts, totalValue } = useMemo(() => {
-    if (!data?.data) return { totalContracts: 0, totalValue: 0 }
-    return {
-      totalContracts: data.data.reduce((s, c) => s + c.total_contracts, 0),
-      totalValue: data.data.reduce((s, c) => s + c.total_value, 0),
+  const totalValue = useMemo(
+    () => (data?.data ? data.data.reduce((s, c) => s + c.total_value, 0) : 0),
+    [data],
+  )
+  const totalContracts = useMemo(
+    () => (data?.data ? data.data.reduce((s, c) => s + c.total_contracts, 0) : 0),
+    [data],
+  )
+
+  // Recent-vs-prior spend growth per category (2022–2024 vs 2019–2021).
+  const risers = useMemo(() => {
+    const m = new Map<number, number>()
+    const rows = (trendsData?.data ?? []) as Array<{ category_id: number; year: number; value: number }>
+    if (rows.length === 0) return m
+    const recent = new Map<number, number>()
+    const prior = new Map<number, number>()
+    for (const r of rows) {
+      if (r.year >= 2022 && r.year <= 2024) recent.set(r.category_id, (recent.get(r.category_id) ?? 0) + (r.value ?? 0))
+      else if (r.year >= 2019 && r.year <= 2021) prior.set(r.category_id, (prior.get(r.category_id) ?? 0) + (r.value ?? 0))
     }
-  }, [data])
+    for (const [id, rec] of recent) {
+      const pri = prior.get(id) ?? 0
+      if (rec >= 1e9 && pri > 0) m.set(id, (rec - pri) / pri)
+    }
+    return m
+  }, [trendsData])
 
-  // Filter then sort
+  const findings = useMemo(
+    () => (data?.data ? computeFindings(data.data, risers) : []),
+    [data, risers],
+  )
+
   const displayed = useMemo(() => {
     if (!data?.data) return []
-    const filtered = activeSector
-      ? data.data.filter((c) => c.sector_code === activeSector)
-      : data.data
+    const filtered = activeSector ? data.data.filter((c) => c.sector_code === activeSector) : data.data
     return sortCategories(filtered, sortKey)
   }, [data, activeSector, sortKey])
 
-  // Sector pills: only show sectors that actually have categories in the data
+  const maxValue = useMemo(() => (displayed.length ? Math.max(...displayed.map((c) => c.total_value)) : 0), [displayed])
+
   const presentSectorCodes = useMemo(() => {
     if (!data?.data) return ALL_SECTOR_CODES
     const seen = new Set(data.data.map((c) => c.sector_code))
     return ALL_SECTOR_CODES.filter((code) => seen.has(code))
   }, [data])
 
-  // Sort button definitions
-  const sortButtons: { key: SortKey; label: string }[] = [
-    { key: 'spend', label: t('index.sortSpend') },
-    { key: 'risk', label: t('index.sortRisk') },
-    { key: 'contracts', label: t('index.sortContracts') },
-    { key: 'direct_award', label: t('index.sortDirectAward') },
+  const sortButtons: { key: SortKey; labelEs: string; labelEn: string }[] = [
+    { key: 'spend', labelEs: 'Gasto', labelEn: 'Spend' },
+    { key: 'risk', labelEs: 'Riesgo', labelEn: 'Risk' },
+    { key: 'contracts', labelEs: 'Contratos', labelEn: 'Contracts' },
+    { key: 'direct_award', labelEs: 'Adj. directa', labelEn: 'Direct award' },
   ]
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ── Editorial header ────────────────────────────────────────────────── */}
-      <header className="bg-background-elevated border-b border-border px-6 py-10 md:px-12 lg:px-16">
-        {/* Kicker */}
-        <p
-          className="font-mono text-[10px] uppercase tracking-[0.2em] mb-3"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
-          {t('index.kicker')}
-        </p>
-
-        {/* Headline */}
-        <h1
-          className="text-4xl font-bold leading-tight mb-4"
-          style={{
-            fontFamily: 'Playfair Display, serif',
-            color: 'var(--color-text-primary)',
-            fontSize: 'clamp(28px, 4vw, 36px)',
-          }}
-        >
-          {t('index.headline')}
-        </h1>
-
-        {/* Lede */}
-        <p
-          className="max-w-2xl leading-relaxed mb-8"
-          style={{
-            fontFamily: 'EB Garamond, Georgia, serif',
-            fontSize: 15,
-            color: 'var(--color-text-secondary)',
-          }}
-        >
-          {t('index.lede')}
-        </p>
-
-        {/* Stats row */}
-        <div className="flex flex-wrap gap-8">
-          <div>
-            <div
-              className="font-mono text-[10px] uppercase tracking-widest mb-1"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              {t('index.statContracts')}
-            </div>
-            <div
-              className="font-mono text-xl tabular-nums font-semibold"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              {formatNumber(totalContracts)}
-            </div>
+      {/* ── Masthead ─────────────────────────────────────────────────────────── */}
+      <header className="border-b border-border px-4 sm:px-6 lg:px-8 py-7">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-3 flex items-center gap-3 font-mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>El Qué</span>
+            <span aria-hidden="true" style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              {lang === 'es' ? '72 categorías de gasto' : '72 spending categories'}
+              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>COMPRANET 2002–2025
+              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>v0.8.5
+            </span>
           </div>
-          <div>
-            <div
-              className="font-mono text-[10px] uppercase tracking-widest mb-1"
-              style={{ color: 'var(--color-text-muted)' }}
+
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <h1
+              className="text-text-primary"
+              style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 0.98, letterSpacing: '-0.012em' }}
             >
-              {t('index.statSpend')}
-            </div>
-            <div
-              className="font-mono text-xl tabular-nums font-semibold"
-              style={{ color: 'var(--color-accent)' }}
-            >
-              {formatCompactMXN(totalValue)}
-            </div>
+              {lang === 'es' ? 'Qué compra México' : 'What Mexico Buys'}
+            </h1>
+            {totalValue > 0 && (
+              <div className="text-right">
+                <div className="tabular-nums" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 'clamp(1.25rem, 2vw, 1.5rem)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
+                  {formatDualCurrency(totalValue)}
+                </div>
+                <div className="font-mono mt-1" style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                  {lang === 'es' ? `gasto validado · ${formatNumber(totalContracts)} contratos` : `validated spend · ${formatNumber(totalContracts)} contracts`}
+                </div>
+              </div>
+            )}
           </div>
-          <div>
-            <div
-              className="font-mono text-[10px] uppercase tracking-widest mb-1"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              {t('index.statCategories')}
-            </div>
-            <div
-              className="font-mono text-xl tabular-nums font-semibold"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              72
-            </div>
-          </div>
+          <p className="mt-3 max-w-[68ch]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 16, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
+            {lang === 'es'
+              ? 'Las categorías agrupan qué compró el gobierno —medicamentos, obra pública, software— sin importar quién. 72 categorías activas clasifican casi todo el gasto federal; aquí, ordenadas por dónde mirar primero.'
+              : 'Categories group what the government bought — medicines, civil works, software — regardless of who. 72 active categories classify nearly all federal spend; here, ranked by where to look first.'}
+          </p>
         </div>
       </header>
 
-      {/* ── Treemap ─────────────────────────────────────────────────────────── */}
-      <div className="px-4 md:px-12 lg:px-16 pb-4">
-        <EditorialChartFrame
-          kicker={
-            lang === 'es'
-              ? '72 CATEGORÍAS DE GASTO · COMPRANET 2002–2025'
-              : '72 SPENDING CATEGORIES · COMPRANET 2002–2025'
-          }
-          headline={
-            lang === 'es'
-              ? 'Dónde va el dinero público: nueve billones en 72 categorías'
-              : 'Where public money flows: nine trillion pesos across 72 categories'
-          }
-          footer={
-            lang === 'es'
-              ? 'Datos de contratos federales COMPRANET · RUBLI v0.8.5 · Gasto validado: 9.9T MXN'
-              : 'COMPRANET federal contract data · RUBLI v0.8.5 · Validated spend: 9.9T MXN'
-          }
-        >
-          <CategoryTreemap
-            categories={data?.data ?? []}
-            lang={lang}
-            activeSector={activeSector}
-          />
-        </EditorialChartFrame>
-      </div>
-
-      {/* ── Controls ────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border px-6 py-3 md:px-12 lg:px-16">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          {/* Sort buttons */}
-          <div
-            className="flex items-center gap-1 flex-wrap"
-            role="group"
-            aria-label={t('index.sortAriaLabel')}
-          >
-            <span
-              className="font-mono text-[10px] uppercase tracking-widest mr-2"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              {t('index.sortBy')}
-            </span>
-            {sortButtons.map(({ key, label }) => {
-              const isActive = sortKey === key
-              return (
-                <button
-                  key={key}
-                  onClick={() => setSortKey(key)}
-                  aria-pressed={isActive}
-                  className="font-mono text-[11px] uppercase tracking-wide px-3 py-1 border transition-colors"
-                  style={
-                    isActive
-                      ? {
-                          background: '#a06820',
-                          borderColor: '#a06820',
-                          color: '#ffffff',
-                        }
-                      : {
-                          background: 'transparent',
-                          borderColor: 'var(--color-border)',
-                          color: 'var(--color-text-secondary)',
-                        }
-                  }
-                >
-                  {label}
-                </button>
-              )
-            })}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        {isLoading && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-36 rounded-sm" />)}
+            </div>
+            <Skeleton className="h-8 w-full" />
+            <div className="space-y-1">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-11 w-full" />)}</div>
           </div>
-        </div>
-
-        {/* Sector filter pills */}
-        <div
-          className="flex flex-wrap gap-1.5 mt-3"
-          role="group"
-          aria-label={t('index.sectorFilterAriaLabel')}
-        >
-          {/* "Todos" pill */}
-          <button
-            onClick={() => setActiveSector(null)}
-            aria-pressed={activeSector === null}
-            className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
-            style={
-              activeSector === null
-                ? {
-                    background: 'var(--color-text-secondary)',
-                    borderColor: 'var(--color-text-secondary)',
-                    color: 'var(--color-background)',
-                  }
-                : {
-                    background: 'transparent',
-                    borderColor: 'var(--color-border)',
-                    color: 'var(--color-text-secondary)',
-                  }
-            }
-          >
-            {t('index.allSectors')}
-          </button>
-
-          {presentSectorCodes.map((code) => {
-            const isActive = activeSector === code
-            const hex = SECTOR_COLORS[code] ?? '#64748b'
-            const label = getSectorName(code, lang as 'en' | 'es')
-            return (
-              <button
-                key={code}
-                onClick={() => setActiveSector(isActive ? null : code)}
-                aria-pressed={isActive}
-                className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
-                style={
-                  isActive
-                    ? {
-                        background: hex,
-                        borderColor: hex,
-                        color: '#ffffff',
-                      }
-                    : {
-                        background: 'transparent',
-                        borderColor: hex,
-                        color: hex,
-                      }
-                }
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* ── Grid ────────────────────────────────────────────────────────────── */}
-      <section
-        className="px-6 py-4 md:px-12 lg:px-16"
-        aria-label={t('index.gridAriaLabel')}
-      >
-        {isLoading && <LoadingGrid />}
+        )}
 
         {isError && (
-          <p
-            className="font-mono text-sm"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
-            {t('index.errorMessage')}
+          <p className="font-mono text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            {lang === 'es' ? 'No se pudieron cargar las categorías. Intenta de nuevo.' : 'Unable to load categories. Please try again.'}
           </p>
         )}
 
-        {!isLoading && !isError && displayed.length === 0 && (
-          <div
-            className="py-16 text-center"
-            role="status"
-            aria-live="polite"
-          >
-            <p className="text-sm font-mono text-text-muted">{t('index.noResults')}</p>
-          </div>
-        )}
+        {!isLoading && !isError && data?.data && data.data.length > 0 && (
+          <>
+            {/* ── FINDINGS BAND ──────────────────────────────────────────────── */}
+            {findings.length > 0 && (
+              <section className="mb-6 pb-6 border-b border-border" aria-label={lang === 'es' ? 'Dónde mirar primero' : 'Where to look first'}>
+                <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+                  § {lang === 'es' ? 'Dónde mirar primero' : 'Where to look first'}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {findings.map((f) => <FindingCard key={f.key} finding={f} lang={lang} />)}
+                </div>
+              </section>
+            )}
 
-        {!isLoading && !isError && displayed.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {displayed.map((item) => (
-              <CategoryCard key={item.category_id} item={item} lang={lang} />
-            ))}
-          </div>
+            {/* ── CONCENTRATION RIBBON ───────────────────────────────────────── */}
+            <section className="mb-6 pb-6 border-b border-border" aria-label={lang === 'es' ? 'Concentración del gasto' : 'Spend concentration'}>
+              <p className="font-mono mb-2.5" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+                § {lang === 'es' ? 'Dónde se concentra el dinero' : 'Where the money concentrates'}
+              </p>
+              <ConcentrationRibbon items={data.data} lang={lang} />
+            </section>
+
+            {/* ── CONTROLS ───────────────────────────────────────────────────── */}
+            <div className="mb-3">
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                <span className="font-mono mr-1" style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                  {lang === 'es' ? 'Ordenar' : 'Sort'}
+                </span>
+                {sortButtons.map(({ key, labelEs, labelEn }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSortKey(key)}
+                    aria-pressed={sortKey === key}
+                    className={cn(
+                      'px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
+                      sortKey === key ? 'bg-text-primary text-background border-transparent' : 'text-text-muted border-border hover:text-text-secondary',
+                    )}
+                  >
+                    {lang === 'es' ? labelEs : labelEn}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label={lang === 'es' ? 'Filtrar por sector' : 'Filter by sector'}>
+                <button
+                  type="button"
+                  onClick={() => setActiveSector(null)}
+                  aria-pressed={activeSector === null}
+                  className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
+                  style={activeSector === null
+                    ? { background: 'var(--color-text-secondary)', borderColor: 'var(--color-text-secondary)', color: 'var(--color-background)' }
+                    : { background: 'transparent', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+                >
+                  {lang === 'es' ? 'Todos' : 'All'}
+                </button>
+                {presentSectorCodes.map((code) => {
+                  const isActive = activeSector === code
+                  const hex = SECTOR_COLORS[code] ?? '#64748b'
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setActiveSector(isActive ? null : code)}
+                      aria-pressed={isActive}
+                      className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
+                      style={isActive ? { background: hex, borderColor: hex, color: '#ffffff' } : { background: 'transparent', borderColor: hex, color: hex }}
+                    >
+                      {getSectorName(code, lang)}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* ── LEDGER ─────────────────────────────────────────────────────── */}
+            <div className="rounded-sm border border-border overflow-hidden">
+              <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-1.5 bg-background-elevated border-b border-border font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted/60">
+                <span className="w-7 flex-shrink-0">#</span>
+                <span className="flex-1">{lang === 'es' ? 'Categoría' : 'Category'}</span>
+                <span className="flex-shrink-0 min-w-[92px] text-right">{lang === 'es' ? 'Gasto' : 'Spend'}</span>
+                <span className="flex-shrink-0 min-w-[78px] text-right">{lang === 'es' ? 'Riesgo' : 'Risk'}</span>
+                <span className="flex-shrink-0 min-w-[78px] text-right">{lang === 'es' ? 'Adj. dir.' : 'Direct'}</span>
+              </div>
+              {displayed.length > 0 ? (
+                displayed.map((item, idx) => (
+                  <LedgerRow key={item.category_id} item={item} rank={idx + 1} maxValue={maxValue} showVendor={idx < 15} lang={lang} />
+                ))
+              ) : (
+                <div className="py-12 text-center" role="status" aria-live="polite">
+                  <p className="text-sm font-mono text-text-muted">
+                    {lang === 'es' ? 'No hay categorías en este sector.' : 'No categories in this sector.'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* ── THE MAP (demoted to a disclosure) ──────────────────────────── */}
+            <details className="mt-5 group" open={showMap} onToggle={(e) => setShowMap((e.currentTarget as HTMLDetailsElement).open)}>
+              <summary className="cursor-pointer font-mono list-none" style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}>
+                {showMap
+                  ? (lang === 'es' ? '▾ Ocultar el mapa de gasto' : '▾ Hide the spending map')
+                  : (lang === 'es' ? '▸ Ver el mapa de gasto (treemap)' : '▸ See the spending map (treemap)')}
+              </summary>
+              {showMap && (
+                <div className="mt-3">
+                  <CategoryTreemap categories={data.data} lang={lang} activeSector={activeSector} />
+                </div>
+              )}
+            </details>
+
+            {/* ── Methodology footer ─────────────────────────────────────────── */}
+            <p className="mt-6 pt-5 border-t border-border font-mono" style={{ fontSize: 10.5, lineHeight: 1.6, letterSpacing: '0.03em', color: 'var(--color-text-muted)', maxWidth: '78ch' }}>
+              {lang === 'es'
+                ? 'Las categorías usan códigos Partida/CUCoP; la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La línea es la fila gris en la regla del procedimiento; el punto de único postor colorea >25% crítico / ≥15% alto. Indicador de riesgo · no estimación de fraude. RUBLI v0.8.5.'
+                : 'Categories use Partida/CUCoP codes; reliable coverage is 2023–2025 (Structure D, 100% Partida) — earlier years may be partially classified. The OECD direct-award ceiling (30%) is the tick on each row; the single-bid dot reddens >25% critical / ≥15% high. Risk indicator · not a fraud estimate. RUBLI v0.8.5.'}
+            </p>
+          </>
         )}
-      </section>
+      </div>
     </div>
   )
 }

@@ -19,7 +19,7 @@
  * resolved by routing through EntityIdentityChip. Legacy CategoryProfile
  * retains /print/categories/:id.
  */
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -32,6 +32,18 @@ import {
   CategoryVendorTable,
   type CategoryLike,
 } from '@/components/category/CategoryCommandPanel'
+import {
+  ProcedureSplit,
+  SeasonalityTell,
+  AriaFingerprint,
+  SubcategoryComposition,
+  CapturePairs,
+  type CompetitionData,
+  type SeasonalityData,
+  type PatternsData,
+  type SubcatRow,
+} from '@/components/category/CategoryDossierSections'
+import { SectorSexenioStrip } from '@/components/sector/SectorReferenceSections'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 import { Button } from '@/components/ui/button'
@@ -129,6 +141,46 @@ export default function CategoryDossier() {
     queryFn: () => categoriesApi.getTopVendors(categoryId, 10),
     enabled: validId,
     staleTime: 5 * 60 * 1000,
+  })
+  // Enrichment endpoints — all in the FAST tier; each query is isolated so one
+  // empty/erroring endpoint never blanks its siblings. getPriceDistribution is
+  // intentionally NOT fetched (it times out >30s live).
+  const { data: competitionData } = useQuery({
+    queryKey: ['cat-dossier', 'competition', categoryId],
+    queryFn: () => categoriesApi.getCompetition(categoryId),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  const { data: seasonalityData } = useQuery({
+    queryKey: ['cat-dossier', 'seasonality', categoryId],
+    queryFn: () => categoriesApi.getSeasonality(categoryId),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  const { data: patternsData } = useQuery({
+    queryKey: ['cat-dossier', 'patterns', categoryId],
+    queryFn: () => categoriesApi.getPatterns(categoryId),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  const { data: subcatData } = useQuery({
+    queryKey: ['cat-dossier', 'subcategories', categoryId],
+    queryFn: () => categoriesApi.getSubcategories(categoryId),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  // Capture pairs are ~14s — strictly lazy, gated behind an explicit click.
+  const [loadPairs, setLoadPairs] = useState(false)
+  const { data: pairsData, isLoading: pairsLoading } = useQuery({
+    queryKey: ['cat-dossier', 'vendor-institution', categoryId],
+    queryFn: () => categoriesApi.getVendorInstitution(categoryId, 15),
+    enabled: validId && loadPairs,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 
   const category = useMemo(() => {
@@ -286,32 +338,149 @@ export default function CategoryDossier() {
         </div>
       </header>
 
-      {/* COMMAND PANEL */}
+      {/* COMMAND PANEL — the decisive numbers */}
       <div className="mt-6">
         <CategoryStatStrip category={c} trends={categoryTrends} lang={lang} />
       </div>
-      <div className="mt-7">
-        <CategoryDiagnosticGrid
-          category={c}
-          concentration={concentration}
-          vendors={vendorRows}
-          trends={categoryTrends}
-          accent={accent}
-          lang={lang}
-        />
+
+      {/* § I — LA COMPETENCIA · the procedure split (count vs value) */}
+      {competitionData && (competitionData.procedure_breakdown?.length ?? 0) > 0 && (
+        <div className="mt-14">
+          <section id="competition" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="competition"
+              eyebrow={lang === 'es' ? 'Competencia' : 'Competition'}
+              title={lang === 'es' ? 'El reparto del procedimiento' : 'The procedure split'}
+              meta={lang === 'es' ? 'conteo vs valor' : 'count vs value'}
+              accent={accent}
+            />
+            <ProcedureSplit data={competitionData as CompetitionData} accent={accent} lang={lang} />
+          </section>
+        </div>
+      )}
+
+      {/* § II — EL MERCADO · concentration + OECD deviation + top vendors + trend */}
+      <div className="mt-12">
+        <section id="market" className="scroll-mt-20">
+          <DossierSectionHeader
+            id="market"
+            eyebrow={lang === 'es' ? 'Mercado' : 'Market'}
+            title={lang === 'es' ? 'Concentración y estructura' : 'Concentration & structure'}
+            accent={accent}
+          />
+          <CategoryDiagnosticGrid
+            category={c}
+            concentration={concentration}
+            vendors={vendorRows}
+            trends={categoryTrends}
+            accent={accent}
+            lang={lang}
+          />
+        </section>
       </div>
 
-      {/* REFERENCE — full vendor table */}
-      <div className="mt-14">
+      {/* § III — LAS SEÑALES · December tell + ARIA fingerprint */}
+      {(seasonalityData || (patternsData && patternsData.vendors_in_aria > 0)) && (
+        <div className="mt-12">
+          <section id="signals" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="signals"
+              eyebrow={lang === 'es' ? 'Señales' : 'Signals'}
+              title={lang === 'es' ? 'Las señales' : 'The tells'}
+              accent={accent}
+            />
+            <div className="grid gap-8 md:grid-cols-2">
+              {seasonalityData && (
+                <div>
+                  <p className="font-mono mb-3" style={{ fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                    {lang === 'es' ? 'La señal de diciembre' : 'The December tell'}
+                  </p>
+                  <SeasonalityTell data={seasonalityData as SeasonalityData} accent={accent} lang={lang} />
+                </div>
+              )}
+              {patternsData && patternsData.vendors_in_aria > 0 && (
+                <div>
+                  <p className="font-mono mb-3" style={{ fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                    {lang === 'es' ? 'La huella ARIA' : 'The ARIA fingerprint'}
+                  </p>
+                  <AriaFingerprint data={patternsData as PatternsData} lang={lang} />
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* § IV — LA TRAYECTORIA · spend & risk across administrations */}
+      {categoryTrends.length > 1 && (
+        <div className="mt-12">
+          <section id="trajectory" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="trajectory"
+              eyebrow={lang === 'es' ? 'Sexenio' : 'Administrations'}
+              title={lang === 'es' ? 'El gasto por sexenio' : 'Spend across administrations'}
+              accent={accent}
+            />
+            <SectorSexenioStrip
+              trends={categoryTrends.map((p) => ({
+                year: p.year,
+                total_contracts: p.total_contracts,
+                total_value_mxn: p.total_value,
+                avg_risk_score: p.avg_risk ?? 0,
+              }))}
+              accent={accent}
+              lang={lang}
+            />
+          </section>
+        </div>
+      )}
+
+      {/* § V — LA COMPOSICIÓN · subcategories (conditional — many categories have none) */}
+      {subcatData && subcatData.data && subcatData.data.length > 0 && (
+        <div className="mt-12">
+          <section id="composition" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="composition"
+              eyebrow={lang === 'es' ? 'Composición' : 'Composition'}
+              title={lang === 'es' ? 'Qué hay dentro' : "What's inside"}
+              meta={lang === 'es' ? `${subcatData.data.length} subcategorías` : `${subcatData.data.length} subcategories`}
+              accent={accent}
+            />
+            <SubcategoryComposition rows={subcatData.data as SubcatRow[]} accent={accent} lang={lang} />
+          </section>
+        </div>
+      )}
+
+      {/* REFERENCE — full vendor register */}
+      <div className="mt-12">
         <section id="vendors" className="scroll-mt-20">
           <DossierSectionHeader
             id="vendors"
             eyebrow={lang === 'es' ? 'Proveedores' : 'Vendors'}
-            title={lang === 'es' ? 'Quién captura el mercado' : 'Who captures the market'}
+            title={lang === 'es' ? 'Registro de proveedores' : 'Vendor register'}
             meta={vendorRows.length ? (lang === 'es' ? `Los ${vendorRows.length} mayores` : `Top ${vendorRows.length}`) : undefined}
             accent={accent}
           />
           <CategoryVendorTable vendors={vendorRows} lang={lang} />
+        </section>
+      </div>
+
+      {/* § — PARES DE CAPTURA · vendor × institution (strictly lazy, ~14s) */}
+      <div className="mt-12">
+        <section id="pairs" className="scroll-mt-20">
+          <DossierSectionHeader
+            id="pairs"
+            eyebrow={lang === 'es' ? 'Pares de captura' : 'Capture pairs'}
+            title={lang === 'es' ? 'Proveedor × institución' : 'Vendor × institution'}
+            accent={accent}
+          />
+          <CapturePairs
+            rows={pairsData?.data ?? []}
+            isLoading={pairsLoading}
+            loaded={loadPairs}
+            onLoad={() => setLoadPairs(true)}
+            lang={lang}
+          />
         </section>
       </div>
 
