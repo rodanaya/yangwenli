@@ -58,27 +58,29 @@ interface NavSectionDef {
   items: NavItemDef[]
 }
 
-// v3.0 LOCKED sidebar — 4 sections / 12 items.
-// Removed entries that pointed at broken or duplicate destinations
-// (Brief Ejecutivo duplicated /, Patrones had no route, Categorías only
-// redirected). Per docs/PROJECT_LOCKED_V3.md — every nav entry must lead
-// to a working page. No exceptions.
+// v3.1 sidebar — 5 sections / 13 items, "newspaper voice" relabel
+// (2026-06-09). PORTADA (front page) replaces DESCUBRIR so the top
+// section no longer reads as a synonym of EXPLORAR; the orphan
+// PLATAFORMA section is renamed METODOLOGÍA after its only item.
+// Per docs/PROJECT_LOCKED_V3.md — every nav entry must lead to a
+// working page. No exceptions.
 const NAV_SECTIONS: NavSectionDef[] = [
   {
-    sectionKey: 'sections.discover',
+    sectionKey: 'sections.portada',
     items: [
-      // 2026-05-10 Phase 7: Spatial Map promoted to /. The spatial nav is
-      // now the homepage, listed first in Discover. Executive briefing kept
-      // available at /dashboard. The Observatory storytelling surface
-      // remains at /atlas.
-      { i18nKey: 'explore', href: '/', icon: Map },
+      // The executive briefing leads the front page (most legible
+      // orientation surface), then the two editorial surfaces, then the
+      // spatial map. El Mapa is still the homepage route (/) — clicking
+      // the logo / landing cold both resolve there — it just isn't
+      // listed first. Atlas storytelling stays at /atlas.
       { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
       { i18nKey: 'newsroom', href: '/journalists', icon: Newspaper },
+      { i18nKey: 'explore', href: '/', icon: Map },
     ],
   },
   {
-    sectionKey: 'sections.investigate',
+    sectionKey: 'sections.investigation',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
