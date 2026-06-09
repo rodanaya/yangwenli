@@ -19,7 +19,7 @@
  * resolved by routing through EntityIdentityChip. Legacy CategoryProfile
  * retains /print/categories/:id.
  */
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -38,10 +38,16 @@ import {
   AriaFingerprint,
   SubcategoryComposition,
   CapturePairs,
+  PriceSpread,
+  LargestContracts,
+  TopBuyers,
   type CompetitionData,
   type SeasonalityData,
   type PatternsData,
   type SubcatRow,
+  type PriceSpreadData,
+  type LargeContractRow,
+  type TopBuyerRow,
 } from '@/components/category/CategoryDossierSections'
 import { SectorSexenioStrip } from '@/components/sector/SectorReferenceSections'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -143,11 +149,33 @@ export default function CategoryDossier() {
     staleTime: 5 * 60 * 1000,
   })
   // Enrichment endpoints — all in the FAST tier; each query is isolated so one
-  // empty/erroring endpoint never blanks its siblings. getPriceDistribution is
-  // intentionally NOT fetched (it times out >30s live).
+  // empty/erroring endpoint never blanks its siblings. getPriceDistribution,
+  // getTopContracts and getTopInstitutions are now served from precomputed
+  // tables (2026-06-09) so they're instant too.
   const { data: competitionData } = useQuery({
     queryKey: ['cat-dossier', 'competition', categoryId],
     queryFn: () => categoriesApi.getCompetition(categoryId),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  const { data: priceData } = useQuery({
+    queryKey: ['cat-dossier', 'price', categoryId],
+    queryFn: () => categoriesApi.getPriceDistribution(categoryId),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  const { data: topContractsData } = useQuery({
+    queryKey: ['cat-dossier', 'top-contracts', categoryId],
+    queryFn: () => categoriesApi.getTopContracts(categoryId, 8),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  const { data: topInstitutionsData } = useQuery({
+    queryKey: ['cat-dossier', 'top-institutions', categoryId],
+    queryFn: () => categoriesApi.getTopInstitutions(categoryId, 6),
     enabled: validId,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -173,12 +201,11 @@ export default function CategoryDossier() {
     staleTime: 5 * 60 * 1000,
     retry: false,
   })
-  // Capture pairs are ~14s — strictly lazy, gated behind an explicit click.
-  const [loadPairs, setLoadPairs] = useState(false)
+  // Capture pairs are now precomputed (instant) — fetched eagerly like the rest.
   const { data: pairsData, isLoading: pairsLoading } = useQuery({
     queryKey: ['cat-dossier', 'vendor-institution', categoryId],
-    queryFn: () => categoriesApi.getVendorInstitution(categoryId, 15),
-    enabled: validId && loadPairs,
+    queryFn: () => categoriesApi.getVendorInstitution(categoryId, 12),
+    enabled: validId,
     staleTime: 5 * 60 * 1000,
     retry: false,
   })
@@ -259,6 +286,9 @@ export default function CategoryDossier() {
     ? { hhi: topVendorsData.hhi ?? 0, concentration_label: topVendorsData.concentration_label, top3_share_pct: topVendorsData.top3_share_pct ?? 0 }
     : null
   const vendorRows = topVendorsData?.data ?? []
+  const contractsRows = topContractsData?.contracts ?? []
+  const buyersRows = topInstitutionsData?.institutions ?? []
+  const hasPrice = !!priceData && (priceData.n ?? 0) > 0
 
   const lede = buildLede({ displayName, totalSpend: c.total_value ?? 0, sectorName, hrPct, daPct, lang })
   const dropChar = displayName.charAt(0)
@@ -451,6 +481,38 @@ export default function CategoryDossier() {
         </div>
       )}
 
+      {/* § — EL TAMAÑO DEL CONTRATO · price spread + mega-contract concentration */}
+      {hasPrice && (
+        <div className="mt-12">
+          <section id="size" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="size"
+              eyebrow={lang === 'es' ? 'Tamaño' : 'Size'}
+              title={lang === 'es' ? 'El tamaño del contrato' : 'Contract size'}
+              meta={lang === 'es' ? 'mediana vs promedio' : 'median vs mean'}
+              accent={accent}
+            />
+            <PriceSpread data={priceData as PriceSpreadData} accent={accent} lang={lang} />
+          </section>
+        </div>
+      )}
+
+      {/* § — LOS GRANDES CONTRATOS · largest single awards */}
+      {contractsRows.length > 0 && (
+        <div className="mt-12">
+          <section id="largest" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="largest"
+              eyebrow={lang === 'es' ? 'Los mayores' : 'The largest'}
+              title={lang === 'es' ? 'Los grandes contratos' : 'The largest contracts'}
+              meta={lang === 'es' ? `Los ${contractsRows.length} mayores` : `Top ${contractsRows.length}`}
+              accent={accent}
+            />
+            <LargestContracts rows={contractsRows as LargeContractRow[]} accent={accent} lang={lang} />
+          </section>
+        </div>
+      )}
+
       {/* REFERENCE — full vendor register */}
       <div className="mt-12">
         <section id="vendors" className="scroll-mt-20">
@@ -465,7 +527,23 @@ export default function CategoryDossier() {
         </section>
       </div>
 
-      {/* § — PARES DE CAPTURA · vendor × institution (strictly lazy, ~14s) */}
+      {/* § — QUIÉN COMPRA · the buying institutions */}
+      {buyersRows.length > 0 && (
+        <div className="mt-12">
+          <section id="buyers" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="buyers"
+              eyebrow={lang === 'es' ? 'Compradores' : 'Buyers'}
+              title={lang === 'es' ? 'Quién compra' : 'Who buys'}
+              meta={lang === 'es' ? 'instituciones · por gasto' : 'institutions · by spend'}
+              accent={accent}
+            />
+            <TopBuyers rows={buyersRows as TopBuyerRow[]} lang={lang} />
+          </section>
+        </div>
+      )}
+
+      {/* § — PARES DE CAPTURA · vendor × institution (precomputed, instant) */}
       <div className="mt-12">
         <section id="pairs" className="scroll-mt-20">
           <DossierSectionHeader
@@ -477,8 +555,6 @@ export default function CategoryDossier() {
           <CapturePairs
             rows={pairsData?.data ?? []}
             isLoading={pairsLoading}
-            loaded={loadPairs}
-            onLoad={() => setLoadPairs(true)}
             lang={lang}
           />
         </section>

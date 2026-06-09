@@ -2535,7 +2535,49 @@ export const categoriesApi = {
       mean_median_ratio: number | null
       outlier_count: number
       outlier_value: number
+      outlier_value_pct?: number
+      mega_count?: number
+      mega_value?: number
+      mega_value_pct?: number
+      total_value?: number
       yearly_trend: { year: number; count: number; avg_value: number }[]
+    }
+  },
+
+  getTopContracts: async (categoryId: number, limit = 8) => {
+    const { data } = await api.get(`/categories/${categoryId}/top-contracts`, { params: { limit } })
+    return data as {
+      category_id: number
+      category_name: string
+      contracts: {
+        contract_id: number
+        amount_mxn: number
+        year: number | null
+        risk_level: string | null
+        risk_score: number | null
+        vendor_id: number | null
+        vendor_name: string | null
+        institution_id: number | null
+        institution_name: string | null
+        title: string | null
+      }[]
+    }
+  },
+
+  getTopInstitutions: async (categoryId: number, limit = 6) => {
+    const { data } = await api.get(`/categories/${categoryId}/top-institutions`, { params: { limit } })
+    return data as {
+      category_id: number
+      category_name: string
+      institutions: {
+        institution_id: number
+        name: string
+        full_name: string
+        contract_count: number
+        value_mxn: number
+        share_pct: number
+        avg_risk: number | null
+      }[]
     }
   },
 }

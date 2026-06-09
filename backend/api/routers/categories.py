@@ -4,6 +4,7 @@ Spending Categories API endpoints.
 Provides category-level statistics, contract lists, and yearly trends
 based on the Mexican government's partida-especifica classification.
 """
+import json
 import logging
 import time as _time
 from typing import Any, Dict, Optional
@@ -232,6 +233,45 @@ def get_category_vendor_institution(
         cat = cur.fetchone()
         if not cat:
             raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        # Fast path: serve from the precomputed capture-pairs table if present
+        # (built by _precompute_category_enrichments.py — top-N vendor×institution
+        # pairs by value, all scopes). This is what lets the dossier render the
+        # pairs INSTANTLY instead of behind a ~14s "Load" button. The live
+        # aggregation below remains the fallback for deploy DBs that predate it.
+        if _table_exists(conn, "category_vendor_institution_topn"):
+            prows = cur.execute("""
+                SELECT vendor_id, vendor_name, institution_id, institution_name,
+                       contract_count, total_value, avg_risk, max_risk,
+                       direct_award_pct, single_bid_pct
+                FROM category_vendor_institution_topn
+                WHERE category_id = ?
+                ORDER BY rank
+                LIMIT ?
+            """, (category_id, limit)).fetchall()
+            if prows:
+                return {
+                    "category_id": category_id,
+                    "category_name": cat["name_es"],
+                    "scope": "all",
+                    "precomputed": True,
+                    "data": [
+                        {
+                            "vendor_id": r["vendor_id"],
+                            "vendor_name": r["vendor_name"],
+                            "institution_id": r["institution_id"],
+                            "institution_name": r["institution_name"],
+                            "contract_count": r["contract_count"],
+                            "total_value": r["total_value"],
+                            "avg_risk": round(r["avg_risk"] or 0, 4),
+                            "max_risk": round(r["max_risk"] or 0, 4),
+                            "direct_award_pct": round(r["direct_award_pct"] or 0, 1),
+                            "single_bid_pct": round(r["single_bid_pct"] or 0, 1),
+                        }
+                        for r in prows
+                    ],
+                    "total": len(prows),
+                }
 
         scope_filter = ""
         params: list = [category_id]
@@ -737,13 +777,49 @@ def get_category_competition(category_id: int):
 
 @router.get("/{category_id}/price-distribution")
 def get_category_price_distribution(category_id: int):
-    """Return contract-amount distribution: P25/P50/P75, mean, skew ratio, outlier count."""
+    """Return contract-amount distribution: P25/P50/P75, mean, skew ratio, outlier count.
+
+    Fast path: served from precomputed_stats['category_price_distribution'] when
+    present (the live percentile scan over a category's rows takes >30s and was
+    why this section was previously omitted). Live compute is the fallback.
+    """
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
         cat = cur.fetchone()
         if not cat:
             raise HTTPException(status_code=404, detail="Category not found")
+
+        if _table_exists(conn, "precomputed_stats"):
+            pre = cur.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'category_price_distribution'"
+            ).fetchone()
+            if pre:
+                try:
+                    entry = json.loads(pre[0]).get(str(category_id))
+                except (json.JSONDecodeError, AttributeError):
+                    entry = None
+                if entry and entry.get("n", 0) > 0:
+                    return {
+                        "category_id": category_id,
+                        "category_name": cat["name_es"],
+                        "precomputed": True,
+                        "n": entry["n"],
+                        "p25": entry.get("p25"),
+                        "p50": entry.get("p50"),
+                        "p75": entry.get("p75"),
+                        "mean": entry.get("mean"),
+                        "iqr": entry.get("iqr"),
+                        "mean_median_ratio": entry.get("mean_median_ratio"),
+                        "outlier_count": entry.get("outlier_count", 0),
+                        "outlier_value": entry.get("outlier_value", 0),
+                        "outlier_value_pct": entry.get("outlier_value_pct", 0.0),
+                        "mega_count": entry.get("mega_count", 0),
+                        "mega_value": entry.get("mega_value", 0),
+                        "mega_value_pct": entry.get("mega_value_pct", 0.0),
+                        "total_value": entry.get("total_value", 0),
+                        "yearly_trend": [],
+                    }
 
         # Total valid count
         cur.execute("""
@@ -970,9 +1046,14 @@ def get_category_top_vendors_fast(
         if not cat:
             raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
 
-        rows = cur.execute("""
+        # Risk fields were backfilled into category_vendor_topn on 2026-06-09 so
+        # the dossier's vendor-register Risk column is populated. Stay
+        # backward-compatible with deploy DBs that predate the backfill.
+        has_risk = _column_exists(conn, "category_vendor_topn", "avg_risk")
+        risk_cols = ", avg_risk, max_risk, direct_award_pct, single_bid_pct" if has_risk else ""
+        rows = cur.execute(f"""
             SELECT vendor_id, vendor_name, contract_count, vendor_value,
-                   category_total_value, market_share_pct
+                   category_total_value, market_share_pct{risk_cols}
             FROM category_vendor_topn
             WHERE category_id = ?
             ORDER BY rank
@@ -999,9 +1080,10 @@ def get_category_top_vendors_fast(
                 "contract_count": r["contract_count"],
                 "vendor_value": r["vendor_value"],
                 "market_share_pct": r["market_share_pct"],
-                "avg_risk": None,
-                "direct_award_pct": None,
-                "single_bid_pct": None,
+                "avg_risk": (r["avg_risk"] if has_risk else None),
+                "max_risk": (r["max_risk"] if has_risk else None),
+                "direct_award_pct": (r["direct_award_pct"] if has_risk else None),
+                "single_bid_pct": (r["single_bid_pct"] if has_risk else None),
             }
             for r in rows
         ]
@@ -1023,6 +1105,59 @@ def get_category_top_vendors_fast(
             "top3_share_pct": round(top3_share, 1),
             "data": vendors,
         }
+
+
+@router.get("/{category_id}/top-contracts")
+def get_category_top_contracts(category_id: int, limit: int = Query(8, ge=1, le=10)):
+    """Largest single contracts in a category — the named, datable, clickable
+    artifacts (megaprojects). Served from precomputed_stats['category_largest_contracts']
+    (a live ORDER BY over a category's rows takes seconds and locks SQLite).
+    Amounts pre-filtered to <= 100B MXN. Mirrors /sectors/{id}/top-contracts."""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        contracts = []
+        if _table_exists(conn, "precomputed_stats"):
+            row = cur.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'category_largest_contracts'"
+            ).fetchone()
+            if row:
+                try:
+                    contracts = json.loads(row[0]).get(str(category_id), [])[:limit]
+                except (json.JSONDecodeError, AttributeError) as e:
+                    logger.warning(f"category_largest_contracts parse failed: {e}")
+
+        return {"category_id": category_id, "category_name": cat["name_es"], "contracts": contracts}
+
+
+@router.get("/{category_id}/top-institutions")
+def get_category_top_institutions(category_id: int, limit: int = Query(6, ge=1, le=10)):
+    """Top buying institutions in a category (who SPENDS here) by value, with each
+    institution's share of the category. Served from
+    precomputed_stats['category_top_institutions']."""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        institutions = []
+        if _table_exists(conn, "precomputed_stats"):
+            row = cur.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'category_top_institutions'"
+            ).fetchone()
+            if row:
+                try:
+                    institutions = json.loads(row[0]).get(str(category_id), [])[:limit]
+                except (json.JSONDecodeError, AttributeError) as e:
+                    logger.warning(f"category_top_institutions parse failed: {e}")
+
+        return {"category_id": category_id, "category_name": cat["name_es"], "institutions": institutions}
 
 
 @router.get("/trends")

@@ -411,7 +411,9 @@ export function SubcategoryComposition({ rows, accent, lang }: { rows: SubcatRow
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// § — CAPTURE PAIRS (PARES DE CAPTURA) — vendor × institution. STRICTLY LAZY.
+// § — CAPTURE PAIRS (PARES DE CAPTURA) — vendor × institution.
+// 2026-06-09: now served from a precomputed table (instant) — the old "Load
+// capture pairs" button is gone; the section fetches eagerly like its siblings.
 // ════════════════════════════════════════════════════════════════════════════
 
 export interface CapturePairRow {
@@ -430,31 +432,12 @@ export interface CapturePairRow {
 export function CapturePairs({
   rows,
   isLoading,
-  loaded,
-  onLoad,
   lang,
 }: {
   rows: CapturePairRow[]
   isLoading: boolean
-  loaded: boolean
-  onLoad: () => void
   lang: 'en' | 'es'
 }) {
-  if (!loaded) {
-    return (
-      <button
-        type="button"
-        onClick={onLoad}
-        className="w-full py-4 border border-dashed rounded-sm font-mono transition-colors hover:bg-background-elevated"
-        style={{ borderColor: 'var(--color-border)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}
-      >
-        {t(lang, 'Cargar pares de captura ↓', 'Load capture pairs ↓')}
-        <span className="block mt-1 normal-case tracking-normal" style={{ fontSize: 10, color: 'var(--color-text-muted)', letterSpacing: 0 }}>
-          {t(lang, 'consulta lenta · proveedor × institución', 'slow query · vendor × institution')}
-        </span>
-      </button>
-    )
-  }
   if (isLoading) {
     return (
       <div className="space-y-2" aria-live="polite">
@@ -502,6 +485,222 @@ export function CapturePairs({
           })}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// § — CONTRACT SIZE / OUTLIERS (EL TAMAÑO DEL CONTRATO) — the shape of spending:
+// a typical contract is small, but a handful of mega-contracts hold the money.
+// ════════════════════════════════════════════════════════════════════════════
+
+export interface PriceSpreadData {
+  n: number
+  p25: number | null
+  p50: number | null
+  p75: number | null
+  mean: number | null
+  mean_median_ratio: number | null
+  outlier_count: number
+  mega_count?: number
+  mega_value?: number
+  mega_value_pct?: number
+  total_value?: number
+}
+
+export function PriceSpread({ data, accent, lang }: { data: PriceSpreadData; accent: string; lang: 'en' | 'es' }) {
+  const { p25, p50, p75, mean } = data
+  if (!p50 || !p75 || !mean) return <EmptyNote text={t(lang, 'Sin distribución de precios.', 'No price distribution.')} />
+  const lo = p25 ?? 0
+  const scaleMax = Math.max(p75, mean) * 1.12
+  const x = (v: number) => `${Math.max(0, Math.min(100, (v / scaleMax) * 100))}%`
+  const ratio = data.mean_median_ratio ?? (mean / p50)
+  const megaPct = data.mega_value_pct ?? 0
+  const megaN = data.mega_count ?? 0
+  const skewed = ratio >= 3
+  const anchorColor = megaPct >= 30 ? RISK_TEXT_COLORS.critical : megaPct >= 15 ? RISK_TEXT_COLORS.high : 'var(--color-text-primary)'
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr] items-start">
+      {/* Quartile scale — IQR box, median line, mean marker (right-skew made visible) */}
+      <div>
+        <div className="relative" style={{ height: 56 }}>
+          {/* baseline track */}
+          <div aria-hidden="true" className="absolute left-0 right-0" style={{ top: 26, height: 3, background: 'var(--color-border)', borderRadius: 999 }} />
+          {/* IQR box P25→P75 */}
+          <div aria-hidden="true" className="absolute" style={{ left: x(lo), width: `calc(${x(p75)} - ${x(lo)})`, top: 18, height: 19, background: `${accent}33`, border: `1px solid ${accent}`, borderRadius: 3 }} />
+          {/* median line */}
+          <div aria-hidden="true" className="absolute" style={{ left: x(p50), top: 14, height: 27, width: 2, background: accent }} />
+          {/* mean marker */}
+          <div aria-hidden="true" className="absolute" style={{ left: x(mean), top: 10, height: 35, width: 2, background: anchorColor }} />
+          {/* labels */}
+          <div className="absolute font-mono tabular-nums" style={{ left: x(p50), top: 0, transform: 'translateX(-50%)', fontSize: 9, color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+            {t(lang, 'mediana', 'median')} {formatCompactMXN(p50)}
+          </div>
+          <div className="absolute font-mono tabular-nums" style={{ left: x(mean), top: 44, transform: 'translateX(-50%)', fontSize: 9, color: anchorColor, whiteSpace: 'nowrap', fontWeight: 600 }}>
+            {t(lang, 'promedio', 'mean')} {formatCompactMXN(mean)}
+          </div>
+        </div>
+        <div className="font-mono mt-1 flex justify-between" style={{ fontSize: 8.5, color: 'var(--color-text-muted)' }}>
+          <span>P25 {p25 != null ? formatCompactMXN(p25) : '—'}</span>
+          <span>P75 {formatCompactMXN(p75)}</span>
+        </div>
+        <p className="mt-3" style={FINDING_STYLE}>
+          {skewed
+            ? t(
+                lang,
+                `La mitad de los contratos vale menos de ${formatCompactMXN(p50)}, pero el promedio (${formatCompactMXN(mean)}) lo supera ${ratio.toFixed(1)}× — unos pocos contratos gigantes inflan la media.`,
+                `Half the contracts are worth less than ${formatCompactMXN(p50)}, yet the mean (${formatCompactMXN(mean)}) runs ${ratio.toFixed(1)}× higher — a handful of giant contracts pull the average up.`,
+              )
+            : t(
+                lang,
+                `La mediana es ${formatCompactMXN(p50)} y el promedio ${formatCompactMXN(mean)} (${ratio.toFixed(1)}×) — sin una cola de valores extremos marcada.`,
+                `The median is ${formatCompactMXN(p50)} and the mean ${formatCompactMXN(mean)} (${ratio.toFixed(1)}×) — no pronounced extreme-value tail.`,
+              )}
+        </p>
+      </div>
+
+      {/* Mega-contract concentration anchor */}
+      <div className="lg:border-l lg:pl-5" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="tabular-nums" style={{ ...BIGNUM_STYLE, fontSize: 44, lineHeight: 1, color: anchorColor }}>
+          {megaPct > 0 ? `${megaPct.toFixed(0)}` : '—'}<span style={{ fontSize: 24 }}>%</span>
+        </div>
+        <div className="font-mono mt-1.5" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+          {t(lang, 'del valor · en contratos ≥ 1.000 MDP', 'of value · in contracts ≥ 1B MXN')}
+        </div>
+        <p className="mt-3" style={FINDING_STYLE}>
+          {megaN > 0
+            ? t(
+                lang,
+                `${formatNumber(megaN)} ${megaN === 1 ? 'contrato concentra' : 'contratos concentran'} el ${megaPct.toFixed(0)}% del dinero de la categoría — de ${formatNumber(data.n)} contratos en total.`,
+                `${formatNumber(megaN)} ${megaN === 1 ? 'contract holds' : 'contracts hold'} ${megaPct.toFixed(0)}% of the category's money — out of ${formatNumber(data.n)} contracts in all.`,
+              )
+            : t(lang, `Ningún contrato supera los 1.000 MDP en esta categoría.`, `No single contract exceeds 1B MXN in this category.`)}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// § — LARGEST CONTRACTS (LOS GRANDES CONTRATOS) — named, datable, clickable.
+// ════════════════════════════════════════════════════════════════════════════
+
+export interface LargeContractRow {
+  contract_id: number
+  amount_mxn: number
+  year: number | null
+  risk_level: string | null
+  risk_score: number | null
+  vendor_id: number | null
+  vendor_name: string | null
+  institution_id: number | null
+  institution_name: string | null
+  title: string | null
+}
+
+export function LargestContracts({ rows, accent, lang }: { rows: LargeContractRow[]; accent: string; lang: 'en' | 'es' }) {
+  const items = (rows ?? []).filter((r) => (r.amount_mxn ?? 0) > 0)
+  if (items.length === 0) return <EmptyNote text={t(lang, 'Sin contratos destacados.', 'No standout contracts.')} />
+  const maxAmt = Math.max(...items.map((r) => r.amount_mxn))
+
+  return (
+    <ol className="space-y-3.5">
+      {items.map((r, i) => {
+        const lvl = r.risk_score != null && r.risk_score > 0 ? getRiskLevelFromScore(r.risk_score) : 'low'
+        const riskPct = r.risk_score != null && r.risk_score > 0 ? Math.round(r.risk_score * 100) : null
+        return (
+          <li key={r.contract_id} className="flex gap-3">
+            <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 11, color: 'var(--color-text-muted)', width: 16, lineHeight: '1.5rem' }}>{i + 1}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="tabular-nums" style={{ ...BIGNUM_STYLE, fontSize: 19, color: 'var(--color-text-primary)' }}>
+                  {formatCompactMXN(r.amount_mxn)}
+                </span>
+                <span className="shrink-0 flex items-baseline gap-2.5 font-mono tabular-nums" style={{ fontSize: 10.5, color: 'var(--color-text-muted)' }}>
+                  {r.year != null && <span>{r.year}</span>}
+                  {riskPct != null && (
+                    <span style={{ color: RISK_TEXT_COLORS[lvl], fontWeight: 600 }}>{riskPct}</span>
+                  )}
+                </span>
+              </div>
+              <div className="mt-0.5">
+                <div style={{ position: 'relative', height: 3, background: 'var(--color-border)', borderRadius: 999 }}>
+                  <div style={{ position: 'absolute', inset: 0, width: `${(r.amount_mxn / maxAmt) * 100}%`, background: accent, borderRadius: 999 }} />
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                {r.vendor_id != null && r.vendor_name && (
+                  <EntityIdentityChip type="vendor" id={r.vendor_id} name={r.vendor_name} size="sm" />
+                )}
+                {r.institution_id != null && r.institution_name && (
+                  <>
+                    <span aria-hidden="true" style={{ color: 'var(--color-text-muted)' }}>→</span>
+                    <EntityIdentityChip type="institution" id={r.institution_id} name={r.institution_name} size="sm" hideIcon />
+                  </>
+                )}
+              </div>
+              {r.title && (
+                <p className="truncate mt-1" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                  {r.title}
+                </p>
+              )}
+            </div>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// § — TOP BUYERS (QUIÉN COMPRA) — the institutions that SPEND in this category.
+// ════════════════════════════════════════════════════════════════════════════
+
+export interface TopBuyerRow {
+  institution_id: number
+  name: string
+  full_name: string
+  contract_count: number
+  value_mxn: number
+  share_pct: number
+  avg_risk: number | null
+}
+
+export function TopBuyers({ rows, lang }: { rows: TopBuyerRow[]; lang: 'en' | 'es' }) {
+  const items = (rows ?? []).filter((r) => (r.value_mxn ?? 0) > 0)
+  if (items.length === 0) return <EmptyNote text={t(lang, 'Sin desglose por institución compradora.', 'No buying-institution breakdown.')} />
+  const maxShare = Math.max(...items.map((r) => r.share_pct), 1)
+  const top3 = items.slice(0, 3).reduce((s, r) => s + (r.share_pct ?? 0), 0)
+
+  return (
+    <div className="space-y-3">
+      <p className="font-mono" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+        {t(
+          lang,
+          `Las 3 mayores instituciones colocan el ${Math.round(top3)}% del gasto de la categoría.`,
+          `The top 3 institutions place ${Math.round(top3)}% of the category's spend.`,
+        )}
+      </p>
+      <div className="space-y-2.5">
+        {items.map((r) => {
+          const lvl = r.avg_risk != null && r.avg_risk > 0 ? getRiskLevelFromScore(r.avg_risk) : 'low'
+          const riskPct = r.avg_risk != null && r.avg_risk > 0 ? Math.round(r.avg_risk * 100) : null
+          return (
+            <div key={r.institution_id} className="flex items-center gap-3">
+              <div className="shrink-0 min-w-0" style={{ width: 188 }}>
+                <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="sm" hideIcon />
+              </div>
+              <FullBar pct={(r.share_pct / maxShare) * 100} color={r.share_pct >= 40 ? RISK_COLORS.high : 'var(--color-text-secondary)'} height={7} ariaLabel={r.name} />
+              <span className="shrink-0 text-right font-mono tabular-nums flex items-baseline justify-end gap-2" style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 132 }}>
+                <span>{formatCompactMXN(r.value_mxn)}</span>
+                <span style={{ color: r.share_pct >= 40 ? RISK_TEXT_COLORS.high : 'var(--color-text-muted)', fontWeight: r.share_pct >= 40 ? 600 : 400 }}>{r.share_pct.toFixed(0)}%</span>
+                <span style={{ color: riskPct != null ? RISK_TEXT_COLORS[lvl] : 'var(--color-text-muted)', fontWeight: 600, width: 22 }}>{riskPct ?? '—'}</span>
+              </span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
