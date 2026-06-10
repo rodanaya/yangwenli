@@ -14,7 +14,7 @@
  * Legacy ContractDetail (958 LOC) moved to /print/contracts/:id.
  */
 import { useState } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { contractApi } from '@/api/client'
@@ -29,6 +29,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatDate } from '@/lib/utils'
 
@@ -229,6 +230,25 @@ export default function ContractDossier() {
   const topContributors = (() => {
     const features = explanation?.features ?? []
     return [...features].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)).slice(0, 4)
+  })()
+
+  // Charter invariant #14 — the § header must STATE THE FINDING, not name a
+  // topic. When SHAP is available, lead with the single biggest contributor:
+  // its label + signed magnitude (e.g. "La volatilidad de precios empuja el
+  // indicador +0.32"). Fall back to the topic noun when SHAP is absent.
+  const hasShapReading = Boolean(explanation?.explanation_available) && topContributors.length > 0
+  const leadFactor = hasShapReading ? topContributors[0] : null
+  const riskReadingHeader = (() => {
+    const topicLabel = lang === 'es' ? 'Lectura del riesgo' : 'Risk reading'
+    if (!leadFactor) return topicLabel
+    const pushes = leadFactor.contribution > 0
+    const signed = `${pushes ? '+' : '−'}${Math.abs(leadFactor.contribution).toFixed(2)}`
+    if (lang === 'es') {
+      const verb = pushes ? 'empuja' : 'reduce'
+      return `${leadFactor.label} ${verb} el indicador ${signed}`
+    }
+    const verb = pushes ? 'pushes the risk indicator' : 'lowers the risk indicator'
+    return `${leadFactor.label} ${verb} ${signed}`
   })()
 
   const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
@@ -517,10 +537,10 @@ export default function ContractDossier() {
 
       <ChapterDivider sectorAccent={sectorAccent} />
 
-      {/* § RISK READING */}
+      {/* § RISK READING — header states the finding (charter §IV #14) */}
       <ChapterShell id="risk-reading">
         <FadeIn>
-          <SubheadRule label={lang === 'es' ? 'Lectura del riesgo' : 'Risk reading'} />
+          <SubheadRule label={riskReadingHeader} />
           {explanation?.explanation_available && topContributors.length > 0 ? (
             <div className="mt-7 max-w-3xl mx-auto">
               <p
@@ -643,6 +663,57 @@ export default function ContractDossier() {
                 >
                   {lang === 'es' ? 'Ficha de la institución' : 'Open institution dossier'} ↗
                 </button>
+              )}
+            </div>
+          </div>
+        </FadeIn>
+      </ChapterShell>
+
+      <ChapterDivider sectorAccent={sectorAccent} />
+
+      {/* § ADÓNDE IR — mandatory coda: investigate CTA + entity chips (charter §II / §IV #13) */}
+      <ChapterShell id="adonde-ir">
+        <FadeIn>
+          <SubheadRule label={lang === 'es' ? 'Adónde ir' : 'Where to go next'} />
+          <div className="mt-7 max-w-3xl mx-auto">
+            {/* Investigate CTA — amber, mono, uppercase */}
+            <Link
+              to="/aria"
+              state={{ from: '/contracts', vendorId: contract.vendor_id }}
+              className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+              style={{ fontSize: 11, color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}
+              aria-label={lang === 'es' ? 'Ver al proveedor en La Cola de investigación de ARIA' : 'See this vendor in the ARIA investigation queue'}
+            >
+              <ExternalLink className="w-3 h-3" aria-hidden="true" />
+              {lang === 'es' ? 'Ver proveedor en La Cola' : 'See vendor in the queue'} →
+            </Link>
+
+            {/* Related-entity chips — recomposed from already-fetched contract data */}
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              {contract.vendor_id && contract.vendor_name && (
+                <EntityIdentityChip
+                  type="vendor"
+                  id={contract.vendor_id}
+                  name={contract.vendor_name}
+                  riskScore={score > 0 ? score : null}
+                  sectorCode={sectorCode}
+                />
+              )}
+              {contract.institution_id && contract.institution_name && (
+                <EntityIdentityChip
+                  type="institution"
+                  id={contract.institution_id}
+                  name={contract.institution_name}
+                  sectorCode={sectorCode}
+                />
+              )}
+              {contract.sector_id != null && (sectorName ?? contract.sector_name) && (
+                <EntityIdentityChip
+                  type="sector"
+                  id={contract.sector_id}
+                  name={sectorName ?? contract.sector_name}
+                  sectorCode={sectorCode}
+                />
               )}
             </div>
           </div>
