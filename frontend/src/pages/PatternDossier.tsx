@@ -11,7 +11,7 @@ import { networkApi, ariaApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { CrossPatternComparison } from '@/components/patterns/CrossPatternComparison'
-import { getRiskLevelFromScore, SECTOR_COLORS, PATTERN_COLORS } from '@/lib/constants'
+import { getRiskLevelFromScore, SECTOR_COLORS, SECTORS, PATTERN_COLORS } from '@/lib/constants'
 import { formatCompactMXN, formatDualCurrency } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
@@ -163,6 +163,121 @@ const PATTERN_HOOKS: Record<string, { en: string; es: string }> = {
 }
 
 // ---------------------------------------------------------------------------
+// § · CÓMO INVESTIGAR — editorial intro, one per pattern.
+// Documented in the charter (§V: "promised § Cómo investigar absent") but never
+// shipped. Static bilingual copy keyed off PATTERN_EDITORIAL P1–P7: (1) what the
+// pattern is in one line, (2) what a journalist checks FIRST, (3) what counts as
+// corroboration. Folio voice — factual, no hype. ARIA output is a model SIGNAL,
+// never proven corruption; risk language is "indicador de riesgo".
+// ---------------------------------------------------------------------------
+interface InvestigateGuide {
+  what: { en: string; es: string }
+  first: { en: string; es: string }
+  corroborate: { en: string; es: string }
+}
+
+const PATTERN_INVESTIGATE: Record<string, InvestigateGuide> = {
+  P1: {
+    what: {
+      en: 'A single vendor holding the majority of one category at one institution year after year. The signal is concentration that persists across sexenios, not a one-off sole-source buy.',
+      es: 'Un único proveedor que concentra la mayoría de una categoría en una institución año tras año. La señal es una concentración que persiste entre sexenios, no una compra de fuente única aislada.',
+    },
+    first: {
+      en: 'Pull the institution–category pair and chart the vendor’s share by year. Then check the procedure type: legitimate dominance can survive open tenders; capture rarely does.',
+      es: 'Extraigan el par institución-categoría y grafiquen la participación del proveedor por año. Luego revisen el tipo de procedimiento: la dominancia legítima sobrevive a licitaciones abiertas; la captura rara vez.',
+    },
+    corroborate: {
+      en: 'A near-total direct-award rate, the absence of any losing bidder across years, or a competitor that exits the category the moment this vendor enters all corroborate. None of these alone proves wrongdoing — they narrow where to look.',
+      es: 'Una tasa de adjudicación directa casi total, la ausencia de cualquier oferente perdedor a lo largo de los años, o un competidor que abandona la categoría justo cuando entra este proveedor son corroboraciones. Ninguna por sí sola prueba un delito — acotan dónde mirar.',
+    },
+  },
+  P2: {
+    what: {
+      en: 'An entity that appears, wins a burst of contracts within one to three fiscal years, and then vanishes from the registry. Shared addresses and unverifiable RFCs are common tells.',
+      es: 'Una entidad que aparece, gana una ráfaga de contratos en uno a tres años fiscales y luego desaparece del registro. Domicilios compartidos y RFC inverificables son indicios frecuentes.',
+    },
+    first: {
+      en: 'Compare the vendor’s SAT RFC registration date against its first contract date. A firm winning public money before it formally exists is the cleanest lead available.',
+      es: 'Comparen la fecha de registro del RFC en el SAT contra la fecha del primer contrato. Una empresa que gana dinero público antes de existir formalmente es el lead más limpio disponible.',
+    },
+    corroborate: {
+      en: 'Appearance on the SAT EFOS Definitivo list, an RFC that fails checksum validation, or a legal address shared with another flagged entity each raise confidence. EFOS is documented external evidence; the burst shape alone is only a model signal.',
+      es: 'La aparición en la lista EFOS Definitivo del SAT, un RFC que no pasa la validación de suma de verificación, o un domicilio fiscal compartido con otra entidad marcada elevan la confianza. EFOS es evidencia externa documentada; la forma de ráfaga por sí sola es solo una señal del modelo.',
+    },
+  },
+  P3: {
+    what: {
+      en: 'A firm that sits in the procurement chain without delivering substantive value — routing the contract to a subcontractor while keeping a margin. Minimal infrastructure, no payroll, low-scrutiny state of incorporation.',
+      es: 'Una empresa que se sitúa en la cadena de contratación sin aportar valor sustantivo — enruta el contrato a un subcontratista y conserva un margen. Infraestructura mínima, sin nómina, constituida en un estado de baja fiscalización.',
+    },
+    first: {
+      en: 'Cross the vendor’s annual contract volume against its IMSS-registered employee count. A firm with tens of millions in contracts and no verifiable workforce cannot deliver what it was paid for.',
+      es: 'Crucen el volumen anual de contratos del proveedor contra su número de empleados registrados en el IMSS. Una empresa con decenas de millones en contratos y sin fuerza laboral verificable no puede entregar lo que se le pagó.',
+    },
+    corroborate: {
+      en: 'Network edges to known subcontractors, identical scopes resold downstream at a markup, or a cascade where a sister firm wins the same procedure the following year corroborate the intermediary read.',
+      es: 'Conexiones de red con subcontratistas conocidos, alcances idénticos revendidos aguas abajo con sobreprecio, o una cascada en la que una empresa hermana gana el mismo procedimiento el año siguiente corroboran la lectura de intermediario.',
+    },
+  },
+  P4: {
+    what: {
+      en: 'Vendors who appear to compete but coordinate — the same small group takes turns winning while the others file cover bids designed to lose. It reads as competition in COMPRANET but isn’t.',
+      es: 'Proveedores que aparentan competir pero coordinan — el mismo pequeño grupo se turna para ganar mientras los demás presentan ofertas de cobertura diseñadas para perder. En COMPRANET parece competencia, pero no lo es.',
+    },
+    first: {
+      en: 'Map the co-bidding graph for the vendor’s institution. Look for the same three to five firms recurring on each other’s losing-bid rosters across dozens of procedures.',
+      es: 'Mapeen el grafo de co-licitación de la institución del proveedor. Busquen las mismas tres a cinco empresas que se repiten en las listas de ofertas perdedoras unas de otras en docenas de procedimientos.',
+    },
+    corroborate: {
+      en: 'A near-deterministic rotation of who wins, bid margins that cluster suspiciously tight, or losing bids that exceed the budget cap turn a statistical pattern into a documentable rigging case. The co-bid rate alone is a model signal.',
+      es: 'Una rotación casi determinista de quién gana, márgenes de oferta sospechosamente ajustados, u ofertas perdedoras que exceden el techo presupuestal convierten un patrón estadístico en un caso de manipulación documentable. La tasa de co-licitación por sí sola es una señal del modelo.',
+    },
+  },
+  P5: {
+    what: {
+      en: 'A vendor whose unit prices sit systematically above the peer-group baseline for comparable goods. Two shapes matter: persistent overpricing across many contracts, and occasional spikes at multiples of the going rate.',
+      es: 'Un proveedor cuyos precios unitarios se ubican sistemáticamente por encima de la línea base de su grupo de pares para bienes comparables. Importan dos formas: el sobreprecio persistente en muchos contratos y los picos ocasionales a múltiplos de la tarifa vigente.',
+    },
+    first: {
+      en: 'Benchmark the vendor’s unit price against the sector-median for the same partida. Isolate the single highest-multiple contract first — that spike is the lede a reader can grasp in one sentence.',
+      es: 'Comparen el precio unitario del proveedor contra la mediana del sector para la misma partida. Aíslen primero el contrato de mayor múltiplo — ese pico es el gancho que un lector entiende en una frase.',
+    },
+    corroborate: {
+      en: 'A matching catalog reference price, an identical good bought cheaper by a peer institution the same year, or a markup that tracks an intermediary in the chain corroborate overpricing. Price benchmarking is feasible in pharma, construction supplies and IT.',
+      es: 'Un precio de referencia de catálogo coincidente, un bien idéntico comprado más barato por una institución par el mismo año, o un sobreprecio que sigue a un intermediario en la cadena corroboran el sobreprecio. El benchmarking de precios es factible en farmacéutica, suministros de construcción y TI.',
+    },
+  },
+  P6: {
+    what: {
+      en: 'An institution whose procurement function is effectively run by a handful of preferred vendors — extreme concentration, near-total reliance on direct awards, and resistance to competition even where the law requires it.',
+      es: 'Una institución cuya función de contratación es manejada en la práctica por un puñado de proveedores preferidos — concentración extrema, dependencia casi total de adjudicaciones directas y resistencia a la competencia incluso donde la ley la exige.',
+    },
+    first: {
+      en: 'Open the network view on the institution’s top vendor and trace the relationship back to its origin. Capture typically begins with one direct award that becomes the de-facto preferred vendor for everything after.',
+      es: 'Abran la vista de red sobre el proveedor principal de la institución y rastreen la relación hasta su origen. La captura suele comenzar con una adjudicación directa que se convierte en el proveedor preferido de facto para todo lo que sigue.',
+    },
+    corroborate: {
+      en: 'Persistence across an administration change, top-vendor direct-award rates above 85%, or competitive-procedure usage below the institution’s sector peers all reinforce the capture read. None alone is proof of corruption.',
+      es: 'La persistencia a través de un cambio de administración, tasas de adjudicación directa del proveedor principal superiores al 85%, o un uso de procedimientos competitivos por debajo de los pares sectoriales de la institución refuerzan la lectura de captura. Ninguna por sí sola es prueba de corrupción.',
+    },
+  },
+  P7: {
+    what: {
+      en: 'A vendor carrying documented external red flags — appearance on a regulatory blacklist, inclusion in a journalism-grounded corruption case, or ties to procurement officials. P7 surfaces the strongest external evidence the model can reach.',
+      es: 'Un proveedor que arrastra señales externas documentadas — aparición en una lista negra regulatoria, inclusión en un caso de corrupción documentado periodísticamente, o vínculos con funcionarios de contratación. P7 expone la evidencia externa más fuerte que el modelo puede alcanzar.',
+    },
+    first: {
+      en: 'Check the vendor against the external registries directly: SAT EFOS for tax fraud, the SFP sanction registry for procurement misconduct, and the curated ground-truth case library. A match on any is documented evidence, not a model inference.',
+      es: 'Verifiquen al proveedor directamente contra los registros externos: EFOS del SAT por fraude fiscal, el registro de sanciones de la SFP por mala conducta en contratación, y la biblioteca curada de casos ground-truth. Una coincidencia en cualquiera es evidencia documentada, no una inferencia del modelo.',
+    },
+    corroborate: {
+      en: 'Beyond the registry hit, look for family or political ties between the vendor’s officers and the contracting institution’s staff, and for the same RFC recurring across other flagged patterns. P7 is binary today; CENTINELA WEB will fold in graded media evidence in Phase 3.',
+      es: 'Más allá de la coincidencia en el registro, busquen vínculos familiares o políticos entre los directivos del proveedor y el personal de la institución contratante, y el mismo RFC recurrente en otros patrones marcados. P7 es binario hoy; CENTINELA WEB incorporará evidencia mediática graduada en la Fase 3.',
+    },
+  },
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -193,6 +308,21 @@ function buildSectorBreakdown(
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5)
+}
+
+/**
+ * Resolve a sector DISPLAY name (e.g. "Salud", "Health", "Tecnología") to its
+ * canonical SECTORS entry, so the coda can route a sector chip by numeric id.
+ * Matches the normalized slug against the sector code, ES name and EN name.
+ */
+function resolveSector(displayName: string): (typeof SECTORS)[number] | undefined {
+  const slug = sectorSlug(displayName)
+  return SECTORS.find(
+    (s) =>
+      s.code === slug ||
+      sectorSlug(s.name) === slug ||
+      sectorSlug(s.nameEN) === slug
+  )
 }
 
 /** Pattern code -> /cases?type=... mapping */
@@ -293,15 +423,82 @@ export default function PatternDossier() {
     value: allPatterns.reduce((s, p) => s + (p.total_value_mxn ?? 0), 0),
   }
 
+  // A0 spine — P1→P7 sibling stepper. The seven siblings are enumerable from
+  // the PATTERN_EDITORIAL metadata; wrap-around so P7 → P1 and P1 ← P7.
+  const siblingIndex = PATTERN_EDITORIAL.findIndex((m) => m.code === codeUpper)
+  const siblingCount = PATTERN_EDITORIAL.length
+  const prevMeta =
+    siblingIndex >= 0
+      ? PATTERN_EDITORIAL[(siblingIndex - 1 + siblingCount) % siblingCount]
+      : undefined
+  const nextMeta =
+    siblingIndex >= 0
+      ? PATTERN_EDITORIAL[(siblingIndex + 1) % siblingCount]
+      : undefined
+
+  // § · CÓMO INVESTIGAR — editorial intro for this pattern.
+  const guide = PATTERN_INVESTIGATE[codeUpper]
+
+  // § · ADÓNDE IR coda — exit ramps drawn from already-fetched data only.
+  // Top vendors from the ARIA queue (deduped, max 4) + dominant sector chip.
+  const codaVendors = vendors.slice(0, 4)
+  const dominantSector =
+    sectorBreakdown.length > 0 ? resolveSector(sectorBreakdown[0].name) : undefined
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-      {/* Breadcrumb */}
-      <Link
-        to="/atlas"
-        className="inline-block text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors"
+      {/* A0 · Spine — up-link to the Atlas patterns lens (pinned to this
+          pattern) + P1→P7 sibling stepper. WayfindingSpine lives on another
+          branch; this is hand-composed per charter §III.3 / A0, NOT a new
+          shared component. */}
+      <nav
+        aria-label={isEs ? 'Navegación entre patrones' : 'Pattern navigation'}
+        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border pb-3"
       >
-        {isEs ? '← El Atlas · lente Patrones' : '← The Atlas · Patterns lens'}
-      </Link>
+        {/* Up-link to El Atlas, patterns lens pinned to this cluster */}
+        <Link
+          to={`/atlas?lens=patterns&pin=${codeUpper}`}
+          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors"
+        >
+          <span aria-hidden="true">←</span>
+          {isEs ? 'El Atlas · lente Patrones' : 'The Atlas · Patterns lens'}
+        </Link>
+
+        {/* Prev / position / next sibling stepper */}
+        {siblingIndex >= 0 && prevMeta && nextMeta && (
+          <div className="inline-flex items-center gap-1.5 font-mono text-[11px]">
+            <Link
+              to={`/patterns/${prevMeta.code}`}
+              title={isEs
+                ? `Patrón anterior · ${prevMeta.code} ${prevMeta.nameEs}`
+                : `Previous pattern · ${prevMeta.code} ${prevMeta.nameEn}`}
+              aria-label={isEs
+                ? `Patrón anterior: ${prevMeta.code} ${prevMeta.nameEs}`
+                : `Previous pattern: ${prevMeta.code} ${prevMeta.nameEn}`}
+              className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-text-muted hover:text-text-secondary hover:bg-background-elevated/60 transition-colors"
+            >
+              <span aria-hidden="true">←</span>
+              <span className="font-bold tabular-nums">{prevMeta.code}</span>
+            </Link>
+            <span className="text-text-muted/60 tabular-nums px-1" aria-hidden="true">
+              {siblingIndex + 1} {isEs ? 'de' : 'of'} {siblingCount}
+            </span>
+            <Link
+              to={`/patterns/${nextMeta.code}`}
+              title={isEs
+                ? `Siguiente patrón · ${nextMeta.code} ${nextMeta.nameEs}`
+                : `Next pattern · ${nextMeta.code} ${nextMeta.nameEn}`}
+              aria-label={isEs
+                ? `Siguiente patrón: ${nextMeta.code} ${nextMeta.nameEs}`
+                : `Next pattern: ${nextMeta.code} ${nextMeta.nameEn}`}
+              className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-text-muted hover:text-text-secondary hover:bg-background-elevated/60 transition-colors"
+            >
+              <span className="font-bold tabular-nums">{nextMeta.code}</span>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        )}
+      </nav>
 
       {/* §0 Cabecera */}
       <section aria-labelledby="pattern-heading">
@@ -371,6 +568,51 @@ export default function PatternDossier() {
         <SectionKicker label="§ 1 · LEDE" />
         <p className="text-sm text-text-secondary leading-relaxed">{lede}</p>
       </section>
+
+      {/* § · CÓMO INVESTIGAR — editorial intro: what this is, what to check
+          first, what counts as corroboration. Static, keyed off the pattern. */}
+      {guide && (
+        <section aria-label={isEs ? 'Cómo investigar este patrón' : 'How to investigate this pattern'}>
+          <SectionKicker label={isEs ? '§ · CÓMO INVESTIGAR' : '§ · HOW TO INVESTIGATE'} />
+          <div
+            className="rounded-sm px-4 py-4 space-y-3.5"
+            style={{
+              backgroundColor: `${patternColor}0a`,
+              borderLeft: `2px solid ${patternColor}55`,
+            }}
+          >
+            {[
+              {
+                k: isEs ? 'QUÉ ES' : 'WHAT IT IS',
+                t: isEs ? guide.what.es : guide.what.en,
+              },
+              {
+                k: isEs ? 'QUÉ REVISAR PRIMERO' : 'WHAT TO CHECK FIRST',
+                t: isEs ? guide.first.es : guide.first.en,
+              },
+              {
+                k: isEs ? 'QUÉ CUENTA COMO CORROBORACIÓN' : 'WHAT COUNTS AS CORROBORATION',
+                t: isEs ? guide.corroborate.es : guide.corroborate.en,
+              },
+            ].map(({ k, t }) => (
+              <div key={k}>
+                <div
+                  className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] mb-1"
+                  style={{ color: patternColor }}
+                >
+                  {k}
+                </div>
+                <p className="text-sm text-text-secondary leading-relaxed">{t}</p>
+              </div>
+            ))}
+            <p className="text-[10px] font-mono text-text-muted/70 leading-relaxed pt-1">
+              {isEs
+                ? 'La marca ARIA es un indicador de riesgo del modelo, no una corrupción probada. Estas rutas acotan dónde mirar; la evidencia documentada la aporta el reportaje.'
+                : 'An ARIA flag is a model risk indicator, not proven corruption. These routes narrow where to look; documented evidence comes from the reporting.'}
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* §2 Top Vendors T1 */}
       <section aria-label={isEs ? 'Proveedores T1' : 'T1 Vendors'}>
@@ -616,6 +858,78 @@ export default function PatternDossier() {
             <span aria-hidden="true">→</span>
             {isEs ? 'Ver casos de corrupción' : 'View corruption cases'}
           </Link>
+        </section>
+      )}
+
+      {/* § · ADÓNDE IR — coda / exit ramps. Investigate CTA + entity chips drawn
+          from already-fetched data (top T1 vendors + dominant sector). No new
+          API calls. Charter §II Codas / invariant #13. */}
+      {(codaVendors.length > 0 || dominantSector) && (
+        <section
+          aria-label={isEs ? 'Adónde ir' : 'Where to go next'}
+          className="pt-6 border-t border-border"
+        >
+          <SectionKicker label={isEs ? '§ · ADÓNDE IR' : '§ · WHERE TO GO NEXT'} />
+
+          {/* Investigate CTA — amber, mono, uppercase */}
+          <Link
+            to={`/aria?pattern=${codeUpper}`}
+            className="mt-1 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
+            style={{
+              backgroundColor: 'rgba(245,158,11,0.10)',
+              color: '#f59e0b',
+              border: '1px solid rgba(245,158,11,0.30)',
+            }}
+            aria-label={isEs
+              ? `Investigar en la Cola ARIA, filtrada por ${codeUpper}`
+              : `Investigate in the ARIA Queue, filtered by ${codeUpper}`}
+          >
+            <span aria-hidden="true">→</span>
+            {isEs
+              ? `Investigar ${codeUpper} en la Cola ARIA`
+              : `Investigate ${codeUpper} in the ARIA Queue`}
+          </Link>
+
+          {/* Top T1 vendors flagged for this pattern */}
+          {codaVendors.length > 0 && (
+            <div className="mt-4">
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
+                {isEs ? 'Proveedores marcados' : 'Flagged vendors'}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {codaVendors.map((v) => (
+                  <EntityIdentityChip
+                    key={v.vendor_id}
+                    type="vendor"
+                    id={v.vendor_id}
+                    name={v.vendor_name}
+                    size="sm"
+                    riskScore={v.avg_risk_score}
+                    sectorCode={v.primary_sector_name ?? null}
+                    ariaTier={v.ips_tier}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Dominant sector for this pattern */}
+          {dominantSector && (
+            <div className="mt-4">
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
+                {isEs ? 'Sector dominante' : 'Dominant sector'}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <EntityIdentityChip
+                  type="sector"
+                  id={dominantSector.id}
+                  name={isEs ? dominantSector.name : dominantSector.nameEN}
+                  size="sm"
+                  sectorCode={dominantSector.code}
+                />
+              </div>
+            </div>
+          )}
         </section>
       )}
 
