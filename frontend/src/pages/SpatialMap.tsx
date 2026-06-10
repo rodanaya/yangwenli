@@ -92,6 +92,21 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
       <div className="relative overflow-hidden">
         <ExploreCanvas lang={lang} />
         {isPanelOpen && <YearScrubber lang={lang} />}
+        {/* Provenance microline — Archetype-C tools carry their colophon as a
+            fixed-chrome microline (charter §C∞ / invariant #18) instead of a
+            ProvenanceFooter, since the map is full-viewport. Non-interactive
+            (pointer-events-none) so it never blocks pan/drill. Lifts above the
+            28px YearScrubber strip only while a panel is open; otherwise sits
+            at the very bottom-left. No collision with top-corner controls
+            (LensToggle/ShareView) or the centered first-visit hint. */}
+        <div
+          className="absolute left-3 z-[1] font-mono text-[9px] uppercase tracking-[0.16em] text-text-muted pointer-events-none select-none"
+          style={{ bottom: isPanelOpen ? 32 : 8, opacity: 0.7 }}
+        >
+          {lang === 'en'
+            ? 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025'
+            : 'CONSTRUIDO POR RUBLI · DATOS: COMPRANET 2002–2025'}
+        </div>
         {showHint && (
           <button
             type="button"
