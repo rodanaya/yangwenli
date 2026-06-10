@@ -496,6 +496,14 @@ export function KeepReadingFooter({
       >
         <span>{heading}</span>
         <span aria-hidden="true" className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
+        {sector && (
+          <EntityIdentityChip
+            type="sector"
+            id={sector.id}
+            name={lang === 'es' ? sector.name : sector.nameEN}
+            size="sm"
+          />
+        )}
       </div>
       <ul className="grid gap-3 sm:grid-cols-3 list-none p-0 m-0">
         {related.map((c) => {

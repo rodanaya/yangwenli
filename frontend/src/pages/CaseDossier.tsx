@@ -606,12 +606,17 @@ export default function CaseDossier() {
                 </FeatureSection>
               )}
 
-              {/* § III — El daño */}
+              {/* § III — El daño. Charter invariant 14: the § header states
+                  the finding — the meta fragment carries the amount. */}
               <FeatureSection
                 id="dano"
                 numeral={numeralFor['dano']}
                 title={{ en: 'The damage', es: 'El daño' }}
-                meta={lang === 'es' ? 'Monto y resolución' : 'Amount and resolution'}
+                meta={
+                  headlineAmount != null
+                    ? formatCompactMXN(headlineAmount)
+                    : lang === 'es' ? 'Monto y resolución' : 'Amount and resolution'
+                }
                 lang={lang}
               >
                 {headlineAmount != null && (
