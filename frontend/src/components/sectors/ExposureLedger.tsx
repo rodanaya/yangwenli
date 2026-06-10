@@ -28,7 +28,7 @@ import type { CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { SECTOR_COLORS, RISK_COLORS, OECD_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
-import { EditorialSparkline } from '@/components/charts/editorial'
+import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
 import type { SectorTrajectoryPoint } from '@/api/types'
 import { SectorDossierCard } from './SectorHoverDossier'
 import { orderForLens } from './confoundScales'
@@ -151,37 +151,9 @@ function buildMarginNotes(lang: 'en' | 'es'): MarginNote[] {
   ]
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DABullet — single FT-bullet process-integrity cell: DA% fill vs the OECD
-// ceiling tick; overshoot tinted RISK_COLORS.high. Linear 0–100%, honest.
-// ─────────────────────────────────────────────────────────────────────────────
-function DABullet({ daPct }: { daPct: number }) {
-  const fill = Math.max(0, Math.min(100, daPct))
-  const within = Math.min(fill, OECD_DA_CEILING)
-  const over = Math.max(0, fill - OECD_DA_CEILING)
-  return (
-    <span
-      className="relative block h-[7px] flex-1 rounded-[1px] overflow-hidden"
-      style={{ background: 'var(--color-background-elevated)', minWidth: 40 }}
-      aria-hidden="true"
-    >
-      <span
-        className="absolute inset-y-0 left-0"
-        style={{ width: `${within}%`, background: 'var(--color-text-muted)', opacity: 0.5 }}
-      />
-      {over > 0 && (
-        <span
-          className="absolute inset-y-0"
-          style={{ left: `${OECD_DA_CEILING}%`, width: `${over}%`, background: RISK_COLORS.high, opacity: 0.9 }}
-        />
-      )}
-      <span
-        className="absolute inset-y-0"
-        style={{ left: `${OECD_DA_CEILING}%`, width: 1.5, background: 'var(--color-text-primary)', opacity: 0.75 }}
-      />
-    </span>
-  )
-}
+// DABullet (process-integrity cell: DA% vs OECD ceiling, overshoot in amber) is
+// now the shared @/components/charts/editorial export, imported above —
+// behavior-identical to the prior local copy.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A single register row — one clean line; the detail lives in the dossier.

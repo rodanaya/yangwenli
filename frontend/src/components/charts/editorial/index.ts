@@ -38,3 +38,5 @@ export type { EditorialDistributionProps, DistributionThreshold } from './Editor
 
 export { EditorialTimeline } from './EditorialTimeline'
 export type { EditorialTimelineProps, EditorialTimelineEvent } from './EditorialTimeline'
+
+export { DABullet } from './DABullet'

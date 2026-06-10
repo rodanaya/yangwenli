@@ -1,29 +1,37 @@
 /**
- * CategoriesIndex — "El Qué" / "What Was Bought"
+ * CategoriesIndex — "EL CONCENTRADO" / "What Mexico Buys"
  *
- * 2026-06-09 (DESIGNUS — category index rebuild). The page was a 3-column grid
- * of 72 near-identical cards: near-zero information scent, no ranking, no
- * comparison, endless scroll, a treemap bolted on as decoration. It read weaker
- * than the category list already shipped on /sectors?view=categories.
+ * 2026-06-10 (DESIGNUS rebuild, judge synthesis — Confounded-Ledger family,
+ * Archetype B). The one finding: Mexican procurement spending is wildly
+ * concentrated — and the categories that swallow the most money are not the ones
+ * the model flags hardest. Spend orders the page; risk undermines the order.
  *
- * Rebuilt as the definitive category surface in the sibling Exposure-Ledger
- * grammar (Sectors.tsx / InstitutionLeague.tsx): a newsroom FINDINGS BAND
- * (computed "where to look first" leads) over a concentration ribbon and a dense
- * ranked LEDGER — one row per category, every metric in one column, inline
- * micro-viz (magnitude spine · risk · direct-award-vs-OECD · single-bid dot ·
- * top vendor). The treemap survives, demoted to a collapsible disclosure.
- * Runs entirely on the two fast endpoints (getSummary + getTrends).
+ * Anatomy: Folio → § EL SALDO (sentence lede) → § HALLAZGOS (3 finding cards) →
+ * El Filtro (URL-synced sort + sector) → § EL CONCENTRADO (dual-lens plate, the
+ * centerpiece) → § LO QUE EL GASTO ESCONDE (honor roll) → § EL REGISTRO (all 72
+ * rows, hover dossier, dagger disclosure) → § ADÓNDE IR (coda) → Procedencia.
+ *
+ * Runs on ONE endpoint — categoriesApi.getSummary(). No per-row fetches.
  */
-
-import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import { categoriesApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { CategoryTreemap } from '@/components/categories/CategoryTreemap'
+import { FindingsBand, type Finding } from '@/components/dossier/FindingsBand'
+import { CategoryConcentrationPlate } from '@/components/categories/CategoryConcentrationPlate'
+import { RiskRankBand } from '@/components/categories/RiskRankBand'
+import { CategoryHoverDossier } from '@/components/categories/CategoryHoverDossier'
+import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
+import {
+  type CategorySummaryItem,
+  type PlateLens,
+  CONTRACT_FLOOR,
+  intensityColor,
+} from '@/components/categories/types'
 import {
   formatCompactMXN,
   formatDualCurrency,
@@ -32,6 +40,7 @@ import {
 } from '@/lib/utils'
 import {
   SECTOR_COLORS,
+  SECTOR_TEXT_COLORS,
   RISK_COLORS,
   RISK_TEXT_COLORS,
   OECD_DIRECT_AWARD_LIMIT,
@@ -41,26 +50,6 @@ import {
 } from '@/lib/constants'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-interface TopVendor {
-  id: number
-  name: string
-}
-
-interface CategorySummaryItem {
-  category_id: number
-  name_es: string
-  name_en: string
-  sector_id: number
-  sector_code: string
-  total_contracts: number
-  total_value: number
-  avg_risk: number
-  high_risk_pct: number | null
-  direct_award_pct: number
-  single_bid_pct: number
-  top_vendor: TopVendor | null
-}
 
 interface CategorySummaryResponse {
   data: CategorySummaryItem[]
@@ -73,7 +62,58 @@ const SORT_KEYS: SortKey[] = ['spend', 'risk', 'contracts', 'direct_award']
 
 const ALL_SECTOR_CODES = SECTORS.map((s) => s.code)
 const DA_LIMIT_PCT = OECD_DIRECT_AWARD_LIMIT * 100 // 30
-const CONTRACT_FLOOR = 200 // suppress tiny-base categories from the findings band
+// Sectors with a single active category — taxonomy expansion pending (S.10–S.12).
+const DAGGER_SECTOR_CODES = new Set(['educacion', 'gobernacion', 'trabajo'])
+
+// ── URL state ─────────────────────────────────────────────────────────────────
+// Param names match El Hilo P0 (?sort=&sector=) so the eventual merge is trivial.
+// Defaults (spend / all / concentration) render with NO params — old bookmarks
+// don't break.
+
+function useCategoriesUrlState() {
+  const [params, setParams] = useSearchParams()
+
+  const rawSort = params.get('sort')
+  const sortKey: SortKey = (SORT_KEYS as string[]).includes(rawSort ?? '') ? (rawSort as SortKey) : 'spend'
+
+  const rawSector = params.get('sector')
+  const activeSector: string | null =
+    rawSector && (ALL_SECTOR_CODES as string[]).includes(rawSector) ? rawSector : null
+
+  const rawLens = params.get('lens')
+  const lens: PlateLens = rawLens === 'risk' ? 'risk' : 'concentration'
+
+  const patch = (next: { sort?: SortKey; sector?: string | null; lens?: PlateLens }) => {
+    setParams(
+      (prev) => {
+        const out = new URLSearchParams(prev)
+        if (next.sort !== undefined) {
+          if (next.sort === 'spend') out.delete('sort')
+          else out.set('sort', next.sort)
+        }
+        if (next.sector !== undefined) {
+          if (next.sector === null) out.delete('sector')
+          else out.set('sector', next.sector)
+        }
+        if (next.lens !== undefined) {
+          if (next.lens === 'concentration') out.delete('lens')
+          else out.set('lens', next.lens)
+        }
+        return out
+      },
+      { replace: true },
+    )
+  }
+
+  return {
+    sortKey,
+    activeSector,
+    lens,
+    setSortKey: (s: SortKey) => patch({ sort: s }),
+    setActiveSector: (s: string | null) => patch({ sector: s }),
+    setLens: (l: PlateLens) => patch({ lens: l }),
+  }
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -91,34 +131,25 @@ function sortCategories(items: CategorySummaryItem[], key: SortKey): CategorySum
   }
 }
 
-// ── Findings band ─────────────────────────────────────────────────────────────
+// ── Findings (3 surviving cards — the trends-dependent "rising" card is gone) ──
 
-interface Finding {
-  key: string
-  eyebrowEs: string
-  eyebrowEn: string
-  item: CategorySummaryItem
-  anchor: string
-  anchorColor: string
-  proofPct: number
-  proofColor: string
-  deckEs: string
-  deckEn: string
-}
-
-function computeFindings(
-  items: CategorySummaryItem[],
-  risers: Map<number, number>,
-): Finding[] {
+function computeFindings(items: CategorySummaryItem[]): Finding[] {
   if (items.length === 0) return []
   const qualified = items.filter((c) => c.total_contracts >= CONTRACT_FLOOR)
-  const pool = qualified.length >= 4 ? qualified : items
+  const pool = qualified.length >= 3 ? qualified : items
   const out: Finding[] = []
-  // Each finding should surface a *different* category — "where to look first"
-  // is most useful pointing at four distinct places, not the same one twice.
   const used = new Set<number>()
   const pick = (list: CategorySummaryItem[], score: (c: CategorySummaryItem) => number) =>
     [...list].filter((c) => !used.has(c.category_id)).sort((a, b) => score(b) - score(a))[0]
+
+  const entityOf = (c: CategorySummaryItem): Finding['entity'] => ({
+    type: 'category',
+    id: c.category_id,
+    nameEs: c.name_es,
+    nameEn: c.name_en,
+    sectorCode: c.sector_code,
+    riskScore: c.avg_risk,
+  })
 
   // 1 — Most captured (direct award)
   const captured = pick(pool, (c) => c.direct_award_pct)
@@ -128,7 +159,7 @@ function computeFindings(
       key: 'captured',
       eyebrowEs: 'La más capturada',
       eyebrowEn: 'Most captured',
-      item: captured,
+      entity: entityOf(captured),
       anchor: `${Math.round(captured.direct_award_pct)}%`,
       anchorColor: captured.direct_award_pct > DA_LIMIT_PCT * 2 ? RISK_TEXT_COLORS.critical : RISK_TEXT_COLORS.high,
       proofPct: captured.direct_award_pct,
@@ -147,7 +178,7 @@ function computeFindings(
       key: 'risk',
       eyebrowEs: 'Mayor riesgo',
       eyebrowEn: 'Highest risk',
-      item: riskiest,
+      entity: entityOf(riskiest),
       anchor: `${Math.round(riskiest.avg_risk * 100)}`,
       anchorColor: RISK_TEXT_COLORS[lvl] ?? 'var(--color-text-primary)',
       proofPct: Math.min(100, riskiest.avg_risk * 100 * 2),
@@ -166,7 +197,7 @@ function computeFindings(
       key: 'exposure',
       eyebrowEs: 'Mayor exposición',
       eyebrowEn: 'Heaviest exposure',
-      item: exposed,
+      entity: entityOf(exposed),
       anchor: `${Math.round(exposed.high_risk_pct)}%`,
       anchorColor: exposed.high_risk_pct >= 15 ? RISK_TEXT_COLORS.high : 'var(--color-text-primary)',
       proofPct: Math.min(100, exposed.high_risk_pct * 3),
@@ -176,435 +207,7 @@ function computeFindings(
     })
   }
 
-  // 4 — Fastest rising (recent vs prior spend) — only if trends present
-  if (risers.size > 0) {
-    const ranked = items
-      .filter((c) => risers.has(c.category_id))
-      .map((c) => ({ c, g: risers.get(c.category_id)! }))
-      .sort((a, b) => b.g - a.g)
-    const top = ranked.find((r) => !used.has(r.c.category_id))
-    if (top && top.g > 0.15) {
-      used.add(top.c.category_id)
-      out.push({
-        key: 'rising',
-        eyebrowEs: 'El alza',
-        eyebrowEn: 'Fastest rising',
-        item: top.c,
-        anchor: `+${Math.round(top.g * 100)}%`,
-        anchorColor: RISK_TEXT_COLORS.high,
-        proofPct: Math.min(100, top.g * 100),
-        proofColor: RISK_COLORS.high,
-        deckEs: 'gasto · últimos 3 años vs previos',
-        deckEn: 'spend · last 3 years vs prior',
-      })
-    }
-  }
-
-  return out.slice(0, 4)
-}
-
-function FindingCard({ finding, lang }: { finding: Finding; lang: 'en' | 'es' }) {
-  const name = lang === 'es' ? finding.item.name_es : finding.item.name_en
-  return (
-    <article
-      className="p-3.5 flex flex-col gap-2"
-      style={{
-        border: '1px solid var(--color-border)',
-        boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
-        borderRadius: 3,
-        borderLeft: `3px solid ${SECTOR_COLORS[finding.item.sector_code] ?? '#64748b'}`,
-      }}
-    >
-      <p
-        className="font-mono"
-        style={{ fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
-      >
-        {lang === 'es' ? finding.eyebrowEs : finding.eyebrowEn}
-      </p>
-      <div className="min-w-0">
-        <EntityIdentityChip
-          type="category"
-          id={finding.item.category_id}
-          name={name}
-          size="sm"
-          sectorCode={finding.item.sector_code}
-          riskScore={finding.item.avg_risk}
-        />
-      </div>
-      <div
-        className="tabular-nums"
-        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 34, lineHeight: 1, color: finding.anchorColor }}
-      >
-        {finding.anchor}
-      </div>
-      <div
-        className="relative overflow-hidden"
-        style={{ height: 4, background: 'var(--color-border)', borderRadius: 999 }}
-        aria-hidden="true"
-      >
-        <div style={{ position: 'absolute', inset: 0, width: `${Math.max(3, Math.min(100, finding.proofPct))}%`, background: finding.proofColor, borderRadius: 999 }} />
-      </div>
-      <p className="font-mono" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
-        {lang === 'es' ? finding.deckEs : finding.deckEn}
-      </p>
-    </article>
-  )
-}
-
-// ── Concentration exhibit ─────────────────────────────────────────────────────
-// "The concentration spine" — an instrumented share bar. Each segment's WIDTH is
-// its slice of total spend, so the bar's x-axis IS cumulative spend: the ½ and
-// 80% marks fall at fixed 50% / 80% of the width, and editorial flags annotate
-// how FEW categories it takes to reach them. Reuters / FT annotated-bar grammar
-// + NYT Upshot named callouts; replaces the flat, un-hoverable 22px ribbon with
-// a real React hover dossier (the native `title` could barely be triggered),
-// a quartile ruler, inline named segments, and a sector legend.
-
-interface ConcSeg {
-  category_id: number
-  name_es: string
-  name_en: string
-  sector_code: string
-  value: number
-  contracts: number
-  rank: number
-  sharePct: number
-  startPct: number
-  cumPct: number
-}
-
-const CONC_BAR_H = 46
-
-function ConcentrationExhibit({
-  items,
-  lang,
-}: {
-  items: CategorySummaryItem[]
-  lang: 'en' | 'es'
-}) {
-  const isEs = lang === 'es'
-  const [hover, setHover] = useState<number | null>(null)
-
-  const { segs, tail, total, k50, k80 } = useMemo(() => {
-    const sorted = [...items].sort((a, b) => b.total_value - a.total_value)
-    const total = sorted.reduce((s, c) => s + c.total_value, 0)
-    let cum = 0
-    let k50 = 0
-    let k80 = 0
-    const cumArr: number[] = []
-    for (let i = 0; i < sorted.length; i++) {
-      cum += sorted[i].total_value
-      cumArr.push(cum)
-      if (k50 === 0 && total > 0 && cum / total >= 0.5) k50 = i + 1
-      if (k80 === 0 && total > 0 && cum / total >= 0.8) k80 = i + 1
-    }
-    // Render enough leading categories as discrete segments that the 80% flag
-    // lands comfortably inside the discrete region; lump the long tail into one.
-    const head = Math.min(sorted.length, Math.max((k80 || 15) + 3, 16))
-    const segs: ConcSeg[] = sorted.slice(0, head).map((c, i) => {
-      const sharePct = total > 0 ? (c.total_value / total) * 100 : 0
-      const cumPct = total > 0 ? (cumArr[i] / total) * 100 : 0
-      return {
-        category_id: c.category_id,
-        name_es: c.name_es,
-        name_en: c.name_en,
-        sector_code: c.sector_code,
-        value: c.total_value,
-        contracts: c.total_contracts,
-        rank: i + 1,
-        sharePct,
-        startPct: cumPct - sharePct,
-        cumPct,
-      }
-    })
-    const tailItems = sorted.slice(head)
-    const tailValue = tailItems.reduce((s, c) => s + c.total_value, 0)
-    const tail =
-      tailItems.length > 0
-        ? {
-            count: tailItems.length,
-            value: tailValue,
-            sharePct: total > 0 ? (tailValue / total) * 100 : 0,
-            startPct: segs.length ? segs[segs.length - 1].cumPct : 0,
-          }
-        : null
-    return { segs, tail, total, k50, k80 }
-  }, [items])
-
-  if (total <= 0) return null
-
-  const TAIL_IDX = segs.length
-  const hoverCenter =
-    hover === null
-      ? null
-      : hover === TAIL_IDX && tail
-        ? (tail.startPct + 100) / 2
-        : segs[hover]
-          ? segs[hover].startPct + segs[hover].sharePct / 2
-          : null
-
-  const legendSectors = Array.from(new Set(segs.map((s) => s.sector_code)))
-
-  const flagDefs = [
-    k50 > 0 ? { x: 50, big: '½', sub: isEs ? `${k50} categorías` : `${k50} categories` } : null,
-    k80 > 0 ? { x: 80, big: '80%', sub: isEs ? `${k80} categorías` : `${k80} categories` } : null,
-  ].filter(Boolean) as { x: number; big: string; sub: string }[]
-
-  return (
-    <div className="relative">
-      {/* ── Threshold flags (above the bar) ──────────────────────────────────── */}
-      <div className="relative" style={{ height: 30 }} aria-hidden="true">
-        {flagDefs.map((f) => (
-          <div
-            key={f.x}
-            className="absolute bottom-0 flex flex-col items-center"
-            style={{ left: `${f.x}%`, transform: 'translateX(-50%)' }}
-          >
-            <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-              <span
-                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 15, lineHeight: 1, color: 'var(--color-text-primary)' }}
-              >
-                {f.big}
-              </span>
-              <span
-                className="font-mono"
-                style={{ fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
-              >
-                {f.sub}
-              </span>
-            </div>
-            <div style={{ width: 1, height: 7, marginTop: 3, background: 'rgba(160, 104, 32, 0.7)' }} />
-          </div>
-        ))}
-      </div>
-
-      {/* ── The bar (interactive segments) ───────────────────────────────────── */}
-      <div className="relative" onMouseLeave={() => setHover(null)}>
-        <div
-          className="flex w-full overflow-hidden"
-          style={{ height: CONC_BAR_H, borderRadius: 3, background: 'var(--color-border)' }}
-        >
-          {segs.map((s, i) => {
-            const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-            const active = hover === i
-            const dim = hover !== null && !active
-            const name = isEs ? s.name_es : s.name_en
-            return (
-              <button
-                key={s.category_id}
-                type="button"
-                onMouseEnter={() => setHover(i)}
-                onFocus={() => setHover(i)}
-                onBlur={() => setHover(null)}
-                aria-label={`#${s.rank} ${name} · ${s.sharePct.toFixed(1)}% ${isEs ? 'del gasto' : 'of spend'} · ${formatCompactMXN(s.value)}`}
-                className="relative h-full block p-0"
-                style={{
-                  width: `${s.sharePct}%`,
-                  minWidth: 2,
-                  background: color,
-                  border: 0,
-                  borderRight: '1px solid var(--color-background)',
-                  opacity: dim ? 0.42 : 1,
-                  boxShadow: active ? 'inset 0 3px 0 rgba(255,255,255,0.6)' : 'none',
-                  transition: 'opacity 140ms ease',
-                  cursor: 'pointer',
-                }}
-              >
-                {s.sharePct >= 7 && (
-                  <span
-                    className="absolute font-mono pointer-events-none"
-                    style={{
-                      left: 5,
-                      top: 5,
-                      right: 5,
-                      fontSize: 9,
-                      fontWeight: 600,
-                      letterSpacing: '0.01em',
-                      color: '#ffffff',
-                      textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {name}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-          {tail && (
-            <button
-              type="button"
-              onMouseEnter={() => setHover(TAIL_IDX)}
-              onFocus={() => setHover(TAIL_IDX)}
-              onBlur={() => setHover(null)}
-              aria-label={`${tail.count} ${isEs ? 'categorías restantes' : 'remaining categories'} · ${tail.sharePct.toFixed(0)}% ${isEs ? 'del gasto' : 'of spend'} · ${formatCompactMXN(tail.value)}`}
-              className="relative h-full flex items-center justify-center p-0"
-              style={{
-                width: `${tail.sharePct}%`,
-                minWidth: 2,
-                background: 'var(--color-text-muted)',
-                border: 0,
-                opacity: hover !== null && hover !== TAIL_IDX ? 0.28 : 0.42,
-                boxShadow: hover === TAIL_IDX ? 'inset 0 3px 0 rgba(255,255,255,0.45)' : 'none',
-                transition: 'opacity 140ms ease',
-                cursor: 'pointer',
-              }}
-            >
-              <span
-                className="font-mono pointer-events-none"
-                style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-background)' }}
-              >
-                +{tail.count}
-              </span>
-            </button>
-          )}
-        </div>
-
-        {/* ── Hover dossier (DOM, anchored above the hovered segment) ─────────── */}
-        {hover !== null && hoverCenter !== null && (() => {
-          const transform =
-            hoverCenter > 72
-              ? 'translate(-88%, calc(-100% - 10px))'
-              : hoverCenter < 28
-                ? 'translate(-12%, calc(-100% - 10px))'
-                : 'translate(-50%, calc(-100% - 10px))'
-          const isTail = hover === TAIL_IDX && tail
-          if (isTail && tail) {
-            return (
-              <div
-                className="absolute z-20 pointer-events-none rounded-md border border-border bg-background-card p-3 shadow-xl"
-                style={{ left: `${hoverCenter}%`, top: 0, transform, minWidth: 200, maxWidth: 270 }}
-              >
-                <div
-                  className="font-mono mb-1.5"
-                  style={{ fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
-                >
-                  {isEs ? 'La cola larga' : 'The long tail'}
-                </div>
-                <div
-                  className="tabular-nums"
-                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 28, lineHeight: 1, color: 'var(--color-text-secondary)' }}
-                >
-                  {tail.sharePct.toFixed(0)}%
-                </div>
-                <div className="font-mono mt-1" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
-                  {isEs
-                    ? `${tail.count} categorías más · ${formatCompactMXN(tail.value)}`
-                    : `${tail.count} smaller categories · ${formatCompactMXN(tail.value)}`}
-                </div>
-              </div>
-            )
-          }
-          const s = segs[hover]
-          if (!s) return null
-          const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-          const name = isEs ? s.name_es : s.name_en
-          return (
-            <div
-              className="absolute z-20 pointer-events-none rounded-md border border-border bg-background-card p-3 shadow-xl"
-              style={{ left: `${hoverCenter}%`, top: 0, transform, minWidth: 212, maxWidth: 280 }}
-            >
-              <div className="flex items-center gap-2 mb-1.5">
-                <span
-                  className="font-mono"
-                  style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color }}
-                >
-                  #{s.rank}
-                </span>
-                <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                  {getSectorName(s.sector_code, lang)}
-                </span>
-                <span className="h-px flex-1" style={{ background: `${color}55` }} />
-              </div>
-              <div className="mb-1.5">
-                <EntityIdentityChip
-                  type="category"
-                  id={s.category_id}
-                  name={name}
-                  size="sm"
-                  sectorCode={s.sector_code}
-                />
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span
-                  className="tabular-nums"
-                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 30, lineHeight: 1, color }}
-                >
-                  {s.sharePct.toFixed(1)}%
-                </span>
-                <span className="font-mono" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
-                  {isEs ? 'del gasto total' : 'of total spend'}
-                </span>
-              </div>
-              <div className="font-mono mt-1.5 flex items-center gap-2" style={{ fontSize: 10.5, color: 'var(--color-text-secondary)' }}>
-                <span className="tabular-nums" style={{ color: 'var(--color-text-primary)' }}>{formatCompactMXN(s.value)}</span>
-                <span style={{ opacity: 0.5 }}>·</span>
-                <span className="tabular-nums">{formatNumber(s.contracts)} {isEs ? 'cont.' : 'contracts'}</span>
-              </div>
-              {/* cumulative-to-here readout */}
-              <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                    {isEs ? 'Acumulado hasta aquí' : 'Running total to here'}
-                  </span>
-                  <span className="font-mono tabular-nums" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                    {s.cumPct.toFixed(0)}%
-                  </span>
-                </div>
-                <div className="relative h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                  <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${Math.min(100, s.cumPct)}%`, background: color, opacity: 0.85 }} />
-                </div>
-              </div>
-            </div>
-          )
-        })()}
-      </div>
-
-      {/* ── Quartile ruler (turns the bar into a measuring rule) ─────────────── */}
-      <div className="relative mt-1.5" style={{ height: 14 }} aria-hidden="true">
-        {[0, 25, 50, 75, 100].map((t) => (
-          <div
-            key={t}
-            className="absolute top-0 flex flex-col items-center"
-            style={{ left: `${t}%`, transform: t === 0 ? 'translateX(0)' : t === 100 ? 'translateX(-100%)' : 'translateX(-50%)' }}
-          >
-            <div style={{ width: 1, height: 4, background: 'var(--color-border)' }} />
-            <span className="font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', marginTop: 1 }}>
-              {t}%
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Caption + sector legend ──────────────────────────────────────────── */}
-      <div className="mt-3 flex items-start justify-between gap-x-6 gap-y-2 flex-wrap">
-        <p
-          className="font-mono"
-          style={{ fontSize: 10.5, lineHeight: 1.55, letterSpacing: '0.02em', color: 'var(--color-text-muted)', maxWidth: '50ch' }}
-        >
-          {isEs
-            ? `Cada bloque es una categoría; su ancho, su tajada del gasto total. Solo ${k50} concentran la mitad y ${k80}, el 80% — pasa el cursor para ver cada una.`
-            : `Each block is one category; its width is its slice of total spend. Just ${k50} hold half — ${k80} hold 80%. Hover any block for the detail.`}
-        </p>
-        <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap">
-          {legendSectors.map((code) => (
-            <span key={code} className="flex items-center gap-1.5 font-mono" style={{ fontSize: 9, letterSpacing: '0.03em', color: 'var(--color-text-muted)' }}>
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: SECTOR_COLORS[code] ?? '#64748b', flexShrink: 0 }} />
-              {getSectorName(code, lang)}
-            </span>
-          ))}
-          {tail && (
-            <span className="flex items-center gap-1.5 font-mono" style={{ fontSize: 9, letterSpacing: '0.03em', color: 'var(--color-text-muted)' }}>
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-text-muted)', opacity: 0.42, flexShrink: 0 }} />
-              {isEs ? 'resto' : 'rest'}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  )
+  return out.slice(0, 3)
 }
 
 // ── Ledger row ────────────────────────────────────────────────────────────────
@@ -615,26 +218,36 @@ function LedgerRow({
   maxValue,
   showVendor,
   lang,
+  onHover,
+  onLeave,
 }: {
   item: CategorySummaryItem
   rank: number
   maxValue: number
   showVendor: boolean
   lang: 'en' | 'es'
+  onHover: (id: number, el: HTMLElement) => void
+  onLeave: () => void
 }) {
-  const sectorColor = item.sector_code ? SECTOR_COLORS[item.sector_code] ?? '#64748b' : '#64748b'
-  const riskLevel = getRiskLevelFromScore(item.avg_risk)
+  const sectorColor = item.sector_code ? SECTOR_COLORS[item.sector_code] ?? SECTOR_COLORS.otros : SECTOR_COLORS.otros
   const sbPct = item.single_bid_pct ?? 0
-  const sbDotColor = sbPct > 25 ? RISK_COLORS.critical : sbPct >= 15 ? RISK_COLORS.high : RISK_COLORS.low
+  const sbDotColor = sbPct > 25 ? RISK_COLORS.critical : sbPct >= 15 ? RISK_COLORS.high : 'var(--color-text-muted)'
   const spendPct = maxValue > 0 ? (item.total_value / maxValue) * 100 : 0
   const daOver = item.direct_award_pct > DA_LIMIT_PCT
+  const hasDagger = DAGGER_SECTOR_CODES.has(item.sector_code)
+  const name = lang === 'es' ? item.name_es : item.name_en
 
   return (
-    <div
+    <tr
       data-wf-row={item.category_id}
-      className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-2 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
-      style={{ borderLeft: `3px solid ${sectorColor}` }}
+      className="border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
+      style={{ display: 'flex', alignItems: 'center', borderLeft: `3px solid ${sectorColor}` }}
+      onMouseEnter={(e) => onHover(item.category_id, e.currentTarget)}
+      onMouseLeave={onLeave}
+      onFocusCapture={(e) => onHover(item.category_id, e.currentTarget)}
+      onBlurCapture={onLeave}
     >
+      <td className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-2 w-full" style={{ display: 'flex' }}>
       <span className="flex-shrink-0 w-7 font-mono text-[11px] font-bold text-text-muted tabular-nums">
         {String(rank).padStart(2, '0')}
       </span>
@@ -642,14 +255,25 @@ function LedgerRow({
       {/* Name + magnitude spine + top vendor */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <EntityIdentityChip
-            type="category"
-            id={item.category_id}
-            name={lang === 'es' ? item.name_es : item.name_en}
-            size="sm"
-            sectorCode={item.sector_code ?? null}
-            riskScore={item.avg_risk ?? null}
-          />
+          <span className="inline-flex items-baseline">
+            <EntityIdentityChip
+              type="category"
+              id={item.category_id}
+              name={name}
+              size="sm"
+              sectorCode={item.sector_code ?? null}
+              riskScore={item.avg_risk ?? null}
+            />
+            {hasDagger && (
+              <sup
+                className="font-mono ml-0.5"
+                style={{ fontSize: 8, color: 'var(--color-text-muted)' }}
+                aria-hidden="true"
+              >
+                †
+              </sup>
+            )}
+          </span>
           {showVendor && item.top_vendor && (
             <span className="hidden md:flex items-center gap-1 text-[10px] text-text-muted/70 font-mono min-w-0">
               <EntityIdentityChip
@@ -681,9 +305,9 @@ function LedgerRow({
       <div className="flex-shrink-0 min-w-[78px]">
         <div className="flex items-center justify-end gap-1.5">
           <div className="w-12 h-1 rounded-full bg-background-elevated overflow-hidden hidden sm:block" aria-hidden="true">
-            <div className="h-full rounded-full" style={{ width: `${Math.min(100, (item.avg_risk * 100) / 45 * 100)}%`, background: RISK_COLORS[riskLevel], opacity: 0.85 }} />
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, (item.avg_risk * 100) / 45 * 100)}%`, background: intensityColor(item.avg_risk), opacity: 0.85 }} />
           </div>
-          <div className="font-mono text-[11px] font-bold tabular-nums text-right" style={{ color: RISK_COLORS[riskLevel] }}>
+          <div className="font-mono text-[11px] font-bold tabular-nums text-right" style={{ color: intensityColor(item.avg_risk) }}>
             {(item.avg_risk * 100).toFixed(0)}
           </div>
         </div>
@@ -707,7 +331,30 @@ function LedgerRow({
           </div>
         </div>
       </div>
-    </div>
+      </td>
+    </tr>
+  )
+}
+
+// ── Provenance note (per-page, matching the ProvenanceFooter pattern) ─────────
+
+function ProvenanceNote({ lang }: { lang: 'en' | 'es' }) {
+  return (
+    <section className="mt-10 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <p
+        className="font-mono mb-3"
+        style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
+      >
+        § {lang === 'es' ? 'Procedencia' : 'Provenance'}
+      </p>
+      <p
+        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, color: 'var(--color-text-secondary)', maxWidth: '78ch' }}
+      >
+        {lang === 'es'
+          ? '72 categorías activas cubren el 99.73% del gasto clasificable (códigos Partida/CUCoP); la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La regla de adjudicación directa marca el techo OCDE del 30%; el punto de único postor colorea >25% crítico / ≥15% alto. Indicador de riesgo, no estimación de fraude. RUBLI v0.8.5.'
+          : '72 active categories cover 99.73% of classifiable spend (Partida/CUCoP codes); reliable coverage is 2023–2025 (Structure D, 100% Partida) — earlier years may be partially classified. The direct-award rule marks the OECD 30% ceiling; the single-bid dot reddens >25% critical / ≥15% high. Risk indicator, not a fraud estimate. RUBLI v0.8.5.'}
+      </p>
+    </section>
   )
 }
 
@@ -716,49 +363,19 @@ function LedgerRow({
 export default function CategoriesIndex() {
   const { i18n } = useTranslation('categories')
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
+  const isEs = lang === 'es'
+  const navigate = useNavigate()
 
-  // Sort + sector filter live in the URL (parity with Sectors/Institutions,
-  // F7) so a browser-back from a dossier restores the exact ledger view.
-  // Defaults are omitted from the URL so existing shared /categories links
-  // keep working; { replace: true } keeps sorting out of the history stack.
-  const [searchParams, setSearchParams] = useSearchParams()
-  const sortParam = searchParams.get('sort')
-  const sortKey: SortKey = SORT_KEYS.includes(sortParam as SortKey) ? (sortParam as SortKey) : 'spend'
-  const activeSector = searchParams.get('sector')
-  const setSortKey = (key: SortKey) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        if (key === 'spend') next.delete('sort')
-        else next.set('sort', key)
-        return next
-      },
-      { replace: true },
-    )
-  }
-  const setActiveSector = (code: string | null) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        if (!code) next.delete('sector')
-        else next.set('sector', code)
-        return next
-      },
-      { replace: true },
-    )
-  }
-  const [showMap, setShowMap] = useState(false)
+  const { sortKey, activeSector, lens, setSortKey, setActiveSector, setLens } = useCategoriesUrlState()
+  // Raw query string re-exposed for the wayfinding backTo link (El Hilo P1+).
+  const [searchParams] = useSearchParams()
+
+  // One floating register dossier instance, keyed by hovered category_id.
+  const [hover, setHover] = useState<{ id: number; top: number; bottom: number; containerH: number } | null>(null)
 
   const { data, isLoading, isError } = useQuery<CategorySummaryResponse>({
     queryKey: ['categories', 'summary'],
     queryFn: () => categoriesApi.getSummary(),
-    staleTime: 600_000,
-  })
-  // Trends power the "fastest rising" finding only — gated on its own query so
-  // first paint never blocks on it.
-  const { data: trendsData } = useQuery({
-    queryKey: ['categories', 'trends', 2002, 2025],
-    queryFn: () => categoriesApi.getTrends(2002, 2025),
     staleTime: 600_000,
   })
 
@@ -771,28 +388,36 @@ export default function CategoriesIndex() {
     [data],
   )
 
-  // Recent-vs-prior spend growth per category (2022–2024 vs 2019–2021).
-  const risers = useMemo(() => {
-    const m = new Map<number, number>()
-    const rows = (trendsData?.data ?? []) as Array<{ category_id: number; year: number; value: number }>
-    if (rows.length === 0) return m
-    const recent = new Map<number, number>()
-    const prior = new Map<number, number>()
-    for (const r of rows) {
-      if (r.year >= 2022 && r.year <= 2024) recent.set(r.category_id, (recent.get(r.category_id) ?? 0) + (r.value ?? 0))
-      else if (r.year >= 2019 && r.year <= 2021) prior.set(r.category_id, (prior.get(r.category_id) ?? 0) + (r.value ?? 0))
-    }
-    for (const [id, rec] of recent) {
-      const pri = prior.get(id) ?? 0
-      if (rec >= 1e9 && pri > 0) m.set(id, (rec - pri) / pri)
-    }
-    return m
-  }, [trendsData])
-
   const findings = useMemo(
-    () => (data?.data ? computeFindings(data.data, risers) : []),
-    [data, risers],
+    () => (data?.data ? computeFindings(data.data) : []),
+    [data],
   )
+
+  // ── EL SALDO computed leads ─────────────────────────────────────────────────
+  const saldo = useMemo(() => {
+    if (!data?.data || data.data.length === 0) return null
+    const items = data.data
+    const total = items.reduce((s, c) => s + c.total_value, 0)
+    // k50 / k80 over spend.
+    const byValue = [...items].sort((a, b) => b.total_value - a.total_value)
+    let cum = 0
+    let k50 = 0
+    let k80 = 0
+    for (let i = 0; i < byValue.length; i++) {
+      cum += byValue[i].total_value
+      if (k50 === 0 && total > 0 && cum / total >= 0.5) k50 = i + 1
+      if (k80 === 0 && total > 0 && cum / total >= 0.8) k80 = i + 1
+    }
+    const topSpend = byValue[0]
+    // Riskiest gated by contract floor.
+    const qualified = items.filter((c) => c.total_contracts >= CONTRACT_FLOOR)
+    const riskiest = (qualified.length ? qualified : items)
+      .slice()
+      .sort((a, b) => b.avg_risk - a.avg_risk)[0]
+    const meanRisk = items.reduce((s, c) => s + c.avg_risk, 0) / items.length
+    const ratio = meanRisk > 0 ? riskiest.avg_risk / meanRisk : 0
+    return { total, k50, k80, topSpend, riskiest, ratio }
+  }, [data])
 
   const displayed = useMemo(() => {
     if (!data?.data) return []
@@ -830,6 +455,19 @@ export default function CategoriesIndex() {
     return ALL_SECTOR_CODES.filter((code) => seen.has(code))
   }, [data])
 
+  // Register hover row + edge-flip geometry.
+  const hoverItem = hover ? displayed.find((c) => c.category_id === hover.id) ?? null : null
+  const hoverRank = hover ? displayed.findIndex((c) => c.category_id === hover.id) + 1 : 0
+  const dossierBelow = hover ? hover.top < hover.containerH / 2 : true
+  const captureRect = (el: HTMLElement) => {
+    const parent = el.offsetParent as HTMLElement | null
+    return {
+      top: el.offsetTop,
+      bottom: el.offsetTop + el.offsetHeight,
+      containerH: parent?.offsetHeight ?? el.offsetTop + el.offsetHeight,
+    }
+  }
+
   const sortButtons: { key: SortKey; labelEs: string; labelEn: string }[] = [
     { key: 'spend', labelEs: 'Gasto', labelEn: 'Spend' },
     { key: 'risk', labelEs: 'Riesgo', labelEn: 'Risk' },
@@ -837,16 +475,24 @@ export default function CategoriesIndex() {
     { key: 'direct_award', labelEs: 'Adj. directa', labelEn: 'Direct award' },
   ]
 
+  // Coda chips (computed from the same memos as EL SALDO).
+  const codaRiskiest = saldo?.riskiest ?? null
+  const codaCaptured = useMemo(() => {
+    if (!data?.data || data.data.length === 0) return null
+    const pool = data.data.filter((c) => c.total_contracts >= CONTRACT_FLOOR)
+    return (pool.length ? pool : data.data).slice().sort((a, b) => b.direct_award_pct - a.direct_award_pct)[0]
+  }, [data])
+
   return (
     <div className="min-h-screen bg-background">
-      {/* ── Masthead ─────────────────────────────────────────────────────────── */}
+      {/* ── B0 · Folio ───────────────────────────────────────────────────────── */}
       <header className="border-b border-border px-4 sm:px-6 lg:px-8 py-7">
         <div className="max-w-7xl mx-auto">
           <div className="mb-3 flex items-center gap-3 font-mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
             <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>El Qué</span>
             <span aria-hidden="true" style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-              {lang === 'es' ? '72 categorías de gasto' : '72 spending categories'}
+              {isEs ? '72 categorías' : '72 categories'}
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>COMPRANET 2002–2025
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>v0.8.5
             </span>
@@ -857,7 +503,7 @@ export default function CategoriesIndex() {
               className="text-text-primary"
               style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 0.98, letterSpacing: '-0.012em' }}
             >
-              {lang === 'es' ? 'Qué compra México' : 'What Mexico Buys'}
+              {isEs ? 'Qué compra México' : 'What Mexico Buys'}
             </h1>
             {totalValue > 0 && (
               <div className="text-right">
@@ -865,13 +511,13 @@ export default function CategoriesIndex() {
                   {formatDualCurrency(totalValue)}
                 </div>
                 <div className="font-mono mt-1" style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                  {lang === 'es' ? `gasto validado · ${formatNumber(totalContracts)} contratos` : `validated spend · ${formatNumber(totalContracts)} contracts`}
+                  {isEs ? `gasto validado · ${formatNumber(totalContracts)} contratos` : `validated spend · ${formatNumber(totalContracts)} contracts`}
                 </div>
               </div>
             )}
           </div>
           <p className="mt-3 max-w-[68ch]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 16, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
-            {lang === 'es'
+            {isEs
               ? 'Las categorías agrupan qué compró el gobierno —medicamentos, obra pública, software— sin importar quién. 72 categorías activas clasifican casi todo el gasto federal; aquí, ordenadas por dónde mirar primero.'
               : 'Categories group what the government bought — medicines, civil works, software — regardless of who. 72 active categories classify nearly all federal spend; here, ranked by where to look first.'}
           </p>
@@ -881,47 +527,84 @@ export default function CategoriesIndex() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {isLoading && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-36 rounded-sm" />)}
+            <Skeleton className="h-16 w-full max-w-2xl rounded-sm" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-36 rounded-sm" />)}
             </div>
-            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-12 w-full" />
             <div className="space-y-1">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-11 w-full" />)}</div>
           </div>
         )}
 
         {isError && (
           <p className="font-mono text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            {lang === 'es' ? 'No se pudieron cargar las categorías. Intenta de nuevo.' : 'Unable to load categories. Please try again.'}
+            {isEs ? 'No se pudieron cargar las categorías. Intenta de nuevo.' : 'Unable to load categories. Please try again.'}
           </p>
         )}
 
         {!isLoading && !isError && data?.data && data.data.length > 0 && (
           <>
-            {/* ── FINDINGS BAND ──────────────────────────────────────────────── */}
-            {findings.length > 0 && (
-              <section className="mb-6 pb-6 border-b border-border" aria-label={lang === 'es' ? 'Dónde mirar primero' : 'Where to look first'}>
+            {/* ── B1 · § EL SALDO (sentence lede) ──────────────────────────── */}
+            {saldo && (
+              <section className="mb-6 pb-6 border-b border-border" aria-label={isEs ? 'El saldo' : 'The balance'}>
                 <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
-                  § {lang === 'es' ? 'Dónde mirar primero' : 'Where to look first'}
+                  § {isEs ? 'El saldo' : 'The balance'}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {findings.map((f) => <FindingCard key={f.key} finding={f} lang={lang} />)}
-                </div>
+                <p
+                  style={{
+                    fontFamily: '"EB Garamond", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontSize: 'clamp(1.25rem, 2.2vw, 1.6rem)',
+                    lineHeight: 1.4,
+                    color: 'var(--color-text-secondary)',
+                    maxWidth: '52ch',
+                  }}
+                >
+                  {isEs ? (
+                    <>
+                      <SaldoNum>{saldo.k50}</SaldoNum> categorías concentran la mitad de{' '}
+                      <SaldoNum>{formatCompactMXN(saldo.total)}</SaldoNum>. Pero la más cara —{' '}
+                      {saldo.topSpend.name_es} — no es la de mayor riesgo:{' '}
+                      <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontStyle: 'normal', fontWeight: 600 }}>
+                        {saldo.riskiest.name_es}
+                      </span>{' '}
+                      marca <SaldoNum>{saldo.riskiest.avg_risk.toFixed(2)}</SaldoNum> de indicador,{' '}
+                      {saldo.ratio.toFixed(1)}× el promedio del libro.
+                    </>
+                  ) : (
+                    <>
+                      <SaldoNum>{saldo.k50}</SaldoNum> categories hold half of{' '}
+                      <SaldoNum>{formatCompactMXN(saldo.total)}</SaldoNum>. Yet the costliest —{' '}
+                      {saldo.topSpend.name_en} — is not the riskiest:{' '}
+                      <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontStyle: 'normal', fontWeight: 600 }}>
+                        {saldo.riskiest.name_en}
+                      </span>{' '}
+                      posts a <SaldoNum>{saldo.riskiest.avg_risk.toFixed(2)}</SaldoNum> indicator,{' '}
+                      {saldo.ratio.toFixed(1)}× the book average.
+                    </>
+                  )}
+                </p>
+                <p className="font-mono mt-3 tabular-nums" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+                  {isEs
+                    ? `top ${saldo.k50} = 50% del gasto · ${saldo.k80} categorías = 80% · 72 cubren 99.73% · indicador de riesgo, no estimación de fraude`
+                    : `top ${saldo.k50} = 50% of spend · ${saldo.k80} categories = 80% · 72 cover 99.73% · risk indicator, not a fraud estimate`}
+                </p>
               </section>
             )}
 
-            {/* ── CONCENTRATION EXHIBIT ──────────────────────────────────────── */}
-            <section className="mb-6 pb-6 border-b border-border" aria-label={lang === 'es' ? 'Concentración del gasto' : 'Spend concentration'}>
-              <p className="font-mono mb-3.5" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
-                § {lang === 'es' ? 'Dónde se concentra el dinero' : 'Where the money concentrates'}
-              </p>
-              <ConcentrationExhibit items={data.data} lang={lang} />
-            </section>
+            {/* ── B1.5 · § HALLAZGOS (3 finding cards) ─────────────────────── */}
+            <FindingsBand
+              findings={findings}
+              lang={lang}
+              kickerEs="Hallazgos · dónde mirar primero"
+              kickerEn="Findings · where to look first"
+            />
 
-            {/* ── CONTROLS ───────────────────────────────────────────────────── */}
-            <div className="mb-3">
+            {/* ── B2 · El Filtro ────────────────────────────────────────────── */}
+            <div className="mb-5">
               <div className="flex items-center gap-2 flex-wrap mb-3">
                 <span className="font-mono mr-1" style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                  {lang === 'es' ? 'Ordenar' : 'Sort'}
+                  {isEs ? 'Ordenar' : 'Sort'}
                 </span>
                 {sortButtons.map(({ key, labelEs, labelEn }) => (
                   <button
@@ -934,11 +617,11 @@ export default function CategoriesIndex() {
                       sortKey === key ? 'bg-text-primary text-background border-transparent' : 'text-text-muted border-border hover:text-text-secondary',
                     )}
                   >
-                    {lang === 'es' ? labelEs : labelEn}
+                    {isEs ? labelEs : labelEn}
                   </button>
                 ))}
               </div>
-              <div className="flex flex-wrap gap-1.5" role="group" aria-label={lang === 'es' ? 'Filtrar por sector' : 'Filter by sector'}>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label={isEs ? 'Filtrar por sector' : 'Filter by sector'}>
                 <button
                   type="button"
                   onClick={() => setActiveSector(null)}
@@ -948,19 +631,19 @@ export default function CategoriesIndex() {
                     ? { background: 'var(--color-text-secondary)', borderColor: 'var(--color-text-secondary)', color: 'var(--color-background)' }
                     : { background: 'transparent', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
                 >
-                  {lang === 'es' ? 'Todos' : 'All'}
+                  {isEs ? 'Todos' : 'All'}
                 </button>
                 {presentSectorCodes.map((code) => {
-                  const isActive = activeSector === code
-                  const hex = SECTOR_COLORS[code] ?? '#64748b'
+                  const sectorActive = activeSector === code
+                  const hex = SECTOR_COLORS[code] ?? SECTOR_COLORS.otros
                   return (
                     <button
                       key={code}
                       type="button"
-                      onClick={() => setActiveSector(isActive ? null : code)}
-                      aria-pressed={isActive}
+                      onClick={() => setActiveSector(sectorActive ? null : code)}
+                      aria-pressed={sectorActive}
                       className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
-                      style={isActive ? { background: hex, borderColor: hex, color: '#ffffff' } : { background: 'transparent', borderColor: hex, color: hex }}
+                      style={sectorActive ? { background: hex, borderColor: hex, color: '#ffffff' } : { background: 'transparent', borderColor: hex, color: hex }}
                     >
                       {getSectorName(code, lang)}
                     </button>
@@ -969,51 +652,198 @@ export default function CategoriesIndex() {
               </div>
             </div>
 
-            {/* ── LEDGER ─────────────────────────────────────────────────────── */}
-            <div className="rounded-sm border border-border overflow-hidden">
-              <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-1.5 bg-background-elevated border-b border-border font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted/60">
-                <span className="w-7 flex-shrink-0">#</span>
-                <span className="flex-1">{lang === 'es' ? 'Categoría' : 'Category'}</span>
-                <span className="flex-shrink-0 min-w-[92px] text-right">{lang === 'es' ? 'Gasto' : 'Spend'}</span>
-                <span className="flex-shrink-0 min-w-[78px] text-right">{lang === 'es' ? 'Riesgo' : 'Risk'}</span>
-                <span className="flex-shrink-0 min-w-[78px] text-right">{lang === 'es' ? 'Adj. dir.' : 'Direct'}</span>
+            {/* ── B3 · § EL CONCENTRADO (centerpiece) ──────────────────────── */}
+            <section className="mb-6 pb-6 border-b border-border" aria-label={isEs ? 'El concentrado' : 'The concentrate'}>
+              <p className="font-mono mb-3.5" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+                § {isEs ? 'El concentrado · el tamaño no es el riesgo' : 'The concentrate · size is not risk'}
+              </p>
+              <CategoryConcentrationPlate items={data.data} lang={lang} lens={lens} onLensChange={setLens} />
+            </section>
+
+            {/* ── B3.5 · § LO QUE EL GASTO ESCONDE (honor roll) ────────────── */}
+            <RiskRankBand items={data.data} lang={lang} />
+
+            {/* ── B4 · § EL REGISTRO ───────────────────────────────────────── */}
+            <section aria-label={isEs ? 'El registro' : 'The register'}>
+              <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+                § {isEs ? 'El registro · las 72 categorías' : 'The register · all 72 categories'}
+              </p>
+              <div className="rounded-sm border border-border overflow-hidden">
+                <table className="w-full border-collapse" style={{ display: 'block' }}>
+                  <thead style={{ display: 'block' }}>
+                    <tr
+                      className="px-3 sm:px-5 py-1.5 bg-background-elevated border-b border-border font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted/60"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+                    >
+                      <th className="w-7 flex-shrink-0 text-left font-medium" scope="col">#</th>
+                      <SortHeaderTh<SortKey>
+                        field="spend"
+                        label={isEs ? 'Categoría · gasto' : 'Category · spend'}
+                        activeField={sortKey}
+                        order="desc"
+                        onSort={setSortKey}
+                        className="flex-1 text-left"
+                      />
+                      <SortHeaderTh<SortKey>
+                        field="contracts"
+                        label={isEs ? 'Contratos' : 'Contracts'}
+                        activeField={sortKey}
+                        order="desc"
+                        onSort={setSortKey}
+                        className="flex-shrink-0 min-w-[92px] text-right"
+                      />
+                      <SortHeaderTh<SortKey>
+                        field="risk"
+                        label={isEs ? 'Riesgo' : 'Risk'}
+                        activeField={sortKey}
+                        order="desc"
+                        onSort={setSortKey}
+                        className="flex-shrink-0 min-w-[78px] text-right"
+                      />
+                      <SortHeaderTh<SortKey>
+                        field="direct_award"
+                        label={isEs ? 'Adj. dir.' : 'Direct'}
+                        activeField={sortKey}
+                        order="desc"
+                        onSort={setSortKey}
+                        className="flex-shrink-0 min-w-[78px] text-right"
+                      />
+                    </tr>
+                  </thead>
+                  {displayed.length > 0 ? (
+                    <tbody
+                      style={{ display: 'block', position: 'relative' }}
+                      onMouseLeave={() => setHover(null)}
+                    >
+                      {displayed.map((item, idx) => (
+                        <LedgerRow
+                          key={item.category_id}
+                          item={item}
+                          rank={idx + 1}
+                          maxValue={maxValue}
+                          showVendor={idx < 15}
+                          lang={lang}
+                          onHover={(id, el) => setHover({ id, ...captureRect(el) })}
+                          onLeave={() => setHover(null)}
+                        />
+                      ))}
+
+                      {/* Floating register dossier (desktop only) — edge-flips */}
+                      {hoverItem && hover && (
+                        <tr style={{ display: 'block' }}>
+                          <td style={{ display: 'block', padding: 0, border: 0 }}>
+                            <div
+                              className="hidden md:block pointer-events-none absolute z-20"
+                              style={{
+                                right: 12,
+                                ...(dossierBelow ? { top: hover.bottom + 6 } : { bottom: hover.containerH - hover.top + 6 }),
+                              }}
+                            >
+                              <div className="rounded-md border border-border bg-background-card p-3 shadow-xl" style={{ width: 300 }}>
+                                <CategoryHoverDossier item={hoverItem} rank={hoverRank} totalValue={totalValue} lang={lang} />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  ) : (
+                    <tbody style={{ display: 'block' }}>
+                      <tr style={{ display: 'block' }}>
+                        <td className="py-12 text-center" style={{ display: 'block' }} role="status" aria-live="polite">
+                          <p className="text-sm font-mono text-text-muted">
+                            {isEs ? 'No hay categorías en este sector.' : 'No categories in this sector.'}
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  )}
+                </table>
               </div>
-              {displayed.length > 0 ? (
-                displayed.map((item, idx) => (
-                  <LedgerRow key={item.category_id} item={item} rank={idx + 1} maxValue={maxValue} showVendor={idx < 15} lang={lang} />
-                ))
-              ) : (
-                <div className="py-12 text-center" role="status" aria-live="polite">
-                  <p className="text-sm font-mono text-text-muted">
-                    {lang === 'es' ? 'No hay categorías en este sector.' : 'No categories in this sector.'}
-                  </p>
-                </div>
-              )}
-            </div>
 
-            {/* ── THE MAP (demoted to a disclosure) ──────────────────────────── */}
-            <details className="mt-5 group" open={showMap} onToggle={(e) => setShowMap((e.currentTarget as HTMLDetailsElement).open)}>
-              <summary className="cursor-pointer font-mono list-none" style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}>
-                {showMap
-                  ? (lang === 'es' ? '▾ Ocultar el mapa de gasto' : '▾ Hide the spending map')
-                  : (lang === 'es' ? '▸ Ver el mapa de gasto (treemap)' : '▸ See the spending map (treemap)')}
-              </summary>
-              {showMap && (
-                <div className="mt-3">
-                  <CategoryTreemap categories={data.data} lang={lang} activeSector={activeSector} />
-                </div>
-              )}
-            </details>
+              {/* dagger margin note */}
+              <p
+                className="mt-3"
+                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11, lineHeight: 1.45, color: 'var(--color-text-secondary)', maxWidth: '64ch' }}
+              >
+                {isEs
+                  ? '† Sectores con una sola categoría activa — expansión de taxonomía pendiente (S.10–S.12).'
+                  : '† Sectors with a single active category — taxonomy expansion pending (S.10–S.12).'}
+              </p>
+            </section>
 
-            {/* ── Methodology footer ─────────────────────────────────────────── */}
-            <p className="mt-6 pt-5 border-t border-border font-mono" style={{ fontSize: 10.5, lineHeight: 1.6, letterSpacing: '0.03em', color: 'var(--color-text-muted)', maxWidth: '78ch' }}>
-              {lang === 'es'
-                ? 'Las categorías usan códigos Partida/CUCoP; la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La línea es la fila gris en la regla del procedimiento; el punto de único postor colorea >25% crítico / ≥15% alto. Indicador de riesgo · no estimación de fraude. RUBLI v0.8.5.'
-                : 'Categories use Partida/CUCoP codes; reliable coverage is 2023–2025 (Structure D, 100% Partida) — earlier years may be partially classified. The OECD direct-award ceiling (30%) is the tick on each row; the single-bid dot reddens >25% critical / ≥15% high. Risk indicator · not a fraud estimate. RUBLI v0.8.5.'}
-            </p>
+            {/* ── B∞ · § ADÓNDE IR (coda) ──────────────────────────────────── */}
+            <section className="mt-8 pt-6" style={{ borderTop: '1px solid var(--color-border)' }} aria-label={isEs ? 'Adónde ir' : 'Where to go next'}>
+              <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+                § {isEs ? 'Adónde ir' : 'Where to go next'}
+              </p>
+              <div className="flex items-center flex-wrap gap-x-5 gap-y-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/aria')}
+                  className="font-mono uppercase tracking-wide transition-opacity hover:opacity-70"
+                  style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--color-accent)', background: 'none', border: 0, cursor: 'pointer' }}
+                >
+                  {isEs ? 'Ver la cola de investigación →' : 'See the investigation queue →'}
+                </button>
+                <div className="flex items-center flex-wrap gap-2">
+                  {codaRiskiest && (
+                    <EntityIdentityChip
+                      type="category"
+                      id={codaRiskiest.category_id}
+                      name={isEs ? codaRiskiest.name_es : codaRiskiest.name_en}
+                      size="sm"
+                      sectorCode={codaRiskiest.sector_code}
+                      riskScore={codaRiskiest.avg_risk}
+                    />
+                  )}
+                  {codaCaptured && codaCaptured.category_id !== codaRiskiest?.category_id && (
+                    <EntityIdentityChip
+                      type="category"
+                      id={codaCaptured.category_id}
+                      name={isEs ? codaCaptured.name_es : codaCaptured.name_en}
+                      size="sm"
+                      sectorCode={codaCaptured.sector_code}
+                      riskScore={codaCaptured.avg_risk}
+                    />
+                  )}
+                  {codaRiskiest?.top_vendor && (
+                    <EntityIdentityChip
+                      type="vendor"
+                      id={codaRiskiest.top_vendor.id}
+                      name={codaRiskiest.top_vendor.name}
+                      size="sm"
+                      hideIcon
+                      sectorCode={codaRiskiest.sector_code}
+                    />
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* ── Procedencia ──────────────────────────────────────────────── */}
+            <ProvenanceNote lang={lang} />
           </>
         )}
       </div>
     </div>
+  )
+}
+
+// Anchor number atom for the EL SALDO sentence — Garamond italic 800 tabular,
+// colour inherits (the surrounding span sets it where needed).
+function SaldoNum({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="tabular-nums"
+      style={{
+        fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+        fontStyle: 'italic',
+        fontWeight: 800,
+        color: 'var(--color-text-primary)',
+      }}
+    >
+      {children}
+    </span>
   )
 }
