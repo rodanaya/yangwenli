@@ -565,7 +565,7 @@ export default function CategoriesIndex() {
                       <SaldoNum>{saldo.k50}</SaldoNum> categorías concentran la mitad de{' '}
                       <SaldoNum>{formatCompactMXN(saldo.total)}</SaldoNum>. Pero la más cara —{' '}
                       {saldo.topSpend.name_es} — no es la de mayor riesgo:{' '}
-                      <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontStyle: 'normal', fontWeight: 600 }}>
+                      <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontWeight: 600 }}>
                         {saldo.riskiest.name_es}
                       </span>{' '}
                       marca <SaldoNum>{saldo.riskiest.avg_risk.toFixed(2)}</SaldoNum> de indicador,{' '}
@@ -576,7 +576,7 @@ export default function CategoriesIndex() {
                       <SaldoNum>{saldo.k50}</SaldoNum> categories hold half of{' '}
                       <SaldoNum>{formatCompactMXN(saldo.total)}</SaldoNum>. Yet the costliest —{' '}
                       {saldo.topSpend.name_en} — is not the riskiest:{' '}
-                      <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontStyle: 'normal', fontWeight: 600 }}>
+                      <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontWeight: 600 }}>
                         {saldo.riskiest.name_en}
                       </span>{' '}
                       posts a <SaldoNum>{saldo.riskiest.avg_risk.toFixed(2)}</SaldoNum> indicator,{' '}

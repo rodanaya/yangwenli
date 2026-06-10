@@ -279,20 +279,22 @@ export default function Executive() {
               letterSpacing: '-0.012em',
             }}
           >
+            {/* Accents inherit the italic (upright-in-italic broke the glyph
+                rhythm and read as misaligned) and never wrap mid-phrase. */}
             {lang === 'en' ? (
               <>
                 Twenty-three years.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>MX$9.9 trillion</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-accent)', whiteSpace: 'nowrap' }}>MX$9.9 trillion</span>
                 {' '}in federal contracts. More than{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-risk-critical)' }}>7 in 10</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-risk-critical)', whiteSpace: 'nowrap' }}>7 in 10</span>
                 {' '}bypass competitive bidding.
               </>
             ) : (
               <>
                 Veintitrés años.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>MX$9.9 billones</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-accent)', whiteSpace: 'nowrap' }}>MX$9.9 billones</span>
                 {' '}en contratos federales. Más de{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-risk-critical)' }}>7 de cada 10</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-risk-critical)', whiteSpace: 'nowrap' }}>7 de cada 10</span>
                 {' '}evitan la licitación competitiva.
               </>
             )}
