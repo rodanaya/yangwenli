@@ -94,7 +94,7 @@ export default function RedaccionWidget() {
             <StoryCardSkeleton />
           </>
         ) : error || stories.length === 0 ? (
-          <p className="text-xs text-text-muted italic">{t('redaccion.noAlerts')}</p>
+          <p className="text-xs text-text-secondary">{t('redaccion.noAlerts')}</p>
         ) : (
           stories.map((story) => (
             <div key={story.vendorId} className="border-t border-border pt-3">

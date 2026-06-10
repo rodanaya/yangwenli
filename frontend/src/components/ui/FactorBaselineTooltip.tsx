@@ -161,7 +161,7 @@ export function FactorBaselineTooltip({
               <BellCurveSVG zScore={zScore} />
             </>
           ) : (
-            <div className="text-xs text-text-muted italic">
+            <div className="text-xs text-text-secondary">
               {t('tooltip.noBaselineData')}
             </div>
           )}

@@ -849,7 +849,7 @@ export default function RedesKnownDossier() {
                             {rank + 1}
                           </span>
                           <span className="text-[11px] font-mono font-bold text-text-primary">{lbl.code}</span>
-                          <span className="text-[10.5px] font-mono text-text-muted/70 ml-1.5 italic">{lbl.orbit}</span>
+                          <span className="text-[10.5px] font-mono text-text-secondary ml-1.5">{lbl.orbit}</span>
                         </span>
                         <span className="shrink-0 inline-flex items-center gap-1.5">
                           <span className="text-[11px] font-mono font-bold text-text-primary">

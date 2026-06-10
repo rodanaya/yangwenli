@@ -552,7 +552,7 @@ function ScoreHistogram({
         <h3 className="text-lg font-serif font-bold text-text-primary leading-tight">
           {t('histogram.headline', { total: formatNumber(total) })}
         </h3>
-        <p className="text-text-muted text-xs mt-1 italic">
+        <p className="text-text-secondary text-xs mt-1">
           {t('histogram.sub', { median: median.toFixed(1) })}
         </p>
       </div>

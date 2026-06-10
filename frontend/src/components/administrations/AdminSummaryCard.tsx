@@ -414,7 +414,7 @@ export function AdminSummaryCard({
               </span>
             </a>
           ) : (
-            <p className="text-[11px] font-mono text-text-muted italic">
+            <p className="text-[11px] font-mono text-text-secondary">
               {t('dossier.noScandals')}
             </p>
           )}

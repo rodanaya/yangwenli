@@ -212,7 +212,7 @@ export function SeasonalityCalendar() {
       </div>
 
       {/* Insight callout */}
-      <p className="text-[11px] text-text-muted leading-relaxed px-1 italic">
+      <p className="text-[11px] text-text-secondary leading-relaxed px-1">
         {t('seasonality.callout')}
       </p>
 

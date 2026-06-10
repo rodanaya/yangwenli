@@ -286,7 +286,7 @@ export function RiskFactorBadge({ factor, zScore, showExplainer = false, classNa
         <TooltipContent side="top" className="max-w-sm p-3 space-y-1.5">
           <p className="font-semibold text-xs">{explanation.title}</p>
           <p className="text-xs text-text-secondary leading-relaxed">{explanation.mechanism}</p>
-          <p className="text-xs text-text-muted italic">{explanation.citation}</p>
+          <p className="text-xs text-text-secondary">{explanation.citation}</p>
         </TooltipContent>
       </Tooltip>
     )
@@ -384,7 +384,7 @@ export function RiskFactorCard({ factor, trigger, className }: RiskFactorCardPro
             {/* Citation */}
             <div className="flex items-start gap-1.5 pt-1 border-t border-border/50">
               <BookOpen size={11} className="text-text-muted mt-0.5 shrink-0" aria-hidden="true" />
-              <p className="text-xs text-text-muted italic">{explanation.citation}</p>
+              <p className="text-xs text-text-secondary">{explanation.citation}</p>
             </div>
           </div>
         </>

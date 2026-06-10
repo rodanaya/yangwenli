@@ -670,7 +670,7 @@ function InstitutionContractsBreakdown({
           <Skeleton className="h-8 w-full" />
         </div>
       ) : contracts.length === 0 ? (
-        <p className="text-xs italic text-text-muted">
+        <p className="text-xs text-text-secondary">
           {isEs ? 'Sin contratos disponibles.' : 'No contracts available.'}
         </p>
       ) : (

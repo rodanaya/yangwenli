@@ -174,7 +174,7 @@ export function DossierItemCard({ item, onRemove }: DossierItemCardProps) {
         <p className="text-sm font-medium truncate">{item.item_name}</p>
         {/* #94 — annotation as italic grey text */}
         {item.annotation && (
-          <p className="text-xs text-text-muted/70 italic truncate mt-0.5">{item.annotation}</p>
+          <p className="text-xs text-text-secondary truncate mt-0.5">{item.annotation}</p>
         )}
         <p className="text-[10px] text-text-muted/70 mt-0.5 capitalize">{item.item_type}</p>
       </div>

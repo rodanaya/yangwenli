@@ -170,7 +170,7 @@ export function PoliticalIntelligenceStrip({ className }: { className?: string }
           {t('politicalStrip.errorLoading')}
         </div>
       ) : vendors.length === 0 ? (
-        <div className="text-sm text-text-muted py-4 italic">
+        <div className="text-sm text-text-secondary py-4">
           {t('politicalStrip.noData')}
         </div>
       ) : (

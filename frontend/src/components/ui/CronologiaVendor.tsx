@@ -49,7 +49,7 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
     return (
       <div className={cn('rounded-lg border border-border bg-background-card p-4', className)}>
         <p className="text-sm text-text-secondary mb-2">{t('cronologia.title')}</p>
-        <p className="text-xs text-text-muted italic">{t('cronologia.noData', { vendor: vendorName })}</p>
+        <p className="text-xs text-text-secondary">{t('cronologia.noData', { vendor: vendorName })}</p>
       </div>
     )
   }

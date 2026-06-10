@@ -1426,7 +1426,7 @@ export function Methodology() {
                 ))}
               </div>
 
-              <p className="text-xs text-text-muted italic">
+              <p className="text-xs text-text-secondary">
                 {t('body.validation.technicalNote')}
               </p>
             </div>

@@ -225,7 +225,7 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
 
       {/* Top-1 full name caption */}
       {top1Name.length > 28 && (
-        <div className="mt-1 text-[10px] text-text-muted italic">{top1Name}</div>
+        <div className="mt-1 text-[10px] text-text-secondary">{top1Name}</div>
       )}
     </div>
   )

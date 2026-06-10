@@ -192,7 +192,7 @@ export function AdminDossierPanel({
             {dossier.scandals.length === 0 ? (
               <div className="rounded-sm border border-border/20 bg-background-elevated/20 px-3 py-3 text-center">
                 <Shield className="h-4 w-4 text-text-muted/40 mx-auto mb-1" aria-hidden="true" />
-                <p className="text-xs text-text-muted italic leading-relaxed">
+                <p className="text-xs text-text-secondary leading-relaxed">
                   {t('dossier.noScandals')}
                 </p>
               </div>

@@ -237,7 +237,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-text-muted italic">
+            <p className="text-xs text-text-secondary">
               {t('drawer.noSignificantRisk')}
             </p>
           )}

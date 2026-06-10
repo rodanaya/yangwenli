@@ -197,7 +197,7 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
         </div>
       )}
 
-      <p className="text-[10px] text-text-muted/60 italic border-t border-border/30 pt-3">
+      <p className="text-[10px] text-text-secondary border-t border-border/30 pt-3">
         Análisis generado por modelo — no sustituye investigación periodística
       </p>
     </div>
@@ -467,7 +467,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
                   </>
                 )}
               </button>
-              <span className="text-[10px] text-text-muted italic">
+              <span className="text-[10px] text-text-secondary">
                 Generado automáticamente — requiere verificación periodística
               </span>
             </div>

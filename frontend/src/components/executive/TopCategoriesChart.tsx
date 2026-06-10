@@ -225,7 +225,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                   {caption && (
                     <>
                       <span aria-hidden="true" className="opacity-50">·</span>
-                      <span className="italic normal-case tracking-normal text-[10px] text-text-muted/85 truncate">
+                      <span className="normal-case tracking-normal text-[10px] text-text-secondary truncate">
                         {caption}
                       </span>
                     </>

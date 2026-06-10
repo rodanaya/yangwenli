@@ -202,7 +202,7 @@ export function VendorActivityTab({
             annotations={annotations}
           />
         ) : (
-          <p className="text-sm text-text-muted italic">
+          <p className="text-sm text-text-secondary">
             {isEs
               ? 'Insuficiente actividad para un histórico.'
               : 'Insufficient activity for a history view.'}
@@ -534,7 +534,7 @@ export function VendorActivityTab({
             )}
           </>
         ) : (
-          <p className="text-sm text-text-muted italic">
+          <p className="text-sm text-text-secondary">
             {isEs ? 'Sin contratos.' : 'No contracts.'}
           </p>
         )}
