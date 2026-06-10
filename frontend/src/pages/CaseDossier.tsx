@@ -472,11 +472,20 @@ function ChapterDamage({
       : `Estimated between ${formatCompactMXN(low)} and ${formatCompactMXN(high)}.`)
     : (lang === 'es' ? 'Estimación única consolidada.' : 'Single consolidated estimate.')
 
+  // Charter invariant 14 — the § header states the finding, not a topic noun.
+  // When a damage figure exists, the title carries the estimated amount; when
+  // damage is NULL the header falls back to the bare topic noun.
+  const damageTitle = headlineAmount != null
+    ? (lang === 'es'
+      ? `El daño · ${formatCompactMXN(headlineAmount)}`
+      : `The damage · ${formatCompactMXN(headlineAmount)}`)
+    : (lang === 'es' ? 'El daño' : 'The damage')
+
   return (
     <ChapterShell id="dano">
       <ChapterHeading
         numeral="II"
-        title={lang === 'es' ? 'El daño' : 'The damage'}
+        title={damageTitle}
         subtitle={lang === 'es' ? 'El monto y la resolución' : 'The amount and the resolution'}
         sectorAccent={accent}
       />
@@ -868,6 +877,107 @@ function ChapterSources({
   )
 }
 
+// ─── Coda · Adónde ir (exit ramp) ───────────────────────────────────────────
+
+function CaseCoda({
+  vendors,
+  primarySector,
+  accent,
+  lang,
+}: {
+  vendors: LinkedVendor[]
+  primarySector: { id: number; nameES: string; nameEN: string } | null
+  accent: string
+  lang: 'en' | 'es'
+}) {
+  // Chips are drawn ONLY from data already on the page (no new API calls).
+  // Case → Vendor (routable linked_vendors) + Sector (primary). Linked vendors
+  // without a vendor_id can't route to a dossier, so they're filtered out; the
+  // remainder is deduped by id and the highest-risk 3 lead the cluster.
+  const routableVendors = vendors.filter(
+    (v): v is LinkedVendor & { vendor_id: number } => v.vendor_id != null,
+  )
+  const seen = new Set<number>()
+  const dedupedVendors = routableVendors
+    .filter((v) => {
+      if (seen.has(v.vendor_id)) return false
+      seen.add(v.vendor_id)
+      return true
+    })
+    .sort((a, b) => (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
+    .slice(0, 3)
+
+  const hasSector = primarySector != null
+  const sectorCode = hasSector
+    ? SECTORS.find((s) => s.id === primarySector.id)?.code ?? null
+    : null
+
+  // 2–4 chips max — keep a sector slot when present, fill the rest with vendors.
+  const vendorSlots = hasSector ? 3 : 4
+  const vendorChips = dedupedVendors.slice(0, vendorSlots)
+
+  // No routable cross-links → the coda would be a dead end; skip it rather than
+  // render an exit ramp that goes nowhere.
+  if (vendorChips.length === 0 && !hasSector) return null
+
+  return (
+    <section
+      id="adonde-ir"
+      className="py-12 px-4 sm:px-8 max-w-4xl mx-auto"
+      aria-label={lang === 'es' ? 'Adónde ir' : 'Where to go next'}
+    >
+      <p
+        className="font-mono mb-6"
+        style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
+      >
+        § · {lang === 'es' ? 'Adónde ir' : 'Where to go next'}
+      </p>
+
+      {/* Investigate CTA → La Cola (ARIA) */}
+      <Link
+        to="/aria"
+        aria-label={lang === 'es' ? 'Abrir la cola de investigación ARIA' : 'Open the ARIA investigation queue'}
+        className="inline-flex items-center gap-1.5 font-mono uppercase hover:opacity-70 transition-opacity"
+        style={{ fontSize: 11, letterSpacing: '0.14em', color: accent, fontWeight: 700 }}
+      >
+        <ArrowUpRight className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+        {lang === 'es' ? 'Investigar en La Cola →' : 'Investigate in The Queue →'}
+      </Link>
+
+      {/* Related-entity chips drawn from the cross-link graph */}
+      <div className="mt-7">
+        <p
+          className="font-mono mb-3"
+          style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+        >
+          {lang === 'es' ? 'Entidades vinculadas' : 'Linked entities'}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {vendorChips.map((v) => (
+            <EntityIdentityChip
+              key={`coda-vendor-${v.vendor_id}`}
+              type="vendor"
+              id={v.vendor_id}
+              name={v.vendor_name}
+              riskScore={v.avg_risk_score}
+              size="sm"
+            />
+          ))}
+          {hasSector && primarySector && (
+            <EntityIdentityChip
+              type="sector"
+              id={primarySector.id}
+              name={lang === 'es' ? primarySector.nameES : primarySector.nameEN}
+              sectorCode={sectorCode}
+              size="sm"
+            />
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Skeleton ───────────────────────────────────────────────────────────────
 
 function DossierSkeleton() {
@@ -947,10 +1057,6 @@ export default function CaseDossier() {
 
   const fromCases = location.state && (location.state as { from?: string }).from === '/cases'
 
-  // Quiet refs to imports we keep for narrative tooling consistency.
-  void EntityIdentityChip
-  void Link
-
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {fromCases && (
@@ -978,6 +1084,13 @@ export default function CaseDossier() {
       <ChapterDivider accent={accent} />
 
       <ChapterSources sources={scandal.sources ?? []} accent={accent} lang={lang} />
+
+      <CaseCoda
+        vendors={scandal.linked_vendors ?? []}
+        primarySector={primarySector}
+        accent={accent}
+        lang={lang}
+      />
 
       <ProvenanceFooter lang={lang} />
 
