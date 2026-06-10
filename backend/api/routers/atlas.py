@@ -135,6 +135,11 @@ class VendorClusterItem(BaseModel):
     primary_pattern: Optional[str] = None
     ghost_score: Optional[float] = None
     capture_score: Optional[float] = None
+    # Full ARIA pattern-confidence dict (e.g. {"P2": 0.91, "P6": 0.80}). Already
+    # SELECTed per row; previously parsed only for the P6 capture_score and
+    # discarded. The Atlas File Panel renders the ARIA fingerprint and the
+    # cross-pattern jump chips from this.
+    pattern_confidences: Optional[dict[str, float]] = None
 
 
 class ClusterVendorsResponse(BaseModel):
@@ -460,12 +465,17 @@ def _build_vendor_items(rows: list[sqlite3.Row]) -> list[VendorClusterItem]:
     for row in rows:
         d = dict(row)
 
-        # Parse capture_score from JSON pattern_confidences["P6"]
+        # Parse the full pattern_confidences JSON once: capture_score keeps its
+        # legacy P6 extraction, and the whole dict is surfaced on the item.
         capture_score = None
+        pattern_confidences = None
         pc_raw = d.get("pattern_confidences")
         if pc_raw:
             try:
                 pc = json.loads(pc_raw) if isinstance(pc_raw, str) else pc_raw
+                pattern_confidences = {
+                    str(k): float(v) for k, v in pc.items() if v is not None
+                } or None
                 p6_val = pc.get("P6")
                 if p6_val is not None:
                     capture_score = float(p6_val)
@@ -490,6 +500,7 @@ def _build_vendor_items(rows: list[sqlite3.Row]) -> list[VendorClusterItem]:
             primary_pattern=d.get("primary_pattern"),
             ghost_score=d.get("ghost_score"),
             capture_score=capture_score,
+            pattern_confidences=pattern_confidences,
         ))
     return items
 

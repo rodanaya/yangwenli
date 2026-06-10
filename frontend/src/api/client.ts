@@ -3555,6 +3555,9 @@ export interface AtlasClusterVendorItem {
   primary_sector_code: string
   primary_sector_name: string
   is_gt: boolean
+  /** Full ARIA pattern-confidence dict (e.g. {"P2": 0.91, "P6": 0.80}) — feeds
+   *  the Atlas File Panel fingerprint + cross-pattern jump chips. */
+  pattern_confidences?: Record<string, number> | null
 }
 
 export interface AtlasClusterVendorsResponse {

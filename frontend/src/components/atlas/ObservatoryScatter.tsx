@@ -24,11 +24,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate, useReducedMotion } from 'framer-motion'
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
-import { riskRamp, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { riskRamp, RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatNumber, formatCompactMXN, formatCompactUSD } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { halton } from '@/lib/particle'
-import { atlasApi } from '@/api/client'
+import { atlasApi, type AtlasClusterVendorItem } from '@/api/client'
+import { VendorFile } from '@/components/atlas/VendorFile'
 
 export interface ScatterCluster {
   code: string
@@ -130,6 +131,12 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const [hoverVendor, setHoverVendor] = useState<number | null>(null)
   const [hoverBody, setHoverBody] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  // El Expediente — clicking a vendor dot SELECTS it (docked File Panel) instead
+  // of ejecting to /vendors/:id. The full cluster item is kept (not just the id)
+  // so the panel's identity header renders with zero extra fetches.
+  const [selected, setSelected] = useState<AtlasClusterVendorItem | null>(null)
+  // Drawer accordion — one vendor row at a time unfolds into an inline file.
+  const [drawerExpanded, setDrawerExpanded] = useState<number | null>(null)
   // Keyboard-focus tracking (distinct from hover) so we can paint a visible focus
   // ring on the orb the user tabbed to — SVG can't render :focus-visible.
   const [focusVendorId, setFocusVendorId] = useState<number | null>(null)
@@ -195,6 +202,14 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   }, [clusters, scales])
 
   const focusedBody = bodies.find((b) => b.code === focused) ?? null
+
+  // code → display label for the active lens — drives the File Panel's ARIA
+  // fingerprint rows and the "⇄ también P6" lateral jump chips.
+  const codeLabels = useMemo(() => {
+    const m: Record<string, string> = {}
+    for (const c of clusters) m[c.code] = toTitleCase(c.label)
+    return m
+  }, [clusters])
 
   // Pre-warm ALL clusters' top vendors via the cached batch endpoint on mount,
   // so flying into an orb is instant.
@@ -285,29 +300,64 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const baseDim = useTransform(zoom, [0, 1], [1, 0.05])
   const focusIn = useTransform(zoom, [0.35, 1], [0, 1])
 
+  // While the File Panel is docked (right ~34% of the container) the camera
+  // pans the viewBox right so the sub-plot stays centered in the VISIBLE area.
+  // A second motion value composed into the same uncontrolled-attribute apply —
+  // no per-frame React re-renders (React #301 discipline).
+  const panShift = useMotionValue(0)
   useEffect(() => {
-    const apply = (z: number) => {
+    const apply = () => {
+      const z = zoom.get()
       const t = targetRef.current
-      const x = t.x * z, y = t.y * z
+      const x = t.x * z + panShift.get() * t.w * 0.17 * z, y = t.y * z
       const w = W + (t.w - W) * z, h = H + (t.h - H) * z
       svgRef.current?.setAttribute('viewBox', `${x} ${y} ${w} ${h}`)
     }
-    apply(zoom.get())
-    const unsub = zoom.on('change', apply)
-    return unsub
-  }, [zoom])
+    apply()
+    const unsubZoom = zoom.on('change', apply)
+    const unsubPan = panShift.on('change', apply)
+    return () => { unsubZoom(); unsubPan() }
+  }, [zoom, panShift])
+
+  useEffect(() => {
+    animate(panShift, selected && focused ? 1 : 0, { duration: dur(0.45), ease: [0.16, 1, 0.3, 1] })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, focused])
 
   const flyTo = (b: { code: string; cx: number; cy: number; r: number }) => {
     targetRef.current = focusFrameFor(b)
     setDrawerOpen(false)
     setHoverBody(null)
+    setSelected(null)
+    setDrawerExpanded(null)
     setFocused(b.code)
     animate(zoom, 1, { duration: dur(0.9), ease: [0.16, 1, 0.3, 1] })
   }
   const flyBack = () => {
     setDrawerOpen(false)
     setHoverVendor(null)
+    setSelected(null)
+    setDrawerExpanded(null)
     animate(zoom, 0, { duration: dur(0.6), ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
+  }
+  // Lateral camera jump — "⇄ también P6": pull out, then dive into the sibling
+  // cluster. The SELECTION SURVIVES the flight (the File Panel is vendor-scoped,
+  // not cluster-scoped), so the reader lands in the new pattern with the same
+  // vendor's file still open.
+  const flyLateral = (code: string) => {
+    const b = bodies.find((x) => x.code === code)
+    if (!b) return
+    setDrawerOpen(false)
+    setDrawerExpanded(null)
+    setHoverVendor(null)
+    animate(zoom, 0, {
+      duration: dur(0.45), ease: [0.5, 0, 0.2, 1],
+      onComplete: () => {
+        targetRef.current = focusFrameFor(b)
+        setFocused(b.code)
+        animate(zoom, 1, { duration: dur(0.7), ease: [0.16, 1, 0.3, 1] })
+      },
+    })
   }
 
   // Recovery: if the lens changed out from under a focused orb (the code no
@@ -319,16 +369,20 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     }
   }, [focused, focusedBody, zoom, reduce])
 
-  // Escape key: close the drawer, else fly back out of focus.
+  // Escape key: close the drawer, else the File Panel, else fly back out.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       if (drawerOpen) setDrawerOpen(false)
-      else if (focused) animate(zoom, 0, { duration: reduce ? 0 : 0.6, ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
+      else if (selected) setSelected(null)
+      else if (focused) {
+        setSelected(null)
+        animate(zoom, 0, { duration: reduce ? 0 : 0.6, ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [drawerOpen, focused, zoom, reduce])
+  }, [drawerOpen, selected, focused, zoom, reduce])
 
   // How collapsed the risk axis is for the focused cluster (0 = risk varies and y
   // is faithful · 1 = all vendors share ~one risk so y is an arbitrary fan). Lifted
@@ -409,11 +463,21 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const subLabels = useMemo(() => {
     if (!focusedBody || subScatter.length === 0) return []
     const cx = focusedBody.cx, cy = focusedBody.cy
+    // Named-outlier callouts (Reuters Forever Pollution): the top-3 marks by
+    // contract value get a second pull-stat line — the plate names its own
+    // outliers instead of leaving every dot anonymous. subScatter is already
+    // sorted by value desc, so the first three are the salience marks.
+    const calloutIds = new Set(subScatter.slice(0, 3).map((s) => s.v.vendor_id))
     const placed: Box[] = subScatter.map((s) => ({ x: s.x - s.r, y: s.y - s.r, w: s.r * 2, h: s.r * 2 }))
-    const out: Array<{ id: number; x: number; y: number; anchor: 'start' | 'middle' | 'end'; name: string; fill: string }> = []
+    const out: Array<{ id: number; x: number; y: number; anchor: 'start' | 'middle' | 'end'; name: string; stat: string | null; fill: string }> = []
     for (const s of subScatter) {
       const name = formatVendorName(s.v.name, 26)
-      const w = name.length * 5 + 5, h = 11, g = 3.5   // sized for the 6.8px render below
+      const isCallout = calloutIds.has(s.v.vendor_id)
+      const stat = isCallout
+        ? `${lang === 'en' ? formatCompactUSD(s.v.total_amount_mxn) : formatCompactMXN(s.v.total_amount_mxn)} · ${Math.round(s.risk * 100)}%`
+        : null
+      const w = Math.max(name.length * 5, stat ? stat.length * 4.2 : 0) + 5
+      const h = isCallout ? 19 : 11, g = 3.5   // sized for the 6.8px render below
       const cands: Array<{ x: number; y: number; anchor: 'start' | 'middle' | 'end' }> = [
         { x: s.x - w / 2, y: s.y - s.r - g - h, anchor: 'middle' },
         { x: s.x - w / 2, y: s.y + s.r + g, anchor: 'middle' },
@@ -430,10 +494,10 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
       if (!chosen) continue
       placed.push({ x: chosen.x, y: chosen.y, w, h })
       const tx = chosen.anchor === 'middle' ? chosen.x + w / 2 : chosen.anchor === 'start' ? chosen.x + 2 : chosen.x + w - 2
-      out.push({ id: s.v.vendor_id, x: tx, y: chosen.y + h - 2, anchor: chosen.anchor, name, fill: s.fill })
+      out.push({ id: s.v.vendor_id, x: tx, y: chosen.y + (isCallout ? 9 : h - 2), anchor: chosen.anchor, name, stat, fill: s.fill })
     }
     return out
-  }, [focusedBody, subScatter])
+  }, [focusedBody, subScatter, lang])
 
   // Drawer = the COMPLETE ranked tail (keyset-paginated by risk indicator), not
   // just the on-chart top-30 — the batch endpoint caps at 30, this walks the rest,
@@ -542,6 +606,16 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           <text transform={`translate(28, ${M.top + PLOT_H / 2}) rotate(-90)`} textAnchor="middle" fill={C.inkMuted} fontSize={14} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
             {lang === 'es' ? '↑ TASA DE ALTO RIESGO' : '↑ HIGH-RISK RATE'}
           </text>
+          {/* Quadrant gloss — names the danger corner the red tint only implied
+              (the plate reads itself; FT-print annotated-quadrant grammar). */}
+          <g style={{ pointerEvents: 'none' }} opacity={0.8}>
+            <text x={W - M.right - 10} y={M.top + 22} textAnchor="end" fill={RISK_COLORS.critical} fontSize={12.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600} opacity={0.75}>
+              {lang === 'es' ? 'el rincón que importa' : 'the corner that matters'}
+            </text>
+            <text x={W - M.right - 10} y={M.top + 35} textAnchor="end" fill={C.inkMuted} fontSize={8.5} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
+              {lang === 'es' ? 'ESCALA ALTA × TASA ALTA' : 'HIGH SCALE × HIGH RATE'}
+            </text>
+          </g>
 
           {links.map((l, i) => (
             <motion.line key={`l${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={C.grid} strokeWidth={1} strokeDasharray="1 5" strokeLinecap="round"
@@ -610,10 +684,36 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
             aria-label={lang === 'es' ? `Proveedores de ${toTitleCase(focusedBody.label)}` : `Vendors in ${toTitleCase(focusedBody.label)}`}>
             {/* tap-empty-to-exit scrim — only fires once the camera has settled */}
             <rect x={focusedBody.cx - W} y={focusedBody.cy - H} width={W * 2} height={H * 2} fill="transparent"
-              onClick={() => { if (zoom.get() > 0.9) flyBack() }} style={{ cursor: 'zoom-out' }} />
+              onClick={() => { if (zoom.get() > 0.9) { if (selected) setSelected(null); else flyBack() } }} style={{ cursor: 'zoom-out' }} />
 
             {/* sub-plot frame + faithful axis hints (x = value · y = risk) */}
             <rect x={focusedBody.cx - SUB_HALF_W} y={focusedBody.cy - SUB_HALF_H} width={SUB_HALF_W * 2} height={SUB_HALF_H * 2} rx={4} fill="none" stroke={C.grid} strokeWidth={0.6} />
+            {/* FT banded field — graduations at the REAL model thresholds
+                (RISK_THRESHOLDS .25/.40/.60), so y-altitude reads as a model
+                tier instead of an unlabeled gradient. Fades out as the fan
+                collapses (an arbitrary spread must never read as banded risk). */}
+            {subScatter.length > 0 && fanState.collapse < 1 && (() => {
+              const yFor01 = (r: number) => focusedBody.cy + (0.5 - r) * 2 * (SUB_HALF_H - SUB_PAD)
+              const bandTop = focusedBody.cy - SUB_HALF_H
+              const tiers: Array<{ r: number; key: 'critical' | 'high' | 'medium' }> = [
+                { r: RISK_THRESHOLDS.critical, key: 'critical' },
+                { r: RISK_THRESHOLDS.high, key: 'high' },
+                { r: RISK_THRESHOLDS.medium, key: 'medium' },
+              ]
+              return (
+                <g style={{ pointerEvents: 'none' }} opacity={1 - fanState.collapse}>
+                  <rect x={focusedBody.cx - SUB_HALF_W} y={bandTop} width={SUB_HALF_W * 2} height={Math.max(0, yFor01(RISK_THRESHOLDS.critical) - bandTop)} fill={RISK_COLORS.critical} opacity={0.045} />
+                  {tiers.map(({ r, key }) => (
+                    <g key={key}>
+                      <line x1={focusedBody.cx - SUB_HALF_W} y1={yFor01(r)} x2={focusedBody.cx + SUB_HALF_W} y2={yFor01(r)} stroke={RISK_COLORS[key]} strokeWidth={0.4} strokeDasharray="3 3" opacity={0.4} />
+                      <text x={focusedBody.cx - SUB_HALF_W + 3} y={yFor01(r) - 2} fill={RISK_COLORS[key]} fontSize={5.2} fontFamily="var(--font-family-mono)" opacity={0.75}>
+                        {`.${String(Math.round(r * 100)).padStart(2, '0')}`}
+                      </text>
+                    </g>
+                  ))}
+                </g>
+              )
+            })()}
             <text x={focusedBody.cx} y={focusedBody.cy + SUB_HALF_H + 13} textAnchor="middle" fill={C.inkFaint} fontSize={6.5} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
               {lang === 'es' ? 'VALOR DE CONTRATO →' : 'CONTRACT VALUE →'}
             </text>
@@ -657,9 +757,9 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               const tierRing = lvl === 'critical' ? 1.5 : lvl === 'high' ? 0.75 : 0
               return (
                 <motion.g key={s.v.vendor_id} role="button" tabIndex={0}
-                  aria-label={`${formatVendorName(s.v.name, 60)} — ${fmtAmount(s.v.total_amount_mxn)}, ${s.v.risk_level}. ${lang === 'es' ? 'Abrir' : 'Open'}`}
-                  onClick={(e) => { e.stopPropagation(); onVendorClick(s.v.vendor_id) }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVendorClick(s.v.vendor_id) } }}
+                  aria-label={`${formatVendorName(s.v.name, 60)} — ${fmtAmount(s.v.total_amount_mxn)}, ${s.v.risk_level}. ${lang === 'es' ? 'Abrir ficha' : 'Open file'}`}
+                  onClick={(e) => { e.stopPropagation(); setSelected((cur) => (cur?.vendor_id === s.v.vendor_id ? null : s.v)) }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected((cur) => (cur?.vendor_id === s.v.vendor_id ? null : s.v)) } }}
                   onMouseEnter={() => setHoverVendor(s.v.vendor_id)} onMouseLeave={() => setHoverVendor(null)}
                   onFocus={() => { setHoverVendor(s.v.vendor_id); setFocusVendorId(s.v.vendor_id) }}
                   onBlur={() => { setHoverVendor(null); setFocusVendorId(null) }}
@@ -674,6 +774,12 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                   {tierRing > 0 && <circle cx={s.x} cy={s.y} r={s.r + 1.5} fill="none" stroke={s.fill} strokeWidth={tierRing} strokeOpacity={0.9} />}
                   {s.r > 4 && <circle cx={s.x - s.r * 0.28} cy={s.y - s.r * 0.3} r={Math.max(0.9, s.r * 0.22)} fill="#fff" opacity={0.85} />}
                   {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 3} fill="none" stroke={C.ink} strokeWidth={0.8} strokeDasharray="2.4 1.6" strokeOpacity={0.6} />}
+                  {selected?.vendor_id === s.v.vendor_id && (
+                    <>
+                      <circle cx={s.x} cy={s.y} r={s.r + 5.5} fill="none" stroke={C.ink} strokeWidth={0.7} opacity={0.55} />
+                      <circle cx={s.x} cy={s.y} r={s.r + 3} fill="none" stroke={s.fill} strokeWidth={1.6} />
+                    </>
+                  )}
                   {kbFocus && <circle cx={s.x} cy={s.y} r={s.r + 4.5} fill="none" stroke={C.ink} strokeWidth={1.4} />}
                 </motion.g>
               )
@@ -682,9 +788,16 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
             {/* fit-only labels — collision-free, NEVER stacked. The active vendor's
                 label is dropped here; its name moves to the opaque hover card below. */}
             {subLabels.filter((l) => l.id !== (hoverVendor ?? focusVendorId)).map((l) => (
-              <text key={l.id} x={l.x} y={l.y} textAnchor={l.anchor} fill={C.ink} fontSize={6.8} fontFamily='"EB Garamond",Georgia,serif' fontWeight={600} paintOrder="stroke" stroke={C.plate0} strokeWidth={1.4} strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-                {l.name}
-              </text>
+              <g key={l.id} style={{ pointerEvents: 'none' }}>
+                <text x={l.x} y={l.y} textAnchor={l.anchor} fill={C.ink} fontSize={6.8} fontFamily='"EB Garamond",Georgia,serif' fontWeight={l.stat ? 700 : 600} paintOrder="stroke" stroke={C.plate0} strokeWidth={1.4} strokeLinejoin="round">
+                  {l.name}
+                </text>
+                {l.stat && (
+                  <text x={l.x} y={l.y + 7.5} textAnchor={l.anchor} fill={C.inkMuted} fontSize={5.6} fontFamily="var(--font-family-mono)" paintOrder="stroke" stroke={C.plate0} strokeWidth={1.2} strokeLinejoin="round">
+                    {l.stat}
+                  </text>
+                )}
+              </g>
             ))}
 
             {/* hover/focus card — opaque plate, drawn LAST (top-most) so the active
@@ -730,8 +843,8 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
       {/* Screen-reader-only live region: narrates the focused cluster on fly-in. */}
       <div aria-live="polite" className="sr-only">{srAnnounce}</div>
 
-      {/* ── Top-right controls (HTML overlay) ── */}
-      <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8, zIndex: 4 }}>
+      {/* ── Top-right controls (HTML overlay) — slide left of the File Panel ── */}
+      <div style={{ position: 'absolute', top: 12, right: selected && focusedBody ? 'min(412px, 90%)' : 12, display: 'flex', gap: 8, zIndex: 4, transition: 'right 0.45s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         {focusedBody && (
           <>
             <button type="button" onClick={() => onOpenDossier(focusedBody.code)}
@@ -763,6 +876,27 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           <ReadItem glyph="✦" title={lang === 'es' ? 'Clic = entrar' : 'Click = fly in'} body={lang === 'es' ? 'La cámara entra al orbe y ve sus proveedores' : 'The camera flies into the orb to its vendors'} />
         </div>
       )}
+
+      {/* ── El Expediente — docked vendor File Panel (no scrim: the plate stays
+              interactive; the camera pans so the sub-plot remains visible) ── */}
+      <AnimatePresence>
+        {selected && focusedBody && (
+          <motion.aside key="vendor-file-panel"
+            initial={{ x: '105%' }} animate={{ x: 0 }} exit={{ x: '105%' }}
+            transition={{ type: 'spring', damping: 32, stiffness: 300 }}
+            style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 400, maxWidth: '88%', zIndex: 6, background: 'var(--color-background-card)', borderLeft: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', boxShadow: '-18px 0 40px -28px rgba(40,30,20,0.5)' }}
+            aria-label={lang === 'es' ? 'Expediente del proveedor' : 'Vendor file'}
+          >
+            <VendorFile
+              item={selected} lens={lens} currentCode={focused} codeLabels={codeLabels}
+              lang={lang} accent={focusedBody.fill} variant="panel"
+              onClose={() => setSelected(null)}
+              onOpenVendor={onVendorClick}
+              onJumpToPattern={lens === 'patterns' ? flyLateral : undefined}
+            />
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
       {/* ── Summonable drawer — the complete ranked list, on demand ── */}
       <AnimatePresence>
@@ -800,13 +934,29 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                     <div className="font-mono" style={{ padding: 14, fontSize: 10, color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'cargando…' : 'loading…'}</div>
                   ) : drawerVendorsFull && drawerVendorsFull.length > 0 ? (
                     <>
+                      {/* Each row is a FOLDER: clicking unfolds the vendor's file
+                          inline (accordion, one open at a time) — the journalist
+                          can crack any of the thousands open without losing their
+                          scroll position. Navigation lives inside the file's CTA. */}
                       {drawerVendorsFull.map((v, i) => (
-                        <IndexRow key={v.vendor_id} rank={i + 1} dot={riskRamp(safeRisk01(v.risk_score))}
-                          name={formatVendorName(v.name, 72)}
-                          stat={`${fmtAmount(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(safeRisk01(v.risk_score) * 100)}%`}
-                          gt={v.is_gt} active={hoverVendor === v.vendor_id}
-                          onEnter={() => setHoverVendor(v.vendor_id)} onLeave={() => setHoverVendor(null)}
-                          onClick={() => onVendorClick(v.vendor_id)} />
+                        <div key={v.vendor_id}>
+                          <IndexRow rank={i + 1} dot={riskRamp(safeRisk01(v.risk_score))}
+                            name={formatVendorName(v.name, 72)}
+                            stat={`${fmtAmount(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(safeRisk01(v.risk_score) * 100)}%`}
+                            gt={v.is_gt} active={hoverVendor === v.vendor_id || drawerExpanded === v.vendor_id}
+                            onEnter={() => setHoverVendor(v.vendor_id)} onLeave={() => setHoverVendor(null)}
+                            onClick={() => setDrawerExpanded((cur) => (cur === v.vendor_id ? null : v.vendor_id))} />
+                          {drawerExpanded === v.vendor_id && (
+                            <div style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-background-elevated)' }}>
+                              <VendorFile
+                                item={v} lens={lens} currentCode={focused} codeLabels={codeLabels}
+                                lang={lang} accent={focusedBody.fill} variant="inline"
+                                onOpenVendor={onVendorClick}
+                                onJumpToPattern={lens === 'patterns' ? flyLateral : undefined}
+                              />
+                            </div>
+                          )}
+                        </div>
                       ))}
                       {drawerQuery.hasNextPage ? (
                         <button type="button" onClick={() => drawerQuery.fetchNextPage()} disabled={drawerQuery.isFetchingNextPage}

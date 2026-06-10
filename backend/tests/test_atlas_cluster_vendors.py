@@ -264,3 +264,22 @@ class TestResponseContract:
         data = _get(client, lens="patterns", code="P5", limit=10).json()
         for v in data["vendors"]:
             assert isinstance(v["is_gt"], bool)
+
+    def test_pattern_confidences_is_dict_or_null(self, client):
+        data = _get(client, lens="patterns", code="P5", limit=10).json()
+        for v in data["vendors"]:
+            pc = v.get("pattern_confidences")
+            assert pc is None or isinstance(pc, dict)
+            if pc:
+                for key, val in pc.items():
+                    assert isinstance(key, str)
+                    assert isinstance(val, (int, float))
+
+    def test_pattern_confidences_p6_matches_capture_score(self, client):
+        # capture_score is the legacy extraction of pattern_confidences["P6"] —
+        # surfacing the full dict must not let the two drift.
+        data = _get(client, lens="patterns", code="P6", limit=10).json()
+        for v in data["vendors"]:
+            pc = v.get("pattern_confidences")
+            if pc and "P6" in pc:
+                assert v["capture_score"] == pytest.approx(pc["P6"])
