@@ -46,7 +46,7 @@ import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Inline chart map — type string → component
@@ -286,6 +286,59 @@ function pickChapterVariant(
   return 'standard'
 }
 
+// ── Chart skeleton — fixed-height shimmer placeholder for lazy charts ─────
+//
+// The 41 story charts in CHART_REGISTRY are lazy-loaded; until their chunk
+// resolves the chapter showed a bare title box with NO reserved height, so
+// the prose below jumped when the chart finally mounted. This skeleton
+// reserves a chart-sized block (~320px, the typical story-chart plot height)
+// with a subtle pulse so chapters read on first paint with zero layout shift.
+//
+// The pulse uses Tailwind's `animate-pulse`; the global
+// `@media (prefers-reduced-motion: reduce)` rule in index.css already pins
+// every animation-duration to 0.01ms, so reduced-motion readers get a static
+// placeholder for free — no per-element motion-reduce class needed.
+
+const CHART_SKELETON_HEIGHT = 320
+
+function ChartSkeleton({ title, lang }: { title: string; lang: 'en' | 'es' }) {
+  const loadingLabel = lang === 'es'
+    ? `Cargando gráfico: ${title}`
+    : `Loading chart: ${title}`
+  // Deterministic bar heights so the shimmer reads as a chart silhouette,
+  // not a flat block — stable across renders (no Math.random repaint flicker).
+  const bars = [0.42, 0.68, 0.55, 0.82, 0.6, 0.95, 0.7, 0.5, 0.78, 0.62, 0.88, 0.45]
+  return (
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label={loadingLabel}
+      className="bg-background-card border border-border rounded-sm overflow-hidden animate-pulse"
+      style={{ height: CHART_SKELETON_HEIGHT }}
+    >
+      {/* Title strip */}
+      <div className="px-5 pt-5">
+        <div className="h-2.5 w-24 rounded-full bg-background-elevated mb-2.5" />
+        <div className="h-3.5 w-2/3 max-w-xs rounded-sm bg-background-elevated" />
+      </div>
+      {/* Plot silhouette — baseline + faint bar columns */}
+      <div className="relative px-5 mt-6" style={{ height: CHART_SKELETON_HEIGHT - 110 }}>
+        <div className="absolute inset-x-5 bottom-0 h-px bg-border" aria-hidden="true" />
+        <div className="flex h-full items-end gap-2">
+          {bars.map((h, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-t-sm bg-background-elevated"
+              style={{ height: `${h * 100}%` }}
+            />
+          ))}
+        </div>
+      </div>
+      <span className="sr-only">{loadingLabel}</span>
+    </div>
+  )
+}
+
 // ── Render helpers (shared across variants) ───────────────────────────────
 
 function renderChartBlock(
@@ -341,11 +394,7 @@ function renderChartBlock(
   return (
     <ScrollReveal className={className}>
       {ChartComponent ? (
-        <Suspense fallback={
-          <div className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center" role="img" aria-label={cfg.title}>
-            {cfg.title}
-          </div>
-        }>
+        <Suspense fallback={<ChartSkeleton title={cfg.title} lang={lang} />}>
           <ChartComponent />
         </Suspense>
       ) : (
@@ -1176,6 +1225,141 @@ function ConnectiveChapter({ chapter, story, accentColor }: ChapterRenderProps) 
 
 // ── Variant: CLOSING (final chapter) ──────────────────────────────────────
 
+// ── ClosingCoda — the charter C3 "§ · ADÓNDE IR" exit ramp ────────────────
+//
+// Charter invariant 13: every story must end with an ADÓNDE IR coda carrying
+// ≥1 investigate CTA + ≥2 EntityIdentityChips. The closing chapter already
+// had the investigate CTA (AtlasLink) but ZERO chips. This block adds the
+// related-entity chips via buildCodaChips() — the layered fallback below —
+// so every one of the 12 stories clears the ≥2 floor from its own data.
+//
+// ROUTING TRAP (deliberate omission): a case chip would have to route by
+// scandal SLUG (CaseDossier resolves by slug; a numeric case_id 404s).
+// StoryDef carries only numeric caseIds — no verified case slug — so we
+// SKIP the case chip rather than mint one that 404s, per the trap rule.
+
+interface CodaChip {
+  type: 'vendor' | 'institution' | 'sector' | 'story' | 'pattern'
+  id: string | number
+  name: string
+  riskScore?: number
+  ariaTier?: 1 | 2 | 3 | 4
+}
+
+// Build up to 3 related-entity chips for the closing coda, drawn ONLY from
+// data already on the story. Layered so every story reaches the invariant-13
+// floor of ≥2 chips:
+//   1. story.entities          — verified vendor/institution dossiers (names
+//                                travel with the entity).
+//   2. lensTags.sectors        — sector codes → numeric ids via SECTORS
+//                                (sector dossiers 1–12 always resolve).
+//   3. related stories         — relatedSlugs → headline via getStoryBySlug
+//                                (target is guaranteed to be in STORIES).
+//   4. lensTags.patterns       — last resort. Pattern code (P1–P7) is both
+//                                the route id and the display name; the chip
+//                                routes to /patterns/P5 which always resolves.
+//                                Code-as-name avoids the inconsistent prose
+//                                pattern labels found across the codebase.
+// Case chips are intentionally absent: StoryDef has only numeric caseIds and
+// no verified case slug, and a numeric case_id 404s on CaseDossier (slug-only).
+function buildCodaChips(story: StoryDef, lang: 'en' | 'es'): CodaChip[] {
+  const chips: CodaChip[] = []
+  const CAP = 3
+
+  // 1. Named vendors/institutions — top by listing order.
+  for (const e of story.entities ?? []) {
+    if (chips.length >= CAP) break
+    chips.push({
+      type: e.type,
+      id: e.id,
+      name: e.name,
+      riskScore: e.riskScore,
+      ariaTier: e.ariaTier as 1 | 2 | 3 | 4 | undefined,
+    })
+  }
+
+  // 2. Sectors.
+  for (const code of story.lensTags?.sectors ?? []) {
+    if (chips.length >= CAP) break
+    const sector = SECTORS.find((s) => s.code === code)
+    if (!sector) continue
+    if (chips.some((c) => c.type === 'sector' && c.id === sector.id)) continue
+    chips.push({ type: 'sector', id: sector.id, name: lang === 'es' ? sector.name : sector.nameEN })
+  }
+
+  // 3. Related stories (only needed to reach the ≥2 floor).
+  if (chips.length < 2) {
+    for (const relSlug of story.relatedSlugs ?? []) {
+      if (chips.length >= CAP) break
+      if (relSlug === story.slug) continue
+      const rel = getStoryBySlug(relSlug)
+      if (!rel) continue
+      chips.push({ type: 'story', id: rel.slug, name: localizeStory(rel, lang).headline })
+    }
+  }
+
+  // 4. Patterns — last resort, code as both id and name.
+  if (chips.length < 2) {
+    for (const code of story.lensTags?.patterns ?? []) {
+      if (chips.length >= CAP) break
+      if (chips.some((c) => c.type === 'pattern' && c.id === code)) continue
+      chips.push({ type: 'pattern', id: code, name: code })
+    }
+  }
+
+  return chips
+}
+
+function ClosingCoda({ story, accentColor, lang }: {
+  story: StoryDef
+  accentColor: string
+  lang: 'en' | 'es'
+}) {
+  const chips = buildCodaChips(story, lang)
+  return (
+    <div className="max-w-prose mx-auto px-4 sm:px-0">
+      {/* § · ADÓNDE IR kicker */}
+      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-4 mt-6">
+        § · {lang === 'es' ? 'ADÓNDE IR' : 'WHERE TO GO NEXT'}
+      </p>
+
+      {/* Investigate CTA — live Atlas. The story has named patterns / years /
+          clusters; the Atlas is where readers can manipulate them live. */}
+      <AtlasLink
+        accentColor={accentColor}
+        lens="patterns"
+        lang={lang}
+        caption={{
+          en: 'Open this story\'s patterns live in The Atlas — scrub years, pin clusters, run your own investigation.',
+          es: 'Abre los patrones de esta historia en vivo en El Atlas — desplaza años, fija cúmulos, lleva tu propia investigación.',
+        }}
+      />
+
+      {/* Related-entity chips — the dossiers this story names. */}
+      {chips.length > 0 && (
+        <ScrollReveal className="mt-6">
+          <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-3">
+            {lang === 'es' ? 'Investigar los expedientes' : 'Investigate the dossiers'}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {chips.map((c) => (
+              <EntityIdentityChip
+                key={`${c.type}-${c.id}`}
+                type={c.type}
+                id={c.id}
+                name={c.name}
+                riskScore={c.riskScore}
+                ariaTier={c.ariaTier}
+                size="sm"
+              />
+            ))}
+          </div>
+        </ScrollReveal>
+      )}
+    </div>
+  )
+}
+
 function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
   const { t, i18n } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
@@ -1247,19 +1431,9 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         </div>
       )}
 
-      {/* Closing CTA — link to live Atlas. The story has named patterns / years
-          / clusters; the Atlas is where readers can manipulate them live. */}
-      <div className="max-w-prose mx-auto px-4 sm:px-0">
-        <AtlasLink
-          accentColor={accentColor}
-          lens="patterns"
-          lang={lang}
-          caption={{
-            en: 'Open this story\'s patterns live in The Atlas — scrub years, pin clusters, run your own investigation.',
-            es: 'Abre los patrones de esta historia en vivo en El Atlas — desplaza años, fija cúmulos, lleva tu propia investigación.',
-          }}
-        />
-      </div>
+      {/* Closing coda — charter C3 "§ · ADÓNDE IR": investigate CTA (live
+          Atlas) + related-entity chips (the dossiers this story names). */}
+      <ClosingCoda story={story} accentColor={accentColor} lang={lang} />
     </section>
   )
 }
