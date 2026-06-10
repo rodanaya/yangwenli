@@ -4035,3 +4035,49 @@ Grep scans completed. All matches confirmed false positives:
 
 ### Overall: WARN
 HTTP and API checks blocked by Anthropic Egress Gateway network policy (cloud runner IP not in external allowlist). Not a site failure — confirmed via `x-deny-reason: host_not_allowed` header. Bilingual scan clean. No regressions detected.
+
+---
+## Visual Review — 2026-06-10T15:40:32Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 | WARN |
+| /atlas | 403 | WARN |
+| /aria | 403 | WARN |
+| /sectors | 403 | WARN |
+| /sectors/salud | 403 | WARN |
+| /cases | 403 | WARN |
+| /methodology | 403 | WARN |
+| /stories/el-ejercito-fantasma | 403 | WARN |
+
+> **Note**: All 403s carry `x-deny-reason: host_not_allowed` from the CDN. Requests originate from the Anthropic cloud runner (Egress Gateway SDS), whose IP is not in rubli.xyz's allowlist. Confirmed not a site outage — identical pattern to all prior automated runs from this environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — Anthropic egress gateway (403, empty body) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — Anthropic egress gateway (403, empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — Anthropic egress gateway (403, empty body) | WARN |
+| /api/v1/sectors | BLOCKED — Anthropic egress gateway (403, empty body) | WARN |
+
+> Empty response bodies returned; JSON parse failed. Not indicative of backend failure — same egress restriction applies to all API calls from this runner.
+
+### Bilingual Gaps
+Grep scans completed. All matches confirmed false positives (same as prior run):
+- `TIER_STYLES[tierName as TierKey]` — TypeScript constant accessor, not rendered string. OK.
+- `CaseLibrary.tsx` — inline comment only. OK.
+- `Methodology.tsx` — academic citation (Mahalanobis, P.C. 1936). Untranslatable. OK.
+- `InstitutionLeague.tsx` — `TIER_STYLES.Excelente.color` code references, not rendered text. OK.
+- `StoryMoneySankeyChart.tsx` — fixture data property `target_type`. Not user-facing. OK.
+- `ExpedienteSpine.tsx` — TypeScript return type annotation. OK.
+- `ExploreCanvas.tsx` — comment block + corporate-form token array. OK.
+- `VendorHero.tsx` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155–167` — all pattern labels properly bilingual via `isEs ? ES : EN`. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by Anthropic Egress Gateway network policy (cloud runner IP not in external allowlist). Not a site failure — confirmed via `x-deny-reason: host_not_allowed` header. Bilingual scan clean. No regressions detected.
