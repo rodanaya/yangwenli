@@ -126,6 +126,55 @@ export const PATTERN_COLORS: Record<string, string> = {
   P7: '#a06820',   // amber-dark — budget dump
 } as const
 
+// Case (scandal) fraud-type accent colors — the left-border / tag accent on the
+// Case Library register. Keyed by `fraud_type` (FraudType union). Hoisted out of
+// CaseLibrary.tsx (2026-06-10) so the Case Library and Case Dossier resolve the
+// same accent from one source. CaseDossier currently derives its fraud accent
+// from the sector palette / crimson fallback (it has no copy of this exact table)
+// — when it is swept it can adopt CASE_FRAUD_TYPE_COLORS without a shape change.
+// Apply via style={{ color / borderLeft / background }} at the use site — never
+// as a className (hex-in-className is silently stripped).
+export const CASE_FRAUD_TYPE_COLORS: Record<string, string> = {
+  ghost_company: '#ef4444',
+  bid_rigging: '#a78bfa',
+  overpricing: '#fb923c',
+  conflict_of_interest: '#c084fc',
+  embezzlement: '#f59e0b',
+  bribery: '#fb7185',
+  procurement_fraud: '#facc15',
+  monopoly: '#60a5fa',
+  emergency_fraud: '#22d3ee',
+  tender_rigging: '#818cf8',
+  other: '#64748b',
+} as const
+
+/** Resolve the Case Library fraud-type accent (falls back to the `other` slate). */
+export function getCaseFraudColor(fraudType: string): string {
+  return CASE_FRAUD_TYPE_COLORS[fraudType] ?? CASE_FRAUD_TYPE_COLORS.other
+}
+
+// Case legal-status styling — status dot, English fallback label, and AA-safe
+// text color for the Case Library status line. Keyed by `legal_status`
+// (LegalStatus union, plus an `unresolved` default). `dot` / `text` may be a hex
+// OR a `var(--color-text-muted)` token for the neutral states (no green). The
+// English `label` is a defaultValue only — the runtime label routes through
+// i18n `legalStatuses.*`. Hoisted from CaseLibrary.tsx (2026-06-10); shaped so
+// CaseDossier's legal-status callout could adopt it later.
+export const CASE_LEGAL_STATUS_STYLE: Record<
+  string,
+  { dot: string; label: string; text: string }
+> = {
+  impunity: { dot: '#ef4444', label: 'IMPUNITY', text: '#fca5a5' },
+  investigation: { dot: '#f59e0b', label: 'UNDER INVESTIGATION', text: '#fcd34d' },
+  prosecuted: { dot: '#3b82f6', label: 'PROSECUTED', text: '#93c5fd' },
+  convicted: { dot: '#22d3ee', label: 'CONVICTED', text: '#67e8f9' },
+  acquitted: { dot: 'var(--color-text-muted)', label: 'ACQUITTED', text: 'var(--color-text-muted)' },
+  dismissed: { dot: 'var(--color-text-muted)', label: 'DISMISSED', text: 'var(--color-text-muted)' },
+  unresolved: { dot: 'var(--color-text-muted)', label: 'UNRESOLVED', text: 'var(--color-text-muted)' },
+  ongoing: { dot: '#f59e0b', label: 'ONGOING', text: '#fcd34d' },
+  settled: { dot: 'var(--color-text-muted)', label: 'SETTLED', text: 'var(--color-text-muted)' },
+} as const
+
 // Risk colors — Phase 1 canonical palette (no green for "low")
 // Rationale: green overclaims safety on a corruption platform — use neutral zinc
 // for the noise floor. Critical=red-500, high=amber-500, medium=amber-800, low=zinc-500.

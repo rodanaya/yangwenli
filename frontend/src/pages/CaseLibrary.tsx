@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -12,7 +12,8 @@ import type {
   LegalStatus,
   CaseLibraryParams,
 } from '@/api/types'
-import { formatCompactMXN } from '@/lib/utils'
+import { formatCompactMXN, formatDualCurrency } from '@/lib/utils'
+import { CASE_FRAUD_TYPE_COLORS, CASE_LEGAL_STATUS_STYLE } from '@/lib/constants'
 import { ADMINISTRATIONS, getAdministrationByYear } from '@/lib/administrations'
 import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
 import { PageFooter } from '@/components/layout/PageFooter'
@@ -27,35 +28,10 @@ const CARD_BG = 'var(--color-background-card)'
 const BORDER = 'var(--color-border)'
 const BORDER_STRONG = 'var(--color-border-hover)'
 
-const FRAUD_TYPE_LEFT: Record<string, string> = {
-  ghost_company: '#ef4444',
-  bid_rigging: '#a78bfa',
-  overpricing: '#fb923c',
-  conflict_of_interest: '#c084fc',
-  embezzlement: '#f59e0b',
-  bribery: '#fb7185',
-  procurement_fraud: '#facc15',
-  monopoly: '#60a5fa',
-  emergency_fraud: '#22d3ee',
-  tender_rigging: '#818cf8',
-  other: '#64748b',
-}
-
-const LEGAL_STATUS_STYLE: Record<
-  string,
-  { dot: string; label: string; text: string }
-> = {
-  impunity: { dot: '#ef4444', label: 'IMPUNITY', text: '#fca5a5' },
-  investigation: { dot: '#f59e0b', label: 'UNDER INVESTIGATION', text: '#fcd34d' },
-  prosecuted: { dot: '#3b82f6', label: 'PROSECUTED', text: '#93c5fd' },
-  convicted: { dot: '#22d3ee', label: 'CONVICTED', text: '#67e8f9' },
-  acquitted: { dot: 'var(--color-text-muted)', label: 'ACQUITTED', text: 'var(--color-text-muted)' },
-  dismissed: { dot: 'var(--color-text-muted)', label: 'DISMISSED', text: 'var(--color-text-muted)' },
-  unresolved: { dot: 'var(--color-text-muted)', label: 'UNRESOLVED', text: 'var(--color-text-muted)' },
-  ongoing: { dot: '#f59e0b', label: 'ONGOING', text: '#fcd34d' },
-  settled: { dot: 'var(--color-text-muted)', label: 'SETTLED', text: 'var(--color-text-muted)' },
-}
-
+// Fraud-type accents and legal-status styling now live in `@/lib/constants`
+// (CASE_FRAUD_TYPE_COLORS / CASE_LEGAL_STATUS_STYLE) — single source of truth so
+// the Case Dossier can adopt the same tables. Hex belongs in constants.ts and is
+// applied via style={{}} at the use sites below.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Formatters
@@ -139,9 +115,9 @@ function CaseRow({
   t: (k: string, o?: Record<string, unknown>) => string
   lang: string
 }) {
-  const accent = FRAUD_TYPE_LEFT[cas.fraud_type] ?? FRAUD_TYPE_LEFT.other
+  const accent = CASE_FRAUD_TYPE_COLORS[cas.fraud_type] ?? CASE_FRAUD_TYPE_COLORS.other
   const legalStatusKey = cas.legal_status || 'unresolved'
-  const legal = LEGAL_STATUS_STYLE[legalStatusKey] ?? LEGAL_STATUS_STYLE.unresolved
+  const legal = CASE_LEGAL_STATUS_STYLE[legalStatusKey] ?? CASE_LEGAL_STATUS_STYLE.unresolved
   const name = lang === 'es' && cas.name_es ? cas.name_es : cas.name_en
   const summary = lang === 'es' && cas.summary_es ? cas.summary_es : cas.summary_en
 
@@ -491,6 +467,39 @@ export default function CaseLibrary() {
 
   const yearSpan = '2002\u20132025'
 
+  // \u2500\u2500 \u00a7 EL SALDO \u2014 the collection's headline, computed from the ALREADY-LOADED
+  // list (no new API call). All three numbers derive from `data`:
+  //   \u00b7 documented count        \u2192 data.length
+  //   \u00b7 GT-anchored count       \u2192 rows with a ground_truth_case_id (the only
+  //                               vendor-link signal present on the list item)
+  //   \u00b7 summed estimated damage \u2192 \u03a3 amount_mxn_low (the field is nullable \u2014
+  //                               `amount_mxn_low?`, so we count the gaps and
+  //                               state the caveat honestly when any exist).
+  const saldo = useMemo(() => {
+    if (!data || data.length === 0) return null
+    let damageSum = 0
+    let withDamage = 0
+    let gtAnchored = 0
+    for (const cas of data) {
+      if (cas.amount_mxn_low != null && cas.amount_mxn_low > 0) {
+        damageSum += cas.amount_mxn_low
+        withDamage += 1
+      }
+      if (cas.ground_truth_case_id != null) gtAnchored += 1
+    }
+    return {
+      count: data.length,
+      damageSum,
+      missingDamage: data.length - withDamage,
+      gtAnchored,
+    }
+  }, [data])
+
+  // Hide the lede while filters are active \u2014 the band reports on the whole
+  // documented collection, not a filtered slice (the result-count line already
+  // narrates the filtered view).
+  const showSaldo = saldo != null && !hasFilters
+
   return (
     <div
       style={{
@@ -527,6 +536,75 @@ export default function CaseLibrary() {
             </div>
           </div>
         </header>
+
+        {/* ─────────── § EL SALDO — findings lede ─────────── */}
+        {showSaldo && saldo && (() => {
+          const es = i18n.language === 'es'
+          const DAMAGE_HEX = 'var(--color-risk-critical)'
+          const GT_HEX = '#d4922a'
+          // Playfair-Italic-800 tabular-nums anchor — color via style only.
+          const Anchor = ({ children, color }: { children: ReactNode; color: string }) => (
+            <span
+              className="tabular-nums"
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 800,
+                color,
+              }}
+            >
+              {children}
+            </span>
+          )
+          const countStr = new Intl.NumberFormat(es ? 'es-MX' : 'en-US').format(saldo.count)
+          const gtStr = new Intl.NumberFormat(es ? 'es-MX' : 'en-US').format(saldo.gtAnchored)
+          const damageStr = formatDualCurrency(saldo.damageSum)
+          const sentenceLabel = es
+            ? 'Resumen del archivo documentado'
+            : 'Summary of the documented record'
+          return (
+            <section
+              className="mb-4 pb-3"
+              aria-label={sentenceLabel}
+              style={{ borderBottom: `1px solid ${BORDER}` }}
+            >
+              <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2">
+                {es ? '§ EL SALDO' : '§ THE LEDGER'}
+              </p>
+              <p
+                className="text-[15px] leading-relaxed text-text-secondary max-w-3xl"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {es ? (
+                  <>
+                    El archivo reúne <Anchor color="var(--color-text-primary)">{countStr}</Anchor>{' '}
+                    casos documentados de corrupción en contratación pública, con un daño estimado
+                    sumado de <Anchor color={DAMAGE_HEX}>{damageStr}</Anchor>; de ellos,{' '}
+                    <Anchor color={GT_HEX}>{gtStr}</Anchor> están anclados en la verdad de campo que
+                    entrena el modelo de riesgo.
+                  </>
+                ) : (
+                  <>
+                    The record gathers <Anchor color="var(--color-text-primary)">{countStr}</Anchor>{' '}
+                    documented procurement-corruption cases, summing to an estimated{' '}
+                    <Anchor color={DAMAGE_HEX}>{damageStr}</Anchor> in damage; of these,{' '}
+                    <Anchor color={GT_HEX}>{gtStr}</Anchor> are anchored in the ground-truth that
+                    trains the risk model.
+                  </>
+                )}
+              </p>
+              {saldo.missingDamage > 0 && (
+                <p
+                  className="mt-1.5 text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted"
+                >
+                  {es
+                    ? `El total excluye ${saldo.missingDamage} casos sin cifra de daño estimado en la fuente`
+                    : `Total excludes ${saldo.missingDamage} cases with no estimated-damage figure on record`}
+                </p>
+              )}
+            </section>
+          )
+        })()}
 
         {/* ─────────── Filter strip ─────────── */}
         <section className="mb-3 space-y-2">
