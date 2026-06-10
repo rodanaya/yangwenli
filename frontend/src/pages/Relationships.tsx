@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { captureApi, type CaptureItem } from '@/api/client'
-import { formatNumber, formatCompactMXN } from '@/lib/utils'
+import { formatNumber, formatCompactMXN, formatDualCurrency } from '@/lib/utils'
 import {
   SECTORS,
   SECTOR_COLORS,
@@ -165,6 +165,13 @@ export default function Relationships() {
     ? Math.max(...allCaptures.map((c) => c.peak_share_pct - c.earliest_share_pct))
     : 0
 
+  // § EL SALDO + § ADÓNDE IR both read the single strongest pair. The matrix is
+  // pre-ranked by Δshare × √(captured MXN), so row 0 is the strongest capture.
+  const strongest = allCaptures[0] ?? null
+  const strongestSectorColor = strongest
+    ? SECTOR_COLORS[SECTORS.find((s) => s.id === strongest.institution_sector_id)?.code ?? 'otros'] ?? '#64748b'
+    : '#64748b'
+
   return (
     <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Paper-grain overlay — single filter for the unified page */}
@@ -252,6 +259,101 @@ export default function Relationships() {
             </Link>
           </div>
         </div>
+
+        {/* ── § EL SALDO — the single strongest capture, as a sentence ──── */}
+        {capLoading ? (
+          <div className="mb-10">
+            <Skeleton className="h-4 w-24 mb-3" />
+            <Skeleton className="h-16 w-full max-w-3xl" />
+          </div>
+        ) : strongest ? (
+          <section
+            aria-label={lang === 'es' ? 'El saldo: la captura más fuerte' : 'The bottom line: the strongest capture'}
+            className="mb-10"
+          >
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+              {lang === 'es' ? '§ El saldo' : '§ The bottom line'}
+            </p>
+            <p
+              style={{
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontSize: '19px',
+                lineHeight: 1.5,
+                maxWidth: '70ch',
+                color: 'var(--color-text-secondary)',
+                letterSpacing: '0.004em',
+              }}
+            >
+              {lang === 'es' ? (
+                <>
+                  La concentración más fuerte del registro:{' '}
+                  <strong className="text-text-primary font-semibold">{strongest.vendor_name}</strong>{' '}
+                  llegó a controlar{' '}
+                  <span
+                    style={{
+                      fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontVariantNumeric: 'tabular-nums',
+                      color: strongestSectorColor,
+                    }}
+                  >
+                    {strongest.peak_share_pct}%
+                  </span>{' '}
+                  del gasto de{' '}
+                  <strong className="text-text-primary font-semibold">{strongest.institution_name}</strong>{' '}
+                  en {strongest.peak_year} —{' '}
+                  <span
+                    style={{
+                      fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontVariantNumeric: 'tabular-nums',
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    {formatDualCurrency(strongest.cumulative_value_mxn)}
+                  </span>{' '}
+                  capturados de los {formatCompactMXN(strongest.institution_total_window)} adjudicados en la ventana. Un indicador de
+                  riesgo alto marca la geometría, no una sentencia.
+                </>
+              ) : (
+                <>
+                  The strongest concentration on record:{' '}
+                  <strong className="text-text-primary font-semibold">{strongest.vendor_name}</strong>{' '}
+                  came to control{' '}
+                  <span
+                    style={{
+                      fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontVariantNumeric: 'tabular-nums',
+                      color: strongestSectorColor,
+                    }}
+                  >
+                    {strongest.peak_share_pct}%
+                  </span>{' '}
+                  of{' '}
+                  <strong className="text-text-primary font-semibold">{strongest.institution_name}</strong>'s spend by{' '}
+                  {strongest.peak_year} —{' '}
+                  <span
+                    style={{
+                      fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontVariantNumeric: 'tabular-nums',
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    {formatDualCurrency(strongest.cumulative_value_mxn)}
+                  </span>{' '}
+                  captured of the {formatCompactMXN(strongest.institution_total_window)} awarded in the window. A high risk
+                  indicator marks the geometry, not a verdict.
+                </>
+              )}
+            </p>
+          </section>
+        ) : null}
 
         {/* ════════════════════════════════════════════════════════════════
             Captura Institucional
@@ -403,8 +505,122 @@ export default function Relationships() {
             </div>
           )}
         </section>
+
+        {/* ── § · ADÓNDE IR — exit ramps from the strongest capture ─────── */}
+        {!capLoading && strongest ? (
+          <section
+            aria-label={lang === 'es' ? 'Adónde ir' : 'Where to go next'}
+            className="mt-12 pt-6"
+            style={{ borderTop: '1px solid var(--color-border)' }}
+          >
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+              {lang === 'es' ? '§ · Adónde ir' : '§ · Where to go next'}
+            </p>
+            <p className="text-[13px] text-text-secondary leading-[1.55] max-w-prose mb-4">
+              {lang === 'es'
+                ? 'Sigue la captura más fuerte hasta su origen — la institución capturada y el proveedor que la dominó.'
+                : 'Trace the strongest capture to its source — the captured institution and the vendor that dominated it.'}
+            </p>
+            <div className="flex flex-wrap items-center gap-2.5 mb-5">
+              <EntityIdentityChip
+                type="institution"
+                id={strongest.institution_id}
+                name={strongest.institution_name}
+                size="md"
+              />
+              <EntityIdentityChip
+                type="vendor"
+                id={strongest.vendor_id}
+                name={strongest.vendor_name}
+                size="md"
+              />
+            </div>
+            <Link
+              to={`/institutions/${strongest.institution_id}`}
+              className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
+              style={{ color: 'var(--color-accent)' }}
+              aria-label={
+                lang === 'es'
+                  ? `Investigar la captura de ${strongest.institution_name}`
+                  : `Investigate the capture of ${strongest.institution_name}`
+              }
+            >
+              {lang === 'es' ? 'Investigar el expediente de la institución' : 'Investigate the institution dossier'}
+              <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            </Link>
+          </section>
+        ) : null}
+
+        <ProvenanceFooter lang={lang} />
         <PageFooter />
       </div>
     </div>
+  )
+}
+
+// ─── ProvenanceFooter — local, matching the dossier provenance idiom ────────────
+
+function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
+  const navigate = useNavigate()
+  return (
+    <section className="mt-10 pt-5" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <p
+        className="font-mono mb-2"
+        style={{
+          fontSize: 9.5,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          fontWeight: 500,
+        }}
+      >
+        § {lang === 'es' ? 'Lo que esta lámina no puede decir' : "What this plate can't tell you"}
+      </p>
+      <p
+        style={{
+          fontFamily: '"EB Garamond", Georgia, serif',
+          fontStyle: 'italic',
+          fontSize: 13.5,
+          color: 'var(--color-text-secondary)',
+          maxWidth: '72ch',
+          lineHeight: 1.55,
+        }}
+      >
+        {lang === 'es'
+          ? 'La concentración monótona lee cómo se adjudicó el gasto, no cómo se ejecutó. Un indicador de riesgo alto señala una geometría publicable, no prueba de un delito, que solo los tribunales determinan.'
+          : 'Monotonic concentration reads how spend was awarded — not how it was performed. A high risk indicator marks a publishable geometry, not proof of wrongdoing, which only courts establish.'}
+      </p>
+      <div className="mt-4">
+        <p
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontStyle: 'italic',
+            fontSize: 13.5,
+            color: 'var(--color-text-secondary)',
+            maxWidth: '72ch',
+            lineHeight: 1.55,
+          }}
+        >
+          {lang === 'es'
+            ? 'Datos COMPRANET 2002–2025; horizonte de datos 28 sep 2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
+            : 'COMPRANET data 2002–2025; data horizon Sep 28 2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'}
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/methodology')}
+          className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-secondary)',
+            background: 'none',
+            border: 'none',
+          }}
+        >
+          {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
+        </button>
+      </div>
+    </section>
   )
 }
