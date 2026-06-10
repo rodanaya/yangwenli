@@ -91,14 +91,22 @@ export default function Executive() {
     // large). Now consistent with the /sectors Exposure Ledger total (~5.5T).
     // Fallback ≈55.9% of spend matches the real share when the bundle is absent.
     const valueAtRisk = d?.overview?.high_risk_value_mxn ?? totalValue * 0.559
+    const valueAtRiskPct =
+      totalValue > 0 ? Math.round((valueAtRisk / totalValue) * 1000) / 10 : 55.9
     return {
       totalContracts,
       totalValue,
       highCriticalRate,
       valueAtRisk,
+      valueAtRiskPct,
       highCriticalCount,
     }
   }, [dashboard])
+
+  // Finding 04 hover dossier — which capture-leader row is under the cursor.
+  // The card itself is a role="link" (navigates to /aria?pattern=P6), so the
+  // detail strip is data-only: no nested anchors (nested-interactive trap).
+  const [capDetail, setCapDetail] = useState<{ label: string; top: number; second: number } | null>(null)
 
   const handlePrint = () => window.print()
 
@@ -744,8 +752,13 @@ export default function Executive() {
                   >
                     {formatNumber(stats.highCriticalCount)}
                   </div>
-                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1.5">
-                    {lang === 'en' ? '· 11.0% of all flagged' : '· 11.0% del total marcado'}
+                  <div className="font-mono text-[11px] tracking-[0.04em] tabular-nums mt-1" style={{ color: 'var(--color-risk-high)' }}>
+                    {formatCompactMXN(stats.valueAtRisk)} {lang === 'en' ? 'at stake' : 'en juego'} · {stats.valueAtRiskPct}%
+                  </div>
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
+                    {lang === 'en'
+                      ? `· ${stats.highCriticalRate}% of contracts · OECD band 2–15%`
+                      : `· ${stats.highCriticalRate}% de contratos · banda OCDE 2–15%`}
                   </div>
                   <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
                     {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}
@@ -781,7 +794,7 @@ export default function Executive() {
                     0.785
                   </div>
                   <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1.5">
-                    {lang === 'en' ? '· random = 0.5  ·  perfect = 1.0' : '· azar = 0.5  ·  perfecto = 1.0'}
+                    {lang === 'en' ? '· test set · random = 0.5 · perfect = 1.0' : '· conjunto de prueba · azar = 0.5 · perfecto = 1.0'}
                   </div>
                   <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
                     {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
@@ -1281,7 +1294,12 @@ export default function Executive() {
                         const gap = inst.top - inst.second
                         const dotColor = inst.captured ? '#a06820' : 'var(--color-text-primary)'
                         return (
-                          <div key={inst.label} className="flex items-center gap-2 mb-[3px]">
+                          <div
+                            key={inst.label}
+                            className="flex items-center gap-2 mb-[3px]"
+                            onMouseEnter={() => setCapDetail({ label: inst.label, top: inst.top, second: inst.second })}
+                            onMouseLeave={() => setCapDetail(null)}
+                          >
                             <span
                               className="text-[8px] font-mono flex-shrink-0 text-right"
                               style={{
@@ -1359,6 +1377,35 @@ export default function Executive() {
                           ? '● top vendor share · ○ second vendor · gap = concentration advantage'
                           : '● cuota proveedor 1 · ○ proveedor 2 · brecha = ventaja de concentración'}
                       </div>
+                      {/* Hover dossier — data-only (the whole card is already a
+                          role="link" to /aria?pattern=P6; nesting anchors here
+                          would be the nested-interactive trap). Defaults to the
+                          top row so touch/keyboard readers see real numbers. */}
+                      {(() => {
+                        const d = capDetail ?? INST_DATA[0] ?? null
+                        if (!d) return null
+                        const gp = d.top - d.second
+                        const gpLabel = Number.isInteger(gp) ? gp : gp.toFixed(1)
+                        return (
+                          <div
+                            role="status"
+                            aria-live="polite"
+                            className="mt-1.5 rounded-sm px-2 py-1.5 text-[9px] font-mono leading-[1.5]"
+                            style={{ background: 'rgba(160,104,32,0.07)', border: '1px solid rgba(160,104,32,0.18)', minHeight: 40 }}
+                          >
+                            <span style={{ color: '#a06820', fontWeight: 700 }}>{d.label}</span>
+                            {' — '}
+                            {lang === 'en'
+                              ? `top vendor ${d.top}% · second ${d.second}% · gap +${gpLabel}pp`
+                              : `proveedor 1 ${d.top}% · proveedor 2 ${d.second}% · brecha +${gpLabel}pp`}
+                            <span className="block" style={{ color: 'var(--color-text-muted)' }}>
+                              {lang === 'en'
+                                ? 'P6 capture signature · risk indicator, not a verdict · click opens the P6 queue'
+                                : 'Huella de captura P6 · indicador de riesgo, no un veredicto · clic abre la cola P6'}
+                            </span>
+                          </div>
+                        )
+                      })()}
                     </>
                   )
                 })()}
@@ -1778,13 +1825,15 @@ export default function Executive() {
           </PlateFrame>
         </section>
 
-        {/* ─── Recent Critical Alerts — live news wire ─── */}
-        {recentCritical.length > 0 && (
-          <section className="mb-8">
+        {/* ─── Recent Critical Alerts — news wire (frozen upstream feed) ─── */}
+        <section className="mb-8">
             <div className="flex items-center justify-between mb-2">
               <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden />
+                <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" aria-hidden />
                 {lang === 'en' ? 'Recent critical alerts' : 'Alertas críticas recientes'}
+                <span className="normal-case tracking-[0.08em] text-text-muted/70 font-normal">
+                  {lang === 'en' ? '· feed frozen Sep 28 2025' : '· corte 28 sep 2025'}
+                </span>
               </div>
               <button
                 onClick={() => navigate('/contracts?risk_level=critical')}
@@ -1799,6 +1848,13 @@ export default function Executive() {
                 ? 'Five contracts most recently flagged at critical risk by the live model. Each is an investigation signal — not a verdict.'
                 : 'Los cinco contratos marcados más recientemente en riesgo crítico por el modelo. Cada uno es una señal de investigación — no un veredicto.'}
             </p>
+            {recentCritical.length === 0 ? (
+              <div className="surface-card rounded-sm p-4 text-xs font-mono text-text-muted leading-[1.6]">
+                {lang === 'en'
+                  ? 'No wire entries available right now. The upstream feed (CompraNet) was frozen on Sep 28 2025 — alerts reflect the latest flagged contracts on record, not new activity.'
+                  : 'No hay entradas del cable disponibles por ahora. La fuente (CompraNet) quedó congelada el 28 de septiembre de 2025 — las alertas reflejan los últimos contratos marcados en el registro, no actividad nueva.'}
+              </div>
+            ) : (
             <div className="surface-card rounded-sm overflow-hidden divide-y divide-border/50">
               {recentCritical.slice(0, 5).map((c) => {
                 const sectorColor = c.sector_name
@@ -1853,8 +1909,8 @@ export default function Executive() {
                 )
               })}
             </div>
+            )}
           </section>
-        )}
 
         {/* ─── CTA ─── */}
         <section className="mb-8 print-hide">
@@ -1918,13 +1974,13 @@ export default function Executive() {
               to="/aria"
               className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] font-bold text-accent hover:text-accent transition-colors mb-4"
               aria-label={lang === 'en'
-                ? 'Open the ARIA investigation queue — 299 Tier-1 vendors'
-                : 'Abrir la cola de investigación ARIA — 299 proveedores Nivel 1'}
+                ? 'Open the ARIA investigation queue — 299 GT-anchored Tier-1 vendors'
+                : 'Abrir la cola de investigación ARIA — 299 proveedores Nivel 1 anclados en GT'}
             >
               <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               {lang === 'en'
-                ? 'Open the ARIA investigation queue →'
-                : 'Abrir la cola de investigación ARIA →'}
+                ? 'Open the ARIA investigation queue'
+                : 'Abrir la cola de investigación ARIA'}
             </Link>
 
             {/* Related-entity chips — all on-page data, all navigable */}
