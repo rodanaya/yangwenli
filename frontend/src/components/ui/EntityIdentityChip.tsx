@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatEntityName, type EntityType } from '@/lib/entity/format'
 import { getRiskLevelFromScore } from '@/lib/constants'
+import { useDossierOrigin, type WayfindingLinkState } from '@/lib/nav/wayfinding'
 
 const ICON_FOR_TYPE = {
   vendor: Building2,
@@ -162,6 +163,13 @@ export function EntityIdentityChip({
   const displayName = formatEntityName(type, name, fullName ? 'full' : size)
   const href = dossierHref(type, id)
 
+  // El Hilo (P2): when this chip lives inside a dossier, stamp that dossier's
+  // identity onto the link state so the destination can offer "← Volver a X".
+  // Self-links (a chip pointing at its own host dossier) carry no origin.
+  const origin = useDossierOrigin()
+  const linkState: WayfindingLinkState | undefined =
+    origin && origin.route !== href ? { wfOrigin: origin } : undefined
+
   // fullName mode lets the chip grow vertically (2-line wrap) rather than
   // forcing a fixed single-line height that triggers ellipsis.
   const heightCls = fullName
@@ -177,6 +185,7 @@ export function EntityIdentityChip({
   return (
     <Link
       to={href}
+      state={linkState}
       className={cn(
         fullName ? 'flex w-full items-center' : 'inline-flex items-center',
         'gap-1.5 rounded-sm px-1.5 transition-colors',

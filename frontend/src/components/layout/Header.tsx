@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Search, Database, Shield, Menu, LogOut, Briefcase } from 'lucide-react'
@@ -150,13 +150,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     return isEs ? (cat.name_es || cat.name_en || null) : (cat.name_en || cat.name_es || null)
   })()
   const title = categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath, isEs))
-  const parentPath = (() => {
+  // Parent breadcrumb segment — now a real Link, not an inert span (F4).
+  // parentRoute was already computed here and discarded; we keep it so
+  // "SECTORES / Salud" lets you click SECTORES back to /sectors.
+  const parent = (() => {
     const parts = currentPath.split('/').filter(Boolean)
-    if (parts.length <= 1) return ''
+    if (parts.length <= 1) return null
     const parentRoute = '/' + parts.slice(0, -1).join('/')
     const parentKey = ROUTE_I18N_KEYS[parentRoute]
-    if (parentKey) return t(parentKey)
-    return getParentPath(currentPath)
+    const label = parentKey ? t(parentKey) : getParentPath(currentPath)
+    return { label, route: parentRoute }
   })()
 
   // Editorial masthead date — locale-aware (F1 audit fix). Spanish users
@@ -189,9 +192,14 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         </span>
         <div className="hidden lg:block h-3 w-px bg-border" aria-hidden="true" />
         <div className="flex items-center gap-1.5 min-w-0">
-          {currentPath !== '/' && (
+          {currentPath !== '/' && parent && (
             <>
-              <span className="text-text-muted hidden sm:inline text-[10px] font-mono tracking-[0.1em] uppercase">{parentPath}</span>
+              <Link
+                to={parent.route}
+                className="text-text-muted hover:text-text-primary hidden sm:inline text-[10px] font-mono tracking-[0.1em] uppercase transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              >
+                {parent.label}
+              </Link>
               <span className="text-text-muted/60 hidden sm:inline">/</span>
             </>
           )}

@@ -16,6 +16,7 @@ import {
   GenericPageSkeleton,
 } from '@/components/LoadingSkeleton'
 import { EntityDrawerProvider } from '@/contexts/EntityDrawerContext'
+import { WayfindingProvider } from '@/lib/nav/wayfinding'
 const EntityProfileDrawer = lazy(() =>
   import('@/components/EntityProfileDrawer').then(m => ({ default: m.EntityProfileDrawer }))
 )
@@ -140,6 +141,7 @@ function App() {
           <EntityDrawerProvider>
           <BrowserRouter>
           <NuqsAdapter>
+          <WayfindingProvider>
           <Routes>
             {/* Public auth pages — full-screen, no sidebar */}
             <Route
@@ -632,6 +634,7 @@ function App() {
           <Suspense fallback={null}>
             <EntityProfileDrawer />
           </Suspense>
+          </WayfindingProvider>
           </NuqsAdapter>
           </BrowserRouter>
           </EntityDrawerProvider>

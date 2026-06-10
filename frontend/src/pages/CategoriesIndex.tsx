@@ -16,8 +16,10 @@
  */
 
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import { categoriesApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -66,6 +68,8 @@ interface CategorySummaryResponse {
 }
 
 type SortKey = 'spend' | 'risk' | 'contracts' | 'direct_award'
+
+const SORT_KEYS: SortKey[] = ['spend', 'risk', 'contracts', 'direct_award']
 
 const ALL_SECTOR_CODES = SECTORS.map((s) => s.code)
 const DA_LIMIT_PCT = OECD_DIRECT_AWARD_LIMIT * 100 // 30
@@ -627,6 +631,7 @@ function LedgerRow({
 
   return (
     <div
+      data-wf-row={item.category_id}
       className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-2 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
       style={{ borderLeft: `3px solid ${sectorColor}` }}
     >
@@ -712,8 +717,36 @@ export default function CategoriesIndex() {
   const { i18n } = useTranslation('categories')
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
 
-  const [sortKey, setSortKey] = useState<SortKey>('spend')
-  const [activeSector, setActiveSector] = useState<string | null>(null)
+  // Sort + sector filter live in the URL (parity with Sectors/Institutions,
+  // F7) so a browser-back from a dossier restores the exact ledger view.
+  // Defaults are omitted from the URL so existing shared /categories links
+  // keep working; { replace: true } keeps sorting out of the history stack.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const sortParam = searchParams.get('sort')
+  const sortKey: SortKey = SORT_KEYS.includes(sortParam as SortKey) ? (sortParam as SortKey) : 'spend'
+  const activeSector = searchParams.get('sector')
+  const setSortKey = (key: SortKey) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (key === 'spend') next.delete('sort')
+        else next.set('sort', key)
+        return next
+      },
+      { replace: true },
+    )
+  }
+  const setActiveSector = (code: string | null) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (!code) next.delete('sector')
+        else next.set('sector', code)
+        return next
+      },
+      { replace: true },
+    )
+  }
   const [showMap, setShowMap] = useState(false)
 
   const { data, isLoading, isError } = useQuery<CategorySummaryResponse>({
@@ -768,6 +801,28 @@ export default function CategoriesIndex() {
   }, [data, activeSector, sortKey])
 
   const maxValue = useMemo(() => (displayed.length ? Math.max(...displayed.map((c) => c.total_value)) : 0), [displayed])
+
+  // ── Wayfinding (El Hilo P1+) — publish the ranked ledger as the sibling list
+  // so a dossier's Prev/Next stepper honours this exact sort/filter, and
+  // restore the origin row on browser-back.
+  const activeSectorName = activeSector
+    ? (lang === 'es'
+        ? SECTORS.find((s) => s.code === activeSector)?.name
+        : SECTORS.find((s) => s.code === activeSector)?.nameEN) ?? null
+    : null
+  const search = searchParams.toString()
+  usePublishSiblingList(
+    displayed.length
+      ? {
+          kind: 'category',
+          items: displayed.map((c) => ({ id: String(c.category_id), label: lang === 'es' ? c.name_es : c.name_en })),
+          backTo: search ? `/categories?${search}` : '/categories',
+          backLabel:
+            (lang === 'es' ? 'categorías' : 'categories') + (activeSectorName ? ` · ${activeSectorName}` : ''),
+        }
+      : null,
+  )
+  useOriginRowFlash('category', displayed.length > 0)
 
   const presentSectorCodes = useMemo(() => {
     if (!data?.data) return ALL_SECTOR_CODES

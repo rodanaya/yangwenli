@@ -40,6 +40,9 @@ import { VendorNetworkTab } from '@/components/vendor/VendorNetworkTab'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { WayfindingSpine } from '@/components/nav/WayfindingSpine'
+import { DossierOriginProvider, type WayfindingLinkState } from '@/lib/nav/wayfinding'
+import { formatEntityName } from '@/lib/entity/format'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 const ContractDetailModal = lazy(() =>
@@ -280,6 +283,12 @@ export default function VendorDossier() {
   }
 
   const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
+  // Cross-entity arrival (El Hilo P2) — an EntityIdentityChip inside another
+  // dossier stamped its host's identity here ("← Volver a Salud"). Vendors are
+  // the prime cross-entity destination; no index publishes a vendor sibling
+  // list, so the spine renders without a stepper and only when there is a
+  // real place to go back to.
+  const wfOrigin = (location.state as WayfindingLinkState | null)?.wfOrigin ?? null
   const isGroundTruth = !!data.groundTruthStatus.data?.is_known_bad
 
   // Timeline (risk-over-years) for the diagnostic grid's "risk over time" panel.
@@ -298,15 +307,24 @@ export default function VendorDossier() {
   const contractsTotal = data.contracts.data?.pagination?.total ?? vendor.total_contracts
 
   return (
+    <DossierOriginProvider value={{ route: `/vendors/${vendorId}`, label: formatEntityName('vendor', vendor.name, 'sm') }}>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {fromAria && (
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
-        >
-          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
-          {lang === 'es' ? 'Volver a ARIA' : 'Back to ARIA'}
-        </button>
+      {(wfOrigin || fromAria) && (
+        <WayfindingSpine
+          nav={{
+            hasContext: false,
+            index: 0,
+            total: 0,
+            prevTo: null,
+            nextTo: null,
+            backTo: '/aria',
+            backLabel: 'ARIA',
+          }}
+          origin={wfOrigin}
+          lang={lang}
+          accent={sectorAccent}
+          showStepper={false}
+        />
       )}
 
       {/* HERO — identity + verdict seal */}
@@ -446,6 +464,7 @@ export default function VendorDossier() {
         </Suspense>
       )}
     </div>
+    </DossierOriginProvider>
   )
 }
 

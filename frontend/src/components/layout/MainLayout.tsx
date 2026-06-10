@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { MobileBottomNav } from './MobileBottomNav'
 import { pageVariants } from '@/lib/animations'
+import { useWayfindingScroll } from '@/hooks/useWayfindingScroll'
 
 const SIDEBAR_COLLAPSED_KEY = 'rubli_sidebar_collapsed'
 
@@ -50,9 +51,9 @@ export function MainLayout() {
   const location = useLocation()
   const { t } = useTranslation('common')
 
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [location.pathname])
+  // Router-aware scroll: tops out on drill-in, restores on browser-back,
+  // leaves URL-synced filter changes alone (EXPLORAR "El Hilo" P0, F1).
+  useWayfindingScroll()
 
   return (
     <div className="min-h-screen bg-background relative">

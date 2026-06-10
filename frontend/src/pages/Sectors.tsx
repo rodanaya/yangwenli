@@ -33,6 +33,7 @@ import { ConfoundPlate } from '@/components/sectors/ConfoundPlate'
 import { SelfCaptureBand } from '@/components/sectors/SelfCaptureBand'
 import { ownSpendShare } from '@/components/sectors/confoundScales'
 import type { PlateLens } from '@/components/sectors/confoundScales'
+import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -355,6 +356,22 @@ export function Sectors() {
       })
       .sort((a, b) => b.varMxn - a.varMxn)
   }, [sectors, t, treemapData, trendsBundle])
+
+  // ── Wayfinding (El Hilo P1+) — publish the exposure ledger as the sector
+  // sibling list (Prev/Next stepper honours this VaR order); flash the origin
+  // row on browser-back.
+  const sectorSearch = searchParams.toString()
+  usePublishSiblingList(
+    ledgerRows.length
+      ? {
+          kind: 'sector',
+          items: ledgerRows.map((r) => ({ id: String(r.sectorId), label: r.name })),
+          backTo: sectorSearch ? `/sectors?${sectorSearch}` : '/sectors',
+          backLabel: lang === 'es' ? 'sectores' : 'sectors',
+        }
+      : null,
+  )
+  useOriginRowFlash('sector', ledgerRows.length > 0)
 
   // ── WHO lede strip computations ───────────────────────────────────────────────
   const ledeStats = useMemo(() => {

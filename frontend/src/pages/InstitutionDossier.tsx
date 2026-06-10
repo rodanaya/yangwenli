@@ -33,6 +33,13 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { WayfindingSpine } from '@/components/nav/WayfindingSpine'
+import {
+  DossierOriginProvider,
+  useSiblingNav,
+  type WayfindingLinkState,
+} from '@/lib/nav/wayfinding'
+import { formatEntityName } from '@/lib/entity/format'
 import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
 
 // ─── Reference-section header — tight, left-aligned (mirrors VendorDossier) ──
@@ -119,6 +126,17 @@ export default function InstitutionDossier() {
   const location = useLocation()
   const { i18n } = useTranslation()
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
+
+  const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
+  // Cross-entity arrival (El Hilo P2) — an EntityIdentityChip inside another
+  // dossier stamped its host's identity here ("← Volver a Salud").
+  const wfOrigin = (location.state as WayfindingLinkState | null)?.wfOrigin ?? null
+  const wf = useSiblingNav(
+    'institution',
+    id,
+    fromAria ? '/aria' : '/institutions',
+    fromAria ? 'ARIA' : lang === 'es' ? 'el ranking' : 'the ranking',
+  )
 
   const { data: institution, isLoading: instLoading, isError: instError } = useQuery({
     queryKey: ['institution-dossier', institutionId, 'detail'],
@@ -219,19 +237,10 @@ export default function InstitutionDossier() {
     ? `${institution.vendor_count.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')} ${lang === 'es' ? 'proveedores' : 'suppliers'}`
     : undefined
 
-  const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
-
   return (
+    <DossierOriginProvider value={{ route: `/institutions/${institutionId}`, label: formatEntityName('institution', institution.name, 'sm') }}>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {fromAria && (
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
-        >
-          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
-          {lang === 'es' ? 'Volver a ARIA' : 'Back to ARIA'}
-        </button>
-      )}
+      <WayfindingSpine nav={wf} lang={lang} accent={sectorAccent} origin={wfOrigin} />
 
       {/* HERO */}
       <InstitutionHero institution={institution} showTOC={false} />
@@ -300,5 +309,6 @@ export default function InstitutionDossier() {
 
       <ProvenanceFooter lang={lang} />
     </div>
+    </DossierOriginProvider>
   )
 }

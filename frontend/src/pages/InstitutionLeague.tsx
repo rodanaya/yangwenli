@@ -52,6 +52,7 @@ import {
   pillarLabel,
 } from '@/lib/institution-pillars'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
+import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import { PageFooter } from '@/components/layout/PageFooter'
 
 // Reverse-lookup: sector display name (Spanish or English) → canonical code,
@@ -1033,6 +1034,23 @@ export default function InstitutionLeague() {
   // Row rank calculation: rank of first item on current page
   const firstItemRank = (page - 1) * PER_PAGE + 1
 
+  // ── Wayfinding (El Hilo P1+) — publish the current league page as the
+  // institution sibling list (Prev/Next steps within the loaded page, honouring
+  // the active sort/filter); flash the origin row on browser-back. backTo
+  // carries the page + filters so "back" restores this exact view.
+  const leagueSearch = searchParams.toString()
+  usePublishSiblingList(
+    items.length
+      ? {
+          kind: 'institution',
+          items: items.map((it) => ({ id: String(it.institution_id), label: it.institution_name })),
+          backTo: leagueSearch ? `/institutions?${leagueSearch}` : '/institutions',
+          backLabel: lang?.startsWith('es') ? 'el ranking' : 'the ranking',
+        }
+      : null,
+  )
+  useOriginRowFlash('institution', items.length > 0)
+
   // Whether filters are active (don't show podium when filtered)
   const hasFilters = !!(sectorFilter || gradeFilter || search)
 
@@ -1633,6 +1651,7 @@ export default function InstitutionLeague() {
                     return (
                       <React.Fragment key={item.institution_id}>
                       <tr
+                        data-wf-row={item.institution_id}
                         className={`border-b border-border hover:bg-background-elevated transition-colors cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] ${
                           isWorstPerformer || isCritico ? 'bg-risk-critical/10' : ''
                         } ${isExpanded ? 'bg-background-elevated' : ''}`}

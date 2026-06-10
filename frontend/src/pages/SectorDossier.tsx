@@ -46,6 +46,12 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { WayfindingSpine } from '@/components/nav/WayfindingSpine'
+import {
+  DossierOriginProvider,
+  useSiblingNav,
+  type WayfindingLinkState,
+} from '@/lib/nav/wayfinding'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 // Reference-section header — tight, left-aligned (mirrors the other dossiers).
@@ -128,6 +134,17 @@ export default function SectorDossier() {
   const location = useLocation()
   const { i18n } = useTranslation()
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
+
+  const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
+  // Cross-entity arrival (El Hilo P2) — an EntityIdentityChip inside another
+  // dossier stamped its host's identity here ("← Volver a Salud").
+  const wfOrigin = (location.state as WayfindingLinkState | null)?.wfOrigin ?? null
+  const wf = useSiblingNav(
+    'sector',
+    id,
+    fromAria ? '/aria' : '/sectors',
+    fromAria ? 'ARIA' : lang === 'es' ? 'sectores' : 'sectors',
+  )
 
   const { data: sector, isLoading: sectorLoading, isError: sectorError } = useQuery({
     queryKey: ['sector-dossier', sectorId, 'detail'],
@@ -298,19 +315,14 @@ export default function SectorDossier() {
     ? undefined
     : lang === 'es' ? `Las ${institutions.length} principales` : `Top ${institutions.length}`
 
-  const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
+  // Identity this dossier stamps onto outgoing EntityIdentityChip links, so
+  // the destination dossier can render "← Volver a {sector}" (El Hilo P2).
+  const sectorDisplayName = sector.name.charAt(0).toUpperCase() + sector.name.slice(1).toLowerCase()
 
   return (
+    <DossierOriginProvider value={{ route: `/sectors/${sectorId}`, label: sectorDisplayName }}>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {fromAria && (
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
-        >
-          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
-          {lang === 'es' ? 'Volver a ARIA' : 'Back to ARIA'}
-        </button>
-      )}
+      <WayfindingSpine nav={wf} lang={lang} accent={sectorAccent} origin={wfOrigin} />
 
       {/* HERO */}
       <SectorHero sector={sector} showTOC={false} />
@@ -481,5 +493,6 @@ export default function SectorDossier() {
 
       <ProvenanceFooter lang={lang} />
     </div>
+    </DossierOriginProvider>
   )
 }

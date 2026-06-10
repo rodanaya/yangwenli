@@ -51,10 +51,17 @@ import {
 } from '@/components/category/CategoryDossierSections'
 import { SectorSexenioStrip } from '@/components/sector/SectorReferenceSections'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { WayfindingSpine } from '@/components/nav/WayfindingSpine'
+import {
+  DossierOriginProvider,
+  useSiblingNav,
+  type WayfindingLinkState,
+} from '@/lib/nav/wayfinding'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore } from '@/lib/constants'
+import { formatEntityName } from '@/lib/entity/format'
 import { formatCompactMXN } from '@/lib/utils'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -131,6 +138,17 @@ export default function CategoryDossier() {
   const location = useLocation()
   const { i18n } = useTranslation()
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
+
+  const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
+  // Cross-entity arrival (El Hilo P2) — an EntityIdentityChip inside another
+  // dossier stamped its host's identity here ("← Volver a Salud").
+  const wfOrigin = (location.state as WayfindingLinkState | null)?.wfOrigin ?? null
+  const wf = useSiblingNav(
+    'category',
+    id,
+    fromAria ? '/aria' : '/categories',
+    fromAria ? 'ARIA' : lang === 'es' ? 'categorías' : 'categories',
+  )
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ['cat-dossier', 'summary'],
@@ -293,15 +311,10 @@ export default function CategoryDossier() {
   const lede = buildLede({ displayName, totalSpend: c.total_value ?? 0, sectorName, hrPct, daPct, lang })
   const dropChar = displayName.charAt(0)
 
-  const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
-
   return (
+    <DossierOriginProvider value={{ route: `/categories/${categoryId}`, label: formatEntityName('category', displayName, 'sm') }}>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {fromAria && (
-        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest">
-          <ArrowLeft className="h-3 w-3" aria-hidden="true" />{lang === 'es' ? 'Volver a ARIA' : 'Back to ARIA'}
-        </button>
-      )}
+      <WayfindingSpine nav={wf} lang={lang} accent={accent} origin={wfOrigin} />
 
       {/* HERO */}
       <header className="relative">
@@ -562,6 +575,7 @@ export default function CategoryDossier() {
 
       <ProvenanceFooter lang={lang} />
     </div>
+    </DossierOriginProvider>
   )
 }
 
