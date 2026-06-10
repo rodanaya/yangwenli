@@ -16,6 +16,9 @@
     "emergency_fraud": "Fraude de Emergencia",
     "tender_rigging": "Manipulación de Concurso",
     "infrastructure_overrun": "Sobrecosto de Infraestructura",
+    "invoice_fraud": "Fraude de Facturación",
+    "state_capture": "Captura del Estado",
+    "cartel_infiltration": "Infiltración del Crimen Organizado",
     "other": "Otro"
   },
   "administrations": {

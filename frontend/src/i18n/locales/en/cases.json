@@ -16,6 +16,9 @@
     "emergency_fraud": "Emergency Fraud",
     "tender_rigging": "Tender Rigging",
     "infrastructure_overrun": "Infrastructure Overrun",
+    "invoice_fraud": "Invoice Fraud",
+    "state_capture": "State Capture",
+    "cartel_infiltration": "Cartel Infiltration",
     "other": "Other"
   },
   "administrations": {

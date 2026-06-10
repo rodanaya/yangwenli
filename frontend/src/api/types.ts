@@ -1379,9 +1379,14 @@ export type FraudType =
   | 'monopoly'
   | 'emergency_fraud'
   | 'tender_rigging'
+  | 'invoice_fraud'
+  | 'infrastructure_overrun'
+  | 'state_capture'
+  | 'cartel_infiltration'
   | 'other'
 
-export type Administration = 'fox' | 'calderon' | 'epn' | 'amlo' | 'sheinbaum'
+// 'multiple' = the case spans a sexenio boundary (4 live rows).
+export type Administration = 'fox' | 'calderon' | 'epn' | 'amlo' | 'sheinbaum' | 'multiple'
 
 export type LegalStatus =
   | 'investigation'
@@ -1391,8 +1396,12 @@ export type LegalStatus =
   | 'dismissed'
   | 'impunity'
   | 'unresolved'
+  | 'ongoing'
+  | 'settled'
 
-export type CompranetVisibility = 'high' | 'partial' | 'invisible' | 'none'
+// DB-verified enum (2026-06-10): high 22 · partial 13 · low 5 · none 3.
+// The previous 'invisible' member never occurs in the data.
+export type CompranetVisibility = 'high' | 'partial' | 'low' | 'none'
 
 export interface KeyActor {
   name: string

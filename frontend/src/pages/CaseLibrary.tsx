@@ -1,6 +1,28 @@
-import { useMemo, useState, type ReactNode } from 'react'
+/**
+ * CaseLibrary — "El Padrón" (/cases). The documented-case docket.
+ *
+ * DESIGNUS synthesis 2026-06-10 (_designus_cases/SYNTHESIS.md):
+ * ARCHIVO's Impunity-Docket spine + EDITOR's front-page craft.
+ *
+ *   Masthead          — the impunity ratio as the page's largest object
+ *                       ("Cuarenta y tres expedientes. Una sola condena.")
+ *   DispositionBand   — ProPublica Bailout-Tracker share band of the 43
+ *                       cases by legal outcome; segments filter ?status.
+ *   Dateline filters  — search + native <details> menus (TIPO/SEXENIO/ESTADO)
+ *                       with live counts; same shareable URL params.
+ *   LeadCase          — above-the-fold feature (rank 1 of active sort).
+ *   Secondary tier    — ranks 2–5, two newspaper columns.
+ *   AgateLedger       — the full archive at FT-markets density. Disposition
+ *                       rail; amounts in neutral tabular ink (rainbow dead).
+ *
+ * Fixes shipped here (prod bugs, 2026-06-10 screenshots): raw i18n key
+ * FRAUDTYPES.INVOICE_FRAUD, dark-theme #e5e5e3 remnants on a cream page,
+ * invisible white-on-white hover, inline-<circle> severity (now DotBar,
+ * correct 4-point scale), fraud-type rainbow palette.
+ */
+import { useMemo, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useQueryState, parseAsStringEnum } from 'nuqs'
 import { useUrlSearch } from '@/hooks'
@@ -12,42 +34,21 @@ import type {
   LegalStatus,
   CaseLibraryParams,
 } from '@/api/types'
-import { formatCompactMXN, formatDualCurrency } from '@/lib/utils'
-import { CASE_FRAUD_TYPE_COLORS, CASE_LEGAL_STATUS_STYLE } from '@/lib/constants'
-import { ADMINISTRATIONS, getAdministrationByYear } from '@/lib/administrations'
-import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
+import { AlertCircle, ArrowRight, ChevronDown, Search, X } from 'lucide-react'
 import { PageFooter } from '@/components/layout/PageFooter'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
+import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
+import {
+  fraudLabel,
+  dispositionLabel,
+  type Lang,
+} from '@/components/cases/casesVocab'
+import { DispositionBand } from '@/components/cases/DispositionBand'
+import { LeadCase, SecondaryCaseCard, AgateLedger } from '@/components/cases/IndexBlocks'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Art direction
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Hero money formatter (Mexican convention: MDP / billones, never B MXN) ──
 
-// Bible §2: page ground = #faf9f6 cream; card = #ffffff white; border = #e2ddd6
-const PAGE_BG = 'var(--color-background)'
-const CARD_BG = 'var(--color-background-card)'
-const BORDER = 'var(--color-border)'
-const BORDER_STRONG = 'var(--color-border-hover)'
-
-// Fraud-type accents and legal-status styling now live in `@/lib/constants`
-// (CASE_FRAUD_TYPE_COLORS / CASE_LEGAL_STATUS_STYLE) — single source of truth so
-// the Case Dossier can adopt the same tables. Hex belongs in constants.ts and is
-// applied via style={{}} at the use sites below.
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Formatters
-// ─────────────────────────────────────────────────────────────────────────────
-
-function formatMXN(n?: number | null): string {
-  if (!n) return '—'
-  // Delegates to the canonical formatter — single source of truth.
-  return formatCompactMXN(n)
-}
-
-// 2026-05-08 audit fix: hero formatter must respect Mexican Spanish convention
-// (CLAUDE.md: never `B MXN` in ES; use `MDP` for 10⁹ and `billones` for 10¹²).
-// `lang` is passed in instead of reading i18n at module scope so the call sites
-// stay reactive to language toggles.
-function formatMXNHero(n: number, lang: 'en' | 'es'): string {
+function formatMXNHero(n: number, lang: Lang): string {
   if (lang === 'es') {
     if (n >= 1e12) return `${(n / 1e12).toFixed(2)} billones`
     if (n >= 1e9) {
@@ -56,325 +57,134 @@ function formatMXNHero(n: number, lang: 'en' | 'es'): string {
     }
     return `${(n / 1e6).toFixed(0)} MDP`
   }
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
-  return `$${(n / 1e6).toFixed(0)}M`
+  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T MXN`
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B MXN`
+  return `$${(n / 1e6).toFixed(0)}M MXN`
 }
 
-// URL-safe slug (case.slug is already URL-safe; fall back to case_id)
-function caseUrl(cas: ScandalListItem): string {
-  return `/cases/${cas.slug}`
+const NUMBER_WORD: Record<number, { en: string; es: string }> = {
+  43: { en: 'Forty-three', es: 'Cuarenta y tres' },
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Filter pill (inline, no dropdown)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Filter enum lists (extended 2026-06-10 — ?fraud=invoice_fraud etc. were
+//     silently unfilterable while the unions lagged the live data) ───────────
 
-function FilterPill({
-  label,
-  active,
-  onClick,
-}: {
+const FRAUD_VALUES: FraudType[] = [
+  'ghost_company', 'monopoly', 'overpricing', 'bid_rigging',
+  'procurement_fraud', 'embezzlement', 'bribery', 'conflict_of_interest',
+  'emergency_fraud', 'tender_rigging', 'invoice_fraud',
+  'infrastructure_overrun', 'state_capture', 'cartel_infiltration', 'other',
+]
+const ADMIN_VALUES: Administration[] = ['fox', 'calderon', 'epn', 'amlo', 'sheinbaum', 'multiple']
+const STATUS_VALUES: LegalStatus[] = [
+  'impunity', 'investigation', 'ongoing', 'prosecuted',
+  'convicted', 'acquitted', 'dismissed', 'settled', 'unresolved',
+]
+
+const ADMIN_SHORT: Record<string, string> = {
+  fox: 'Fox', calderon: 'Calderón', epn: 'Peña Nieto', amlo: 'AMLO',
+  sheinbaum: 'Sheinbaum', multiple: 'Multi',
+}
+
+// ─── Dateline filter menu (native <details>, zero popover JS) ────────────────
+
+interface MenuOption {
+  value: string
   label: string
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="px-3 py-1 text-[11px] font-medium tracking-wide transition-colors"
-      style={{
-        fontFamily: 'var(--font-family-mono)',
-        // Active: strong amber fill + white text (unmistakable).
-        // Default: transparent, muted text, warm-gray border (clearly ghost).
-        background: active ? 'var(--color-accent)' : 'transparent',
-        color: active ? '#ffffff' : 'var(--color-text-muted)',
-        border: `1px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'}`,
-      }}
-    >
-      {label.toUpperCase()}
-    </button>
-  )
+  count?: number
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Case row — editorial table style
-// ─────────────────────────────────────────────────────────────────────────────
-
-function CaseRow({
-  cas,
-  onClick,
-  t,
+function FilterMenu({
+  label,
+  activeLabel,
+  options,
+  onSelect,
+  onClear,
   lang,
 }: {
-  cas: ScandalListItem
-  onClick: () => void
-  t: (k: string, o?: Record<string, unknown>) => string
-  lang: string
+  label: string
+  activeLabel: string | null
+  options: MenuOption[]
+  onSelect: (value: string) => void
+  onClear: () => void
+  lang: Lang
 }) {
-  const accent = CASE_FRAUD_TYPE_COLORS[cas.fraud_type] ?? CASE_FRAUD_TYPE_COLORS.other
-  const legalStatusKey = cas.legal_status || 'unresolved'
-  const legal = CASE_LEGAL_STATUS_STYLE[legalStatusKey] ?? CASE_LEGAL_STATUS_STYLE.unresolved
-  const name = lang === 'es' && cas.name_es ? cas.name_es : cas.name_en
-  const summary = lang === 'es' && cas.summary_es ? cas.summary_es : cas.summary_en
-
-  const yearLabel = cas.contract_year_start
-    ? cas.contract_year_end && cas.contract_year_end !== cas.contract_year_start
-      ? `${cas.contract_year_start}\u2013${cas.contract_year_end}`
-      : String(cas.contract_year_start)
-    : '—'
-
+  const ref = useRef<HTMLDetailsElement>(null)
+  const close = () => ref.current?.removeAttribute('open')
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group w-full text-left transition-colors"
-      style={{
-        background: CARD_BG,
-        borderBottom: `1px solid ${BORDER}`,
-        borderLeft: `3px solid ${accent}`,
-      }}
-    >
-      <div className="flex items-start gap-4 px-5 py-3 hover:bg-[rgba(255,255,255,0.04)] transition-colors">
-        {/* Left: name + metadata */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            {/* Fraud type tag */}
+    <details ref={ref} className="relative">
+      <summary
+        className="list-none cursor-pointer select-none inline-flex items-center gap-1.5 font-mono uppercase px-2.5 py-1.5 transition-colors"
+        style={{
+          fontSize: 10,
+          letterSpacing: '0.14em',
+          color: activeLabel ? '#ffffff' : 'var(--color-text-secondary)',
+          background: activeLabel ? 'var(--color-accent)' : 'transparent',
+          border: `1px solid ${activeLabel ? 'var(--color-accent)' : 'var(--color-border-hover)'}`,
+        }}
+      >
+        {label}
+        {activeLabel && <span className="normal-case tracking-normal font-semibold">· {activeLabel}</span>}
+        <ChevronDown className="h-3 w-3 opacity-70" aria-hidden="true" />
+      </summary>
+      <div
+        className="absolute left-0 z-30 mt-1 min-w-[240px] py-1"
+        style={{
+          background: 'var(--color-background-card)',
+          border: '1px solid var(--color-border-hover)',
+          boxShadow: '0 6px 20px rgba(45, 41, 38, 0.12)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => { onClear(); close() }}
+          className="w-full text-left px-3 py-1.5 font-mono uppercase hover:bg-background-elevated transition-colors"
+          style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
+        >
+          {lang === 'es' ? 'Todos' : 'All'}
+        </button>
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => { onSelect(o.value); close() }}
+            className="w-full flex items-baseline justify-between gap-4 text-left px-3 py-1.5 hover:bg-background-elevated transition-colors"
+          >
             <span
-              className="text-[10px] font-semibold tracking-[0.08em] uppercase px-2 py-0.5"
-              style={{
-                fontFamily: 'var(--font-family-mono)',
-                color: accent,
-                background: `${accent}14`,
-                border: `1px solid ${accent}33`,
-              }}
+              className="font-mono uppercase"
+              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-primary)' }}
             >
-              {t(`fraudTypes.${cas.fraud_type}`)}
+              {o.label}
             </span>
-            {/* Administration pill
-                2026-05-11 (Audit F068/F069 + self-review): the DB
-                administration field was off for cases that span an
-                administration boundary (Tren Maya tagged "Peña Nieto"
-                instead of AMLO, NAICM tagged "AMLO" instead of Peña
-                Nieto). Override rule: trust the DB value when the
-                case's start year falls inside the DB admin's term;
-                otherwise derive from start year. This handles the
-                boundary year 2018 correctly — if the DB says AMLO and
-                2018 is within AMLO's [2018..2024] range, we keep AMLO
-                rather than flipping to EPN (which getAdministrationByYear
-                returns first because its range ends at 2018 inclusive). */}
-            {(() => {
-              const startYear = cas.contract_year_start ?? cas.contract_year_end ?? null
-              const dbAdminRecord = cas.administration
-                ? ADMINISTRATIONS.find((a) => a.key === cas.administration)
-                : null
-              const dbAdminFitsYear =
-                dbAdminRecord != null &&
-                startYear != null &&
-                startYear >= dbAdminRecord.yearStart &&
-                startYear <= dbAdminRecord.yearEnd
-              const derivedKey = !dbAdminFitsYear
-                ? getAdministrationByYear(startYear)?.key
-                : null
-              const effectiveAdmin = derivedKey ?? cas.administration
-              if (!effectiveAdmin) return null
-              return (
-                <span
-                  className="text-[10px] uppercase tracking-wider px-2 py-0.5"
-                  style={{
-                    fontFamily: 'var(--font-family-mono)',
-                    color: '#8a8a86',
-                    border: `1px solid ${BORDER_STRONG}`,
-                  }}
-                >
-                  {/* Audit fix 2026-05-07: defensive — if an administration value
-                      has no i18n entry, show the raw value lowercase rather than
-                      echoing the uppercase key. Pluck the last segment so users
-                      never see "ADMINISTRATIONS.FOO". */}
-                  {(() => {
-                    const key = `administrations.${effectiveAdmin}`
-                    const tr = t(key)
-                    return tr === key || tr.includes('.') ? effectiveAdmin : tr
-                  })()}
-                </span>
-              )
-            })()}
-            {/* Ground truth indicator */}
-            {cas.ground_truth_case_id != null && (
+            {o.count != null && (
               <span
-                className="text-[10px] uppercase tracking-wider px-2 py-0.5"
-                style={{
-                  fontFamily: 'var(--font-family-mono)',
-                  color: '#d4922a',
-                  background: 'rgba(212,146,42,0.06)',
-                  border: '1px solid rgba(212,146,42,0.22)',
-                }}
+                className="font-mono tabular-nums"
+                style={{ fontSize: 10, color: 'var(--color-text-muted)' }}
               >
-                {lang === 'es' ? 'ENTRENAMIENTO GT' : 'GT TRAINING'}
+                {o.count}
               </span>
             )}
-          </div>
-
-          <h3
-            className="text-[15px] leading-snug text-text-primary group-hover:text-accent transition-colors"
-            style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 600 }}
-          >
-            {name}
-          </h3>
-
-          <p
-            className="text-[12px] text-text-muted mt-1.5 line-clamp-2 leading-relaxed pr-6"
-            style={{ fontFamily: 'var(--font-family-sans)' }}
-          >
-            {summary}
-          </p>
-
-          {/* Status line */}
-          <div
-            className="flex items-center gap-3 mt-2.5 text-[10px] flex-wrap"
-            style={{ fontFamily: 'var(--font-family-mono)' }}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <span
-                className="h-1.5 w-1.5"
-                style={{ background: legal.dot, borderRadius: 999 }}
-              />
-              <span style={{ color: legal.text }} className="tracking-wider">
-                {t(`legalStatuses.${legalStatusKey}`, { defaultValue: legal.label }).toUpperCase()}
-              </span>
-            </span>
-            <span className="text-text-muted">·</span>
-            <span className="text-text-muted tabular-nums">{yearLabel}</span>
-            <span className="text-text-muted">·</span>
-            {/* 5-dot severity indicator — always rendered. Filled dots equal
-                severity level (1–5); empty dots fill the remainder. Color
-                escalates: severity ≥4 red, =3 amber, <3 muted. Text label
-                still shown alongside dots for severity ≥3 (kept from prior). */}
-            <span className="inline-flex items-center gap-1.5">
-              <svg
-                width={5 * 6 + 4 * 3}
-                height={6}
-                viewBox={`0 0 ${5 * 6 + 4 * 3} 6`}
-                role="img"
-                aria-label={`severity ${cas.severity} of 5`}
-                style={{ display: 'block' }}
-              >
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const filled = i < cas.severity
-                  const fillColor =
-                    cas.severity >= 4 ? '#ef4444' : cas.severity === 3 ? '#f59e0b' : '#71717a'
-                  return (
-                    <circle
-                      key={i}
-                      cx={i * 9 + 3}
-                      cy={3}
-                      r={2.5}
-                      fill={filled ? fillColor : 'transparent'}
-                      stroke={filled ? fillColor : '#71717a'}
-                      strokeWidth={1}
-                    />
-                  )
-                })}
-              </svg>
-              {cas.severity >= 3 && (
-                <span className="text-text-muted tracking-wider">
-                  {t(`severity.${cas.severity}`)} {t('severity.label', { defaultValue: 'SEVERITY' })}
-                </span>
-              )}
-            </span>
-          </div>
-        </div>
-
-        {/* Middle: amount */}
-        <div className="flex-shrink-0 text-right min-w-[100px]">
-          <div
-            className="tabular-nums leading-none"
-            style={{
-              fontFamily: 'var(--font-family-serif)',
-              fontStyle: 'italic',
-              fontWeight: 700,
-              fontSize: 'clamp(18px, 2.5vw, 24px)',
-              color: cas.amount_mxn_low ? accent : 'var(--color-text-muted)',
-            }}
-          >
-            {formatMXN(cas.amount_mxn_low)}
-            {cas.amount_mxn_high &&
-              cas.amount_mxn_high !== cas.amount_mxn_low && (
-                <span className="text-text-muted text-[13px]"> +</span>
-              )}
-          </div>
-          <div
-            className="text-[9px] uppercase tracking-[0.15em] text-text-muted mt-1"
-            style={{ fontFamily: 'var(--font-family-mono)' }}
-          >
-            {lang === 'es' ? 'PÉRDIDA EST.' : 'EST. LOSS'}
-          </div>
-        </div>
-
-        {/* Right: chevron */}
-        <div className="flex-shrink-0 self-center">
-          <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
-        </div>
+          </button>
+        ))}
       </div>
-    </button>
+    </details>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main page
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Page ───────────────────────────────────────────────────────────────────
 
-const FRAUD_FILTERS: { value: FraudType; key: string }[] = [
-  { value: 'ghost_company', key: 'fraudTypes.ghost_company' },
-  { value: 'monopoly', key: 'fraudTypes.monopoly' },
-  { value: 'overpricing', key: 'fraudTypes.overpricing' },
-  { value: 'bid_rigging', key: 'fraudTypes.bid_rigging' },
-  { value: 'procurement_fraud', key: 'fraudTypes.procurement_fraud' },
-  { value: 'embezzlement', key: 'fraudTypes.embezzlement' },
-]
-
-const ADMIN_FILTERS: { value: Administration; key: string }[] = [
-  { value: 'fox', key: 'administrations.fox' },
-  { value: 'calderon', key: 'administrations.calderon' },
-  { value: 'epn', key: 'administrations.epn' },
-  { value: 'amlo', key: 'administrations.amlo' },
-  { value: 'sheinbaum', key: 'administrations.sheinbaum' },
-]
-
-const STATUS_FILTERS: { value: LegalStatus; key: string }[] = [
-  { value: 'impunity', key: 'legalStatuses.impunity' },
-  { value: 'investigation', key: 'legalStatuses.investigation' },
-  { value: 'prosecuted', key: 'legalStatuses.prosecuted' },
-  { value: 'convicted', key: 'legalStatuses.convicted' },
-]
+type SortKey = 'loss' | 'severity' | 'year' | 'gt'
 
 export default function CaseLibrary() {
-  const { t, i18n } = useTranslation('cases')
+  const { i18n } = useTranslation('cases')
   const navigate = useNavigate()
+  const location = useLocation()
+  const lang: Lang = i18n.language?.startsWith('es') ? 'es' : 'en'
 
   // URL-synced filters — refresh preserves state, links are shareable.
-  const [fraudType, setFraudType] = useQueryState(
-    'fraud',
-    parseAsStringEnum<FraudType>([
-      'ghost_company', 'monopoly', 'overpricing', 'bid_rigging',
-      'procurement_fraud', 'embezzlement', 'bribery',
-      'conflict_of_interest', 'emergency_fraud', 'tender_rigging', 'other',
-    ])
-  )
-  const [administration, setAdministration] = useQueryState(
-    'admin',
-    parseAsStringEnum<Administration>(['fox', 'calderon', 'epn', 'amlo', 'sheinbaum'])
-  )
-  const [legalStatus, setLegalStatus] = useQueryState(
-    'status',
-    parseAsStringEnum<LegalStatus>([
-      'impunity', 'investigation', 'prosecuted',
-      'convicted', 'acquitted', 'dismissed', 'unresolved',
-    ])
-  )
+  const [fraudType, setFraudType] = useQueryState('fraud', parseAsStringEnum<FraudType>(FRAUD_VALUES))
+  const [administration, setAdministration] = useQueryState('admin', parseAsStringEnum<Administration>(ADMIN_VALUES))
+  const [legalStatus, setLegalStatus] = useQueryState('status', parseAsStringEnum<LegalStatus>(STATUS_VALUES))
   const { search, setSearch } = useUrlSearch()
 
   const filters: CaseLibraryParams = useMemo(
@@ -383,12 +193,11 @@ export default function CaseLibrary() {
       administration: administration ?? undefined,
       legal_status: legalStatus ?? undefined,
     }),
-    [fraudType, administration, legalStatus]
+    [fraudType, administration, legalStatus],
   )
-
   const queryParams: CaseLibraryParams = useMemo(
     () => ({ ...filters, search: search || undefined }),
-    [filters, search]
+    [filters, search],
   )
 
   const { data: rawData, isLoading, error } = useQuery({
@@ -396,16 +205,12 @@ export default function CaseLibrary() {
     queryFn: () => caseLibraryApi.getAll(queryParams),
     staleTime: 5 * 60 * 1000,
   })
-
   const { data: stats } = useQuery({
     queryKey: ['cases', 'stats'],
     queryFn: () => caseLibraryApi.getStats(),
     staleTime: 10 * 60 * 1000,
   })
 
-  // Sort control — local state; URL-sync deliberately omitted (transient view
-  // preference, not a shareable filter). Default 'loss' preserves prior order.
-  type SortKey = 'loss' | 'severity' | 'year' | 'gt'
   const [sortBy, setSortBy] = useState<SortKey>('loss')
 
   const data = useMemo(() => {
@@ -415,351 +220,271 @@ export default function CaseLibrary() {
       (b.amount_mxn_low ?? 0) - (a.amount_mxn_low ?? 0)
     switch (sortBy) {
       case 'severity':
-        arr.sort((a, b) => {
-          if (b.severity !== a.severity) return b.severity - a.severity
-          return byAmount(a, b)
-        })
+        arr.sort((a, b) => (b.severity !== a.severity ? b.severity - a.severity : byAmount(a, b)))
         break
       case 'year':
         arr.sort((a, b) => {
           const ay = a.contract_year_start ?? -Infinity
           const by = b.contract_year_start ?? -Infinity
-          if (by !== ay) return by - ay
-          return byAmount(a, b)
+          return by !== ay ? by - ay : byAmount(a, b)
         })
         break
       case 'gt':
         arr.sort((a, b) => {
           const al = a.ground_truth_case_id != null ? 1 : 0
           const bl = b.ground_truth_case_id != null ? 1 : 0
-          if (bl !== al) return bl - al
-          return byAmount(a, b)
+          return bl !== al ? bl - al : byAmount(a, b)
         })
         break
       case 'loss':
       default:
         arr.sort((a, b) => {
-          const ad = byAmount(a, b)
-          if (ad !== 0) return ad
-          if (b.severity !== a.severity) return b.severity - a.severity
-          const al = a.ground_truth_case_id != null ? 1 : 0
-          const bl = b.ground_truth_case_id != null ? 1 : 0
-          return bl - al
+          const d = byAmount(a, b)
+          if (d !== 0) return d
+          return b.severity - a.severity
         })
     }
     return arr
   }, [rawData, sortBy])
 
   const hasFilters =
-    !!search ||
-    filters.fraud_type != null ||
-    filters.administration != null ||
-    filters.legal_status != null
+    !!search || filters.fraud_type != null || filters.administration != null || filters.legal_status != null
 
-  // ── Stats strip numbers ────────────────────────────────────────────────────
-  const totalCases = stats?.total_cases ?? data?.length ?? 0
+  // El Hilo — publish the displayed order so the dossier stepper follows it.
+  usePublishSiblingList(
+    data && data.length > 0
+      ? {
+          kind: 'case',
+          items: data.map((c) => ({
+            id: c.slug,
+            label: lang === 'es' && c.name_es ? c.name_es : c.name_en,
+          })),
+          backTo: location.pathname + location.search,
+          backLabel: lang === 'es' ? 'El Padrón' : 'the docket',
+        }
+      : null,
+  )
+  useOriginRowFlash('case', !!data && data.length > 0)
+
+  // Masthead numbers — interpolated, never hardcoded.
+  const totalCases = stats?.total_cases ?? rawData?.length ?? 0
+  const convicted = stats?.cases_by_legal_status?.find((s) => s.legal_status === 'convicted')?.count ?? 0
+  const withoutConviction = Math.max(0, totalCases - convicted)
   const totalLoss = stats?.total_amount_mxn_low ?? 0
-  const prosecutedCount =
-    (stats?.cases_by_legal_status?.find((s) => s.legal_status === 'prosecuted')
-      ?.count ?? 0) +
-    (stats?.cases_by_legal_status?.find((s) => s.legal_status === 'convicted')
-      ?.count ?? 0)
 
-  const yearSpan = '2002\u20132025'
+  const totalWord = NUMBER_WORD[totalCases]?.[lang] ?? String(totalCases)
+  const headlineTop = lang === 'es' ? `${totalWord} expedientes.` : `${totalWord} case files.`
+  const headlineFragment =
+    convicted === 1
+      ? lang === 'es' ? 'Una sola condena.' : 'One conviction.'
+      : lang === 'es' ? `${convicted} condenas.` : `${convicted} convictions.`
 
-  // \u2500\u2500 \u00a7 EL SALDO \u2014 the collection's headline, computed from the ALREADY-LOADED
-  // list (no new API call). All three numbers derive from `data`:
-  //   \u00b7 documented count        \u2192 data.length
-  //   \u00b7 GT-anchored count       \u2192 rows with a ground_truth_case_id (the only
-  //                               vendor-link signal present on the list item)
-  //   \u00b7 summed estimated damage \u2192 \u03a3 amount_mxn_low (the field is nullable \u2014
-  //                               `amount_mxn_low?`, so we count the gaps and
-  //                               state the caveat honestly when any exist).
-  const saldo = useMemo(() => {
-    if (!data || data.length === 0) return null
-    let damageSum = 0
-    let withDamage = 0
-    let gtAnchored = 0
-    for (const cas of data) {
-      if (cas.amount_mxn_low != null && cas.amount_mxn_low > 0) {
-        damageSum += cas.amount_mxn_low
-        withDamage += 1
-      }
-      if (cas.ground_truth_case_id != null) gtAnchored += 1
-    }
-    return {
-      count: data.length,
-      damageSum,
-      missingDamage: data.length - withDamage,
-      gtAnchored,
-    }
-  }, [data])
+  const openCase = (cas: ScandalListItem) =>
+    navigate(`/cases/${cas.slug}`, { state: { from: '/cases' } })
 
-  // Hide the lede while filters are active \u2014 the band reports on the whole
-  // documented collection, not a filtered slice (the result-count line already
-  // narrates the filtered view).
-  const showSaldo = saldo != null && !hasFilters
+  // Tier split — front page only on the unfiltered view.
+  const showTiers = !hasFilters && !!data && data.length > 6
+  const lead = showTiers ? data![0] : null
+  const secondary = showTiers ? data!.slice(1, 5) : []
+  const agate = showTiers ? data!.slice(5) : data ?? []
+
+  const clearAll = () => {
+    setFraudType(null)
+    setAdministration(null)
+    setLegalStatus(null)
+    setSearch(null)
+  }
+
+  // Filter menu options — built from the live stats distributions so every
+  // value in the data is filterable (the old page hardcoded 6 of 12 types).
+  const fraudOptions: MenuOption[] = (stats?.cases_by_fraud_type ?? [])
+    .map((f) => ({ value: f.fraud_type, label: fraudLabel(f.fraud_type, lang), count: f.count }))
+  const adminOptions: MenuOption[] = (stats?.cases_by_administration ?? [])
+    .map((a) => ({ value: a.administration, label: ADMIN_SHORT[a.administration] ?? a.administration, count: a.count }))
+  const statusOptions: MenuOption[] = (stats?.cases_by_legal_status ?? [])
+    .map((s) => ({ value: s.legal_status, label: dispositionLabel(s.legal_status, lang), count: s.count }))
 
   return (
-    <div
-      style={{
-        background: PAGE_BG,
-        minHeight: '100vh',
-        color: '#e5e5e3',
-      }}
-    >
-      <div className="max-w-[1100px] mx-auto px-6 py-3">
-        <header className="mb-3 pb-3 border-b" style={{ borderColor: BORDER_STRONG }}>
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <div>
-              <h1
-                className="text-text-primary"
-                style={{
-                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
-                  fontWeight: 500,
-                  fontSize: 'clamp(20px, 3vw, 26px)',
-                  lineHeight: 1.05,
-                  letterSpacing: '-0.012em',
-                }}
-              >
-                {i18n.language === 'es' ? 'Registro Documentado' : 'Documented Record'}
-              </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
-                {!stats
-                  ? <span className="opacity-40">{yearSpan} · {i18n.language === 'es' ? 'cargando…' : 'loading…'}</span>
-                  : i18n.language === 'es'
-                  ? <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos sin enjuiciar · {yearSpan} · {formatMXNHero(totalLoss, 'es')} documentados</>
-                  : <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} of {totalCases}</span> scandals unprosecuted · {yearSpan} · {formatMXNHero(totalLoss, 'en')} MXN documented</>
-                }
-              </p>
+    <div style={{ background: 'var(--color-background)', minHeight: '100vh', color: 'var(--color-text-primary)' }}>
+      <div className="max-w-[1180px] mx-auto px-5 sm:px-7 py-5">
+        {/* ─── Masthead ─── */}
+        <header className="pb-5" style={{ borderBottom: '2px solid var(--color-text-primary)' }}>
+          <p
+            className="font-mono uppercase mb-3"
+            style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 500 }}
+          >
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 600 }}>
+              {lang === 'es' ? 'El Padrón' : 'The Docket'}
+            </span>
+            <span className="mx-2 opacity-50">·</span>
+            {lang === 'es' ? 'Casos documentados · 2002–2025' : 'Documented cases · 2002–2025'}
+          </p>
+
+          <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+            <h1
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(30px, 4.6vw, 54px)',
+                lineHeight: 1.0,
+                letterSpacing: '-0.012em',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              {headlineTop}
+              <br />
+              <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
+                {headlineFragment}
+              </span>
+            </h1>
+
+            {/* Stat rail */}
+            <div className="flex items-end gap-8" aria-label={lang === 'es' ? 'Cifras del padrón' : 'Docket figures'}>
+              <MastheadStat
+                value={totalCases ? `${convicted}/${totalCases}` : '—'}
+                caption={lang === 'es' ? 'Condenas' : 'Convictions'}
+                ink="var(--color-text-primary)"
+              />
+              <MastheadStat
+                value={totalLoss ? formatMXNHero(totalLoss, lang) : '—'}
+                caption={lang === 'es' ? 'Daño documentado' : 'Documented harm'}
+                ink="var(--color-text-primary)"
+              />
+              <MastheadStat
+                value={totalCases ? String(withoutConviction) : '—'}
+                caption={lang === 'es' ? 'Sin condena' : 'Without conviction'}
+                ink={RISK_TEXT_COLORS.critical}
+              />
             </div>
           </div>
         </header>
 
-        {/* ─────────── § EL SALDO — findings lede ─────────── */}
-        {showSaldo && saldo && (() => {
-          const es = i18n.language === 'es'
-          const DAMAGE_HEX = 'var(--color-risk-critical)'
-          const GT_HEX = '#d4922a'
-          // Playfair-Italic-800 tabular-nums anchor — color via style only.
-          const Anchor = ({ children, color }: { children: ReactNode; color: string }) => (
-            <span
-              className="tabular-nums"
-              style={{
-                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
-                fontWeight: 800,
-                color,
-              }}
-            >
-              {children}
-            </span>
-          )
-          const countStr = new Intl.NumberFormat(es ? 'es-MX' : 'en-US').format(saldo.count)
-          const gtStr = new Intl.NumberFormat(es ? 'es-MX' : 'en-US').format(saldo.gtAnchored)
-          const damageStr = formatDualCurrency(saldo.damageSum)
-          const sentenceLabel = es
-            ? 'Resumen del archivo documentado'
-            : 'Summary of the documented record'
-          return (
-            <section
-              className="mb-4 pb-3"
-              aria-label={sentenceLabel}
-              style={{ borderBottom: `1px solid ${BORDER}` }}
-            >
-              <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2">
-                {es ? '§ EL SALDO' : '§ THE LEDGER'}
-              </p>
-              <p
-                className="text-[15px] leading-relaxed text-text-secondary max-w-3xl"
-                style={{ fontFamily: 'var(--font-family-serif)' }}
-              >
-                {es ? (
-                  <>
-                    El archivo reúne <Anchor color="var(--color-text-primary)">{countStr}</Anchor>{' '}
-                    casos documentados de corrupción en contratación pública, con un daño estimado
-                    sumado de <Anchor color={DAMAGE_HEX}>{damageStr}</Anchor>; de ellos,{' '}
-                    <Anchor color={GT_HEX}>{gtStr}</Anchor> están anclados en la verdad de campo que
-                    entrena el modelo de riesgo.
-                  </>
-                ) : (
-                  <>
-                    The record gathers <Anchor color="var(--color-text-primary)">{countStr}</Anchor>{' '}
-                    documented procurement-corruption cases, summing to an estimated{' '}
-                    <Anchor color={DAMAGE_HEX}>{damageStr}</Anchor> in damage; of these,{' '}
-                    <Anchor color={GT_HEX}>{gtStr}</Anchor> are anchored in the ground-truth that
-                    trains the risk model.
-                  </>
-                )}
-              </p>
-              {saldo.missingDamage > 0 && (
-                <p
-                  className="mt-1.5 text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted"
-                >
-                  {es
-                    ? `El total excluye ${saldo.missingDamage} casos sin cifra de daño estimado en la fuente`
-                    : `Total excludes ${saldo.missingDamage} cases with no estimated-damage figure on record`}
-                </p>
-              )}
-            </section>
-          )
-        })()}
+        {/* ─── Disposition band ─── */}
+        {stats && stats.cases_by_legal_status.length > 0 && (
+          <DispositionBand
+            counts={stats.cases_by_legal_status}
+            activeStatus={legalStatus}
+            onSelect={(s) => setLegalStatus((s as LegalStatus) ?? null)}
+            lang={lang}
+          />
+        )}
 
-        {/* ─────────── Filter strip ─────────── */}
-        <section className="mb-3 space-y-2">
-          {/* Search */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-              <input
-                type="text"
-                aria-label={t('filters.searchAriaLabel', 'Search corruption cases and vendors')}
-                value={search ?? ''}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t('filters.search')}
-                className="w-full pl-9 pr-8 py-2 text-[12px] bg-transparent focus:outline-none focus:border-risk-high/40 transition-colors"
-                style={{
-                  fontFamily: 'var(--font-family-mono)',
-                  color: '#e5e5e3',
-                  border: `1px solid ${BORDER_STRONG}`,
-                }}
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch(null)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
-                  aria-label={i18n.language === 'es' ? 'Limpiar búsqueda' : 'Clear search'}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-            {hasFilters && (
+        {/* ─── Dateline filters ─── */}
+        <div
+          className="mt-4 py-3 flex flex-wrap items-center gap-3"
+          style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}
+        >
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+            <input
+              type="text"
+              aria-label={lang === 'es' ? 'Buscar casos' : 'Search cases'}
+              value={search ?? ''}
+              onChange={(e) => setSearch(e.target.value || null)}
+              placeholder={lang === 'es' ? 'Buscar caso o proveedor…' : 'Search case or vendor…'}
+              className="w-full pl-9 pr-8 py-1.5 text-[12px] bg-transparent focus:outline-none transition-colors"
+              style={{
+                fontFamily: 'var(--font-family-mono)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border-hover)',
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-accent)' }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border-hover)' }}
+            />
+            {search && (
               <button
                 type="button"
-                onClick={() => {
-                  setFraudType(null)
-                  setAdministration(null)
-                  setLegalStatus(null)
-                  setSearch(null)
-                }}
-                className="text-[10px] tracking-wider uppercase text-text-muted hover:text-accent transition-colors flex items-center gap-1"
-                style={{ fontFamily: 'var(--font-family-mono)' }}
+                onClick={() => setSearch(null)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
+                aria-label={lang === 'es' ? 'Limpiar búsqueda' : 'Clear search'}
               >
-                <X className="h-3 w-3" />
-                {t('filters.clearFilters')}
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
 
-          {/* Type filter */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className="text-[10px] tracking-[0.15em] uppercase text-text-muted w-14 flex-shrink-0"
-              style={{ fontFamily: 'var(--font-family-mono)' }}
-            >
-              {i18n.language === 'es' ? 'TIPO' : 'TYPE'}
-            </span>
-            <FilterPill
-              label={t('filters.all')}
-              active={fraudType == null}
-              onClick={() => setFraudType(null)}
-            />
-            {FRAUD_FILTERS.map((f) => (
-              <FilterPill
-                key={f.value}
-                label={t(f.key)}
-                active={fraudType === f.value}
-                onClick={() => setFraudType(f.value)}
-              />
-            ))}
-          </div>
+          <FilterMenu
+            label={lang === 'es' ? 'Tipo' : 'Type'}
+            activeLabel={fraudType ? fraudLabel(fraudType, lang) : null}
+            options={fraudOptions}
+            onSelect={(v) => setFraudType(v as FraudType)}
+            onClear={() => setFraudType(null)}
+            lang={lang}
+          />
+          <FilterMenu
+            label={lang === 'es' ? 'Sexenio' : 'Term'}
+            activeLabel={administration ? (ADMIN_SHORT[administration] ?? administration) : null}
+            options={adminOptions}
+            onSelect={(v) => setAdministration(v as Administration)}
+            onClear={() => setAdministration(null)}
+            lang={lang}
+          />
+          <FilterMenu
+            label={lang === 'es' ? 'Estado' : 'Status'}
+            activeLabel={legalStatus ? dispositionLabel(legalStatus, lang) : null}
+            options={statusOptions}
+            onSelect={(v) => setLegalStatus(v as LegalStatus)}
+            onClear={() => setLegalStatus(null)}
+            lang={lang}
+          />
 
-          {/* Admin filter */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="ml-auto flex items-center gap-3">
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="inline-flex items-center gap-1 font-mono uppercase text-text-muted hover:text-accent transition-colors"
+                style={{ fontSize: 10, letterSpacing: '0.12em' }}
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+                {lang === 'es' ? 'Limpiar' : 'Clear'}
+              </button>
+            )}
             <span
-              className="text-[10px] tracking-[0.15em] uppercase text-text-muted w-14 flex-shrink-0"
-              style={{ fontFamily: 'var(--font-family-mono)' }}
+              className="font-mono tabular-nums uppercase"
+              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
             >
-              {i18n.language === 'es' ? 'ADMIN' : 'ADMIN'}
+              {data
+                ? hasFilters
+                  ? `${totalCases} → ${data.length} ${lang === 'es' ? 'casos' : 'cases'}`
+                  : `${data.length} ${lang === 'es' ? 'casos' : 'cases'}`
+                : '…'}
             </span>
-            <FilterPill
-              label={t('filters.all')}
-              active={administration == null}
-              onClick={() => setAdministration(null)}
-            />
-            {ADMIN_FILTERS.map((f) => (
-              <FilterPill
-                key={f.value}
-                label={t(f.key).split(' ')[0]}
-                active={administration === f.value}
-                onClick={() => setAdministration(f.value)}
-              />
-            ))}
           </div>
+        </div>
 
-          {/* Status filter */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className="text-[10px] tracking-[0.15em] uppercase text-text-muted w-14 flex-shrink-0"
-              style={{ fontFamily: 'var(--font-family-mono)' }}
-            >
-              {i18n.language === 'es' ? 'ESTADO' : 'STATUS'}
-            </span>
-            <FilterPill
-              label={t('filters.all')}
-              active={legalStatus == null}
-              onClick={() => setLegalStatus(null)}
-            />
-            {STATUS_FILTERS.map((f) => (
-              <FilterPill
-                key={f.value}
-                label={t(f.key)}
-                active={legalStatus === f.value}
-                onClick={() => setLegalStatus(f.value)}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* ─────────── Results ─────────── */}
+        {/* ─── Body ─── */}
         {isLoading && (
-          <div className="space-y-0">
-            {Array.from({ length: 6 }).map((_, i) => (
+          <div className="mt-4 space-y-px">
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="h-[88px] animate-pulse"
-                style={{
-                  background: CARD_BG,
-                  borderBottom: `1px solid ${BORDER}`,
-                  borderLeft: `3px solid ${BORDER_STRONG}`,
-                }}
+                className="h-[44px] animate-pulse"
+                style={{ background: 'var(--color-background-card)', borderBottom: '1px solid var(--color-border)' }}
               />
             ))}
           </div>
         )}
 
-        {error && (
+        {error != null && (
           <div
-            className="p-5 flex items-start gap-3"
+            className="mt-5 p-5 flex items-start gap-3"
             style={{
-              background: CARD_BG,
-              border: '1px solid rgba(239,68,68,0.3)',
-              borderLeft: '3px solid #ef4444',
+              background: 'var(--color-background-card)',
+              border: '1px solid var(--color-border)',
+              borderLeft: `3px solid ${RISK_TEXT_COLORS.critical}`,
             }}
           >
             <AlertCircle className="h-5 w-5 text-risk-critical mt-0.5 flex-shrink-0" aria-hidden="true" />
             <div>
-              <p
-                className="text-[13px] font-semibold text-risk-critical mb-1"
-                style={{ fontFamily: 'var(--font-family-serif)' }}
-              >
-                {t('loadError')}
+              <p className="text-[13px] font-semibold text-risk-critical mb-1" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                {lang === 'es' ? 'Error al cargar los casos.' : 'Failed to load cases.'}
               </p>
               <p className="text-[12px] text-text-muted leading-relaxed">
-                {t('loadErrorDetail')}
+                {lang === 'es'
+                  ? 'El servidor puede estar temporalmente no disponible. Los datos aparecerán al restablecerse la conexión.'
+                  : 'The server may be temporarily unavailable. Data will appear once the connection is restored.'}
               </p>
             </div>
           </div>
@@ -767,213 +492,171 @@ export default function CaseLibrary() {
 
         {!isLoading && !error && data && (
           <>
-            {/* Result count + interactive sort controls. The sort buttons
-                mirror FilterPill but at micro scale (10px / px-2) — same amber
-                accent for the active state so the relationship reads. */}
-            <div
-              className="flex items-center justify-between mb-3 text-[10px] tracking-wider uppercase gap-3 flex-wrap"
-              style={{ fontFamily: 'var(--font-family-mono)', color: '#6a6a66' }}
-            >
-              <span>
-                {t('resultCount', { count: data.length })}
-                {hasFilters && (
-                  <span className="text-text-muted ml-1">
-                    ({i18n.language === 'es' ? 'filtrado' : 'filtered'})
-                  </span>
-                )}
-              </span>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-text-muted">
-                  {i18n.language === 'es' ? 'ORDENAR' : 'SORT'}
-                </span>
-                {([
-                  { key: 'loss', label: i18n.language === 'es' ? 'PÉRDIDA ↓' : 'LOSS ↓' },
-                  { key: 'severity', label: i18n.language === 'es' ? 'GRAVEDAD ↓' : 'SEVERITY ↓' },
-                  { key: 'year', label: i18n.language === 'es' ? 'AÑO ↓' : 'YEAR ↓' },
-                  { key: 'gt', label: i18n.language === 'es' ? 'GT PRIMERO' : 'GT FIRST' },
-                ] as { key: SortKey; label: string }[]).map((s) => {
-                  const active = sortBy === s.key
-                  return (
-                    <button
-                      key={s.key}
-                      type="button"
-                      onClick={() => setSortBy(s.key)}
-                      className="px-2 py-0.5 text-[10px] font-medium tracking-wide transition-colors"
-                      style={{
-                        fontFamily: 'var(--font-family-mono)',
-                        background: active ? 'var(--color-accent)' : 'transparent',
-                        color: active ? '#ffffff' : 'var(--color-text-muted)',
-                        border: `1px solid ${active ? 'var(--color-accent)' : BORDER}`,
-                      }}
-                    >
-                      {s.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
             {data.length === 0 ? (
               <div
-                className="py-16 text-center"
-                style={{
-                  background: CARD_BG,
-                  border: `1px solid ${BORDER}`,
-                }}
+                className="mt-5 py-16 text-center"
+                style={{ background: 'var(--color-background-card)', border: '1px solid var(--color-border)' }}
               >
-                <p
-                  className="text-[14px] text-text-secondary mb-2"
-                  style={{ fontFamily: 'var(--font-family-serif)' }}
-                >
-                  {t('noResults')}
-                </p>
-                <p className="text-[12px] text-text-muted max-w-md mx-auto leading-relaxed">
-                  {search
-                    ? t('noResultsExplain', { query: search })
-                    : t('noResultsHint')}
+                <p className="text-[14px] text-text-secondary mb-2" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                  {lang === 'es' ? 'Ningún caso coincide con los filtros actuales.' : 'No cases match the current filters.'}
                 </p>
                 <button
                   type="button"
-                  onClick={() => {
-                    setFraudType(null)
-                    setAdministration(null)
-                    setLegalStatus(null)
-                    setSearch(null)
-                  }}
-                  className="mt-4 inline-flex items-center gap-1.5 text-[11px] tracking-wider uppercase text-accent hover:text-accent-hover transition-colors"
-                  style={{ fontFamily: 'var(--font-family-mono)' }}
+                  onClick={clearAll}
+                  className="mt-3 inline-flex items-center gap-1.5 font-mono uppercase text-accent hover:opacity-70 transition-opacity"
+                  style={{ fontSize: 11, letterSpacing: '0.12em' }}
                 >
-                  <X className="h-3 w-3" />
-                  {t('filters.clearFilters')}
+                  <X className="h-3 w-3" aria-hidden="true" />
+                  {lang === 'es' ? 'Limpiar filtros' : 'Clear filters'}
                 </button>
               </div>
-            ) : (() => {
-              // Editorial tier break: the top 3 cases (by loss, via existing sort)
-              // get a "FEATURED" section header so the reader immediately sees the
-              // most damaging scandals; the rest render compactly below. Art
-              // Director + UX/IA critics flagged the uniform list as having no
-              // featured case and no rhythm change — "a database dump."
-              // Only applied to the unfiltered view; filtered results render flat.
-              const showFeatured = !hasFilters && data.length > 6
-              const featured = showFeatured ? data.slice(0, 3) : []
-              const rest = showFeatured ? data.slice(3) : data
-              return (
-                <>
-                  {showFeatured && (
-                    <>
-                      <div
-                        className="flex items-center gap-3 mb-3"
-                        style={{ fontFamily: 'var(--font-family-mono)' }}
-                      >
-                        <span
-                          className="h-px flex-1"
-                          style={{ background: 'rgba(212,146,42,0.3)' }}
+            ) : (
+              <>
+                {lead && <LeadCase cas={lead} lang={lang} onOpen={() => openCase(lead)} />}
+
+                {secondary.length > 0 && (
+                  <section aria-label={lang === 'es' ? 'Más en portada' : 'More on the front page'}>
+                    <div
+                      className="flex items-center gap-3 mt-6 mb-1 font-mono uppercase"
+                      style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
+                    >
+                      <span>
+                        {lang === 'es'
+                          ? `Más en portada · ${secondary.length} casos`
+                          : `More on the front page · ${secondary.length} cases`}
+                      </span>
+                      <span aria-hidden="true" className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-x-7">
+                      {secondary.map((cas, i) => (
+                        <SecondaryCaseCard
+                          key={cas.id}
+                          cas={cas}
+                          lang={lang}
+                          onOpen={() => openCase(cas)}
+                          withGutter={i % 2 === 0}
                         />
-                        <span
-                          className="text-[10px] font-bold tracking-[0.2em] uppercase"
-                          style={{ color: '#d4922a' }}
-                        >
-                          {i18n.language === 'es'
-                            ? 'Los tres casos de mayor daño documentado'
-                            : 'The three largest documented cases'}
-                        </span>
-                        <span
-                          className="h-px flex-1"
-                          style={{ background: 'rgba(212,146,42,0.3)' }}
-                        />
-                      </div>
-                      <div
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Sort control */}
+                <div
+                  className="mt-6 flex items-center justify-end gap-1.5 flex-wrap font-mono uppercase"
+                  style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
+                >
+                  <span>{lang === 'es' ? 'Ordenar' : 'Sort'}</span>
+                  {([
+                    { key: 'loss' as SortKey, label: lang === 'es' ? 'Pérdida ↓' : 'Loss ↓' },
+                    { key: 'severity' as SortKey, label: lang === 'es' ? 'Gravedad ↓' : 'Severity ↓' },
+                    { key: 'year' as SortKey, label: lang === 'es' ? 'Año ↓' : 'Year ↓' },
+                    { key: 'gt' as SortKey, label: lang === 'es' ? 'GT primero' : 'GT first' },
+                  ]).map((s) => {
+                    const active = sortBy === s.key
+                    return (
+                      <button
+                        key={s.key}
+                        type="button"
+                        onClick={() => setSortBy(s.key)}
+                        className="px-2 py-0.5 font-medium transition-colors"
                         style={{
-                          border: `1px solid ${BORDER}`,
-                          borderBottom: 'none',
-                          marginBottom: 24,
+                          fontFamily: 'var(--font-family-mono)',
+                          background: active ? 'var(--color-accent)' : 'transparent',
+                          color: active ? '#ffffff' : 'var(--color-text-muted)',
+                          border: `1px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'}`,
                         }}
                       >
-                        {featured.map((cas, idx) => (
-                          <div
-                            key={cas.id}
-                            style={{ background: idx === 0 ? 'rgba(212,146,42,0.055)' : 'rgba(212,146,42,0.025)' }}
-                          >
-                            {idx === 0 && (
-                              <div
-                                className="flex items-center gap-2 px-5 pt-3 pb-0"
-                                style={{ fontFamily: 'var(--font-family-mono)' }}
-                              >
-                                <span
-                                  className="text-[9px] font-bold tracking-[0.2em] uppercase px-2 py-0.5"
-                                  style={{
-                                    color: '#d4922a',
-                                    background: 'rgba(212,146,42,0.12)',
-                                    border: '1px solid rgba(212,146,42,0.3)',
-                                  }}
-                                >
-                                  {i18n.language === 'es' ? 'Caso líder · Mayor pérdida documentada' : 'Lead case · Largest documented loss'}
-                                </span>
-                              </div>
-                            )}
-                            <CaseRow
-                              cas={cas}
-                              onClick={() => navigate(caseUrl(cas))}
-                              t={t}
-                              lang={i18n.language}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      <div
-                        className="flex items-center gap-3 mb-3"
-                        style={{ fontFamily: 'var(--font-family-mono)' }}
-                      >
-                        <span
-                          className="text-[10px] font-bold tracking-[0.2em] uppercase text-text-muted"
-                        >
-                          {i18n.language === 'es'
-                            ? `El resto del archivo · ${rest.length} casos`
-                            : `The rest of the archive · ${rest.length} cases`}
-                        </span>
-                        <span
-                          className="h-px flex-1 bg-border"
-                        />
-                      </div>
-                    </>
-                  )}
-                  <div
-                    style={{
-                      border: `1px solid ${BORDER}`,
-                      borderBottom: 'none',
-                    }}
-                  >
-                    {rest.map((cas) => (
-                      <CaseRow
-                        key={cas.id}
-                        cas={cas}
-                        onClick={() => navigate(caseUrl(cas))}
-                        t={t}
-                        lang={i18n.language}
-                      />
-                    ))}
-                  </div>
-                </>
-              )
-            })()}
+                        {s.label}
+                      </button>
+                    )
+                  })}
+                </div>
 
-            {/* Footnote */}
+                <AgateLedger
+                  cases={agate}
+                  lang={lang}
+                  onOpen={openCase}
+                  header={
+                    showTiers
+                      ? lang === 'es'
+                        ? `El archivo completo · ${agate.length} casos`
+                        : `The full archive · ${agate.length} cases`
+                      : lang === 'es'
+                        ? `${agate.length} resultados`
+                        : `${agate.length} results`
+                  }
+                />
+              </>
+            )}
+
+            {/* ─── Footer ─── */}
+            {convicted === 1 && totalCases > 0 && (
+              <p
+                className="mt-10 text-center"
+                style={{
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontSize: 14,
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                {lang === 'es'
+                  ? `Una condena en ${totalCases} casos. El registro es el argumento.`
+                  : `One conviction in ${totalCases} cases. The record is the argument.`}
+              </p>
+            )}
             <p
-              className="mt-8 text-[10px] tracking-wider uppercase text-text-muted flex items-center gap-2"
-              style={{ fontFamily: 'var(--font-family-mono)' }}
+              className="mt-4 font-mono uppercase flex items-center justify-center gap-2 flex-wrap"
+              style={{ fontSize: 9.5, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
             >
-              <span>{i18n.language === 'es' ? 'FUENTE' : 'SOURCE'}</span>
-              <span className="text-text-primary">·</span>
-              <span className="text-text-muted">
-                {i18n.language === 'es'
-                  ? 'Registros judiciales, auditorías ASF, registro SAT EFOS, investigaciones periodísticas'
-                  : 'Judicial records, ASF audits, SAT EFOS registry, journalism investigations'}
+              <span>{lang === 'es' ? 'Fuentes' : 'Sources'}</span>
+              <span aria-hidden="true">·</span>
+              <span>
+                {lang === 'es'
+                  ? 'Registros judiciales, auditorías ASF, registro SAT EFOS, periodismo de investigación'
+                  : 'Judicial records, ASF audits, SAT EFOS registry, investigative journalism'}
               </span>
-              <ArrowRight className="h-3 w-3 ml-1 text-text-primary" aria-hidden="true" />
+              <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </p>
           </>
         )}
         <PageFooter />
+      </div>
+    </div>
+  )
+}
+
+function MastheadStat({
+  value,
+  caption,
+  ink,
+}: {
+  value: string
+  caption: string
+  ink: string
+}) {
+  return (
+    <div className="text-right">
+      <div
+        className="tabular-nums"
+        style={{
+          fontFamily: '"Playfair Display", Georgia, serif',
+          fontStyle: 'italic',
+          fontWeight: 800,
+          fontSize: 'clamp(22px, 2.6vw, 32px)',
+          lineHeight: 1,
+          letterSpacing: '-0.02em',
+          color: ink,
+        }}
+      >
+        {value}
+      </div>
+      <div
+        className="font-mono uppercase mt-1"
+        style={{ fontSize: 8.5, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
+      >
+        {caption}
       </div>
     </div>
   )

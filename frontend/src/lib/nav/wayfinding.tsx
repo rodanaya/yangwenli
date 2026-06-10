@@ -28,12 +28,13 @@ import {
 } from 'react'
 import { useNavigationType } from 'react-router-dom'
 
-export type WayfindingKind = 'category' | 'sector' | 'institution'
+export type WayfindingKind = 'category' | 'sector' | 'institution' | 'case'
 
 const BASE_PATH: Record<WayfindingKind, string> = {
   category: '/categories/',
   sector: '/sectors/',
   institution: '/institutions/',
+  case: '/cases/',
 }
 
 export interface SiblingItem {
