@@ -1,6 +1,7 @@
 import { useState, memo, useMemo, useCallback, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { analysisApi } from '@/api/client'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
@@ -26,6 +27,8 @@ import {
   Copy,
   Check,
   Printer,
+  ArrowRight,
+  ArrowLeft,
 } from 'lucide-react'
 import { RiskFactorTable } from '@/components/RiskExplainer'
 import { CitationBlock } from '@/components/CitationBlock'
@@ -695,11 +698,186 @@ function TableOfContents() {
 }
 
 // ============================================================================
+// La Coda · § ADÓNDE IR  (Charter C3 exit ramp for the methodology essay)
+// ============================================================================
+//
+// Methodology is Archetype C (narrative/tool). Per the charter, its coda links
+// to Sectores / Patrones / La Cola. These are section-level surfaces, not
+// concrete entity instances, so styled mono CTAs are the correct primitive here
+// (an EntityIdentityChip would imply a specific vendor/sector row that this
+// essay does not carry). Amber/mono/uppercase per the coda contract.
+
+function MethodologyCoda({ lang }: { lang: 'en' | 'es' }) {
+  const isEs = lang === 'es'
+
+  const ramps: { to: string; label: string; sub: string; title: string }[] = [
+    {
+      to: '/sectors',
+      label: isEs ? 'Sectores' : 'Sectors',
+      sub: isEs
+        ? 'El riesgo modelado por los 12 ramos federales'
+        : 'Modelled risk across the 12 federal sectors',
+      title: isEs
+        ? 'Ver el riesgo por sector — el indicador de riesgo en contexto'
+        : 'See risk by sector — the risk indicator in context',
+    },
+    {
+      to: '/atlas?lens=patterns',
+      label: isEs ? 'Patrones' : 'Patterns',
+      sub: isEs
+        ? 'Las 7 huellas de colusión que el modelo persigue'
+        : 'The 7 collusion fingerprints the model chases',
+      title: isEs
+        ? 'Abrir El Atlas en la lente de Patrones'
+        : 'Open The Atlas on the Patterns lens',
+    },
+    {
+      to: '/aria',
+      label: isEs ? 'La Cola (ARIA)' : 'The Queue (ARIA)',
+      sub: isEs
+        ? 'Los proveedores priorizados para investigación'
+        : 'Vendors prioritised for investigation',
+      title: isEs
+        ? 'Ir a la cola de investigación de ARIA'
+        : 'Go to the ARIA investigation queue',
+    },
+  ]
+
+  return (
+    <section
+      aria-label={isEs ? 'Adónde ir' : 'Where to go next'}
+      className="mt-10 pt-5"
+      style={{ borderTop: '1px solid var(--color-accent)' }}
+    >
+      <p
+        className="font-mono mb-1.5 text-accent"
+        style={{
+          fontSize: 10,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          fontWeight: 700,
+        }}
+      >
+        § · {isEs ? 'ADÓNDE IR' : 'WHERE TO GO NEXT'}
+      </p>
+      <p
+        className="text-xs text-text-muted mb-4"
+        style={{ maxWidth: '60ch', lineHeight: 1.55 }}
+      >
+        {isEs
+          ? 'La metodología no es un destino. Lleva el indicador de riesgo a donde se vuelve accionable.'
+          : 'The methodology is not a destination. Take the risk indicator to where it becomes actionable.'}
+      </p>
+
+      <div className="grid gap-2.5 sm:grid-cols-3">
+        {ramps.map((r) => (
+          <Link
+            key={r.to}
+            to={r.to}
+            title={r.title}
+            className="group flex flex-col gap-1 rounded-sm border border-accent/20 bg-accent/[0.04] px-3 py-2.5 hover:bg-accent/10 hover:border-accent/40 transition-colors"
+          >
+            <span className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.1em] text-accent text-[11px] font-bold">
+              {r.label}
+              <ArrowRight
+                className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </span>
+            <span className="text-[11px] text-text-muted leading-snug">{r.sub}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ============================================================================
+// A∞ · Procedencia  (ProvenanceFooter — local copy of the dossier pattern)
+// ============================================================================
+//
+// WayfindingSpine / shared dossier chrome are not extracted on this branch, so
+// this mirrors the VendorDossier ProvenanceFooter: an honesty movement (what
+// this page can't tell you) above a demoted provenance line — model version
+// v0.8.5, COMPRANET 2002–2025, the Sep 28 2025 frozen horizon, and the dateline.
+
+function MethodologyProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
+  const isEs = lang === 'es'
+  return (
+    <section
+      aria-label={isEs ? 'Procedencia de los datos' : 'Data provenance'}
+      className="mt-10 pt-5"
+      style={{ borderTop: '1px solid var(--color-border)' }}
+    >
+      {/* (a) Honesty movement — what this trust document can't tell you */}
+      <p
+        className="font-mono mb-2"
+        style={{
+          fontSize: 9.5,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          fontWeight: 500,
+        }}
+      >
+        § {isEs ? 'Lo que esta metodología no puede decir' : "What this methodology can't tell you"}
+      </p>
+      <p
+        style={{
+          fontFamily: '"EB Garamond", Georgia, serif',
+          fontStyle: 'italic',
+          fontSize: 13.5,
+          color: 'var(--color-text-secondary)',
+          maxWidth: '72ch',
+          lineHeight: 1.55,
+        }}
+      >
+        {isEs
+          ? 'El modelo lee cómo se adjudicaron los contratos, no cómo se ejecutaron. Un indicador de riesgo alto señala anomalías estadísticas en la contratación, no prueba de un delito, que solo los tribunales determinan.'
+          : 'The model reads how contracts were awarded — not how they were performed. A high risk indicator marks statistical anomalies in procurement, not proof of wrongdoing, which only courts establish.'}
+      </p>
+
+      {/* (b) Provenance movement — model, source, frozen horizon, dateline */}
+      <div className="mt-4">
+        <p
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontStyle: 'italic',
+            fontSize: 13.5,
+            color: 'var(--color-text-secondary)',
+            maxWidth: '72ch',
+            lineHeight: 1.55,
+          }}
+        >
+          {isEs
+            ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 (CAL-v8-202605020212) entrenado con 1,427 casos de corrupción documentados. La fuente federal se congeló el 28 de septiembre de 2025 tras la abolición de CompraNet; no existe reemplazo integral. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
+            : 'COMPRANET data 2002–2025. v0.8.5 risk model (CAL-v8-202605020212) trained on 1,427 documented corruption cases. The federal source froze on 28 September 2025 after CompraNet was abolished; no comprehensive replacement exists. Model signals are statistical indicators, not legal determinations.'}
+        </p>
+        <p
+          className="mt-3 font-mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+          }}
+        >
+          {isEs
+            ? 'RUBLI · Metodología v0.8.5 · Horizonte de datos 28 sep 2025'
+            : 'RUBLI · Methodology v0.8.5 · Data horizon Sep 28 2025'}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================================
 // Main Page Component
 // ============================================================================
 
 export function Methodology() {
-  const { t } = useTranslation('methodology')
+  const { t, i18n } = useTranslation('methodology')
+  const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
 
   const { data: summary } = useQuery({
     queryKey: ['executive-summary-methodology'],
@@ -723,6 +901,16 @@ export function Methodology() {
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Utility header — same redesign sweep. */}
         <header className="mb-5 pb-4 border-b border-border">
+          {/* Breadcrumb up-link (Charter C0 spine) — matches the platform's
+              "← Surface" idiom used on the dossiers. */}
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors mb-3"
+            title={lang === 'es' ? 'Volver a la portada de RUBLI' : 'Back to the RUBLI home'}
+          >
+            <ArrowLeft className="h-3 w-3" aria-hidden="true" />
+            {lang === 'es' ? 'Metodología · RUBLI' : 'Methodology · RUBLI'}
+          </Link>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
@@ -1671,6 +1859,12 @@ export function Methodology() {
         {/* Sidebar: Table of Contents */}
         <TableOfContents />
       </div>
+
+      {/* La Coda · § ADÓNDE IR — exit ramps to Sectores / Patrones / La Cola */}
+      <MethodologyCoda lang={lang} />
+
+      {/* A∞ · Procedencia — provenance footer (model, source, frozen horizon) */}
+      <MethodologyProvenanceFooter lang={lang} />
 
       <CitationBlock context="RUBLI methodology — v0.8.5 risk model" className="mt-2" />
       <PageFooter />
