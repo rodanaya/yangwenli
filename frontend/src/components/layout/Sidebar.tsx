@@ -211,22 +211,39 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       {/* Logo — signal spike mark */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
         <div className="relative flex-shrink-0">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            {/* Baseline — warm dark, flanking the spike */}
-            <line x1="2" y1="23" x2="11" y2="23" stroke="#2e2926" strokeWidth="1.4" strokeLinecap="round"/>
-            <line x1="21" y1="23" x2="30" y2="23" stroke="#2e2926" strokeWidth="1.4" strokeLinecap="round"/>
+          <svg width="34" height="34" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            {/* The Velocity Spike — a leaning anomaly caught mid-motion.
+                Subtle shimmer on the speed-trail; disabled for reduced-motion. */}
+            <style>{`
+              @keyframes rubliStreak { 0%,100% { opacity:.36 } 50% { opacity:.1 } }
+              @keyframes rubliHalo { 0%,100% { opacity:.12 } 50% { opacity:.22 } }
+              .rubli-streak > * { animation: rubliStreak 3.4s ease-in-out infinite; }
+              .rubli-streak > *:nth-child(2) { animation-delay:.28s }
+              .rubli-streak > *:nth-child(3) { animation-delay:.56s }
+              .rubli-halo { animation: rubliHalo 3.4s ease-in-out infinite; }
+              @media (prefers-reduced-motion: reduce) {
+                .rubli-streak > *, .rubli-halo { animation: none; }
+              }
+            `}</style>
             {/* Atmospheric glow at peak */}
-            <circle cx="16" cy="5" r="8" fill="#dc2626" opacity="0.10"/>
-            <circle cx="16" cy="5" r="5" fill="#dc2626" opacity="0.10"/>
-            {/* The spike — the detection signal */}
-            <polyline
-              points="11,23 16,5 21,23"
-              stroke="#dc2626" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="miter"
-            />
-            {/* Peak: outer dot */}
-            <circle cx="16" cy="5" r="2.4" fill="#dc2626"/>
-            {/* Peak: specular highlight */}
-            <circle cx="15.2" cy="4.3" r="0.9" fill="#fda4af" opacity="0.85"/>
+            <circle className="rubli-halo" cx="26" cy="5" r="8" fill="#dc2626" opacity="0.12"/>
+            {/* Baseline — warm dark */}
+            <line x1="6" y1="31" x2="34" y2="31" stroke="#2e2926" strokeWidth="1.6" strokeLinecap="round"/>
+            {/* Speed ticks — the motion trail */}
+            <g className="rubli-streak" stroke="#dc2626" strokeLinecap="round">
+              <line x1="3" y1="25" x2="8" y2="25" strokeWidth="1.6" opacity="0.36"/>
+              <line x1="4.5" y1="20" x2="9" y2="20" strokeWidth="1.6" opacity="0.26"/>
+              <line x1="6" y1="15" x2="9.5" y2="15" strokeWidth="1.6" opacity="0.18"/>
+            </g>
+            {/* Ghost trail */}
+            <polyline points="10,31 22,5 26,31" stroke="#dc2626" strokeWidth="2.6"
+              strokeLinejoin="round" strokeLinecap="round" opacity="0.28"/>
+            {/* The spike — leaning forward (the detection signal, in motion) */}
+            <polyline points="14,31 26,5 30,31" stroke="#dc2626" strokeWidth="3.4"
+              strokeLinejoin="round" strokeLinecap="round"/>
+            {/* Peak: core dot + specular highlight */}
+            <circle cx="26" cy="5" r="2.6" fill="#dc2626"/>
+            <circle cx="25.1" cy="4.2" r="0.95" fill="#fda4af" opacity="0.85"/>
           </svg>
         </div>
         {!isCollapsed && (

@@ -1,21 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="18%" r="55%">
-      <stop offset="0%" stop-color="#dc2626" stop-opacity="0.28"/>
+    <radialGradient id="glow" cx="58%" cy="14%" r="60%">
+      <stop offset="0%" stop-color="#dc2626" stop-opacity="0.30"/>
       <stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <!-- Background -->
-  <rect width="32" height="32" rx="7" fill="#0d0f0e"/>
-  <!-- Crimson glow at spike peak -->
-  <rect width="32" height="32" rx="7" fill="url(#glow)"/>
-  <!-- Baseline (warm dark — subtle, not dominant) -->
-  <line x1="3" y1="22" x2="29" y2="22" stroke="#1e2220" stroke-width="1.5"/>
-  <!-- The spike — THE mark -->
-  <polyline points="12,22 16,5 20,22"
-    stroke="#dc2626" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="miter" fill="none"/>
-  <!-- Peak: outer dot -->
-  <circle cx="16" cy="5" r="2.5" fill="#dc2626"/>
-  <!-- Peak: inner highlight -->
-  <circle cx="16" cy="5" r="1.1" fill="#fda4af"/>
+  <!-- Tile -->
+  <rect width="40" height="40" rx="9" fill="#0d0f0e"/>
+  <rect width="40" height="40" rx="9" fill="url(#glow)"/>
+  <!-- Baseline -->
+  <line x1="7" y1="31" x2="33" y2="31" stroke="#1e2220" stroke-width="2" stroke-linecap="round"/>
+  <!-- Ghost trail (motion) -->
+  <polyline points="10,31 22,5 26,31" fill="none" stroke="#dc2626" stroke-width="2.6"
+    stroke-linejoin="round" stroke-linecap="round" opacity="0.28"/>
+  <!-- The spike — leaning forward (the detection signal, in motion) -->
+  <polyline points="14,31 26,5 30,31" fill="none" stroke="#dc2626" stroke-width="3.4"
+    stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Peak -->
+  <circle cx="26" cy="5" r="2.6" fill="#dc2626"/>
+  <circle cx="25.1" cy="4.2" r="1" fill="#fda4af"/>
 </svg>
