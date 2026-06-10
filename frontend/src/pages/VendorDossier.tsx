@@ -22,13 +22,20 @@
  * /print/vendors/:id retains the legacy VendorProfile.
  */
 
-import { lazy, Suspense, useState } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useState, type ReactNode } from 'react'
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { vendorApi } from '@/api/client'
-import { AlertTriangle, ArrowLeft, Download } from 'lucide-react'
-import type { ContractListItem, VendorLinkedScandalsResponse } from '@/api/types'
+import { AlertTriangle, ArrowLeft, ArrowRight, Download } from 'lucide-react'
+import type {
+  AriaQueueItem,
+  ContractListItem,
+  VendorDetailResponse,
+  VendorGroundTruthStatus,
+  VendorLinkedScandalsResponse,
+  VendorTenureInstitution,
+} from '@/api/types'
 
 import { useVendorData } from '@/hooks/useVendorData'
 import { buildVendorFlags } from '@/components/vendor/buildFlags'
@@ -37,6 +44,7 @@ import { VendorStatStrip, VendorDiagnosticGrid } from '@/components/vendor/Vendo
 import { VendorEvidenceTab } from '@/components/vendor/VendorEvidenceTab'
 import { VendorActivityTab } from '@/components/vendor/VendorActivityTab'
 import { VendorNetworkTab } from '@/components/vendor/VendorNetworkTab'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -109,6 +117,163 @@ function DossierSectionHeader({
           {meta}
         </span>
       )}
+    </div>
+  )
+}
+
+// ─── La Coda · § ADÓNDE IR ───────────────────────────────────────────────────
+//
+// Charter A∞−1 exit ramp (Archetype A): ≥1 investigate CTA + ≥2 EntityIdentity
+// chips drawn from the already-loaded cross-link graph (no new API calls).
+// Vendor cross-link graph: Institution (top buyer) · Pattern (primary ARIA) ·
+// Case (GT/linked-scandal anchor) · Network (co-bidding community via the
+// network-graph modal). Chips are computed defensively — only ones whose data
+// actually fired render, and the section is suppressed entirely if fewer than
+// two related entities exist (so we never ship an empty coda).
+
+function VendorCoda({
+  vendor,
+  aria,
+  groundTruth,
+  linkedScandals,
+  accent,
+  lang,
+  onOpenNetworkGraph,
+}: {
+  vendor: VendorDetailResponse
+  aria: AriaQueueItem | null | undefined
+  groundTruth: VendorGroundTruthStatus | null | undefined
+  linkedScandals: VendorLinkedScandalsResponse | null | undefined
+  accent: string
+  lang: 'en' | 'es'
+  onOpenNetworkGraph: () => void
+}) {
+  const isEs = lang === 'es'
+
+  // — Chip 1: top institution buyer (concentration anchor) ——————————————
+  const topInst: VendorTenureInstitution | undefined = vendor.top_institutions?.[0]
+
+  // — Chip 2: primary ARIA pattern (e.g. "P2") → /patterns/:code ——————————
+  const patternCode = aria?.primary_pattern?.trim().toUpperCase() || null
+  const isPatternCode = patternCode != null && /^P[1-7]$/.test(patternCode)
+
+  // — Chip 3: case anchor — prefer a GT case, fall back to a linked scandal.
+  //   /cases/:slug resolves BY SLUG (getBySlug), never by numeric case_id, so a
+  //   chip is only routable when a scandal_slug exists. Cases without a slug are
+  //   skipped rather than producing a dead /cases/<number> link. ——————————————
+  const gtCase = (groundTruth?.cases ?? []).find((c) => !!c.scandal_slug)
+  const linkedCase = (linkedScandals?.cases ?? linkedScandals?.scandals ?? []).find(
+    (c) => !!c.scandal_slug && (c.case_name || c.scandal_title),
+  )
+  const caseAnchor = gtCase
+    ? { slug: gtCase.scandal_slug as string, name: gtCase.case_name, isGt: true }
+    : linkedCase
+      ? { slug: linkedCase.scandal_slug as string, name: linkedCase.case_name ?? linkedCase.scandal_title ?? null, isGt: false }
+      : null
+
+  // Count concrete related entities. The network CTA is an action, not an
+  // entity chip, so it doesn't count toward the ≥2-chip minimum.
+  const chipCount = (topInst ? 1 : 0) + (isPatternCode ? 1 : 0) + (caseAnchor ? 1 : 0)
+  if (chipCount < 2) return null
+
+  return (
+    <section
+      aria-label={isEs ? 'Adónde ir' : 'Where to go next'}
+      className="mt-10 pt-5"
+      style={{ borderTop: `1px solid ${accent}33` }}
+    >
+      <p
+        className="font-mono mb-3"
+        style={{
+          fontSize: 10,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: accent,
+          fontWeight: 700,
+        }}
+      >
+        § {isEs ? 'ADÓNDE IR' : 'WHERE TO GO NEXT'}
+      </p>
+
+      {/* Investigate CTA — open the co-bidding network graph centered on this
+          vendor. Amber, mono, uppercase per the charter coda contract. */}
+      <button
+        type="button"
+        onClick={onOpenNetworkGraph}
+        className="inline-flex items-center gap-1.5 mb-4 font-mono uppercase tracking-[0.08em] text-accent hover:opacity-80 transition-opacity cursor-pointer"
+        style={{ fontSize: 11, background: 'none', border: 'none', padding: 0 }}
+        title={isEs ? 'Abrir el grafo de la red de co-licitación' : 'Open the co-bidding network graph'}
+      >
+        {isEs ? 'Ver la red de co-licitación' : 'View the co-bidding network'}
+        <ArrowRight className="h-3 w-3" aria-hidden="true" />
+      </button>
+
+      {/* Related-entity chips — the cross-link graph. */}
+      <div className="space-y-3">
+        {topInst && (
+          <ChipRow label={isEs ? 'Su principal comprador' : 'Its top buyer'}>
+            <EntityIdentityChip
+              type="institution"
+              id={topInst.institution_id}
+              name={topInst.institution_name}
+              size="sm"
+            />
+          </ChipRow>
+        )}
+
+        {isPatternCode && (
+          <ChipRow label={isEs ? 'Patrón ARIA dominante' : 'Dominant ARIA pattern'}>
+            <Link
+              to={`/patterns/${patternCode}`}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-risk-high/30 bg-risk-high/10 text-risk-high font-mono uppercase tracking-[0.08em] hover:bg-risk-high/20 transition-colors"
+              style={{ fontSize: 11 }}
+              title={isEs ? `Patrón ${patternCode} de ARIA` : `ARIA pattern ${patternCode}`}
+            >
+              {patternCode}
+              <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            </Link>
+          </ChipRow>
+        )}
+
+        {caseAnchor && (
+          <ChipRow
+            label={
+              caseAnchor.isGt
+                ? isEs ? 'Caso confirmado (Ground Truth)' : 'Confirmed case (Ground Truth)'
+                : isEs ? 'Escándalo vinculado' : 'Linked scandal'
+            }
+          >
+            <EntityIdentityChip
+              type="case"
+              id={caseAnchor.slug}
+              name={caseAnchor.name}
+              size="sm"
+              flags={caseAnchor.isGt ? ['gt'] : undefined}
+            />
+          </ChipRow>
+        )}
+      </div>
+    </section>
+  )
+}
+
+/** One labelled row inside the coda — mono caption + chip(s). */
+function ChipRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
+      <span
+        className="font-mono flex-shrink-0"
+        style={{
+          fontSize: 10,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          minWidth: 0,
+        }}
+      >
+        {label}
+      </span>
+      <div className="flex flex-wrap items-center gap-1.5">{children}</div>
     </div>
   )
 }
@@ -439,6 +604,17 @@ export default function VendorDossier() {
           />
         </section>
       </div>
+
+      {/* LA CODA — § ADÓNDE IR (exit ramps) */}
+      <VendorCoda
+        vendor={vendor}
+        aria={data.aria.data}
+        groundTruth={data.groundTruthStatus.data}
+        linkedScandals={data.linkedScandals.data as VendorLinkedScandalsResponse | null | undefined}
+        accent={sectorAccent}
+        lang={lang}
+        onOpenNetworkGraph={() => setNetworkOpen(true)}
+      />
 
       <ProvenanceFooter lang={lang} />
 
