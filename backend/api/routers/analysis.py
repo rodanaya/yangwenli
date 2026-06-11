@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 
 from ..dependencies import get_db, require_write_key
 from ..config.constants import MAX_CONTRACT_VALUE
+from ..services.active_model import normalize_coefficients
 from ..cache import SimpleCache
 from ..config.temporal_events import TEMPORAL_EVENTS, TemporalEventData
 from ..helpers.analysis_helpers import (
@@ -408,7 +409,7 @@ def get_model_metadata():
             )
             row = cursor.execute(
                 f"SELECT {select_cols} "
-                "FROM model_calibration WHERE sector_id IS NULL "
+                "FROM model_calibration WHERE (sector_id = 0 OR sector_id IS NULL) "
                 "ORDER BY created_at DESC LIMIT 1"
             ).fetchone()
             if not row or row["model_version"] != _ACTIVE_MODEL_VERSION:
@@ -491,14 +492,14 @@ def get_model_calibration():
             )
             row = cursor.execute(
                 f"SELECT {select_cols} FROM model_calibration "
-                "WHERE sector_id IS NULL ORDER BY created_at DESC LIMIT 1"
+                "WHERE (sector_id = 0 OR sector_id IS NULL) ORDER BY created_at DESC LIMIT 1"
             ).fetchone()
 
             if not row or row["model_version"] != _ACTIVE_MODEL_VERSION:
                 # No global row or stale v6.0 entry — return hardcoded v0.8.5 calibration
                 return _V085_CALIBRATION
 
-            coefficients_raw: Dict[str, float] = json.loads(row["coefficients"]) if row["coefficients"] else {}
+            coefficients_raw: Dict[str, float] = normalize_coefficients(row["coefficients"])
             bootstrap_ci_raw: Dict[str, Any] = json.loads(row["bootstrap_ci"]) if row["bootstrap_ci"] else {}
 
             coefficient_items: List[Dict[str, Any]] = []
@@ -3652,7 +3653,7 @@ def get_feature_importance(
                 """
                 SELECT rank, factor_name, shap_mean_abs, coefficient
                 FROM feature_importance
-                WHERE model_version = 'v5.2' AND sector_id IS NULL
+                WHERE model_version = 'v0.8.5' AND sector_id IS NULL
                 ORDER BY rank ASC
                 """,
             )
@@ -3661,7 +3662,7 @@ def get_feature_importance(
                 """
                 SELECT rank, factor_name, shap_mean_abs, coefficient
                 FROM feature_importance
-                WHERE model_version = 'v5.2' AND sector_id = ?
+                WHERE model_version = 'v0.8.5' AND sector_id = ?
                 ORDER BY rank ASC
                 """,
                 (sector_id,),
@@ -3684,7 +3685,7 @@ def get_feature_importance(
         )
 
     result = FeatureImportanceResponse(
-        model_version="v5.2",
+        model_version="v0.8.5",
         sector_id=sector_id,
         features=features,
         total=len(features),
