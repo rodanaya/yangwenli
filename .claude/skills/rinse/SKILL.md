@@ -1,93 +1,114 @@
 ---
 name: rinse
 description: |
-  Checkpoint-and-hand-off ritual that makes the session safe to `/clear`.
-  Run this when a thread of work just closed and you want to free up context
-  before starting something new — especially when switching domains (backend →
-  design, one surface → the next) or when the conversation has grown long.
+  Checkpoint the finished thread, then hand back the EXACT one line to run next
+  so the context gets cleaned and the next task starts with minimal friction.
+  Run when one piece of work just closed and you want to move to the next task
+  while freeing up context to save tokens.
 
-  Trigger phrases: "rinse", "/rinse", "let's rinse", "rinse before we clear",
-  "free up context properly", "checkpoint and clear", "wrap up and clear",
-  "bank this and clear", "I want to clear the context", "we're done here —
-  clear", "prep for /clear", "hand off before clearing".
+  Invoke with the next task as an argument: `/rinse <next task>`
+  (e.g. `/rinse start the Casos design day`). With no argument, rinse falls
+  back to the **Next action** in `.claude/ACTIVE_WORK.md`.
 
-  Rinse does NOT clear the context itself (only the user can run `/clear`).
-  It guarantees the durable record is complete FIRST, then emits the exact
-  resume prompt to paste afterward, so nothing is lost across the boundary.
-  Use `/compact` instead of rinse when you want to summarize-and-CONTINUE in
-  the same session; rinse is for a full reset between threads.
+  Trigger phrases: "rinse", "/rinse", "rinse and move on", "next task",
+  "I'm done with this, what's next", "free up context and continue",
+  "checkpoint and continue", "clean the context and start the next one",
+  "bank this and go to <X>", "wrap up and switch to <X>".
+
+  What rinse CANNOT do (be honest about this every time): it cannot clean the
+  context or switch the model itself — `/clear`, `/compact`, and `/model` are
+  user-only commands, and a skill runs inside the OLD context so it can't start
+  a task in a fresh one. Rinse therefore writes the durable record, then prints
+  the single command for the user to run. For a same-model handoff that command
+  is `/compact <next task>` (compress + auto-continue, one action). For a
+  model switch it's the `/clear` → `/model X` → paste trio (irreducible — only
+  the user can switch models).
 ---
 
-# RINSE — checkpoint & hand off before clearing context
+# RINSE — checkpoint, then emit the exact next command
 
-> The chat is disposable; the **record** is the handoff. Rinse makes the
-> durable record (memory + ACTIVE_WORK + docs + commits) complete enough that a
-> fresh session can resume from a one-line prompt. Then it hands the user the
-> resume prompt and stops.
+> The chat is disposable; the **record** is the handoff. Rinse makes the durable
+> record (memory + ACTIVE_WORK + docs + commits) complete enough that a fresh or
+> compacted context can resume, then hands the user the single line to run.
 
-This is a **terminal step**. Do not start new work during a rinse — its only
-job is to make `/clear` safe. Work in order; don't skip a step because it
-"seems fine."
+This is a **terminal step**. Do not start the next task yourself — rinse runs in
+the old context; the next task belongs in the cleaned one. Work in order.
+
+**Input:** the next task, from the skill argument. If none was given, read the
+bolded **Next action** in `.claude/ACTIVE_WORK.md` and use that.
 
 ## 1. Scan the session for unsaved state
 
-Account for everything that happened since the last rinse/clear that is not yet
-in the durable record. Walk these buckets explicitly:
-
-- **Shipped** — commits made, prod deploys (record commit hash + bundle hash +
-  BUILD_ID), tests run and their result. State outcomes plainly, including
-  failures.
-- **WIP not committed** — uncommitted edits, files that carry foreign WIP and
-  must be **re-applied on deploy**, anything staged but not pushed. Run
-  `git status --short` to catch what you forgot.
-- **Decisions** — what was chosen, what was rejected, and the *why*. These are
-  the most expensive things to reconstruct and the easiest to lose.
-- **Paused / blocked** — the exact resume point: the next concrete action, the
-  gate it's waiting on, and where the plan lives.
+Account for everything since the last rinse/clear not yet in the durable record:
+- **Shipped** — commits (hash), prod deploys (commit + bundle hash + BUILD_ID),
+  tests run + result. State failures plainly. (`git status --short`, `git log`.)
+- **WIP not committed** — uncommitted edits, files carrying foreign WIP that must
+  be **re-applied on deploy**, anything staged-not-pushed.
+- **Decisions** — what was chosen, what was rejected, and the *why*. Most
+  expensive to reconstruct, easiest to lose.
+- **Paused / blocked** — the exact resume point and the gate it waits on.
 
 ## 2. Write it to the durable record
 
-- **MEMORY.md** (`C:\Users\ranay\.claude\projects\D--Python-yangwenli\memory\`)
-  — follow the project memory rules. Add/update one-line index entries in
-  `MEMORY.md`; put the detail in topic files (`type: project | feedback | user |
-  reference`). Convert relative dates to absolute. Don't duplicate what the
-  repo/git history already records — capture what was *non-obvious*. Update the
-  existing file rather than duplicating; delete memories proven wrong.
-- **`.claude/ACTIVE_WORK.md`** — refresh the **RESUME PICKUP** block at the top:
-  a short "Shipped", a short "Banked / paused", and a single bolded
-  **Next action**. This block is what the next session reads first.
-- **Re-apply-on-deploy WIP** — if any edits live only in the working tree and
-  must be re-applied (e.g. a file carrying another session's WIP), spell out the
-  exact lines/edits in ACTIVE_WORK so the deploy isn't archaeology.
+- **MEMORY.md** (`C:\Users\ranay\.claude\projects\D--Python-yangwenli\memory\`) —
+  per the memory rules: one-line index entries in `MEMORY.md`, detail in topic
+  files (`type: project | feedback | user | reference`), absolute dates, capture
+  the *non-obvious* (not what git already records), update don't duplicate.
+- **`.claude/ACTIVE_WORK.md`** — refresh the **RESUME PICKUP** block: short
+  "Shipped", short "Banked / paused", one bolded **Next action**.
+- **Re-apply-on-deploy WIP** — spell out exact lines/edits so deploy isn't
+  archaeology.
 
-## 3. Verify durability (the rinse test)
+## 3. Durability gate
 
-Ask: **"If I `/clear`ed right now and had only MEMORY.md + ACTIVE_WORK + docs +
-commits, could a fresh session resume without me?"** If the answer is no, you
-found a gap — fix it before handing off. Nothing load-bearing may live only in
-the chat scrollback.
+Ask: **"If the context were cleaned right now and only MEMORY.md + ACTIVE_WORK +
+docs + commits survived, could the next session resume without me?"** If no, fix
+the gap before handing off. Nothing load-bearing may live only in the scrollback.
 
-## 4. Emit the resume handoff
+## 4. Pick the handoff route — same model vs model switch
 
-Give the user, concisely:
+Determine the **target model** for the next task:
+- Explicit wins: if the user named a model in the args (or the task says "with
+  Fable / on Opus"), use it.
+- Else infer from the work: **design / UI / frontend / redesign / DESIGNUS /
+  visual / page polish → Fable 5**; **backend / data / ML / scoring / SQL / API /
+  label / logic → Opus**. (Per `docs/POLISH_SCHEDULE.md`: Fable = design brain,
+  Opus = backend/logic.)
+- Compare against the **current** session model (state it — e.g. "currently on
+  Opus").
 
-1. The exact **copy-paste resume prompt** — 1–2 lines that point at the pickup
-   (`ACTIVE_WORK.md` RESUME PICKUP + the relevant doc + MEMORY.md) and state the
-   goal. Short, because the memory reloads automatically.
-2. Any **model switch** the next thread wants (`/model` → e.g. Fable 5 for a
-   design day, Opus for backend/logic). Note it explicitly — `/clear` does not
-   change the model.
-3. The reminder to run **`/clear`** themselves (the skill can't), with `/compact`
-   named as the alternative if they'd rather summarize-and-continue.
+## 5. Emit the single next command, then stop
 
-## 5. Stop
+**Route A — same model** (target == current): print one copy-paste line —
 
-Confirm the record is durable and the handoff is ready. Do not begin the next
-task — the user will `/clear` (or not) and re-issue the resume prompt when ready.
+```
+/compact <next task, phrased as an instruction>
+```
+
+`/compact` compresses the history (token savings) and auto-continues with that
+instruction, on the same model. One action. Note the tradeoff once if useful:
+`/compact` keeps a summary (some tokens) so it can continue; `/clear` saves more
+but can't continue — auto-continue and maximal savings are mutually exclusive.
+
+**Route B — model switch** (target != current): print the trio, in order —
+
+```
+1. /clear
+2. /model  → <target model>
+3. paste:  <the resume prompt: next task + "Context: ACTIVE_WORK.md RESUME
+            PICKUP + <relevant doc> + MEMORY.md">
+```
+
+This is irreducible — only the user can switch models, so a switch costs ~3
+actions no matter what. Rinse's job is to make them safe and pre-fill step 3.
+
+**Then stop.** Confirm the record is durable and the command is ready. Do not
+begin the next task — the user runs the emitted command when ready.
 
 ---
 
-**Why this exists:** doing this by hand each time is error-prone — it's easy to
-clear with a decision or a re-apply note living only in the chat, and then the
-fresh session silently redoes or breaks it. Rinse turns "free up context" into a
-checklist with a hard durability gate.
+**Why this shape:** a skill can't clean context or switch models, so the honest
+best is: guarantee the durable record, then collapse the user's decision to
+"run this one line." Same-model handoffs (e.g. consecutive Fable design days)
+become a single `/compact <surface>`; model switches stay a safe, pre-filled
+3-step. Pairs with `/compact` (continue) — not a replacement for it.
