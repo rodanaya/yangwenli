@@ -390,7 +390,7 @@ Available via `.claude/agents/`. Trigger by describing the task — Claude deleg
 | Database (deploy) | `backend/RUBLI_DEPLOY.db` |
 | ETL pipeline | `backend/scripts/etl_pipeline.py` |
 | ARIA pipeline | `backend/scripts/aria_pipeline.py` |
-| Active scoring | `backend/scripts/_score_v6_now.py` |
+| Scoring (read `docs/SCORING.md` first) | active **v0.8.5** → `risk_score_v8`; ⚠️ `_score_v6_now.py` is the **V6** scorer, NOT active |
 | WAL checkpoint | `backend/scripts/_wal_checkpoint.py` |
 | Settings (team) | `.claude/settings.json` |
 | Settings (local) | `.claude/settings.local.json` |
