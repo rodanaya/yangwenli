@@ -623,7 +623,7 @@ export default function Administrations() {
                     </div>
 
                     {/* auto-scale honesty disclosure (each panel owns its y-domain) */}
-                    <p className="text-[9px] font-mono text-text-muted/60 italic">
+                    <p className="text-[9px] font-mono text-text-secondary">
                       {isEs
                         ? 'cada panel se autoescala — compare la forma dentro de cada métrica, no entre ellas'
                         : 'each panel auto-scales — compare the shape within a metric, not across them'}
