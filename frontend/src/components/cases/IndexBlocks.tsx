@@ -13,6 +13,7 @@
  * disposition encoding. Amounts are deliberately UNCOLORED (the old page
  * painted them in a 10-hue fraud rainbow).
  */
+import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { formatCompactMXN } from '@/lib/utils'
 import type { ScandalListItem } from '@/api/types'
@@ -36,6 +37,12 @@ function caseSummary(cas: ScandalListItem, lang: Lang): string {
   return (lang === 'es' && cas.summary_es ? cas.summary_es : cas.summary_en) ?? ''
 }
 
+/** Real links (middle-click / new-tab capable); state preserves the
+ *  back-to-docket origin the old navigate() call stamped. */
+function caseTo(cas: ScandalListItem) {
+  return { pathname: `/cases/${cas.slug}`, state: { from: '/cases' } }
+}
+
 function yearSpan(cas: ScandalListItem): string {
   if (!cas.contract_year_start) return '—'
   return cas.contract_year_end && cas.contract_year_end !== cas.contract_year_start
@@ -48,11 +55,9 @@ function yearSpan(cas: ScandalListItem): string {
 export function LeadCase({
   cas,
   lang,
-  onOpen,
 }: {
   cas: ScandalListItem
   lang: Lang
-  onOpen: () => void
 }) {
   const meta = dispositionFor(cas.legal_status)
   const amount = cas.amount_mxn_high ?? cas.amount_mxn_low ?? null
@@ -93,7 +98,7 @@ export function LeadCase({
       <div className="grid gap-7 md:grid-cols-[1.55fr_1fr] items-start">
         {/* Left — headline + deck */}
         <div>
-          <button type="button" onClick={onOpen} className="text-left group">
+          <Link to={caseTo(cas).pathname} state={caseTo(cas).state} className="block text-left group">
             <h2
               className="group-hover:opacity-80 transition-opacity"
               style={{
@@ -109,7 +114,7 @@ export function LeadCase({
             >
               {caseName(cas, lang)}
             </h2>
-          </button>
+          </Link>
           <p
             className="mt-3"
             style={{
@@ -211,15 +216,15 @@ export function LeadCase({
               {finding}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onOpen}
+          <Link
+            to={caseTo(cas).pathname}
+            state={caseTo(cas).state}
             className="mt-4 inline-flex items-center gap-1.5 font-mono uppercase hover:opacity-70 transition-opacity"
             style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-primary)', fontWeight: 600 }}
           >
             {lang === 'es' ? 'Leer el expediente' : 'Read the file'}
             <ChevronRight className="h-3 w-3" aria-hidden="true" />
-          </button>
+          </Link>
         </div>
       </div>
     </section>
@@ -231,12 +236,10 @@ export function LeadCase({
 export function SecondaryCaseCard({
   cas,
   lang,
-  onOpen,
   withGutter,
 }: {
   cas: ScandalListItem
   lang: Lang
-  onOpen: () => void
   /** Right-edge newspaper gutter rule (odd columns). */
   withGutter?: boolean
 }) {
@@ -245,7 +248,7 @@ export function SecondaryCaseCard({
       className="py-4 md:pr-7"
       style={withGutter ? { borderRight: '1px solid var(--color-border)' } : undefined}
     >
-      <button type="button" onClick={onOpen} className="text-left group w-full">
+      <Link to={caseTo(cas).pathname} state={caseTo(cas).state} className="block text-left group w-full">
         <div className="flex items-baseline justify-between gap-3 mb-1.5">
           <span
             className="font-mono uppercase"
@@ -299,7 +302,7 @@ export function SecondaryCaseCard({
         >
           {arcMicro(cas, lang)}
         </p>
-      </button>
+      </Link>
     </article>
   )
 }
@@ -312,12 +315,10 @@ const AGATE_GRID =
 export function AgateLedger({
   cases,
   lang,
-  onOpen,
   header,
 }: {
   cases: ScandalListItem[]
   lang: Lang
-  onOpen: (cas: ScandalListItem) => void
   /** Optional section header line above the column rule. */
   header?: string
 }) {
@@ -358,7 +359,7 @@ export function AgateLedger({
 
       <ul className="list-none p-0 m-0">
         {cases.map((cas) => (
-          <AgateRow key={cas.id} cas={cas} lang={lang} onOpen={() => onOpen(cas)} />
+          <AgateRow key={cas.id} cas={cas} lang={lang} />
         ))}
       </ul>
     </section>
@@ -368,18 +369,16 @@ export function AgateLedger({
 function AgateRow({
   cas,
   lang,
-  onOpen,
 }: {
   cas: ScandalListItem
   lang: Lang
-  onOpen: () => void
 }) {
   const meta = dispositionFor(cas.legal_status)
   return (
     <li style={{ borderBottom: '1px solid var(--color-border)' }} data-wf-row={cas.slug}>
-      <button
-        type="button"
-        onClick={onOpen}
+      <Link
+        to={caseTo(cas).pathname}
+        state={caseTo(cas).state}
         className={`${AGATE_GRID} w-full items-center gap-x-3 py-2 text-left transition-colors group`}
         style={{ background: 'transparent' }}
         onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(160,104,32,0.05)' }}
@@ -472,7 +471,7 @@ function AgateRow({
           className="h-3.5 w-3.5 justify-self-end text-text-muted group-hover:translate-x-0.5 transition-transform"
           aria-hidden="true"
         />
-      </button>
+      </Link>
     </li>
   )
 }

@@ -92,6 +92,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     refetchOnMount: false,  // Don't refetch on every page navigation
   })
 
+  // Case breadcrumb — subscribe to the dossier's own query (same key, no
+  // fetch of our own: enabled:false) so the crumb reads the localized case
+  // name instead of the title-cased slug. Falls back to slugToTitle below.
+  const caseSlugMatch = location.pathname.match(/^\/cases\/([^/]+)$/)
+  const { data: caseForBreadcrumb } = useQuery<{ name_en?: string; name_es?: string }>({
+    queryKey: ['case-dossier', caseSlugMatch?.[1]],
+    queryFn: () => Promise.reject(new Error('header never fetches cases')),
+    enabled: false,
+  })
+
   // Category breadcrumb — resolve numeric ID to actual category name
   const isCategoryPage = /^\/categories\/\d+/.test(location.pathname)
   const breadcrumbCategoryId = isCategoryPage ? parseInt(location.pathname.split('/')[2]) : NaN
@@ -149,7 +159,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     if (!cat) return null
     return isEs ? (cat.name_es || cat.name_en || null) : (cat.name_en || cat.name_es || null)
   })()
-  const title = categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath, isEs))
+  const caseBreadcrumbName: string | null = caseSlugMatch && caseForBreadcrumb
+    ? (isEs
+        ? (caseForBreadcrumb.name_es || caseForBreadcrumb.name_en || null)
+        : (caseForBreadcrumb.name_en || caseForBreadcrumb.name_es || null))
+    : null
+  const title = caseBreadcrumbName ?? categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath, isEs))
   // Parent breadcrumb segment — now a real Link, not an inert span (F4).
   // parentRoute was already computed here and discarded; we keep it so
   // "SECTORES / Salud" lets you click SECTORES back to /sectors.

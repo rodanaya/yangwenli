@@ -355,8 +355,11 @@ export function CompranetVisibilityBanner({
       >
         {vis.body[lang]}
       </p>
+      {/* compranet_note is analyst content authored in English only —
+          lang="en" keeps screen readers correct on /es. */}
       {scandal.compranet_note && (
         <p
+          lang="en"
           className="mt-1.5"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',

@@ -22,7 +22,7 @@
  */
 import { useMemo, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useQueryState, parseAsStringEnum } from 'nuqs'
 import { useUrlSearch } from '@/hooks'
@@ -177,7 +177,6 @@ type SortKey = 'loss' | 'severity' | 'year' | 'gt'
 
 export default function CaseLibrary() {
   const { i18n } = useTranslation('cases')
-  const navigate = useNavigate()
   const location = useLocation()
   const lang: Lang = i18n.language?.startsWith('es') ? 'es' : 'en'
 
@@ -278,9 +277,6 @@ export default function CaseLibrary() {
     convicted === 1
       ? lang === 'es' ? 'Una sola condena.' : 'One conviction.'
       : lang === 'es' ? `${convicted} condenas.` : `${convicted} convictions.`
-
-  const openCase = (cas: ScandalListItem) =>
-    navigate(`/cases/${cas.slug}`, { state: { from: '/cases' } })
 
   // Tier split — front page only on the unfiltered view.
   const showTiers = !hasFilters && !!data && data.length > 6
@@ -512,7 +508,7 @@ export default function CaseLibrary() {
               </div>
             ) : (
               <>
-                {lead && <LeadCase cas={lead} lang={lang} onOpen={() => openCase(lead)} />}
+                {lead && <LeadCase cas={lead} lang={lang} />}
 
                 {secondary.length > 0 && (
                   <section aria-label={lang === 'es' ? 'Más en portada' : 'More on the front page'}>
@@ -533,7 +529,6 @@ export default function CaseLibrary() {
                           key={cas.id}
                           cas={cas}
                           lang={lang}
-                          onOpen={() => openCase(cas)}
                           withGutter={i % 2 === 0}
                         />
                       ))}
@@ -576,7 +571,6 @@ export default function CaseLibrary() {
                 <AgateLedger
                   cases={agate}
                   lang={lang}
-                  onOpen={openCase}
                   header={
                     showTiers
                       ? lang === 'es'

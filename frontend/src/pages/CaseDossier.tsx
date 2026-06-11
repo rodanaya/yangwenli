@@ -291,13 +291,16 @@ function ActorList({ actors, lang }: { actors: KeyActor[]; lang: Lang }) {
             >
               {actor.name}
             </p>
+            {/* Actor titles/notes are source-record content, authored in
+                Spanish only (no _en twin in the DB) — lang="es" keeps screen
+                readers pronouncing them correctly on the EN page. */}
             {actor.title && (
-              <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+              <p lang="es" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
                 {actor.title}
               </p>
             )}
             {actor.note && (
-              <p className="mt-1" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12.5, color: 'var(--color-text-muted)', lineHeight: 1.45 }}>
+              <p lang="es" className="mt-1" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12.5, color: 'var(--color-text-muted)', lineHeight: 1.45 }}>
                 {actor.note}
               </p>
             )}
@@ -649,9 +652,11 @@ export default function CaseDossier() {
                     </div>
                   </div>
                 )}
+                {/* amount/ruling notes are analyst content authored in English
+                    only — lang="en" keeps screen readers correct on /es. */}
                 {scandal.amount_note && (
                   <MarginNote kicker={lang === 'es' ? 'Nota · Monto' : 'Note · Amount'}>
-                    {scandal.amount_note}
+                    <span lang="en">{scandal.amount_note}</span>
                   </MarginNote>
                 )}
 
@@ -683,7 +688,7 @@ export default function CaseDossier() {
                 </div>
                 {scandal.legal_status_note && (
                   <MarginNote kicker={lang === 'es' ? 'Nota · Fallo' : 'Note · Ruling'}>
-                    {scandal.legal_status_note}
+                    <span lang="en">{scandal.legal_status_note}</span>
                   </MarginNote>
                 )}
               </FeatureSection>
