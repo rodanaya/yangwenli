@@ -447,7 +447,7 @@ def get_related_vendors(
             if vendor["group_id"]:
                 cursor.execute("""
                     SELECT
-                        v.id, v.name, v.rfc,
+                        v.id, v.name, CASE WHEN v.is_individual THEN NULL ELSE v.rfc END AS rfc,
                         'same_group' as relationship,
                         1.0 as confidence,
                         COUNT(c.id) as contracts,
@@ -475,7 +475,7 @@ def get_related_vendors(
                 rfc_root = vendor["rfc"][:10]
                 cursor.execute("""
                     SELECT
-                        v.id, v.name, v.rfc,
+                        v.id, v.name, CASE WHEN v.is_individual THEN NULL ELSE v.rfc END AS rfc,
                         'shared_rfc' as relationship,
                         0.9 as confidence,
                         COUNT(c.id) as contracts,
@@ -505,7 +505,7 @@ def get_related_vendors(
             if vendor["phonetic_code"] and len(related) < limit:
                 cursor.execute("""
                     SELECT
-                        v.id, v.name, v.rfc,
+                        v.id, v.name, CASE WHEN v.is_individual THEN NULL ELSE v.rfc END AS rfc,
                         'similar_name' as relationship,
                         0.7 as confidence,
                         COUNT(c.id) as contracts,
