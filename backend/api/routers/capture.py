@@ -21,7 +21,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 
 from ..cache import app_cache
-from ..dependencies import get_db_dep
+from ..dependencies import get_db, get_db_dep
 
 logger = logging.getLogger(__name__)
 
@@ -328,4 +328,178 @@ def get_top_captures(
         "data": top,
     }
     app_cache.set("capture", cache_key, response, maxsize=16, ttl=1800)
+    return response
+
+
+# ─── Landscape — the full ≥100M federal field («la fotografía») ──────────────
+#
+# One self-persisting census: for every institution with ≥ _MIN_INST_TOTAL of
+# recorded spend, the #1 vendor's CUMULATIVE share of that institution's total.
+# This is a snapshot of the RECORD, not of "today" — institution_top_vendors /
+# institution_stats are whole-record aggregates (verified: ASIPONA cumulative
+# 35.6% vs latest-year 0.2% vs peak 76.3%). Frontend copy must say "acumulada".
+#
+# Reads precomputed tables only (institution_top_vendors, institution_stats,
+# institution_hhi, aria_queue count, capture_results ids) — never contracts.
+# Self-persists to precomputed_stats (admin-breakdown pattern); read-back ~2 ms.
+
+_LANDSCAPE_KEY = "capture_landscape_v1"
+
+
+def _build_landscape(conn: sqlite3.Connection) -> dict:
+    """One-time census build from precomputed tables (~0.6 s). Persisted after."""
+    conn.row_factory = sqlite3.Row
+
+    rows = conn.execute(
+        """
+        WITH top1 AS (
+            SELECT institution_id, vendor_id, vendor_name, total_value_mxn,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY institution_id ORDER BY total_value_mxn DESC
+                   ) AS rn
+            FROM institution_top_vendors
+        )
+        SELECT s.institution_id,
+               COALESCE(i.siglas, i.name) AS name,
+               i.sector_id,
+               s.total_value_mxn AS window_total_mxn,
+               t.vendor_id  AS top1_vendor_id,
+               t.vendor_name AS top1_vendor_name,
+               100.0 * t.total_value_mxn / s.total_value_mxn AS share_pct
+        FROM institution_stats s
+        JOIN institutions i ON i.id = s.institution_id
+        JOIN top1 t ON t.institution_id = s.institution_id AND t.rn = 1
+        WHERE s.total_value_mxn >= ?
+        ORDER BY share_pct DESC
+        """,
+        (_MIN_INST_TOTAL,),
+    ).fetchall()
+
+    ticks = []
+    captured = []
+    antesala = []
+    for r in rows:
+        share = round(min(100.0, r["share_pct"]), 1)
+        ticks.append([r["institution_id"], r["name"], r["sector_id"], share])
+        if share >= _CEIL_SHARE:
+            captured.append({
+                "institution_id": r["institution_id"],
+                "name": r["name"],
+                "sector_id": r["sector_id"],
+                "share_pct": share,
+                "top1_vendor_id": r["top1_vendor_id"],
+                "top1_vendor_name": r["top1_vendor_name"],
+                "window_total_mxn": r["window_total_mxn"],
+                "latest_hhi": None,
+            })
+        elif share >= 40.0:
+            antesala.append({
+                "institution_id": r["institution_id"],
+                "name": r["name"],
+                "share_pct": share,
+            })
+
+    # Latest HHI for the captured set only (small IN list, indexed PK pairs)
+    if captured:
+        ids = [c["institution_id"] for c in captured]
+        ph = ",".join("?" * len(ids))
+        hhi_map = {
+            r["institution_id"]: r["hhi"]
+            for r in conn.execute(
+                f"""
+                SELECT institution_id, hhi FROM (
+                    SELECT institution_id, hhi,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY institution_id ORDER BY contract_year DESC
+                           ) AS rn
+                    FROM institution_hhi WHERE institution_id IN ({ph})
+                ) WHERE rn = 1
+                """,
+                ids,
+            ).fetchall()
+        }
+        for c in captured:
+            c["latest_hhi"] = hhi_map.get(c["institution_id"])
+
+    # The 13 monotonic captures' institutions (table absent → empty list)
+    monotonic_ids: list[int] = []
+    if conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='capture_results'"
+    ).fetchone():
+        monotonic_ids = [
+            r["institution_id"]
+            for r in conn.execute(
+                "SELECT DISTINCT institution_id FROM capture_results"
+            ).fetchall()
+        ]
+
+    # ARIA P6 fingerprint count (table absent → 0)
+    aria_p6_total = 0
+    if conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='aria_queue'"
+    ).fetchone():
+        aria_p6_total = conn.execute(
+            "SELECT COUNT(*) FROM aria_queue WHERE primary_pattern = 'P6'"
+        ).fetchone()[0]
+
+    import datetime
+    return {
+        "qualifying_count": len(ticks),
+        "captured_now_count": len(captured),
+        "antesala_count": len(antesala),
+        "aria_p6_total": aria_p6_total,
+        "monotonic_institution_ids": monotonic_ids,
+        "thresholds": {
+            "min_inst_total_mxn": _MIN_INST_TOTAL,
+            "floor_share_pct": _FLOOR_SHARE,
+            "ceil_share_pct": _CEIL_SHARE,
+        },
+        "ticks": ticks,
+        "captured_now": captured,
+        "antesala_top": antesala[:12],
+        "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
+    }
+
+
+@router.get("/landscape")
+def get_capture_landscape(conn: sqlite3.Connection = Depends(get_db_dep)):
+    """
+    The full federal capture field: every institution with >= 100M MXN of
+    recorded spend, positioned by its #1 vendor's CUMULATIVE share of the
+    institution's recorded total. Includes the >= 50% cumulative-majority
+    set (with latest HHI), the 40-50% anteroom, the monotonic-capture
+    institution ids, and the ARIA P6 fingerprint count.
+
+    Like /capture/top this is arithmetic, not a model output. Served from
+    precomputed_stats (key capture_landscape_v1); on first request it builds
+    once from precomputed tables (never contracts) and self-persists.
+    """
+    import json as _json
+
+    cached = app_cache.get("capture", "landscape:v1")
+    if cached is not None:
+        return cached
+
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+        (_LANDSCAPE_KEY,),
+    ).fetchone()
+    if row and row["stat_value"]:
+        response = _json.loads(row["stat_value"])
+        app_cache.set("capture", "landscape:v1", response, maxsize=4, ttl=3600)
+        return response
+
+    response = _build_landscape(conn)
+    app_cache.set("capture", "landscape:v1", response, maxsize=4, ttl=3600)
+    try:
+        with get_db() as wconn:
+            wconn.execute(
+                "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) "
+                "VALUES(?, ?, datetime('now'))",
+                (_LANDSCAPE_KEY, _json.dumps(response, default=str)),
+            )
+            wconn.commit()
+    except Exception as e:
+        logger.warning("capture landscape persist failed: %s", e)
     return response

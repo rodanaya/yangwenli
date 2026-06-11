@@ -1,176 +1,68 @@
 /**
- * Relationships — Folio·XIV · Institutional Capture
+ * Relationships — Folio·XIV · Institutional Capture («Su Institución»)
  *
- * Single analytical lens: monotonic concentration — vendors that grew from
- * ≤25% to ≥50% of an institution's spend over ≥4 years.
+ * Two honest lenses, one coordinate system:
+ *  · § LA PELÍCULA (Lámina XIV·a) — the 13 strict monotonic captures as an
+ *    FT-dumbbell register on a shared 0–100% axis, with in-place dockets
+ *    (year-by-year money ledger · lazy ARIA cross-light · institution facts).
+ *  · § LA FOTOGRAFÍA (Lámina XIV·b) — the NYT-Upshot Hometown lookup over the
+ *    FULL ≥100M federal field (/capture/landscape — 1,400+ institutions,
+ *    cumulative №1-vendor share of recorded spend), plus § LOS 119, the
+ *    complete cumulative-majority ledger.
  *
- * The intersection quadrants (RUBLI vs regulators) previously also lived
- * on this page but were a carbon copy of the dedicated /intersection
- * surface. We now keep a compact teaser linking to /intersection and
- * focus this page entirely on Captura Institucional.
+ * The film is a trajectory; the photograph is the record. The photograph is
+ * NEVER labeled "today" — institution-level shares here are cumulative.
+ * Anti-model identity kept: arithmetic leads, the model is cross-light only.
+ *
+ * Spec: .claude/designs/captura-2026-06-11-spec.md (DESIGNUS panel winner
+ * «Su Institución» + the landscape universe graft from «El Censo de la
+ * Captura»).
  */
 
 import { Link, useNavigate } from 'react-router-dom'
-import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
-import { captureApi, type CaptureItem } from '@/api/client'
-import { formatNumber, formatCompactMXN, formatDualCurrency } from '@/lib/utils'
-import {
-  SECTORS,
-  SECTOR_COLORS,
-  getSectorName,
-} from '@/lib/constants'
-import { ChevronRight, AlertTriangle, ArrowRight } from 'lucide-react'
+import { captureApi } from '@/api/client'
+import { formatCompactMXN, formatDualCurrency } from '@/lib/utils'
+import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
+import { ArrowRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { PageFooter } from '@/components/layout/PageFooter'
-
-// ─── Capture helpers ──────────────────────────────────────────────────────────
-
-function ShareSparkline({ timeline, peakShare }: { timeline: CaptureItem['timeline']; peakShare: number }) {
-  if (timeline.length < 2) return null
-  const W = 180, H = 40, minY = 0
-  const maxY = Math.max(100, peakShare)
-  const minX = Math.min(...timeline.map((p) => p.year))
-  const maxX = Math.max(...timeline.map((p) => p.year))
-  const xSpan = Math.max(1, maxX - minX)
-  const ySpan = maxY - minY
-  const points = timeline.map((p) => ({
-    x: ((p.year - minX) / xSpan) * (W - 8) + 4,
-    y: H - 4 - ((p.share_pct - minY) / ySpan) * (H - 8),
-    ...p,
-  }))
-  const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
-  const area = `${path} L ${points[points.length - 1].x.toFixed(1)} ${H - 4} L ${points[0].x.toFixed(1)} ${H - 4} Z`
-  const thresholdY = H - 4 - ((50 - minY) / ySpan) * (H - 8)
-  return (
-    <svg width={W} height={H} className="flex-shrink-0" aria-hidden="true">
-      <line x1="4" x2={W - 4} y1={thresholdY} y2={thresholdY} stroke="currentColor" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.35" />
-      <path d={area} fill="var(--color-risk-critical)" opacity="0.12" />
-      <path d={path} fill="none" stroke="var(--color-risk-critical)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      {points.map((p) => (
-        <circle key={p.year} cx={p.x} cy={p.y} r={p.share_pct >= 50 ? 2.2 : 1.6}
-          fill={p.share_pct >= 50 ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'} />
-      ))}
-    </svg>
-  )
-}
-
-function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en' | 'es' }) {
-  const navigate = useNavigate()
-  // Use sector_id for color + localized name — API returns name_en (English)
-  // regardless of UI language, so id-based lookup is the correct approach.
-  const sector = SECTORS.find(s => s.id === c.institution_sector_id)
-  const sectorColor = sector ? SECTOR_COLORS[sector.code] : '#64748b'
-  const delta = c.peak_share_pct - c.earliest_share_pct
-  const years = `${c.earliest_year}–${c.peak_year}`
-  const goToInstitution = (e: React.MouseEvent | React.KeyboardEvent) => {
-    // Let inner links (EntityIdentityChip) handle their own clicks
-    const target = e.target as HTMLElement
-    if (target.closest('a')) return
-    navigate(`/institutions/${c.institution_id}`)
-  }
-  return (
-    <article
-      role="link"
-      tabIndex={0}
-      onClick={goToInstitution}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToInstitution(e) } }}
-      title={lang === 'es' ? `Ver institución: ${c.institution_name}` : `View institution: ${c.institution_name}`}
-      className="group flex flex-col md:flex-row items-stretch md:items-center gap-4 px-5 py-5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-text-muted focus:ring-inset"
-      style={{ borderLeft: `4px solid ${sectorColor}` }}
-    >
-      <div className="flex items-start gap-4 md:w-[240px] flex-shrink-0">
-        <span className="font-mono text-[11px] font-bold text-text-muted tabular-nums pt-1">{String(rank).padStart(2, '0')}</span>
-        <ShareSparkline timeline={c.timeline} peakShare={c.peak_share_pct} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-col gap-0.5 mb-1.5">
-          <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" className="self-start max-w-full" />
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] text-text-muted font-mono uppercase tracking-wider">{lang === 'es' ? 'capturó' : 'captured'}</span>
-            <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="sm" className="flex-1 min-w-0" />
-          </div>
-        </div>
-        <p className="text-[13px] text-text-secondary leading-[1.55]">
-          {lang === 'es' ? (
-            <>De <strong className="text-text-primary font-mono tabular-nums">{c.earliest_share_pct}%</strong> en {c.earliest_year} a{' '}
-            <strong className="font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{c.peak_share_pct}%</strong> en {c.peak_year} — <strong className="text-text-primary">+{delta.toFixed(1)} puntos</strong> en {c.years_observed} años. Valor capturado: <strong className="text-text-primary font-mono">{formatCompactMXN(c.cumulative_value_mxn)}</strong> de {formatCompactMXN(c.institution_total_window)} totales.</>
-          ) : (
-            <>From <strong className="text-text-primary font-mono tabular-nums">{c.earliest_share_pct}%</strong> in {c.earliest_year} to{' '}
-            <strong className="font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{c.peak_share_pct}%</strong> in {c.peak_year} — <strong className="text-text-primary">+{delta.toFixed(1)} points</strong> over {c.years_observed} years. Value captured: <strong className="text-text-primary font-mono">{formatCompactMXN(c.cumulative_value_mxn)}</strong> of institution's {formatCompactMXN(c.institution_total_window)} total.</>
-          )}
-        </p>
-        <div className="mt-2 flex items-center gap-3 flex-wrap text-[10px] font-mono tracking-wider uppercase text-text-muted">
-          {sector && (
-            <span><span className="inline-block h-1.5 w-1.5 rounded-full mr-1 align-middle" style={{ background: sectorColor }} />{getSectorName(sector.code, lang).toUpperCase()}</span>
-          )}
-          <span>·</span>
-          <span className="tabular-nums">{years}</span>
-          <span>·</span>
-          <span className="tabular-nums">Score {c.score.toFixed(0)}</span>
-        </div>
-      </div>
-      <ChevronRight className="hidden md:block h-4 w-4 text-text-muted flex-shrink-0 group-hover:text-text-primary group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
-    </article>
-  )
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+import { CaptureRegister } from '@/components/capture/CaptureRegister'
+import { CaptureField } from '@/components/capture/CaptureField'
+import { CaptureNowLedger } from '@/components/capture/CaptureNowLedger'
 
 export default function Relationships() {
   const { i18n } = useTranslation()
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
-  const { data: capData, isLoading: capLoading } = useQuery({
+  const { data: capData, isLoading: capLoading, isError: capError } = useQuery({
     queryKey: ['capture', 'top', 50],
     queryFn: () => captureApi.getTop({ limit: 50 }),
     staleTime: 30 * 60 * 1000,
   })
+  const { data: landscape, isLoading: fieldLoading } = useQuery({
+    queryKey: ['capture', 'landscape'],
+    queryFn: () => captureApi.getLandscape(),
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+  })
 
   const allCaptures = capData?.data ?? []
-  const [captureFilter, setCaptureFilter] = useState<number | null>(null)
-
-  // Sector counts keyed by institution_sector_id (integer 1-12) — matches SECTORS[].id
-  const captureSectorCounts = useMemo(() => {
-    const counts = new Map<number, number>()
-    for (const c of allCaptures) {
-      const id = c.institution_sector_id
-      if (id != null) counts.set(id, (counts.get(id) ?? 0) + 1)
-    }
-    return counts
-  }, [allCaptures])
-
-  const topSectorEntry = useMemo(() => {
-    let best: { id: number; code: string; count: number } | null = null
-    for (const [id, count] of captureSectorCounts) {
-      if (!best || count > best.count) {
-        const sec = SECTORS.find(s => s.id === id)
-        best = { id, code: sec?.code ?? 'otros', count }
-      }
-    }
-    return best
-  }, [captureSectorCounts])
-
-  const captures = useMemo(() => {
-    if (captureFilter === null) return allCaptures
-    return allCaptures.filter((c) => c.institution_sector_id === captureFilter)
-  }, [allCaptures, captureFilter])
-
   const totalCaptures = capData?.total_captures ?? 0
-  const capturedValue = allCaptures.reduce((s, c) => s + c.cumulative_value_mxn, 0)
-  const largestJump = allCaptures.length > 0
-    ? Math.max(...allCaptures.map((c) => c.peak_share_pct - c.earliest_share_pct))
-    : 0
 
-  // § EL SALDO + § ADÓNDE IR both read the single strongest pair. The matrix is
-  // pre-ranked by Δshare × √(captured MXN), so row 0 is the strongest capture.
+  // § EL SALDO + § ADÓNDE IR read the single strongest pair (server-ranked).
   const strongest = allCaptures[0] ?? null
   const strongestSectorColor = strongest
-    ? SECTOR_COLORS[SECTORS.find((s) => s.id === strongest.institution_sector_id)?.code ?? 'otros'] ?? '#64748b'
+    ? SECTOR_COLORS[
+        SECTORS.find((s) => s.id === strongest.institution_sector_id)?.code ?? 'otros'
+      ] ?? '#64748b'
     : '#64748b'
+  const strongestHolds =
+    strongest && capData
+      ? strongest.latest_share_pct >= capData.thresholds.ceil_share_pct
+      : false
 
   return (
     <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -188,7 +80,6 @@ export default function Relationships() {
       </svg>
 
       <div className="relative" style={{ zIndex: 1 }}>
-
         {/* ── Folio·XIV page hero — Institutional Capture ──────────────── */}
         <header className="mb-8 pb-6 border-b border-border">
           <div
@@ -198,7 +89,7 @@ export default function Relationships() {
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
               <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
-              <span>{lang === 'es' ? 'Captura institucional · concentración monótona' : 'Institutional capture · monotonic concentration'}</span>
+              <span>{lang === 'en' ? 'Institutional capture · monotonic concentration' : 'Captura institucional · concentración monótona'}</span>
             </span>
           </div>
           <h1
@@ -212,18 +103,18 @@ export default function Relationships() {
               color: 'var(--color-text-primary)',
             }}
           >
-            {lang === 'es' ? (
-              <>
-                Cómo un proveedor{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
-                  captura una institución.
-                </span>
-              </>
-            ) : (
+            {lang === 'en' ? (
               <>
                 How a vendor{' '}
                 <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                   captures an institution.
+                </span>
+              </>
+            ) : (
+              <>
+                Cómo un proveedor{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
+                  captura una institución.
                 </span>
               </>
             )}
@@ -232,33 +123,84 @@ export default function Relationships() {
             className="mt-4"
             style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: '17px', lineHeight: 1.55, maxWidth: '68ch', color: 'var(--color-text-secondary)', letterSpacing: '0.005em' }}
           >
-            {lang === 'es'
-              ? 'Concentración monótona: el proveedor empezó por debajo del 25% y terminó por encima del 50%, año tras año, durante al menos cuatro años. El ascenso no es prueba de irregularidad — pero la geometría es publicable.'
-              : "Monotonic concentration: the vendor began below 25% and ended above 50%, year after year, for at least four years. The climb is not proof of wrongdoing — but the geometry is publishable."}
+            {lang === 'en'
+              ? 'Monotonic concentration: the vendor began below 25% and ended above 50%, year after year, for at least four years. The climb is not proof of wrongdoing — but the geometry is publishable.'
+              : 'Concentración monótona: el proveedor empezó por debajo del 25% y terminó por encima del 50%, año tras año, durante al menos cuatro años. El ascenso no es prueba de irregularidad — pero la geometría es publicable.'}
+            {landscape && (
+              <>
+                {' '}
+                {lang === 'en'
+                  ? `Thirteen pairs meet the strict definition; below, the full field of ${landscape.qualifying_count.toLocaleString()} institutions to place them in.`
+                  : `Trece pares cumplen la definición estricta; abajo, el campo completo de ${landscape.qualifying_count.toLocaleString()} instituciones para situarlos.`}
+              </>
+            )}
           </p>
         </header>
 
-        {/* ── Intersection teaser — compact link to dedicated surface ──── */}
-        <div className="mb-10 pb-6 border-b border-border flex items-start gap-5 flex-wrap">
-          <div className="flex-1 min-w-[220px]">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
-              {lang === 'es' ? 'Cuadrante de la intersección · Folio·XIII' : 'Intersection quadrant · Folio·XIII'}
-            </p>
-            <p className="text-[13px] text-text-secondary leading-[1.55] max-w-prose">
-              {lang === 'es'
-                ? 'Tres cuadrantes de triangulación: lo que el modelo señala antes que los reguladores, lo que ambos confirman, y lo que el modelo todavía no ve.'
-                : 'Three triangulation quadrants: what the model flags before regulators, what both confirm, and what the model still misses.'}
-            </p>
-            <Link
-              to="/intersection"
-              className="inline-flex items-center gap-1.5 mt-3 text-[10px] font-mono font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
-              style={{ color: 'var(--color-accent)' }}
-            >
-              {lang === 'es' ? 'Ver superficie de investigación completa' : 'Open full investigation surface'}
-              <ArrowRight className="h-3 w-3" aria-hidden="true" />
-            </Link>
+        {/* ── § EL HALLAZGO — the computed cross-dataset finding ─────────── */}
+        {fieldLoading || capLoading ? (
+          <div className="mb-8">
+            <Skeleton className="h-4 w-24 mb-3" />
+            <Skeleton className="h-14 w-full max-w-3xl" />
           </div>
-        </div>
+        ) : landscape && capData ? (
+          <section aria-label={lang === 'en' ? 'The finding' : 'El hallazgo'} className="mb-8">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+              {lang === 'en' ? '§ The finding' : '§ El hallazgo'}
+            </p>
+            <p
+              style={{
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontSize: '19px',
+                lineHeight: 1.5,
+                maxWidth: '70ch',
+                color: 'var(--color-text-secondary)',
+              }}
+            >
+              {lang === 'en' ? (
+                <>
+                  Of the{' '}
+                  <Num color="var(--color-text-primary)">
+                    {landscape.qualifying_count.toLocaleString()}
+                  </Num>{' '}
+                  federal institutions with at least 100M MXN on record,{' '}
+                  <Num color="var(--color-risk-critical)">{landscape.captured_now_count}</Num>{' '}
+                  have handed more than half of all their recorded spend to a single vendor —
+                  and <Num color="#a16207">{landscape.antesala_count}</Num> more, at least
+                  40 percent. Only <Num color="var(--color-accent)">{totalCaptures}</Num>{' '}
+                  climbs pass the hardest test on record: rising year after year, from under
+                  25% to over 50%, without a single step back.
+                </>
+              ) : (
+                <>
+                  De las{' '}
+                  <Num color="var(--color-text-primary)">
+                    {landscape.qualifying_count.toLocaleString()}
+                  </Num>{' '}
+                  instituciones federales con al menos 100 MDP en el registro,{' '}
+                  <Num color="var(--color-risk-critical)">{landscape.captured_now_count}</Num>{' '}
+                  han entregado más de la mitad de todo su gasto registrado a un solo
+                  proveedor — y <Num color="#a16207">{landscape.antesala_count}</Num> más,
+                  al menos el 40 por ciento. Sólo{' '}
+                  <Num color="var(--color-accent)">{totalCaptures}</Num> ascensos cumplen la
+                  prueba más dura del registro: subir año tras año, de menos del 25% a más
+                  del 50%, sin un solo retroceso.
+                </>
+              )}
+            </p>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted tabular-nums">
+              {totalCaptures}{' '}
+              {lang === 'en' ? 'MONOTONIC CAPTURES' : 'CAPTURAS MONÓTONAS'} ·{' '}
+              {landscape.captured_now_count}/{landscape.qualifying_count.toLocaleString()}{' '}
+              {lang === 'en' ? 'WITH CUMULATIVE MAJORITY' : 'CON MAYORÍA ACUMULADA'} ·{' '}
+              {landscape.aria_p6_total.toLocaleString()}{' '}
+              {lang === 'en' ? 'P6 FINGERPRINTS' : 'HUELLAS P6'} ·{' '}
+              <a href="#la-pelicula" className="hover:opacity-80" style={{ color: 'var(--color-accent)' }}>
+                {lang === 'en' ? 'SEE THE PROOF ↓' : 'VER LA PRUEBA ↓'}
+              </a>
+            </p>
+          </section>
+        ) : null}
 
         {/* ── § EL SALDO — the single strongest capture, as a sentence ──── */}
         {capLoading ? (
@@ -268,11 +210,11 @@ export default function Relationships() {
           </div>
         ) : strongest ? (
           <section
-            aria-label={lang === 'es' ? 'El saldo: la captura más fuerte' : 'The bottom line: the strongest capture'}
+            aria-label={lang === 'en' ? 'The bottom line: the strongest capture' : 'El saldo: la captura más fuerte'}
             className="mb-10"
           >
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
-              {lang === 'es' ? '§ El saldo' : '§ The bottom line'}
+              {lang === 'en' ? '§ The bottom line' : '§ El saldo'}
             </p>
             <p
               style={{
@@ -284,242 +226,132 @@ export default function Relationships() {
                 letterSpacing: '0.004em',
               }}
             >
-              {lang === 'es' ? (
-                <>
-                  La concentración más fuerte del registro:{' '}
-                  <strong className="text-text-primary font-semibold">{strongest.vendor_name}</strong>{' '}
-                  llegó a controlar{' '}
-                  <span
-                    style={{
-                      fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 800,
-                      fontVariantNumeric: 'tabular-nums',
-                      color: strongestSectorColor,
-                    }}
-                  >
-                    {strongest.peak_share_pct}%
-                  </span>{' '}
-                  del gasto de{' '}
-                  <strong className="text-text-primary font-semibold">{strongest.institution_name}</strong>{' '}
-                  en {strongest.peak_year} —{' '}
-                  <span
-                    style={{
-                      fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 800,
-                      fontVariantNumeric: 'tabular-nums',
-                      color: 'var(--color-text-primary)',
-                    }}
-                  >
-                    {formatDualCurrency(strongest.cumulative_value_mxn)}
-                  </span>{' '}
-                  capturados de los {formatCompactMXN(strongest.institution_total_window)} adjudicados en la ventana. Un indicador de
-                  riesgo alto marca la geometría, no una sentencia.
-                </>
-              ) : (
+              {lang === 'en' ? (
                 <>
                   The strongest concentration on record:{' '}
                   <strong className="text-text-primary font-semibold">{strongest.vendor_name}</strong>{' '}
                   came to control{' '}
-                  <span
-                    style={{
-                      fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 800,
-                      fontVariantNumeric: 'tabular-nums',
-                      color: strongestSectorColor,
-                    }}
-                  >
-                    {strongest.peak_share_pct}%
-                  </span>{' '}
-                  of{' '}
-                  <strong className="text-text-primary font-semibold">{strongest.institution_name}</strong>'s spend by{' '}
-                  {strongest.peak_year} —{' '}
-                  <span
-                    style={{
-                      fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 800,
-                      fontVariantNumeric: 'tabular-nums',
-                      color: 'var(--color-text-primary)',
-                    }}
-                  >
+                  <Num color={strongestSectorColor}>{strongest.peak_share_pct}%</Num> of{' '}
+                  <strong className="text-text-primary font-semibold">{strongest.institution_name}</strong>
+                  &rsquo;s spend by {strongest.peak_year} —{' '}
+                  <Num color="var(--color-text-primary)">
                     {formatDualCurrency(strongest.cumulative_value_mxn)}
-                  </span>{' '}
-                  captured of the {formatCompactMXN(strongest.institution_total_window)} awarded in the window. A high risk
-                  indicator marks the geometry, not a verdict.
+                  </Num>{' '}
+                  captured of the {formatCompactMXN(strongest.institution_total_window)} awarded
+                  in the window
+                  {strongestHolds
+                    ? ` — and today still holds ${strongest.latest_share_pct}%.`
+                    : ` — and has since fallen to ${strongest.latest_share_pct}%.`}{' '}
+                  A high risk indicator marks the geometry, not a verdict.
+                </>
+              ) : (
+                <>
+                  La concentración más fuerte del registro:{' '}
+                  <strong className="text-text-primary font-semibold">{strongest.vendor_name}</strong>{' '}
+                  llegó a controlar{' '}
+                  <Num color={strongestSectorColor}>{strongest.peak_share_pct}%</Num> del gasto
+                  de{' '}
+                  <strong className="text-text-primary font-semibold">{strongest.institution_name}</strong>{' '}
+                  en {strongest.peak_year} —{' '}
+                  <Num color="var(--color-text-primary)">
+                    {formatDualCurrency(strongest.cumulative_value_mxn)}
+                  </Num>{' '}
+                  capturados de los {formatCompactMXN(strongest.institution_total_window)}{' '}
+                  adjudicados en la ventana
+                  {strongestHolds
+                    ? ` — y hoy conserva el ${strongest.latest_share_pct}%.`
+                    : ` — y hoy ha caído al ${strongest.latest_share_pct}%.`}{' '}
+                  Un indicador de riesgo alto marca la geometría, no una sentencia.
                 </>
               )}
             </p>
           </section>
         ) : null}
 
-        {/* ════════════════════════════════════════════════════════════════
-            Captura Institucional
-            ════════════════════════════════════════════════════════════════ */}
-        <section id="captura" aria-labelledby="captura-heading">
-          <div className="mb-6">
-            <div className="flex items-baseline gap-5">
-              <div className="text-right">
-                {capLoading ? <Skeleton className="h-5 w-12 ml-auto" /> : <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(totalCaptures)}</div>}
-                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Capturas' : 'Captures'}</div>
-              </div>
-              <div className="text-right">
-                {capLoading ? <Skeleton className="h-5 w-20 ml-auto" /> : <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatCompactMXN(capturedValue)}</div>}
-                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Valor capturado' : 'Captured value'}</div>
-              </div>
-              <div className="text-right">
-                {capLoading ? <Skeleton className="h-5 w-14 ml-auto" /> : <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)} pp` : '—'}</div>}
-                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Mayor salto' : 'Largest jump'}</div>
-              </div>
-              <div className="text-right">
-                {capLoading ? (
-                  <Skeleton className="h-5 w-24 ml-auto" />
-                ) : topSectorEntry ? (
-                  <div className="flex items-baseline gap-1.5 justify-end">
-                    <span
-                      className="inline-block h-2 w-2 rounded-full"
-                      style={{ background: SECTOR_COLORS[topSectorEntry.code] ?? '#64748b' }}
-                      aria-hidden="true"
-                    />
-                    <span className="font-mono tabular-nums text-base font-semibold text-text-primary uppercase tracking-tight">
-                      {getSectorName(topSectorEntry.code, lang)}
-                    </span>
-                    <span className="font-mono tabular-nums text-[11px] text-text-muted">
-                      ({topSectorEntry.count})
-                    </span>
-                  </div>
-                ) : (
-                  <div className="font-mono tabular-nums text-base font-semibold text-text-primary">—</div>
-                )}
-                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">
-                  {lang === 'es' ? 'Sector dominante' : 'Top sector'}
-                </div>
-              </div>
-            </div>
+        {/* ── § LA PELÍCULA — the 13, on one shared axis ─────────────────── */}
+        {capLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
           </div>
+        ) : capError || !capData ? (
+          <div className="px-5 py-10 text-center text-[12px] text-text-muted border border-border rounded-sm">
+            {lang === 'en'
+              ? 'The capture register is not available right now — try again shortly.'
+              : 'El registro de capturas no está disponible en este momento — intente de nuevo en breve.'}
+          </div>
+        ) : (
+          <>
+            <CaptureRegister
+              data={allCaptures}
+              thresholds={capData.thresholds}
+              landscape={landscape}
+              lang={lang}
+            />
 
-          {capLoading ? (
-            <div className="space-y-3">{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-elevated">
-                <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
-                <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
-                  {lang === 'es'
-                    ? 'La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada fila abajo merece investigación — no acusación.'
-                    : 'Institutional capture is not proof of wrongdoing. Some legitimate concentrations emerge from technical certification, regional exclusivity, or single-source regulatory dependency. Each row warrants investigation — not accusation.'}
-                </p>
-              </div>
-
-              {/* Sector filter chips — narrow the capture list to a single sector */}
-              <div className="flex items-center gap-2">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted flex-shrink-0">
-                  {lang === 'es' ? 'Filtrar' : 'Filter'}
-                </p>
-                <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: 'thin' }}>
-                  <button
-                    type="button"
-                    onClick={() => setCaptureFilter(null)}
-                    className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider transition-colors ${
-                      captureFilter === null
-                        ? 'border border-text-primary text-text-primary bg-background-elevated font-semibold'
-                        : 'border border-border text-text-muted hover:text-text-secondary hover:border-text-muted'
-                    }`}
-                    aria-pressed={captureFilter === null}
-                  >
-                    <span>{lang === 'es' ? 'Todos' : 'All'}</span>
-                    <span className="opacity-50" aria-hidden="true">·</span>
-                    <span className="tabular-nums opacity-70">{allCaptures.length}</span>
-                  </button>
-                  {SECTORS.map((s) => {
-                    const count = captureSectorCounts.get(s.id) ?? 0
-                    if (count === 0) return null
-                    const active = captureFilter === s.id
-                    return (
-                      <button
-                        key={s.code}
-                        type="button"
-                        onClick={() => setCaptureFilter(active ? null : s.id)}
-                        aria-pressed={active}
-                        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider transition-colors ${
-                          active
-                            ? 'bg-background-elevated font-semibold'
-                            : 'border border-border text-text-muted hover:text-text-secondary hover:border-text-muted'
-                        }`}
-                        style={
-                          active
-                            ? { border: `1px solid ${SECTOR_COLORS[s.code] ?? '#64748b'}`, color: SECTOR_COLORS[s.code] ?? undefined }
-                            : undefined
-                        }
-                        title={`${lang === 'es' ? s.name : s.nameEN} — ${count} ${lang === 'es' ? 'capturas' : 'captures'}`}
-                      >
-                        <span
-                          className="inline-block h-1.5 w-1.5 rounded-full"
-                          style={{ background: SECTOR_COLORS[s.code] ?? '#64748b' }}
-                          aria-hidden="true"
-                        />
-                        <span>{lang === 'es' ? s.name : s.nameEN}</span>
-                        <span className="opacity-50" aria-hidden="true">·</span>
-                        <span className="tabular-nums opacity-70">{count}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <PlateFrame
-                lang={lang}
-                folio="XII"
-                contextLabel={{ en: 'Capture atlas', es: 'Atlas de captura' }}
-                caption={lang === 'es'
-                  ? 'Lámina — Las concentraciones monótonas más grandes de proveedor → institución, 2018–2025. El ancho de la chispa muestra los años observados; los puntos rojos marcan años con participación ≥ 50%.'
-                  : 'Plate — The largest monotonic vendor → institution concentrations, 2018–2025. Sparkline width shows observed years; red dots mark years at ≥ 50% share.'}
-              >
-                <div className="rounded-sm border border-border bg-background-card overflow-hidden">
-                  {captures.length === 0 ? (
-                    <div className="px-5 py-10 text-center text-[12px] text-text-muted">
-                      {lang === 'es'
-                        ? 'Ninguna captura coincide con este filtro de sector.'
-                        : 'No captures match this sector filter.'}
-                    </div>
-                  ) : (
-                    captures.map((c, i) => (
-                      <CaptureRow key={`${c.institution_id}-${c.vendor_id}`} c={c} rank={i + 1} lang={lang} />
-                    ))
-                  )}
-                </div>
-              </PlateFrame>
-
-              <div className="pt-4 border-t border-border">
-                <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">{lang === 'es' ? 'Metodología' : 'Methodology'}</p>
-                <p className="text-[12px] leading-[1.7] text-text-secondary max-w-prose">
-                  {lang === 'es' ? (
-                    <>Calculado sobre {capData ? capData.total_unfiltered : '—'} candidatos (institución, proveedor) con al menos {capData?.thresholds.min_years ?? '—'} años de datos. Umbrales: piso {capData?.thresholds.floor_share_pct ?? '—'}%, techo {capData?.thresholds.ceil_share_pct ?? '—'}%. Ranking: Δparticipación × √(valor MXN capturado). Datos: COMPRANET contratos federales 2018–2025.</>
-                  ) : (
-                    <>Computed over {capData ? capData.total_unfiltered : '—'} (institution, vendor) candidates with at least {capData?.thresholds.min_years ?? '—'} years of data. Thresholds: floor {capData?.thresholds.floor_share_pct ?? '—'}%, ceiling {capData?.thresholds.ceil_share_pct ?? '—'}%. Ranking: Δshare × √(captured MXN). Data: COMPRANET federal contracts 2018–2025.</>
-                  )}
-                </p>
-              </div>
+            {/* Methodology — live thresholds + the two-lens distinction */}
+            <div className="mt-6 pt-4 border-t border-border">
+              <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+                {lang === 'en' ? 'Methodology' : 'Metodología'}
+              </p>
+              <p className="text-[12px] leading-[1.7] text-text-secondary max-w-prose">
+                {lang === 'en' ? (
+                  <>
+                    Computed over {capData.total_unfiltered} (institution, vendor) candidates
+                    with at least {capData.thresholds.min_years} years of data. Thresholds:
+                    floor {capData.thresholds.floor_share_pct}%, ceiling{' '}
+                    {capData.thresholds.ceil_share_pct}%. Ranking: Δshare × √(captured MXN).
+                    Data: COMPRANET federal contracts 2018–2025. The field plate (XIV·b)
+                    measures something different and weaker: the №1 vendor&rsquo;s cumulative
+                    share of each institution&rsquo;s full recorded spend — a photograph of
+                    the record, not a trajectory, and never a statement about today.
+                  </>
+                ) : (
+                  <>
+                    Calculado sobre {capData.total_unfiltered} candidatos (institución,
+                    proveedor) con al menos {capData.thresholds.min_years} años de datos.
+                    Umbrales: piso {capData.thresholds.floor_share_pct}%, techo{' '}
+                    {capData.thresholds.ceil_share_pct}%. Ranking: Δparticipación × √(valor
+                    MXN capturado). Datos: COMPRANET contratos federales 2018–2025. La lámina
+                    del campo (XIV·b) mide algo distinto y más débil: la participación
+                    acumulada del proveedor №1 en todo el gasto registrado de cada
+                    institución — una fotografía del registro, no una trayectoria, y nunca
+                    una afirmación sobre el presente.
+                  </>
+                )}
+              </p>
             </div>
-          )}
-        </section>
+          </>
+        )}
+
+        {/* ── § LA FOTOGRAFÍA — the full federal field + the 119 ─────────── */}
+        {fieldLoading ? (
+          <div className="mt-12">
+            <Skeleton className="h-4 w-48 mb-3" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        ) : landscape ? (
+          <>
+            <CaptureField landscape={landscape} lang={lang} />
+            <CaptureNowLedger landscape={landscape} lang={lang} />
+          </>
+        ) : null}
 
         {/* ── § · ADÓNDE IR — exit ramps from the strongest capture ─────── */}
         {!capLoading && strongest ? (
           <section
-            aria-label={lang === 'es' ? 'Adónde ir' : 'Where to go next'}
+            aria-label={lang === 'en' ? 'Where to go next' : 'Adónde ir'}
             className="mt-12 pt-6"
             style={{ borderTop: '1px solid var(--color-border)' }}
           >
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
-              {lang === 'es' ? '§ · Adónde ir' : '§ · Where to go next'}
+              {lang === 'en' ? '§ · Where to go next' : '§ · Adónde ir'}
             </p>
             <p className="text-[13px] text-text-secondary leading-[1.55] max-w-prose mb-4">
-              {lang === 'es'
-                ? 'Sigue la captura más fuerte hasta su origen — la institución capturada y el proveedor que la dominó.'
-                : 'Trace the strongest capture to its source — the captured institution and the vendor that dominated it.'}
+              {lang === 'en'
+                ? "Trace the strongest capture to its source — the captured institution, the vendor that dominated it, or the full capture pattern in the model's queue."
+                : 'Sigue la captura más fuerte hasta su origen — la institución capturada, el proveedor que la dominó, o el patrón de captura completo en la cola del modelo.'}
             </p>
             <div className="flex flex-wrap items-center gap-2.5 mb-5">
               <EntityIdentityChip
@@ -534,18 +366,24 @@ export default function Relationships() {
                 name={strongest.vendor_name}
                 size="md"
               />
+              <EntityIdentityChip
+                type="pattern"
+                id="P6"
+                name={lang === 'en' ? 'Capture pattern (P6)' : 'Patrón de captura (P6)'}
+                size="md"
+              />
             </div>
             <Link
               to={`/institutions/${strongest.institution_id}`}
               className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
               style={{ color: 'var(--color-accent)' }}
               aria-label={
-                lang === 'es'
-                  ? `Investigar la captura de ${strongest.institution_name}`
-                  : `Investigate the capture of ${strongest.institution_name}`
+                lang === 'en'
+                  ? `Investigate the capture of ${strongest.institution_name}`
+                  : `Investigar la captura de ${strongest.institution_name}`
               }
             >
-              {lang === 'es' ? 'Investigar el expediente de la institución' : 'Investigate the institution dossier'}
+              {lang === 'en' ? 'Investigate the institution dossier' : 'Investigar el expediente de la institución'}
               <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </Link>
           </section>
@@ -555,6 +393,24 @@ export default function Relationships() {
         <PageFooter />
       </div>
     </div>
+  )
+}
+
+// ─── Inline editorial number — Garamond italic 800, hex via style only ──────
+
+function Num({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <span
+      style={{
+        fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+        fontStyle: 'italic',
+        fontWeight: 800,
+        fontVariantNumeric: 'tabular-nums',
+        color,
+      }}
+    >
+      {children}
+    </span>
   )
 }
 
@@ -574,7 +430,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           fontWeight: 500,
         }}
       >
-        § {lang === 'es' ? 'Lo que esta lámina no puede decir' : "What this plate can't tell you"}
+        § {lang === 'en' ? "What this plate can't tell you" : 'Lo que esta lámina no puede decir'}
       </p>
       <p
         style={{
@@ -586,9 +442,9 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           lineHeight: 1.55,
         }}
       >
-        {lang === 'es'
-          ? 'La concentración monótona lee cómo se adjudicó el gasto, no cómo se ejecutó. Un indicador de riesgo alto señala una geometría publicable, no prueba de un delito, que solo los tribunales determinan.'
-          : 'Monotonic concentration reads how spend was awarded — not how it was performed. A high risk indicator marks a publishable geometry, not proof of wrongdoing, which only courts establish.'}
+        {lang === 'en'
+          ? 'Monotonic concentration reads how spend was awarded — not how it was performed. A high risk indicator marks a publishable geometry, not proof of wrongdoing, which only courts establish.'
+          : 'La concentración monótona lee cómo se adjudicó el gasto, no cómo se ejecutó. Un indicador de riesgo alto señala una geometría publicable, no prueba de un delito, que solo los tribunales determinan.'}
       </p>
       <div className="mt-4">
         <p
@@ -601,9 +457,9 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
             lineHeight: 1.55,
           }}
         >
-          {lang === 'es'
-            ? 'Datos COMPRANET 2002–2025; horizonte de datos 28 sep 2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
-            : 'COMPRANET data 2002–2025; data horizon Sep 28 2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'}
+          {lang === 'en'
+            ? 'COMPRANET data 2002–2025; data horizon Sep 28 2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'
+            : 'Datos COMPRANET 2002–2025; horizonte de datos 28 sep 2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'}
         </p>
         <button
           type="button"
@@ -618,7 +474,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
             border: 'none',
           }}
         >
-          {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
+          {lang === 'en' ? 'See full methodology' : 'Ver metodología completa'} ↗
         </button>
       </div>
     </section>

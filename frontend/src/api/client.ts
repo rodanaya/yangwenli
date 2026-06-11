@@ -3509,10 +3509,51 @@ export interface CaptureTopResponse {
   data: CaptureItem[]
 }
 
+export interface CaptureLandscapeCaptured {
+  institution_id: number
+  name: string
+  sector_id: number | null
+  share_pct: number
+  top1_vendor_id: number
+  top1_vendor_name: string
+  window_total_mxn: number
+  latest_hhi: number | null
+}
+
+/** Tick tuple: [institution_id, name, sector_id, cumulative top-1 share %]. Share-desc ordered. */
+export type CaptureLandscapeTick = [number, string, number | null, number]
+
+export interface CaptureLandscapeResponse {
+  qualifying_count: number
+  captured_now_count: number
+  antesala_count: number
+  aria_p6_total: number
+  monotonic_institution_ids: number[]
+  thresholds: {
+    min_inst_total_mxn: number
+    floor_share_pct: number
+    ceil_share_pct: number
+  }
+  ticks: CaptureLandscapeTick[]
+  captured_now: CaptureLandscapeCaptured[]
+  antesala_top: Array<{ institution_id: number; name: string; share_pct: number }>
+  generated_at: string
+}
+
 export const captureApi = {
   async getTop(params: { limit?: number; sector_id?: number } = {}): Promise<CaptureTopResponse> {
     const q = buildQueryParams(params as QueryParams)
     const { data } = await api.get<CaptureTopResponse>(`/capture/top?${q}`)
+    return data
+  },
+
+  /**
+   * The full federal capture field — every institution ≥100M MXN of recorded
+   * spend with its #1 vendor's CUMULATIVE share of the recorded total.
+   * Snapshot of the RECORD, not of "today" (copy must say "acumulada").
+   */
+  async getLandscape(): Promise<CaptureLandscapeResponse> {
+    const { data } = await api.get<CaptureLandscapeResponse>(`/capture/landscape`)
     return data
   },
 }
