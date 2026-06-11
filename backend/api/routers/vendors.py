@@ -62,6 +62,7 @@ from ..models.asf import ASFCase
 from ..models.common import PaginationMeta
 from ..models.contract import ContractListItem, ContractListResponse, PaginationMeta as ContractPaginationMeta
 from ..services.vendor_service import vendor_service
+from ..services.active_model import load_active_global_coefficients
 
 logger = logging.getLogger(__name__)
 
@@ -1829,13 +1830,12 @@ _Z_FEATURE_COLS = [
 
 
 def _load_global_coefficients(conn) -> Dict[str, float]:
-    """Load global model coefficients from model_calibration."""
-    row = conn.execute(
-        "SELECT coefficients FROM model_calibration WHERE sector_id IS NULL ORDER BY id DESC LIMIT 1"
-    ).fetchone()
-    if not row:
-        return {}
-    return json.loads(row["coefficients"])
+    """Active-model (v0.8.5) global coefficients, normalized to a flat {name: value} dict.
+
+    Was `WHERE sector_id IS NULL` (→ superseded v6.0 betas, and v0.8.5's
+    {names,values} array format would parse to nothing). See active_model.py.
+    """
+    return load_active_global_coefficients(conn)
 
 
 def _build_waterfall_from_shap(conn, vendor_id: int) -> tuple:

@@ -1406,7 +1406,7 @@ def get_sector_model_coefficients(
                     SELECT sector_id, intercept, coefficients, pu_correction_factor,
                            auc_roc, test_auc, model_version, run_id
                     FROM model_calibration
-                    WHERE sector_id IS NULL
+                    WHERE (sector_id = 0 OR sector_id IS NULL)
                     ORDER BY created_at DESC
                     LIMIT 1
                     """,

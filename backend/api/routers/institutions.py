@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, Query, Path, Response
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
+from ..services.active_model import load_active_global_coefficients
 from ..models.institution import (
     InstitutionResponse,
     InstitutionDetailResponse,
@@ -473,11 +474,9 @@ def get_institution_risk_waterfall(
             _set_top_cache(cache_key, result)
             return result
 
-        # Load global coefficients
-        cal_row = conn.execute(
-            "SELECT coefficients FROM model_calibration WHERE sector_id IS NULL ORDER BY id DESC LIMIT 1"
-        ).fetchone()
-        coefficients = json.loads(cal_row["coefficients"]) if cal_row else {}
+        # Active-model (v0.8.5) global coefficients, normalized to a flat dict.
+        # Was `WHERE sector_id IS NULL` → superseded v6.0 betas. See active_model.py.
+        coefficients = load_active_global_coefficients(conn)
 
         items = []
         for z_col in _INST_Z_COLS:

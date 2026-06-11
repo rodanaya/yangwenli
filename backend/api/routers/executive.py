@@ -378,7 +378,7 @@ def _build_summary(conn) -> dict:
         cal_row = cur.execute(
             "SELECT model_version, test_auc, brier_score, pu_correction_factor, "
             "created_at, temporal_metrics "
-            "FROM model_calibration WHERE sector_id IS NULL "
+            "FROM model_calibration WHERE (sector_id = 0 OR sector_id IS NULL) "
             "ORDER BY created_at DESC LIMIT 1"
         ).fetchone()
     except Exception as e:
@@ -386,7 +386,7 @@ def _build_summary(conn) -> dict:
         try:
             cal_row = cur.execute(
                 "SELECT model_version, brier_score, pu_correction_factor, created_at "
-                "FROM model_calibration WHERE sector_id IS NULL "
+                "FROM model_calibration WHERE (sector_id = 0 OR sector_id IS NULL) "
                 "ORDER BY created_at DESC LIMIT 1"
             ).fetchone()
         except Exception as e2:
