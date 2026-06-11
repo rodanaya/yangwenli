@@ -1,4 +1,9 @@
-"""One-shot v6.0 scoring script with per-sector models. Run directly.
+"""⚠️ V6.0 SCORER — *NOT* THE ACTIVE MODEL. The active model is v0.8.5 (writes
+`contracts.risk_score_v8`). Running this OVERWRITES the active v0.8.5 scores with
+v6.0. CLAUDE.md "Important Files" mislabels this "Active scoring" — it is not.
+Do NOT run to "rescore". See docs/SCORING.md before touching scores.
+
+One-shot v6.0 scoring script with per-sector models. Run directly.
 
 Fixes applied (Mar 2026):
   1. Z-score winsorization: clamp z-scores to [-5, +5] SD before logit computation

@@ -440,6 +440,21 @@ _INST_Z_COLS = [
 ]
 
 
+def _load_inst_z_means(conn, institution_id: int):
+    """Fallback per-institution mean z-vector from the precomputed
+    institution_z_means table — used when contract_z_features is absent (prod
+    deploy DB). Returns a Row with cnt + the _INST_Z_COLS, or None.
+    See scripts/_precompute_institution_z_means.py."""
+    try:
+        cols = ", ".join(_INST_Z_COLS)
+        return conn.execute(
+            f"SELECT cnt, {cols} FROM institution_z_means WHERE institution_id = ?",
+            (institution_id,),
+        ).fetchone()
+    except _sqlite3.OperationalError:
+        return None
+
+
 @router.get("/{institution_id:int}/risk-waterfall", response_model=InstitutionWaterfallResponse)
 def get_institution_risk_waterfall(
     institution_id: int = Path(..., description="Institution ID"),
@@ -465,11 +480,16 @@ def get_institution_risk_waterfall(
                 WHERE c.institution_id = ?
             """, (institution_id,)).fetchone()
         except _sqlite3.OperationalError:
-            result = InstitutionWaterfallResponse(institution_id=institution_id, items=[], total_contracts=0)
-            _set_top_cache(cache_key, result)
-            return result
+            row = None  # prod deploy DB omits contract_z_features → fall back below
 
-        if not row or row["cnt"] == 0:
+        if not row or not row["cnt"]:
+            # Fallback to precomputed per-institution z-means (ships to the deploy
+            # DB, which lacks the 3M-row contract_z_features table). Keeps the
+            # institution waterfall non-empty on prod. See
+            # scripts/_precompute_institution_z_means.py.
+            row = _load_inst_z_means(conn, institution_id)
+
+        if not row or not row["cnt"]:
             result = InstitutionWaterfallResponse(institution_id=institution_id, items=[], total_contracts=0)
             _set_top_cache(cache_key, result)
             return result
