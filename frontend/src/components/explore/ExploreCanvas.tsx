@@ -1925,8 +1925,11 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
           {editorial}
         </div>
       )}
+      {/* overflow-hidden: on short cells this block collapses (min-h-0) and
+          its children used to PAINT OVER the Critical footer below — the
+          Agricultura/Gobernación text smear (W3b, present on prod). */}
       {topInst && (
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: subTextColor, opacity: 0.85 }}>
             {isEs ? 'PRINCIPAL' : 'TOP'}
           </div>
@@ -2766,11 +2769,17 @@ function Z2Panel({
   // Priority: confirmed-corruption count → tier-1 count → concentration →
   // top10 absorption → dispersion fallback. The whole point of /explore is
   // to expose the actual finding, not show a generic stat.
-  const top10 = sortedVendors.slice(0, 10)
+  // Now that the lede leads the panel (thesis position), its "10 largest
+  // suppliers" claim must be rank-by-SPEND regardless of the active sort —
+  // under RISK sort the old slice(0,10) was the 10 riskiest, not largest.
+  const top10 = useMemo(
+    () => [...vendors].sort((a, b) => b.total_value_mxn - a.total_value_mxn).slice(0, 10),
+    [vendors],
+  )
   const gtInTop10 = top10.filter((v) => v.in_ground_truth === 1).length
   const t1InTop10 = top10.filter((v) => v.ips_tier === 1).length
   const gtSpendShare = top10.filter((v) => v.in_ground_truth === 1).reduce((s, v) => s + v.share_of_institution_pct, 0)
-  const top1 = sortedVendors[0]
+  const top1 = top10[0]
   const top1Pct = data?.top1_share_pct ?? 0
   const pullLine: React.ReactNode = (() => {
     if (gtInTop10 >= 3) {

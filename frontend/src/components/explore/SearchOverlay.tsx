@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { searchApi, institutionApi } from '@/api/client'
 import { SECTORS, getSectorName } from '@/lib/constants'
 import { useExploreDispatch } from './ExploreState'
+import { SEARCH_KBD } from './ExploreCanvas'
 
 interface Result {
   kind: 'sector' | 'institution' | 'vendor'
@@ -171,26 +172,28 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
 
   return (
     <>
+      {/* Launcher — bottom-right cluster (above SpatialMap's ? glyph). The
+          original top-left position sat on top of the Z0 § eyebrow. Kbd hint
+          is platform-aware (W4). */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="absolute top-3 left-3 z-10 flex items-center gap-2 px-3 py-1.5 transition-colors"
+        className="absolute bottom-12 right-4 z-10 flex items-center gap-2 px-2.5 py-1 transition-colors hover:opacity-80"
         style={{
           background: 'var(--color-background-card, #fff)',
           border: '1px solid var(--color-border)',
           borderRadius: 4,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          color: 'var(--color-text-muted)',
+          color: 'var(--color-text-secondary)',
           cursor: 'pointer',
-          fontSize: 11,
+          fontSize: 10,
           fontFamily: 'var(--font-family-mono, monospace)',
           letterSpacing: '0.06em',
         }}
         aria-label={lang === 'en' ? 'Search the map' : 'Buscar en el mapa'}
       >
-        🔍 {lang === 'en' ? 'Search' : 'Buscar'}
-        <span className="ml-1 px-1 py-0.5 text-[8px] font-mono opacity-70 border border-current rounded-sm">
-          ⌘K
+        {lang === 'en' ? 'Search' : 'Buscar'}
+        <span className="px-1 py-0.5 text-[8px] font-mono opacity-70 border border-current rounded-sm">
+          {SEARCH_KBD}
         </span>
       </button>
 
