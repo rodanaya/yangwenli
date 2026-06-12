@@ -612,8 +612,9 @@ export interface VendorPoolItem {
   first_year?: number | null
   last_year?: number | null
   avg_risk_score?: number | null
-  // Flag fields are nullable: null = "not yet computed" (cold-start
-  // degraded fallback), distinct from a real 0. Z2Row renders null as "—".
+  // Flag fields are nullable: since the 2026-06-12 at-rest backfill they
+  // arrive populated cold; null now means "row newer than the last backfill
+  // cut" and Z2Row renders a quiet pending glyph, never a permanent dash.
   high_risk_count: number | null
   high_risk_pct: number | null
   direct_award_count: number | null
@@ -623,6 +624,11 @@ export interface VendorPoolItem {
   ips_tier?: number | null
   primary_pattern?: string | null
   in_ground_truth: number
+  // Official-registry seals (aria_queue passthrough — documentary facts,
+  // not model output; null = vendor not in the ARIA queue)
+  is_efos_definitivo?: number | null
+  is_sfp_sanctioned?: number | null
+  is_disappeared?: number | null
 }
 
 export interface VendorPoolResponse {

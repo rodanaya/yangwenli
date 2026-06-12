@@ -64,19 +64,25 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
     if (open) setRecent(readRecent())
   }, [open])
 
-  // Cmd/Ctrl-K to open
+  // Cmd/Ctrl-K to open. Capture-phase + stopImmediatePropagation so the
+  // in-surface overlay wins over the Header's global bubble-phase search
+  // while this component is mounted (it only mounts on the map route —
+  // everywhere else the Header keeps the key). Escape, when open, is also
+  // swallowed so the canvas's pop-focus handler doesn't fire underneath.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
+        e.stopImmediatePropagation()
         setOpen(true)
       } else if (e.key === 'Escape' && open) {
+        e.stopImmediatePropagation()
         setOpen(false)
         setQ('')
       }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, { capture: true })
+    return () => window.removeEventListener('keydown', onKey, { capture: true })
   }, [open])
 
   // Focus when opened

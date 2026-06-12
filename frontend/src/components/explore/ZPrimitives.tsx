@@ -239,20 +239,30 @@ export function ZPullLine({
   children,
   custom = 3,
   variants,
+  fontSize = 13,
+  asLede = false,
 }: {
   children: React.ReactNode
   custom?: number
   variants: Variants
+  /** Bump for verdict-lede position (Z2 promotes its pull-line above the register). */
+  fontSize?: number
+  /** Lede position: no top rule / elevated wash — it opens the section instead of closing it. */
+  asLede?: boolean
 }) {
   return (
     <motion.div
       variants={variants}
       custom={custom}
       className="px-4 sm:px-6 py-3 flex-shrink-0"
-      style={{
-        borderTop: '1px solid var(--color-border)',
-        background: 'var(--color-background-elevated)',
-      }}
+      style={
+        asLede
+          ? undefined
+          : {
+              borderTop: '1px solid var(--color-border)',
+              background: 'var(--color-background-elevated)',
+            }
+      }
     >
       <div className="flex items-start gap-3 max-w-3xl">
         <span
@@ -263,7 +273,7 @@ export function ZPullLine({
         <p
           className="text-text-secondary leading-snug"
           style={{
-            fontSize: 13,
+            fontSize,
             fontFamily: "'EB Garamond', Georgia, serif",
             fontStyle: 'italic',
           }}
@@ -298,15 +308,17 @@ export function ZFooterLink({
 }) {
   const navigate = useNavigate()
   const text = label ?? (lang === 'en' ? 'Open full dossier' : 'Ver ficha completa')
+  // 2026-06-12 (W5): promoted from 10px text-secondary — the page's main
+  // exit to the dossier system was its least visible element.
   return (
     <button
       type="button"
       onClick={() => navigate(href)}
-      className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
-      style={{ color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}
+      className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+      style={{ color: 'var(--color-text-primary)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
     >
       <span>{text}</span>
-      <span aria-hidden="true">↗</span>
+      <span aria-hidden="true" style={{ color: 'var(--color-accent)' }}>↗</span>
     </button>
   )
 }

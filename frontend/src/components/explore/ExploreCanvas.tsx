@@ -32,6 +32,7 @@ import { formatCompactMXN, formatCompactUSD, formatCompactUSDByYear, formatNumbe
 import { cleanContractDescription, computeContractFlags, type ContractFlags } from '@/lib/contract-audit'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { getAdministrationByYear } from '@/lib/administrations'
+import { ShareViewButton } from './CanvasControls'
 import {
   getPinAnnotation,
   useExploreState,
@@ -64,6 +65,31 @@ const SVG_H = 720
 
 // formatCompactUSD imported from @/lib/utils (uses the canonical
 // exchange-rate helper). Local duplicate removed 2026-05-21.
+
+// W4 (Day-5): the DB ships unaccented Spanish sector names ("Educacion").
+// Display-level correction keyed on the exact API string — EN names and
+// richer ES strings ("Medio Ambiente") pass through untouched. A DB-level
+// `UPDATE sectors SET name_es` is Phase-2 (blast radius across every
+// surface reading name_es). Do NOT rebind to SECTORS here: its nameEN
+// ("Governance") regresses the API's editorial EN names ("Interior").
+const ES_SECTOR_ACCENTS: Record<string, string> = {
+  Educacion: 'Educación',
+  Energia: 'Energía',
+  Gobernacion: 'Gobernación',
+  Tecnologia: 'Tecnología',
+}
+function fixEsSectorName(name: string | null | undefined): string {
+  if (!name) return ''
+  return ES_SECTOR_ACCENTS[name] ?? name
+}
+
+// Platform-aware shortcut label for in-surface copy (W4: a Windows
+// journalist was told to press ⌘K). Header.tsx's own kbd is shared
+// chrome — Phase-2. Exported for SpatialMap's hint chip.
+export const SEARCH_KBD =
+  typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform ?? '')
+    ? '⌘K'
+    : 'Ctrl+K'
 
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -919,6 +945,10 @@ function Z0Panel({
   const sectors = treemapData?.sectors ?? []
   const totalSpend = treemapData?.total_value_mxn ?? 0
   const totalCritical = treemapData?.total_critical_count ?? 0
+  const totalContracts = useMemo(
+    () => sectors.reduce((s, x) => s + (x.total_contracts || 0), 0),
+    [sectors],
+  )
 
   // Build the items list for the treemap.
   // Min-area floor: 2.5% of total area per cell — keeps the smallest sectors
@@ -936,7 +966,7 @@ function Z0Panel({
     return sectors.map((s, i) => {
       const raw = rawValues[i]
       const flooredValue = Math.max(raw, floor)
-      const label = lang === 'es' ? s.sector_name_es : s.sector_name_en
+      const label = lang === 'es' ? fixEsSectorName(s.sector_name_es) : s.sector_name_en
       return {
         sectorId: s.sector_id,
         sectorCode: s.sector_code,
@@ -1010,6 +1040,30 @@ function Z0Panel({
             {headline}{' '}
             <em style={{ fontStyle: 'italic', fontWeight: 800 }}>{headlineSub}</em>
           </h1>
+          {/* Compass line (NYT Upshot in-header instruction) — computed from
+              the loaded payload, never hardcoded. Orientation rides existing
+              chrome; the treemap stays the page. */}
+          {totalContracts > 0 && (
+            <p
+              className="font-mono truncate"
+              style={{
+                fontSize: 10,
+                letterSpacing: '0.04em',
+                color: 'var(--color-text-secondary)',
+                marginTop: 4,
+                maxWidth: '68ch',
+              }}
+              title={
+                isEs
+                  ? `${formatNumber(totalContracts)} contratos federales · ${sectors.length} sectores`
+                  : `${formatNumber(totalContracts)} federal contracts · ${sectors.length} sectors`
+              }
+            >
+              {isEs
+                ? `${formatNumber(totalContracts)} contratos federales · ${sectors.length} sectores — haz clic en un mosaico para descender; ${SEARCH_KBD} busca sin salir del mapa.`
+                : `${formatNumber(totalContracts)} federal contracts · ${sectors.length} sectors — click any tile to descend; ${SEARCH_KBD} searches without leaving the map.`}
+            </p>
+          )}
         </div>
 
         {/* Stat row + sort — second band in the cascade (custom={1}) */}
@@ -1195,10 +1249,15 @@ function Z0Panel({
                   : b.total_value_mxn - a.total_value_mxn))
                 .map((s) => {
                   const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-                  const label = isEs ? s.sector_name_es : s.sector_name_en
+                  const label = isEs ? fixEsSectorName(s.sector_name_es) : s.sector_name_en
                   const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
                   const railWidthPct = Math.max(3, spendPct * 2)  // amplify so smallest are visible
                   const opacity = fillOpacityFromCriticalShare(s.critical_share_pct, false)
+                  // Same luminance branch as the desktop cells — Energía's
+                  // yellow × hardcoded white failed AA on mobile (W-hygiene).
+                  const darkText = isLightSectorColor(color)
+                  const fg = darkText ? '#1f1a14' : '#ffffff'
+                  const fgSub = darkText ? 'rgba(31,26,20,0.78)' : 'rgba(255,255,255,0.78)'
                   const finding = EDITORIAL_FINDINGS[s.sector_code]
                   const tag = DESCRIPTIVE_TAGS[s.sector_code]
                   const editorial = finding ? (isEs ? finding.es : finding.en)
@@ -1223,7 +1282,7 @@ function Z0Panel({
                         />
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <div className="font-mono text-[9px] uppercase tracking-[0.16em]" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                            <div className="font-mono text-[9px] uppercase tracking-[0.16em]" style={{ color: fgSub }}>
                               {s.sector_code} · {spendPct.toFixed(1)}%
                             </div>
                             <div
@@ -1233,7 +1292,7 @@ function Z0Panel({
                                 fontWeight: 700,
                                 fontStyle: 'italic',
                                 fontSize: 17,
-                                color: '#ffffff',
+                                color: fg,
                                 lineHeight: 1.1,
                               }}
                             >
@@ -1242,17 +1301,17 @@ function Z0Panel({
                             {editorial && (
                               <div
                                 className="font-mono text-[10px] mt-0.5"
-                                style={{ color: 'rgba(255,255,255,0.78)' }}
+                                style={{ color: fgSub }}
                               >
                                 {editorial}
                               </div>
                             )}
                           </div>
                           <div className="text-right whitespace-nowrap">
-                            <div className="font-mono tabular-nums text-sm font-bold" style={{ color: '#ffffff' }}>
+                            <div className="font-mono tabular-nums text-sm font-bold" style={{ color: fg }}>
                               {formatCompactMXN(s.total_value_mxn)}
                             </div>
-                            <div className="font-mono text-[10px] tabular-nums" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                            <div className="font-mono text-[10px] tabular-nums" style={{ color: fgSub }}>
                               {s.critical_share_pct.toFixed(1)}% {isEs ? 'crít' : 'crit'}
                             </div>
                           </div>
@@ -1592,6 +1651,31 @@ function effectiveSiglas(name: string, siglas: string | null | undefined): strin
   return inferSiglasFromName(name)
 }
 
+// W3a (Day-5): two distinct institutions can ship the SAME API siglas
+// (DB-verified: ids 311/314 both "PEMEX"; 1327/3785 both "DICONSA"). On a
+// collision inside one rendered list, re-resolve the colliders by name
+// through NAME_TO_SIGLAS_FALLBACK (PEMEX-EP / PEMEX-R / BIENESTAR are
+// curated there) — disambiguate the label, never merge the rows.
+function disambiguateSiglas(
+  insts: ReadonlyArray<{ institution_id: number; name: string; siglas?: string | null }>,
+): Map<number, string | null> {
+  const eff = new Map<number, string | null>()
+  const counts = new Map<string, number>()
+  for (const i of insts) {
+    const s = effectiveSiglas(i.name, i.siglas)
+    eff.set(i.institution_id, s)
+    if (s) counts.set(s, (counts.get(s) ?? 0) + 1)
+  }
+  for (const i of insts) {
+    const s = eff.get(i.institution_id)
+    if (s && (counts.get(s) ?? 0) > 1) {
+      const byName = inferSiglasFromName(i.name)
+      if (byName && byName !== s) eff.set(i.institution_id, byName)
+    }
+  }
+  return eff
+}
+
 type CellProps = {
   item: CellItem
   color: string         // for the sector code kicker
@@ -1740,8 +1824,11 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
           {isEs ? 'PRINCIPALES INSTITUCIONES' : 'TOP INSTITUTIONS'}
         </div>
         <ul className="space-y-1.5">
-          {item.topInstitutions.slice(0, 3).map((inst) => {
-            const eff = effectiveSiglas(inst.name, inst.siglas)
+          {(() => {
+            const top3 = item.topInstitutions.slice(0, 3)
+            const sigMap = disambiguateSiglas(top3)
+            return top3.map((inst) => {
+            const eff = sigMap.get(inst.institution_id) ?? null
             const short = shortInstitutionLabel(inst.name, eff)
             const logoSrc = logoSrcForSiglas(eff)
             // Fallback chip uses high-contrast vs the cell's text color
@@ -1756,7 +1843,7 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
                   fallbackColor={fallbackChipColor}
                 />
                 <span
-                  className="font-mono tracking-[0.04em] flex-1"
+                  className="font-mono tracking-[0.04em] flex-1 min-w-0 truncate"
                   style={{ color: textColor, fontWeight: 700, fontSize: 13 }}
                 >
                   {short}
@@ -1766,7 +1853,8 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
                 </span>
               </li>
             )
-          })}
+            })
+          })()}
         </ul>
       </div>
       {/* Footer rail: critical share + contracts */}
@@ -1840,7 +1928,7 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
       {topInst && (
         <div className="flex-1 min-h-0">
           <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: subTextColor, opacity: 0.85 }}>
-            {isEs ? 'TOP' : 'TOP'}
+            {isEs ? 'PRINCIPAL' : 'TOP'}
           </div>
           <div className="flex items-center gap-2 min-w-0" title={topInst.name}>
             {(() => {
@@ -1855,7 +1943,7 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
                     fallbackColor={textColor}
                   />
                   <span
-                    className="font-mono tracking-[0.04em] flex-1"
+                    className="font-mono tracking-[0.04em] flex-1 min-w-0 truncate"
                     style={{ color: textColor, fontWeight: 700, fontSize: 12 }}
                   >
                     {short}
@@ -1971,13 +2059,17 @@ function Z1Panel({
   const sectorAccent = SECTOR_COLORS[sectorCode] ?? '#64748b'
   const institutions = data?.institutions ?? []
   const totalSectorSpend = institutions.reduce((s, i) => s + i.total_amount_mxn, 0)
-  const sectorName = lang === 'es' ? (data?.sector_name_es ?? sectorCode) : (data?.sector_name_en ?? sectorCode)
+  const sectorName = lang === 'es' ? fixEsSectorName(data?.sector_name_es) || sectorCode : (data?.sector_name_en ?? sectorCode)
 
   // Editorial dek: top-3 concentration finding
   const top3Share = institutions.slice(0, 3).reduce((s, i) => s + i.total_amount_mxn, 0)
   const top3Pct = totalSectorSpend > 0 ? Math.round((top3Share / totalSectorSpend) * 100) : 0
   const top1 = institutions[0]
   const top1Pct = top1 && totalSectorSpend > 0 ? Math.round((top1.total_amount_mxn / totalSectorSpend) * 100) : 0
+  // Σ ranks 2–10 — the pull-line's "more than the rest combined" guard input.
+  const restTop10Pct = totalSectorSpend > 0
+    ? Math.round((institutions.slice(1, 10).reduce((s, i) => s + i.total_amount_mxn, 0) / totalSectorSpend) * 100)
+    : 0
 
   const [mode, setMode] = useState<'spend' | 'risk'>('spend')
 
@@ -2002,10 +2094,11 @@ function Z1Panel({
   // Risk-tier shelves. When sorted by RISK, group by tier. When sorted by
   // SPEND, shelves dissolve to a flat ranked list (matching Z2's canon).
   const useShelf = mode === 'risk'
-  const shelfCritical = useShelf ? sortedInstitutions.filter((i) => (i.risk ?? 0) >= 0.60) : []
-  const shelfHigh     = useShelf ? sortedInstitutions.filter((i) => { const r = i.risk ?? 0; return r >= 0.40 && r < 0.60 }) : []
-  const shelfMedium   = useShelf ? sortedInstitutions.filter((i) => { const r = i.risk ?? 0; return r >= 0.25 && r < 0.40 }) : []
-  const shelfRoutine  = useShelf ? sortedInstitutions.filter((i) => (i.risk ?? 0) < 0.25) : sortedInstitutions
+  // Canonical thresholds via getRiskLevelFromScore (hard rule #2).
+  const shelfCritical = useShelf ? sortedInstitutions.filter((i) => getRiskLevelFromScore(i.risk ?? 0) === 'critical') : []
+  const shelfHigh     = useShelf ? sortedInstitutions.filter((i) => getRiskLevelFromScore(i.risk ?? 0) === 'high') : []
+  const shelfMedium   = useShelf ? sortedInstitutions.filter((i) => getRiskLevelFromScore(i.risk ?? 0) === 'medium') : []
+  const shelfRoutine  = useShelf ? sortedInstitutions.filter((i) => getRiskLevelFromScore(i.risk ?? 0) === 'low') : sortedInstitutions
 
   const crumbs: CrumbSegment[] = [
     { label: lang === 'en' ? 'Spoils' : 'Reparto', onClick: () => dispatch({ type: 'reset-to-system' }) },
@@ -2162,24 +2255,35 @@ function Z1Panel({
           )}
         </motion.div>
 
-        {/* Pull-line — band 3 in cascade. Editorial finding from data. */}
+        {/* Pull-line — band 3 in cascade. The "more than the rest of the
+            top 10 combined" frame now carries the guard it claims (Day-5):
+            it renders only when top-1 actually exceeds ranks 2–10 summed. */}
         {!isLoading && top1 && top1Pct >= 25 && (
           <ZPullLine custom={3} variants={bandVariants}>
-            {lang === 'en'
-              ? <><strong className="font-semibold text-text-primary">{shortInstitutionLabel(top1.name, effectiveSiglas(top1.name, null))}</strong> alone manages <strong className="font-semibold">{top1Pct}%</strong> of the sector's spend — more than the rest of the top 10 combined.</>
-              : <><strong className="font-semibold text-text-primary">{shortInstitutionLabel(top1.name, effectiveSiglas(top1.name, null))}</strong> sola maneja el <strong className="font-semibold">{top1Pct}%</strong> del gasto del sector — más que las siguientes nueve combinadas.</>}
+            {top1Pct > restTop10Pct ? (
+              lang === 'en'
+                ? <><strong className="font-semibold text-text-primary">{shortInstitutionLabel(top1.name, effectiveSiglas(top1.name, null))}</strong> alone manages <strong className="font-semibold">{top1Pct}%</strong> of the sector's spend — more than the rest of the top 10 combined.</>
+                : <><strong className="font-semibold text-text-primary">{shortInstitutionLabel(top1.name, effectiveSiglas(top1.name, null))}</strong> sola maneja el <strong className="font-semibold">{top1Pct}%</strong> del gasto del sector — más que el resto de los 10 mayores combinados.</>
+            ) : (
+              lang === 'en'
+                ? <><strong className="font-semibold text-text-primary">{shortInstitutionLabel(top1.name, effectiveSiglas(top1.name, null))}</strong> leads with <strong className="font-semibold">{top1Pct}%</strong> of the sector's spend — the top 10 together absorb <strong className="font-semibold">{top1Pct + restTop10Pct}%</strong>.</>
+                : <><strong className="font-semibold text-text-primary">{shortInstitutionLabel(top1.name, effectiveSiglas(top1.name, null))}</strong> encabeza con el <strong className="font-semibold">{top1Pct}%</strong> del gasto del sector — los 10 mayores concentran el <strong className="font-semibold">{top1Pct + restTop10Pct}%</strong>.</>
+            )}
           </ZPullLine>
         )}
 
-        {/* Footer — outbound link to /sectors/:code (full dossier) */}
+        {/* Jumpline bar — count · copy-link · dossier exit (W5) */}
         {!isLoading && institutions.length > 0 && (
-          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <span className="font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <span className="font-mono text-[9px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en'
                 ? `${institutions.length} institutions`
                 : `${institutions.length} instituciones`}
             </span>
-            <ZFooterLink href={`/sectors/${sectorCode}`} lang={lang} />
+            <span className="flex items-center gap-4">
+              <ShareViewButton lang={lang} />
+              <ZFooterLink href={`/sectors/${sectorCode}`} lang={lang} />
+            </span>
           </div>
         )}
       </motion.div>
@@ -2370,13 +2474,9 @@ function Z1Row({
   prefersReducedMotion: boolean
 }) {
   const risk = inst.risk ?? 0
-  const riskTier: 'critical' | 'high' | 'medium' | 'low' =
-    risk >= 0.60 ? 'critical' : risk >= 0.40 ? 'high' : risk >= 0.25 ? 'medium' : 'low'
-  const riskColor =
-    riskTier === 'critical' ? RISK_COLORS.critical
-    : riskTier === 'high' ? RISK_COLORS.high
-    : riskTier === 'medium' ? RISK_COLORS.medium
-    : 'var(--color-text-muted)'
+  // Canonical thresholds (hard rule #2) — low renders muted, never green.
+  const riskTier = getRiskLevelFromScore(risk)
+  const riskColor = riskTier === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[riskTier]
   const share = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
   const eff = effectiveSiglas(inst.name, null)
   const acronym = shortInstitutionLabel(inst.name, eff)
@@ -2575,7 +2675,9 @@ function Z1Shelf({
 // Data: /institutions/{id}/vendor-pool (richer than /vendors).
 // ────────────────────────────────────────────────────────────────────────────
 
-type Z2Mode = 'spend' | 'risk'
+// 'hr' | 'da' | 'sb' added 2026-06-12 (El Padrón Vivo): the formerly-dead
+// columns are now interrogable — clicking their headers sorts the register.
+type Z2Mode = 'spend' | 'risk' | 'hr' | 'da' | 'sb'
 
 function Z2Panel({
   institutionId,
@@ -2623,19 +2725,42 @@ function Z2Panel({
   const layoutTransition = prefersReducedMotion ? { duration: 0 } : { duration: Z_LAYOUT_DURATION_S, ease: Z_EASE }
 
   const sortedVendors = useMemo(() => {
-    return [...vendors].sort((a, b) =>
-      mode === 'risk'
-        ? (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0) || b.total_value_mxn - a.total_value_mxn
-        : b.total_value_mxn - a.total_value_mxn
-    )
+    const bySpend = (a: typeof vendors[number], b: typeof vendors[number]) =>
+      b.total_value_mxn - a.total_value_mxn
+    return [...vendors].sort((a, b) => {
+      switch (mode) {
+        case 'risk': return (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0) || bySpend(a, b)
+        case 'hr':   return (b.high_risk_pct ?? -1) - (a.high_risk_pct ?? -1) || bySpend(a, b)
+        case 'da':   return (b.direct_award_pct ?? -1) - (a.direct_award_pct ?? -1) || bySpend(a, b)
+        case 'sb':   return (b.single_bid_pct ?? -1) - (a.single_bid_pct ?? -1) || bySpend(a, b)
+        default:     return bySpend(a, b)
+      }
+    })
   }, [vendors, mode])
+
+  // Capture spine inputs — ALWAYS rank-by-spend, independent of the active
+  // sort (the spine states how the institution's money pools, not how the
+  // user happens to have ordered the register).
+  const spine = useMemo(() => {
+    if (!vendors.length) return null
+    const ranked = [...vendors].sort((a, b) => b.total_value_mxn - a.total_value_mxn)
+    const sum = (arr: typeof ranked) => arr.reduce((s, v) => s + (v.share_of_institution_pct || 0), 0)
+    const top1Seg = sum(ranked.slice(0, 1))
+    const seg2to5 = sum(ranked.slice(1, 5))
+    const seg6to50 = sum(ranked.slice(5))
+    const pool = top1Seg + seg2to5 + seg6to50
+    const rest = Math.max(0, 100 - pool)
+    const gtShare = sum(ranked.filter((v) => v.in_ground_truth === 1))
+    return { top1Seg, seg2to5, seg6to50, pool, rest, gtShare }
+  }, [vendors])
 
   // Risk-tier shelves when sorted by RISK. Flat ranked list when by SPEND.
   const useShelf = mode === 'risk'
-  const shelfCritical = useShelf ? sortedVendors.filter((v) => (v.avg_risk_score ?? 0) >= 0.60) : []
-  const shelfHigh     = useShelf ? sortedVendors.filter((v) => { const r = v.avg_risk_score ?? 0; return r >= 0.40 && r < 0.60 }) : []
-  const shelfMedium   = useShelf ? sortedVendors.filter((v) => { const r = v.avg_risk_score ?? 0; return r >= 0.25 && r < 0.40 }) : []
-  const shelfRoutine  = useShelf ? sortedVendors.filter((v) => (v.avg_risk_score ?? 0) < 0.25) : sortedVendors
+  // Canonical thresholds via getRiskLevelFromScore (hard rule #2).
+  const shelfCritical = useShelf ? sortedVendors.filter((v) => getRiskLevelFromScore(v.avg_risk_score ?? 0) === 'critical') : []
+  const shelfHigh     = useShelf ? sortedVendors.filter((v) => getRiskLevelFromScore(v.avg_risk_score ?? 0) === 'high') : []
+  const shelfMedium   = useShelf ? sortedVendors.filter((v) => getRiskLevelFromScore(v.avg_risk_score ?? 0) === 'medium') : []
+  const shelfRoutine  = useShelf ? sortedVendors.filter((v) => getRiskLevelFromScore(v.avg_risk_score ?? 0) === 'low') : sortedVendors
 
   // Editorial pull-line — picks the strongest narrative frame from the data.
   // Priority: confirmed-corruption count → tier-1 count → concentration →
@@ -2729,17 +2854,38 @@ function Z2Panel({
           }
         />
 
+        {/* Verdict lede — the computed finding, promoted from the register
+            footer to thesis position (ICIJ verdict-first ordering, Day-5). */}
+        {!isLoading && sortedVendors.length > 0 && (
+          <ZPullLine custom={1} variants={bandVariants} fontSize={15} asLede>
+            {pullLine}
+          </ZPullLine>
+        )}
+
+        {/* Capture spine — how the institution's money pools across the
+            register's rank bands, with the GT disposition as a DETACHED
+            labeled total (never an x-aligned under-run). */}
+        {!isLoading && spine && sortedVendors.length > 0 && (
+          <CaptureSpine
+            spine={spine}
+            sectorAccent={sectorAccent}
+            lang={lang}
+            variants={bandVariants}
+            custom={2}
+          />
+        )}
+
         {/* Sort toggle band */}
         <motion.div
           variants={bandVariants}
-          custom={1}
+          custom={3}
           className="px-4 sm:px-6 pb-2 flex justify-end"
         >
           <ZSortToggle
-            modes={['spend', 'risk'] as const}
+            modes={['spend', 'risk'] as Z2Mode[]}
             active={mode}
             onChange={setMode}
-            riskMode="risk"
+            riskMode={'risk' as Z2Mode}
             label={lang === 'en' ? 'SORT' : 'ORDENAR'}
             labelFor={(m) => lang === 'en' ? m.toUpperCase() : (m === 'spend' ? 'GASTO' : 'RIESGO')}
           />
@@ -2748,7 +2894,7 @@ function Z2Panel({
         {/* Scrollable register */}
         <motion.div
           variants={bandVariants}
-          custom={2}
+          custom={4}
           className="flex-1 min-h-0 overflow-y-auto mx-3 sm:mx-4 mb-2"
         >
           {isLoading && (
@@ -2761,7 +2907,9 @@ function Z2Panel({
               {lang === 'en' ? 'no vendor data available.' : 'sin datos de proveedores.'}
             </div>
           )}
-          {!isLoading && !isError && sortedVendors.length > 0 && <Z2ColumnHeader lang={lang} />}
+          {!isLoading && !isError && sortedVendors.length > 0 && (
+            <Z2ColumnHeader lang={lang} mode={mode} onSort={setMode} />
+          )}
           {!isLoading && !isError && !useShelf && (
             <ul role="list" className="space-y-px">
               {sortedVendors.map((v, i) => (
@@ -2831,22 +2979,19 @@ function Z2Panel({
           )}
         </motion.div>
 
-        {/* Pull-line — editorial finding */}
+        {/* Jumpline bar — register count · copy-link · dossier exit (W5).
+            (The pull-line that used to close the register now opens it.) */}
         {!isLoading && sortedVendors.length > 0 && (
-          <ZPullLine custom={3} variants={bandVariants}>
-            {pullLine}
-          </ZPullLine>
-        )}
-
-        {/* Footer — link to /institutions/:id (canonical dossier) */}
-        {!isLoading && sortedVendors.length > 0 && (
-          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <span className="font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <span className="font-mono text-[9px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en'
                 ? `top ${sortedVendors.length} of ${formatNumber(instVendorCount)} vendors`
                 : `top ${sortedVendors.length} de ${formatNumber(instVendorCount)} proveedores`}
             </span>
-            <ZFooterLink href={`/institutions/${institutionId}`} lang={lang} />
+            <span className="flex items-center gap-4">
+              <ShareViewButton lang={lang} />
+              <ZFooterLink href={`/institutions/${institutionId}`} lang={lang} />
+            </span>
           </div>
         )}
       </motion.div>
@@ -2862,7 +3007,16 @@ function Z2Panel({
  *   rank 20 · chip 32 · vendor flex · badges 96 · HR-bar 130 ·
  *   spend 110 · contracts 70 · DA 56 · SB 56 · risk 56
  */
-function Z2ColumnHeader({ lang }: { lang: 'en' | 'es' }) {
+function Z2ColumnHeader({
+  lang,
+  mode,
+  onSort,
+}: {
+  lang: 'en' | 'es'
+  /** Active sort — data columns are interrogable (FT markets-table rule). */
+  mode: Z2Mode
+  onSort: (m: Z2Mode) => void
+}) {
   const isEs = lang === 'es'
   const headerCell: React.CSSProperties = {
     fontSize: 9,
@@ -2872,6 +3026,38 @@ function Z2ColumnHeader({ lang }: { lang: 'en' | 'es' }) {
     textTransform: 'uppercase',
     color: 'var(--color-text-muted)',
     lineHeight: 1.3,
+  }
+  // Sortable header cell — plain button in the same type, accent underline
+  // when it owns the sort. aria-sort lives on the wrapping columnheader.
+  const sortableCell = (m: Z2Mode, width: number, title: string, children: React.ReactNode, align: 'left' | 'right' = 'right') => {
+    const active = mode === m
+    return (
+      <span
+        className="flex-shrink-0"
+        style={{ width, textAlign: align }}
+        role="columnheader"
+        aria-sort={active ? 'descending' : 'none'}
+        title={title}
+      >
+        <button
+          type="button"
+          onClick={() => onSort(m)}
+          className="cursor-pointer"
+          style={{
+            ...headerCell,
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            textAlign: align,
+            width: '100%',
+            color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+            borderBottom: active ? '2px solid var(--color-accent)' : '2px solid transparent',
+          }}
+        >
+          {children}
+        </button>
+      </span>
+    )
   }
   return (
     <div
@@ -2899,34 +3085,27 @@ function Z2ColumnHeader({ lang }: { lang: 'en' | 'es' }) {
       >
         {isEs ? 'Etiquetas' : 'Flags'}
       </span>
-      <span
-        className="flex-shrink-0"
-        style={{ ...headerCell, width: 130, textAlign: 'left' }}
-        role="columnheader"
-        title={
-          isEs
-            ? 'Tasa de contratos de alto riesgo del proveedor con esta institución: % marcados como alto o crítico por el modelo. Barra al 100% = todos sus contratos aquí están en riesgo.'
-            : "High-risk contract rate for this vendor at this institution: % flagged high or critical by the risk model. A full bar means every contract this vendor holds here is at risk."
-        }
-      >
-        {isEs ? 'Contratos de alto riesgo' : 'High-risk contracts'}
-      </span>
-      <span
-        className="flex-shrink-0 text-right"
-        style={{ ...headerCell, width: 110 }}
-        role="columnheader"
-        title={
-          isEs
-            ? 'Gasto acumulado del proveedor con esta institución, con equivalente en USD y % del gasto total de la institución.'
-            : "Total spend this vendor has received from this institution, with USD equivalent and percentage of the institution's spend."
-        }
-      >
-        {isEs ? (
+      {sortableCell(
+        'hr',
+        130,
+        isEs
+          ? 'Tasa de contratos de alto riesgo del proveedor con esta institución: % marcados como alto o crítico por el modelo. Clic para ordenar.'
+          : 'High-risk contract rate for this vendor at this institution: % flagged high or critical by the risk model. Click to sort.',
+        isEs ? 'Contratos de alto riesgo' : 'High-risk contracts',
+        'left',
+      )}
+      {sortableCell(
+        'spend',
+        110,
+        isEs
+          ? 'Gasto acumulado del proveedor con esta institución, con equivalente en USD y % del gasto total. Clic para ordenar.'
+          : "Total spend this vendor has received from this institution, with USD equivalent and share. Click to sort.",
+        isEs ? (
           <>Gasto<br /><span style={{ fontWeight: 400, opacity: 0.7 }}>MXN · USD · %</span></>
         ) : (
           <>Spend<br /><span style={{ fontWeight: 400, opacity: 0.7 }}>MXN · USD · share</span></>
-        )}
-      </span>
+        ),
+      )}
       <span
         className="flex-shrink-0 text-right"
         style={{ ...headerCell, width: 70 }}
@@ -2939,42 +3118,30 @@ function Z2ColumnHeader({ lang }: { lang: 'en' | 'es' }) {
       >
         {isEs ? (<># de<br /><span>contratos</span></>) : (<># of<br /><span>contracts</span></>)}
       </span>
-      <span
-        className="flex-shrink-0 text-right"
-        style={{ ...headerCell, width: 56 }}
-        role="columnheader"
-        title={
-          isEs
-            ? 'Adjudicación directa: % de contratos del proveedor con esta institución otorgados sin licitación pública.'
-            : "Direct-award rate: % of this vendor's contracts here awarded without an open bid."
-        }
-      >
-        {isEs ? (<>Adj.<br /><span>directa</span></>) : (<>Direct<br /><span>award</span></>)}
-      </span>
-      <span
-        className="flex-shrink-0 text-right"
-        style={{ ...headerCell, width: 56 }}
-        role="columnheader"
-        title={
-          isEs
-            ? 'Licitación con un solo postor: % de procedimientos competitivos donde el proveedor fue el único ofertante. Señal clave de manipulación de licitaciones.'
-            : 'Single-bid rate: % of competitive procedures where this vendor was the only bidder. Key bid-rigging signal.'
-        }
-      >
-        {isEs ? (<>Único<br /><span>postor</span></>) : (<>Single<br /><span>bid</span></>)}
-      </span>
-      <span
-        className="flex-shrink-0 text-right"
-        style={{ ...headerCell, width: 56 }}
-        role="columnheader"
-        title={
-          isEs
-            ? "Puntuación promedio de riesgo del modelo para los contratos de este proveedor con esta institución (0–100). Crítico ≥ 60."
-            : "Average risk score from the model for this vendor's contracts here (0–100). Critical ≥ 60."
-        }
-      >
-        {isEs ? (<>Riesgo<br /><span>prom.</span></>) : (<>Avg<br /><span>risk</span></>)}
-      </span>
+      {sortableCell(
+        'da',
+        56,
+        isEs
+          ? 'Adjudicación directa: % de contratos del proveedor con esta institución otorgados sin licitación pública. Clic para ordenar.'
+          : "Direct-award rate: % of this vendor's contracts here awarded without an open bid. Click to sort.",
+        isEs ? (<>Adj.<br /><span>directa</span></>) : (<>Direct<br /><span>award</span></>),
+      )}
+      {sortableCell(
+        'sb',
+        56,
+        isEs
+          ? 'Licitación con un solo postor: % de procedimientos competitivos donde el proveedor fue el único ofertante. Señal clave de manipulación de licitaciones. Clic para ordenar.'
+          : 'Single-bid rate: % of competitive procedures where this vendor was the only bidder. Key bid-rigging signal. Click to sort.',
+        isEs ? (<>Único<br /><span>postor</span></>) : (<>Single<br /><span>bid</span></>),
+      )}
+      {sortableCell(
+        'risk',
+        56,
+        isEs
+          ? 'Indicador promedio de riesgo del modelo para los contratos de este proveedor con esta institución (0–100). Crítico ≥ 60. Clic para ordenar.'
+          : "Average risk indicator from the model for this vendor's contracts here (0–100). Critical ≥ 60. Click to sort.",
+        isEs ? (<>Riesgo<br /><span>prom.</span></>) : (<>Avg<br /><span>risk</span></>),
+      )}
     </div>
   )
 }
@@ -3003,15 +3170,13 @@ function Z2Row({
 }) {
   const score = v.avg_risk_score ?? 0
   const riskPct = Math.round(score * 100)
-  const riskColor =
-    score >= 0.60 ? RISK_COLORS.critical
-    : score >= 0.40 ? RISK_COLORS.high
-    : score >= 0.25 ? RISK_COLORS.medium
-    : 'var(--color-text-muted)'
+  // Canonical thresholds (hard rule #2) — low renders muted, never green.
+  const riskLevel = getRiskLevelFromScore(score)
+  const riskColor = riskLevel === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[riskLevel]
 
-  // flagsKnown=false under the cold-start degraded fallback (backend sends
-  // null for these, NOT 0). Render "—" + shimmer so a degraded response is
-  // never mistaken for a real zero. Warm response fills real counts.
+  // Since the 2026-06-12 at-rest backfill the flag fields arrive populated
+  // cold; null now means "row newer than the last backfill cut" and renders
+  // a quiet pending dot — never a permanent dash wall.
   const flagsKnown = v.high_risk_pct != null
   const hrPct = v.high_risk_pct ?? 0
   const daPct = v.direct_award_pct ?? 0
@@ -3020,8 +3185,29 @@ function Z2Row({
   const hrBarColor = hrPct >= 50 ? RISK_COLORS.critical : hrPct >= 25 ? RISK_COLORS.high : hrPct >= 10 ? RISK_COLORS.medium : 'var(--color-text-muted)'
   const daColor = daPct >= 80 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
   const sbColor = sbPct >= 50 ? RISK_COLORS.critical : sbPct >= 25 ? RISK_COLORS.high : sbPct >= 10 ? RISK_COLORS.medium : 'var(--color-text-muted)'
-  // Pending-value glyph for unknown flag fields.
-  const pendingGlyph = <span style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>—</span>
+  // Pending-value glyph: scheduled-refresh promise, not session shimmer.
+  const pendingGlyph = (
+    <span
+      style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}
+      title={lang === 'en' ? 'computed at the next refresh' : 'se calcula en el próximo corte'}
+    >
+      ·
+    </span>
+  )
+
+  // Tenure agate (OCCRP Aleph registry line) — fields were always in the
+  // payload, never rendered. Years-only v1 (win-rate deferred, audit § 2).
+  const tenure = (() => {
+    if (v.first_year == null) return null
+    const last = v.last_year ?? 2025
+    const years = last - v.first_year + 1
+    if (years <= 1) {
+      return lang === 'en' ? `since ${v.first_year}` : `desde ${v.first_year}`
+    }
+    return lang === 'en'
+      ? `since ${v.first_year} · ${years} yrs`
+      : `desde ${v.first_year} · ${years} años`
+  })()
 
   // Vendor initials chip — no logo registry for vendors (1000s of names),
   // so we synthesize a 2-char initial tile in the sector accent.
@@ -3072,11 +3258,20 @@ function Z2Row({
         >
           {initials}
         </span>
-        {/* Full vendor name — title-cased, wraps, never truncated */}
-        <span className="flex-1 min-w-0 text-sm leading-tight" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
-          {editorialName}
+        {/* Full vendor name — title-cased, wraps, never truncated — with the
+            tenure agate underneath (incumbency as identity, zero column cost) */}
+        <span className="flex-1 min-w-0" style={{ minWidth: 0 }}>
+          <span className="block text-sm leading-tight" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+            {editorialName}
+          </span>
+          {tenure && (
+            <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 2 }}>
+              {tenure}
+            </span>
+          )}
         </span>
-        {/* Badge stack — DOMINANT / GT / T1 / pattern */}
+        {/* Badge stack — official-registry seals (bordered stamps) outrank
+            model badges (filled chips): EFOS > SANC > DESAP > GT > … */}
         <span className="flex-shrink-0 flex flex-wrap items-center gap-1 justify-end" style={{ width: 96 }}>
           {badges.map((b, i) => (
             <span
@@ -3086,8 +3281,8 @@ function Z2Row({
                 fontSize: 8,
                 fontWeight: 700,
                 color: b.color,
-                background: `${b.color}1f`,
-                border: `1px solid ${b.color}33`,
+                background: b.seal ? 'transparent' : `${b.color}1f`,
+                border: b.seal ? `1px solid ${b.color}` : `1px solid ${b.color}33`,
               }}
               title={b.tooltip}
             >
@@ -3392,18 +3587,157 @@ function Z2RowDense({
 }
 
 /**
+ * CaptureSpine — how the institution's money pools across the register's
+ * rank bands (FT cumulative-share bar / in-house ConcentrationExhibit
+ * lineage). One 18px segmented bar: TOP-1 / 2–5 / 6–50 in the sector
+ * accent at stepped opacity, the remainder as a border-hatch. The GT
+ * disposition renders as a DETACHED labeled total BELOW — label first,
+ * then a proportional run — never an x-aligned under-run (the panel audit
+ * found rank-aligned GT runs assert WHERE the documented money sits when
+ * GT vendors are not rank-contiguous).
+ */
+function CaptureSpine({
+  spine,
+  sectorAccent,
+  lang,
+  variants,
+  custom,
+}: {
+  spine: { top1Seg: number; seg2to5: number; seg6to50: number; pool: number; rest: number; gtShare: number }
+  sectorAccent: string
+  lang: 'en' | 'es'
+  variants: Variants
+  custom: number
+}) {
+  const isEs = lang === 'es'
+  const segs = [
+    { key: 'top1', w: spine.top1Seg, opacity: 1.0, label: 'TOP 1' },
+    { key: '2-5', w: spine.seg2to5, opacity: 0.65, label: '2–5' },
+    { key: '6-50', w: spine.seg6to50, opacity: 0.35, label: '6–50' },
+  ].filter((s) => s.w > 0.05)
+  const cum: number[] = []
+  segs.reduce((acc, s) => { const c = acc + s.w; cum.push(c); return c }, 0)
+  const restLabel = isEs ? 'resto del gasto institucional' : 'rest of institution spend'
+  const ariaLabel = isEs
+    ? `Concentración del gasto: principal proveedor ${spine.top1Seg.toFixed(1)}%, los cinco mayores ${(spine.top1Seg + spine.seg2to5).toFixed(1)}%, los cincuenta del registro ${spine.pool.toFixed(1)}%; ${spine.gtShare.toFixed(1)}% ligado a casos documentados de corrupción.`
+    : `Spend concentration: top supplier ${spine.top1Seg.toFixed(1)}%, top five ${(spine.top1Seg + spine.seg2to5).toFixed(1)}%, the fifty in this register ${spine.pool.toFixed(1)}%; ${spine.gtShare.toFixed(1)}% tied to documented corruption cases.`
+  return (
+    <motion.div
+      variants={variants}
+      custom={custom}
+      className="px-4 sm:px-6 pb-2 flex-shrink-0"
+      role="img"
+      aria-label={ariaLabel}
+    >
+      <div className="flex w-full overflow-hidden rounded-sm" style={{ height: 18 }} aria-hidden="true">
+        {segs.map((s) => (
+          <span
+            key={s.key}
+            style={{
+              width: `${Math.max(s.w, 0.5)}%`,
+              background: sectorAccent,
+              opacity: s.opacity,
+              borderRight: '1px solid var(--color-background)',
+            }}
+            title={`${s.label} · ${s.w.toFixed(1)}%`}
+          />
+        ))}
+        {spine.rest > 0.5 && (
+          <span
+            style={{
+              width: `${spine.rest}%`,
+              background:
+                'repeating-linear-gradient(45deg, transparent, transparent 4px, var(--color-border) 4px, var(--color-border) 5px)',
+              border: '1px solid var(--color-border)',
+            }}
+            title={`${restLabel} · ${spine.rest.toFixed(1)}%`}
+          />
+        )}
+      </div>
+      {/* Tick row — cumulative shares under the segment boundaries */}
+      <div
+        className="hidden sm:flex w-full font-mono tabular-nums"
+        style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 2, gap: 8 }}
+        aria-hidden="true"
+      >
+        {segs.map((s, i) => (
+          <span key={s.key} style={{ width: `${Math.max(s.w, 0.5)}%`, minWidth: 'fit-content' }}>
+            {s.label} <span style={{ opacity: 0.75 }}>{cum[i].toFixed(0)}%</span>
+          </span>
+        ))}
+        {spine.rest > 8 && <span style={{ opacity: 0.75 }}>{restLabel}</span>}
+      </div>
+      {/* GT disposition — detached labeled total (label FIRST, then the
+          proportional run: no shared x-origin with the rank segments) */}
+      {spine.gtShare >= 3 && (
+        <div className="flex items-center gap-2" style={{ marginTop: 5 }}>
+          <span
+            className="font-mono uppercase tracking-[0.08em] whitespace-nowrap"
+            style={{ fontSize: 9, fontWeight: 700, color: RISK_COLORS.critical }}
+          >
+            {isEs
+              ? `${spine.gtShare.toFixed(1)}% en casos GT documentados`
+              : `${spine.gtShare.toFixed(1)}% in documented GT cases`}
+          </span>
+          <span className="flex-1 relative" style={{ height: 3, maxWidth: 280 }} aria-hidden="true">
+            <span
+              className="absolute inset-y-0 left-0 rounded-sm"
+              style={{ width: `${Math.min(spine.gtShare, 100)}%`, background: RISK_COLORS.critical }}
+            />
+            <span
+              className="absolute inset-y-0 left-0 w-full rounded-sm"
+              style={{ background: 'var(--color-background-elevated)', zIndex: -1 }}
+            />
+          </span>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+/**
  * Compute the visible badges for a Z2 vendor row. Returns at most 2 in
- * priority order: GT → DOMINANT → T1 → pattern (P1-P7) → T2. Each badge
- * carries its own color + localized tooltip.
+ * priority order: official-registry seals (EFOS → SANC → DESAP — documentary
+ * facts, rendered as bordered stamps) → GT → DOMINANT → T1 → pattern
+ * (P1-P7) → T2. Each badge carries its own color + localized tooltip.
  */
 function computeZ2Badges(
   v: import('@/api/types').VendorPoolItem,
   lang: 'en' | 'es',
-): Array<{ label: string; color: string; tooltip: string }> {
-  const out: Array<{ label: string; color: string; tooltip: string }> = []
+): Array<{ label: string; color: string; tooltip: string; seal?: boolean }> {
+  const out: Array<{ label: string; color: string; tooltip: string; seal?: boolean }> = []
   const isEs = lang === 'es'
 
-  if (v.in_ground_truth === 1) {
+  // Official-registry seals — the State's own blacklists (OCCRP ID
+  // sanctions-tracker mechanic). Authority-voiced, never risk-scaled.
+  if (v.is_efos_definitivo === 1) {
+    out.push({
+      label: 'EFOS',
+      color: RISK_COLORS.critical,
+      seal: true,
+      tooltip: isEs
+        ? 'SAT: EFOS definitivo — facturación de operaciones simuladas'
+        : 'SAT final EFOS listing — invoices declared simulated',
+    })
+  }
+  if (out.length < 2 && v.is_sfp_sanctioned === 1) {
+    out.push({
+      label: 'SANC',
+      color: RISK_COLORS.critical,
+      seal: true,
+      tooltip: isEs ? 'Sanción SFP en el registro' : 'SFP sanction on record',
+    })
+  }
+  if (out.length < 2 && v.is_disappeared === 1) {
+    out.push({
+      label: 'DESAP',
+      color: RISK_COLORS.critical,
+      seal: true,
+      tooltip: isEs ? 'Proveedor no localizado (SAT)' : 'Vendor not located (SAT)',
+    })
+  }
+
+  if (out.length < 2 && v.in_ground_truth === 1) {
     out.push({
       label: 'GT',
       color: RISK_COLORS.critical,
@@ -4094,15 +4428,18 @@ function Z3Panel({
           )}
         </motion.div>
 
-        {/* Footer — (the editorial finding now leads the view as the indictment band) */}
+        {/* Jumpline bar — count · copy-link · dossier exit (W5) */}
         {!isLoading && !isError && contracts.length > 0 && (
-          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <span className="font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <span className="font-mono text-[9px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en'
                 ? `${visibleContracts.length} of ${formatNumber(filtered.length)} shown`
                 : `${visibleContracts.length} de ${formatNumber(filtered.length)} mostrados`}
             </span>
-            <ZFooterLink href={`/vendors/${vendorId}`} lang={lang} />
+            <span className="flex items-center gap-4">
+              <ShareViewButton lang={lang} />
+              <ZFooterLink href={`/vendors/${vendorId}`} lang={lang} />
+            </span>
           </div>
         )}
       </motion.div>
@@ -4198,11 +4535,9 @@ function Z3TimelineStrip({
             const cell = byYear.get(yr) ?? { count: 0, amount: 0, riskSum: 0, riskN: 0 }
             const heightPct = cell.amount > 0 ? Math.max(4, (cell.amount / maxYearAmt) * 100) : 0
             const avgRisk = cell.riskN > 0 ? cell.riskSum / cell.riskN : 0
-            const capColor =
-              avgRisk >= 0.60 ? RISK_COLORS.critical
-              : avgRisk >= 0.40 ? RISK_COLORS.high
-              : avgRisk >= 0.25 ? RISK_COLORS.medium
-              : 'var(--color-text-muted)'
+            // Canonical thresholds (hard rule #2) — low renders muted.
+            const yearTier = getRiskLevelFromScore(avgRisk)
+            const capColor = yearTier === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[yearTier]
             const isSelected = selectedYear === yr
             return (
               <button
@@ -4227,8 +4562,8 @@ function Z3TimelineStrip({
                     className="w-full"
                     style={{
                       height: `${heightPct}%`,
-                      background: avgRisk >= 0.25 ? capColor : 'var(--color-text-muted)',
-                      opacity: avgRisk >= 0.60 ? 0.62 : avgRisk >= 0.40 ? 0.5 : avgRisk >= 0.25 ? 0.42 : 0.35,
+                      background: yearTier !== 'low' ? capColor : 'var(--color-text-muted)',
+                      opacity: yearTier === 'critical' ? 0.62 : yearTier === 'high' ? 0.5 : yearTier === 'medium' ? 0.42 : 0.35,
                       borderTop: `2px solid ${capColor}`,
                       minHeight: 3,
                     }}
@@ -4738,15 +5073,14 @@ function Z3MonthlyStrip({
             // number doesn't clip the top of the plot area.
             const ceiling = showCountLabels ? 80 : 100
             const h = m.count > 0 ? Math.max(10, (m.count / maxMonthCount) * ceiling) : 0
-            const cap =
-              m.avgRisk >= 0.60 ? RISK_COLORS.critical
-              : m.avgRisk >= 0.40 ? RISK_COLORS.high
-              : m.avgRisk >= 0.25 ? RISK_COLORS.medium
-              : 'var(--color-text-muted)'
+            // Canonical thresholds (hard rule #2) — low renders muted.
+            const monthTier = getRiskLevelFromScore(m.avgRisk)
+            const cap = monthTier === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[monthTier]
             // Fill tracks risk too — high-risk burst months read solid red, not
             // a faint grey ghost. The peak month should dominate the strip.
-            const fill = m.avgRisk >= 0.40 ? cap : 'var(--color-text-muted)'
-            const fillOpacity = m.avgRisk >= 0.60 ? 0.8 : m.avgRisk >= 0.40 ? 0.62 : 0.34
+            const highOrWorse = monthTier === 'critical' || monthTier === 'high'
+            const fill = highOrWorse ? cap : 'var(--color-text-muted)'
+            const fillOpacity = monthTier === 'critical' ? 0.8 : monthTier === 'high' ? 0.62 : 0.34
             return (
               <span
                 key={m.ym}
@@ -4760,7 +5094,7 @@ function Z3MonthlyStrip({
                     {showCountLabels && (
                       <span
                         className="font-mono tabular-nums leading-none mb-0.5"
-                        style={{ fontSize: 9, fontWeight: 700, color: m.avgRisk >= 0.40 ? cap : 'var(--color-text-secondary)' }}
+                        style={{ fontSize: 9, fontWeight: 700, color: highOrWorse ? cap : 'var(--color-text-secondary)' }}
                       >
                         {m.count}
                       </span>

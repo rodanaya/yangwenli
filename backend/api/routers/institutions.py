@@ -1294,10 +1294,12 @@ def _z2_compute_full(institution_id: int) -> Optional[VendorPoolResponse]:
         )
         flag_counts = {r["vendor_id"]: r for r in cur.fetchall()}
 
-        # 5. ARIA tier/pattern lookup
+        # 5. ARIA tier/pattern lookup (+ official-registry seals — shape
+        #    parity with _z2_compute_degraded)
         cur.execute(
             f"""
-            SELECT vendor_id, ips_tier, primary_pattern, in_ground_truth
+            SELECT vendor_id, ips_tier, primary_pattern, in_ground_truth,
+                   is_efos_definitivo, is_sfp_sanctioned, is_disappeared
             FROM aria_queue
             WHERE vendor_id IN ({placeholders})
             """,
@@ -1344,6 +1346,9 @@ def _z2_compute_full(institution_id: int) -> Optional[VendorPoolResponse]:
             ips_tier=int(a["ips_tier"]) if a and a["ips_tier"] is not None else None,
             primary_pattern=a["primary_pattern"] if a else None,
             in_ground_truth=int(a["in_ground_truth"]) if a and a["in_ground_truth"] is not None else 0,
+            is_efos_definitivo=int(a["is_efos_definitivo"]) if a and a["is_efos_definitivo"] is not None else None,
+            is_sfp_sanctioned=int(a["is_sfp_sanctioned"]) if a and a["is_sfp_sanctioned"] is not None else None,
+            is_disappeared=int(a["is_disappeared"]) if a and a["is_disappeared"] is not None else None,
         ))
 
     top1 = items[0] if items else None
@@ -1380,11 +1385,14 @@ def _z2_compute_full(institution_id: int) -> Optional[VendorPoolResponse]:
 
 
 def _z2_compute_degraded(institution_id: int) -> Optional[VendorPoolResponse]:
-    """Fast degraded Z2 response — precomputed top vendors WITHOUT the live
-    HR/DA/SB flag counts (those require a 60s+ live aggregate). Returns
-    None for 404. Used as cold-start fallback so the page renders
-    immediately; the warmup thread fills the full cache for the next
-    request.
+    """Fast cold-path Z2 response. Since the 2026-06-12 at-rest backfill
+    (scripts/backfill_z2_flags.py) this is no longer "degraded": the
+    HR/DA/SB counts are read straight off institution_top_vendors and the
+    cheap aria_queue IN-list rides along (tier/pattern/GT + the official-
+    registry seals), so a cold request serves the complete register in
+    <1s. Flag fields fall back to None only for rows newer than the last
+    backfill cut (or on a DB that never ran the script) — the legacy
+    warmup thread then fills them. Returns None for 404.
     """
     with get_db() as conn:
         cur = conn.cursor()
@@ -1414,48 +1422,101 @@ def _z2_compute_degraded(institution_id: int) -> Optional[VendorPoolResponse]:
         inst_hr_pct = float(stats["high_risk_pct"]) if stats else 0.0
         inst_sb_pct = float(stats["single_bid_pct"]) if stats else 0.0
 
-        cur.execute(
-            """
-            SELECT vendor_id, vendor_name, contract_count,
-                   total_value_mxn, avg_risk_score, first_year, last_year
-            FROM institution_top_vendors
-            WHERE institution_id = ?
-            ORDER BY total_value_mxn DESC
-            LIMIT 50
-            """,
-            (institution_id,),
-        )
-        top_rows = cur.fetchall()
+        # Backfilled flag counts when the columns exist (additive migration —
+        # a DB that hasn't run backfill_z2_flags.py serves the legacy shape).
+        try:
+            cur.execute(
+                """
+                SELECT vendor_id, vendor_name, contract_count,
+                       total_value_mxn, avg_risk_score, first_year, last_year,
+                       hr_count, da_count, sb_count
+                FROM institution_top_vendors
+                WHERE institution_id = ?
+                ORDER BY total_value_mxn DESC
+                LIMIT 50
+                """,
+                (institution_id,),
+            )
+            top_rows = cur.fetchall()
+            has_flag_cols = True
+        except _sqlite3.OperationalError:
+            cur.execute(
+                """
+                SELECT vendor_id, vendor_name, contract_count,
+                       total_value_mxn, avg_risk_score, first_year, last_year
+                FROM institution_top_vendors
+                WHERE institution_id = ?
+                ORDER BY total_value_mxn DESC
+                LIMIT 50
+                """,
+                (institution_id,),
+            )
+            top_rows = cur.fetchall()
+            has_flag_cols = False
+
+        # ARIA lookup — cheap IN-list (~0.4s on 248,944 rows); the warm path
+        # always paid this exact query, the cold path now does too so badges
+        # and the official-registry seals never blank on first paint.
+        aria = {}
+        if top_rows:
+            vendor_ids = [r["vendor_id"] for r in top_rows]
+            placeholders = ",".join("?" * len(vendor_ids))
+            cur.execute(
+                f"""
+                SELECT vendor_id, ips_tier, primary_pattern, in_ground_truth,
+                       is_efos_definitivo, is_sfp_sanctioned, is_disappeared
+                FROM aria_queue
+                WHERE vendor_id IN ({placeholders})
+                """,
+                tuple(vendor_ids),
+            )
+            aria = {r["vendor_id"]: r for r in cur.fetchall()}
 
     items: List[VendorPoolItem] = []
     top10_value = 0.0
     for rank, row in enumerate(top_rows, start=1):
         value = float(row["total_value_mxn"] or 0)
+        ccount = int(row["contract_count"] or 0)
         share = (value / inst_total_value * 100.0) if inst_total_value > 0 else 0.0
         if rank <= 10:
             top10_value += value
+
+        hr_count = row["hr_count"] if has_flag_cols else None
+        da_count = row["da_count"] if has_flag_cols else None
+        sb_count = row["sb_count"] if has_flag_cols else None
+
+        def _pct(count) -> Optional[float]:
+            if count is None:
+                return None  # row newer than the backfill cut — honest pending
+            if ccount <= 0:
+                return 0.0
+            # Clamp: 64 of 88,569 ITV rows carry a stale (low) contract_count
+            # vs live contracts — without this they'd serve >100% rates.
+            return min(100.0, round(int(count) / ccount * 100.0, 1))
+
+        a = aria.get(row["vendor_id"])
         items.append(VendorPoolItem(
             rank=rank,
             vendor_id=row["vendor_id"],
             vendor_name=row["vendor_name"],
-            contract_count=int(row["contract_count"] or 0),
+            contract_count=ccount,
             total_value_mxn=value,
             share_of_institution_pct=round(share, 2),
             first_year=row["first_year"],
             last_year=row["last_year"],
             avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] is not None else None,
-            # Degraded fields — None (NOT 0) signals "not yet computed" so the
-            # Z2 register renders "—" + shimmer instead of a misleading 0%.
-            # Filled with real counts by the background warmup.
-            high_risk_count=None,
-            high_risk_pct=None,
-            direct_award_count=None,
-            direct_award_pct=None,
-            single_bid_count=None,
-            single_bid_pct=None,
-            ips_tier=None,
-            primary_pattern=None,
-            in_ground_truth=0,
+            high_risk_count=int(hr_count) if hr_count is not None else None,
+            high_risk_pct=_pct(hr_count),
+            direct_award_count=int(da_count) if da_count is not None else None,
+            direct_award_pct=_pct(da_count),
+            single_bid_count=int(sb_count) if sb_count is not None else None,
+            single_bid_pct=_pct(sb_count),
+            ips_tier=int(a["ips_tier"]) if a and a["ips_tier"] is not None else None,
+            primary_pattern=a["primary_pattern"] if a else None,
+            in_ground_truth=int(a["in_ground_truth"]) if a and a["in_ground_truth"] is not None else 0,
+            is_efos_definitivo=int(a["is_efos_definitivo"]) if a and a["is_efos_definitivo"] is not None else None,
+            is_sfp_sanctioned=int(a["is_sfp_sanctioned"]) if a and a["is_sfp_sanctioned"] is not None else None,
+            is_disappeared=int(a["is_disappeared"]) if a and a["is_disappeared"] is not None else None,
         ))
 
     top1 = items[0] if items else None
@@ -1503,12 +1564,27 @@ def get_institution_vendor_pool(
                 return cached
             return cached.model_copy(update={"data": cached.data[:limit]})
 
-    # Cold start — return degraded response NOW + warm full cache in background.
+    # Cold start — the fast path now reads the backfilled at-rest counts, so
+    # when every row carries scoped flags the response IS complete: promote it
+    # straight into the cache and never spawn the 60-120s live aggregate.
     degraded = _z2_compute_degraded(institution_id)
     if degraded is None:
         raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
-    # Spawn the heavy warmup if no other thread is doing it for this institution.
+    is_complete = bool(degraded.data) and all(
+        v.high_risk_pct is not None for v in degraded.data
+    )
+    if is_complete or not degraded.data:
+        with _z2_pool_lock:
+            _z2_pool_cache[institution_id] = degraded
+            _z2_pool_cache_ts[institution_id] = datetime.now().timestamp()
+        response.headers["Cache-Control"] = "public, max-age=300"
+        if limit < len(degraded.data):
+            return degraded.model_copy(update={"data": degraded.data[:limit]})
+        return degraded
+
+    # Legacy fallback (un-backfilled DB or post-backfill rows): spawn the heavy
+    # warmup if no other thread is doing it for this institution.
     with _z2_warmup_lock:
         warmup_needed = institution_id not in _z2_warmup_in_flight
         if warmup_needed:
@@ -1525,7 +1601,7 @@ def get_institution_vendor_pool(
                     _z2_warmup_in_flight.discard(institution_id)
         threading.Thread(target=_warm, daemon=True, name=f"z2-warmup-{institution_id}").start()
 
-    response.headers["Cache-Control"] = "no-store"  # don't cache degraded
+    response.headers["Cache-Control"] = "no-store"  # don't cache incomplete
     if limit < len(degraded.data):
         return degraded.model_copy(update={"data": degraded.data[:limit]})
     return degraded

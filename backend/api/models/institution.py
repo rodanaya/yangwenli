@@ -215,6 +215,11 @@ class VendorPoolItem(BaseModel):
     ips_tier: Optional[int] = None
     primary_pattern: Optional[str] = None
     in_ground_truth: int = 0
+    # Official-registry seals (aria_queue passthrough — documentary facts,
+    # not model output; None = vendor not in the ARIA queue)
+    is_efos_definitivo: Optional[int] = None
+    is_sfp_sanctioned: Optional[int] = None
+    is_disappeared: Optional[int] = None
 
 
 class VendorPoolResponse(BaseModel):
