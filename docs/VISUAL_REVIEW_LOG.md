@@ -4359,3 +4359,49 @@ Grep scans completed. All matches confirmed false positives:
 
 ### Overall: WARN
 HTTP and API checks blocked by Anthropic Egress Gateway network policy (cloud runner IP not in external allowlist). Not a site failure — confirmed via `x-deny-reason: host_not_allowed` header. Bilingual scan clean. No regressions detected.
+
+---
+## Visual Review — 2026-06-12T06:06:17Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 | WARN |
+| /atlas | 403 | WARN |
+| /aria | 403 | WARN |
+| /sectors | 403 | WARN |
+| /sectors/salud | 403 | WARN |
+| /cases | 403 | WARN |
+| /methodology | 403 | WARN |
+| /stories/el-ejercito-fantasma | 403 | WARN |
+
+> **Note**: All 403s originate from the Anthropic cloud runner egress gateway (`x-deny-reason: host_not_allowed`). TLS handshake completes to 37.60.232.109 — server is reachable, SSL cert valid (CN=rubli.xyz, expires 2026-07-12). Not a site outage. Identical pattern to all prior automated runs from this environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — Anthropic egress gateway (host not in allowlist) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — Anthropic egress gateway (host not in allowlist) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — Anthropic egress gateway (host not in allowlist) | WARN |
+| /api/v1/sectors | BLOCKED — Anthropic egress gateway (host not in allowlist) | WARN |
+
+> Empty response bodies returned; JSON parse failed. Not indicative of backend failure — same egress restriction applies to all API calls from this runner. TLS certificate renewed (was expiring; new expiry 2026-07-12).
+
+### Bilingual Gaps
+Grep scans completed on `frontend/src/pages/` and `frontend/src/components/`. All matches confirmed false positives:
+- `InstitutionScorecards.tsx:444` — `TIER_STYLES[tierName as TierKey]` TypeScript constant accessor, not a rendered string. OK.
+- `CaseLibrary.tsx:19` — inline comment only. OK.
+- `Methodology.tsx:124` — academic citation (Mahalanobis, P.C. 1936). Untranslatable bibliographic reference. OK.
+- `InstitutionLeague.tsx:203,754` — `TIER_STYLES.Excelente.color` code references, not rendered text. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property `target_type`. Not user-facing. OK.
+- `ExpedienteSpine.tsx:72` — TypeScript return type annotation. OK.
+- `ExploreCanvas.tsx:1417–1432` — comment block + corporate-form token array (`S.A.`, `C.V.`, etc.). OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155–167` — all pattern labels properly bilingual via `isEs ? ES : EN`. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by Anthropic Egress Gateway network policy (cloud runner IP not in external allowlist). Not a site failure — TLS cert valid and renewed, server IP confirmed reachable. Bilingual scan clean. No regressions detected.
