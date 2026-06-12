@@ -73,7 +73,7 @@ export function VendorNetworkTab({
   shap,
   onOpenNetworkGraph,
 }: VendorNetworkTabProps) {
-  const { i18n } = useTranslation(['vendors'])
+  const { t, i18n } = useTranslation(['vendors', 'aria'])
   const isEs = i18n.language.startsWith('es')
 
   const scandalList =
@@ -166,7 +166,11 @@ export function VendorNetworkTab({
             <div className="mt-3 space-y-1 text-[11px] font-mono tabular-nums">
               <div>
                 <span className="text-text-muted">{isEs ? 'Estado: ' : 'Status: '}</span>
-                <span className="text-text-secondary uppercase tracking-wider">{aria.review_status}</span>
+                <span className="text-text-secondary uppercase tracking-wider">
+                  {aria.review_status
+                    ? t(`aria:status.${aria.review_status}`, { defaultValue: aria.review_status })
+                    : '—'}
+                </span>
               </div>
               {aria.primary_pattern && (
                 <div>

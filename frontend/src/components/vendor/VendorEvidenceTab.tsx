@@ -297,12 +297,12 @@ export function VendorEvidenceTab({
                   <div className="flex flex-wrap gap-2 mt-1">
                     {c.role && (
                       <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
-                        {isEs ? 'Rol' : 'Role'}: {c.role}
+                        {isEs ? 'Rol' : 'Role'}: {localizeGtEnum(c.role, isEs, GT_ROLE_ES)}
                       </span>
                     )}
                     {c.evidence_strength && (
                       <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
-                        {isEs ? 'Evidencia' : 'Evidence'}: {c.evidence_strength}
+                        {isEs ? 'Evidencia' : 'Evidence'}: {localizeGtEnum(c.evidence_strength, isEs, GT_EVIDENCE_ES)}
                       </span>
                     )}
                   </div>
@@ -477,4 +477,50 @@ function VendorBenchmarkBars({
       </p>
     </section>
   )
+}
+
+// ─── GT enum localization (§ 7 Los Signos) ──────────────────────────────────
+// ground_truth_vendors.role / .evidence_strength carry mixed snake_case enums
+// plus occasional analyst free text. Known enums get a proper ES label; unknown
+// values fall back to underscore-cleaned raw text (free text renders as-is).
+
+const GT_ROLE_ES: Record<string, string> = {
+  primary: 'Principal',
+  secondary: 'Secundario',
+  beneficiary: 'Beneficiario',
+  primary_beneficiary: 'Beneficiario principal',
+  direct_beneficiary: 'Beneficiario directo',
+  primary_suspect: 'Sospechoso principal',
+  shell_company: 'Empresa fantasma',
+  shell_vendor: 'Empresa fantasma',
+  suspected_shell: 'Presunta empresa fantasma',
+  ghost_company: 'Empresa fantasma',
+  intermediary: 'Intermediario',
+  'co-conspirator': 'Coconspirador',
+  co_conspirator: 'Coconspirador',
+  bribing_vendor: 'Proveedor sobornante',
+  captured_vendor: 'Proveedor capturado',
+  corporate_sibling: 'Filial corporativa',
+  sanctioned_individual: 'Persona sancionada',
+  sole_supplier: 'Proveedor único',
+}
+
+const GT_EVIDENCE_ES: Record<string, string> = {
+  high: 'Alta',
+  strong: 'Fuerte',
+  medium: 'Media',
+  moderate: 'Moderada',
+  low: 'Baja',
+  weak: 'Débil',
+  direct: 'Directa',
+  circumstantial: 'Circunstancial',
+  statistical: 'Estadística',
+  confirmed_corrupt: 'Corrupción documentada',
+}
+
+function localizeGtEnum(raw: string, isEs: boolean, esMap: Record<string, string>): string {
+  const key = raw.trim().toLowerCase()
+  if (isEs && esMap[key]) return esMap[key]
+  // EN (or unmapped ES): clean snake_case → spaces; CSS uppercases for display.
+  return key.length <= 32 ? raw.replace(/_/g, ' ') : raw
 }

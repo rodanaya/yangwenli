@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   Tooltip,
   TooltipContent,
@@ -42,12 +43,27 @@ const RISK_STYLES = {
   },
 } as const
 
-const RISK_TOOLTIPS: Record<'critical' | 'high' | 'medium' | 'low', string> = {
+const RISK_TOOLTIPS_EN: Record<'critical' | 'high' | 'medium' | 'low', string> = {
   critical:
     'Critical risk — Strong match to documented fraud patterns. This is a statistical indicator, not proof of wrongdoing.',
   high: 'High risk — Elevated similarity to known corruption patterns.',
   medium: 'Medium risk — Some procurement anomalies detected relative to sector baseline.',
   low: 'Low risk — Few anomalies relative to sector baseline.',
+}
+
+const RISK_TOOLTIPS_ES: Record<'critical' | 'high' | 'medium' | 'low', string> = {
+  critical:
+    'Riesgo crítico — Fuerte similitud con patrones de fraude documentados. Es un indicador estadístico, no prueba de irregularidad.',
+  high: 'Riesgo alto — Similitud elevada con patrones de corrupción conocidos.',
+  medium: 'Riesgo medio — Algunas anomalías de contratación respecto a la base del sector.',
+  low: 'Riesgo bajo — Pocas anomalías respecto a la base del sector.',
+}
+
+const RISK_LABELS_ES: Record<'critical' | 'high' | 'medium' | 'low', string> = {
+  critical: 'Crítico',
+  high: 'Alto',
+  medium: 'Medio',
+  low: 'Bajo',
 }
 
 export function RiskLevelPill({
@@ -57,13 +73,15 @@ export function RiskLevelPill({
   className,
   score,
 }: RiskLevelPillProps) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language?.startsWith('es') ?? false
   const s = RISK_STYLES[level]
   const padding = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm'
 
-  const baseTooltip = RISK_TOOLTIPS[level]
+  const baseTooltip = isEs ? RISK_TOOLTIPS_ES[level] : RISK_TOOLTIPS_EN[level]
   const tooltipText =
     score !== undefined
-      ? `${baseTooltip} Score: ${score.toFixed(3)}.`
+      ? `${baseTooltip} ${isEs ? 'Puntuación' : 'Score'}: ${score.toFixed(3)}.`
       : baseTooltip
 
   const pill = (
@@ -77,7 +95,7 @@ export function RiskLevelPill({
           aria-hidden="true"
         />
       )}
-      {level.charAt(0).toUpperCase() + level.slice(1)}
+      {isEs ? RISK_LABELS_ES[level] : level.charAt(0).toUpperCase() + level.slice(1)}
     </span>
   )
 

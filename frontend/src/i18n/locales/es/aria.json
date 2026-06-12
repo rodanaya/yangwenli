@@ -137,7 +137,19 @@
     "pending": "Pendiente",
     "reviewing": "En revisión",
     "confirmed": "Confirmado",
-    "dismissed": "Descartado"
+    "dismissed": "Descartado",
+    "needs_review": "Por revisar",
+    "reviewed": "Revisado",
+    "confirmed_corrupt": "Corrupción documentada",
+    "false_positive": "Falso positivo",
+    "fp_excluded": "FP estructural excluido",
+    "structural_fp": "FP estructural",
+    "cleared": "Revisado · sin hallazgos",
+    "reviewed_clean": "Revisado · sin hallazgos",
+    "skipped": "Omitido",
+    "reviewed_skip": "Omitido",
+    "gt_added": "Añadido a Ground Truth",
+    "classified": "Clasificado"
   },
   "reviewPopover": {
     "reviewStatus": "Estado de Revisión",

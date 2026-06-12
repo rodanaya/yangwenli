@@ -7,6 +7,7 @@
  * (the old fixed-348px SVG rendered tiny + centered). No chart dependency.
  */
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 interface WaterfallFeature {
@@ -15,6 +16,7 @@ interface WaterfallFeature {
   coefficient: number
   contribution: number
   label_en: string
+  label_es?: string
 }
 
 interface WaterfallRiskChartProps {
@@ -28,23 +30,25 @@ export function WaterfallRiskChart({
   features,
   className,
 }: WaterfallRiskChartProps) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language?.startsWith('es') ?? false
   const data = useMemo(() => {
     return [...features]
       .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
       .slice(0, 10)
       .map((f) => ({
-        label: f.label_en,
+        label: (isEs ? f.label_es : f.label_en) || f.label_en,
         contribution: f.contribution,
         feature: f.feature,
         z_score: f.z_score,
         coefficient: f.coefficient,
       }))
-  }, [features])
+  }, [features, isEs])
 
   if (data.length === 0) {
     return (
       <div className={cn('flex items-center justify-center h-48 text-xs text-text-muted', className)}>
-        No feature data available
+        {isEs ? 'Sin datos de factores disponibles' : 'No feature data available'}
       </div>
     )
   }

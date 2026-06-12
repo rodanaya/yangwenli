@@ -329,7 +329,9 @@ export function VendorActivityTab({
                     <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="sm" fullName />
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0 text-[11px] font-mono tabular-nums text-text-muted">
-                    <span className="text-text-secondary">{(share * 100).toFixed(0)}%</span>
+                    <span className="text-text-secondary">
+                      {share > 0 && share < 0.01 ? '<1%' : `${(share * 100).toFixed(0)}%`}
+                    </span>
                     <span className="text-text-primary font-medium">
                       {formatCompactMXN(inst.total_value_mxn)}
                     </span>

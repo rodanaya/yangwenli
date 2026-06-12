@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { analysisApi, categoriesApi } from '@/api/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { getStoryBySlug } from '@/lib/story-content'
+import { formatVendorName } from '@/lib/vendor/formatName'
 
 const CommandPalette = lazy(() =>
   import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette }))
@@ -102,6 +103,17 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     enabled: false,
   })
 
+  // Vendor breadcrumb — same cache-subscribe trick on VendorDossier's detail
+  // query (['vendor', id] via useVendorData). The crumb reads the vendor's
+  // actual name ("Grupo Farmacos Especializados") instead of the static
+  // English "Vendor Profile" label. Falls back to ENTITY_TYPE_LABELS below.
+  const vendorIdMatch = location.pathname.match(/^\/vendors\/(\d+)$/)
+  const { data: vendorForBreadcrumb } = useQuery<{ name?: string }>({
+    queryKey: ['vendor', vendorIdMatch ? Number(vendorIdMatch[1]) : -1],
+    queryFn: () => Promise.reject(new Error('header never fetches vendors')),
+    enabled: false,
+  })
+
   // Category breadcrumb — resolve numeric ID to actual category name
   const isCategoryPage = /^\/categories\/\d+/.test(location.pathname)
   const breadcrumbCategoryId = isCategoryPage ? parseInt(location.pathname.split('/')[2]) : NaN
@@ -164,7 +176,10 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         ? (caseForBreadcrumb.name_es || caseForBreadcrumb.name_en || null)
         : (caseForBreadcrumb.name_en || caseForBreadcrumb.name_es || null))
     : null
-  const title = caseBreadcrumbName ?? categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath, isEs))
+  const vendorBreadcrumbName: string | null = vendorIdMatch && vendorForBreadcrumb?.name
+    ? formatVendorName(vendorForBreadcrumb.name)
+    : null
+  const title = vendorBreadcrumbName ?? caseBreadcrumbName ?? categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath, isEs))
   // Parent breadcrumb segment — now a real Link, not an inert span (F4).
   // parentRoute was already computed here and discarded; we keep it so
   // "SECTORES / Salud" lets you click SECTORES back to /sectors.
@@ -373,14 +388,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   )
 }
 
-// Map of parent route → entity type label for numeric-ID child routes
-const ENTITY_TYPE_LABELS: Record<string, string> = {
-  vendors: 'Vendor Profile',
-  institutions: 'Institution Profile',
-  sectors: 'Sector Profile',
-  categories: 'Categoría',
-  cases: 'Case Detail',
-  investigation: 'Investigation',
+// Map of parent route → entity type label for numeric-ID child routes.
+// Static fallback only — vendor/case/category crumbs resolve the real entity
+// name from the dossier's own react-query cache first (see Header body).
+const ENTITY_TYPE_LABELS: Record<string, { en: string; es: string }> = {
+  vendors: { en: 'Vendor dossier', es: 'Expediente del proveedor' },
+  institutions: { en: 'Institution dossier', es: 'Expediente institucional' },
+  sectors: { en: 'Sector dossier', es: 'Expediente sectorial' },
+  categories: { en: 'Category', es: 'Categoría' },
+  cases: { en: 'Case dossier', es: 'Expediente del caso' },
+  investigation: { en: 'Investigation', es: 'Investigación' },
 }
 
 /**
@@ -419,7 +436,7 @@ function getBreadcrumbTitle(path: string, isEs = false): string {
   if (/^\d+$/.test(lastPart)) {
     const parentSegment = parts.length >= 2 ? parts[parts.length - 2] : ''
     const entityLabel = ENTITY_TYPE_LABELS[parentSegment]
-    if (entityLabel) return entityLabel
+    if (entityLabel) return isEs ? entityLabel.es : entityLabel.en
     const parentRoute = parts.slice(0, -1).join('/')
     const parentKey = ROUTE_I18N_KEYS[`/${parentRoute}`]
     if (parentKey) return `#${lastPart}`

@@ -137,7 +137,19 @@
     "pending": "Pending",
     "reviewing": "Reviewing",
     "confirmed": "Confirmed",
-    "dismissed": "Dismissed"
+    "dismissed": "Dismissed",
+    "needs_review": "Needs review",
+    "reviewed": "Reviewed",
+    "confirmed_corrupt": "Documented corruption",
+    "false_positive": "False positive",
+    "fp_excluded": "Structural FP excluded",
+    "structural_fp": "Structural FP",
+    "cleared": "Reviewed · no findings",
+    "reviewed_clean": "Reviewed · no findings",
+    "skipped": "Skipped",
+    "reviewed_skip": "Skipped",
+    "gt_added": "Added to Ground Truth",
+    "classified": "Classified"
   },
   "reviewPopover": {
     "reviewStatus": "Review Status",
