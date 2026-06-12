@@ -1,37 +1,44 @@
 /**
- * ARIA — Cola de Investigación
+ * ARIA — Cola de Riesgo · «El Registro de Asignación»
  *
- * Charter Archetype B (index) — one eye-path down the page.
- *   B0. Folio — Playfair nameplate + dek + dateline (no seal)
- *   B1. § EL SALDO — the queue's single finding as a sentence with numbers
- *   B2. El Filtro — ONE unified header (tier pills · search · pattern · presets)
- *   B3. El Registro — investigation rows, one per vendor, EntityIdentityChip-routed
- *   Coda. § · ADÓNDE IR — pattern-dossier CTAs (P2/P6) + top-T1 vendor chips
- *   Procedencia. Methodology footer
+ * La máquina propone, el analista dispone. Spec:
+ * .claude/designs/aria-cola-2026-06-11-spec.md (DESIGNUS panel, APPROVED 2026-06-12).
  *
- * Credo: "evenflow" — ONE obvious action per element.
+ *   B0. Folio · B1. § EL SALDO — kept frames (sentence carries the GT/DISC split)
+ *   § EL EMBUDO — log-width compression band = the tier navigation
+ *   Honest filter rail — every visible control is server-backed
+ *   § EL REGISTRO — 40px agate rows (rank+provenance · mills IPS · driver tag ·
+ *     E/S/W ticks · memo provenance · disposition rail/cell)
+ *   EL DESGLOSE — lazy in-row case file with the one-click verdict bar
+ *   Coda. § · ADÓNDE IR · § METODOLOGÍA — kept
+ *
+ * Data-honesty invariants (panel audit F1/F2): T1 has ZERO 'pending' rows —
+ * start-here keys on needs_review; progress never renders from
+ * t1_reviewed_count (it counts 299/299).
  */
 
-import { useState, useRef, useEffect, Fragment } from 'react'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useSearchParams, Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { motion } from 'framer-motion'
-import { staggerContainer, staggerItem } from '@/lib/animations'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ariaApi } from '@/api/client'
-import { TableExportButton } from '@/components/TableExportButton'
 import { GhostSuspectsPanel } from '@/components/aria/GhostSuspectsPanel'
+import { FunnelBand } from '@/components/aria/FunnelBand'
+import { QueueRegisterHeader } from '@/components/aria/QueueRegisterHeader'
+import { RegisterRow } from '@/components/aria/RegisterRow'
+import { RowExpand } from '@/components/aria/RowExpand'
+import { bucketStatus } from '@/components/aria/disposition'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatCompactMXN, formatCompactUSDByYear, formatDualCurrency, formatNumber } from '@/lib/utils'
-import { getSectorName, SECTORS } from '@/lib/constants'
+import { cn, formatDualCurrency, formatNumber } from '@/lib/utils'
+import { SECTORS } from '@/lib/constants'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import {
   Search,
   FileText,
   ArrowRight,
-  Check,
   X as XIcon,
 } from 'lucide-react'
 
@@ -91,50 +98,6 @@ const REVIEW_STATUS_META: Record<ReviewStatus, { className: string }> = {
 }
 
 // ============================================================================
-// Tier pill — used in header filter row
-// ============================================================================
-
-function TierFilterPill({
-  tier,
-  count,
-  isActive,
-  loading,
-  onClick,
-}: {
-  tier: TierConfig
-  count: number
-  isActive: boolean
-  loading?: boolean
-  onClick: () => void
-}) {
-  const { t } = useTranslation('aria')
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
-        isActive
-          ? cn(tier.pillBg, tier.pillText, 'border-current')
-          : 'bg-background-card text-text-secondary border-border hover:border-border'
-      )}
-      aria-pressed={isActive}
-    >
-      <span className={cn('font-mono font-bold', isActive ? tier.textColor : 'text-text-muted')}>
-        {t(tier.labelKey).replace(/^Nivel\s+/i, 'T')}
-      </span>
-      {loading
-        ? <span className="w-6 h-2.5 rounded bg-background-elevated animate-pulse" />
-        : <span className="font-mono tabular-nums">{formatNumber(count)}</span>
-      }
-    </button>
-  )
-}
-
-// (TierNavigationRow component removed in the AriaQueue redesign — tier
-//  selection is now a compact pill row inside the unified filter bar
-//  via TierFilterPill above.)
-
-// ============================================================================
 // Pattern chip — compact filter chip
 // ============================================================================
 
@@ -170,130 +133,6 @@ function PatternChip({
   )
 }
 
-// ============================================================================
-// Review popover (kept — useful inline action)
-// ============================================================================
-
-function ReviewPopover({
-  vendorId,
-  currentStatus,
-  inGroundTruth,
-  onClose,
-}: {
-  vendorId: number
-  currentStatus: ReviewStatus | null | undefined
-  inGroundTruth?: boolean
-  onClose: () => void
-}) {
-  const { t } = useTranslation('aria')
-  const queryClient = useQueryClient()
-  const [status, setStatus] = useState<ReviewStatus>((currentStatus ?? 'pending') as ReviewStatus)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [onClose])
-
-  const mutation = useMutation({
-    mutationFn: (s: ReviewStatus) => ariaApi.updateReview(vendorId, { review_status: s }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['aria-queue-leads'] })
-      queryClient.invalidateQueries({ queryKey: ['aria-queue'] })
-      onClose()
-    },
-  })
-
-  const promoteMutation = useMutation({
-    mutationFn: () => ariaApi.promoteToGroundTruth(vendorId, { confidence_level: 'medium' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['aria-queue-leads'] })
-      queryClient.invalidateQueries({ queryKey: ['aria-queue'] })
-      queryClient.invalidateQueries({ queryKey: ['aria-stats'] })
-      onClose()
-    },
-  })
-
-  const statuses: ReviewStatus[] = ['pending', 'reviewing', 'confirmed', 'dismissed']
-
-  return (
-    <div
-      ref={ref}
-      className="absolute right-0 top-8 z-50 w-56 rounded-sm border border-border bg-background shadow-xl p-3 space-y-2"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <p className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted font-bold mb-2">
-        {t('reviewPopover.reviewStatus')}
-      </p>
-      {statuses.map((s) => {
-        const meta = REVIEW_STATUS_META[s]
-        const isSelected = status === s
-        return (
-          <button
-            key={s}
-            onClick={() => setStatus(s)}
-            className={cn(
-              'w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium border transition-colors',
-              isSelected
-                ? cn(meta.className, 'ring-1 ring-border')
-                : 'bg-background-card border-border text-text-secondary hover:border-border'
-            )}
-          >
-            {isSelected && <Check className="h-3 w-3 shrink-0" />}
-            {!isSelected && <span className="w-3 shrink-0" />}
-            {t('status.' + s)}
-          </button>
-        )
-      })}
-      <div className="flex items-center gap-2 pt-1 border-t border-border">
-        <button
-          onClick={() => mutation.mutate(status)}
-          disabled={mutation.isPending}
-          className="flex-1 py-1.5 rounded text-xs font-medium bg-risk-high text-white hover:opacity-90 disabled:opacity-50 transition-colors"
-        >
-          {mutation.isPending ? t('reviewPopover.saving') : t('reviewPopover.save')}
-        </button>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded text-text-muted hover:text-text-secondary hover:bg-background-card transition-colors"
-          aria-label={t('reviewPopover.close')}
-        >
-          <XIcon className="h-3.5 w-3.5" aria-hidden="true" />
-        </button>
-      </div>
-      {status === 'confirmed' && !inGroundTruth && (
-        <button
-          onClick={() => promoteMutation.mutate()}
-          disabled={promoteMutation.isPending || promoteMutation.isSuccess}
-          className="w-full py-1.5 rounded text-xs font-medium border border-risk-high/30 text-risk-high hover:bg-risk-high/10 disabled:opacity-50 transition-colors"
-        >
-          {promoteMutation.isPending ? t('reviewPopover.promoting') : promoteMutation.isSuccess ? t('reviewPopover.promotedToGT') : t('reviewPopover.promoteToGT')}
-        </button>
-      )}
-      {inGroundTruth && (
-        <p className="text-[10px] text-text-muted text-center">{t('reviewPopover.alreadyInGT')}</p>
-      )}
-      {(mutation.isError || promoteMutation.isError) && (
-        <p className="text-[10px] text-risk-critical">{t('reviewPopover.error')}</p>
-      )}
-    </div>
-  )
-}
-
-// ============================================================================
-// Investigation Row — the core card, replaces both SpotlightCard + LeadRow
-// Evenflow: [Tier] [Vendor name · subline] [Pattern] [IPS] [→]
-// ============================================================================
-
-// ============================================================================
-// Ghost Suspects Panel — shown when P2 pattern filter is active
-// ============================================================================
-
-// TIER_GHOST_META + SIG_LABELS + SIG_KEYS + GhostSuspectsPanel itself moved
-// to components/aria/GhostSuspectsPanel.tsx (167 LOC removed from this file).
 
 /**
  * FilterChip — small removable pill for the Active-filter summary bar.
@@ -333,235 +172,6 @@ function FilterChip({
   )
 }
 
-// 2026-05-08 audit fix: title was monolingual EN — now picks ES on `es` locale.
-const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; titleEn: string; titleEs: string }> = {
-  pending:    { char: '○', color: 'var(--color-text-muted)',     titleEn: 'Pending review',      titleEs: 'Revisión pendiente' },
-  reviewing:  { char: '◐', color: 'var(--color-risk-high)',      titleEn: 'Under review',         titleEs: 'En revisión' },
-  confirmed:  { char: '✓', color: 'var(--color-risk-critical)',  titleEn: 'Confirmed corrupt',    titleEs: 'Corrupción confirmada' },
-  dismissed:  { char: '⊘', color: 'var(--color-text-muted)',     titleEn: 'Dismissed',            titleEs: 'Descartado' },
-}
-
-function getTopBadges(item: AriaQueueItem, isEs: boolean): Array<{ code: string; cls: string; title: string }> {
-  const badges: Array<{ code: string; cls: string; title: string }> = []
-  if (item.in_ground_truth) {
-    badges.push({ code: 'GT', cls: 'bg-accent/10 text-accent border-accent/30', title: isEs ? 'Caso documentado de corrupción' : 'Documented corruption case' })
-  }
-  if (item.is_efos_definitivo) {
-    badges.push({ code: 'EFOS', cls: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30', title: 'SAT EFOS Definitivo' })
-  }
-  if (item.is_sfp_sanctioned) {
-    badges.push({ code: 'SFP', cls: 'bg-risk-high/10 text-risk-high border-risk-high/30', title: isEs ? 'Sancionado por la SFP' : 'Sanctioned by SFP' })
-  }
-  if (item.web_evidence_verdict === 'SANCTION') {
-    badges.push({ code: 'SANC', cls: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30', title: 'CENTINELA — Sanction' })
-  } else if (item.web_evidence_verdict === 'CORRUPTION_MENTION') {
-    badges.push({ code: 'CORR', cls: 'bg-risk-high/10 text-risk-high border-risk-high/30', title: 'CENTINELA — Corruption mention' })
-  }
-  if (item.memo_provenance === 'llm_narrative') {
-    badges.push({ code: 'LLM', cls: 'bg-accent-data/10 text-accent-data border-accent-data/20', title: isEs ? 'Memo investigativo IA' : 'AI investigation memo' })
-  }
-  if (!item.in_ground_truth && item.ips_tier === 1) {
-    badges.push({ code: 'DISC', cls: 'bg-accent-data/10 text-accent-data border-accent-data/20', title: isEs ? 'Descubrimiento del modelo' : 'Model discovery' })
-  }
-  return badges
-}
-
-function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }) {
-  const { t } = useTranslation('aria')
-  const navigate = useNavigate()
-  const [reviewOpen, setReviewOpen] = useState(false)
-
-  const ips = item.ips_final ?? 0
-  const ipsPct = Math.round(ips * 100)
-  const tier = item.ips_tier ?? 4
-  const tierCfg = TIER_CONFIG.find((c) => c.tier === tier) ?? TIER_CONFIG[3]
-  const patternKey = item.primary_pattern as PatternKey | null
-  const patternMeta = patternKey ? PATTERN_META[patternKey] : null
-
-  const value = item.total_value_mxn ?? 0
-  const contracts = item.total_contracts ?? 0
-  const sector = item.primary_sector_name ?? null
-
-  const lastYear = item.last_contract_year ?? null
-  const yearsActive = item.years_active ?? null
-  const firstYear =
-    item.first_contract_year ??
-    (lastYear != null && yearsActive != null && yearsActive > 0
-      ? lastYear - yearsActive + 1
-      : null)
-  const isActive = lastYear != null && lastYear >= 2024
-  const isDormant = lastYear != null && lastYear < 2022
-
-  const reviewStatus = (item.review_status as ReviewStatus | undefined) ?? 'pending'
-  const reviewGlyph = REVIEW_GLYPH[reviewStatus] ?? REVIEW_GLYPH.pending
-
-  const riskColor =
-    ips >= 0.75 ? 'var(--color-risk-critical)'
-    : ips >= 0.50 ? 'var(--color-risk-high)'
-    : ips >= 0.30 ? 'var(--color-risk-medium)'
-    : 'var(--color-text-muted)'
-
-  const allBadges = getTopBadges(item, isEs)
-  const shownBadges = allBadges.slice(0, 2)
-  const overflowCount = allBadges.length - 2
-
-  const handleClick = () => {
-    navigate(`/vendors/${item.vendor_id}`)
-  }
-
-  return (
-    <motion.div variants={staggerItem}>
-      <div
-        role="link"
-        tabIndex={0}
-        onClick={handleClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleClick()
-          }
-        }}
-        className={cn(
-          'group relative grid items-center gap-x-3 gap-y-0.5 px-3 py-2 border-b border-border/50 border-l-2 bg-background-card hover:bg-background-elevated/40 transition-colors cursor-pointer',
-          'grid-cols-[1fr_auto_auto_auto_auto] sm:grid-cols-[1fr_auto_auto_auto_auto_auto]',
-          tierCfg.accent
-        )}
-      >
-        {/* ─── LINE 1: Name + pattern + sector + score + badges + review + arrow ── */}
-        <div className="min-w-0 flex items-center gap-2">
-          <div onClick={(e) => e.stopPropagation()} className="min-w-0">
-            <EntityIdentityChip
-              type="vendor"
-              id={item.vendor_id}
-              name={item.vendor_name}
-              size="md"
-              riskScore={item.avg_risk_score}
-              sectorCode={item.primary_sector_name ?? null}
-              ariaTier={item.ips_tier}
-              hideIcon
-            />
-          </div>
-          {patternKey && patternMeta && (
-            <span
-              className={cn('shrink-0 font-mono text-[9px] font-bold px-1 py-0.5 rounded-sm leading-none border', patternMeta.bg, patternMeta.text, patternMeta.border)}
-            >
-              {patternKey}
-            </span>
-          )}
-          {sector && (
-            <span className="shrink-0 text-[10px] font-mono uppercase tracking-[0.06em] text-text-muted hidden sm:inline" title={getSectorName(sector, isEs ? 'es' : 'en')}>
-              {getSectorName(sector, isEs ? 'es' : 'en')}
-            </span>
-          )}
-        </div>
-
-        {/* IPS score — compact number badge */}
-        <div
-          className="shrink-0 flex items-center justify-end"
-          title={`IPS ${ipsPct} · T${tier}`}
-        >
-          <span
-            className="font-mono tabular-nums text-xs font-bold px-1.5 py-0.5 rounded-sm"
-            style={{ color: riskColor, background: `${riskColor}18`, border: `1px solid ${riskColor}33` }}
-          >
-            {ipsPct}
-          </span>
-        </div>
-
-        {/* Badges — max 2 + overflow */}
-        <div className="shrink-0 flex items-center gap-1">
-          {shownBadges.map((b) => (
-            <span
-              key={b.code}
-              className={cn('inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider border', b.cls)}
-              title={b.title}
-            >
-              {b.code}
-            </span>
-          ))}
-          {overflowCount > 0 && (
-            <span
-              className="text-[8px] font-mono text-text-muted bg-background-elevated rounded px-1 py-0.5"
-              title={allBadges.slice(2).map(b => b.code).join(', ')}
-            >
-              +{overflowCount}
-            </span>
-          )}
-        </div>
-
-        {/* Review glyph */}
-        <div className="shrink-0 flex items-center" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => setReviewOpen((v) => !v)}
-            className="inline-flex items-center justify-center w-6 h-6 rounded text-base leading-none hover:bg-background-elevated transition-colors"
-            style={{ color: reviewGlyph.color }}
-            aria-label={t('reviewPopover.updateTitle')}
-            aria-expanded={reviewOpen}
-            title={`${isEs ? reviewGlyph.titleEs : reviewGlyph.titleEn} — ${t('reviewPopover.updateTitle')}`}
-          >
-            {reviewGlyph.char}
-          </button>
-          {reviewOpen && (
-            <ReviewPopover
-              vendorId={item.vendor_id}
-              currentStatus={reviewStatus}
-              inGroundTruth={!!item.in_ground_truth}
-              onClose={() => setReviewOpen(false)}
-            />
-          )}
-        </div>
-
-        {/* Arrow */}
-        <ArrowRight className="hidden sm:block h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all shrink-0" aria-hidden="true" />
-
-        {/* ─── LINE 2: Financials + timeline ─────────────────────────── */}
-        <div className="col-span-full flex items-center gap-2.5 text-[10px] font-mono text-text-muted flex-wrap">
-          {value > 0 && (
-            <>
-              <span className="text-[11px] font-bold tabular-nums text-text-primary">
-                {formatCompactMXN(value)}
-              </span>
-              <span className="tabular-nums text-text-muted/70">
-                ~{formatCompactUSDByYear(value)}
-              </span>
-            </>
-          )}
-          {contracts > 0 && (
-            <span className="tabular-nums">
-              {formatNumber(contracts)}{' '}
-              {isEs ? (contracts === 1 ? 'contrato' : 'contratos') : (contracts === 1 ? 'contract' : 'contracts')}
-            </span>
-          )}
-          {firstYear != null && lastYear != null && (
-            <span className="tabular-nums">
-              '{String(firstYear).slice(2)}–'{String(lastYear).slice(2)}
-            </span>
-          )}
-          {isActive ? (
-            <span className="inline-flex items-center gap-1 text-risk-high">
-              <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
-              <span className="uppercase tracking-[0.08em] font-bold">
-                {isEs ? `Activo ${lastYear}` : `Active ${lastYear}`}
-              </span>
-            </span>
-          ) : isDormant && lastYear ? (
-            <span className="text-text-muted/70">
-              {isEs ? `Inactivo desde ${lastYear}` : `Dormant since ${lastYear}`}
-            </span>
-          ) : null}
-          {sector && (
-            <span className="sm:hidden inline-flex items-center gap-1">
-              <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" aria-hidden="true" />
-              <span className="uppercase tracking-[0.06em]">
-                {getSectorName(sector, isEs ? 'es' : 'en')}
-              </span>
-            </span>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  )
-}
 
 // ============================================================================
 // SaldoAnchor — Playfair Display Italic 800 tabular-nums anchor number for the
@@ -618,7 +228,9 @@ function SaldoAnchor({
 
 export default function AriaPage() {
   const { t, i18n } = useTranslation('aria')
-  const [search, setSearch] = useState('')
+  // Debounced server search — the old input fired one fetch per keystroke.
+  const { inputValue: search, setInputValue: setSearch, debouncedValue: debouncedSearch, clear: clearSearch } =
+    useDebouncedSearch('', { delay: 300 })
   const [searchParams, setSearchParams] = useSearchParams()
   const patternFilter = searchParams.get('pattern')
   const setPatternFilter = (pattern: string | null) => {
@@ -636,42 +248,28 @@ export default function AriaPage() {
   const [newVendorOnly, setNewVendorOnly] = useState(false)
   const [novelOnly, setNovelOnly] = useState(false)
   const [sectorFilter, setSectorFilter] = useState<number | null>(null)
-  const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatus | null>(null)
+  // Free-string server param — canonical 4 plus CENTINELA script statuses
+  // (the "Por revisar" chip sends 'needs_review'; aria.py:144–146 binds it
+  // parameterized). W5: every filter on this page is server-backed.
+  const [reviewStatusFilter, setReviewStatusFilter] = useState<string | null>(null)
+  const [efosOnly, setEfosOnly] = useState(false)
+  // "Histórico 10+" — wires the existing, never-sent min_years_active param.
+  const [minYears, setMinYears] = useState<number | null>(null)
   const [page, setPage] = useState(1)
 
-  // Administration overlap filter — Mexican sexenio chips. Client-side
-  // computed against last_contract_year + years_active (we derive
-  // first_year = last_year - years_active + 1 and check whether the
-  // vendor's [first, last] range overlaps the sexenio's [start, end].
-  type AdminKey = 'sheinbaum' | 'amlo' | 'pena' | 'calderon' | 'fox'
-  const [adminFilter, setAdminFilter] = useState<AdminKey | null>(null)
+  // One expand open at a time — EL DESGLOSE state.
+  const [expandedId, setExpandedId] = useState<number | null>(null)
 
-  // External flag filters — client-side OR drives api param when supported.
-  // gtOnly + sfpOnly are client-side; efosOnly hits the existing API param.
-  const [gtOnly, setGtOnly] = useState(false)
-  const [efosOnly, setEfosOnly] = useState(false)
-  const [sfpOnly, setSfpOnly] = useState(false)
-  const [webEvidenceOnly, setWebEvidenceOnly] = useState(false)
-  // S.3: filter to vendors with genuine LLM investigation memos
-  const [llmMemoOnly, setLlmMemoOnly] = useState(false)
-
-  // Client-side sort within the current page. Server returns IPS-ordered;
-  // user can re-sort by what's actually meaningful for their triage. The
-  // 'ips' sort key is server-default so picking it preserves backend order.
-  type SortKey = 'ips' | 'value' | 'recency' | 'tenure' | 'pattern'
-  const [sortKey, setSortKey] = useState<SortKey>('ips')
-
-  // Disclosure state for the "+ More filters" panel. Hides secondary
-  // filters by default to drop the chrome from 9 rows to 3-4.
+  // Disclosure state for the "+ More filters" panel.
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
 
   const PER_PAGE = 50
 
-  // refetchOnWindowFocus auto-recovers from transient deploy windows /
-  // backend restarts — when the user tabs back to the page, react-query
-  // refetches in the background and replaces the stale data. Without it
-  // a 30-second deploy blip strands the user on a broken page until they
-  // manually reload. Same pattern applied to RedThread (see 41c500b).
+  // Stats keeps refetchOnWindowFocus (cheap, feeds the funnel + strip and
+  // auto-recovers from deploy blips); the QUEUE query drops it and both gain
+  // placeholderData so the rendered register never collapses to skeletons
+  // mid-read (W7 — observed 4,955px → 1,714px on tab-return; pattern:
+  // InstitutionLeague.tsx:983).
   const {
     data: stats,
     isLoading: statsLoading,
@@ -682,15 +280,16 @@ export default function AriaPage() {
     queryFn: () => ariaApi.getStats(),
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: true,
+    placeholderData: (prev) => prev,
   })
 
   const { data: leadsData, isLoading: leadsLoading, isError: leadsError } = useQuery({
-    queryKey: ['aria-queue-leads', { page, search, patternFilter, tierFilter, newVendorOnly, novelOnly, sectorFilter, reviewStatusFilter, efosOnly }],
+    queryKey: ['aria-queue-leads', { page, search: debouncedSearch, patternFilter, tierFilter, newVendorOnly, novelOnly, sectorFilter, reviewStatusFilter, efosOnly, minYears }],
     queryFn: () =>
       ariaApi.getQueue({
         page,
         per_page: PER_PAGE,
-        search: search || undefined,
+        search: debouncedSearch || undefined,
         pattern: patternFilter ?? undefined,
         new_vendor_only: newVendorOnly || undefined,
         novel_only: novelOnly || undefined,
@@ -698,9 +297,11 @@ export default function AriaPage() {
         tier: tierFilter ?? undefined,
         sector_id: sectorFilter ?? undefined,
         efos_only: efosOnly || undefined,
+        min_years_active: minYears ?? undefined,
       }),
     staleTime: 2 * 60_000,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
   })
 
   const totalLeads = leadsData?.pagination?.total ?? 0
@@ -708,55 +309,17 @@ export default function AriaPage() {
 
   const patternCounts = stats?.pattern_counts ?? {}
 
-  const leadsItemsRaw: AriaQueueItem[] = leadsData?.data ?? []
+  // Server truth, verbatim — the client filter/sort pipeline is deleted (W5:
+  // controls whose operand was 50 rows presented as global are gone, not
+  // relabeled). Order is always the server's ips_final DESC.
+  const leadsItems: AriaQueueItem[] = leadsData?.data ?? []
+  const queueSummary = leadsData?.summary ?? null
 
-  // Sexenio definitions — Mexican federal administrations. We check
-  // [first_year, last_year] overlap with each window. Sheinbaum is
-  // 2024-present; we use 2025+ as a hard right edge.
-  const ADMIN_RANGES: Record<AdminKey, [number, number]> = {
-    sheinbaum: [2024, 2030],
-    amlo:      [2018, 2024],
-    pena:      [2012, 2018],
-    calderon:  [2006, 2012],
-    fox:       [2000, 2006],
-  }
-
-  // Client-side filters applied to the visible page after the API call.
-  // These are paired in the same pipeline as sort so the user can stack
-  // (e.g. P5 + AMLO + GT-only).
-  const leadsItems: AriaQueueItem[] = (() => {
-    let arr = [...leadsItemsRaw]
-    if (gtOnly) arr = arr.filter((it) => it.in_ground_truth)
-    if (sfpOnly) arr = arr.filter((it) => it.is_sfp_sanctioned)
-    if (llmMemoOnly) arr = arr.filter((it) => it.memo_provenance === 'llm_narrative')
-    if (webEvidenceOnly) {
-      arr = arr.filter((it) => it.web_evidence_verdict && it.web_evidence_verdict !== 'NEGATIVE')
-      // Sort by evidence score descending when WEB filter is active (overrides IPS order)
-      if (sortKey === 'ips') arr.sort((a, b) => (b.web_evidence_score ?? 0) - (a.web_evidence_score ?? 0))
-    }
-    if (adminFilter) {
-      const [adminStart, adminEnd] = ADMIN_RANGES[adminFilter]
-      arr = arr.filter((it) => {
-        const last = it.last_contract_year ?? 0
-        const yrs = it.years_active ?? 1
-        const first = last > 0 ? last - yrs + 1 : 0
-        if (last === 0 || first === 0) return false
-        // Overlap test: [first, last] ∩ [adminStart, adminEnd] != ∅
-        return first <= adminEnd && last >= adminStart
-      })
-    }
-    if (sortKey === 'ips') return arr
-    if (sortKey === 'value') {
-      arr.sort((a, b) => (b.total_value_mxn ?? 0) - (a.total_value_mxn ?? 0))
-    } else if (sortKey === 'recency') {
-      arr.sort((a, b) => (b.last_contract_year ?? 0) - (a.last_contract_year ?? 0))
-    } else if (sortKey === 'tenure') {
-      arr.sort((a, b) => (b.years_active ?? 0) - (a.years_active ?? 0))
-    } else if (sortKey === 'pattern') {
-      arr.sort((a, b) => (a.primary_pattern ?? 'ZZ').localeCompare(b.primary_pattern ?? 'ZZ'))
-    }
-    return arr
-  })()
+  // Close any open desglose when the underlying slice changes — no ghost
+  // panels floating over different data.
+  useEffect(() => {
+    setExpandedId(null)
+  }, [page, debouncedSearch, patternFilter, tierFilter, newVendorOnly, novelOnly, sectorFilter, reviewStatusFilter, efosOnly, minYears])
 
   const tierCounts: Record<number, number> = {
     1: stats?.latest_run?.tier1_count ?? 0,
@@ -769,12 +332,31 @@ export default function AriaPage() {
   // (no new API call). Prefer Tier-1 rows; fall back to the highest-IPS rows
   // currently loaded so the coda is never empty under a non-T1 filter.
   const codaVendors: AriaQueueItem[] = (() => {
-    const sorted = [...leadsItemsRaw].sort((a, b) => (b.ips_final ?? 0) - (a.ips_final ?? 0))
+    const sorted = [...leadsItems].sort((a, b) => (b.ips_final ?? 0) - (a.ips_final ?? 0))
     const t1 = sorted.filter((it) => (it.ips_tier ?? 4) === 1)
     return (t1.length >= 3 ? t1 : sorted).slice(0, 3)
   })()
 
   const isEs = i18n.language.startsWith('es')
+
+  // "Siguiente por revisar" — the next OPEN row (needs_review / pending /
+  // reviewing) after the given index on this page. F1: T1 has zero 'pending'
+  // rows, so the open-work definition is bucket-based, not status==='pending'.
+  const nextOpenAfter = (fromId: number): AriaQueueItem | null => {
+    const idx = leadsItems.findIndex((it) => it.vendor_id === fromId)
+    for (let i = idx + 1; i < leadsItems.length; i++) {
+      const b = bucketStatus(leadsItems[i].review_status)
+      if (b === 'por_revisar' || b === 'pendiente') return leadsItems[i]
+    }
+    return null
+  }
+
+  const openDesglose = (vendorId: number) => {
+    setExpandedId(vendorId)
+    requestAnimationFrame(() => {
+      document.getElementById(`aria-row-${vendorId}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    })
+  }
 
   const clearAll = () => {
     setPatternFilter(null)
@@ -783,12 +365,9 @@ export default function AriaPage() {
     setNovelOnly(false)
     setSectorFilter(null)
     setReviewStatusFilter(null)
-    setAdminFilter(null)
-    setGtOnly(false)
     setEfosOnly(false)
-    setSfpOnly(false)
-    setWebEvidenceOnly(false)
-    setSearch('')
+    setMinYears(null)
+    clearSearch()
     setPage(1)
   }
 
@@ -799,24 +378,10 @@ export default function AriaPage() {
     novelOnly || null,
     sectorFilter != null ? sectorFilter : null,
     reviewStatusFilter,
-    adminFilter,
-    gtOnly || null,
     efosOnly || null,
-    sfpOnly || null,
-    webEvidenceOnly || null,
-    llmMemoOnly || null,
+    minYears != null ? minYears : null,
     search || null,
   ].filter(Boolean).length
-
-  // Sexenio metadata — labels + risk-style accent palette so the chips
-  // read as time-coded slicers, not generic toggles.
-  const ADMIN_META: Record<AdminKey, { label: string; range: string; color: string }> = {
-    sheinbaum: { label: isEs ? 'Sheinbaum' : 'Sheinbaum', range: '2024–', color: 'var(--color-risk-critical)' },
-    amlo:      { label: isEs ? 'AMLO' : 'AMLO',           range: '2018–24', color: 'var(--color-risk-high)' },
-    pena:      { label: isEs ? 'Peña Nieto' : 'Peña Nieto', range: '2012–18', color: 'var(--color-accent)' },
-    calderon:  { label: isEs ? 'Calderón' : 'Calderón',   range: '2006–12', color: 'var(--color-text-secondary)' },
-    fox:       { label: isEs ? 'Fox' : 'Fox',             range: '2000–06', color: 'var(--color-text-muted)' },
-  }
 
   if (statsError || leadsError) {
     return (
@@ -918,19 +483,38 @@ export default function AriaPage() {
             <span className="h-3 w-3/4 max-w-lg rounded bg-background-elevated animate-pulse inline-block" />
           ) : (
             <p className="text-sm sm:text-[15px] text-text-secondary leading-relaxed max-w-3xl">
+              {/* GT/DISC clause is computed-guarded: "todos anclados" renders only
+                  while summary.novel_leads_t1 === 0 (the verified structural truth);
+                  the 831 anchor deep-links to the T2 discoveries register. */}
               {isEs ? (
                 <>
-                  El modelo coloca{' '}
-                  <SaldoAnchor color="var(--color-risk-critical)">
-                    {formatNumber(stats?.latest_run?.tier1_count ?? 0)}
-                  </SaldoAnchor>{' '}
-                  proveedores en el Nivel 1 —{' '}
-                  <span className="text-text-muted">los anclados en casos de referencia más los descubrimientos del modelo</span>{' '}
-                  — de una cola total de{' '}
+                  De{' '}
                   <SaldoAnchor color="var(--color-text-primary)">
                     {formatNumber(stats?.queue_total ?? 0)}
                   </SaldoAnchor>{' '}
-                  proveedores. Suman{' '}
+                  proveedores examinados, el modelo eleva{' '}
+                  <SaldoAnchor color="var(--color-risk-critical)">
+                    {formatNumber(stats?.latest_run?.tier1_count ?? 0)}
+                  </SaldoAnchor>{' '}
+                  al Nivel 1{queueSummary && queueSummary.novel_leads_t1 === 0 ? (
+                    <span className="text-text-muted"> — todos anclados a casos documentados</span>
+                  ) : null}.
+                  {queueSummary && queueSummary.novel_leads_t2 > 0 ? (
+                    <>
+                      {' '}Sus{' '}
+                      <button
+                        onClick={() => { setTierFilter(2); setNovelOnly(true); setPage(1); document.getElementById('aria-investigation-list')?.scrollIntoView({ behavior: 'smooth' }) }}
+                        className="align-baseline hover:opacity-80 transition-opacity"
+                        aria-label={`Ver los ${formatNumber(queueSummary.novel_leads_t2)} descubrimientos del modelo en el Nivel 2`}
+                      >
+                        <SaldoAnchor color="var(--color-accent-data)">
+                          {formatNumber(queueSummary.novel_leads_t2)}
+                        </SaldoAnchor>
+                      </button>{' '}
+                      descubrimientos propios esperan en el Nivel 2, en calibración.
+                    </>
+                  ) : null}{' '}
+                  Los niveles altos suman{' '}
                   <SaldoAnchor color="var(--color-risk-high)" small>
                     {formatDualCurrency(stats?.elevated_value_mxn ?? 0)}
                   </SaldoAnchor>{' '}
@@ -938,17 +522,33 @@ export default function AriaPage() {
                 </>
               ) : (
                 <>
-                  The model places{' '}
-                  <SaldoAnchor color="var(--color-risk-critical)">
-                    {formatNumber(stats?.latest_run?.tier1_count ?? 0)}
-                  </SaldoAnchor>{' '}
-                  vendors in Tier 1 —{' '}
-                  <span className="text-text-muted">the ground-truth-anchored plus the model’s own discoveries</span>{' '}
-                  — out of a total queue of{' '}
+                  Of{' '}
                   <SaldoAnchor color="var(--color-text-primary)">
                     {formatNumber(stats?.queue_total ?? 0)}
                   </SaldoAnchor>{' '}
-                  vendors. Together they carry{' '}
+                  vendors examined, the model elevates{' '}
+                  <SaldoAnchor color="var(--color-risk-critical)">
+                    {formatNumber(stats?.latest_run?.tier1_count ?? 0)}
+                  </SaldoAnchor>{' '}
+                  to Tier 1{queueSummary && queueSummary.novel_leads_t1 === 0 ? (
+                    <span className="text-text-muted"> — every one anchored to a documented case</span>
+                  ) : null}.
+                  {queueSummary && queueSummary.novel_leads_t2 > 0 ? (
+                    <>
+                      {' '}Its own{' '}
+                      <button
+                        onClick={() => { setTierFilter(2); setNovelOnly(true); setPage(1); document.getElementById('aria-investigation-list')?.scrollIntoView({ behavior: 'smooth' }) }}
+                        className="align-baseline hover:opacity-80 transition-opacity"
+                        aria-label={`View the ${formatNumber(queueSummary.novel_leads_t2)} model discoveries in Tier 2`}
+                      >
+                        <SaldoAnchor color="var(--color-accent-data)">
+                          {formatNumber(queueSummary.novel_leads_t2)}
+                        </SaldoAnchor>
+                      </button>{' '}
+                      discoveries wait in Tier 2, in calibration.
+                    </>
+                  ) : null}{' '}
+                  The elevated tiers carry{' '}
                   <SaldoAnchor color="var(--color-risk-high)" small>
                     {formatDualCurrency(stats?.elevated_value_mxn ?? 0)}
                   </SaldoAnchor>{' '}
@@ -959,38 +559,26 @@ export default function AriaPage() {
           )}
         </section>
 
-        {/* ═══ FILTER BAR — Tier + Search (row 1), Patterns (row 2), VIEW presets (row 3) ═══ */}
+        {/* ═══ § EL EMBUDO — the compression band IS the tier navigation ═══ */}
+        <FunnelBand
+          tierCounts={tierCounts}
+          queueTotal={stats?.queue_total ?? 0}
+          novelLeadsT2={queueSummary?.novel_leads_t2 ?? null}
+          activeTier={tierFilter}
+          novelOnly={novelOnly}
+          loading={statsLoading}
+          isEs={isEs}
+          onSelect={(tier, novel) => {
+            setTierFilter(tier)
+            setNovelOnly(novel)
+            setPage(1)
+          }}
+        />
+
+        {/* ═══ FILTER RAIL — every visible control is server-backed (W5/W10) ═══ */}
         <div className="mb-4 space-y-2">
-          {/* ROW 1: Tier pills + Search — primary slicer */}
+          {/* ROW 1: Search */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
-              {isEs ? 'Nivel' : 'Tier'}
-            </span>
-            <button
-              onClick={() => { setTierFilter(null); setPage(1) }}
-              className={cn(
-                'inline-flex items-center gap-1 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
-                tierFilter == null
-                  ? 'bg-background-elevated text-text-primary border-border'
-                  : 'bg-background-card text-text-muted border-border hover:border-border'
-              )}
-            >
-              {t('filters.all')}
-            </button>
-            {TIER_CONFIG.map((cfg) => (
-              <TierFilterPill
-                key={cfg.tier}
-                tier={cfg}
-                count={tierCounts[cfg.tier]}
-                isActive={tierFilter === cfg.tier}
-                loading={statsLoading}
-                onClick={() => {
-                  setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
-                  setPage(1)
-                }}
-              />
-            ))}
-            <span className="mx-1 h-4 w-px bg-border hidden sm:inline-block" aria-hidden />
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" aria-hidden="true" />
               <input
@@ -1027,95 +615,86 @@ export default function AriaPage() {
             </div>
           )}
 
-          {/* ROW 3: VIEW presets + More filters toggle */}
-          {(() => {
-            const presets: Array<{ id: string; label: string; isActive: boolean; onClick: () => void }> = [
-              {
-                id: 'active',
-                label: isEs ? 'Activos 2024+' : 'Active 2024+',
-                isActive: adminFilter === 'sheinbaum' && tierFilter === 1,
-                onClick: () => {
-                  setTierFilter(1); setAdminFilter('sheinbaum'); setPatternFilter(null)
-                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
-                  setSortKey('recency'); setPage(1)
-                },
-              },
-              {
-                id: 'flagged',
-                label: isEs ? 'Validados extern.' : 'External-flagged',
-                isActive: (gtOnly || efosOnly || sfpOnly) && tierFilter === 1,
-                onClick: () => {
-                  setTierFilter(1); setGtOnly(true); setEfosOnly(false); setSfpOnly(false)
-                  setAdminFilter(null); setPatternFilter(null)
-                  setNewVendorOnly(false); setNovelOnly(false); setPage(1)
-                },
-              },
-              {
-                id: 'biggest-bets',
-                label: isEs ? 'Mayor valor' : 'Biggest bets',
-                isActive: sortKey === 'value' && tierFilter === 1 && !adminFilter && !gtOnly,
-                onClick: () => {
-                  setTierFilter(1); setSortKey('value'); setAdminFilter(null)
-                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
-                  setPatternFilter(null); setPage(1)
-                },
-              },
-              {
-                id: 'long-running',
-                label: isEs ? 'Histórico 10+' : 'Long-running',
-                isActive: sortKey === 'tenure' && tierFilter === 1 && !adminFilter && !gtOnly,
-                onClick: () => {
-                  setTierFilter(1); setSortKey('tenure'); setAdminFilter(null)
-                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
-                  setPatternFilter(null); setPage(1)
-                },
-              },
-            ]
-            const secondaryActiveCount =
-              (sectorFilter != null ? 1 : 0) + (newVendorOnly ? 1 : 0) + (novelOnly ? 1 : 0) +
-              (adminFilter != null ? 1 : 0) + (gtOnly ? 1 : 0) + (efosOnly ? 1 : 0) +
-              (sfpOnly ? 1 : 0) + (webEvidenceOnly ? 1 : 0) + (llmMemoOnly ? 1 : 0) +
-              (reviewStatusFilter != null ? 1 : 0)
-            return (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
-                  {isEs ? 'Vista' : 'View'}
-                </span>
-                {presets.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={p.onClick}
-                    className={cn(
-                      'inline-flex items-center px-2 py-0.5 rounded-sm border text-[10px] font-mono transition-colors',
-                      p.isActive
-                        ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
-                        : 'bg-background-card text-text-muted border-border hover:border-border-hover'
-                    )}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setMoreFiltersOpen((v) => !v)}
-                  className={cn(
-                    'ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
-                    moreFiltersOpen ? 'bg-background-elevated text-text-primary'
-                      : secondaryActiveCount > 0 ? 'text-accent hover:text-text-primary'
-                      : 'text-text-muted hover:text-text-primary'
-                  )}
-                  aria-expanded={moreFiltersOpen}
-                  aria-label={isEs ? 'Más filtros' : 'More filters'}
-                >
-                  {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
-                  {secondaryActiveCount > 0 && (
-                    <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-accent/15 text-accent text-[10px] font-mono tabular-nums font-bold" aria-hidden>
-                      {secondaryActiveCount}
-                    </span>
-                  )}
-                </button>
-              </div>
-            )
-          })()}
+          {/* ROW 2.5: server-backed chips — FILTROS · ALCANCE GLOBAL */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+              {isEs ? 'Filtros · alcance global' : 'Filters · global scope'}
+            </span>
+            <button
+              onClick={() => { setReviewStatusFilter(reviewStatusFilter === 'needs_review' ? null : 'needs_review'); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                reviewStatusFilter === 'needs_review'
+                  ? 'border-current'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              style={reviewStatusFilter === 'needs_review' ? { color: '#a06820', backgroundColor: '#a0682014' } : undefined}
+              title={isEs ? 'Pendientes de revisión humana (CENTINELA needs_review)' : 'Awaiting human review (CENTINELA needs_review)'}
+            >
+              {isEs ? 'Por revisar' : 'To review'}
+            </button>
+            <button
+              onClick={() => { setEfosOnly(!efosOnly); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                efosOnly
+                  ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              title="SAT EFOS Definitivo"
+            >
+              EFOS
+            </button>
+            <button
+              onClick={() => { setNewVendorOnly(!newVendorOnly); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                newVendorOnly
+                  ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+            >
+              {t('filters.newVendorOnly')}
+              {stats?.new_vendor_count != null && (
+                <span className="font-mono tabular-nums text-text-muted">{formatNumber(stats.new_vendor_count)}</span>
+              )}
+            </button>
+            <button
+              onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                novelOnly
+                  ? 'bg-accent-data/10 text-accent-data border-accent-data/30'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              title={t('filters.novelOnlyTooltip')}
+            >
+              {isEs ? 'Solo descubrimientos' : 'Discoveries only'}
+            </button>
+            <button
+              onClick={() => { setMinYears(minYears === 10 ? null : 10); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                minYears === 10
+                  ? 'bg-background-elevated text-text-primary border-border'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              title={isEs ? 'Proveedores con 10+ años de actividad (filtro del servidor)' : 'Vendors with 10+ years active (server filter)'}
+            >
+              {isEs ? 'Histórico 10+' : 'Long-running 10+'}
+            </button>
+            <button
+              onClick={() => setMoreFiltersOpen((v) => !v)}
+              className={cn(
+                'ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
+                moreFiltersOpen ? 'bg-background-elevated text-text-primary' : 'text-text-muted hover:text-text-primary'
+              )}
+              aria-expanded={moreFiltersOpen}
+              aria-label={isEs ? 'Más filtros' : 'More filters'}
+            >
+              {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
+            </button>
+          </div>
 
           {/* "+ More filters" disclosure — secondary filters */}
           {moreFiltersOpen && (
@@ -1147,136 +726,6 @@ export default function AriaPage() {
                     </option>
                   ))}
                 </select>
-                <span className="mx-1 h-3 w-px bg-border" aria-hidden />
-                <button
-                  onClick={() => { setNewVendorOnly(!newVendorOnly); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    newVendorOnly
-                      ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
-                      : 'bg-background-card text-text-secondary border-border hover:border-border'
-                  )}
-                >
-                  {t('filters.newVendorOnly')}
-                  {stats?.new_vendor_count != null && (
-                    <span className="font-mono tabular-nums text-text-muted">{formatNumber(stats.new_vendor_count)}</span>
-                  )}
-                </button>
-                <button
-                  onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    novelOnly
-                      ? 'bg-background-elevated text-text-secondary border-border'
-                      : 'bg-background-card text-text-secondary border-border hover:border-border'
-                  )}
-                  title={t('filters.novelOnlyTooltip')}
-                >
-                  {t('filters.novelOnly')}
-                </button>
-              </div>
-
-              {/* Administration (sexenio) + external flags */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
-                  {isEs ? 'Sexenio' : 'Admin'}
-                </span>
-                <button
-                  onClick={() => { setAdminFilter(null); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    adminFilter == null
-                      ? 'bg-background-elevated text-text-primary border-border'
-                      : 'bg-background-card text-text-muted border-border hover:border-border'
-                  )}
-                >
-                  {t('filters.all')}
-                </button>
-                {(['sheinbaum', 'amlo', 'pena', 'calderon', 'fox'] as const).map((key) => {
-                  const meta = ADMIN_META[key]
-                  const isActive = adminFilter === key
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => { setAdminFilter(isActive ? null : key); setPage(1) }}
-                      className={cn(
-                        'inline-flex items-baseline gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                        isActive
-                          ? 'border-current'
-                          : 'bg-background-card text-text-secondary border-border hover:border-border'
-                      )}
-                      style={isActive ? { color: meta.color, backgroundColor: `${meta.color}10` } : undefined}
-                      title={`${meta.label} (${meta.range})`}
-                    >
-                      <span>{meta.label}</span>
-                      <span className="font-mono text-[9px] text-text-muted tabular-nums">{meta.range}</span>
-                    </button>
-                  )
-                })}
-                <span className="mx-1 h-3 w-px bg-border" aria-hidden />
-                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
-                  {isEs ? 'Banderas' : 'Flags'}
-                </span>
-                <button
-                  onClick={() => { setGtOnly(!gtOnly); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    gtOnly
-                      ? 'bg-accent/10 text-accent border-accent/30'
-                      : 'bg-background-card text-text-secondary border-border hover:border-border'
-                  )}
-                  title={isEs ? 'Solo proveedores en casos de referencia documentados' : 'Only vendors in documented ground-truth cases'}
-                >
-                  GT
-                </button>
-                <button
-                  onClick={() => { setEfosOnly(!efosOnly); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    efosOnly
-                      ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
-                      : 'bg-background-card text-text-secondary border-border hover:border-border'
-                  )}
-                  title="SAT EFOS Definitivo"
-                >
-                  EFOS
-                </button>
-                <button
-                  onClick={() => { setSfpOnly(!sfpOnly); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    sfpOnly
-                      ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
-                      : 'bg-background-card text-text-secondary border-border hover:border-border'
-                  )}
-                  title={isEs ? 'Sancionado por SFP' : 'Sanctioned by SFP'}
-                >
-                  SFP
-                </button>
-                <button
-                  onClick={() => { setWebEvidenceOnly(!webEvidenceOnly); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    webEvidenceOnly
-                      ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
-                      : 'bg-background-card text-text-secondary border-border hover:border-border'
-                  )}
-                  title={isEs ? 'Evidencia web (CENTINELA)' : 'Has web evidence (CENTINELA)'}
-                >
-                  WEB
-                </button>
-                <button
-                  onClick={() => { setLlmMemoOnly(!llmMemoOnly); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    llmMemoOnly
-                      ? 'bg-accent-data/10 text-accent-data border-accent-data/30'
-                      : 'bg-background-card text-text-secondary border-border hover:border-border'
-                  )}
-                  title={isEs ? 'Solo proveedores con memo investigativo LLM completo' : 'Only vendors with full LLM investigation memo'}
-                >
-                  LLM
-                </button>
               </div>
 
               {/* Review-status filter — moved out of the list header to
@@ -1349,29 +798,14 @@ export default function AriaPage() {
                   })()}
                 </FilterChip>
               )}
-              {adminFilter && (
-                <FilterChip onClear={() => { setAdminFilter(null); setPage(1) }} accent={ADMIN_META[adminFilter].color}>
-                  {ADMIN_META[adminFilter].label} {ADMIN_META[adminFilter].range}
-                </FilterChip>
-              )}
-              {gtOnly && (
-                <FilterChip onClear={() => { setGtOnly(false); setPage(1) }} accent="var(--color-accent)">
-                  GT only
-                </FilterChip>
-              )}
               {efosOnly && (
                 <FilterChip onClear={() => { setEfosOnly(false); setPage(1) }} accent="var(--color-risk-critical)">
                   EFOS only
                 </FilterChip>
               )}
-              {sfpOnly && (
-                <FilterChip onClear={() => { setSfpOnly(false); setPage(1) }} accent="var(--color-risk-high)">
-                  SFP only
-                </FilterChip>
-              )}
-              {webEvidenceOnly && (
-                <FilterChip onClear={() => { setWebEvidenceOnly(false); setPage(1) }} accent="var(--color-risk-critical)">
-                  {isEs ? 'Con evidencia web' : 'Web evidence'}
+              {minYears != null && (
+                <FilterChip onClear={() => { setMinYears(null); setPage(1) }}>
+                  {isEs ? `Histórico ${minYears}+` : `Long-running ${minYears}+`}
                 </FilterChip>
               )}
               {newVendorOnly && (
@@ -1386,11 +820,13 @@ export default function AriaPage() {
               )}
               {reviewStatusFilter && (
                 <FilterChip onClear={() => { setReviewStatusFilter(null); setPage(1) }}>
-                  {t(`status.${reviewStatusFilter}`)}
+                  {reviewStatusFilter === 'needs_review'
+                    ? (isEs ? 'Por revisar' : 'To review')
+                    : t(`status.${reviewStatusFilter}`)}
                 </FilterChip>
               )}
               {search && (
-                <FilterChip onClear={() => { setSearch(''); setPage(1) }}>
+                <FilterChip onClear={() => { clearSearch(); setPage(1) }}>
                   "{search}"
                 </FilterChip>
               )}
@@ -1403,54 +839,30 @@ export default function AriaPage() {
             </div>
           )}
 
-          {/* List header — single tight line. The redundant "TIER 1 · 299 ·
-              CLEAR ALL (1)" was already covered by the Active Filter Bar
-              above; review-status chips moved into "+ More filters" since
-              they're a workflow filter most users don't touch. Header now
-              shows: count · sort · export — three things, never wraps. */}
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
-            <span className="text-[11px] text-text-muted font-mono tabular-nums">
-              {totalLeads > 0 ? `${formatNumber(totalLeads)} ${t('leads.vendorCount')}` : ''}
-            </span>
-            <div className="ml-auto flex items-center gap-1 flex-wrap">
-              <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted mr-1">
-                {isEs ? 'Orden' : 'Sort'}
-              </span>
-              {(
-                [
-                  { key: 'ips',     labelEs: 'Indicador de Riesgo ↕', labelEn: 'Risk Score ↕' },
-                  { key: 'value',   labelEs: 'Valor MXN ↕',           labelEn: 'MXN Value ↕' },
-                  { key: 'recency', labelEs: 'T1 Reciente ↕',         labelEn: 'T1 Count ↕' },
-                  { key: 'pattern', labelEs: 'Patrón ↕',              labelEn: 'Pattern ↕' },
-                ] as const
-              ).map(({ key, labelEs, labelEn }) => (
-                <button
-                  key={key}
-                  onClick={() => setSortKey(key)}
-                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border transition-colors"
-                  style={{
-                    background: sortKey === key ? 'var(--color-accent)' : 'var(--color-background-card)',
-                    color: sortKey === key ? '#ffffff' : 'var(--color-text-secondary)',
-                    borderColor: sortKey === key ? 'var(--color-accent)' : 'var(--color-border)',
-                  }}
-                >
-                  {isEs ? labelEs : labelEn}
-                </button>
-              ))}
-              <span className="mx-1 h-3 w-px bg-border" aria-hidden />
-              <TableExportButton
-                data={leadsItems as unknown as Record<string, unknown>[]}
-                filename="aria-queue"
-                showXlsx={true}
-                disabled={leadsItems.length === 0}
-              />
-            </div>
-          </div>
+          {/* § EL REGISTRO header — disposition strip (honest buckets, F2),
+              MESETA rug, tier invariant, key line, export. The client sort
+              chips are deleted, not demoted: the only order this page shows
+              is the server's ips_final DESC, and the header says so. */}
+          <QueueRegisterHeader
+            isEs={isEs}
+            totalLeads={totalLeads}
+            tierFilter={tierFilter}
+            novelOnly={novelOnly}
+            t1StatusCounts={stats?.t1_status_counts ?? null}
+            runDateline={stats?.latest_run?.completed_at ?? stats?.latest_run?.started_at ?? null}
+            ipsValues={leadsItems.map((it) => it.ips_final ?? 0).filter((v) => v > 0)}
+            novelLeadsT2={queueSummary?.novel_leads_t2 ?? null}
+            tier1Count={stats?.latest_run?.tier1_count ?? 0}
+            tier4Count={stats?.latest_run?.tier4_count ?? 0}
+            onGoT2Disc={() => { setTierFilter(2); setNovelOnly(true); setPage(1) }}
+            onFilterNeedsReview={() => { setReviewStatusFilter('needs_review'); setPage(1) }}
+            exportData={leadsItems as unknown as Record<string, unknown>[]}
+          />
 
           {leadsLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 rounded-sm" />
+            <div className="space-y-px">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 rounded-sm" />
               ))}
             </div>
           ) : leadsItems.length === 0 ? (
@@ -1482,16 +894,31 @@ export default function AriaPage() {
               )}
             </div>
           ) : (
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              animate="show"
-              className="space-y-1.5"
-            >
-              {leadsItems.map((item) => (
-                <InvestigationRow key={item.vendor_id} item={item} isEs={isEs} />
-              ))}
-            </motion.div>
+            <div className="border-t border-border">
+              {leadsItems.map((item, idx) => {
+                const isOpen = expandedId === item.vendor_id
+                const next = isOpen ? nextOpenAfter(item.vendor_id) : null
+                return (
+                  <div key={item.vendor_id} id={`aria-row-${item.vendor_id}`}>
+                    <RegisterRow
+                      item={item}
+                      isEs={isEs}
+                      rank={(page - 1) * PER_PAGE + idx + 1}
+                      expanded={isOpen}
+                      onToggle={() => setExpandedId(isOpen ? null : item.vendor_id)}
+                    />
+                    {isOpen && (
+                      <RowExpand
+                        item={item}
+                        isEs={isEs}
+                        onClose={() => setExpandedId(null)}
+                        onNext={next ? () => openDesglose(next.vendor_id) : null}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           )}
 
           {/* Pagination */}
@@ -1518,32 +945,8 @@ export default function AriaPage() {
           )}
         </section>
 
-        {/* ═══ BADGE LEGEND ═══ */}
-        <div className="rounded-sm border border-border bg-background-card p-4 mt-4">
-          <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted font-bold mb-3">
-            {isEs ? '§ LEYENDA DE INDICADORES' : '§ BADGE LEGEND'}
-          </p>
-          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 items-center">
-            {([
-              { code: 'GT', cls: 'bg-accent/10 text-accent border-accent/30', es: 'Caso documentado de corrupción (corpus de referencia)', en: 'Documented corruption case (ground-truth corpus)' },
-              { code: 'EFOS', cls: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30', es: 'Lista SAT de empresas que facturan operaciones simuladas', en: 'SAT invoice fraud list (definitive)' },
-              { code: 'SFP', cls: 'bg-risk-high/10 text-risk-high border-risk-high/30', es: 'Sancionado por la Secretaría de la Función Pública', en: 'Sanctioned by public audit authority' },
-              { code: 'LLM', cls: 'bg-accent-data/10 text-accent-data border-accent-data/20', es: 'Memo investigativo generado por IA disponible', en: 'AI-generated investigation memo available' },
-              { code: 'SANC', cls: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30', es: 'Sanción oficial encontrada en medios digitales', en: 'Official sanction found in digital media' },
-              { code: 'CORR', cls: 'bg-risk-high/10 text-risk-high border-risk-high/30', es: 'Mención de corrupción en medios digitales', en: 'Corruption mention in digital media' },
-              { code: 'DISC', cls: 'bg-accent-data/10 text-accent-data border-accent-data/20', es: 'Descubrimiento del modelo — T1 sin anclaje GT, señal pura', en: 'Model discovery — T1 without GT anchor, pure signal' },
-            ] as const).map((b) => (
-              <Fragment key={b.code}>
-                <span className={cn('inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider border', b.cls)}>
-                  {b.code}
-                </span>
-                <span className="text-[11px] text-text-muted leading-relaxed">
-                  {isEs ? b.es : b.en}
-                </span>
-              </Fragment>
-            ))}
-          </div>
-        </div>
+        {/* (Badge legend retired — its content lives in the register header's
+            key line, 0px from the marks it explains.) */}
 
         {/* ============================================================== */}
         {/* CODA · § ADÓNDE IR — exit ramps: pattern dossiers + top T1 chips */}
@@ -1613,6 +1016,13 @@ export default function AriaPage() {
                 </p>
                 <p>{t('about.description')}</p>
                 <p className="text-text-muted">{t('about.disclaimer')}</p>
+                {/* W9 — documented IPS-scale decision (designus aria-cola panel):
+                    IPS is a priority ordering, not a risk scale; it carries no color. */}
+                <p className="text-text-muted">
+                  {isEs
+                    ? 'El IPS ordena la cola; no es una escala de riesgo y no se colorea. En el registro, el color del riel codifica la disposición del análisis — no la magnitud.'
+                    : 'IPS orders the queue; it is not a risk scale and carries no color. In the register, the rail color encodes the analyst disposition — not magnitude.'}
+                </p>
               </div>
             </div>
           </div>

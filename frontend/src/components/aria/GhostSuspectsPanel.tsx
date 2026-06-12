@@ -13,6 +13,7 @@ import { ArrowRight } from 'lucide-react'
 import { ariaApi } from '@/api/client'
 import type { GhostSuspect } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { cn } from '@/lib/utils'
 
 export const TIER_GHOST_META = {
@@ -128,10 +129,18 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
               const meta = TIER_GHOST_META[s.ghost_confidence_tier]
               const activeSigs = SIG_KEYS.filter((k) => s[k] === 1)
               return (
-                <button
+                <div
                   key={s.vendor_id}
+                  role="link"
+                  tabIndex={0}
                   onClick={() => navigate(`/vendors/${s.vendor_id}`)}
-                  className="w-full text-left group flex items-start gap-3 px-3 py-2.5 rounded-sm border border-transparent hover:border-border hover:bg-background-card transition-all"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      navigate(`/vendors/${s.vendor_id}`)
+                    }
+                  }}
+                  className="w-full text-left group flex items-start gap-3 px-3 py-2.5 rounded-sm border border-transparent hover:border-border hover:bg-background-card transition-all cursor-pointer"
                 >
                   {/* Score badge */}
                   <div className="shrink-0 w-10 text-right pt-0.5">
@@ -140,11 +149,18 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                     </span>
                   </div>
 
-                  {/* Name + signals */}
+                  {/* Name + signals — hard rule #1: identity renders only via
+                      EntityIdentityChip (was a raw vendor_name span + navigate). */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-text-primary truncate group-hover:text-text-primary">
-                        {s.vendor_name || `#${s.vendor_id}`}
+                      <span onClick={(e) => e.stopPropagation()} className="min-w-0">
+                        <EntityIdentityChip
+                          type="vendor"
+                          id={s.vendor_id}
+                          name={s.vendor_name}
+                          size="sm"
+                          hideIcon
+                        />
                       </span>
                       {s.total_contracts != null && (
                         <span className="text-[10px] font-mono text-text-muted shrink-0">
@@ -181,7 +197,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                     </span>
                   </div>
                   <ArrowRight className="h-3.5 w-3.5 text-text-primary group-hover:text-accent group-hover:translate-x-0.5 transition-all self-center shrink-0" aria-hidden="true" />
-                </button>
+                </div>
               )
             })}
           </div>

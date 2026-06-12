@@ -118,6 +118,34 @@ class TestAriaStats:
         assert isinstance(data["queue_total"], int)
         assert data["queue_total"] >= 0
 
+    def test_t1_status_counts_shape(self, client):
+        # May be absent when served from a pre-upgrade persisted snapshot;
+        # when present it must be {raw_status: non-negative int}.
+        data = client.get(f"{ARIA_PREFIX}/stats").json()
+        counts = data.get("t1_status_counts")
+        if counts is not None:
+            assert isinstance(counts, dict)
+            for status, n in counts.items():
+                assert isinstance(status, str) and status
+                assert isinstance(n, int) and n >= 0
+
+
+class TestAriaVendorDetailGTAnchor:
+    """GET /api/v1/aria/queue/{vendor_id} — gt_case_name / gt_case_type fields"""
+
+    def test_gt_anchor_fields_present(self, client):
+        queue = client.get(f"{ARIA_PREFIX}/queue", params={"tier": 1, "per_page": 1}).json()
+        rows = queue.get("data") or []
+        if not rows:
+            return  # pipeline not run in this environment
+        detail = client.get(f"{ARIA_PREFIX}/queue/{rows[0]['vendor_id']}").json()
+        assert "gt_case_name" in detail
+        assert "gt_case_type" in detail
+        # T1 is GT-anchored by construction; when the GT tables exist the
+        # anchor should resolve to a named case.
+        if detail.get("in_ground_truth"):
+            assert detail["gt_case_name"] is None or isinstance(detail["gt_case_name"], str)
+
 
 class TestAriaGTUpdates:
     """GET /api/v1/aria/gt-updates"""

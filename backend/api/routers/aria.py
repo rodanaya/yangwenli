@@ -306,6 +306,29 @@ def get_aria_queue_vendor(
     # Decode JSON text column
     d["pattern_confidences"] = _decode_json_field(d.get("pattern_confidences"))
 
+    # GT case anchor — the documented case this lead traces to (T1 is 299/299
+    # GT-anchored; the queue row only carries the boolean). Indexed PK-path join.
+    d["gt_case_name"] = None
+    d["gt_case_type"] = None
+    if d.get("in_ground_truth") and _table_exists(conn, "ground_truth_vendors"):
+        try:
+            gt_row = conn.execute(
+                """
+                SELECT c.case_name, c.case_type
+                FROM ground_truth_vendors v
+                JOIN ground_truth_cases c ON v.case_id = c.id
+                WHERE v.vendor_id = ? AND COALESCE(v.is_false_positive, 0) = 0
+                ORDER BY v.match_confidence DESC
+                LIMIT 1
+                """,
+                (vendor_id,),
+            ).fetchone()
+            if gt_row:
+                d["gt_case_name"] = gt_row["case_name"]
+                d["gt_case_type"] = gt_row["case_type"]
+        except Exception:
+            pass
+
     # Include memo if available
     d["memo"] = None
     if _table_exists(conn, "aria_memos"):
@@ -522,7 +545,10 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
     if cached is not None:
         return cached
 
-    # Persistent fallback: read from precomputed_stats (survives container restarts)
+    # Persistent fallback: read from precomputed_stats (survives container restarts).
+    # Schema check: a snapshot persisted before the t1_status_counts upgrade
+    # (2026-06-12) is treated as stale so the live compute self-heals it —
+    # otherwise the pre-deploy row would shadow the new field forever.
     try:
         row = conn.execute(
             "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
@@ -530,8 +556,9 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
         ).fetchone()
         if row and row["stat_value"]:
             persisted = json.loads(row["stat_value"])
-            app_cache.set("aria", _STATS_CACHE_KEY, persisted, maxsize=4, ttl=300)
-            return persisted
+            if "t1_status_counts" in persisted:
+                app_cache.set("aria", _STATS_CACHE_KEY, persisted, maxsize=4, ttl=300)
+                return persisted
     except Exception:
         pass
 
@@ -566,6 +593,7 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
     pattern_counts: dict = {}
     external_counts: dict = {"efos": 0, "sfp": 0}
     elevated_value = 0.0
+    t1_status_counts: dict = {}
 
     if _table_exists(conn, "aria_queue"):
         # Single consolidated aggregation — replaces 10 sequential full-table scans
@@ -630,6 +658,24 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
         except Exception:
             pass
 
+        # T1 per-status disposition counts — raw statuses, frontend buckets them.
+        # t1_reviewed_count is useless for progress UI (any non-pending status
+        # counts, so it reads 299/299 while 83 rows are needs_review); this
+        # GROUP BY over the 299 T1 rows (idx_aria_queue_tier_score) is ~0ms.
+        try:
+            t1_rows = conn.execute(
+                """
+                SELECT COALESCE(review_status, 'pending') AS status, COUNT(*) AS cnt
+                FROM aria_queue
+                WHERE ips_tier = 1
+                GROUP BY COALESCE(review_status, 'pending')
+                """
+            ).fetchall()
+            for tr in t1_rows:
+                t1_status_counts[tr["status"]] = tr["cnt"]
+        except Exception:
+            pass
+
     result = {
         "latest_run": latest_run,
         "review_stats": review_stats,
@@ -642,6 +688,7 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
         "confirmed_count": confirmed_count,
         "dismissed_count": dismissed_count,
         "t1_reviewed_count": t1_reviewed_count,
+        "t1_status_counts": t1_status_counts,
     }
     app_cache.set("aria", _STATS_CACHE_KEY, result, maxsize=4, ttl=300)
 

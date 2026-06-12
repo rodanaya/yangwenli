@@ -2484,6 +2484,10 @@ export interface AriaQueueItem {
   /** S.7: GT-anchored overlay flag — true when vendor is in ground_truth_vendors.
    *  Distinguishes "we already know this is corrupt" from "model discovered this". */
   gt_overlay?: boolean | null
+  /** Detail endpoint only — the named documented case this lead is anchored to
+   *  (ground_truth_vendors ⨝ ground_truth_cases, added 2026-06-12). */
+  gt_case_name?: string | null
+  gt_case_type?: string | null
 }
 
 export interface AriaStats {
@@ -2517,6 +2521,11 @@ export interface AriaStatsResponse {
   confirmed_count?: number
   dismissed_count?: number
   t1_reviewed_count?: number
+  /** Raw per-status counts for Tier 1 (e.g. {confirmed: 164, needs_review: 83, …}).
+   *  t1_reviewed_count is useless for progress UI — it counts any non-pending
+   *  status (=299/299); the UI buckets these raw statuses instead. May be
+   *  absent when served from a pre-upgrade persisted snapshot. */
+  t1_status_counts?: Record<string, number>
 }
 
 export interface AriaQueueResponse {
@@ -2524,6 +2533,15 @@ export interface AriaQueueResponse {
   pagination: PaginationMeta
   run_summary: AriaStats | null
   message?: string
+  /** Ships on every /aria/queue response (60s server cache) — typed for the
+   *  first time 2026-06-12. The GT-vs-DISC structural truth: T1 is fully
+   *  GT-anchored (novel_leads_t1 = 0); the model's discoveries live in T2. */
+  summary?: {
+    total_t1: number
+    novel_leads_t1: number
+    known_gt_t1: number
+    novel_leads_t2: number
+  }
 }
 
 // ---------------------------------------------------------------------------
