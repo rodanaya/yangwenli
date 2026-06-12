@@ -1,191 +1,17 @@
 /**
  * CanvasControls — overlay controls floated on top of the ExploreCanvas.
  *
- * Year scrubber lives at the bottom-center, risk-floor toggle at the
- * top-right. Both are pure UI — they dispatch into ExploreState via
- * set-year / set-risk-floor and the consuming data hooks read those
- * fields. Nothing here knows about the canvas SVG; both controls sit
- * above it via position: absolute on the canvas wrapper.
+ * 2026-06-12 STEP-0 cull (El Mapa Day 5): YearScrubber, LensToggle,
+ * RiskFloorToggle and MapLegend deleted — all dispatched into state
+ * fields (`year`, `riskFloor`) that no query or render ever consumed,
+ * and the scrubber's 28px strip occluded every panel's footer exits.
+ * ShareViewButton is the sole survivor; the Z-panel jumpline bars wire it.
  */
 import { useState } from 'react'
-import { useExploreState, useExploreDispatch } from './ExploreState'
-import { RISK_COLORS } from '@/lib/constants'
-
-const YEAR_MIN = 2002
-const YEAR_MAX = 2025
-
-export function YearScrubber({ lang }: { lang: 'en' | 'es' }) {
-  const state = useExploreState()
-  const dispatch = useExploreDispatch()
-  const year = state.year
-  const isAll = year === null
-
-  return (
-    <div
-      className="absolute bottom-0 left-0 right-0 z-10 flex items-center gap-2 px-3"
-      style={{
-        height: 28,
-        background: 'var(--color-background-card, #fff)',
-        borderTop: '1px solid var(--color-border)',
-        opacity: 0.92,
-      }}
-    >
-      <span className="text-[8px] font-mono uppercase tracking-[0.16em] text-text-muted shrink-0 tabular-nums">
-        {isAll ? (lang === 'en' ? 'All years' : 'Todos') : year}
-      </span>
-      <input
-        type="range"
-        min={YEAR_MIN}
-        max={YEAR_MAX}
-        step={1}
-        value={year ?? YEAR_MAX}
-        onChange={(e) => dispatch({ type: 'set-year', year: Number(e.target.value) })}
-        className="flex-1 cursor-pointer appearance-none"
-        style={{ height: 2, accentColor: 'var(--color-accent)', touchAction: 'none' }}
-        aria-label={lang === 'en' ? 'Year filter' : 'Filtro de año'}
-      />
-      {!isAll && (
-        <button
-          type="button"
-          onClick={() => dispatch({ type: 'set-year', year: null })}
-          className="text-[8px] font-mono text-text-muted hover:text-text-primary transition-colors shrink-0"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          aria-label={lang === 'en' ? 'Reset year' : 'Reiniciar año'}
-        >
-          ✕
-        </button>
-      )}
-    </div>
-  )
-}
-
-const RISK_FLOORS: Array<{
-  value: 'all' | 'medium' | 'high' | 'critical'
-  labelEn: string
-  labelEs: string
-}> = [
-  { value: 'all', labelEn: 'All', labelEs: 'Todos' },
-  { value: 'medium', labelEn: 'Med+', labelEs: 'Med+' },
-  { value: 'high', labelEn: 'High+', labelEs: 'Alto+' },
-  { value: 'critical', labelEn: 'Crit', labelEs: 'Crít' },
-]
-
-// RiskFloorToggle merged into LensToggle — rendered there as second button group.
-export function RiskFloorToggle(_props: { lang: 'en' | 'es' }) { return null }
-
-/**
- * LensToggle — Gap 6. Two lenses for v1.0:
- *   SECTORS (default) — bodies sized by total spend, colored by sector palette.
- *                       Answers "where is the money?"
- *   RISK              — bodies sized by avg_risk_score, colored by risk
- *                       palette (critical/high/medium/low). Answers "where
- *                       is the corruption concentrated?"
- *
- * Z0Layer reads state.lens and branches its body builder.
- *
- * Future v1.1 lenses (patterns / categories / terms) attach here.
- */
-const LENSES: Array<{ value: 'sectors' | 'risk'; labelEn: string; labelEs: string }> = [
-  { value: 'sectors', labelEn: 'Spend', labelEs: 'Gasto' },
-  { value: 'risk', labelEn: 'Risk', labelEs: 'Riesgo' },
-]
-
-const RISK_FLOOR_COLORS: Record<'all' | 'medium' | 'high' | 'critical', string> = {
-  all: 'var(--color-text-muted)',
-  medium: RISK_COLORS.medium,
-  high: RISK_COLORS.high,
-  critical: RISK_COLORS.critical,
-}
-
-export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
-  const state = useExploreState()
-  const dispatch = useExploreDispatch()
-  return (
-    <div
-      className="absolute top-14 left-3 z-10 flex"
-      style={{
-        background: 'var(--color-background-card, #fff)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 2,
-        overflow: 'hidden',
-      }}
-      role="group"
-      aria-label={lang === 'en' ? 'Map controls — lens and risk filter' : 'Controles del mapa — lente y filtro de riesgo'}
-    >
-      {/* Lens group — underline-tab style, no filled background */}
-      {LENSES.map((l) => {
-        const active = state.lens === l.value
-        return (
-          <button
-            key={l.value}
-            type="button"
-            onClick={() => dispatch({ type: 'set-lens', lens: l.value })}
-            className="text-[10px] font-mono uppercase tracking-[0.12em] px-2.5 py-1.5 transition-colors"
-            style={{
-              background: 'transparent',
-              color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-              fontWeight: active ? 600 : 400,
-              border: 'none',
-              borderBottom: active ? '2px solid var(--color-accent)' : '2px solid transparent',
-              cursor: 'pointer',
-            }}
-            aria-pressed={active}
-          >
-            {lang === 'en' ? l.labelEn : l.labelEs}
-          </button>
-        )
-      })}
-      {/* Group separator */}
-      <span
-        aria-hidden="true"
-        style={{
-          display: 'inline-block',
-          width: 1,
-          alignSelf: 'stretch',
-          background: 'var(--color-border)',
-        }}
-      />
-      {/* Risk floor group — colored dot + tinted background on active */}
-      {RISK_FLOORS.map((f) => {
-        const active = state.riskFloor === f.value
-        const dotColor = RISK_FLOOR_COLORS[f.value]
-        const activeBg = f.value === 'all' ? 'transparent' : `${RISK_COLORS[f.value]}12`
-        return (
-          <button
-            key={f.value}
-            type="button"
-            onClick={() => dispatch({ type: 'set-risk-floor', floor: f.value })}
-            className="text-[10px] font-mono uppercase tracking-[0.12em] px-2 py-1.5 transition-colors flex items-center"
-            style={{
-              background: active ? activeBg : 'transparent',
-              color: active ? dotColor : 'var(--color-text-muted)',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-            aria-pressed={active}
-          >
-            {active && (
-              <span
-                aria-hidden="true"
-                className="inline-block w-1.5 h-1.5 rounded-full mr-1 shrink-0"
-                style={{ background: dotColor }}
-              />
-            )}
-            {lang === 'en' ? f.labelEn : f.labelEs}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-// MapLegend removed — legend context is provided by the LensToggle label and BriefingPanel.
-export function MapLegend(_props: { lang: 'en' | 'es' }) { return null }
 
 /**
  * ShareViewButton — copies the current /explore URL (with focus stack
- * encoded by useExploreUrlSync) to the clipboard. Sits below the risk
- * floor toggle so the controls stack vertically along the top-right.
+ * encoded by useExploreUrlSync) to the clipboard.
  */
 export function ShareViewButton({ lang }: { lang: 'en' | 'es' }) {
   const [copied, setCopied] = useState(false)
@@ -203,12 +29,11 @@ export function ShareViewButton({ lang }: { lang: 'en' | 'es' }) {
     <button
       type="button"
       onClick={onShare}
-      className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 transition-colors"
+      className="flex items-center gap-1.5 transition-colors"
       style={{
-        background: 'var(--color-background-card, #fff)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 4,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        background: 'none',
+        border: 'none',
+        padding: 0,
         color: copied ? 'var(--color-accent)' : 'var(--color-text-secondary)',
         cursor: 'pointer',
         fontSize: 10,
@@ -220,7 +45,7 @@ export function ShareViewButton({ lang }: { lang: 'en' | 'es' }) {
     >
       {copied
         ? (lang === 'en' ? '✓ Copied' : '✓ Copiado')
-        : (lang === 'en' ? '⤴ Share' : '⤴ Compartir')}
+        : (lang === 'en' ? '⤴ Copy link' : '⤴ Copiar enlace')}
     </button>
   )
 }

@@ -3502,7 +3502,9 @@ function Z3Panel({
   // Peer comparison — sector medians + percentiles for the DEVIATION LEDGER.
   // Non-blocking: the page renders without it (ledger degrades to vendor-only
   // values + dimmed ticks). The vendor's OWN rates are computed from the
-  // fetched rows below, NOT from vendor_stats (direct_award_pct is corrupted).
+  // fetched rows below — a deliberate sample-basis choice. (A 2026-06-12
+  // 150-vendor audit verified vendor_stats da/sb/hr are clean; the old
+  // "corrupted" note here was stale.)
   const { data: peerData } = useQuery({
     queryKey: ['explore', 'z3-peers', vendorId],
     queryFn: async () => {

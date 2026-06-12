@@ -32,12 +32,8 @@ export type Focus =
 export interface ExploreState {
   /** Stack of focus states. Index 0 is the system root; the last item is the active focus. */
   stack: Focus[]
-  /** Hovered entity — drives the briefing panel preview. */
+  /** Hovered entity — kept for Phase-2 hover previews (no dispatcher today). */
   hover: { kind: Focus['kind']; id: number | null } | null
-  /** Year filter (procurement year). null = all years. */
-  year: number | null
-  /** Risk floor — drops bodies below this level. */
-  riskFloor: 'all' | 'medium' | 'high' | 'critical'
   /**
    * Lens — the coloring + sizing transform applied to bodies on screen.
    *   'sectors' (default) — sized by total spend, colored by sector palette
@@ -65,8 +61,6 @@ export type ExploreAction =
   | { type: 'pop-to-level'; level: number } // for breadcrumbs / browser back
   | { type: 'reset-to-system' }
   | { type: 'set-hover'; hover: ExploreState['hover'] }
-  | { type: 'set-year'; year: number | null }
-  | { type: 'set-risk-floor'; floor: ExploreState['riskFloor'] }
   | { type: 'set-lens'; lens: ExploreState['lens'] }
   | { type: 'hydrate-from-url'; stack: Focus[] }
   | { type: 'pin-current' }
@@ -76,8 +70,6 @@ export type ExploreAction =
 export const EXPLORE_DEFAULT_STATE: ExploreState = {
   stack: [{ level: 0, kind: 'system' }],
   hover: null,
-  year: null,
-  riskFloor: 'all',
   lens: 'sectors',
   pinnedPath: null,
 }
@@ -200,10 +192,6 @@ function reducer(state: ExploreState, action: ExploreAction): ExploreState {
       }
     case 'set-hover':
       return { ...state, hover: action.hover }
-    case 'set-year':
-      return { ...state, year: action.year }
-    case 'set-risk-floor':
-      return { ...state, riskFloor: action.floor }
     case 'set-lens':
       return { ...state, lens: action.lens }
     case 'pin-current': {
@@ -265,8 +253,8 @@ export function useCurrentFocus(state: ExploreState): Focus {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Pin helpers — used by ExploreCanvas (to draw ring annotations) and
-// BriefingPanel (to render the pin/unpin button).
+// Pin helpers — used by ExploreCanvas (to draw ring annotations).
+// (BriefingPanel, the original pin-button host, was culled 2026-06-12.)
 // ────────────────────────────────────────────────────────────────────────────
 
 /** Are two Focus entries the same entity? Structural equality by kind+id. */

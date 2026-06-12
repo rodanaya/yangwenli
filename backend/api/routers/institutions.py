@@ -1372,11 +1372,10 @@ def _z2_compute_full(institution_id: int) -> Optional[VendorPoolResponse]:
         _z2_pool_cache[institution_id] = response
         _z2_pool_cache_ts[institution_id] = datetime.now().timestamp()
 
-    # Slice the cached top-50 down to the caller's requested limit. The cache
-    # always stores the full 50; smaller-limit callers get a trimmed copy
-    # without triggering a recompute and without poisoning the cache.
-    if limit < len(response.data):
-        return response.model_copy(update={"data": response.data[:limit]})
+    # (2026-06-12) A dead "slice to caller's limit" block here referenced an
+    # out-of-scope `limit` — every warmup raised a NameError that _warm's
+    # except swallowed; harmless only because the cache write above ran first.
+    # The endpoint handler does the limit slicing; this helper just computes.
     return response
 
 

@@ -3,30 +3,18 @@
  *
  * Replaces the failure of /atlas?z1=true. No legacy ClusterDetailPanel
  * modal, no ZoomedClusterPanel, no AtlasContext. Clean state machine in
- * ExploreState; clean canvas in ExploreCanvas; clean briefing in
- * BriefingPanel.
+ * ExploreState; clean canvas in ExploreCanvas.
  *
- * Layout:
- *   ┌───────────────────────────────────────────┬────────────────┐
- *   │                                           │                │
- *   │           ExploreCanvas (the map)         │  BriefingPanel │
- *   │                                           │                │
- *   └───────────────────────────────────────────┴────────────────┘
+ * Layout: ExploreCanvas (the map) fills the page — single column.
+ * (BriefingPanel rail killed 2026-05-20; file culled 2026-06-12.)
  *
  * Goal: the map IS the page. No hero block above, no toolbar below.
- * Tools (year, risk floor, search) are floated as overlays inside the
- * canvas surface — Phase 2 work; today the canvas is just the bodies.
  */
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  ExploreProvider,
-  useCurrentFocus,
-  useExploreState,
-} from '@/components/explore/ExploreState'
+import { ExploreProvider } from '@/components/explore/ExploreState'
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
-import { YearScrubber } from '@/components/explore/CanvasControls'
 
 const FIRST_VISIT_KEY = 'rubli_explore_visited_v1'
 
@@ -47,9 +35,6 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
   // and is shareable. /explore?s=salud&i=251&v=29277 deep-links into
   // vendor 29277 inside IMSS inside Salud.
   useExploreUrlSync()
-  const exploreState = useExploreState()
-  const exploreFocus = useCurrentFocus(exploreState)
-  const isPanelOpen = exploreFocus.level > 0
 
   // First-visit hint — one-time educational chip pointing at the canvas.
   // Auto-dismisses after 8s or on user click. Persisted via localStorage
@@ -91,17 +76,15 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
       {/* The map — fills available space */}
       <div className="relative overflow-hidden">
         <ExploreCanvas lang={lang} />
-        {isPanelOpen && <YearScrubber lang={lang} />}
         {/* Provenance microline — Archetype-C tools carry their colophon as a
             fixed-chrome microline (charter §C∞ / invariant #18) instead of a
             ProvenanceFooter, since the map is full-viewport. Non-interactive
-            (pointer-events-none) so it never blocks pan/drill. Lifts above the
-            28px YearScrubber strip only while a panel is open; otherwise sits
-            at the very bottom-left. No collision with top-corner controls
-            (LensToggle/ShareView) or the centered first-visit hint. */}
+            (pointer-events-none) so it never blocks pan/drill. (The 28px
+            YearScrubber strip it used to dodge was culled 2026-06-12 — it
+            dispatched into state nothing read and occluded the panel exits.) */}
         <div
           className="absolute left-3 z-[1] font-mono text-[9px] uppercase tracking-[0.16em] text-text-muted pointer-events-none select-none"
-          style={{ bottom: isPanelOpen ? 32 : 8, opacity: 0.7 }}
+          style={{ bottom: 8, opacity: 0.7 }}
         >
           {lang === 'en'
             ? 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025'
