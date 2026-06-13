@@ -35,6 +35,8 @@ import {
 } from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
+import { DossierOriginProvider } from '@/lib/nav/wayfinding'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { CommunityForceGraph } from '@/components/network/CommunityForceGraph'
 import { InstitutionStarGraph } from '@/components/network/InstitutionStarGraph'
@@ -61,7 +63,7 @@ function readPins(): number[] {
 function clusterLabel(c: CommunityIndexItem, isEs: boolean): { code: string; orbit: string } {
   return {
     code: `C-${c.community_id}`,
-    orbit: `${isEs ? 'órbita de' : 'orbit of'} ${formatEntityName('vendor', c.hub_vendor_name, 'xs')}`,
+    orbit: `${isEs ? 'órbita de' : 'orbit of'} ${formatEntityName('vendor', c.hub_vendor_name, 'md')}`,
   }
 }
 
@@ -404,7 +406,13 @@ export default function RedesKnownDossier() {
     gt: { en: 'GT cases', es: 'Casos GT' },
   }
 
+  // W4 — one origin provider over the body tree so an actor opened to its vendor
+  // dossier (RUNG-3) gets a "← Volver a La Trama" thread back to the exact cluster
+  // + lens. NOT wrapped over the RUNG-3 early return (it owns its own breadcrumb).
   return (
+    <DossierOriginProvider
+      value={{ route: `/network?${searchParams.toString()}`, label: lang === 'en' ? 'The Mesh' : 'La Trama' }}
+    >
     <div className="relative space-y-8 max-w-6xl mx-auto pb-12">
       {/* Paper-grain atmosphere — contemplative atlas surface */}
       <svg
@@ -697,9 +705,17 @@ export default function RedesKnownDossier() {
                           <WellDisc inst={inst} maxValue={maxInstValue} />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-baseline justify-between gap-2">
-                              <span className="min-w-0 truncate text-[11px] font-mono font-bold text-text-primary">
-                                <span className="text-[10px] font-mono font-bold text-text-muted/60 mr-1.5">{rank + 1}</span>
-                                {formatEntityName('institution', inst.name, 'sm')}
+                              <span className="min-w-0 flex items-baseline gap-1.5 text-[11px] font-mono font-bold text-text-primary">
+                                <span className="shrink-0 text-[10px] text-text-muted/60">{rank + 1}</span>
+                                {/* W1 — known buyers ("Instituto Mexicano del Seguro Social")
+                                    must stay recognizable: md (48) + 2-line clamp, full on hover. */}
+                                <span
+                                  className="min-w-0"
+                                  title={inst.name}
+                                  style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.25 }}
+                                >
+                                  {formatEntityName('institution', inst.name, 'md')}
+                                </span>
                               </span>
                               <span className="shrink-0 text-[11px] font-mono font-bold text-text-primary">
                                 {formatCompactMXN(inst.total_value_mxn)}
@@ -849,7 +865,6 @@ export default function RedesKnownDossier() {
                             {rank + 1}
                           </span>
                           <span className="text-[11px] font-mono font-bold text-text-primary">{lbl.code}</span>
-                          <span className="text-[10.5px] font-mono text-text-secondary ml-1.5">{lbl.orbit}</span>
                         </span>
                         <span className="shrink-0 inline-flex items-center gap-1.5">
                           <span className="text-[11px] font-mono font-bold text-text-primary">
@@ -876,6 +891,15 @@ export default function RedesKnownDossier() {
                           </button>
                         </span>
                       </div>
+                      {/* W1 — the hub firm IS the cluster's identity: own row, 2-line
+                          clamp (md=40 chars), full name on native hover. */}
+                      <span
+                        className="block mt-0.5 text-[10.5px] font-mono text-text-secondary"
+                        title={c.hub_vendor_name}
+                        style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.25 }}
+                      >
+                        {lbl.orbit}
+                      </span>
                       <div className="mt-1 flex items-center gap-2.5 text-[9.5px] font-mono text-text-muted/70">
                         <span>
                           {c.size.toLocaleString(isEs ? 'es-MX' : 'en-US')} {isEs ? 'actores' : 'actors'}
@@ -1057,31 +1081,65 @@ export default function RedesKnownDossier() {
                     className="rounded-sm border border-border bg-background-card px-4 py-3.5"
                     style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
                   >
-                    <p className="mb-2.5 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
-                      {isEs ? '§ Actores centrales' : '§ Central actors'}
+                    {/* W2 — header reconciles the sort (pagerank centrality) with
+                        what the eye reads. The order now tracks a VISIBLE channel
+                        (the influence bar); degree is demoted to muted context. */}
+                    <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+                      {isEs ? '§ Más centrales · por influencia' : '§ Most central · by influence'}
                     </p>
-                    <ul className="space-y-1.5">
-                      {[...graph.nodes]
-                        .sort((a, b) => b.pagerank - a.pagerank)
-                        .slice(0, 10)
-                        .map((n) => (
-                          <li key={n.vendor_id} className="flex items-center justify-between gap-2 min-w-0">
+                    <p className="mb-2.5 text-[8.5px] font-mono text-text-muted/45">
+                      {isEs ? 'centralidad pagerank · conexiones = grado' : 'pagerank centrality · ties = degree'}
+                    </p>
+                    {(() => {
+                      const roster = [...graph.nodes].sort((a, b) => b.pagerank - a.pagerank).slice(0, 10)
+                      // √pagerank domain — keeps the descending channel visible under
+                      // the near-power-law pagerank distribution (audit caution C).
+                      const maxInfl = Math.sqrt(roster[0]?.pagerank ?? 1) || 1
+                      return (
+                    <ul className="space-y-2">
+                      {roster.map((n) => {
+                        const pat = n.primary_pattern && PATTERN_COLORS[n.primary_pattern] ? n.primary_pattern : null
+                        return (
+                          <li key={n.vendor_id} className="min-w-0">
                             <EntityIdentityChip
                               type="vendor"
                               id={n.vendor_id}
                               name={n.name}
-                              size="xs"
+                              size="sm"
                               riskScore={n.risk_score}
+                              fullName
                             />
-                            <span className="shrink-0 text-[9px] font-mono text-text-muted/60">
-                              {n.degree} {isEs ? 'conexiones' : 'ties'}
-                              {n.is_sanctioned && (
-                                <span style={{ color: RISK_TEXT_COLORS.critical }}> · SFP</span>
+                            <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+                              <DotBar
+                                value={Math.sqrt(n.pagerank)}
+                                max={maxInfl}
+                                color="var(--color-accent)"
+                                ariaLabel={isEs ? 'Influencia (centralidad pagerank)' : 'Influence (pagerank centrality)'}
+                              />
+                              {pat && (
+                                <span
+                                  className="text-[8.5px] font-mono font-bold px-1 rounded-sm"
+                                  style={{ color: PATTERN_COLORS[pat], background: `${PATTERN_COLORS[pat]}1f` }}
+                                >
+                                  {pat}
+                                </span>
                               )}
-                            </span>
+                              <span
+                                className="text-[9px] font-mono text-text-muted/55"
+                                title={isEs ? 'conteo bruto de co-licitaciones' : 'raw co-bidding tie count'}
+                              >
+                                {n.degree} {isEs ? 'conexiones' : 'ties'}
+                                {n.is_sanctioned && (
+                                  <span style={{ color: RISK_TEXT_COLORS.critical }}> · SFP</span>
+                                )}
+                              </span>
+                            </div>
                           </li>
-                        ))}
+                        )
+                      })}
                     </ul>
+                      )
+                    })()}
                     {selectedVendor != null && (
                       <div className="mt-3 border-t border-border/50 pt-2.5 flex items-center justify-between gap-2">
                         <span className="text-[10px] font-mono text-text-muted/70">
@@ -1239,6 +1297,7 @@ export default function RedesKnownDossier() {
                               name={selectedCaptureItem.top1_vendor.vendor_name}
                               size="sm"
                               riskScore={selectedCaptureItem.top1_vendor.avg_risk_score}
+                              fullName
                             />
                           </div>
                         )}
@@ -1291,6 +1350,7 @@ export default function RedesKnownDossier() {
                             name={v.vendor_name}
                             size="xs"
                             riskScore={v.avg_risk_score}
+                            fullName
                           />
                           <span className="shrink-0 text-[9px] font-mono text-text-muted/60">
                             {formatCompactMXN(v.total_value_mxn)}
@@ -1351,5 +1411,6 @@ export default function RedesKnownDossier() {
         </div>
       </div>
     </div>
+    </DossierOriginProvider>
   )
 }

@@ -124,10 +124,30 @@ export function CommunityForceGraph({
       n.y = Math.max(MARGIN, Math.min(VIEW_H - MARGIN, n.y ?? VIEW_H / 2))
     })
 
-    // Named-outlier callouts (NYT Upshot): top 5 by pagerank.
-    const labeledIds = new Set(
-      [...simNodes].sort((a, b) => b.node.pagerank - a.node.pagerank).slice(0, 5).map((n) => n.id),
-    )
+    // Named-outlier callouts (NYT Upshot, greedy non-overlap): top-5 by pagerank,
+    // each accepted only if its label box clears every already-placed box (AABB).
+    // x/y/r are final + clamped here, so placement is exact and runs once per
+    // community (no per-frame cost, no #301). 'xs' (16) labels stay short BY
+    // DESIGN — widening to sm/md re-triggers the collision this pass resolves;
+    // the full name is one hover away in the dossier card.
+    const CH_W = 6.2   // ~9.5px mono advance + 0.04em tracking + stroke halo
+    const LABEL_H = 13 // cap-height + the 3px paint-order stroke halo
+    const PAD = 2
+    const candidates = [...simNodes].sort((a, b) => b.node.pagerank - a.node.pagerank).slice(0, 5)
+    const placedBoxes: { x0: number; y0: number; x1: number; y1: number }[] = []
+    const labeledIds = new Set<number>()
+    for (const n of candidates) {
+      const txt = formatEntityName('vendor', n.node.name, 'xs')
+      const w = txt.length * CH_W
+      const cx = n.x as number
+      const cy = (n.y as number) - n.r - 6
+      const box = { x0: cx - w / 2 - PAD, y0: cy - LABEL_H, x1: cx + w / 2 + PAD, y1: cy + PAD }
+      const clear = placedBoxes.every((b) => box.x1 < b.x0 || box.x0 > b.x1 || box.y1 < b.y0 || box.y0 > b.y1)
+      if (clear) {
+        placedBoxes.push(box)
+        labeledIds.add(n.id)
+      }
+    }
     return { nodes: simNodes, edges: simEdges as SimEdge[], labeled: labeledIds }
   }, [data])
 
@@ -342,6 +362,13 @@ export function CommunityForceGraph({
           {isEs ? 'Co-licitación' : 'Co-bidding tie'}
         </span>
       </div>
+      {/* W3 — when the greedy pass withholds colliding callouts, say so:
+          the rest are one hover away. */}
+      {labeled.size < Math.min(5, data.nodes.length) && (
+        <p className="mt-1.5 text-[8.5px] font-mono text-text-muted/45">
+          {isEs ? 'pasa el cursor para leer el resto' : 'hover to read the rest'}
+        </p>
+      )}
     </div>
   )
 }
