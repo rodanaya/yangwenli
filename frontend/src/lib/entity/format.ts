@@ -45,7 +45,11 @@ function formatInstitutionName(raw: string, max: number): string {
   // Title-case if input is ALL CAPS
   // NOTE: avoid \b\w regex — it misreads Unicode word boundaries (e.g. "Secretaría" → "SecretaríA")
   const isAllCaps = cleaned === cleaned.toUpperCase()
-  const cased = isAllCaps
+  // A single all-caps token of ≤8 chars is a sigla/acronym (IMSS, PEMEX, CFE,
+  // CONAGUA, SEGALMEX) — keep it uppercase. Title-casing it produced "Imss".
+  // Only multi-word ALL-CAPS names (shouty full names) get title-cased.
+  const isSigla = isAllCaps && !cleaned.includes(' ') && cleaned.length <= 8
+  const cased = isAllCaps && !isSigla
     ? cleaned.toLowerCase().split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
     : cleaned
   if (cased.length <= max) return cased
