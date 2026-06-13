@@ -188,7 +188,7 @@ export function VendorActivityTab({
       {/* § Indicador de riesgo — Risk year-over-year area chart */}
       <section aria-labelledby="trend-title">
         <SubSectionTitle id="trend-title">
-          {isEs ? '§ · Indicador de riesgo anual' : '§ · Annual risk indicator'}
+          {isEs ? '§ Indicador de riesgo anual' : '§ Annual risk indicator'}
         </SubSectionTitle>
         {riskTrend.length > 1 ? (
           <EditorialAreaChart
@@ -217,7 +217,7 @@ export function VendorActivityTab({
           className="pt-2"
         >
           <SubSectionTitle id="cronologia-title">
-            {isEs ? '§ 6 · La Cronología' : '§ 6 · Timeline'}
+            {isEs ? '§ La Cronología' : '§ Timeline'}
           </SubSectionTitle>
           <EditorialTimeline
             events={timelineEvents}
@@ -245,7 +245,7 @@ export function VendorActivityTab({
             className="pt-2"
           >
             <SubSectionTitle id="dinero-title">
-              {isEs ? '§ 5 · El Dinero' : '§ 5 · The Money'}
+              {isEs ? '§ El Dinero' : '§ The Money'}
             </SubSectionTitle>
             <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
               {isEs
@@ -287,7 +287,7 @@ export function VendorActivityTab({
           className="pt-2"
         >
           <SubSectionTitle id="inst-title">
-            {isEs ? '§ 2 · La Captura institucional' : '§ 2 · Institutional capture'}
+            {isEs ? '§ La Captura institucional' : '§ Institutional capture'}
           </SubSectionTitle>
           {/* Capture pill — shown if top institution > 40% of total vendor value */}
           {(() => {
@@ -359,7 +359,7 @@ export function VendorActivityTab({
             <>
               <div className="mb-1 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
                 <SubSectionTitle id="contracts-title" className="mb-0">
-                  {isEs ? '§ · El Expediente' : '§ · The Register'}
+                  {isEs ? '§ El Expediente' : '§ The Register'}
                 </SubSectionTitle>
                 <div className="flex flex-wrap items-baseline gap-x-2 text-[11px] font-mono tabular-nums text-text-muted">
                   <span className="text-text-secondary">

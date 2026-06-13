@@ -9,6 +9,7 @@ import { analysisApi, categoriesApi } from '@/api/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { getStoryBySlug } from '@/lib/story-content'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { cleanContractDescription } from '@/lib/contract-audit'
 
 const CommandPalette = lazy(() =>
   import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette }))
@@ -114,6 +115,17 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     enabled: false,
   })
 
+  // Contract breadcrumb — subscribe to ContractDossier's detail query
+  // (['contract-dossier', id, 'detail']) so the crumb reads a cleaned contract
+  // object ("Medicamentos") instead of the bare internal "#id". Falls back to
+  // ENTITY_TYPE_LABELS / #id below when the cache is cold.
+  const contractIdMatch = location.pathname.match(/^\/contracts\/(\d+)$/)
+  const { data: contractForBreadcrumb } = useQuery<{ title?: string; description?: string }>({
+    queryKey: ['contract-dossier', contractIdMatch ? Number(contractIdMatch[1]) : -1, 'detail'],
+    queryFn: () => Promise.reject(new Error('header never fetches contracts')),
+    enabled: false,
+  })
+
   // Category breadcrumb — resolve numeric ID to actual category name
   const isCategoryPage = /^\/categories\/\d+/.test(location.pathname)
   const breadcrumbCategoryId = isCategoryPage ? parseInt(location.pathname.split('/')[2]) : NaN
@@ -179,7 +191,17 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const vendorBreadcrumbName: string | null = vendorIdMatch && vendorForBreadcrumb?.name
     ? formatVendorName(vendorForBreadcrumb.name)
     : null
-  const title = vendorBreadcrumbName ?? caseBreadcrumbName ?? categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath, isEs))
+  // Contract breadcrumb — cleaned object text, truncated; falls through to the
+  // localized "Expediente del contrato" / #id when the cache is cold.
+  const contractBreadcrumbName: string | null = (() => {
+    if (!contractIdMatch) return null
+    const raw = (contractForBreadcrumb?.title || contractForBreadcrumb?.description || '').trim()
+    if (!raw) return null
+    const obj = cleanContractDescription(raw).objeto || raw
+    const cleaned = obj.length > 48 ? `${obj.slice(0, 47)}…` : obj
+    return cleaned || null
+  })()
+  const title = vendorBreadcrumbName ?? contractBreadcrumbName ?? caseBreadcrumbName ?? categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath, isEs))
   // Parent breadcrumb segment — now a real Link, not an inert span (F4).
   // parentRoute was already computed here and discarded; we keep it so
   // "SECTORES / Salud" lets you click SECTORES back to /sectors.
@@ -393,6 +415,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 // name from the dossier's own react-query cache first (see Header body).
 const ENTITY_TYPE_LABELS: Record<string, { en: string; es: string }> = {
   vendors: { en: 'Vendor dossier', es: 'Expediente del proveedor' },
+  contracts: { en: 'Contract dossier', es: 'Expediente del contrato' },
   institutions: { en: 'Institution dossier', es: 'Expediente institucional' },
   sectors: { en: 'Sector dossier', es: 'Expediente sectorial' },
   categories: { en: 'Category', es: 'Categoría' },

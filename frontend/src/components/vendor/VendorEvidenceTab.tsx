@@ -213,7 +213,7 @@ export function VendorEvidenceTab({
           className="pt-2"
         >
           <SubSectionTitle id="peer-title">
-            {isEs ? '§ 9 · El Desvío (vs sector)' : '§ 9 · The Deviation (vs sector)'}
+            {isEs ? '§ El Desvío (vs sector)' : '§ The Deviation (vs sector)'}
           </SubSectionTitle>
           <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
             {isEs
@@ -235,7 +235,7 @@ export function VendorEvidenceTab({
           className="pt-2"
         >
           <SubSectionTitle id="signos-title">
-            {isEs ? '§ 7 · Los Signos' : '§ 7 · External Signals'}
+            {isEs ? '§ Los Signos' : '§ External Signals'}
           </SubSectionTitle>
           <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
             {isEs
@@ -347,7 +347,7 @@ export function VendorEvidenceTab({
             className="pt-2"
           >
             <SubSectionTitle id="verdict-title">
-              {isEs ? '§ 8 · El Veredicto' : '§ 8 · Verdict'}
+              {isEs ? '§ El Veredicto' : '§ Verdict'}
             </SubSectionTitle>
             <div className="flex items-start gap-3">
               <span

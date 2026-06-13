@@ -51,6 +51,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { WayfindingSpine } from '@/components/nav/WayfindingSpine'
 import { DossierOriginProvider, type WayfindingLinkState } from '@/lib/nav/wayfinding'
 import { formatEntityName } from '@/lib/entity/format'
+import { DossierSectionHeader } from '@/components/dossier/DossierSectionHeader'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 const ContractDetailModal = lazy(() =>
@@ -59,67 +60,6 @@ const ContractDetailModal = lazy(() =>
 const NetworkGraphModal = lazy(() =>
   import('@/components/NetworkGraphModal').then((m) => ({ default: m.NetworkGraphModal })),
 )
-
-// ─── Reference-section header — tight, left-aligned (replaces the old centered
-//     py-12 plate). Mono § eyebrow + italic title + sector-tinted rule. ───────
-
-function DossierSectionHeader({
-  id,
-  eyebrow,
-  title,
-  meta,
-  accent,
-}: {
-  id: string
-  eyebrow: string
-  title: string
-  meta?: string
-  accent: string
-}) {
-  return (
-    <div
-      className="flex items-baseline justify-between gap-4 pb-1.5 mb-3.5"
-      style={{ borderBottom: `1px solid ${accent}33` }}
-    >
-      <div className="flex items-baseline gap-3 min-w-0">
-        <span
-          id={`${id}-eyebrow`}
-          className="font-mono flex-shrink-0"
-          style={{
-            fontSize: 10,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: accent,
-            fontWeight: 700,
-          }}
-        >
-          § {eyebrow}
-        </span>
-        <h2
-          className="truncate"
-          style={{
-            fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
-            fontWeight: 500,
-            fontSize: 18,
-            color: 'var(--color-text-primary)',
-            letterSpacing: '-0.005em',
-          }}
-        >
-          {title}
-        </h2>
-      </div>
-      {meta && (
-        <span
-          className="font-mono tabular-nums flex-shrink-0"
-          style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
-        >
-          {meta}
-        </span>
-      )}
-    </div>
-  )
-}
 
 // ─── La Coda · § ADÓNDE IR ───────────────────────────────────────────────────
 //
@@ -599,7 +539,6 @@ export default function VendorDossier() {
             linkedScandals={data.linkedScandals.data as VendorLinkedScandalsResponse | null | undefined}
             coBidders={data.coBidders.data}
             externalFlags={data.externalFlags.data}
-            shap={data.shap.data}
             onOpenNetworkGraph={() => setNetworkOpen(true)}
           />
         </section>

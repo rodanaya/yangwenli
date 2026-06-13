@@ -23,13 +23,19 @@ import { AlertTriangle, ArrowLeft, Copy, Check, ExternalLink } from 'lucide-reac
 import {
   ChapterShell,
   SubheadRule,
-  LedeParagraph,
   FadeIn,
 } from '@/components/dossier/primitives'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DossierSectionHeader } from '@/components/dossier/DossierSectionHeader'
+import { ContractSignalTags } from '@/components/contract/ContractSignalTags'
+import { OfficialCard } from '@/components/contract/OfficialCard'
+import { RiskFactorLedger } from '@/components/contract/RiskFactorLedger'
+import { ContractCotejo } from '@/components/contract/ContractCotejo'
+import { localizeProcedure, describeContractFactor } from '@/lib/contract-format'
+import { formatEntityName } from '@/lib/entity/format'
 import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatDate } from '@/lib/utils'
 
@@ -43,9 +49,19 @@ function localizeLevel(level: 'critical' | 'high' | 'medium' | 'low', lang: 'en'
     : 'BAJO'
 }
 
-function toTitleCase(raw: string | undefined): string {
-  if (!raw) return ''
-  return raw.replace(/[A-ZÁÉÍÓÚÑ]{2,}/g, (m) => m.charAt(0) + m.slice(1).toLowerCase())
+// §1 La transacción field grammar (matches TransactionField's dt/dd styling so
+// the chip-bearing party rows align with the scalar rows).
+const FIELD_LABEL_STYLE: React.CSSProperties = {
+  fontSize: 10,
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-muted)',
+}
+const FIELD_VALUE_STYLE: React.CSSProperties = {
+  fontFamily: '"EB Garamond", Georgia, serif',
+  fontSize: 14,
+  color: 'var(--color-text-primary)',
+  lineHeight: 1.4,
 }
 
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
@@ -137,6 +153,26 @@ export default function ContractDossier() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // §2 POR QUÉ — prod-true risk factors (parses risk_factors server-side; works
+  // WITHOUT contract_z_features, unlike risk-explain). The honest centerpiece.
+  const { data: riskBreakdown } = useQuery({
+    queryKey: ['contract-dossier', contractId, 'risk-breakdown'],
+    queryFn: () => contractApi.getRiskBreakdown(contractId),
+    enabled: validId,
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  })
+
+  // §1 OfficialCard + §3 EL COTEJO — size-in-context + relationship + named
+  // official, all 0ms PK/indexed reads bundled additively.
+  const { data: context } = useQuery({
+    queryKey: ['contract-dossier', contractId, 'context'],
+    queryFn: () => contractApi.getContext(contractId),
+    enabled: validId,
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  })
+
   const [contractNoCopied, setContractNoCopied] = useState(false)
   async function copyContractNo() {
     if (!contract?.contract_number) return
@@ -226,38 +262,13 @@ export default function ContractDossier() {
     })
   }
 
-  // SHAP top-4 contributors
-  const topContributors = (() => {
-    const features = explanation?.features ?? []
-    return [...features].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)).slice(0, 4)
-  })()
-
-  // Charter invariant #14 — the § header must STATE THE FINDING, not name a
-  // topic. When SHAP is available, lead with the single biggest contributor:
-  // its label + signed magnitude (e.g. "La volatilidad de precios empuja el
-  // indicador +0.32"). Fall back to the topic noun when SHAP is absent.
-  const hasShapReading = Boolean(explanation?.explanation_available) && topContributors.length > 0
-  const leadFactor = hasShapReading ? topContributors[0] : null
-  const riskReadingHeader = (() => {
-    const topicLabel = lang === 'es' ? 'Lectura del riesgo' : 'Risk reading'
-    if (!leadFactor) return topicLabel
-    const pushes = leadFactor.contribution > 0
-    const signed = `${pushes ? '+' : '−'}${Math.abs(leadFactor.contribution).toFixed(2)}`
-    if (lang === 'es') {
-      const verb = pushes ? 'empuja' : 'reduce'
-      return `${leadFactor.label} ${verb} el indicador ${signed}`
-    }
-    const verb = pushes ? 'pushes the risk indicator' : 'lowers the risk indicator'
-    return `${leadFactor.label} ${verb} ${signed}`
-  })()
-
   const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
 
   const sectorName = lang === 'es'
     ? SECTORS.find((s) => s.id === contract.sector_id)?.name
     : SECTORS.find((s) => s.id === contract.sector_id)?.nameEN
 
-  const lede = buildLede({ contract, sectorName, lang })
+  const lede = buildLede({ contract, sectorName, riskBreakdown, lang })
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -464,210 +475,185 @@ export default function ContractDossier() {
         </div>
       </header>
 
-      {/* § THE TRANSACTION */}
-      <ChapterShell id="transaction">
-        <FadeIn>
-          <SubheadRule label={lang === 'es' ? 'La transacción' : 'The transaction'} />
-          <dl className="mt-7 max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
-            <TransactionField
-              label={lang === 'es' ? 'Proveedor' : 'Vendor'}
-              value={contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}
-              href={contract.vendor_id ? `/vendors/${contract.vendor_id}` : undefined}
+      {/* Reworked body — tight DossierSectionHeader grammar (W3), centered
+          reading column. ChapterShell py-20 + 2 ChapterDividers removed. */}
+      <div className="mt-10 max-w-3xl mx-auto px-4 sm:px-8 space-y-10">
+
+        {/* §1 · LA TRANSACCIÓN — parties as chips, localized procedure, the
+            named-official card + signal-tag rail + honest quality/era block */}
+        <section id="transaction">
+          <FadeIn>
+            <DossierSectionHeader
+              id="transaction"
+              eyebrow={lang === 'es' ? 'Acta' : 'Record'}
+              title={lang === 'es' ? 'La transacción' : 'The transaction'}
+              meta={localizeProcedure(contract.procedure_type_normalized ?? contract.procedure_type, lang)}
+              accent={sectorAccent}
             />
-            <TransactionField
-              label={lang === 'es' ? 'Institución' : 'Institution'}
-              value={contract.institution_name ? toTitleCase(contract.institution_name) : '—'}
-              href={contract.institution_id ? `/institutions/${contract.institution_id}` : undefined}
-            />
-            <TransactionField
-              label={lang === 'es' ? 'Procedimiento' : 'Procedure'}
-              value={contract.procedure_type_normalized ?? contract.procedure_type ?? '—'}
-            />
-            <TransactionField
-              label={lang === 'es' ? 'Número' : 'Number'}
-              value={contract.procedure_number ?? '—'}
-              mono
-            />
-            <TransactionField
-              label={lang === 'es' ? 'Fecha del contrato' : 'Contract date'}
-              value={contract.contract_date ? formatDate(contract.contract_date) : '—'}
-              mono
-            />
-            <TransactionField
-              label={lang === 'es' ? 'Fecha de adjudicación' : 'Award date'}
-              value={contract.award_date ? formatDate(contract.award_date) : '—'}
-              mono
-            />
-            {contract.publication_date && (
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
+              <div>
+                <dt className="font-mono mb-1.5" style={FIELD_LABEL_STYLE}>{lang === 'es' ? 'Proveedor' : 'Vendor'}</dt>
+                <dd>
+                  {contract.vendor_id && contract.vendor_name ? (
+                    <EntityIdentityChip
+                      type="vendor"
+                      id={contract.vendor_id}
+                      name={contract.vendor_name}
+                      riskScore={score > 0 ? score : null}
+                      sectorCode={sectorCode}
+                      fullName
+                    />
+                  ) : (
+                    <span style={FIELD_VALUE_STYLE}>{contract.vendor_name ? formatEntityName('vendor', contract.vendor_name) : '—'}</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono mb-1.5" style={FIELD_LABEL_STYLE}>{lang === 'es' ? 'Institución' : 'Institution'}</dt>
+                <dd>
+                  {contract.institution_id && contract.institution_name ? (
+                    <EntityIdentityChip
+                      type="institution"
+                      id={contract.institution_id}
+                      name={contract.institution_name}
+                      sectorCode={sectorCode}
+                      fullName
+                    />
+                  ) : (
+                    <span style={FIELD_VALUE_STYLE}>{contract.institution_name ? formatEntityName('institution', contract.institution_name) : '—'}</span>
+                  )}
+                </dd>
+              </div>
               <TransactionField
-                label={lang === 'es' ? 'Publicación' : 'Publication'}
-                value={formatDate(contract.publication_date)}
+                label={lang === 'es' ? 'Procedimiento' : 'Procedure'}
+                value={localizeProcedure(contract.procedure_type_normalized ?? contract.procedure_type, lang)}
+              />
+              <TransactionField
+                label={lang === 'es' ? 'Número' : 'Number'}
+                value={contract.procedure_number ?? '—'}
                 mono
               />
-            )}
-            {contract.sector_name && (
               <TransactionField
-                label={lang === 'es' ? 'Sector' : 'Sector'}
-                value={contract.sector_name}
+                label={lang === 'es' ? 'Fecha del contrato' : 'Contract date'}
+                value={contract.contract_date ? formatDate(contract.contract_date) : '—'}
+                mono
               />
-            )}
-            {contract.data_quality_grade && (
               <TransactionField
-                label={lang === 'es' ? 'Calidad de datos' : 'Data quality'}
-                value={contract.data_quality_grade}
+                label={lang === 'es' ? 'Fecha de adjudicación' : 'Award date'}
+                value={contract.award_date ? formatDate(contract.award_date) : '—'}
+                mono
               />
-            )}
-            {contract.url && (
-              <div className="sm:col-span-2 pt-2">
-                <a
-                  href={contract.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
-                  style={{ fontSize: 11, color: 'var(--color-text-secondary)', textDecoration: 'none' }}
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  {lang === 'es' ? 'Documento fuente' : 'Source document'}
-                </a>
-              </div>
-            )}
-          </dl>
-        </FadeIn>
-      </ChapterShell>
+              {contract.publication_date && (
+                <TransactionField
+                  label={lang === 'es' ? 'Publicación' : 'Publication'}
+                  value={formatDate(contract.publication_date)}
+                  mono
+                />
+              )}
+              {contract.url && (
+                <div className="sm:col-span-2 pt-1">
+                  <a
+                    href={contract.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+                    style={{ fontSize: 11, color: 'var(--color-text-secondary)', textDecoration: 'none' }}
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    {lang === 'es' ? 'Documento fuente' : 'Source document'}
+                  </a>
+                </div>
+              )}
+            </dl>
 
-      <ChapterDivider sectorAccent={sectorAccent} />
+            {/* Named-official accountability card (graft; renders only when the
+                buying official is on record) */}
+            <div className="mt-5">
+              <OfficialCard
+                official={context?.official}
+                contractYear={contract.contract_year}
+                sexenioYear={contract.sexenio_year}
+                isElectionYear={contract.is_election_year}
+                sectorAccent={sectorAccent}
+                lang={lang}
+              />
+            </div>
 
-      {/* § RISK READING — header states the finding (charter §IV #14) */}
-      <ChapterShell id="risk-reading">
-        <FadeIn>
-          <SubheadRule label={riskReadingHeader} />
-          {explanation?.explanation_available && topContributors.length > 0 ? (
-            <div className="mt-7 max-w-3xl mx-auto">
-              <p
-                className="mb-5"
-                style={{
-                  fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
-                  fontSize: 14,
-                  lineHeight: 1.6,
-                  color: 'var(--color-text-secondary)',
-                }}
-              >
-                {lang === 'es'
-                  ? `El modelo v0.8.5 marca este contrato en ${riskPct} de 100. Los factores que más empujan el veredicto:`
-                  : `The v0.8.5 model rates this contract at ${riskPct} of 100. The factors pushing the verdict the most:`}
-              </p>
-              <ul className="space-y-3 list-none p-0">
-                {topContributors.map((f, i) => {
-                  const isPositive = f.contribution > 0
-                  const factorColor = isPositive ? verdictColor : 'var(--color-text-muted)'
-                  const sign = isPositive ? '+' : ''
-                  return (
-                    <li key={i} className="flex items-baseline gap-3 px-3 py-2" style={{ borderLeft: `2px solid ${factorColor}` }}>
-                      <span style={{ fontSize: 11, color: factorColor, fontWeight: 700, minWidth: 14 }} aria-hidden="true">
-                        {isPositive ? '▲' : '▽'}
-                      </span>
-                      <span
-                        className="flex-1 min-w-0"
-                        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 14, color: 'var(--color-text-primary)' }}
-                      >
-                        {f.label}
-                      </span>
-                      <span
-                        className="font-mono tabular-nums text-right flex-shrink-0"
-                        style={{ fontSize: 11, color: factorColor, fontWeight: 700, minWidth: 60 }}
-                      >
-                        {sign}{f.contribution.toFixed(3)}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-              {explanation.model_version && (
+            {/* Signal-tag rail (TRUE-only) */}
+            <div className="mt-4">
+              <ContractSignalTags contract={contract} lang={lang} />
+            </div>
+
+            {/* Honest quality/era block (replaces the naked grade letter) */}
+            {contract.data_quality_grade && (() => {
+              const ERA: Record<string, string> = { A: '2002–2010', B: '2010–2017', C: '2018–2022', D: '2023–2025' }
+              const struct = contract.source_structure
+              const era = struct ? ERA[struct] : undefined
+              const structText = struct
+                ? `${lang === 'es' ? ' · Estructura' : ' · Structure'} ${struct}${era ? ` — ${era}` : ''}`
+                : ''
+              return (
                 <p
-                  className="mt-5 font-mono text-center"
+                  className="mt-3"
                   style={{
-                    fontSize: 9,
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
+                    fontFamily: '"EB Garamond", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontSize: 13,
                     color: 'var(--color-text-muted)',
-                    opacity: 0.7,
                   }}
                 >
-                  {lang === 'es' ? 'modelo' : 'model'} {explanation.model_version} · {lang === 'es' ? 'descomposición SHAP' : 'SHAP decomposition'}
+                  {lang === 'es' ? 'Calidad de datos ' : 'Data quality '}{contract.data_quality_grade}{structText}
                 </p>
-              )}
-            </div>
-          ) : (
-            <p
-              className="mt-7 text-center"
-              style={{
-                fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
-                fontSize: 14,
-                color: 'var(--color-text-muted)',
-              }}
-            >
-              {lang === 'es'
-                ? 'No hay descomposición SHAP disponible para este contrato.'
-                : 'No SHAP decomposition available for this contract.'}
-            </p>
-          )}
-        </FadeIn>
-      </ChapterShell>
+              )
+            })()}
+          </FadeIn>
+        </section>
 
-      <ChapterDivider sectorAccent={sectorAccent} />
+        {/* §2 · POR QUÉ — prod-true severity-ranked risk ledger (W1/W2/W5) */}
+        <section id="por-que">
+          <FadeIn>
+            <DossierSectionHeader
+              id="por-que"
+              eyebrow={lang === 'es' ? 'Diagnóstico' : 'Diagnosis'}
+              title={lang === 'es' ? 'Por qué está marcado' : "Why it's flagged"}
+              meta={riskPct != null ? `${riskPct}/100` : undefined}
+              accent={sectorAccent}
+            />
+            <RiskFactorLedger
+              breakdown={riskBreakdown}
+              explanation={explanation}
+              contract={contract}
+              riskPct={riskPct}
+              lang={lang}
+            />
+          </FadeIn>
+        </section>
 
-      {/* § CONTEXT */}
-      <ChapterShell id="context">
-        <FadeIn>
-          <SubheadRule label={lang === 'es' ? 'Contexto' : 'Context'} />
-          <div className="mt-7 max-w-3xl mx-auto">
-            <LedeParagraph sectorAccent={sectorAccent}>
-              {lang === 'es'
-                ? `Este contrato es uno de muchos entre ${contract.vendor_name ? toTitleCase(contract.vendor_name) : 'el proveedor'} y ${contract.institution_name ? toTitleCase(contract.institution_name) : 'la institución'}. Para entender el patrón, abra cualquiera de las dos fichas:`
-                : `This contract is one of many between ${contract.vendor_name ? toTitleCase(contract.vendor_name) : 'the vendor'} and ${contract.institution_name ? toTitleCase(contract.institution_name) : 'the institution'}. To see the pattern, open either dossier:`}
-            </LedeParagraph>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {contract.vendor_id && contract.vendor_name && (
-                <button
-                  type="button"
-                  onClick={() => navigate(`/vendors/${contract.vendor_id}`)}
-                  className="inline-flex items-center gap-2 font-mono uppercase tracking-[0.12em] hover:opacity-90 transition-opacity"
-                  style={{
-                    fontSize: 11,
-                    background: sectorAccent,
-                    color: '#fff',
-                    padding: '10px 16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                  }}
-                >
-                  {lang === 'es' ? 'Ficha del proveedor' : 'Open vendor dossier'} ↗
-                </button>
-              )}
-              {contract.institution_id && contract.institution_name && (
-                <button
-                  type="button"
-                  onClick={() => navigate(`/institutions/${contract.institution_id}`)}
-                  className="inline-flex items-center gap-2 font-mono uppercase tracking-[0.12em] hover:bg-background-card transition-colors"
-                  style={{
-                    fontSize: 11,
-                    background: 'var(--color-background-elevated)',
-                    color: 'var(--color-text-primary)',
-                    padding: '10px 16px',
-                    border: '1px solid var(--color-border)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {lang === 'es' ? 'Ficha de la institución' : 'Open institution dossier'} ↗
-                </button>
-              )}
-            </div>
-          </div>
-        </FadeIn>
-      </ChapterShell>
+        {/* §3 · EL COTEJO — size-in-context bullet + pair register (W6) */}
+        <section id="cotejo">
+          <FadeIn>
+            <DossierSectionHeader
+              id="cotejo"
+              eyebrow={lang === 'es' ? 'Cotejo' : 'Cross-reference'}
+              title={lang === 'es' ? 'El tamaño en contexto' : 'Size in context'}
+              meta={
+                context?.pair?.this_rank === 1
+                  ? (lang === 'es' ? 'el mayor del par' : 'largest of the pair')
+                  : undefined
+              }
+              accent={sectorAccent}
+            />
+            <ContractCotejo
+              context={context}
+              contract={contract}
+              sectorName={sectorName ?? contract.sector_name ?? ''}
+              sectorAccent={sectorAccent}
+              lang={lang}
+            />
+          </FadeIn>
+        </section>
+
+      </div>
 
       <ChapterDivider sectorAccent={sectorAccent} />
 
@@ -782,36 +768,47 @@ function TransactionField({
 function buildLede({
   contract,
   sectorName,
+  riskBreakdown,
   lang,
 }: {
   contract: Awaited<ReturnType<typeof contractApi.getById>>
   sectorName?: string
+  riskBreakdown?: Awaited<ReturnType<typeof contractApi.getRiskBreakdown>>
   lang: 'en' | 'es'
 }): string {
-  const vendor = contract.vendor_name ? toTitleCase(contract.vendor_name) : (lang === 'es' ? 'un proveedor' : 'a vendor')
-  const inst = contract.institution_name ? toTitleCase(contract.institution_name) : (lang === 'es' ? 'una institución' : 'an institution')
+  const vendor = contract.vendor_name
+    ? formatEntityName('vendor', contract.vendor_name)
+    : (lang === 'es' ? 'un proveedor' : 'a vendor')
+  const inst = contract.institution_name
+    ? formatEntityName('institution', contract.institution_name)
+    : (lang === 'es' ? 'una institución' : 'an institution')
   const yr = contract.contract_year ?? '—'
-  const procType = (contract.procedure_type_normalized ?? contract.procedure_type ?? '').toLowerCase()
+  // localizeProcedure returns a capitalized label ("Licitación pública"); lower
+  // the initial for mid-sentence use ("…mediante licitación pública").
+  const procLabel = localizeProcedure(contract.procedure_type_normalized ?? contract.procedure_type, lang)
+  const procLower = procLabel === '—' ? '' : procLabel.charAt(0).toLowerCase() + procLabel.slice(1)
   const score = Number(contract.risk_score ?? 0)
-  const isDA = contract.is_direct_award
-  const isSB = contract.is_single_bid
+
+  // Top factor by SEVERITY (never the v0.6.5-decoy weight) — feeds the critical lede.
+  const topFactor = (() => {
+    const factors = riskBreakdown?.factors ?? []
+    if (!factors.length) return null
+    const described = factors.map((f) => describeContractFactor(f, lang)).sort((a, b) => b.sortKey - a.sortKey)
+    return described[0]?.severity ? described[0] : null
+  })()
 
   if (score >= 0.60) {
-    return lang === 'es'
-      ? `${vendor} obtuvo este contrato de ${inst} en ${yr} mediante ${procType || 'el procedimiento registrado'}. El modelo de riesgo lo califica como crítico — ${formatPctSafe(contract.amount_mxn)} y las señales de procuración lo confirman: ${isDA ? 'adjudicación directa' : ''}${isSB ? (isDA ? ' + ' : '') + 'único postor' : ''}.`
-      : `${vendor} obtained this contract from ${inst} in ${yr} via ${procType || 'the recorded procedure'}. The risk model rates it critical — the procurement signals confirm it: ${isDA ? 'direct award' : ''}${isSB ? (isDA ? ' + ' : '') + 'single bid' : ''}.`
-  }
-  if (isDA) {
-    return lang === 'es'
-      ? `${vendor} recibió este contrato de ${inst} en ${yr} mediante adjudicación directa.`
-      : `${vendor} received this contract from ${inst} in ${yr} via direct award.`
+    const via = procLower ? (lang === 'es' ? `mediante ${procLower}` : `via ${procLower}`) : ''
+    const signal = topFactor ? topFactor.label.toLowerCase() : null
+    if (lang === 'es') {
+      const base = `${vendor} obtuvo este contrato de ${inst} en ${yr}${via ? ` ${via}` : ''}. El modelo de riesgo lo califica como crítico`
+      return signal ? `${base} — la señal dominante: ${signal}.` : `${base}.`
+    }
+    const amount = formatCompactMXN(Number(contract.amount_mxn ?? 0))
+    const base = `${vendor} obtained this ${amount} contract from ${inst} in ${yr}${via ? ` ${via}` : ''}. The risk model rates it critical`
+    return signal ? `${base} — the leading signal: ${signal}.` : `${base}.`
   }
   return lang === 'es'
-    ? `${vendor} recibió este contrato de ${inst} en ${yr}${procType ? ` mediante ${procType}` : ''}${sectorName ? `, dentro del sector ${sectorName}` : ''}.`
-    : `${vendor} received this contract from ${inst} in ${yr}${procType ? ` via ${procType}` : ''}${sectorName ? `, within the ${sectorName} sector` : ''}.`
-}
-
-function formatPctSafe(n: number | undefined): string {
-  if (n == null) return '—'
-  return formatCompactMXN(n)
+    ? `${vendor} recibió este contrato de ${inst} en ${yr}${procLower ? ` mediante ${procLower}` : ''}${sectorName ? `, dentro del sector ${sectorName}` : ''}.`
+    : `${vendor} received this contract from ${inst} in ${yr}${procLower ? ` via ${procLower}` : ''}${sectorName ? `, within the ${sectorName} sector` : ''}.`
 }

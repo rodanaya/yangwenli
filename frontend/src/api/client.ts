@@ -64,6 +64,8 @@ import type {
   ExecutiveSummaryResponse,
   DashboardBundleResponse,
   RiskExplanation,
+  ContractRiskBreakdownResponse,
+  ContractContextResponse,
   ASFInstitutionResponse,
   SectorASFResponse,
   ASFInstitutionSummaryResponse,
@@ -476,8 +478,18 @@ export const contractApi = {
     return data
   },
 
-  async getRiskBreakdown(contractId: number): Promise<unknown> {
-    const { data } = await api.get(`/contracts/${contractId}/risk`)
+  async getRiskBreakdown(contractId: number): Promise<ContractRiskBreakdownResponse> {
+    const { data } = await api.get<ContractRiskBreakdownResponse>(`/contracts/${contractId}/risk`)
+    return data
+  },
+
+  /**
+   * Size-in-context, vendor↔institution relationship, and named-official block.
+   * Additive endpoint (PK/indexed reads ~15-30ms); feeds §1 OfficialCard +
+   * §3 EL COTEJO. Every field nullable — caller hides absent blocks.
+   */
+  async getContext(contractId: number): Promise<ContractContextResponse> {
+    const { data } = await api.get<ContractContextResponse>(`/contracts/${contractId}/context`)
     return data
   },
 

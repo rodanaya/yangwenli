@@ -48,6 +48,50 @@ class RiskExplanationResponse(BaseModel):
     explanation_available: bool
     features: List[Dict[str, Any]]
 
+
+class ContractOfficial(BaseModel):
+    """Named-official accountability block (§1 OfficialCard graft).
+
+    `responsible_uc` and `category_id`/name live in `SELECT c.*` but are dropped
+    by the ContractDetail Pydantic model; this surfaces them additively without
+    touching the hot-path detail endpoint. Every field is nullable — the card
+    HIDES rows that are null (never renders a "—").
+    """
+    responsible_uc: Optional[str] = None
+    exception_article: Optional[str] = None
+    category_id: Optional[int] = None
+    category_name_es: Optional[str] = None
+    category_name_en: Optional[str] = None
+
+
+class ContractPairContext(BaseModel):
+    """Vendor↔institution relationship, computed LIVE from `contracts` (NOT the
+    precomputed vendor_institution_tenure table) so count/total/rank are mutually
+    consistent with the lazy pair register's pagination.total."""
+    vendor_id: Optional[int] = None
+    institution_id: Optional[int] = None
+    total_contracts: int = 0
+    total_amount_mxn: float = 0.0
+    first_year: Optional[int] = None
+    last_year: Optional[int] = None
+    this_rank: Optional[int] = None  # 1-based rank of THIS contract by amount desc within the pair
+
+
+class ContractContextResponse(BaseModel):
+    """Size-in-context + relationship + named-official, all 0-ms PK / indexed
+    reads. Feeds §1 OfficialCard, §3 EL COTEJO RatioBullet + rank prose + pin.
+    Additive — does not alter the hot-path /contracts/{id} response."""
+    contract_id: int
+    amount_mxn: float
+    sector_id: Optional[int] = None
+    sector_name: Optional[str] = None
+    sector_p99_mxn: Optional[float] = None
+    size_vs_p99: Optional[float] = None  # amount / p99 (the marquee "×100")
+    official: ContractOfficial
+    pair: ContractPairContext
+    vendor_rank: Optional[int] = None          # 1-based rank by amount across ALL vendor contracts
+    vendor_total_contracts: int = 0
+
 logger = logging.getLogger(__name__)
 
 # Valid risk levels for validation
@@ -568,6 +612,126 @@ def get_contract_risk_explain(
             return result
     except sqlite3.Error as e:
         logger.error(f"Database error in get_contract_risk_explain: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+@router.get("/{contract_id}/context", response_model=ContractContextResponse)
+def get_contract_context(
+    contract_id: int = Path(..., description="Contract ID"),
+):
+    """Size-in-context, vendor↔institution relationship, and named-official block.
+
+    Bundles the dormant assets the canonical contract dossier needs (DESIGNUS
+    "El Cotejo", Day-6 polish) into ONE additive call, all PK / vendor-indexed
+    reads (~15-30 ms total, no hot-path change):
+
+    - `sector_p99_mxn` / `size_vs_p99` — sector_price_baselines.percentile_99
+      (the §3 RatioBullet "×N vs the sector 99th percentile").
+    - `pair` — COUNT/SUM/MIN(year) + this contract's rank, computed LIVE from
+      `contracts` (so it matches the lazy register's pagination.total exactly —
+      the precomputed tenure table drifts ~0.8% and is deliberately NOT used).
+    - `official` — responsible_uc / exception_article / category name, which
+      `SELECT c.*` carries but ContractDetail drops.
+
+    Every field is nullable; the frontend hides any block whose data is absent
+    (Structure-A contracts, vendors with no pair history, etc.).
+    """
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT c.id, c.amount_mxn, c.sector_id, c.vendor_id, c.institution_id,
+                       c.responsible_uc, c.exception_article, c.category_id,
+                       s.name_es AS sector_name,
+                       cat.name_es AS category_name_es, cat.name_en AS category_name_en
+                FROM contracts c
+                LEFT JOIN sectors s ON c.sector_id = s.id
+                LEFT JOIN categories cat ON c.category_id = cat.id
+                WHERE c.id = ?
+                """,
+                (contract_id,),
+            )
+            row = cur.fetchone()
+            if row is None:
+                raise HTTPException(status_code=404, detail=f"Contract {contract_id} not found")
+
+            amount = row["amount_mxn"] or 0.0
+            sector_id = row["sector_id"]
+            vendor_id = row["vendor_id"]
+            institution_id = row["institution_id"]
+
+            # Sector p99 — all-years / all-types baseline (year column is NULL on
+            # the deploy row; 'all' is the only contract_type present).
+            sector_p99 = None
+            size_vs_p99 = None
+            if sector_id is not None:
+                cur.execute(
+                    """SELECT percentile_99 FROM sector_price_baselines
+                       WHERE sector_id = ? AND contract_type = 'all'
+                       ORDER BY (year IS NULL) DESC LIMIT 1""",
+                    (sector_id,),
+                )
+                p99_row = cur.fetchone()
+                if p99_row and p99_row["percentile_99"]:
+                    sector_p99 = float(p99_row["percentile_99"])
+                    if sector_p99 > 0 and amount > 0:
+                        size_vs_p99 = amount / sector_p99
+
+            # Pair context — LIVE aggregate (idx_c_vendor_date), kept consistent
+            # with the register's pagination.total. Rank = 1 + (bigger siblings).
+            pair = ContractPairContext(vendor_id=vendor_id, institution_id=institution_id)
+            if vendor_id is not None and institution_id is not None:
+                cur.execute(
+                    """SELECT COUNT(*) AS n, COALESCE(SUM(amount_mxn), 0) AS total,
+                              MIN(contract_year) AS y0, MAX(contract_year) AS y1,
+                              SUM(CASE WHEN amount_mxn > ? THEN 1 ELSE 0 END) AS bigger
+                       FROM contracts WHERE vendor_id = ? AND institution_id = ?""",
+                    (amount, vendor_id, institution_id),
+                )
+                pr = cur.fetchone()
+                if pr and pr["n"]:
+                    pair.total_contracts = pr["n"]
+                    pair.total_amount_mxn = float(pr["total"] or 0)
+                    pair.first_year = pr["y0"]
+                    pair.last_year = pr["y1"]
+                    pair.this_rank = int(pr["bigger"] or 0) + 1
+
+            # Vendor-wide rank by amount (for "el mayor de N contratos del proveedor").
+            vendor_rank = None
+            vendor_total = 0
+            if vendor_id is not None:
+                cur.execute(
+                    """SELECT COUNT(*) AS n,
+                              SUM(CASE WHEN amount_mxn > ? THEN 1 ELSE 0 END) AS bigger
+                       FROM contracts WHERE vendor_id = ?""",
+                    (amount, vendor_id),
+                )
+                vr = cur.fetchone()
+                if vr and vr["n"]:
+                    vendor_total = vr["n"]
+                    vendor_rank = int(vr["bigger"] or 0) + 1
+
+            return ContractContextResponse(
+                contract_id=contract_id,
+                amount_mxn=amount,
+                sector_id=sector_id,
+                sector_name=row["sector_name"],
+                sector_p99_mxn=sector_p99,
+                size_vs_p99=size_vs_p99,
+                official=ContractOfficial(
+                    responsible_uc=row["responsible_uc"],
+                    exception_article=row["exception_article"],
+                    category_id=row["category_id"],
+                    category_name_es=row["category_name_es"],
+                    category_name_en=row["category_name_en"],
+                ),
+                pair=pair,
+                vendor_rank=vendor_rank,
+                vendor_total_contracts=vendor_total,
+            )
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_contract_context: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 

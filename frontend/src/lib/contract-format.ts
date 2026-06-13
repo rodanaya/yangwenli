@@ -1,0 +1,163 @@
+/**
+ * Contract-dossier formatting helpers (DESIGNUS "El Cotejo", Day-6).
+ *
+ *  - localizeProcedure: COMPRANET procedure_type / _normalized → clean bilingual
+ *    label. The raw column is uppercase-unaccented ("LICITACIÓN PÚBLICA") or a
+ *    normalized snake-case bucket; a resilient prefix matcher handles both and
+ *    falls back to a title-cased echo.
+ *  - describeContractFactor: one row of GET /contracts/{id}/risk, localized.
+ *    The endpoint's `weight` is a v0.6.5-era hardcoded decoy (0.0 / 0.03 / 0.05)
+ *    and `category` is undefined for the dynamic factors a flagged contract
+ *    actually carries — so we render SEVERITY (alto/medio) + the human parameter,
+ *    derive the category client-side from the code, and never print the weight.
+ */
+import { parseFactorLabel, getFactorCategoryColor, type FactorCategory } from './risk-factors'
+import type { ContractRiskFactor } from '@/api/types'
+
+// ── Procedure type ──────────────────────────────────────────────────────────
+
+const stripAccents = (s: string) =>
+  s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+
+/** Localize a COMPRANET procedure type. Handles raw uppercase, normalized
+ *  snake-case, and unknown values (title-cased echo). */
+export function localizeProcedure(
+  raw: string | null | undefined,
+  lang: 'en' | 'es',
+): string {
+  if (!raw || !raw.trim()) return '—'
+  const k = stripAccents(raw.trim().toLowerCase()).replace(/[_\s]+/g, ' ')
+
+  const has = (...needles: string[]) => needles.some((n) => k.includes(n))
+
+  // Short normalized buckets ('directa'/'licitacion'/'invitacion'/'otro'/
+  // 'desconocido') AND the full raw strings ("LICITACIÓN PÚBLICA", "Adjudicación
+  // Directa Federal", …) both land here.
+  if (has('licitacion', 'public tender', 'open tender')) {
+    const intl = has('internacional', 'international')
+    const nat = has('nacional', 'national')
+    if (lang === 'es') return intl ? 'Licitación pública internacional' : nat ? 'Licitación pública nacional' : 'Licitación pública'
+    return intl ? 'International public tender' : nat ? 'National public tender' : 'Open public tender'
+  }
+  if (has('invitacion', 'invitation', 'three', 'tres')) {
+    return lang === 'es' ? 'Invitación a cuando menos tres' : 'Restricted invitation (3 quotes)'
+  }
+  if (has('directa', 'direct award', 'direct')) {
+    return lang === 'es' ? 'Adjudicación directa' : 'Direct award'
+  }
+  if (has('desconocido', 'unknown')) {
+    return lang === 'es' ? 'Procedimiento no especificado' : 'Procedure not specified'
+  }
+  if (k === 'otro' || k === 'otra' || k === 'other') {
+    return lang === 'es' ? 'Otro procedimiento' : 'Other procedure'
+  }
+  // Unknown — title-case the raw value rather than echo SHOUTING CAPS.
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+// ── Risk factor row ───────────────────────────────────────────────────────────
+
+export type FactorSeverity = 'alto' | 'medio' | null
+
+export interface DescribedFactor {
+  code: string
+  label: string            // localized factor name
+  category: FactorCategory // derived client-side from the code (never the API field)
+  categoryColor: string
+  severity: FactorSeverity
+  param: string | null     // human parameter, e.g. "200% · 124 socios" / "confianza 0.95"
+  sortKey: number          // severity rank for ordering (higher = more severe)
+}
+
+// Spanish labels for the /risk factor families (the endpoint ships EN only).
+const FAMILY_ES: Record<string, string> = {
+  price_hyp: 'Sobreprecio detectado',
+  extreme_overpricing: 'Sobreprecio extremo',
+  statistical_outlier: 'Valor atípico estadístico',
+  co_bid_high: 'Co-licitación alta',
+  co_bid_med: 'Co-licitación media',
+  co_bid_low: 'Co-licitación baja',
+  single_bid: 'Postor único',
+  direct_award: 'Adjudicación directa',
+  restricted_procedure: 'Procedimiento restringido',
+  price_anomaly: 'Anomalía de precio',
+  industry_mismatch: 'Desajuste industria-sector',
+  vendor_concentration: 'Concentración de proveedor',
+  network_risk: 'Riesgo de red',
+  year_end: 'Concentración fin de año',
+  threshold_split: 'Fraccionamiento de umbral',
+  inst_risk: 'Riesgo institucional',
+}
+
+function familyKey(code: string): string {
+  const head = code.split(':')[0]
+  // collapse parametric families (network_3, split_2, short_ad_<5d) to a stem
+  if (/^network_\d+$/.test(head)) return 'network_risk'
+  if (/^split_\d+$/.test(head)) return 'threshold_split'
+  if (/^short_ad/.test(head)) return 'short_ad'
+  if (/^vendor_concentration/.test(head)) return 'vendor_concentration'
+  return head
+}
+
+/** Severity per the spec: ALTO = price_hyp / co_bid_high; MEDIO = co_bid_med;
+ *  everything else neutral. (The weight field is a decoy — do not rank on it.) */
+function severityOf(code: string): FactorSeverity {
+  const head = code.split(':')[0]
+  if (head === 'price_hyp' || head === 'co_bid_high') return 'alto'
+  if (head === 'co_bid_med') return 'medio'
+  return null
+}
+
+/** Extract the human-readable parameter from a parametric code. */
+function paramOf(code: string, lang: 'en' | 'es'): string | null {
+  // co_bid_high:200%:124p → "200% · 124 socios" / "200% · 124 partners"
+  const coBid = code.match(/^co_bid_(?:high|med|low):(\d+%?)(?::(\d+)p)?$/)
+  if (coBid) {
+    const pct = coBid[1].endsWith('%') ? coBid[1] : `${coBid[1]}%`
+    if (coBid[2]) {
+      const partners = lang === 'es' ? `${coBid[2]} socios` : `${coBid[2]} partners`
+      return `${pct} · ${partners}`
+    }
+    return pct
+  }
+  // price_hyp:extreme_overpricing:0.95 → "confianza 0.95" / "confidence 0.95"
+  const priceHyp = code.match(/^price_hyp:[^:]+:([\d.]+)$/)
+  if (priceHyp) {
+    return lang === 'es' ? `confianza ${priceHyp[1]}` : `confidence ${priceHyp[1]}`
+  }
+  // industry_mismatch:distribucion->s1 → the mismatch pair
+  const mismatch = code.match(/^industry_mismatch:(.+)$/)
+  if (mismatch) return mismatch[1].replace(/->/g, ' → ')
+  return null
+}
+
+export function describeContractFactor(
+  factor: ContractRiskFactor,
+  lang: 'en' | 'es',
+): DescribedFactor {
+  const code = factor.code
+  const parsed = parseFactorLabel(code) // ALWAYS returns a category (BROKEN-5 fix)
+  const fam = familyKey(code)
+  const label = lang === 'es'
+    ? (FAMILY_ES[fam] ?? FAMILY_ES[code] ?? parsed.label)
+    : (factor.name || parsed.label)
+  const severity = severityOf(code)
+  return {
+    code,
+    label,
+    category: parsed.category,
+    categoryColor: getFactorCategoryColor(parsed.category),
+    severity,
+    param: paramOf(code, lang),
+    sortKey: severity === 'alto' ? 2 : severity === 'medio' ? 1 : 0,
+  }
+}
+
+export function severityWord(severity: FactorSeverity, lang: 'en' | 'es'): string {
+  if (severity === 'alto') return lang === 'es' ? 'ALTO' : 'HIGH'
+  if (severity === 'medio') return lang === 'es' ? 'MEDIO' : 'MED'
+  return ''
+}

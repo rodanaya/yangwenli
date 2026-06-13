@@ -298,6 +298,56 @@ export interface RiskExplanation {
   features: RiskFeatureContribution[]
 }
 
+/** One server-parsed risk factor from GET /contracts/{id}/risk.
+ *  NOTE: `weight` is a v0.6.5-era hardcoded bucket (0.0 / 0.03 / 0.05), NOT a
+ *  per-contract magnitude — render severity, never the number as a coefficient. */
+export interface ContractRiskFactor {
+  code: string
+  name: string
+  description?: string
+  weight?: number
+  category?: string
+  severity?: string
+  icon?: string
+}
+
+export interface ContractRiskBreakdownResponse {
+  contract_id: number
+  risk_score: number | null
+  risk_level: string | null
+  risk_confidence?: number | null
+  factors: ContractRiskFactor[]
+}
+
+/** GET /contracts/{id}/context — size-in-context + relationship + named-official.
+ *  All fields nullable; the dossier hides any block whose data is absent. */
+export interface ContractContextResponse {
+  contract_id: number
+  amount_mxn: number
+  sector_id?: number | null
+  sector_name?: string | null
+  sector_p99_mxn?: number | null
+  size_vs_p99?: number | null
+  official: {
+    responsible_uc?: string | null
+    exception_article?: string | null
+    category_id?: number | null
+    category_name_es?: string | null
+    category_name_en?: string | null
+  }
+  pair: {
+    vendor_id?: number | null
+    institution_id?: number | null
+    total_contracts: number
+    total_amount_mxn: number
+    first_year?: number | null
+    last_year?: number | null
+    this_rank?: number | null
+  }
+  vendor_rank?: number | null
+  vendor_total_contracts: number
+}
+
 // ============================================================================
 // Vendor Types
 // ============================================================================
