@@ -46,6 +46,20 @@ export const ADMIN_DISPLAY: Record<AdministrationKey, string> = {
   sheinbaum: 'Sheinbaum',
 }
 
+/** Accented short-name display map — correct Spanish spelling (Calderón / Peña
+ *  Nieto). Same string length as ADMIN_DISPLAY (the accent replaces an existing
+ *  letter), so it is layout-safe. Used by editorial surfaces that render the
+ *  term names as prose (the sector dossier sexenio strip + case roll). Kept
+ *  separate from ADMIN_DISPLAY because the latter is string-matched against
+ *  un-accented keys in CategoryProfile. */
+export const ADMIN_DISPLAY_ACCENTED: Record<AdministrationKey, string> = {
+  fox: 'Fox',
+  calderon: 'Calderón',
+  epn: 'Peña Nieto',
+  amlo: 'AMLO',
+  sheinbaum: 'Sheinbaum',
+}
+
 /** Identity palette for administrations — used by sexenio matrices,
  *  timeline bands, and other charts that need to distinguish terms.
  *  These are identity colors (not severity); they should never be used

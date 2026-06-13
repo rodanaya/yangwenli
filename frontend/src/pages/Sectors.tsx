@@ -18,7 +18,6 @@ import { formatCompactMXN, formatNumber, cn } from '@/lib/utils'
 import { sectorApi } from '@/api/client'
 import {
   SECTOR_COLORS,
-  SECTOR_TEXT_COLORS,
   RISK_COLORS,
   getRiskLevelFromScore,
   getSectorName,
@@ -644,7 +643,7 @@ export function Sectors() {
                     >
                       {lang === 'es' ? (
                         <>
-                          <span style={{ color: SECTOR_TEXT_COLORS[topByRisk.sector_code ?? 'otros'] ?? '#991b1b' }}>
+                          <span style={{ color: 'var(--color-accent)' }}>
                             {topByRisk.name_es}
                           </span>
                           {' '}es la categoría de mayor riesgo:{' '}
@@ -653,7 +652,7 @@ export function Sectors() {
                         </>
                       ) : (
                         <>
-                          <span style={{ color: SECTOR_TEXT_COLORS[topByRisk.sector_code ?? 'otros'] ?? '#991b1b' }}>
+                          <span style={{ color: 'var(--color-accent)' }}>
                             {topByRisk.name_en}
                           </span>
                           {' '}is the highest-risk category:{' '}
@@ -697,13 +696,13 @@ export function Sectors() {
                     <div className="flex items-baseline gap-3 mb-2">
                       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                         {lang === 'es'
-                          ? '§ La Brecha · #1 vs #2'
-                          : '§ The Gap · #1 vs #2'}
+                          ? '§ La fragmentación · cuánto controla el líder'
+                          : '§ The Fragmentation · how little the leader holds'}
                       </p>
                       <span className="text-[9px] text-text-muted/50 font-mono hidden sm:block">
                         {lang === 'es'
-                          ? '12 categorías más concentradas'
-                          : '12 most concentrated categories'}
+                          ? 'las 12 categorías de mayor gasto'
+                          : 'the 12 largest categories by spend'}
                       </span>
                     </div>
                     <CategoryCaptureDumbbell categories={categoryData.data} />
@@ -841,7 +840,7 @@ export function Sectors() {
                             sbPct > 25
                               ? 'bg-risk-critical'
                               : sbPct >= 15
-                                ? 'bg-amber-500'
+                                ? 'bg-risk-high'
                                 : 'bg-zinc-400'
 
                           return (
@@ -1061,7 +1060,7 @@ export function Sectors() {
                     {lang === 'es' ? (
                       <>
                         {'El tamaño manda el orden. La intensidad lo desmiente: '}
-                        <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.intLeader.sectorCode] ?? 'var(--color-text-primary)' }}>
+                        <span style={{ color: 'var(--color-accent)' }}>
                           {ledeStats.intLeader.name}
                         </span>
                         {' señala el '}
@@ -1073,7 +1072,7 @@ export function Sectors() {
                     ) : (
                       <>
                         {'Size sets the ranking. Intensity overturns it: '}
-                        <span style={{ color: SECTOR_TEXT_COLORS[ledeStats.intLeader.sectorCode] ?? 'var(--color-text-primary)' }}>
+                        <span style={{ color: 'var(--color-accent)' }}>
                           {ledeStats.intLeader.name}
                         </span>
                         {' has '}

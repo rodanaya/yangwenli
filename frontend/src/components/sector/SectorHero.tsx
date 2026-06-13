@@ -15,6 +15,7 @@ import {
   RISK_TEXT_COLORS,
   SECTOR_COLORS,
   getRiskLevelFromScore,
+  getSectorName,
 } from '@/lib/constants'
 import {
   formatCompactMXN,
@@ -50,7 +51,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
     hrPct >= 20 ? 'critical' : hrPct >= 12 ? 'high' : hrPct >= 5 ? 'medium' : 'low'
   const verdictColor = RISK_COLORS[hrLevel]
 
-  const sectorDisplayName = displayName(sector.name, lang)
+  const sectorDisplayName = getSectorName(sector.code, lang)
   const lede = buildSectorLede({ sector, hrPct, avgRisk, lang })
 
   return (
@@ -206,7 +207,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 className="font-mono text-center mt-1"
                 style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}
               >
-                {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {Math.round(avgRisk * 100)} ({riskLevel})
+                {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {Math.round(avgRisk * 100)} ({lang === 'es' ? localizeLevel(riskLevel, 'es').toLowerCase() : riskLevel})
               </div>
             )}
           </aside>
@@ -568,13 +569,6 @@ function ExposureStat({
   )
 }
 
-function displayName(name: string, lang: 'en' | 'es'): string {
-  // Spanish sector names already accented; English sector names are simple
-  // single-word labels. Render in title case.
-  if (lang === 'es') return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
-  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
-}
-
 function localizeLevel(level: 'critical' | 'high' | 'medium' | 'low', lang: 'en' | 'es'): string {
   if (lang !== 'es') return level.toUpperCase()
   return level === 'critical' ? 'CRÍTICO'
@@ -594,7 +588,7 @@ function buildSectorLede({
   avgRisk: number
   lang: 'en' | 'es'
 }): string {
-  const name = displayName(sector.name, lang)
+  const name = getSectorName(sector.code, lang)
   const stats = sector.statistics
   const spend = formatCompactMXN(stats.total_value_mxn)
   const usd = formatCompactUSD(stats.total_value_mxn)

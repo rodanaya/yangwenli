@@ -109,6 +109,8 @@ interface DumbbellRow {
   top1: VendorRow
   top2: VendorRow | null
   gap: number // share_top1 - share_top2 in %
+  top3_share_pct: number // #1+#2+#3 combined share — surfaced in the tooltip
+  hhi: number
 }
 
 interface Props {
@@ -118,8 +120,7 @@ interface Props {
 // ── Layout constants ───────────────────────────────────────────────────────────
 
 const LEFT_W = 180   // px reserved for category label column
-const RIGHT_W = 88   // px reserved for "XX% vs YY%" numerics
-const PILL_W = 130   // px for "MERCADO CAPTURADO" pill column (only when any row qualifies)
+const RIGHT_W = 88   // px reserved for "XX% / YY%" numerics
 const ROW_H_DESKTOP = 28
 const ROW_H_MOBILE = 24
 const HEADER_H = 36
@@ -223,6 +224,14 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
         {' · '}{row.total_contracts} {isEs ? 'contratos' : 'contracts'}
       </div>
 
+      {/* Top-3 combined + HHI — the fragmentation reading on inspection */}
+      {row.top3_share_pct > 0 && (
+        <div className="mt-1 font-mono tabular-nums text-[10px] text-text-muted">
+          {isEs ? 'Top-3 combinado:' : 'Top-3 combined:'} {row.top3_share_pct.toFixed(0)}%
+          {row.hhi > 0 && <>{' · HHI '}{Math.round(row.hhi)}</>}
+        </div>
+      )}
+
       {/* Top-1 full name caption */}
       {top1Name.length > 28 && (
         <div className="mt-1 text-[10px] text-text-secondary">{top1Name}</div>
@@ -284,28 +293,36 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
             top1,
             top2,
             gap,
+            top3_share_pct: cats.top3_share_pct ?? 0,
+            hhi: cats.hhi ?? 0,
           }
         })
         .filter((r): r is DumbbellRow => r !== null)
-        // Sort by gap descending — widest dumbbell on top
-        .sort((a, b) => b.gap - a.gap)
+        // Sort by #1-vendor share descending — most-concentrated leader on top,
+        // matching the "how concentrated is the leader" reading of the reframe.
+        .sort((a, b) => b.top1.market_share_pct - a.top1.market_share_pct)
         .slice(0, MAX_ROWS)
     },
     staleTime: 5 * 60 * 1000, // 5 min cache
     enabled: top12cats.length > 0,
   })
 
-  // ── Derived: widest gap index for the pull-quote ──────────────────────────
-  const widestIdx = 0 // after sort-by-gap, index 0 is always the widest
-
-  const hasCaptured = (captureRows ?? []).some(r => r.top1.market_share_pct > 75)
-
-  // ── Layout: responsive row height ─────────────────────────────────────────
-  // We can't directly measure window width in pure hooks without useLayoutEffect,
-  // so we use a CSS variable trick. Instead, derive both heights and let SVG
-  // respond via viewBox.
+  // ── Derived ───────────────────────────────────────────────────────────────
   const rows = captureRows ?? []
   const rowCount = rows.length
+  // After the #1-share sort, index 0 is the most-concentrated leader — the
+  // pull-quote sits there.
+  const leaderIdx = 0
+  // Data-driven x-domain. Real category #1-vendor shares top out at ~14%
+  // (federal categories span thousands of vendors); the old 0–100% axis wasted
+  // ~75% of the width and propped up a "market captured" story the data refutes.
+  // Bind the domain to the observed max (≥20% floor, snapped to a clean /5 tick)
+  // so the dots fill the track and the 4–14% differences read.
+  const maxTop1 = rows.length ? Math.max(...rows.map(r => r.top1.market_share_pct)) : 14
+  const domainMax = Math.max(20, Math.ceil((maxTop1 * 1.15) / 5) * 5)
+  // "the leader holds barely 1 peso in N" — computed, never hardcoded.
+  const fragDenom = Math.max(2, Math.round(100 / Math.max(maxTop1, 1)))
+
   const chartH_desktop = rowCount * ROW_H_DESKTOP + HEADER_H + FOOTER_H
   const chartH_mobile = rowCount * ROW_H_MOBILE + HEADER_H + FOOTER_H
   // The SVG viewBox uses desktop coords; CSS scales it responsively.
@@ -364,14 +381,12 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
 
   // ── SVG geometry ──────────────────────────────────────────────────────────
   // Total width is 100% of container. We draw in a fixed-width coordinate
-  // system and let SVG scale. The right pill column is only appended when
-  // any row has #1 share > 75%.
+  // system and let SVG scale.
   const TOTAL_W = 900 // SVG coordinate width
-  const pillColW = hasCaptured ? PILL_W : 0
-  const barAreaW = TOTAL_W - LEFT_W - RIGHT_W - pillColW
-  // X position for a share percentage (0–100)
-  const xPos = (pct: number) => LEFT_W + (pct / 100) * barAreaW
-  const xPct50 = xPos(50)
+  const barAreaW = TOTAL_W - LEFT_W - RIGHT_W
+  // X position for a share percentage, on the data-driven domain (0 → domainMax).
+  const xPos = (pct: number) => LEFT_W + (pct / domainMax) * barAreaW
+  const xCeiling = xPos(maxTop1) // the observed concentration ceiling
 
   return (
     <div
@@ -379,6 +394,31 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
       className="w-full relative"
       onMouseMove={handleMouseMove}
     >
+      {/* Anchor stat — the sharpest thesis on the page: the most dominant vendor
+          in ANY federal category holds barely 1 peso in N. Computed from the live
+          max, never hardcoded, so it stays honest across rescores. */}
+      <div className="flex items-baseline gap-3 mb-3">
+        <span
+          className="tabular-nums shrink-0"
+          style={{
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontStyle: 'italic',
+            fontWeight: 800,
+            fontSize: 38,
+            lineHeight: 1,
+            letterSpacing: '-0.02em',
+            color: 'var(--color-accent)',
+          }}
+        >
+          {maxTop1.toFixed(0)}%
+        </span>
+        <span className="text-[11px] leading-snug text-text-secondary" style={{ maxWidth: '46ch' }}>
+          {isEs
+            ? `el proveedor más dominante de cualquier categoría federal controla apenas 1 peso de cada ${fragDenom} — el resto se reparte entre miles`
+            : `the most dominant vendor in any federal category controls barely 1 peso in ${fragDenom} — the rest splits across thousands`}
+        </span>
+      </div>
+
       {/* ── Responsive SVG wrapper ── */}
       {/* Desktop height via style; mobile via CSS override */}
       <div
@@ -389,11 +429,11 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
           viewBox={`0 0 ${TOTAL_W} ${CHART_H}`}
           width="100%"
           height="100%"
-          aria-label={isEs ? 'Gráfica de captura de mercado: #1 vs #2 proveedor' : 'Market capture chart: #1 vs #2 vendor'}
+          aria-label={isEs ? `Concentración de proveedores por categoría: participación #1 vs #2, máx. ${maxTop1.toFixed(0)}%` : `Vendor concentration by category: #1 vs #2 share, max ${maxTop1.toFixed(0)}%`}
           role="img"
         >
-          {/* ── X-axis header labels ── */}
-          {[0, 25, 50, 75, 100].map(pct => (
+          {/* ── X-axis header labels (data-driven ticks every 5%) ── */}
+          {Array.from({ length: Math.floor(domainMax / 5) + 1 }, (_, i) => i * 5).map(pct => (
             <g key={pct}>
               <line
                 x1={xPos(pct)}
@@ -417,26 +457,29 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
             </g>
           ))}
 
-          {/* ── 50% reference vertical dashed line ── */}
+          {/* ── Concentration ceiling: the observed #1-share maximum, drawn in
+                 a NEUTRAL (non-risk) zinc — concentration is structure, not a
+                 verdict. The empty track to its right IS the finding: even the
+                 most-concentrated leader is nowhere near a majority. ── */}
           <line
-            x1={xPct50}
+            x1={xCeiling}
             y1={HEADER_H - 8}
-            x2={xPct50}
+            x2={xCeiling}
             y2={CHART_H - FOOTER_H}
             stroke="currentColor"
-            strokeWidth={1.5}
-            strokeDasharray="4 3"
-            strokeOpacity={0.35}
+            strokeWidth={1}
+            strokeDasharray="2 4"
+            strokeOpacity={0.4}
             className="text-text-muted"
           />
           <text
-            x={xPct50}
+            x={xCeiling - 4}
             y={CHART_H - FOOTER_H + 16}
-            textAnchor="middle"
+            textAnchor="end"
             className="fill-current text-text-muted"
             style={{ fontSize: 9.5, fontFamily: 'var(--font-family-mono)' }}
           >
-            {isEs ? '50% del mercado' : '50% of market'}
+            {isEs ? `techo de concentración · ${maxTop1.toFixed(0)}%` : `concentration ceiling · ${maxTop1.toFixed(0)}%`}
           </text>
 
           {/* ── Row legend: #1 filled / #2 open ── */}
@@ -469,8 +512,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
             const x2 = row.top2 ? xPos(row.top2.market_share_pct) : null
             const dimmed = hoveredIdx !== null && hoveredIdx !== idx
             const opacity = dimmed ? 0.25 : 1
-            const isCaptured = row.top1.market_share_pct > 75
-            const isWidest = idx === widestIdx
+            const isLeader = idx === leaderIdx
             const barThickness = connectorThickness(row.total_value)
 
             return (
@@ -569,19 +611,27 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                   aria-label={`${formatVendorName(row.top1.vendor_name)} — ${row.top1.market_share_pct.toFixed(1)}%`}
                 />
 
-                {/* ── #1 vendor name label (above-right of dot) ── */}
-                <text
-                  x={x1 + 10}
-                  y={cy - 6}
-                  className="fill-current text-text-primary"
-                  style={{
-                    fontSize: 9.5,
-                    fontFamily: 'var(--font-family-mono)',
-                    pointerEvents: 'none',
-                  }}
-                >
-                  {truncateLabel(row.top1.vendor_name)}
-                </text>
+                {/* ── #1 vendor name label — flips to the LEFT of the dot when
+                       the dot sits in the right 40% of the track, so the label
+                       never runs off the (now data-tight) axis ── */}
+                {(() => {
+                  const flip = x1 > LEFT_W + barAreaW * 0.6
+                  return (
+                    <text
+                      x={flip ? x1 - 11 : x1 + 11}
+                      y={cy - 6}
+                      textAnchor={flip ? 'end' : 'start'}
+                      className="fill-current text-text-primary"
+                      style={{
+                        fontSize: 9.5,
+                        fontFamily: 'var(--font-family-mono)',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      {truncateLabel(row.top1.vendor_name)}
+                    </text>
+                  )
+                })()}
 
                 {/* ── Right numerics: XX% vs YY% ── */}
                 <text
@@ -599,37 +649,14 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                   <tspan fill={SECTOR_TEXT_COLORS[row.sector_code] ?? row.color} fontWeight="700">
                     {row.top1.market_share_pct.toFixed(0)}%
                   </tspan>
-                  <tspan> vs </tspan>
+                  <tspan> / </tspan>
                   <tspan>
                     {row.top2 ? row.top2.market_share_pct.toFixed(0) + '%' : 'N/A'}
                   </tspan>
                 </text>
 
-                {/* ── "MERCADO CAPTURADO" pill ── */}
-                {isCaptured && hasCaptured && (
-                  <g transform={`translate(${LEFT_W + barAreaW + RIGHT_W + 4}, ${cy - 9})`}>
-                    <rect
-                      x={0} y={0} width={PILL_W - 8} height={18}
-                      rx={3}
-                      fill="#dc2626"
-                      fillOpacity={0.15}
-                      stroke="#dc2626"
-                      strokeWidth={0.75}
-                    />
-                    <text
-                      x={(PILL_W - 8) / 2}
-                      y={12}
-                      textAnchor="middle"
-                      fill="#dc2626"
-                      style={{ fontSize: 8, fontFamily: 'var(--font-family-mono)', fontWeight: 700, letterSpacing: '0.08em' }}
-                    >
-                      {isEs ? 'MERCADO CAPTURADO' : 'MARKET CAPTURED'}
-                    </text>
-                  </g>
-                )}
-
-                {/* ── Pull-quote on widest dumbbell (index 0) ── */}
-                {isWidest && (
+                {/* ── Pull-quote on the leader row (most-concentrated #1) ── */}
+                {isLeader && (
                   <text
                     x={LEFT_W + 4}
                     y={rowY + ROW_H_DESKTOP - 4}
@@ -642,8 +669,8 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                     className="fill-current text-text-muted"
                   >
                     {isEs
-                      ? `"Un solo proveedor controla el ${row.top1.market_share_pct.toFixed(0)}% de ${isEs ? row.name_es : row.name_en}"`
-                      : `"One vendor controls ${row.top1.market_share_pct.toFixed(0)}% of ${row.name_en}"`
+                      ? `"El mayor proveedor de cualquier categoría federal controla apenas ~1 de cada ${fragDenom} pesos"`
+                      : `"The top vendor in any federal category holds barely ~1 peso in ${fragDenom}"`
                     }
                   </text>
                 )}
@@ -652,6 +679,13 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
           })}
         </svg>
       </div>
+
+      {/* Honesty guard — fragmentation is not a clean bill of health. */}
+      <p className="mt-2 font-mono leading-relaxed text-text-muted max-w-prose" style={{ fontSize: 9.5 }}>
+        {isEs
+          ? 'Concentración baja no certifica integridad — un cártel puede operar repartiendo lotes entre varias firmas; esto mide dispersión, no riesgo.'
+          : 'Low concentration does not certify integrity — a cartel can operate by splitting lots across firms; this measures dispersion, not risk.'}
+      </p>
 
       {/* ── Tooltip (DOM, not SVG, for rich content) ── */}
       {tooltip && (

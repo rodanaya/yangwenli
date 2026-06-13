@@ -36,7 +36,7 @@ import {
   RISK_TEXT_COLORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
-import { ADMIN_ORDER, ADMIN_DISPLAY, type AdministrationKey } from '@/lib/administrations'
+import { ADMIN_ORDER, ADMIN_DISPLAY_ACCENTED, type AdministrationKey } from '@/lib/administrations'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 
 const t = (lang: 'en' | 'es', es: string, en: string) => (lang === 'es' ? es : en)
@@ -358,12 +358,12 @@ export function SectorSexenioStrip({
           <div key={r.key} className="flex items-center gap-3">
             <div className="shrink-0 w-28 sm:w-36 min-w-0">
               <div className="font-mono truncate" style={{ fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-primary)', fontWeight: isPeak ? 600 : 400 }}>
-                {ADMIN_DISPLAY[r.key]}
+                {ADMIN_DISPLAY_ACCENTED[r.key]}
                 {isPeak && <span className="ml-1" style={{ color: RISK_TEXT_COLORS.high, fontSize: 9 }}>▲</span>}
               </div>
               <div className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{ADMIN_YEARS[r.key]} · {formatNumber(r.contracts)}</div>
             </div>
-            <FullBar pct={barPct} color={isPeak ? RISK_COLORS.high : accent} height={7} ariaLabel={ADMIN_DISPLAY[r.key]} />
+            <FullBar pct={barPct} color={isPeak ? RISK_COLORS.high : accent} height={7} ariaLabel={ADMIN_DISPLAY_ACCENTED[r.key]} />
             <span
               className="shrink-0 text-right tabular-nums"
               style={{ ...BIGNUM_STYLE, fontSize: 16, width: 92, color: isPeak ? RISK_TEXT_COLORS.high : 'var(--color-text-primary)' }}
@@ -383,8 +383,8 @@ export function SectorSexenioStrip({
       <p className="font-mono pt-0.5" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {t(
           lang,
-          `Pico de gasto · ${ADMIN_DISPLAY[peak.key]} (${ADMIN_YEARS[peak.key]}). Última columna = indicador de riesgo medio.`,
-          `Peak spend · ${ADMIN_DISPLAY[peak.key]} (${ADMIN_YEARS[peak.key]}). Last column = mean risk indicator.`,
+          `Pico de gasto · ${ADMIN_DISPLAY_ACCENTED[peak.key]} (${ADMIN_YEARS[peak.key]}). Última columna = indicador de riesgo medio.`,
+          `Peak spend · ${ADMIN_DISPLAY_ACCENTED[peak.key]} (${ADMIN_YEARS[peak.key]}). Last column = mean risk indicator.`,
         )}
       </p>
     </div>
@@ -547,7 +547,7 @@ export function SectorAnomalyStrip({
                   <div key={r.year} className="flex items-center gap-3">
                     <span className="font-mono tabular-nums shrink-0 w-10" style={{ fontSize: 11, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)', fontWeight: isWorst ? 600 : 400 }}>{r.year}</span>
                     <FullBar pct={barPct} color={color} height={isWorst ? 8 : 6} ariaLabel={`${r.year}`} />
-                    <span className="font-mono tabular-nums text-right shrink-0 w-9" style={{ fontSize: 11, fontWeight: isWorst ? 600 : 400, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)' }}>{r.overall_anomaly_score.toFixed(1)}</span>
+                    <span className="font-mono tabular-nums text-right shrink-0 w-12" style={{ fontSize: 11, fontWeight: isWorst ? 600 : 400, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)' }}>{r.overall_anomaly_score.toFixed(2)}</span>
                   </div>
                 )
               })
@@ -604,7 +604,7 @@ function fraudLabel(ft: string | undefined, lang: 'en' | 'es'): string | null {
 function adminLabel(a: string | undefined): string | null {
   if (!a) return null
   const key = a as AdministrationKey
-  return ADMIN_DISPLAY[key] ?? a.charAt(0).toUpperCase() + a.slice(1)
+  return ADMIN_DISPLAY_ACCENTED[key] ?? a.charAt(0).toUpperCase() + a.slice(1)
 }
 
 export function SectorCaseRoll({

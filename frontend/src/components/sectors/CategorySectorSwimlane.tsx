@@ -21,7 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import * as d3force from 'd3-force'
-import { SECTOR_COLORS, SECTOR_TEXT_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, SECTORS, RISK_THRESHOLDS, RISK_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -52,15 +52,17 @@ interface SimNode extends CategoryDatum {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const LANE_H_DESKTOP = 28
-const LANE_H_MOBILE = 24
+const LANE_H_DESKTOP = 32
+const LANE_H_MOBILE = 26
 const LABEL_W = 100  // left margin for lane labels
 const RIGHT_PAD = 24
 const TOP_PAD = 48   // space for x-axis tick labels
 const BOTTOM_PAD = 20
 const DOMAIN_MIN = 0
-const DOMAIN_MAX = 40  // avg_risk × 100
-const OECD_CYAN = '#22d3ee'
+const DOMAIN_MAX_FALLBACK = 50  // avg_risk × 100; used only when categories are empty. The real domain is data-driven — see the domainMax memo.
+// The model's 25% MEDIUM-risk floor (RISK_THRESHOLDS.medium) — where categories
+// start being worth a look. NOT an OECD benchmark, and never cyan: risk reads amber.
+const MEDIUM_THRESHOLD_COLOR = RISK_COLORS.high
 const HIGH_THRESHOLD = RISK_THRESHOLDS.medium * 100  // 25
 
 // Segalmex is the rightmost Agricultura outlier — identified by sector_code
@@ -73,9 +75,9 @@ function dotRadius(totalValue: number): number {
   return Math.max(3, Math.min(14, r))
 }
 
-function xScale(risk: number, width: number): number {
+function xScale(risk: number, width: number, domainMax: number): number {
   const chartW = width - LABEL_W - RIGHT_PAD
-  return LABEL_W + ((risk * 100 - DOMAIN_MIN) / (DOMAIN_MAX - DOMAIN_MIN)) * chartW
+  return LABEL_W + ((risk * 100 - DOMAIN_MIN) / (domainMax - DOMAIN_MIN)) * chartW
 }
 
 // ── Swimlane ───────────────────────────────────────────────────────────────────
@@ -126,6 +128,23 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
     )
   }, [categories])
 
+  // Data-driven x-domain. The old hardcoded DOMAIN_MAX=40 clipped the top
+  // category (Cleaning Supplies, ~45%) off the right edge; bind it to the real
+  // max with ~8% headroom, snapped to a clean /5 tick, so the chart self-fits
+  // on any rescore. Floor at 10 to avoid a degenerate tiny domain.
+  const domainMax = useMemo(() => {
+    if (!categories.length) return DOMAIN_MAX_FALLBACK
+    const maxRisk = Math.max(...categories.map(c => c.avg_risk))
+    return Math.max(10, Math.ceil((maxRisk * 100 * 1.08) / 5) * 5)
+  }, [categories])
+
+  // X-axis ticks every 10%, generated to fit the data-driven domain.
+  const axisTicks = useMemo(() => {
+    const out: number[] = []
+    for (let t = 0; t <= domainMax; t += 10) out.push(t)
+    return out
+  }, [domainMax])
+
   // Run force simulation once categories or width changes
   useEffect(() => {
     if (!categories.length || width < 100) return
@@ -137,7 +156,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
       const laneCenter = TOP_PAD + safeIdx * laneH + laneH / 2
       return {
         ...cat,
-        x: xScale(cat.avg_risk, width),
+        x: xScale(cat.avg_risk, width, domainMax),
         y: laneCenter,
         r: dotRadius(cat.total_value),
         laneIdx: safeIdx,
@@ -145,7 +164,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
     })
 
     const sim = d3force.forceSimulation(nodes)
-      .force('x', d3force.forceX<SimNode>(d => xScale(d.avg_risk, width)).strength(0.9))
+      .force('x', d3force.forceX<SimNode>(d => xScale(d.avg_risk, width, domainMax)).strength(0.9))
       .force('y', d3force.forceY<SimNode>(d => TOP_PAD + d.laneIdx * laneH + laneH / 2).strength(0.35))
       .force('collide', d3force.forceCollide<SimNode>(d => d.r + 1).iterations(3))
       .stop()
@@ -154,7 +173,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
     for (let i = 0; i < 120; i++) sim.tick()
 
     setSimulatedNodes([...nodes])
-  }, [categories, width, laneOrder, laneH])
+  }, [categories, width, laneOrder, laneH, domainMax])
 
   // Top-3 highest-risk categories (for label annotations)
   const top3 = useMemo(
@@ -178,10 +197,27 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
     const sorted = [...categories].map(c => c.avg_risk).sort((a, b) => a - b)
     const mid = Math.floor(sorted.length / 2)
     const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
-    return xScale(median, width)
-  }, [categories, width])
+    return xScale(median, width, domainMax)
+  }, [categories, width, domainMax])
 
-  const oecdX = xScale(HIGH_THRESHOLD / 100, width)
+  // De-collided top-3-risk labels: an independent labelY per node overprints
+  // when two high-risk dots land close (the Hacienda "Insurance & Bonds" +
+  // "Financial Services" garble). Sort by y, walk top→bottom, enforce a min gap.
+  const top3Labels = useMemo(() => {
+    const MIN_GAP = 13
+    const labelled = simulatedNodes
+      .filter(n => top3Ids.has(n.category_id))
+      .map(n => ({ node: n, labelY: n.y - n.r - 6 }))
+      .sort((a, b) => a.labelY - b.labelY)
+    for (let i = 1; i < labelled.length; i++) {
+      if (labelled[i].labelY < labelled[i - 1].labelY + MIN_GAP) {
+        labelled[i].labelY = labelled[i - 1].labelY + MIN_GAP
+      }
+    }
+    return labelled
+  }, [simulatedNodes, top3Ids])
+
+  const mediumX = xScale(HIGH_THRESHOLD / 100, width, domainMax)
 
   const handleDotClick = useCallback(
     (catId: number) => navigate(`/categories/${catId}`),
@@ -251,8 +287,8 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
         })}
 
         {/* X-axis ticks */}
-        {[0, 10, 20, 30, 40].map(tick => {
-          const tx = xScale(tick / 100, width)
+        {axisTicks.map(tick => {
+          const tx = xScale(tick / 100, width, domainMax)
           return (
             <g key={tick}>
               <line
@@ -293,27 +329,29 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
           />
         )}
 
-        {/* OECD / high-risk threshold line (cyan dashed) */}
+        {/* Model medium-risk threshold (25%, amber dashed). NOT an OECD
+            benchmark — it is the model's RISK_THRESHOLDS.medium floor, where
+            categories start being worth a look. */}
         <line
-          x1={oecdX}
+          x1={mediumX}
           y1={TOP_PAD - 4}
-          x2={oecdX}
+          x2={mediumX}
           y2={TOP_PAD + laneOrder.length * laneH + BOTTOM_PAD - 4}
-          stroke={OECD_CYAN}
+          stroke={MEDIUM_THRESHOLD_COLOR}
           strokeWidth={1.5}
           strokeDasharray="5 3"
           strokeOpacity={0.85}
         />
         <text
-          x={oecdX + 4}
+          x={mediumX + 4}
           y={TOP_PAD - 8}
           fontSize={8}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight={700}
-          fill={OECD_CYAN}
+          fill={RISK_TEXT_COLORS.high}
           letterSpacing="0.06em"
         >
-          {lang === 'es' ? 'RIESGO ALTO ≥ 25%' : 'HIGH RISK ≥ 25%'}
+          {lang === 'es' ? 'UMBRAL MEDIO · 25% (modelo)' : 'MEDIUM THRESHOLD · 25% (model)'}
         </text>
 
         {/* Dots */}
@@ -340,7 +378,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
               onMouseEnter={() => handleMouseEnter(node, node.x, node.y)}
               onMouseLeave={handleMouseLeave}
               onClick={() => handleDotClick(node.category_id)}
-              aria-label={`${lang === 'es' ? node.name_es : node.name_en}: ${(node.avg_risk * 100).toFixed(1)}% riesgo`}
+              aria-label={`${lang === 'es' ? node.name_es : node.name_en}: ${(node.avg_risk * 100).toFixed(1)}% ${lang === 'es' ? 'riesgo' : 'risk'}`}
               role="button"
               tabIndex={0}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleDotClick(node.category_id) }}
@@ -348,42 +386,43 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
           )
         })}
 
-        {/* Top-3 risk labels with connector lines */}
-        {simulatedNodes
-          .filter(n => top3Ids.has(n.category_id))
-          .map(node => {
-            const name = lang === 'es' ? node.name_es : node.name_en
-            const truncated = name.length > 22 ? name.slice(0, 20) + '…' : name
-            const color = SECTOR_COLORS[node.sector_code ?? 'otros'] ?? '#64748b'
-            // Place label above the dot if space; always above lane center
-            const labelY = node.y - node.r - 6
-            const labelX = Math.min(node.x + 6, width - RIGHT_PAD - 60)
-            return (
-              <g key={`label-${node.category_id}`} pointerEvents="none">
-                <line
-                  x1={node.x}
-                  y1={node.y - node.r}
-                  x2={node.x + 4}
-                  y2={labelY + 2}
-                  stroke={color}
-                  strokeWidth={0.8}
-                  strokeOpacity={0.7}
-                />
-                {/* Top-3 labels: use AA-safe darker text color */}
-                <text
-                  x={labelX}
-                  y={labelY}
-                  fontSize={9}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fill={SECTOR_TEXT_COLORS[node.sector_code ?? 'otros'] ?? color}
-                  fontWeight={700}
-                  letterSpacing="0.04em"
-                >
-                  {truncated}
-                </text>
-              </g>
-            )
-          })}
+        {/* Top-3 risk labels with connector lines (de-collided labelY) */}
+        {top3Labels.map(({ node, labelY }) => {
+          const name = lang === 'es' ? node.name_es : node.name_en
+          const truncated = name.length > 22 ? name.slice(0, 20) + '…' : name
+          const color = SECTOR_COLORS[node.sector_code ?? 'otros'] ?? '#64748b'
+          // Anchor the label LEFT of the dot when a right-placed label would
+          // overflow the chart's right edge; otherwise place it to the right.
+          const approxW = truncated.length * 5.6
+          const anchorEnd = node.x + 8 + approxW > width - RIGHT_PAD
+          const labelX = anchorEnd ? node.x - 8 : node.x + 8
+          return (
+            <g key={`label-${node.category_id}`} pointerEvents="none">
+              <line
+                x1={node.x}
+                y1={node.y - node.r}
+                x2={anchorEnd ? node.x - 4 : node.x + 4}
+                y2={labelY + 2}
+                stroke={color}
+                strokeWidth={0.8}
+                strokeOpacity={0.7}
+              />
+              {/* Top-3 labels: AA-safe darker sector text color */}
+              <text
+                x={labelX}
+                y={labelY}
+                textAnchor={anchorEnd ? 'end' : 'start'}
+                fontSize={9}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill={SECTOR_TEXT_COLORS[node.sector_code ?? 'otros'] ?? color}
+                fontWeight={700}
+                letterSpacing="0.04em"
+              >
+                {truncated}
+              </text>
+            </g>
+          )
+        })}
 
         {/* Segalmex/Agricultura outlier annotation */}
         {segalmexDot && (
