@@ -45,7 +45,8 @@
     "limitations": "Limitaciones",
     "v33": "Modelo Anterior (v3.3)",
     "data-sources": "Fuentes de Datos",
-    "references": "Referencias"
+    "references": "Referencias",
+    "limitations-detail": "Salvedades del modelo, en detalle"
   },
   "pageHeadline": "Cómo Detectamos Corrupción",
   "pageSubline": "Análisis estadístico de 3.05M contratos del gobierno federal mexicano",
@@ -69,7 +70,8 @@
       "v52Desc": "Valores SHAP por proveedor (456K proveedores) + ensemble PyOD de validación cruzada (9.3M puntuaciones) + monitoreo de deriva KS. Ver Perfil de Proveedor → Pestaña Riesgo, Detalle de contrato → Confirmado por IA, Panel → Validación Cruzada.",
       "v85Title": "Modelo de Producción Recalibrado",
       "v85Desc": "1,427 casos GT · 1,554 proveedores. ElasticNet (C=0.2243, l1_ratio=0.7545), 18 variables activas, c_pu=0.32. HR=11.01% (cumple OECD 2–15%). Corrida: CAL-v8-202605020212."
-    }
+    },
+    "axisNow": "AHORA"
   },
   "kpiBadges": {
     "contracts": "3.05M Contratos",
@@ -407,5 +409,8 @@
     "Bid rigging": "Colusión en ofertas",
     "Bribery": "Soborno",
     "Conflict of interest": "Conflicto de interés"
+  },
+  "movements": {
+    "trust": "§ CÓMO CONFIAR EN ESTO"
   }
 }

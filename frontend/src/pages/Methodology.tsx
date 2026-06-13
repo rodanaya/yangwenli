@@ -1,4 +1,4 @@
-import { useState, memo, useMemo, useCallback, type ReactNode } from 'react'
+import { useState, memo, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
 import { TwoWorldsExhibit } from '@/components/methodology/TwoWorldsExhibit'
+import { BenchmarkRow } from '@/components/editorial/BenchmarkRow'
+import { ModelTimeline } from '@/components/methodology/ModelTimeline'
 import {
   ChevronDown,
   ChevronRight,
@@ -23,7 +25,6 @@ import {
   FileText,
   History,
   FlaskConical,
-  GitBranch,
   Copy,
   Check,
   Printer,
@@ -134,92 +135,23 @@ const MODEL_COMPARISON = [
   { metric: 'Lift vs Random', v33: '1.22x', v60: '3.1x', improvement: '+1.9x' },
 ] as const
 
-const MODEL_EVOLUTION_STEPS = [
-  {
-    version: 'v3.3',
-    date: 'Feb 2026',
-    titleKey: 'v33Title',
-    descKey: 'v33Desc',
-    metric: 'AUC 0.584',
-    active: false,
-    overlay: false,
-  },
-  {
-    version: 'v4.0',
-    date: 'Feb 2026',
-    titleKey: 'v40Title',
-    descKey: 'v40Desc',
-    metric: 'AUC 0.942',
-    active: false,
-    overlay: false,
-  },
-  {
-    version: 'v5.0',
-    date: 'Feb 2026',
-    titleKey: 'v50Title',
-    descKey: 'v50Desc',
-    metric: 'AUC 0.960',
-    active: false,
-    overlay: false,
-  },
-  {
-    version: 'v5.1',
-    date: 'Feb 27, 2026',
-    titleKey: 'v51Title',
-    descKey: 'v51Desc',
-    metric: 'AUC 0.957 (temporal)',
-    active: false,
-    overlay: false,
-  },
-  {
-    // 2026-05-12 (Audit F082/F221): this row was mislabeled as v0.8.5,
-    // creating two rows both reading "v0.8.5" — the old v0.6.5 entry
-    // (Mar 25, 2026, AUC 0.828, 748 GT cases) showed up looking like
-    // a duplicate of the active May 2 v0.8.5 model. Renamed to its
-    // correct version so the lineage reads as a coherent progression
-    // and the "1,422 cases vs 748 cases" contradiction the audit
-    // surfaced becomes self-explanatory (748 = v0.6.5 trained-on,
-    // 1,422 = v0.8.5 trained-on).
-    version: 'v0.6.5',
-    date: 'Mar 25, 2026',
-    titleKey: 'v60Title',
-    descKey: 'v60Desc',
-    metric: 'AUC 0.828 (test)',
-    active: false,
-    overlay: false,
-  },
-  {
-    version: 'v5.2 layer',
-    date: 'Mar 7, 2026',
-    titleKey: 'v52Title',
-    descKey: 'v52Desc',
-    metric: '~130K dual-confirmed',
-    active: false,
-    overlay: true,
-  },
-  {
-    version: 'v0.8.5',
-    date: 'May 2, 2026',
-    titleKey: 'v85Title',
-    descKey: 'v85Desc',
-    metric: 'AUC 0.785 (test)',
-    active: true,
-    overlay: false,
-  },
-] as const
-
 // ============================================================================
 // Section IDs for TOC navigation
 // ============================================================================
 
+// Faithful TOC manifest — every rendered CollapsibleSection in render order
+// (W4 fix: was a drifted 10-entry list that orphaned `risk-evidence` and the
+// deep limitations section, and listed `limitations` once for two sections).
 const SECTIONS = [
   { id: 'overview', icon: Shield },
   { id: 'features', icon: BarChart3 },
+  { id: 'risk-evidence', icon: FlaskConical },
   { id: 'findings', icon: Brain },
   { id: 'validation', icon: Target },
   { id: 'methods', icon: Beaker },
   { id: 'v52-layer', icon: FlaskConical },
   { id: 'limitations', icon: AlertTriangle },
+  { id: 'limitations-detail', icon: AlertTriangle },
   { id: 'v33', icon: History },
   { id: 'data-sources', icon: Database },
   { id: 'references', icon: FileText },
@@ -298,44 +230,9 @@ function Mono({ children }: { children: React.ReactNode }) {
   return <span className="font-mono text-accent">{children}</span>
 }
 
-/**
- * PullQuote — editorial blockquote with left amber border and large serif number.
- * Used to highlight key statistics (AUC, HR, case count) inside sections.
- */
-function PullQuote({
-  stat,
-  label,
-  source,
-}: {
-  stat: string
-  label: string
-  source?: string
-}) {
-  return (
-    <blockquote className="my-3 pl-5 py-1" style={{ borderLeft: '2px solid var(--color-accent)' }}>
-      <div
-        className="font-mono tabular-nums leading-none"
-        style={{
-          fontFamily: 'var(--font-family-serif)',
-          fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
-          fontWeight: 700,
-          letterSpacing: '-0.02em',
-          color: 'var(--color-accent)',
-        }}
-      >
-        {stat}
-      </div>
-      <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-text-secondary">
-        {label}
-      </div>
-      {source && (
-        <div className="mt-1 text-[10px] font-mono text-text-muted leading-relaxed">
-          {source}
-        </div>
-      )}
-    </blockquote>
-  )
-}
+// PullQuote — REMOVED 2026-06-13 (Day-7 W1 hero consolidation). It rendered only
+// the duplicated 3-stat grid that the single Playfair anchor + BenchmarkRow now
+// replace; with no remaining caller it was dead code (strict noUnusedLocals).
 
 function Formula({ children }: { children: React.ReactNode }) {
   return (
@@ -528,104 +425,6 @@ const V33WeightsChart = memo(function V33WeightsChart() {
 // ============================================================================
 // Model Evolution Timeline
 // ============================================================================
-
-function ModelEvolutionTimeline() {
-  const { t, i18n } = useTranslation('methodology')
-  const isEs = i18n.language?.startsWith('es')
-  const steps = MODEL_EVOLUTION_STEPS
-  const nodes = steps.reduce<ReactNode[]>((acc, step, i) => {
-    if (i > 0) {
-      acc.push(
-        <ChevronRight
-          key={`arrow-${i}`}
-          className="h-4 w-4 text-text-muted flex-shrink-0 self-center"
-          aria-hidden="true"
-        />
-      )
-    }
-    acc.push(
-      <div
-        key={step.version}
-        className={cn(
-          'w-40 flex-shrink-0 rounded-sm border p-3 text-[11px] space-y-1.5',
-          step.active
-            ? 'border-accent/40 bg-accent/5'
-            : step.overlay
-              ? 'border-dashed border-border/60 bg-transparent'
-              : 'border-border/40 bg-background-elevated/20'
-        )}
-      >
-        <div className="flex items-center justify-between gap-1">
-          <span
-            className={cn(
-              'font-mono font-bold px-1.5 py-0.5 rounded text-[10px]',
-              step.active
-                ? 'bg-accent/15 text-accent'
-                : step.overlay
-                  ? 'bg-border/30 text-text-muted'
-                  : 'bg-border/20 text-text-secondary'
-            )}
-          >
-            {step.version}
-          </span>
-          <span className="text-[10px] text-text-muted">{step.date}</span>
-        </div>
-        <p className="font-semibold text-text-primary leading-tight">{t(`evolution.steps.${step.titleKey}`)}</p>
-        <p className="text-text-muted leading-relaxed">{t(`evolution.steps.${step.descKey}`)}</p>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span
-            className={cn(
-              'font-mono text-[10px] font-semibold',
-              step.active ? 'text-accent' : step.overlay ? 'text-text-muted' : 'text-text-secondary'
-            )}
-          >
-            {step.metric}
-          </span>
-          {step.version === 'v3.3' && (
-            <span
-              className="text-[9px] font-semibold tracking-[0.12em] uppercase px-1.5 py-0.5 rounded bg-border/30 text-text-muted"
-              title={isEs ? 'AUC que se obtendría prediciendo siempre la proporción de la clase mayoritaria' : 'AUC from always predicting the majority class proportion'}
-            >
-              {isEs ? 'línea base modelo nulo' : 'null model baseline'}
-            </span>
-          )}
-          {step.active && (
-            <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-1.5 py-0.5 rounded bg-accent/10 text-accent">
-              {t('evolution.active')}
-            </span>
-          )}
-          {step.overlay && (
-            <span className="text-[9px] font-semibold tracking-[0.15em] uppercase px-1.5 py-0.5 rounded bg-border/30 text-text-muted">
-              {t('evolution.overlay')}
-            </span>
-          )}
-        </div>
-      </div>
-    )
-    return acc
-  }, [])
-
-  return (
-    <div className="fern-card">
-      <div className="px-5 pt-4 pb-3">
-        <div className="editorial-rule mb-2">
-          <GitBranch className="h-4 w-4 text-accent" aria-hidden="true" />
-          <span className="editorial-label text-accent">{t('evolution.title')}</span>
-        </div>
-        <p className="text-xs text-text-muted">
-          {t('evolution.subtitle')}
-        </p>
-      </div>
-      <div className="px-5 pb-5">
-        <div className="overflow-x-auto pb-1">
-          <div className="flex items-stretch gap-1.5 min-w-max">
-            {nodes}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ============================================================================
 // Copy All Citations Button
@@ -920,20 +719,15 @@ export function Methodology() {
                 {t('heroHeader.subtitle')}
               </p>
             </div>
-            <div className="flex items-baseline gap-5">
-              <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">0.785</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.testAuc')}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">11.01%</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.highRiskRate')}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">1,427</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.gtCases')}</div>
-              </div>
-            </div>
+            {/* Sole PDF affordance (reconciled from the editorial hero, W1). */}
+            <button
+              onClick={() => window.print()}
+              className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
+              title={t('heroHeader.exportPdf')}
+            >
+              <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+              PDF
+            </button>
           </div>
         </header>
     <div className="space-y-5">
@@ -977,33 +771,47 @@ export function Methodology() {
               {t('pageSubline')}
             </p>
           </div>
-          <button
-            onClick={() => window.print()}
-            className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
-            title={t('heroHeader.exportPdf')}
-          >
-            <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-            PDF
-          </button>
         </div>
 
-        {/* Editorial pull-quotes: the three numbers that matter */}
-        <div className="mt-8 grid gap-5 sm:grid-cols-3">
-          <PullQuote
-            stat="0.785"
-            label={t('pullQuotes.testAucLabel')}
-            source={t('pullQuotes.testAucSource')}
-          />
-          <PullQuote
-            stat="11.01%"
-            label={t('pullQuotes.highRiskLabel')}
-            source={t('pullQuotes.highRiskSource')}
-          />
-          <PullQuote
-            stat="1,427"
-            label={t('pullQuotes.gtCasesLabel')}
-            source={t('pullQuotes.gtCasesSource')}
-          />
+        {/* W1 — ONE anchor stat (Playfair) + FT deviation bullet (HR vs OECD
+            ceiling) + a quiet mono micro-row. Replaces the duplicated 3-stat
+            PullQuote grid; the masthead's inline stat trio is also removed. */}
+        <div className="mt-8 grid gap-5 sm:grid-cols-[auto_1fr] sm:items-end">
+          <div className="fern-card" style={{ boxShadow: 'inset 0 0 0 1px rgba(160,104,32,0.06)', padding: 20 }}>
+            <div
+              className="tabular-nums"
+              style={{
+                fontFamily: '"Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 800,
+                fontSize: 'clamp(40px, 6vw, 64px)',
+                lineHeight: 1,
+                color: '#a06820',
+              }}
+            >
+              0.785
+            </div>
+            <div
+              className="font-mono mt-1.5"
+              style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+            >
+              {t('pullQuotes.testAucLabel')} · {t('pullQuotes.testAucSource')}
+            </div>
+          </div>
+          <div className="space-y-3 min-w-0">
+            <BenchmarkRow
+              label={lang === 'en' ? 'High-risk rate vs OECD ceiling' : 'Tasa de alto riesgo vs. techo OCDE'}
+              value={0.1101}
+              benchmark={0.15}
+              benchmarkLabel={lang === 'en' ? 'OECD' : 'OCDE'}
+              maxDelta={0.15}
+            />
+            <p className="font-mono leading-relaxed" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+              <span className="tabular-nums text-text-primary">11.01%</span> · {t('pullQuotes.highRiskLabel')}
+              <span className="mx-2 opacity-40">·</span>
+              <span className="tabular-nums text-text-primary">1,427</span> · {t('pullQuotes.gtCasesLabel')}
+            </p>
+          </div>
         </div>
       </header>
 
@@ -1031,6 +839,18 @@ export function Methodology() {
           </motion.div>
         ))}
       </motion.div>
+
+      {/* ── § HOW TO TRUST THIS — honesty movement (W5): Confidence Tiers +
+           Two-Worlds read as one credibility pair BEFORE the technical log. ── */}
+      <div className="flex items-center gap-3 pt-2">
+        <span
+          className="font-mono font-bold uppercase flex-shrink-0"
+          style={{ fontSize: 11, letterSpacing: '0.18em', color: '#a06820' }}
+        >
+          {t('movements.trust')}
+        </span>
+        <span className="flex-1 h-px" style={{ background: 'var(--color-border)' }} aria-hidden="true" />
+      </div>
 
       {/* ── Confidence Tier Framework ─────────────────────────────── */}
       <section id="confidence-tiers" className="scroll-mt-20">
@@ -1137,8 +957,17 @@ export function Methodology() {
         </div>
       </section>
 
-      {/* Model Evolution Flowchart */}
-      <ModelEvolutionTimeline />
+      {/* Two-Worlds — moved OUT of the accordion grid so it sits adjacent to the
+          Confidence Tiers as the second half of the honesty pair (W5). Its own
+          self-driven motion.div keeps the entrance animation outside the grid's
+          staggerContainer (caution F — staggerItem self-drives via initial/animate). */}
+      <motion.div variants={staggerItem} initial="initial" animate="animate">
+        <TwoWorldsExhibit />
+      </motion.div>
+
+      {/* The Model Research Log — Reuters annotated date axis (W3); demoted BELOW
+          the honesty pair as the technical changelog (was ModelEvolutionTimeline). */}
+      <ModelTimeline />
 
       {/* Layout: TOC sidebar + content */}
       <div className="grid gap-5 lg:grid-cols-[1fr_200px]">
@@ -1149,12 +978,6 @@ export function Methodology() {
           initial="initial"
           animate="animate"
         >
-
-          {/* Featured exhibit — formerly the standalone /intersection page,
-              retired 2026-06-08 and folded in here as a credibility argument. */}
-          <motion.div variants={staggerItem}>
-            <TwoWorldsExhibit />
-          </motion.div>
 
           {/* Section 2: Model Overview */}
           <motion.div variants={staggerItem}>
@@ -1615,9 +1438,80 @@ export function Methodology() {
           </CollapsibleSection>
           </motion.div>
 
-          {/* Section 8: Previous Model (v3.3) */}
+          {/* Section 09: Known Limitations — in depth (de-collided from §08; was §11 id=limitations) */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="v33" number="09" title={t('sectionLabels.v33')} icon={History} defaultOpen={false}>
+          <CollapsibleSection id="limitations-detail" number="09" title={t('sectionLabels.limitations-detail')} icon={AlertTriangle} defaultOpen={false}>
+            <div className="space-y-6">
+              <p className="text-xs text-text-secondary leading-relaxed">
+                {t('limitations.intro')}
+              </p>
+
+              {/* Severity summary */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-critical/5 border border-risk-critical/15">
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" aria-hidden="true" />
+                  <div>
+                    <span className="text-lg font-bold font-mono tabular-nums text-risk-critical">5</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.highImpact')}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-high" aria-hidden="true" />
+                  <div>
+                    <span className="text-lg font-bold font-mono tabular-nums text-risk-high">5</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.mediumImpact')}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" aria-hidden="true" />
+                  <div>
+                    <span className="text-lg font-bold font-mono tabular-nums text-risk-medium">4</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.lowImpact')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs" aria-label={t('limitations.tableAria')}>
+                  <thead className="border-b border-border">
+                    <tr>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium">{t('limitations.colLimitation')}</th>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('limitations.colImpact')}</th>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('limitations.colPath')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {/* 15 known limitations — content in methodology.json
+                        under `limitationsTable.row{N}_{l|i|f}` so the whole
+                        table translates with the language toggle. Stable
+                        index keys; updates to the list need both EN+ES
+                        JSON updates. */}
+                    {Array.from({ length: 15 }, (_, idx) => idx + 1).map((n) => (
+                      <tr key={n} className="hover:bg-accent/[0.03]">
+                        <td className="px-3 py-2 text-text-primary">{t(`limitationsTable.row${n}_l`)}</td>
+                        <td className="px-3 py-2 text-text-muted hidden md:table-cell">{t(`limitationsTable.row${n}_i`)}</td>
+                        <td className="px-3 py-2 text-text-muted hidden lg:table-cell">{t(`limitationsTable.row${n}_f`)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Interpretive guidance */}
+              <div className="p-3 rounded-md bg-border/10 border border-border/40">
+                <p className="text-xs text-text-muted leading-relaxed">
+                  <span className="font-medium text-text-primary">{t('limitations.interpretationLabel')}</span>
+                  {t('limitations.interpretationBody')}
+                </p>
+              </div>
+            </div>
+          </CollapsibleSection>
+          </motion.div>
+
+          {/* Section 10: Previous Model (v3.3) */}
+          <motion.div variants={staggerItem}>
+          <CollapsibleSection id="v33" number="10" title={t('sectionLabels.v33')} icon={History} defaultOpen={false}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.v33section.p1Start')}<strong className="text-text-primary">{t('body.v33section.p1Strong')}</strong>{t('body.v33section.p1End')}<Mono>{t('body.v33section.p1Mono')}</Mono>{t('body.v33section.p1MonoEnd')}
@@ -1667,9 +1561,9 @@ export function Methodology() {
           </CollapsibleSection>
           </motion.div>
 
-          {/* Section 9: Data Sources */}
+          {/* Section 11: Data Sources */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="data-sources" number="10" title={t('sectionLabels.data-sources')} icon={Database}>
+          <CollapsibleSection id="data-sources" number="11" title={t('sectionLabels.data-sources')} icon={Database}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.dataSources.p1Start')}<strong className="text-text-primary">{t('body.dataSources.p1Strong')}</strong>{t('body.dataSources.p1End')}
@@ -1755,78 +1649,7 @@ export function Methodology() {
           </CollapsibleSection>
           </motion.div>
 
-          {/* Section 10: Known Limitations */}
-          <motion.div variants={staggerItem}>
-          <CollapsibleSection id="limitations" number="11" title={t('sectionLabels.limitations')} icon={AlertTriangle} defaultOpen={false}>
-            <div className="space-y-6">
-              <p className="text-xs text-text-secondary leading-relaxed">
-                {t('limitations.intro')}
-              </p>
-
-              {/* Severity summary */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-critical/5 border border-risk-critical/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" aria-hidden="true" />
-                  <div>
-                    <span className="text-lg font-bold font-mono tabular-nums text-risk-critical">5</span>
-                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.highImpact')}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-high" aria-hidden="true" />
-                  <div>
-                    <span className="text-lg font-bold font-mono tabular-nums text-risk-high">5</span>
-                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.mediumImpact')}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" aria-hidden="true" />
-                  <div>
-                    <span className="text-lg font-bold font-mono tabular-nums text-risk-medium">4</span>
-                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.lowImpact')}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Summary table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs" aria-label={t('limitations.tableAria')}>
-                  <thead className="border-b border-border">
-                    <tr>
-                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium">{t('limitations.colLimitation')}</th>
-                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('limitations.colImpact')}</th>
-                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('limitations.colPath')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {/* 15 known limitations — content in methodology.json
-                        under `limitationsTable.row{N}_{l|i|f}` so the whole
-                        table translates with the language toggle. Stable
-                        index keys; updates to the list need both EN+ES
-                        JSON updates. */}
-                    {Array.from({ length: 15 }, (_, idx) => idx + 1).map((n) => (
-                      <tr key={n} className="hover:bg-accent/[0.03]">
-                        <td className="px-3 py-2 text-text-primary">{t(`limitationsTable.row${n}_l`)}</td>
-                        <td className="px-3 py-2 text-text-muted hidden md:table-cell">{t(`limitationsTable.row${n}_i`)}</td>
-                        <td className="px-3 py-2 text-text-muted hidden lg:table-cell">{t(`limitationsTable.row${n}_f`)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Interpretive guidance */}
-              <div className="p-3 rounded-md bg-border/10 border border-border/40">
-                <p className="text-xs text-text-muted leading-relaxed">
-                  <span className="font-medium text-text-primary">{t('limitations.interpretationLabel')}</span>
-                  {t('limitations.interpretationBody')}
-                </p>
-              </div>
-            </div>
-          </CollapsibleSection>
-          </motion.div>
-
-          {/* Section 11: References */}
+          {/* Section 12: References */}
           <motion.div variants={staggerItem}>
           <CollapsibleSection id="references" number="12" title={t('sectionLabels.references')} icon={FileText} defaultOpen={false}>
             <div className="space-y-2">

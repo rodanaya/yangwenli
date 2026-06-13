@@ -44,7 +44,8 @@
     "limitations": "Limitations",
     "v33": "Previous Model (v3.3)",
     "data-sources": "Data Sources",
-    "references": "References"
+    "references": "References",
+    "limitations-detail": "Model caveats, in depth"
   },
   "kicker": "METHODOLOGICAL FOUNDATIONS",
   "pageHeadline": "How We Score Procurement Risk",
@@ -69,7 +70,8 @@
       "v52Desc": "SHAP per-vendor explanations (456K vendors) + PyOD cross-model ensemble (9.3M scores) + KS drift monitoring. See Vendor Profile → Risk tab, Contract detail → AI Confirmed, Dashboard → Cross-Model.",
       "v85Title": "Recalibrated Production Model",
       "v85Desc": "1,427 GT cases · 1,554 vendors. ElasticNet (C=0.2243, l1_ratio=0.7545), 18 active features, c_pu=0.32. HR=11.01% OECD-compliant. Run: CAL-v8-202605020212."
-    }
+    },
+    "axisNow": "NOW"
   },
   "kpiBadges": {
     "contracts": "3.05M Contracts",
@@ -407,5 +409,8 @@
     "Bid rigging": "Bid rigging",
     "Bribery": "Bribery",
     "Conflict of interest": "Conflict of interest"
+  },
+  "movements": {
+    "trust": "§ HOW TO TRUST THIS"
   }
 }
