@@ -40,6 +40,25 @@ def _column_exists(conn, table_name: str, column_name: str) -> bool:
     return any(row[1] == column_name for row in cur.fetchall())
 
 
+def _read_precomputed_signal(cur, key: str):
+    """Return a precomputed JSON signal from precomputed_stats by stat_key, or
+    None if absent/unreadable. The /{id}/{competition,seasonality,patterns}
+    endpoints run multi-scan per-category aggregations that time out live on the
+    5 GB deploy DB (>12s → 504); scripts/_precompute_category_signals.py writes
+    one row per category so these read O(1). The live query below stays as the
+    fallback when the precompute is missing (e.g. a fresh DB)."""
+    try:
+        cur.execute(
+            "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?", (key,)
+        )
+        row = cur.fetchone()
+        if row and row["stat_value"]:
+            return json.loads(row["stat_value"])
+    except Exception:
+        pass
+    return None
+
+
 @router.get("/summary")
 def get_categories_summary():
     """Return all categories with aggregated stats, sorted by total_value desc."""
@@ -509,6 +528,9 @@ def get_category_patterns(category_id: int):
 
     with get_db() as conn:
         cur = conn.cursor()
+        pre = _read_precomputed_signal(cur, f"category_patterns:{category_id}")
+        if pre is not None:
+            return pre
         cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
         cat = cur.fetchone()
         if not cat:
@@ -595,6 +617,9 @@ def get_category_seasonality(category_id: int):
     MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     with get_db() as conn:
         cur = conn.cursor()
+        pre = _read_precomputed_signal(cur, f"category_seasonality:{category_id}")
+        if pre is not None:
+            return pre
         cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
         cat = cur.fetchone()
         if not cat:
@@ -687,6 +712,9 @@ def get_category_competition(category_id: int):
     """Return competition metrics: procedure breakdown, DA/single-bid trends, sector benchmark."""
     with get_db() as conn:
         cur = conn.cursor()
+        pre = _read_precomputed_signal(cur, f"category_competition:{category_id}")
+        if pre is not None:
+            return pre
         cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
         cat = cur.fetchone()
         if not cat:

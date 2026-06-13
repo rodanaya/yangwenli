@@ -294,10 +294,19 @@ export default function CategoryDossier() {
   const hrPct = c.high_risk_pct ?? 0
   const daPct = c.direct_award_pct ?? 0
 
-  // Verdict — the categories /summary endpoint exposes no high_risk_pct (unlike
-  // institution/sector, which verdict on HR%), so average risk is the signal
-  // here. Avoids a misleading "0% high-risk" seal.
-  const verdictColor = RISK_COLORS[riskLevel]
+  // Verdict seal — mirror SectorHero (and the institution dossier): state the
+  // HIGH-RISK SHARE (HR%) with HR bands, not the mean. The category mean is
+  // dominated by routine procurement and can read "ALTO" for a category whose
+  // contracts are almost all low-risk (Cleaning Supplies: avg ~0.21 but 98%
+  // direct-award, 1% high-risk). avg risk is demoted to a sub-line.
+  // high_risk_pct is NULL for Structure-A (2002–2010, 0.1% RFC) categories —
+  // there we keep the avg seal rather than render a misleading "0% high-risk".
+  const hrAvailable = c.high_risk_pct != null
+  const hrLevel: 'critical' | 'high' | 'medium' | 'low' =
+    hrPct >= 20 ? 'critical' : hrPct >= 12 ? 'high' : hrPct >= 5 ? 'medium' : 'low'
+  const sealLevel = hrAvailable ? hrLevel : riskLevel
+  const sealNumber = hrAvailable ? Math.round(hrPct) : riskPct
+  const verdictColor = RISK_COLORS[sealLevel]
 
   // Concentration + vendor rows from the fast endpoint.
   const concentration = topVendorsData
@@ -351,16 +360,24 @@ export default function CategoryDossier() {
               <div aria-hidden="true" className="absolute top-0 left-0 right-0" style={{ height: 2, background: verdictColor }} />
               <div className="text-center">
                 <div className="tabular-nums" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 46, lineHeight: 1, color: verdictColor, letterSpacing: '-0.02em' }}>
-                  {riskPct || '—'}
+                  {sealNumber || '—'}
+                  {hrAvailable && <span className="font-mono" style={{ fontSize: 18, fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: 2 }}>%</span>}
                 </div>
                 <div className="font-mono mt-1" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.6, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                  {lang === 'es' ? 'riesgo prom. · de 100' : 'avg risk · of 100'}
+                  {hrAvailable
+                    ? (lang === 'es' ? 'contratos de alto riesgo' : 'high-risk contracts')
+                    : (lang === 'es' ? 'riesgo prom. · de 100' : 'avg risk · of 100')}
                 </div>
               </div>
               <div aria-hidden="true" className="my-3 mx-auto" style={{ height: 1, width: '60%', background: 'var(--color-border)' }} />
               <div className="font-mono text-center" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: verdictColor, fontWeight: 700 }}>
-                {lang === 'es' ? localizeLevel(riskLevel, 'es') : riskLevel.toUpperCase()}
+                {lang === 'es' ? localizeLevel(sealLevel, 'es') : sealLevel.toUpperCase()}
               </div>
+              {hrAvailable && riskPct > 0 && (
+                <div className="font-mono text-center mt-1" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
+                  {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {riskPct}
+                </div>
+              )}
               <div className="font-mono text-center mt-1" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
                 {Math.round(daPct)}% {lang === 'es' ? 'adj. directa' : 'direct-award'}
               </div>
