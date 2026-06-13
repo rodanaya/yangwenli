@@ -4588,3 +4588,49 @@ Grep scans on `frontend/src/pages/` and `frontend/src/components/` completed. Al
 
 ### Overall: WARN
 HTTP and API checks blocked by Anthropic Egress Gateway (cloud runner IP not in external allowlist for rubli.xyz). Not a confirmed site failure — consistent with prior automated runs from this environment. To enable live checks, add `rubli.xyz` to the session's network egress allowlist. Bilingual scan clean; no regressions detected in source.
+
+---
+## Visual Review — 2026-06-13T12:05:53Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (egress blocked) | WARN |
+| https://rubli.xyz/atlas | 403 (egress blocked) | WARN |
+| https://rubli.xyz/aria | 403 (egress blocked) | WARN |
+| https://rubli.xyz/sectors | 403 (egress blocked) | WARN |
+| https://rubli.xyz/sectors/salud | 403 (egress blocked) | WARN |
+| https://rubli.xyz/cases | 403 (egress blocked) | WARN |
+| https://rubli.xyz/methodology | 403 (egress blocked) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress blocked) | WARN |
+
+> **Note**: All 403s are from the Anthropic cloud runner egress gateway — `x-deny-reason: host_not_allowed`. Error body: "Host not in allowlist: rubli.xyz." Consistent with all prior automated runs from this environment. Not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — Anthropic egress gateway (empty body) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — Anthropic egress gateway (empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — Anthropic egress gateway (empty body) | WARN |
+| /api/v1/sectors | BLOCKED — Anthropic egress gateway (empty body) | WARN |
+
+> All API calls blocked by the same egress restriction. Not indicative of backend failure.
+
+### Bilingual Gaps
+Grep scans on `frontend/src/pages/` and `frontend/src/components/` completed. All matches are false positives:
+- `InstitutionScorecards.tsx:444` — TypeScript constant accessor (`TIER_STYLES[tierName]`), not rendered text. OK.
+- `CaseLibrary.tsx:19` — inline comment. OK.
+- `Methodology.tsx:124` — academic citation (Mahalanobis, P.C. 1936). Untranslatable. OK.
+- `InstitutionLeague.tsx:203,754` — `TIER_STYLES.Excelente.color` code references, not rendered text. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property `target_type`, not user-facing. OK.
+- `ExpedienteSpine.tsx:72` — TypeScript return type annotation. OK.
+- `ExploreCanvas.tsx` — comment block + corporate-form token array (`S.A.`, `C.V.`, etc.). OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155–165` — pattern labels properly bilingual via `isEs ? ES : EN` ternaries. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by Anthropic Egress Gateway for the third consecutive run (2026-06-12 · 2026-06-13T06 · 2026-06-13T12). Not a site failure — the 403 originates inside the container network proxy. To fix: add `rubli.xyz` to the session's network egress allowlist in environment settings. Bilingual scan clean; no source regressions.
