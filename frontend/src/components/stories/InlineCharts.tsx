@@ -75,8 +75,98 @@ const HIGHLIGHT_COLOR = 'var(--color-sector-salud)'
 const REFERENCE_COLOR = 'var(--color-sector-tecnologia)'
 const ANCHOR_COLOR = '#a06820'
 
+// ---------------------------------------------------------------------------
+// Color-safety guards (2026-06-14, Day-13). story-content.ts hand-authors
+// per-chart colors; off-palette / low-contrast values (e.g. #22d3ee cyan ≈0.55
+// luminance) leaked into line / series / label use where they read as nearly
+// invisible on the cream (#faf9f6) page. These read a color's luminance and:
+//  • remap unsafe INK colors (lines/series/markers/text) to a legible palette,
+//  • pick legible ink for a label drawn ON a filled bar,
+//  • reject near-white fills.
+// Sanctioned, contrast-passing colors and component var() tokens pass through
+// untouched — mirrors the diverging-bar CANONICAL_COLOR_ALLOWLIST below.
+// ---------------------------------------------------------------------------
+
+// Known design-token CSS var names → hex, so we can read their luminance.
+const TOKEN_HEX: Record<string, string> = {
+  ...Object.fromEntries(
+    Object.entries(SECTOR_COLORS).map(([k, v]) => [`var(--color-sector-${k})`, v]),
+  ),
+  'var(--color-text-primary)': '#1a1714',
+  'var(--color-text-secondary)': '#6b6560',
+  'var(--color-text-muted)': '#7a716c',
+  'var(--color-background)': '#faf9f6',
+}
+
+function relLuminance(hex: string): number | null {
+  const m = /^#?([0-9a-fA-F]{6})$/.exec(hex.trim())
+  if (!m) return null
+  const int = parseInt(m[1], 16)
+  const lin = [(int >> 16) & 255, (int >> 8) & 255, int & 255].map((c) => {
+    const s = c / 255
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
+  })
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+}
+
+// Luminance of any color string (hex or a known var token); null if unknown.
+function lumOf(color: string | undefined): number | null {
+  if (!color) return null
+  const v = color.trim()
+  if (v.startsWith('var(')) {
+    const hex = TOKEN_HEX[v]
+    return hex ? relLuminance(hex) : null
+  }
+  return relLuminance(v)
+}
+
+// Contrast-safe line/series/marker palette — every entry is dark enough to read
+// as a 2px line or small label on the page (luminance ≲ 0.25).
+const LINE_PALETTE = [
+  'var(--color-sector-salud)',           // red
+  ANCHOR_COLOR,                          // amber #a06820
+  'var(--color-sector-tecnologia)',      // violet
+  'var(--color-sector-infraestructura)', // orange
+  'var(--color-sector-defensa)',         // navy
+  'var(--color-sector-gobernacion)',     // crimson
+  '#3b82f6',                             // educacion blue
+]
+
+// Max luminance an INK color (line/series/text/marker) may carry before it reads
+// too faint on cream (~3:1). Above this we fall back to a legible palette color.
+const INK_LUM_CEILING = 0.3
+
+// Guard a data-supplied INK color. var() tokens and contrast-passing hexes pass
+// through; too-light or unparseable colors (e.g. #22d3ee cyan) → fallback.
+function safeInk(raw: string | undefined, fallback: string): string {
+  if (!raw) return fallback
+  if (raw.trim().startsWith('var(')) return raw
+  const L = relLuminance(raw)
+  if (L === null || L > INK_LUM_CEILING) return fallback
+  return raw
+}
+
+// Guard a data-supplied FILL color. Fills tolerate lower contrast than ink, so
+// this only rejects near-white fills (invisible on the cream page).
+function safeFill(raw: string | undefined, fallback: string): string {
+  if (!raw) return fallback
+  if (raw.trim().startsWith('var(')) return raw
+  const L = relLuminance(raw)
+  if (L === null || L > 0.8) return fallback
+  return raw
+}
+
+// Legible ink for a label drawn ON TOP of a filled bar/area: white on dark
+// fills, near-black on light fills (e.g. RISK_COLORS.high #f59e0b ≈0.45, energia
+// yellow) where white would vanish.
+function labelInkOn(fillColor: string): string {
+  const L = lumOf(fillColor)
+  if (L === null) return 'rgba(255,255,255,0.92)'
+  return L < 0.38 ? 'rgba(255,255,255,0.92)' : 'var(--color-text-primary)'
+}
+
 function getColor(point: StoryChartPoint, index: number): string {
-  return point.color ?? PALETTE[index % PALETTE.length]
+  return safeFill(point.color, PALETTE[index % PALETTE.length])
 }
 
 // 2026-05-21: risk-tier color binding for bar points that opt in via
@@ -528,7 +618,7 @@ export function InlineBarChart({
                     dominantBaseline="middle"
                     fontSize={9}
                     fontFamily="var(--font-family-mono, monospace)"
-                    fill="rgba(255,255,255,0.85)"
+                    fill={labelInkOn(color)}
                   >
                     {txt}
                   </text>
@@ -1255,6 +1345,9 @@ export function InlineMultiLine({
   // Compute global y-max
   const allValues = series.flatMap((s) => s.values)
   const yMax = Math.max(...allValues, 1)
+  // Guard each series color: off-palette / low-contrast (e.g. #22d3ee cyan) →
+  // a legible LINE_PALETTE slot so no series reads as invisible on the page.
+  const seriesColors = series.map((s, i) => safeInk(s.color, LINE_PALETTE[i % LINE_PALETTE.length]))
 
   const W = 720
   const H = 280
@@ -1327,7 +1420,7 @@ export function InlineMultiLine({
               <polyline
                 points={linePts}
                 fill="none"
-                stroke={s.color}
+                stroke={seriesColors[sIdx]}
                 strokeWidth={2}
                 strokeLinejoin="round"
                 strokeLinecap="round"
@@ -1346,7 +1439,7 @@ export function InlineMultiLine({
                     y={plotY(lastV) + 3}
                     fontSize={10}
                     fontFamily="var(--font-family-mono, monospace)"
-                    fill={s.color}
+                    fill={seriesColors[sIdx]}
                     fontWeight={700}
                   >
                     {seriesName}
@@ -1362,7 +1455,7 @@ export function InlineMultiLine({
                     cx={plotX(i)}
                     cy={plotY(v)}
                     r={isAnno ? 4.5 : 2}
-                    fill={s.color}
+                    fill={seriesColors[sIdx]}
                     stroke={isAnno ? 'var(--color-background)' : 'none'}
                     strokeWidth={isAnno ? 2 : 0}
                   />
@@ -1376,7 +1469,7 @@ export function InlineMultiLine({
                   textAnchor="middle"
                   fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill={s.color}
+                  fill={seriesColors[sIdx]}
                   fontWeight={700}
                 >
                   {lang === 'es' ? (s.annotation.text_es ?? s.annotation.text) : s.annotation.text}
@@ -1417,7 +1510,7 @@ export function InlineMultiLine({
             <div key={i} className="flex items-center gap-2">
               <span
                 className="inline-block rounded-sm"
-                style={{ width: 14, height: 3, backgroundColor: s.color }}
+                style={{ width: 14, height: 3, backgroundColor: seriesColors[i] }}
               />
               <span
                 className="font-mono"

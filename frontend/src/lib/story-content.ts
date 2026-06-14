@@ -1576,7 +1576,7 @@ export const STORIES: StoryDef[] = [
                 id: 'pisa',
                 label: 'PISA',
                 sublabel: '55.6B',
-                color: '#22d3ee',
+                color: '#3b82f6',
               },
               {
                 id: 'dimm',
@@ -1741,7 +1741,7 @@ export const STORIES: StoryDef[] = [
               },
               {
                 name: 'PISA',
-                color: '#22d3ee',
+                color: '#3b82f6',
                 values: [
                   1.18, 0, 2.41, 0.56, 1.39, 0.73, 2.97, 1.58, 0.18, 0.36, 0.71, 0.94, 2.6, 0.96,
                   1.23, 0.47, 3.5, 6.42, 2.56, 3.77, 0.13, 0.67, 19.46,
@@ -4953,7 +4953,7 @@ export const STORIES: StoryDef[] = [
             referenceLine: {
               value: 0,
               label: '',
-              color: '#52525b',
+              color: '#64748b',
             },
             unit: 'coefficient',
             annotation:
@@ -5088,7 +5088,7 @@ export const STORIES: StoryDef[] = [
             referenceLine: {
               value: 0,
               label: '',
-              color: '#52525b',
+              color: '#64748b',
             },
             unit: 'SHAP φ',
             annotation:
