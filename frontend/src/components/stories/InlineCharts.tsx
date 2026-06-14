@@ -1163,7 +1163,9 @@ export function InlineSpikeChart({
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
               opacity={0.9}
             >
-              {data.referenceLine.label}
+              {lang === 'es'
+                ? (data.referenceLine.label_es ?? data.referenceLine.label)
+                : data.referenceLine.label}
             </text>
           </>
         )}

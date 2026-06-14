@@ -4379,8 +4379,8 @@ export const STORIES: StoryDef[] = [
                 label: '210K',
                 value: 28264,
                 highlight: true,
-                annotation: 'spike',
-                annotation_es: 'pico',
+                annotation: '+76% vs floor',
+                annotation_es: '+76% vs base',
               },
               {
                 label: '220K',
@@ -4421,8 +4421,8 @@ export const STORIES: StoryDef[] = [
                 label: '300K',
                 value: 22064,
                 highlight: true,
-                annotation: '300K',
-                annotation_es: '300K',
+                annotation: '300K legal line',
+                annotation_es: 'línea legal 300K',
               },
               {
                 label: '310K',
@@ -4466,6 +4466,12 @@ export const STORIES: StoryDef[] = [
               },
             ],
             unit: 'contracts',
+            referenceLine: {
+              value: 16075,
+              label: 'baseline floor · 16K',
+              label_es: 'línea base · 16K',
+              color: 'var(--color-text-secondary)',
+            },
             annotation:
               'Anomalous spikes at 210K, 250K, and 300K suggest artificial contract splitting.',
             annotation_es:
