@@ -670,6 +670,55 @@ export interface InstitutionOfficialsResponse {
   data_available: boolean
 }
 
+// ─── Cross-institution movers + per-official profile (GET /officials/*) ───────
+export interface OfficialMover {
+  official_name: string
+  institution_count: number
+  total_contracts: number
+  total_value_mxn: number
+  direct_award_pct: number
+  single_bid_pct: number
+  avg_risk_score: number
+  first_contract_year: number | null
+  last_contract_year: number | null
+}
+
+export interface OfficialMoversResponse {
+  movers: OfficialMover[]
+  note: string
+  data_available: boolean
+}
+
+export interface OfficialInstitutionRow {
+  institution_id: number
+  institution_name: string | null
+  total_contracts: number
+  total_value_mxn: number
+  direct_award_pct: number
+  single_bid_pct: number
+  avg_risk_score: number
+  vendor_diversity: number
+  hhi_vendors: number
+  first_contract_year: number | null
+  last_contract_year: number | null
+}
+
+export interface OfficialProfileResponse {
+  official_name: string
+  summary: {
+    total_contracts: number
+    total_value_mxn: number
+    institution_count: number
+    direct_award_pct: number
+    single_bid_pct: number
+    avg_risk_score: number
+    first_contract_year: number | null
+    last_contract_year: number | null
+  }
+  institutions: OfficialInstitutionRow[]
+  note: string
+}
+
 // ─── Z2 "La Captura" — vendor-pool dossier ──────────────────────────────────
 // Richer shape than InstitutionVendorListResponse: per-vendor HR/DA/SB counts,
 // ARIA tier/pattern badges, plus institution-level aggregates for the kicker.

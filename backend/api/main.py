@@ -80,6 +80,7 @@ from .routers import (
     investigation_router,
 )
 from .routers.institutions import router as institutions_router
+from .routers.officials import router as officials_router
 from .routers.contracts import router as contracts_router
 from .routers.sectors import router as sectors_router
 from .routers.export import router as export_router
@@ -548,6 +549,7 @@ app.include_router(industries_router, prefix="/api/v1")
 app.include_router(vendors_router, prefix="/api/v1")
 app.include_router(stats_router, prefix="/api/v1")
 app.include_router(institutions_router, prefix="/api/v1")
+app.include_router(officials_router, prefix="/api/v1")
 app.include_router(contracts_router, prefix="/api/v1")
 app.include_router(sectors_router, prefix="/api/v1")
 app.include_router(export_router, prefix="/api/v1")

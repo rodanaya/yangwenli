@@ -35,6 +35,8 @@ import type {
   InstitutionTopListResponse,
   InstitutionVendorListResponse,
   InstitutionOfficialsResponse,
+  OfficialMoversResponse,
+  OfficialProfileResponse,
   VendorPoolResponse,
   InstitutionWaterfallResponse,
   InstitutionFilterParams,
@@ -1629,6 +1631,25 @@ export const exportApi = {
     const { data } = await api.get(`/export/contracts/excel?${queryParams}`, {
       responseType: 'blob',
     })
+    return data
+  },
+}
+
+// ============================================================================
+// Officials Endpoints — Responsables de la Unidad Compradora
+// ============================================================================
+
+export const officialsApi = {
+  /** Cross-institution movers — officials who signed at >1 institution (2018+). */
+  async getMovers(limit = 40, minContracts = 50): Promise<OfficialMoversResponse> {
+    const { data } = await api.get<OfficialMoversResponse>('/officials/movers', {
+      params: { limit, min_contracts: minContracts },
+    })
+    return data
+  },
+  /** Per-institution rollup for one official (responsible_uc — any case/accents). */
+  async getProfile(name: string): Promise<OfficialProfileResponse> {
+    const { data } = await api.get<OfficialProfileResponse>(`/officials/${encodeURIComponent(name)}`)
     return data
   },
 }

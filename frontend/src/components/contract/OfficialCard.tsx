@@ -11,6 +11,7 @@
  * text (NOT formatEntityName('person', …) — 'person' is not in EntityType).
  * Renders nothing when there is no named official.
  */
+import { Link } from 'react-router-dom'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { getAdministrationByYear } from '@/lib/administrations'
 import { RISK_COLORS } from '@/lib/constants'
@@ -51,9 +52,15 @@ export function OfficialCard({
       className="rounded-sm px-4 py-3.5"
       style={{ border: INK_BORDER, boxShadow: INK_INSET, background: 'var(--color-background-elevated)' }}
     >
-      {/* Headline — the named official, serif */}
-      <div
+      {/* Headline — the named official, serif. Links to their cross-institution
+          rollup (/officials/:name); falls back to a graceful 404 if they sit
+          below the contract floor / outside the 2018+ window. */}
+      <Link
+        to={`/officials/${encodeURIComponent(name)}`}
+        className="hover:opacity-70 transition-opacity"
         style={{
+          display: 'inline-block',
+          textDecoration: 'none',
           fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'italic',
           fontWeight: 500,
@@ -64,7 +71,7 @@ export function OfficialCard({
         }}
       >
         {name}
-      </div>
+      </Link>
       <div
         className="font-mono mt-1"
         style={{

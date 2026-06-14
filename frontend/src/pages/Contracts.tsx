@@ -432,6 +432,38 @@ export function Contracts() {
     }
   }
 
+  // Excel export — same current-filter semantics as the CSV path, via the
+  // existing /export/contracts/excel endpoint (the Records Room "take it with
+  // you" affordance, now offered in both formats).
+  const [isExportingExcel, setIsExportingExcel] = useState(false)
+  const handleExportExcel = async () => {
+    setIsExportingExcel(true)
+    const total = data?.pagination.total ?? 0
+    if (total > EXPORT_MAX_ROWS) {
+      toast.warning(
+        'Export capped',
+        `Your filters match ${total.toLocaleString()} contracts. Only the first ${EXPORT_MAX_ROWS.toLocaleString()} will be exported. Narrow your filters to get the full set.`
+      )
+    }
+    try {
+      const { page: _page, per_page: _perPage, sort_by: _sortBy, sort_order: _sortOrder, ...exportFilters } = filters
+      const blob = await exportApi.downloadExcel(exportFilters)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `contracts_export_${new Date().toISOString().split('T')[0]}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success('Export complete', `Downloaded ${Math.min(total, EXPORT_MAX_ROWS).toLocaleString()} contracts (Excel)`)
+    } catch {
+      toast.error('Export failed', 'Unable to export contracts')
+    } finally {
+      setIsExportingExcel(false)
+    }
+  }
+
   // Saved contract filters (localStorage)
   const CONTRACT_FILTERS_KEY = 'rubli_contract_filters'
   const { items: savedFilters, save: saveFilter, remove: removeSavedFilter } = useSavedSearches(CONTRACT_FILTERS_KEY)
@@ -629,6 +661,16 @@ export function Contracts() {
             title="Export to CSV"
           >
             {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-[10px] px-2 font-mono tracking-wide"
+            onClick={handleExportExcel}
+            disabled={isExportingExcel || !data || (data?.pagination?.total ?? 0) === 0}
+            title="Export to Excel (.xlsx)"
+          >
+            {isExportingExcel ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'XLSX'}
           </Button>
           <TableExportButton
             data={pageExportData}

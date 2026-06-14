@@ -40,6 +40,7 @@ const VendorDossier = lazy(() => import('@/pages/VendorDossier'))
 // const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
 const InstitutionThread = lazy(() => import('@/pages/InstitutionThread'))
 const InstitutionDossier = lazy(() => import('@/pages/InstitutionDossier'))
+const OfficialProfile = lazy(() => import('@/pages/OfficialProfile'))
 // 2026-05-09: spatial-nav rebuild — the Star Fox map. Lives at /explore
 // while it iterates; will be promoted to / when stable.
 // File is named SpatialMap.tsx (not Explore.tsx) to avoid a Windows
@@ -481,6 +482,17 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <InstitutionDossier />
+                  </SuspenseBoundary>
+                }
+              />
+              {/* 2026-06-14: /officials/:name — per-official rollup
+                  (Responsable de la Unidad Compradora), the destination the
+                  /contracts/:id OfficialCard links into. */}
+              <Route
+                path="officials/:name"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <OfficialProfile />
                   </SuspenseBoundary>
                 }
               />

@@ -19,7 +19,7 @@
  */
 
 import { useMemo, useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AdminSummaryCard } from '@/components/administrations/AdminSummaryCard'
 import { ComparePeriodView } from '@/components/administrations/ComparePeriodView'
 import { AdminCycleSmallMultiples } from '@/components/administrations/AdminCycleSmallMultiples'
@@ -38,9 +38,9 @@ import type {
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatNumber } from '@/lib/utils'
-import { SECTORS } from '@/lib/constants'
-import { analysisApi } from '@/api/client'
+import { cn, formatNumber, toTitleCase, formatCompactMXN } from '@/lib/utils'
+import { SECTORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { analysisApi, officialsApi } from '@/api/client'
 import type { YearOverYearChange } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
 import { AlertTriangle } from 'lucide-react'
@@ -209,6 +209,15 @@ export default function Administrations() {
   const { data: breakdownResp, isLoading: breakdownLoading } = useQuery({
     queryKey: ['analysis', 'admin-breakdown'],
     queryFn: () => analysisApi.getAdminBreakdown(),
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+  })
+
+  // Cross-institution movers — administration-agnostic (2018+ window), so it
+  // sits as a window-wide coda after the per-sexenio modules.
+  const { data: moversResp } = useQuery({
+    queryKey: ['officials', 'movers', 24],
+    queryFn: () => officialsApi.getMovers(24, 50),
     staleTime: 60 * 60 * 1000,
     retry: false,
   })
@@ -1141,6 +1150,70 @@ export default function Administrations() {
             )}
           </div>
           </section>
+
+          {/* ── LOS ITINERANTES — cross-institution movers (2018+, window-wide;
+               administration-agnostic coda). Each name links to its /officials
+               rollup. Ranked by institution count, never a raw risk ranking. ── */}
+          {moversResp?.data_available && moversResp.movers.length > 0 && (
+            <section className="mt-10 pt-8 border-t border-border" aria-label={isEs ? 'Funcionarios itinerantes' : 'Itinerant officials'}>
+              <div className="font-mono mb-1" style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                {isEs ? 'Ventana 2018+ · todas las administraciones' : '2018+ window · across administrations'}
+              </div>
+              <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 22, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
+                {isEs ? 'Los itinerantes' : 'The itinerants'}
+              </h2>
+              <p className="mt-1.5 text-xs text-text-secondary max-w-2xl leading-relaxed">
+                {isEs
+                  ? 'Responsables de la Unidad Compradora que firmaron en más de una institución — la señal de rotación que ninguna ficha de una sola entidad puede mostrar. Ordenados por número de instituciones.'
+                  : 'Procurement officers of record who signed at more than one institution — the rotation signal no single-entity surface can show. Ranked by institution count.'}
+              </p>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">
+                      <th className="text-left font-medium py-2 pr-3">{isEs ? 'Funcionario' : 'Officer'}</th>
+                      <th className="text-right font-medium py-2 px-3">{isEs ? 'Inst.' : 'Inst.'}</th>
+                      <th className="text-right font-medium py-2 px-3">{isEs ? 'Contratos' : 'Contracts'}</th>
+                      <th className="text-right font-medium py-2 px-3">{isEs ? 'Valor' : 'Value'}</th>
+                      <th className="text-right font-medium py-2 px-3">{isEs ? 'Adj. directa' : 'Direct award'}</th>
+                      <th className="text-right font-medium py-2 pl-3">{isEs ? 'Indicador' : 'Risk ind.'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {moversResp.movers.map((m) => {
+                      const level = getRiskLevelFromScore(m.avg_risk_score)
+                      const locale = isEs ? 'es-MX' : 'en-US'
+                      return (
+                        <tr key={m.official_name} className="border-b border-border/40 hover:bg-background-elevated/40">
+                          <td className="py-2 pr-3">
+                            <Link
+                              to={`/officials/${encodeURIComponent(m.official_name)}`}
+                              className="text-text-primary font-medium hover:opacity-70 transition-opacity"
+                            >
+                              {toTitleCase(m.official_name)}
+                            </Link>
+                          </td>
+                          <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{m.institution_count}</td>
+                          <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{m.total_contracts.toLocaleString(locale)}</td>
+                          <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{formatCompactMXN(m.total_value_mxn)}</td>
+                          <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{m.direct_award_pct.toFixed(0)}%</td>
+                          <td className="py-2 pl-3 text-right tabular-nums">
+                            <span className="inline-flex items-center gap-1.5 justify-end">
+                              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: RISK_COLORS[level] }} aria-hidden="true" />
+                              <span style={{ color: RISK_COLORS[level] }}>{m.avg_risk_score.toFixed(2)}</span>
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {moversResp.note && (
+                <p className="mt-3 text-[11px] leading-relaxed text-text-muted max-w-2xl">{moversResp.note}</p>
+              )}
+            </section>
+          )}
 
           <PageFooter />
         </div>
