@@ -6,7 +6,7 @@
 
 # ML / Model Training
 scikit-learn>=1.3.0        # Logistic regression, IsolationForest, calibration, metrics
-optuna>=3.0.0              # Bayesian hyperparameter tuning (calibrate_risk_model_v6_enhanced.py)
+optuna>=4.8.0              # Bayesian hyperparameter tuning (calibrate_risk_model_v6_enhanced.py)
 shap>=0.45.0               # SHAP explanations (compute_shap_explanations.py)
 pyod>=2.0.0                # Anomaly detection ensemble (compute_ml_anomalies_pyod.py)
 
