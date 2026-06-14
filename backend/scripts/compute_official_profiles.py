@@ -136,7 +136,26 @@ def main(min_contracts: int = 5):
     # Indexes for live drill (raw column; the backfill GROUP BY normalizes with
     # UPPER/TRIM so it scans, but the per-institution endpoint filters by
     # institution_id + total_contracts on the precomputed table, which is tiny).
-    print("Step 1/3  Ensuring indexes...")
+    print("Step 1/3  Ensuring table + indexes...")
+    # Self-sufficient: the deploy DB (RUBLI_DEPLOY.db) ships without this table,
+    # so create it if absent rather than assuming a prior migration.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS official_risk_profiles (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            official_name       TEXT NOT NULL,
+            institution_id      INTEGER REFERENCES institutions(id),
+            first_contract_year INTEGER,
+            last_contract_year  INTEGER,
+            total_contracts     INTEGER,
+            single_bid_pct      REAL,
+            direct_award_pct    REAL,
+            avg_risk_score      REAL,
+            vendor_diversity    INTEGER,
+            hhi_vendors         REAL,
+            computed_at         TEXT DEFAULT (datetime('now')),
+            total_value_mxn     REAL
+        )
+    """)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_contracts_responsible_uc ON contracts(responsible_uc)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_contracts_resp_uc_inst ON contracts(responsible_uc, institution_id)")
     conn.commit()
