@@ -1655,7 +1655,10 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
             )
           })()}
           <span className="text-[11px] text-text-primary font-mono">
-            {story.chapters.length} {story.chapters.length === 1 ? 'chapter' : 'chapters'}
+            {story.chapters.length}{' '}
+            {lang === 'es'
+              ? story.chapters.length === 1 ? 'capítulo' : 'capítulos'
+              : story.chapters.length === 1 ? 'chapter' : 'chapters'}
           </span>
           {/* Analysis-as-of timestamp — editorial honesty about freshness.
               These pieces are not "live" — the underlying analysis was
@@ -1718,7 +1721,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                       color: valueColor,
                     }}
                   >
-                    {stat.value}
+                    {localizeAmount(stat.value, lang)}
                   </span>
                   {suffix && (
                     <span

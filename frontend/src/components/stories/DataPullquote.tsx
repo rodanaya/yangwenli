@@ -541,11 +541,13 @@ export default function DataPullquote({
     lang,
   }
 
-  // Editorial dateline mimics the masthead. Locale-aware short date.
-  const dateline = new Date().toLocaleDateString(
-    lang === 'es' ? 'es-MX' : 'en-US',
-    { month: 'short', day: 'numeric', year: 'numeric' }
-  ).toUpperCase().replace(/,/g, ' ·').replace(/\./g, '')
+  // Editorial dateline = the story's analysis-as-of period, NOT new Date().
+  // These figures are static analyses of a frozen COMPRANET snapshot; a live
+  // clock here read as a publication date and contradicted the hero's
+  // "Analysis as of May 2026" line. DataPullquote is story-only (one call site
+  // in StoryNarrative), so the shared analysis period applies universally —
+  // keep this in sync with the hero label in StoryNarrative.tsx.
+  const dateline = lang === 'es' ? 'ANÁLISIS · MAYO 2026' : 'ANALYSIS · MAY 2026'
   const sectionLabel = lang === 'es' ? 'CIFRA · COMPRANET' : 'FIGURE · COMPRANET'
 
   // Use the eyebrow text in mark-up; ignore the translation hook's t() since

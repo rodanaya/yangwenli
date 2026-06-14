@@ -371,40 +371,87 @@ function Honest({ text }: { text: string }) {
   )
 }
 
-// ── Band 1 renderer — signed SHAP driver strip ────────────────────────────────
-// FT-bullet zero-axis grammar: risk drivers extend RIGHT in critical red,
-// protective factors extend LEFT in neutral zinc (NEVER green — Bible §3.10).
+// ── Band 1 renderer — verdict-led SHAP driver ledger ──────────────────────────
+// Geometry is RANK + a 3-step strength glyph, NOT maxAbs-normalized bar width.
+// On prod the /shap endpoint serves the v5.2 precompute (the deploy DB lacks
+// v0.8.5 contract_z_features), where one driver can be a 50x outlier (e.g.
+// price_ratio +11.09 vs ±0.19). A divergent bar normalized to that outlier
+// starved ranks 2-6 into invisible slivers and destroyed the band's meaning.
+// Rank index + tercile glyph cannot collapse, so every driver stays legible at
+// full row height; the verdict sentence names the lead driver, and a quiet
+// microline keeps the band honest (direction + relative weight, not exact
+// magnitude) so it never over-claims a precision the served numbers can't back.
+// Protective factors read in neutral muted (NEVER green — Bible §3.10).
 
 function ShapDriverStrip({ rows, lang }: { rows: Array<{ label: string; value: number }>; lang: 'en' | 'es' }) {
-  const maxAbs = Math.max(...rows.map((r) => Math.abs(r.value)), 0.0001)
-  const AXIS = 42 // % position of the zero axis inside the track
+  const es = lang === 'es'
+  const risk = rows.filter((r) => r.value > 0).sort((a, b) => b.value - a.value)
+  const prot = rows.filter((r) => r.value < 0).sort((a, b) => a.value - b.value)
+  const ordered = [...risk, ...prot]
+  const d0 = risk[0]?.value ?? 0
+  const d1 = risk[1]?.value ?? 0
+  const dominant = d0 > 0 && (d1 === 0 || d0 >= 3 * d1)
+  // Coarse 3-step strength, measured against the lead driver. Never 0 filled —
+  // a finite-but-tiny driver still reads "present, minor".
+  const ref = d0 > 0 ? d0 : Math.abs(prot[0]?.value ?? 0)
+  const step = (v: number) => {
+    if (ref <= 0) return 1
+    const a = Math.abs(v)
+    return a >= 0.4 * ref ? 3 : a >= 0.12 * ref ? 2 : 1
+  }
+  // Verdict — names the lead driver (one colored fragment). Guards empty arrays.
+  const r0 = risk[0]?.label ?? ''
+  const r1 = risk[1]?.label ?? ''
+  const verdict =
+    risk.length === 0
+      ? { pre: es ? 'Ningún factor elevó a este proveedor; ' : 'No risk factors elevated this vendor; ', name: prot[0]?.label ?? '—', post: es ? ' lo acerca a lo rutinario.' : ' pulls toward routine.', color: 'var(--color-text-primary)' }
+      : risk.length === 1
+        ? { pre: '', name: r0, post: es ? ' es el único factor de esta señal.' : ' is the sole driver of this flag.', color: RISK_COLORS.critical }
+        : dominant
+          ? { pre: '', name: r0, post: es ? ' domina abrumadoramente esta señal.' : ' overwhelmingly drives this flag.', color: RISK_COLORS.critical }
+          : { pre: '', name: r0, post: es ? ` encabeza esta señal, con apoyo de ${r1}.` : ` leads this flag, with support from ${r1}.`, color: RISK_COLORS.critical }
+
   return (
-    <div role="img" aria-label={lang === 'es' ? 'Factores del indicador de riesgo' : 'Risk indicator drivers'}
-      style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-      {rows.map((r, i) => {
-        const pos = r.value > 0
-        const frac = Math.abs(r.value) / maxAbs
-        return (
-          <div key={`${r.label}-${i}`} className="flex items-center" style={{ gap: 8 }}>
-            <span className="font-mono flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-secondary)', width: 118, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.label}>
-              {r.label}
-            </span>
-            <span aria-hidden="true" className="flex-1" style={{ height: 7, position: 'relative' }}>
-              <span style={{ position: 'absolute', left: `${AXIS}%`, top: -1, bottom: -1, width: 1, background: 'var(--color-border)' }} />
-              <span style={{
-                position: 'absolute', top: 0, bottom: 0, borderRadius: 2,
-                left: pos ? `${AXIS}%` : `${AXIS - frac * AXIS}%`,
-                width: pos ? `${frac * (100 - AXIS)}%` : `${frac * AXIS}%`,
-                background: pos ? RISK_COLORS.critical : 'var(--color-text-muted)',
-                opacity: pos ? 0.85 : 0.55,
-              }} />
-            </span>
-            <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: pos ? RISK_COLORS.critical : 'var(--color-text-muted)', width: 36, textAlign: 'right' }}>
-              {pos ? '+' : '−'}{Math.abs(r.value).toFixed(2)}
-            </span>
-          </div>
-        )
-      })}
+    <div role="img" aria-label={es ? 'Factores del indicador de riesgo, ordenados por peso' : 'Risk indicator drivers, ranked by weight'}>
+      <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 13, lineHeight: 1.35, color: 'var(--color-text-primary)', margin: '0 0 9px' }}>
+        {verdict.pre}
+        <span style={{ fontStyle: 'normal', color: verdict.color }}>{verdict.name}</span>
+        {verdict.post}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {ordered.map((r, i) => {
+          const pos = r.value > 0
+          const rail = pos ? RISK_COLORS.critical : 'var(--color-text-muted)'
+          const isDom = i === 0 && pos && dominant && risk.length > 1
+          const s = step(r.value)
+          const sword = s === 3 ? (es ? 'fuerte' : 'strong') : s === 2 ? (es ? 'moderado' : 'moderate') : (es ? 'leve' : 'faint')
+          return (
+            <div key={`${r.label}-${i}`} className="flex items-center" style={{ gap: 7 }}>
+              <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 12, textAlign: 'right' }}>{i + 1}</span>
+              <span aria-hidden="true" style={{ width: 2, alignSelf: 'stretch', minHeight: 12, background: rail, opacity: pos ? 0.85 : 0.5, borderRadius: 1 }} />
+              <span className="font-mono" style={{ fontSize: 9.5, color: 'var(--color-text-secondary)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.label}>
+                {r.label}
+              </span>
+              {isDom && (
+                <span className="font-mono flex-shrink-0" style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '0.1em', color: RISK_COLORS.critical, border: `1px solid ${RISK_COLORS.critical}`, borderRadius: 2, padding: '1px 4px', opacity: 0.9 }}>
+                  {es ? 'DOMINA' : 'DOMINANT'}
+                </span>
+              )}
+              <span aria-hidden="true" className="flex-shrink-0" style={{ display: 'flex', gap: 2 }}>
+                {[0, 1, 2].map((k) => (
+                  <span key={k} style={{ width: 6, height: 6, borderRadius: 1, background: rail, opacity: k < s ? (pos ? 0.9 : 0.55) : 0.14 }} />
+                ))}
+              </span>
+              <span className="sr-only">{sword}</span>
+            </div>
+          )
+        })}
+      </div>
+      <p className="font-mono" style={{ fontSize: 8.5, letterSpacing: '0.03em', color: 'var(--color-text-muted)', lineHeight: 1.35, margin: '9px 0 0', paddingTop: 7, borderTop: '1px solid var(--color-border)' }}>
+        {es
+          ? 'Atribución de riesgo del modelo — léase como dirección y peso relativo, no magnitud exacta.'
+          : "The model's risk attribution — read as direction and relative weight, not exact magnitude."}
+      </p>
     </div>
   )
 }

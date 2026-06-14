@@ -36,6 +36,7 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/cases': 'caseLibrary',
   '/journalists': 'journalists',
   '/newsroom': 'newsroom',
+  '/stories': 'stories',
   '/aria': 'ariaQueue',
   '/report-card': 'reportCard',
   '/year-in-review': 'yearInReview',
