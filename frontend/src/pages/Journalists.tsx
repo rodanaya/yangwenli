@@ -77,8 +77,8 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'captura-institucional',
-    headline: 'Inside Institutional Capture: 15,923 Vendors, 787B in Three Agencies',
-    sub: 'IMSS · CFE · PEMEX · P6 pattern at Mexico\'s largest institutions',
+    headline: 'Inside Institutional Capture: 15,923 Vendors, 787B in Five Agencies',
+    sub: 'IMSS · CFE · PEMEX · SCT · CONAGUA · P6 pattern at Mexico\'s largest institutions',
     type: 'monopoly',
     status: 'auditado',
     amount: 787,
@@ -189,7 +189,7 @@ const INVESTIGATIONS: Investigation[] = [
     headline: '2020: The Year Competition Stopped',
     headline_es: '2020: El Año en que la Competencia se Detuvo',
     sub: '87% direct-award rate · COVID decree · HEMOSER MX$17.2B same-day awards',
-    sub_es: '87% adjudicación directa · decreto COVID · HEMOSER MX$17,200 MDP en mismo día',
+    sub_es: '87% adjudicación directa · decreto COVID · HEMOSER 17,200 MDP en mismo día',
     type: 'procurement_fraud',
     status: 'reporteado',
     amount: 17.2,
@@ -817,11 +817,9 @@ export default function Journalists() {
     return dossier.filter((i) => lensFilteredSlugs.has(i.slug))
   }, [dossier, lensFilteredSlugs])
 
-  const updatedDate = new Date().toLocaleDateString(isEs ? 'es-MX' : 'en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  // Data horizon frozen at Sep 28 2025 (upstream CompraNet abolished) — show the data
+  // freeze, never new Date() (which would falsely imply a live daily refresh). Day-13.
+  const updatedLabel = isEs ? 'Datos hasta sep 2025' : 'Data through Sep 2025'
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
@@ -843,7 +841,7 @@ export default function Journalists() {
               {t('masthead.desk', { defaultValue: 'Investigations Desk' })}
             </span>
             <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums">
-              {t('masthead.updated', { defaultValue: 'Updated' })} {updatedDate}
+              {updatedLabel}
             </span>
           </div>
 
@@ -1084,8 +1082,8 @@ export default function Journalists() {
             </span>
             {' — '}
             {isEs
-              ? 'una constelación viva de 1,200 clusters de proveedores.'
-              : 'a living constellation of 1,200 vendor clusters.'}
+              ? 'un mapa vivo de cúmulos de proveedores por escala y riesgo.'
+              : 'a live scatter of vendor clusters by scale and risk indicator.'}
           </p>
           <Link
             to="/atlas"
