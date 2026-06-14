@@ -190,10 +190,16 @@ on rename — only user-visible strings change.
 
 Page: `frontend/src/pages/Atlas.tsx` · Stories data: `frontend/src/lib/atlas-stories.ts`
 
-The Observatory is a full-viewport constellation of 1,200 dots with four
-lenses (PATTERNS / SECTORS / CATEGORIES / TERMS) and a year scrubber
-2008–2025. Critical-risk dots cluster around mode-specific attractors via
-weighted Halton draw; nearest-neighbor edges connect them.
+The Atlas is a full-viewport **per-lens scatter** — "Atlas of Federal
+Contracting": bubbles positioned by scale (vendor count, log-x) × high-risk
+rate (y), sized by Tier-1 vendors, with four lenses (PATTERNS / SECTORS /
+CATEGORIES / TERMS). Click a bubble → fly in: L1 shows that cohort's top-30
+vendors → L2 click opens the docked "El Expediente" `VendorFile.tsx` panel.
+The single view is fixed at the latest year (no scrubber); the **year
+scrubber 2008–2025 only mounts in Compare mode** (the bottom scrubber was
+removed from the single view in M-OBS Phase 1). The old V5 "1,200-dot Halton
+lattice with nearest-neighbor edges" was superseded by this scatter
+(`ObservatoryScatter.tsx`).
 
 V6 (2026-04-28): brief tours replaced by **multi-chapter narratives**:
 - **The Pharmaceutical Cartel** (6 ch · ~55s)
