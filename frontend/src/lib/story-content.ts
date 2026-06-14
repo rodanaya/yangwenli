@@ -4045,7 +4045,8 @@ export const STORIES: StoryDef[] = [
                 label: 'Infraestructura',
                 value: 179.5,
                 color: '#ea580c',
-                highlight: true,
+                annotation: '2.7× the average channel',
+                annotation_es: '2.7× el canal promedio',
               },
               {
                 label: 'Energía',
@@ -4084,10 +4085,16 @@ export const STORIES: StoryDef[] = [
               },
             ],
             unit: 'B MXN',
+            referenceLine: {
+              value: 65.85,
+              label: 'avg channel · 65.8B',
+              label_es: 'canal promedio · 65.8B',
+              color: 'var(--color-text-secondary)',
+            },
             annotation:
-              'Mechanistically: contract won by intermediary, work subcontracted, fee extracted. 526.8B total.',
+              'Mechanistically: contract won by intermediary, work subcontracted, fee extracted. Top 3 channels (infra · energy · health) = 79% of the 526.8B P3 total; dashed line marks the 65.8B average channel.',
             annotation_es:
-              'Mecánica: el intermediario gana el contrato, subcontrata el trabajo, extrae la comisión. 526.8 mil millones en total.',
+              'Mecánica: el intermediario gana el contrato, subcontrata el trabajo, extrae la comisión. Los 3 canales mayores (infra · energía · salud) = 79% del total P3 de 526.8 mil millones; la línea punteada marca el canal promedio de 65.8 mil millones.',
           },
         },
         pullquote: {
