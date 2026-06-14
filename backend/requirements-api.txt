@@ -26,5 +26,11 @@ python-jose[cryptography]>=3.3.0  # JWT encode/decode
 bcrypt>=4.0.0                     # Password hashing (direct, avoids passlib compat issues)
 email-validator>=2.0.0            # Required by pydantic EmailStr
 
+# Data export — Excel (.xlsx). /export/contracts/excel imports openpyxl at
+# request time; without it the endpoint 501s. It is in requirements.txt /
+# requirements-scripts.txt, but the API image installs ONLY this slim file,
+# so it must be listed here too.
+openpyxl>=3.1.0
+
 # Error monitoring (optional — no-op when SENTRY_DSN env var is not set)
 sentry-sdk[fastapi]==2.22.0
