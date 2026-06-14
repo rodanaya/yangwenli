@@ -1206,16 +1206,31 @@ export function InlineDivergingBar({
   // Wider label gutter — was 148, truncating "P6 Capture — institution_diversity"
   // at 18 chars. The new gutter + ~40-char allowance covers every SHAP feature
   // label in volatilidad ch3/ch5 without breaking the centered layout.
-  const LABEL_W = 240
+  const LABEL_W = 264
   const ROW_GAP = 6
   const HALF_W = 180
   const VALUE_PAD = 36
   const LABEL_MAX_CHARS = 40
   const W = LABEL_W + HALF_W * 2 + VALUE_PAD * 2
-  const H = pts.length * (BAR_HEIGHT + ROW_GAP) + 28
+  const ANNO_H = 13
   const centerX = LABEL_W + HALF_W
   const labelFor = (p: StoryChartPoint) =>
     lang === 'es' ? (p.label_es ?? p.label) : p.label
+  const annoFor = (p: StoryChartPoint) =>
+    lang === 'es' ? (p.annotation_es ?? p.annotation) : p.annotation
+
+  // Per-row layout with cumulative y so annotated rows get a sub-caption line.
+  // (2026-06-14: InlineDivergingBar previously dropped point.annotation entirely —
+  // surfacing it puts the in-place delta callout on the chart, the Five-Administrations
+  // standard, not just in the footer.)
+  let yCursor = 4
+  const rowLayout = pts.map((p) => {
+    const top = yCursor
+    const anno = annoFor(p)
+    yCursor += BAR_HEIGHT + (anno ? ANNO_H : 0) + ROW_GAP
+    return { top, anno }
+  })
+  const H = yCursor + 24
 
   const absMax = Math.max(...pts.map((p) => Math.abs(p.value)), 0.01)
   const maxAbsPt = pts.reduce((a, b) => (Math.abs(a.value) > Math.abs(b.value) ? a : b), pts[0])
@@ -1261,7 +1276,7 @@ export function InlineDivergingBar({
         </text>
 
         {pts.map((pt, i) => {
-          const y = i * (BAR_HEIGHT + ROW_GAP) + 4
+          const y = rowLayout[i].top
           const barW = (Math.abs(pt.value) / absMax) * HALF_W
           const isPos = pt.value >= 0
           // Per-row color override honored only when it resolves against
@@ -1281,8 +1296,10 @@ export function InlineDivergingBar({
 
           return (
             <g key={i}>
+              {/* Label lives in the left gutter (right-anchored at LABEL_W) so
+                  negative bars, which extend left of center, never overlap it. */}
               <text
-                x={centerX - 6}
+                x={LABEL_W - 10}
                 y={y + BAR_HEIGHT / 2 + 1}
                 textAnchor="end"
                 dominantBaseline="middle"
@@ -1316,6 +1333,20 @@ export function InlineDivergingBar({
               >
                 {pt.value > 0 ? '+' : ''}{pt.value.toFixed ? pt.value.toFixed(4) : pt.value}
               </text>
+
+              {rowLayout[i].anno && (
+                <text
+                  x={isPos ? centerX + 4 : centerX - 4}
+                  y={y + BAR_HEIGHT + 10}
+                  textAnchor={isPos ? 'start' : 'end'}
+                  fontSize={9}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill={color}
+                  opacity={0.92}
+                >
+                  {rowLayout[i].anno}
+                </text>
+              )}
             </g>
           )
         })}

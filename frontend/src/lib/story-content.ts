@@ -4900,7 +4900,7 @@ export const STORIES: StoryDef[] = [
                 label_es: 'Volatilidad de precios',
                 value: 0.558,
                 highlight: true,
-                annotation: '+43% vs siguiente',
+                annotation: '+43% vs next',
                 annotation_es: '+43% vs siguiente',
               },
               {
@@ -4953,7 +4953,7 @@ export const STORIES: StoryDef[] = [
                 label_es: 'Diversidad institucional',
                 value: -0.388,
                 color: '#3b82f6',
-                annotation: 'única protectora',
+                annotation: 'only protective',
                 annotation_es: 'única protectora',
               },
             ],
@@ -5048,6 +5048,8 @@ export const STORIES: StoryDef[] = [
                 label_es: 'P2 Fantasma — volatilidad precios',
                 value: 0.82,
                 highlight: true,
+                annotation: 'ghost signature · 5–10× price jumps',
+                annotation_es: 'firma fantasma · saltos de 5–10×',
               },
               {
                 label: 'P2 Ghost — institution_diversity',
@@ -5074,6 +5076,9 @@ export const STORIES: StoryDef[] = [
                 label: 'P6 Capture — vendor_concentration',
                 label_es: 'P6 Captura — concentración proveedor',
                 value: 0.71,
+                highlight: true,
+                annotation: 'capture signature · one buyer',
+                annotation_es: 'firma de captura · un solo comprador',
               },
               {
                 label: 'Legit — price_volatility',
