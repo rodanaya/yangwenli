@@ -65,8 +65,6 @@ import esRedThread from './locales/es/redThread.json'
 import enRedThread from './locales/en/redThread.json'
 import esProcurementCalendar from './locales/es/procurementCalendar.json'
 import enProcurementCalendar from './locales/en/procurementCalendar.json'
-import esInstitutionScorecards from './locales/es/institutionScorecards.json'
-import enInstitutionScorecards from './locales/en/institutionScorecards.json'
 import esAuth from './locales/es/auth.json'
 import enAuth from './locales/en/auth.json'
 import esStoryCharts from './locales/es/storyCharts.json'
@@ -99,7 +97,6 @@ i18n
         categories: esCategories,
         redThread: esRedThread,
         procurementCalendar: esProcurementCalendar,
-        institutionScorecards: esInstitutionScorecards,
         auth: esAuth,
         storyCharts: esStoryCharts,
       },
@@ -125,7 +122,6 @@ i18n
         categories: enCategories,
         redThread: enRedThread,
         procurementCalendar: enProcurementCalendar,
-        institutionScorecards: enInstitutionScorecards,
         auth: enAuth,
         storyCharts: enStoryCharts,
       },

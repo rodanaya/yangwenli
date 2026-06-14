@@ -440,8 +440,8 @@ function App() {
               <Route path="year-in-review" element={<Navigate to="/" replace />} />
               <Route path="year-in-review/:year" element={<Navigate to="/" replace />} />
               <Route path="institutions/health" element={<Navigate to="/institutions" replace />} />
-              <Route path="institutions/scorecards" element={<Navigate to="/institutions?tab=fichas" replace />} />
-              <Route path="institutions/fichas" element={<Navigate to="/institutions?tab=fichas" replace />} />
+              <Route path="institutions/scorecards" element={<Navigate to="/institutions" replace />} />
+              <Route path="institutions/fichas" element={<Navigate to="/institutions" replace />} />
               <Route path="price-intelligence" element={<Navigate to="/price-analysis" replace />} />
               <Route path="model-transparency" element={<Navigate to="/model" replace />} />
               {/* v1.0 launch cut — PriceIntelligence is fully built but
@@ -579,7 +579,7 @@ function App() {
 
               <Route
                 path="scorecards"
-                element={<Navigate to="/institutions?tab=fichas" replace />}
+                element={<Navigate to="/institutions" replace />}
               />
 
               {/* Redirects from old routes */}

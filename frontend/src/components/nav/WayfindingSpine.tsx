@@ -47,7 +47,11 @@ export function WayfindingSpine({
   className?: string
 }) {
   const backTo = origin?.route ?? nav.backTo
-  const backText = `${lang === 'es' ? 'Volver a' : 'Back to'} ${origin?.label ?? nav.backLabel}`
+  const backLabelRaw = origin?.label ?? nav.backLabel
+  // Spanish a+el contraction so "Volver a el ranking" reads "Volver al ranking"
+  // (entity labels like "Salud" are unaffected — the regex only fires on "a el ").
+  const esBack = `a ${backLabelRaw}`.replace(/^a el\s/i, 'al ')
+  const backText = lang === 'es' ? `Volver ${esBack}` : `Back to ${backLabelRaw}`
   const prevLabel = lang === 'es' ? 'Anterior' : 'Previous'
   const nextLabel = lang === 'es' ? 'Siguiente' : 'Next'
   const openIndexHint =

@@ -39,6 +39,37 @@ const TOC_ANCHORS: Array<{ id: string; en: string; es: string; numeral?: string 
   { id: 'methodology', en: 'Methodology', es: 'Metodología' },
 ]
 
+// institution_type is a machine enum from the DB (e.g. "state_enterprise_infra").
+// Render a localized label rather than the raw snake_case string; unknown values
+// fall back to a title-cased, de-underscored form.
+const INSTITUTION_TYPE_LABELS: Record<string, [es: string, en: string]> = {
+  municipal: ['Municipal', 'Municipal'],
+  state_agency: ['Organismo estatal', 'State agency'],
+  educational: ['Educativa', 'Educational'],
+  other: ['Otro', 'Other'],
+  federal_secretariat: ['Secretaría federal', 'Federal secretariat'],
+  health_institution: ['Institución de salud', 'Health institution'],
+  federal_agency: ['Organismo federal', 'Federal agency'],
+  state_enterprise_infra: ['Empresa estatal · infraestructura', 'State enterprise · infrastructure'],
+  social_program: ['Programa social', 'Social program'],
+  judicial: ['Judicial', 'Judicial'],
+  state_government: ['Gobierno estatal', 'State government'],
+  research_education: ['Investigación y educación', 'Research & education'],
+  state_enterprise_energy: ['Empresa productiva · energía', 'State enterprise · energy'],
+  state_enterprise_finance: ['Empresa estatal · finanzas', 'State enterprise · finance'],
+  autonomous_constitutional: ['Autónomo constitucional', 'Autonomous constitutional'],
+  social_security: ['Seguridad social', 'Social security'],
+  regulatory_agency: ['Organismo regulador', 'Regulatory agency'],
+  legislative: ['Legislativo', 'Legislative'],
+  military: ['Militar', 'Military'],
+}
+
+function institutionTypeLabel(type: string, lang: string): string {
+  const entry = INSTITUTION_TYPE_LABELS[type]
+  if (entry) return lang === 'es' ? entry[0] : entry[1]
+  return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 interface InstitutionHeroProps {
   institution: InstitutionDetailResponse
   actions?: ReactNode
@@ -380,7 +411,7 @@ function InstitutionMetaRule({
 
   const tags: string[] = []
   if (sectorName) tags.push(sectorName)
-  if (institution.institution_type) tags.push(institution.institution_type)
+  if (institution.institution_type) tags.push(institutionTypeLabel(institution.institution_type, lang))
   if (institution.vendor_count) {
     tags.push(
       lang === 'es'

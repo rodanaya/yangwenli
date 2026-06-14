@@ -45,7 +45,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, getSectorName } from '@/lib/constants'
 import {
   INSTITUTION_PILLARS,
   INSTITUTION_PILLAR_LETTERS,
@@ -74,7 +74,15 @@ function getSectorColorFromName(sectorName: string | null | undefined): string {
   return SECTOR_COLORS[code] ?? SECTOR_COLORS.otros
 }
 
-const InstitutionScorecards = lazy(() => import('./InstitutionScorecards'))
+// The scorecards API returns the localized ES `sector_name` (name_es). Resolve
+// it back to a sector code so we can render the locale-correct label via
+// getSectorName(code, lang) — never the raw Spanish string on the EN locale.
+function localizedSectorName(sectorName: string | null | undefined, lang: string): string {
+  if (!sectorName) return ''
+  const code = SECTOR_NAME_TO_CODE[sectorName.toLowerCase()] ?? 'otros'
+  return getSectorName(code, lang === 'es' ? 'es' : 'en')
+}
+
 const ReportCard = lazy(() => import('./ReportCard'))
 
 // ---------------------------------------------------------------------------
@@ -137,7 +145,7 @@ type SortKey =
   | 'pillar_process'
   | 'pillar_external'
 
-// 5-tier color system imported from lib/tiers (shared with InstitutionScorecards).
+// 5-tier color system imported from lib/tiers (shared across institution surfaces).
 // Local TierInfo extends TierStyle with the i18n label resolved at consumption time.
 interface TierInfo extends TierStyle {
   label: string
@@ -220,6 +228,11 @@ function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
 // ---------------------------------------------------------------------------
 
 function RiskDriverPill({ driver }: { driver: string }) {
+  const { i18n } = useTranslation('institutionleague')
+  // top_risk_driver arrives as the canonical ES pillar label (compute_scorecards.py).
+  // Resolve it to the SoT pillar so EN renders the English label, not Spanish.
+  const pillar = INSTITUTION_PILLARS.find((p) => p.label_es === driver)
+  const label = pillar ? pillarLabel(pillar, i18n.language) : driver
   return (
     <span
       className="inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-mono uppercase tracking-wide mt-0.5"
@@ -233,84 +246,8 @@ function RiskDriverPill({ driver }: { driver: string }) {
         className="h-1 w-1 rounded-full flex-shrink-0"
         style={{ backgroundColor: 'var(--color-risk-critical)' }}
       />
-      {driver}
+      {label}
     </span>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Tier distribution bar (5-tier stacked bar)
-// ---------------------------------------------------------------------------
-
-function TierDistributionBar({ distribution }: { distribution: Record<string, number> }) {
-  const { t } = useTranslation('institutionleague')
-  const getTier = useTierByKey()
-
-  const tiers = useMemo(() => {
-    return TIER_NAMES.map((key) => {
-      const grades = TIER_GRADE_MAP[key]
-      const count = grades.reduce((sum, g) => sum + (distribution[g] ?? 0), 0)
-      return { tier: getTier(key), count }
-    })
-  }, [distribution, getTier])
-
-  const total = tiers.reduce((s, t) => s + t.count, 0)
-  if (total === 0) return null
-
-  const ariaLabel = t('distribution.ariaLabel')
-
-  return (
-    <div className="space-y-3">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('distribution.title')}
-      </p>
-      {/* Stacked dot-matrix */}
-      {(() => {
-        const N = 60, DR = 3, DG = 8
-        const segments: Array<{ count: number; color: string; label: string }> = tiers
-          .filter((tier) => (tier.count / total) * 100 >= 0.3)
-          .map(({ tier, count }) => ({ count, color: tier.color, label: tier.label }))
-        const cells: { color: string; label: string }[] = []
-        // Distribute dots proportionally across segments
-        segments.forEach((seg) => {
-          const segDots = Math.max(1, Math.round((seg.count / total) * N))
-          for (let k = 0; k < segDots && cells.length < N; k++) {
-            cells.push({ color: seg.color, label: seg.label })
-          }
-        })
-        // Fill remaining with last segment color
-        while (cells.length < N && cells.length > 0) {
-          cells.push(cells[cells.length - 1])
-        }
-        return (
-          <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10}
-            role="img" aria-label={ariaLabel}>
-            {cells.map((c, k) => (
-              <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                fill={c.color}
-                fillOpacity={0.9}
-              >
-                <title>{c.label}</title>
-              </circle>
-            ))}
-          </svg>
-        )
-      })()}
-      {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        {tiers.filter(t => t.count > 0).map(({ tier, count }) => {
-          const pct = ((count / total) * 100).toFixed(1)
-          return (
-            <span key={tier.key} className="flex items-center gap-1.5 text-[10px] text-text-secondary">
-              <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tier.color }} />
-              <span className="font-mono font-bold" style={{ color: tier.color }}>{tier.label}</span>
-              <span className="font-mono tabular-nums text-text-muted">{count}</span>
-              <span className="font-mono tabular-nums text-text-muted">({pct}%)</span>
-            </span>
-          )
-        })}
-      </div>
-    </div>
   )
 }
 
@@ -390,7 +327,8 @@ function RedFlagCard({
   item: InstitutionScorecardItem
   onNavigate: (id: number) => void
 }) {
-  const { t } = useTranslation('institutionleague')
+  const { t, i18n } = useTranslation('institutionleague')
+  const lang = i18n.language
   const getTier = useTierInfo()
   const tier = getTier(item.grade)
   const sectorColor = getSectorColorFromName(item.sector_name)
@@ -473,7 +411,7 @@ function RedFlagCard({
                   className="h-1 w-1 rounded-full flex-shrink-0"
                   style={{ backgroundColor: sectorColor }}
                 />
-                {item.sector_name}
+                {localizedSectorName(item.sector_name, lang)}
               </span>
             )}
             {item.top_risk_driver && (
@@ -1092,21 +1030,13 @@ export default function InstitutionLeague() {
     return ''
   }, [gradeFilter])
 
-  const activeTab = searchParams.get('tab') || 'ranking'
+  // Only 'ranking' and 'reporte' are valid tabs (the legacy 'fichas'/Scorecards
+  // tab was retired Day-11 — redundant with the Ranking row-expand). Any unknown
+  // tab value (e.g. a stale ?tab=fichas bookmark) normalizes to ranking so the
+  // TabBar always reflects a valid tab.
+  const tabParam = searchParams.get('tab') || ''
+  const activeTab = ['ranking', 'reporte'].includes(tabParam) ? tabParam : 'ranking'
   const setTab = (tab: string) => updateParams({ tab, page: undefined })
-
-  if (activeTab === 'fichas') {
-    return (
-      <div className="min-h-screen bg-background text-text-primary">
-        <TabBar activeTab={activeTab} setTab={setTab} />
-        <ErrorBoundary fallback={null}>
-          <Suspense fallback={<div className="flex items-center justify-center h-64 text-text-muted text-sm">{t('loadingShort')}</div>}>
-            <InstitutionScorecards />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-    )
-  }
 
   if (activeTab === 'reporte') {
     return (
@@ -1524,7 +1454,7 @@ export default function InstitutionLeague() {
                     className="h-1.5 w-1.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: color }}
                   />
-                  {s.label}
+                  {getSectorName(s.value, lang === 'es' ? 'es' : 'en')}
                 </button>
               )
             })}
@@ -1716,7 +1646,7 @@ export default function InstitutionLeague() {
                               aria-hidden="true"
                               className="h-2 w-2 rounded-full flex-shrink-0"
                               style={{ backgroundColor: getSectorColorFromName(item.sector_name) }}
-                              title={item.sector_name ?? ''}
+                              title={localizedSectorName(item.sector_name, lang)}
                             />
                             <span
                               className="text-[13px] text-text-secondary group-hover:text-text-primary transition-colors font-medium truncate"
@@ -1726,7 +1656,7 @@ export default function InstitutionLeague() {
                             </span>
                             {item.sector_name && (
                               <span className="text-text-muted text-[9px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">
-                                · {item.sector_name}
+                                · {localizedSectorName(item.sector_name, lang)}
                               </span>
                             )}
                             {item.top_risk_driver && (
@@ -1896,13 +1826,6 @@ export default function InstitutionLeague() {
 
         {methodologyOpen && (
           <div className="space-y-6 mt-5">
-            {/* Tier distribution dot strip */}
-            {statsData?.grade_distribution && (
-              <div className="bg-background border border-border rounded-sm px-5 py-4">
-                <TierDistributionBar distribution={statsData.grade_distribution} />
-              </div>
-            )}
-
             {/* Score Distribution Histogram */}
             {statsData?.grade_distribution && (
               <ScoreHistogram
@@ -1927,14 +1850,13 @@ export default function InstitutionLeague() {
 }
 
 // ---------------------------------------------------------------------------
-// Tab bar — shared between ranking/fichas/reporte views
+// Tab bar — shared between ranking/reporte views
 // ---------------------------------------------------------------------------
 
 function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string) => void }) {
   const { t } = useTranslation('institutionleague')
   const tabs = [
     { id: 'ranking', label: t('tabs.ranking') },
-    { id: 'fichas',  label: t('tabs.fichas') },
     { id: 'reporte', label: t('tabs.reporte') },
   ]
   return (

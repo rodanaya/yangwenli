@@ -5,7 +5,7 @@
   "oecdContextTitle": "CONTEXTO OCDE",
   "oecdDALabel": "Tasa de adjudicación directa",
   "oecdDABenchmark": "Recomendación OCDE: máximo 25%",
-  "oecdMexicoDA": "México: {{pct}}%",
+  "oecdMexicoDA": "México: {{pct}}% por valor",
   "oecdSBLabel": "Tasa de oferente único",
   "oecdSBBenchmark": "Recomendación OCDE: máximo 15%",
   "oecdMexicoSB": "México: {{pct}}%",
@@ -51,7 +51,19 @@
   "riskLevelMedium": "Medio",
   "riskLevelLow": "Bajo",
   "viewFullMethodology": "Ver metodología completa →",
+  "heroKicker": "Salud del Sistema · Índice Nacional de Integridad",
+  "heroIntro": "Este índice mide la salud del sistema de compras federales de México — no instituciones individuales.",
+  "findingKicker": "Hallazgo",
+  "sectorBreakdownKicker": "Desglose por Sector",
+  "statContractsAnalyzed": "Contratos analizados",
+  "statCriticalContracts": "Contratos de riesgo crítico",
+  "statHighRiskRate": "Tasa de alto riesgo",
+  "statOecdMax15": "(OCDE: máx. 15%)",
+  "statSectorsGraded": "Sectores calificados",
+  "distByCount": "Por número de contratos",
+  "distByValue": "Por valor de contrato",
+  "impactSummaryAria": "Resumen de impacto de salud de compras",
   "gradeMethodology": {
-    "body": "Calificación basada en 5 dimensiones: tasa de adjudicación directa, concentración de proveedores, tasa de riesgo crítico, indicadores de fraccionamiento, y cobertura de datos. OCDE recomienda <25% adjudicaciones directas — México promedió 79.4%."
+    "body": "Calificación basada en 5 dimensiones: tasa de adjudicación directa, concentración de proveedores, tasa de riesgo crítico, indicadores de fraccionamiento, y cobertura de datos. OCDE recomienda <25% adjudicaciones directas — México promedió 79.4% por número de procedimientos (menor por valor de contrato — ver contexto OCDE)."
   }
 }

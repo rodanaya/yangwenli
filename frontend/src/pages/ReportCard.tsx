@@ -14,7 +14,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { phiApi, analysisApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, RISK_COLORS, getSectorName } from '@/lib/constants'
 import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
@@ -170,21 +170,8 @@ function SemaforoIndicator({ active }: { active: 'verde' | 'amarillo' | 'rojo' }
 
 
 
-// Sector display names (ES)
-const SECTOR_NAME_ES: Record<string, string> = {
-  salud: 'Salud',
-  educacion: 'Educacion',
-  infraestructura: 'Infraestructura',
-  energia: 'Energia',
-  defensa: 'Defensa',
-  tecnologia: 'Tecnologia',
-  hacienda: 'Hacienda',
-  gobernacion: 'Gobernacion',
-  agricultura: 'Agricultura',
-  ambiente: 'Ambiente',
-  trabajo: 'Trabajo',
-  otros: 'Otros',
-}
+// Sector display names resolve through the canonical getSectorName(code, lang)
+// helper (accent-correct ES + real EN) — never a local accent-stripped map.
 
 // ---------------------------------------------------------------------------
 // Animation variants
@@ -233,6 +220,7 @@ function HeroImpactSection({
   national: PHINational
   totalValueMxn: number | null
 }) {
+  const { t } = useTranslation('reportcard')
   const dist = national.risk_distribution
 
   const valueMxn = totalValueMxn ?? national.total_value_mxn ?? null
@@ -256,10 +244,10 @@ function HeroImpactSection({
   // Routed through canonical RISK_COLORS (was 4 hex constants duplicating
   // the same map elsewhere in the codebase per Batch A critique).
   const barLevels: Array<{ key: keyof RiskDistribution; color: string; label: string }> = [
-    { key: 'critical', color: RISK_COLORS.critical, label: 'Critical' },
-    { key: 'high',     color: RISK_COLORS.high,     label: 'High'     },
-    { key: 'medium',   color: RISK_COLORS.medium,   label: 'Medium'   },
-    { key: 'low',      color: RISK_COLORS.low,      label: 'Low'      },
+    { key: 'critical', color: RISK_COLORS.critical, label: t('riskLevelCritical') },
+    { key: 'high',     color: RISK_COLORS.high,     label: t('riskLevelHigh')     },
+    { key: 'medium',   color: RISK_COLORS.medium,   label: t('riskLevelMedium')   },
+    { key: 'low',      color: RISK_COLORS.low,      label: t('riskLevelLow')      },
   ]
 
   return (
@@ -268,7 +256,7 @@ function HeroImpactSection({
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: 'easeOut' }}
-      aria-label="Procurement health impact summary"
+      aria-label={t('impactSummaryAria')}
       role="region"
     >
       {/* Stats row */}
@@ -279,7 +267,7 @@ function HeroImpactSection({
             {valueLabel}
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
-            Contracts analyzed
+            {t('statContractsAnalyzed')}
           </span>
         </div>
 
@@ -289,7 +277,7 @@ function HeroImpactSection({
             {criticalCountLabel}
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
-            Critical risk contracts
+            {t('statCriticalContracts')}
           </span>
         </div>
 
@@ -299,8 +287,8 @@ function HeroImpactSection({
             {highRiskRate}%
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
-            High-risk rate
-            <span className="text-oecd ml-1">(OECD: max 15%)</span>
+            {t('statHighRiskRate')}
+            <span className="text-oecd ml-1">{t('statOecdMax15')}</span>
           </span>
         </div>
 
@@ -310,7 +298,7 @@ function HeroImpactSection({
             12
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
-            Sectors graded
+            {t('statSectorsGraded')}
           </span>
         </div>
       </div>
@@ -318,6 +306,9 @@ function HeroImpactSection({
       {/* Risk dot-matrix distribution */}
       {dist && totalPct > 0 && (
         <div className="px-6 pb-5 pt-1 border-t border-border">
+          <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
+            {t('distByCount')}
+          </p>
           {(() => {
             const N = 50, DR = 3, DG = 8
             const segs = barLevels
@@ -335,7 +326,7 @@ function HeroImpactSection({
             }
             return (
               <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10}
-                role="img" aria-label="Risk level distribution across all contracts">
+                role="img" aria-label={t('distByCount')}>
                 {cells.map((c, k) => (
                   <circle key={k} cx={k * DG + DR} cy={5} r={DR} fill={c.color} fillOpacity={0.9}>
                     <title>{c.label}</title>
@@ -415,25 +406,41 @@ function HeroSection({
             <SemaforoIndicator active={mx.semaforo} />
             <div className="flex flex-col items-center">
               {/* Extra-large numeric score — national index hero */}
-              <div className="flex items-baseline gap-1">
-                {/* Glow pulse honors prefers-reduced-motion — was an infinite
-                    textShadow loop ignoring the OS setting per Batch A critique. */}
-                <motion.span
-                  className="leading-none font-black font-mono tabular-nums text-[5rem] sm:text-[7.5rem] motion-safe:[animation:reportcard-glow_3.2s_ease-in-out_infinite]"
-                  style={{
-                    color: mx.color,
-                    textShadow: `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
-                  }}
-                  aria-label={`${Math.round(score)} de 100`}
-                >
-                  {Math.round(score)}
-                </motion.span>
-                <span
-                  className="text-3xl font-bold font-mono"
-                  style={{ color: mx.color, opacity: 0.5 }}
-                >
-                  /100
-                </span>
+              {/* Score donut — progress ring + Playfair Italic numeral, per the
+                  folio "Headline Numbers" rule (was a font-black/font-mono number
+                  with an infinite glow loop). The arc fills to score/100. */}
+              <div className="relative flex items-center justify-center" style={{ width: 180, height: 180 }}>
+                <svg viewBox="0 0 100 100" width={180} height={180} className="absolute inset-0 -rotate-90" aria-hidden="true">
+                  <circle cx={50} cy={50} r={44} fill="none" stroke="var(--color-border)" strokeWidth={5} />
+                  <circle
+                    cx={50}
+                    cy={50}
+                    r={44}
+                    fill="none"
+                    stroke={mx.color}
+                    strokeWidth={5}
+                    strokeLinecap="round"
+                    strokeDasharray={`${(Math.min(100, Math.max(0, Math.round(score))) / 100) * (2 * Math.PI * 44)} ${2 * Math.PI * 44}`}
+                  />
+                </svg>
+                <div className="flex flex-col items-center leading-none">
+                  <span
+                    className="tabular-nums"
+                    style={{
+                      fontFamily: '"Playfair Display", Georgia, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontSize: '3.6rem',
+                      color: mx.color,
+                    }}
+                    aria-label={`${Math.round(score)}/100`}
+                  >
+                    {Math.round(score)}
+                  </span>
+                  <span className="text-xs font-mono font-bold mt-0.5" style={{ color: mx.color, opacity: 0.5 }}>
+                    /100
+                  </span>
+                </div>
               </div>
               {/* Colored label badge */}
               <span
@@ -526,7 +533,7 @@ function OECDContextPanel({ national }: { national: PHINational }) {
           <div className="flex items-start gap-3">
             <span
               className="block w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-              style={{ backgroundColor: '#22d3ee' }}
+              style={{ backgroundColor: 'var(--color-oecd)' }}
             />
             <div>
               <p className="text-xs text-text-secondary">{t('oecdDALabel')}</p>
@@ -544,7 +551,7 @@ function OECDContextPanel({ national }: { national: PHINational }) {
           <div className="flex items-start gap-3">
             <span
               className="block w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-              style={{ backgroundColor: '#22d3ee' }}
+              style={{ backgroundColor: 'var(--color-oecd)' }}
             />
             <div>
               <p className="text-xs text-text-secondary">{t('oecdSBLabel')}</p>
@@ -593,6 +600,9 @@ function RiskBar({ dist }: { dist: RiskDistribution }) {
 
   return (
     <div>
+      <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
+        {t('distByValue')}
+      </p>
       {(() => {
         const N = 40, DR = 2.5, DG = 6
         const segs = levels
@@ -614,7 +624,7 @@ function RiskBar({ dist }: { dist: RiskDistribution }) {
         }
         return (
           <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8}
-            role="img" aria-label="Risk distribution by contract value">
+            role="img" aria-label={t('distByValue')}>
             {cells.map((c, k) => (
               <circle key={k} cx={k * DG + DR} cy={4} r={DR} fill={c.color} fillOpacity={0.9}>
                 <title>{c.label}</title>
@@ -678,7 +688,7 @@ function KeyMetrics({
       title: valueTrillions !== null ? t('metricValueTitle', { value: valueTrillions }) : '--',
       subtitle: t('metricValueSubtitle'),
       note: t('metricValueNote', { contracts: contractsFormatted ?? '3.1M' }),
-      accent: '#22d3ee',
+      accent: 'var(--color-oecd)',
     },
     {
       id: 'cases',
@@ -752,7 +762,7 @@ function WhatThisMeans({
       </h2>
       <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-3">
-          HALLAZGO
+          {t('findingKicker')}
         </p>
         <ul className="space-y-3" role="list">
           {bullets.map((bullet, i) => (
@@ -819,9 +829,7 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
           {sorted.map((sector, idx) => {
             const sectorMeta = SECTORS.find((s) => s.id === sector.sector_id)
             const color = SECTOR_COLORS[sector.sector_name] ?? sectorMeta?.color ?? SECTOR_COLORS.otros
-            const displayName = isES
-              ? (SECTOR_NAME_ES[sector.sector_name] ?? sector.sector_name)
-              : (sectorMeta?.name ?? sector.sector_name)
+            const displayName = getSectorName(sector.sector_name, isES ? 'es' : 'en')
 
             const critPct = sector.risk_distribution?.critical?.count_pct ?? 0
             const highPct = sector.risk_distribution?.high?.count_pct ?? 0
@@ -1121,7 +1129,8 @@ function ErrorState() {
 // ---------------------------------------------------------------------------
 
 function ReportCard() {
-  const { t } = useTranslation('reportcard')
+  const { t, i18n } = useTranslation('reportcard')
+  const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
 
   // PHI data: national grade + sector breakdown
   const {
@@ -1169,10 +1178,7 @@ function ReportCard() {
       (b.risk_distribution?.high?.count_pct ?? 0)
     return bPct - aPct
   })
-  const worstSectorNames = sortedBySeverity.slice(0, 3).map((s) => {
-    const meta = SECTORS.find((m) => m.id === s.sector_id)
-    return SECTOR_NAME_ES[s.sector_name] ?? meta?.name ?? s.sector_name
-  })
+  const worstSectorNames = sortedBySeverity.slice(0, 3).map((s) => getSectorName(s.sector_name, lang))
 
   // High risk pct from PHI national risk_distribution or fast dashboard
   const highRiskPct: number | null = (() => {
@@ -1201,14 +1207,14 @@ function ReportCard() {
           <div className="flex items-center gap-2 mb-2">
             <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
             <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-risk-high">
-              Salud del Sistema · Índice Nacional de Integridad
+              {t('heroKicker')}
             </p>
           </div>
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-text-primary">
             {t('pageTitle')}
           </h1>
           <p className="text-sm mt-2 text-text-secondary max-w-2xl leading-relaxed">
-            Este índice mide la salud del sistema de compras federales de México — no instituciones individuales.
+            {t('heroIntro')}
           </p>
           <p className="text-[11px] mt-1 text-text-muted font-mono">
             {t('pageSubtitleV2')}
@@ -1228,7 +1234,7 @@ function ReportCard() {
           </div>
           <div className="relative flex justify-center">
             <span className="bg-background px-4 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-text-muted">
-              Desglose por Sector
+              {t('sectorBreakdownKicker')}
             </span>
           </div>
         </div>

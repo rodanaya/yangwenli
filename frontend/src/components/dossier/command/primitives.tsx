@@ -169,11 +169,17 @@ export interface TrendPoint {
  */
 export function RiskOverTimePanel({ trend, isEs }: { trend: TrendPoint[]; isEs: boolean }) {
   const peak = trend.reduce<TrendPoint | null>((mx, p) => (!mx || p.avg > mx.avg ? p : mx), null)
+  // `avg` arrives as a 0–1 risk fraction. The 'pct' axis formatter renders its
+  // value verbatim (no ×100), so on a [0,1] domain the ticks read "0.2%/1.0%"
+  // while the peak caption (Math.round(avg*100)) reads "22%" — a 100× mismatch.
+  // Scale into percentage units and use a [0,100] domain so axis, tooltip and
+  // caption agree; the line keeps the exact same relative height as before.
+  const scaled = trend.map((p) => ({ ...p, avg: p.avg * 100 }))
   return (
     <Panel label={isEs ? 'Riesgo en el tiempo' : 'Risk over time'} accent={RISK_COLORS.critical}>
       {trend.length > 1 ? (
         <>
-          <EditorialAreaChart data={trend} xKey="year" yKey="avg" colorToken="risk-critical" yFormat="pct" yDomain={[0, 1]} height={96} />
+          <EditorialAreaChart data={scaled} xKey="year" yKey="avg" colorToken="risk-critical" yFormat="pct" yDomain={[0, 100]} height={96} />
           {peak && (
             <p className="font-mono mt-2" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
               {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg * 100)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}
