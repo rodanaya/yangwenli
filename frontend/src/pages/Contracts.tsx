@@ -457,8 +457,16 @@ export function Contracts() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       toast.success('Export complete', `Downloaded ${Math.min(total, EXPORT_MAX_ROWS).toLocaleString()} contracts (Excel)`)
-    } catch {
-      toast.error('Export failed', 'Unable to export contracts')
+    } catch (err) {
+      // 501 = the server build lacks openpyxl (Excel optional dep). Degrade
+      // honestly to CSV rather than a generic failure; self-heals once the
+      // backend image carries openpyxl.
+      const status = (err as { response?: { status?: number } })?.response?.status
+      if (status === 501) {
+        toast.error('Excel unavailable', 'Excel export isn’t enabled on this server yet — use the CSV download instead.')
+      } else {
+        toast.error('Export failed', 'Unable to export contracts')
+      }
     } finally {
       setIsExportingExcel(false)
     }
