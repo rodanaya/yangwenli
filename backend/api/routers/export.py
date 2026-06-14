@@ -40,6 +40,20 @@ MAX_EXPORT_ROWS = 100_000
 
 router = APIRouter(prefix="/export", tags=["export"])
 
+# Risk factor → indexed column mapping (mirrors contract_service.py _RISK_FACTOR_COLUMN_MAP).
+# Keeping this in sync here avoids a cross-layer import while guaranteeing identical semantics.
+# When the service map changes, update both.
+_RISK_FACTOR_COLUMN_MAP = {
+    "direct_award": ("c.is_direct_award = ?", 1),
+    "single_bid": ("c.is_single_bid = ?", 1),
+    "year_end": ("c.is_year_end = ?", 1),
+    # NOTE: "price_hyp" intentionally NOT mapped. There is no
+    # `price_hypothesis_type` column — it is a token inside the
+    # `risk_factors` TEXT column (387K rows), so it falls through to the
+    # `risk_factors LIKE '%price_hyp%'` path below. The same phantom-column
+    # mapping was removed from contract_service.py to keep list/export parity.
+}
+
 
 def sanitize_csv_cell(value):
     """Sanitize a CSV cell to prevent formula injection.
@@ -82,6 +96,105 @@ def generate_csv(rows, columns):
     return output
 
 
+def build_contracts_where(
+    *,
+    sector_id: Optional[int],
+    year: Optional[int],
+    institution_id: Optional[int],
+    vendor_id: Optional[int],
+    risk_level: Optional[str],
+    is_direct_award: Optional[bool],
+    is_single_bid: Optional[bool],
+    min_amount: Optional[float],
+    max_amount: Optional[float],
+    category_id: Optional[int],
+    risk_factor: Optional[str],
+    search: Optional[str],
+) -> tuple[str, list]:
+    """Build a parameterized WHERE clause for contract queries.
+
+    Matches the filter semantics of ContractService.list_contracts exactly,
+    so export results are always consistent with what the list endpoint returns
+    for the same filter combination.
+
+    Returns (where_clause_string, params_list).  The caller appends additional
+    params (e.g. LIMIT value) after this list.
+
+    Search implementation note: uses bilateral LIKE (%term%) across c.title and
+    c.description, identical to QueryBuilder.filter_search.  This is
+    index-defeating on the full 3.1M-row table but consistent with the list
+    endpoint. The MAX_EXPORT_ROWS cap limits the blast radius.
+    """
+    conditions: list[str] = ["COALESCE(c.amount_mxn, 0) <= ?"]
+    params: list = [MAX_CONTRACT_VALUE]
+
+    if sector_id is not None:
+        conditions.append("c.sector_id = ?")
+        params.append(sector_id)
+
+    if year is not None:
+        conditions.append("c.contract_year = ?")
+        params.append(year)
+
+    if institution_id is not None:
+        conditions.append("c.institution_id = ?")
+        params.append(institution_id)
+
+    if vendor_id is not None:
+        conditions.append("c.vendor_id = ?")
+        params.append(vendor_id)
+
+    if risk_level is not None:
+        conditions.append("c.risk_level = ?")
+        params.append(risk_level.lower())
+
+    if is_direct_award is not None:
+        conditions.append("c.is_direct_award = ?")
+        params.append(1 if is_direct_award else 0)
+
+    if is_single_bid is not None:
+        conditions.append("c.is_single_bid = ?")
+        params.append(1 if is_single_bid else 0)
+
+    if min_amount is not None:
+        conditions.append("c.amount_mxn >= ?")
+        params.append(min_amount)
+
+    if max_amount is not None:
+        conditions.append("c.amount_mxn <= ?")
+        params.append(max_amount)
+
+    if category_id is not None:
+        conditions.append("c.category_id = ?")
+        params.append(category_id)
+
+    if risk_factor is not None:
+        mapped = _RISK_FACTOR_COLUMN_MAP.get(risk_factor)
+        if mapped:
+            clause, val = mapped
+            if val is not None:
+                conditions.append(clause)
+                params.append(val)
+            else:
+                conditions.append(clause)
+        else:
+            # Fallback: LIKE scan for dynamic factors (co_bid, network, split, etc.)
+            # Leading wildcard prevents index use — same trade-off as the list endpoint.
+            conditions.append("c.risk_factors LIKE ?")
+            params.append(f"%{risk_factor}%")
+
+    if search is not None:
+        # Escape LIKE special chars, mirror QueryBuilder.filter_search exactly.
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
+        conditions.append(
+            "(c.title LIKE ? ESCAPE '\\' OR c.description LIKE ? ESCAPE '\\')"
+        )
+        params.extend([pattern, pattern])
+
+    return " AND ".join(conditions), params
+
+
 @router.get("/contracts/csv")
 @rate_limit("10/minute")
 def export_contracts_csv(
@@ -95,12 +208,16 @@ def export_contracts_csv(
     is_single_bid: Optional[bool] = Query(None, description="Filter single-bid contracts"),
     min_amount: Optional[float] = Query(None, ge=0, description="Minimum contract amount"),
     max_amount: Optional[float] = Query(None, le=100_000_000_000, description="Maximum contract amount"),
+    category_id: Optional[int] = Query(None, description="Filter by spending category (partida) ID"),
+    risk_factor: Optional[str] = Query(None, description="Filter by risk factor (e.g., co_bid, price_hyp, direct_award)"),
+    search: Optional[str] = Query(None, min_length=3, description="Full-text search in title/description"),
     limit: int = Query(10000, ge=1, le=MAX_EXPORT_ROWS, description=f"Maximum rows to export (max {MAX_EXPORT_ROWS})"),
 ):
     """
     Export contracts as CSV file.
 
     Returns filtered contracts in CSV format for download.
+    Supports the same 13 filter facets as the contracts list endpoint.
     Maximum {MAX_EXPORT_ROWS} rows per export to prevent memory issues.
     """
     if max_amount is not None and max_amount > MAX_CONTRACT_VALUE:
@@ -113,47 +230,20 @@ def export_contracts_csv(
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Build WHERE clause
-            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
-            params = [MAX_CONTRACT_VALUE]
-
-            if sector_id is not None:
-                conditions.append("c.sector_id = ?")
-                params.append(sector_id)
-
-            if year is not None:
-                conditions.append("c.contract_year = ?")
-                params.append(year)
-
-            if institution_id is not None:
-                conditions.append("c.institution_id = ?")
-                params.append(institution_id)
-
-            if vendor_id is not None:
-                conditions.append("c.vendor_id = ?")
-                params.append(vendor_id)
-
-            if risk_level is not None:
-                conditions.append("c.risk_level = ?")
-                params.append(risk_level.lower())
-
-            if is_direct_award is not None:
-                conditions.append("c.is_direct_award = ?")
-                params.append(1 if is_direct_award else 0)
-
-            if is_single_bid is not None:
-                conditions.append("c.is_single_bid = ?")
-                params.append(1 if is_single_bid else 0)
-
-            if min_amount is not None:
-                conditions.append("c.amount_mxn >= ?")
-                params.append(min_amount)
-
-            if max_amount is not None:
-                conditions.append("c.amount_mxn <= ?")
-                params.append(max_amount)
-
-            where_clause = " AND ".join(conditions)
+            where_clause, params = build_contracts_where(
+                sector_id=sector_id,
+                year=year,
+                institution_id=institution_id,
+                vendor_id=vendor_id,
+                risk_level=risk_level,
+                is_direct_award=is_direct_award,
+                is_single_bid=is_single_bid,
+                min_amount=min_amount,
+                max_amount=max_amount,
+                category_id=category_id,
+                risk_factor=risk_factor,
+                search=search,
+            )
 
             query = f"""
                 SELECT
@@ -180,6 +270,7 @@ def export_contracts_csv(
                     c.contract_type,
                     c.is_direct_award,
                     c.is_single_bid,
+                    c.category_id,
                     c.risk_score,
                     c.risk_level,
                     c.risk_factors
@@ -203,7 +294,8 @@ def export_contracts_csv(
                 "institution_id", "institution_name", "institution_type",
                 "procedure_type", "contract_type",
                 "is_direct_award", "is_single_bid",
-                "risk_score", "risk_level", "risk_factors"
+                "category_id",
+                "risk_score", "risk_level", "risk_factors",
             ]
 
             # Convert rows to list format
@@ -217,6 +309,8 @@ def export_contracts_csv(
                 filters_str += f"_sector{sector_id}"
             if year:
                 filters_str += f"_year{year}"
+            if category_id:
+                filters_str += f"_cat{category_id}"
             filename = f"contracts{filters_str}_{timestamp}.csv"
 
             return StreamingResponse(
@@ -243,12 +337,16 @@ def export_contracts_excel(
     is_single_bid: Optional[bool] = Query(None, description="Filter single-bid contracts"),
     min_amount: Optional[float] = Query(None, ge=0, description="Minimum contract amount"),
     max_amount: Optional[float] = Query(None, le=100_000_000_000, description="Maximum contract amount"),
+    category_id: Optional[int] = Query(None, description="Filter by spending category (partida) ID"),
+    risk_factor: Optional[str] = Query(None, description="Filter by risk factor (e.g., co_bid, price_hyp, direct_award)"),
+    search: Optional[str] = Query(None, min_length=3, description="Full-text search in title/description"),
     limit: int = Query(10000, ge=1, le=MAX_EXPORT_ROWS, description=f"Maximum rows to export (max {MAX_EXPORT_ROWS})"),
 ):
     """
     Export contracts as Excel file.
 
     Returns filtered contracts in Excel format for download.
+    Supports the same 13 filter facets as the contracts list endpoint.
     Maximum {MAX_EXPORT_ROWS} rows per export to prevent memory issues.
     """
     if max_amount is not None and max_amount > MAX_CONTRACT_VALUE:
@@ -271,47 +369,20 @@ def export_contracts_excel(
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # Build WHERE clause (same as CSV)
-            conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
-            params = [MAX_CONTRACT_VALUE]
-
-            if sector_id is not None:
-                conditions.append("c.sector_id = ?")
-                params.append(sector_id)
-
-            if year is not None:
-                conditions.append("c.contract_year = ?")
-                params.append(year)
-
-            if institution_id is not None:
-                conditions.append("c.institution_id = ?")
-                params.append(institution_id)
-
-            if vendor_id is not None:
-                conditions.append("c.vendor_id = ?")
-                params.append(vendor_id)
-
-            if risk_level is not None:
-                conditions.append("c.risk_level = ?")
-                params.append(risk_level.lower())
-
-            if is_direct_award is not None:
-                conditions.append("c.is_direct_award = ?")
-                params.append(1 if is_direct_award else 0)
-
-            if is_single_bid is not None:
-                conditions.append("c.is_single_bid = ?")
-                params.append(1 if is_single_bid else 0)
-
-            if min_amount is not None:
-                conditions.append("c.amount_mxn >= ?")
-                params.append(min_amount)
-
-            if max_amount is not None:
-                conditions.append("c.amount_mxn <= ?")
-                params.append(max_amount)
-
-            where_clause = " AND ".join(conditions)
+            where_clause, params = build_contracts_where(
+                sector_id=sector_id,
+                year=year,
+                institution_id=institution_id,
+                vendor_id=vendor_id,
+                risk_level=risk_level,
+                is_direct_award=is_direct_award,
+                is_single_bid=is_single_bid,
+                min_amount=min_amount,
+                max_amount=max_amount,
+                category_id=category_id,
+                risk_factor=risk_factor,
+                search=search,
+            )
 
             query = f"""
                 SELECT
@@ -331,8 +402,10 @@ def export_contracts_excel(
                     c.procedure_type,
                     c.is_direct_award,
                     c.is_single_bid,
+                    c.category_id,
                     c.risk_score,
-                    c.risk_level
+                    c.risk_level,
+                    c.risk_factors
                 FROM contracts c
                 LEFT JOIN sectors s ON c.sector_id = s.id
                 LEFT JOIN vendors v ON c.vendor_id = v.id
@@ -356,7 +429,9 @@ def export_contracts_excel(
                 "Amount (MXN)", "Currency", "Contract Date", "Year",
                 "Sector", "Vendor Name", "Vendor RFC",
                 "Institution", "Institution Type", "Procedure Type",
-                "Direct Award", "Single Bid", "Risk Score", "Risk Level"
+                "Direct Award", "Single Bid",
+                "Category ID",
+                "Risk Score", "Risk Level", "Risk Factors",
             ]
             ws.append(headers)
 
@@ -388,6 +463,8 @@ def export_contracts_excel(
                 filters_str += f"_sector{sector_id}"
             if year:
                 filters_str += f"_year{year}"
+            if category_id:
+                filters_str += f"_cat{category_id}"
             filename = f"contracts{filters_str}_{timestamp}.xlsx"
 
             return StreamingResponse(
@@ -409,6 +486,8 @@ def export_vendors_csv(
     min_contracts: Optional[int] = Query(None, ge=1, description="Minimum contract count"),
     min_value: Optional[float] = Query(None, ge=0, description="Minimum total contract value"),
     has_rfc: Optional[bool] = Query(None, description="Filter vendors with RFC"),
+    search: Optional[str] = Query(None, min_length=3, description="Search by vendor name"),
+    risk_level: Optional[str] = Query(None, description="Filter by predominant risk level (low/medium/high/critical)"),
     limit: int = Query(10000, ge=1, le=MAX_EXPORT_ROWS, description=f"Maximum rows to export (max {MAX_EXPORT_ROWS})"),
 ):
     """
@@ -423,7 +502,7 @@ def export_vendors_csv(
 
             # Build WHERE clause
             conditions = ["1=1"]
-            params = []
+            params: list = []
 
             if has_rfc is not None:
                 if has_rfc:
@@ -431,11 +510,17 @@ def export_vendors_csv(
                 else:
                     conditions.append("(v.rfc IS NULL OR v.rfc = '')")
 
+            if search is not None:
+                escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                pattern = f"%{escaped}%"
+                conditions.append("v.name LIKE ? ESCAPE '\\'")
+                params.append(pattern)
+
             where_clause = " AND ".join(conditions)
 
             # HAVING conditions
             having_conditions = ["1=1"]
-            having_params = []
+            having_params: list = []
 
             if min_contracts is not None:
                 having_conditions.append("COUNT(c.id) >= ?")
@@ -454,13 +539,24 @@ def export_vendors_csv(
                 """)
                 having_params.append(sector_id)
 
+            if risk_level is not None:
+                # Filter vendors whose most common risk level matches the requested one.
+                # Uses a correlated subquery matching the pattern used for sector above.
+                having_conditions.append("""
+                    (SELECT risk_level FROM contracts
+                     WHERE vendor_id = v.id AND risk_level IS NOT NULL
+                     GROUP BY risk_level
+                     ORDER BY COUNT(*) DESC LIMIT 1) = ?
+                """)
+                having_params.append(risk_level.lower())
+
             having_clause = " AND ".join(having_conditions)
 
             query = f"""
                 SELECT
                     v.id,
                     v.name,
-                    v.rfc,
+                    CASE WHEN v.is_individual THEN NULL ELSE v.rfc END as rfc,
                     v.name_normalized,
                     COUNT(c.id) as total_contracts,
                     COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
@@ -491,7 +587,7 @@ def export_vendors_csv(
                 "avg_risk_score", "high_risk_count",
                 "direct_award_count", "single_bid_count",
                 "first_contract_year", "last_contract_year",
-                "total_institutions", "sectors_count"
+                "total_institutions", "sectors_count",
             ]
 
             # Convert rows to list format

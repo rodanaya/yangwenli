@@ -1,10 +1,32 @@
 """
 Pytest fixtures for API tests.
 """
+import contextlib
+
 import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _disable_rate_limits():
+    """Disable slowapi rate limiters for the test session.
+
+    The export endpoints carry a 10/minute cap. The suite fires many requests
+    at /export/contracts/csv in a tight loop (facet + parity tests), which would
+    otherwise trip the cap and fail unrelated assertions with 429s. slowapi
+    evaluates ``Limiter.enabled`` at request time, so flipping it off here keeps
+    the rate-limit code paths intact in production while making tests
+    deterministic.
+    """
+    with contextlib.suppress(Exception):
+        from api.routers import export as _export
+        if getattr(_export, "limiter", None) is not None:
+            _export.limiter.enabled = False
+    with contextlib.suppress(Exception):
+        app.state.limiter.enabled = False
+    yield
 
 
 @pytest.fixture(scope="module")

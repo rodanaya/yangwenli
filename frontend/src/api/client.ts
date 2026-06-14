@@ -34,6 +34,7 @@ import type {
   InstitutionRiskProfile,
   InstitutionTopListResponse,
   InstitutionVendorListResponse,
+  InstitutionOfficialsResponse,
   VendorPoolResponse,
   InstitutionWaterfallResponse,
   InstitutionFilterParams,
@@ -1005,9 +1006,19 @@ export const institutionApi = {
     return data
   },
 
-  /** @deprecated - defined but not yet wired to any UI */
-  async getOfficials(institutionId: number): Promise<unknown> {
-    const { data } = await api.get(`/institutions/${institutionId}/officials`)
+  /**
+   * Responsables de la Unidad Compradora (signing officers of record), 2018+.
+   * Precomputed in official_risk_profiles from contracts.responsible_uc.
+   * Defaults to a >=50-contract floor to suppress thin-n homonym noise.
+   */
+  async getOfficials(
+    institutionId: number,
+    minContracts = 50,
+  ): Promise<InstitutionOfficialsResponse> {
+    const { data } = await api.get<InstitutionOfficialsResponse>(
+      `/institutions/${institutionId}/officials`,
+      { params: { min_contracts: minContracts } },
+    )
     return data
   },
 }

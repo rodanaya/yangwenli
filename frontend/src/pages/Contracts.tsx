@@ -569,24 +569,24 @@ export function Contracts() {
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                Contracts
+                {t('title')}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                THE FEDERAL LEDGER · 2002–2025 · v0.8.5
+                {t('header.kicker')}
               </p>
             </div>
             <div className="flex items-baseline gap-5">
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{formatNumber(3_051_294)}</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Indexed</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.indexed')}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-risk-high tabular-nums leading-none">{formatNumber(337_693)}</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.highRisk')}</div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">9.9T MXN</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{formatCompactMXN(9_900_000_000_000)}</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.totalSpend')}</div>
               </div>
             </div>
           </div>
@@ -1246,6 +1246,34 @@ export function Contracts() {
       />
 
       </Act>
+
+      {/* Data dictionary + freeze-date footer — the transparency-archive
+          affordance the methodology audit flagged as missing. Makes the
+          frozen-Sep-2025 horizon and the export semantics explicit, and
+          glosses the load-bearing fields for a first-time reader. */}
+      <details className="mt-8 border-t border-border pt-4 group">
+        <summary className="flex items-center gap-2 cursor-pointer list-none text-[11px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-secondary transition-colors">
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+          {t('dictionary.title')}
+          <ChevronDown className="h-3.5 w-3.5 ml-auto transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="mt-3 space-y-3 text-xs leading-relaxed text-text-secondary max-w-3xl">
+          <p>{t('dictionary.frozen')}</p>
+          <p>{t('dictionary.export')}</p>
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1.5">
+              {t('dictionary.fieldsTitle')}
+            </div>
+            <ul className="space-y-1 list-none">
+              <li>{t('dictionary.contract')}</li>
+              <li>{t('dictionary.directAward')}</li>
+              <li>{t('dictionary.singleBid')}</li>
+              <li>{t('dictionary.risk')}</li>
+              <li>{t('dictionary.category')}</li>
+            </ul>
+          </div>
+        </div>
+      </details>
       </div>
     </div>
   )

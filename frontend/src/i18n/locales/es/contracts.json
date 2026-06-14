@@ -1,5 +1,22 @@
 {
   "title": "Contratos",
+  "header": {
+    "kicker": "EL LIBRO MAYOR FEDERAL · 2002–2025 · v0.8.5",
+    "indexed": "Indexados",
+    "highRisk": "Riesgo alto",
+    "totalSpend": "Gasto total"
+  },
+  "dictionary": {
+    "title": "Sobre este archivo",
+    "frozen": "Datos congelados al 28 sep 2025 — el padrón federal de CompraNet cerró tras su abolición legal (abr 2025). No existen registros de 2026; es un archivo histórico completo y citable, no un flujo en vivo.",
+    "export": "Las descargas respetan los filtros activos (búsqueda en título/descripción, sector, año, institución, categoría, nivel de riesgo, tipo de procedimiento, monto y factor de riesgo), con un tope de las primeras 10,000 filas — acote los filtros para obtener un corte completo.",
+    "fieldsTitle": "Glosario de campos",
+    "contract": "Contrato — un registro de adjudicación (proveedor · institución · monto · fecha).",
+    "directAward": "Adjudicación directa — otorgado sin licitación competitiva.",
+    "singleBid": "Postor único — un procedimiento competitivo que atrajo a un solo postor.",
+    "risk": "Indicador de riesgo — similitud del modelo (0–1) con patrones documentados de corrupción. Una señal de investigación, no una prueba de irregularidad.",
+    "category": "Categoría (partida) — la clasificación de gasto CUCoP de los bienes/servicios."
+  },
   "searchPlaceholder": "Buscar por título o número de contrato...",
   "guidance": "Seleccione un preset para comenzar a investigar, o use filtros para encontrar contratos específicos. Haga clic en cualquier fila para expandir los factores de riesgo. Use la herramienta de comparación para analizar contratos lado a lado.",
   "presets": {

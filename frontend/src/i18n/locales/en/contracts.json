@@ -1,5 +1,22 @@
 {
   "title": "Contracts",
+  "header": {
+    "kicker": "THE FEDERAL LEDGER · 2002–2025 · v0.8.5",
+    "indexed": "Indexed",
+    "highRisk": "High-risk",
+    "totalSpend": "Total spend"
+  },
+  "dictionary": {
+    "title": "About this archive",
+    "frozen": "Data frozen Sep 28 2025 — COMPRANET's federal feed closed after its legal abolition (Apr 2025). No 2026 records exist; this is a complete, citable historical archive, not a live feed.",
+    "export": "Downloads honor your current filters (title/description search, sector, year, institution, category, risk level, procedure flags, amount and risk-factor), capped at the first 10,000 rows — narrow the filters to retrieve a full slice.",
+    "fieldsTitle": "Field glossary",
+    "contract": "Contract — one awarded procurement record (vendor · institution · amount · date).",
+    "directAward": "Direct award (adjudicación directa) — awarded without a competitive tender.",
+    "singleBid": "Single bid — a competitive procedure that drew only one bidder.",
+    "risk": "Risk indicator — model similarity (0–1) to documented corruption patterns. An investigation signal, not proof of irregularity.",
+    "category": "Category (partida) — the CUCoP spending classification of the goods/services."
+  },
   "searchPlaceholder": "Search by title or contract number...",
   "guidance": "Select a preset to start investigating, or use filters to find specific contracts. Click any row to expand risk factors. Use the compare tool to analyze contracts side-by-side.",
   "presets": {

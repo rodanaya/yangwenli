@@ -114,7 +114,10 @@ class ContractService(BaseService):
                 "direct_award": ("c.is_direct_award = ?", 1),
                 "single_bid": ("c.is_single_bid = ?", 1),
                 "year_end": ("c.is_year_end = ?", 1),
-                "price_hyp": ("c.price_hypothesis_type IS NOT NULL", None),
+                # "price_hyp" removed: no `price_hypothesis_type` column exists —
+                # it raised OperationalError (500) on this filter. It is a token
+                # in the `risk_factors` TEXT column (387K rows), so it now falls
+                # through to the LIKE path below. Mirrored in export.py.
             }
             mapped = _RISK_FACTOR_COLUMN_MAP.get(risk_factor)
             if mapped:

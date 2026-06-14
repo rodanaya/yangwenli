@@ -648,6 +648,28 @@ export interface InstitutionVendorListResponse {
   generated_at: string
 }
 
+// ─── Responsables de la Unidad Compradora (signing officers of record) ───────
+// Precomputed in official_risk_profiles from contracts.responsible_uc (2018+).
+export interface InstitutionOfficial {
+  official_name: string
+  total_contracts: number
+  first_contract_year: number | null
+  last_contract_year: number | null
+  single_bid_pct: number
+  direct_award_pct: number
+  avg_risk_score: number
+  vendor_diversity: number
+  hhi_vendors: number
+  interpretation: string
+}
+
+export interface InstitutionOfficialsResponse {
+  institution_id: number
+  officials: InstitutionOfficial[]
+  note: string
+  data_available: boolean
+}
+
 // ─── Z2 "La Captura" — vendor-pool dossier ──────────────────────────────────
 // Richer shape than InstitutionVendorListResponse: per-vendor HR/DA/SB counts,
 // ARIA tier/pattern badges, plus institution-level aggregates for the kicker.

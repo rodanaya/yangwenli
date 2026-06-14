@@ -2224,8 +2224,9 @@ def get_institution_officials(
     Based on Coviello & Gagliarducci (2017) who found official tenure is the most
     predictive variable for single-bid rates in procurement.
 
-    NOTE: Requires 'oficial_firmante' field populated via compute_official_profiles.py.
-    Returns empty list if field is not available in the database.
+    Source: official_risk_profiles, precomputed from contracts.responsible_uc
+    (Responsable de la Unidad Compradora) by compute_official_profiles.py.
+    Returns an empty list (graceful) if the table has not been populated yet.
     """
     import sqlite3
     with get_db() as conn:
@@ -2253,10 +2254,6 @@ def get_institution_officials(
             # Table missing or query error — return empty (UI shows
             # "no officials data" instead of crashing the whole tab).
             officials = []
-
-        has_oficial_firmante = "oficial_firmante" in [
-            c[1] for c in conn.execute("PRAGMA table_info(contracts)").fetchall()
-        ]
 
         def _interpret(r) -> str:
             parts = []
@@ -2288,10 +2285,11 @@ def get_institution_officials(
                 for r in officials
             ],
             "note": (
-                "Official-level analysis available for 2018+ contracts (COMPRANET Structure C/D). "
-                + ("Data not yet populated — run compute_official_profiles.py to enable." if not has_oficial_firmante else "")
+                "Responsable de la Unidad Compradora · 2018+ (COMPRANET Structure C/D). "
+                "Indicador de riesgo del modelo — no es una acusación."
+                + ("" if officials else " Sin funcionarios que alcancen el mínimo de contratos para esta institución.")
             ),
-            "data_available": has_oficial_firmante and len(officials) > 0,
+            "data_available": len(officials) > 0,
         }
 
 

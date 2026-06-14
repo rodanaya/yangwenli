@@ -21,7 +21,7 @@ import {
   Newspaper,
   Sparkles,
   Tag,
-  Map,
+  Archive,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -69,14 +69,16 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.portada',
     items: [
       // The executive briefing leads the front page (most legible
-      // orientation surface), then the two editorial surfaces, then the
-      // spatial map. El Mapa is still the homepage route (/) — clicking
-      // the logo / landing cold both resolve there — it just isn't
-      // listed first. Atlas storytelling stays at /atlas.
+      // orientation surface), then the two editorial surfaces. El Mapa
+      // (the spatial map) is still the homepage route (/) and is reachable
+      // by clicking the sidebar logo — it no longer holds its own nav row.
+      // Its slot was re-pointed to El Archivo (the queryable contract
+      // corpus) under EXPLORAR per the new-tab committee (2026-06-14):
+      // a finished, high-value surface that was discoverable only by
+      // deep-link. Atlas storytelling stays at /atlas.
       { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
       { i18nKey: 'newsroom', href: '/journalists', icon: Newspaper },
-      { i18nKey: 'explore', href: '/', icon: Map },
     ],
   },
   {
@@ -93,6 +95,11 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'categories', href: '/categories', icon: Tag },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'network', href: '/network', icon: Network },
+      // El Archivo — the queryable / downloadable contract corpus (the live
+      // /contracts browser, previously reachable only by deep-link or the
+      // Cmd+K palette). Promoted into the nav by re-pointing the old El Mapa
+      // slot (new-tab committee, 2026-06-14). Route stays /contracts.
+      { i18nKey: 'theArchive', href: '/contracts', icon: Archive },
     ],
   },
   {
@@ -208,8 +215,15 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         collapsed ? 'md:w-14' : 'md:w-56',
       )}
     >
-      {/* Logo — signal spike mark */}
+      {/* Logo — signal spike mark. Links to El Mapa (/), the homepage,
+          since El Mapa no longer holds its own nav row (2026-06-14). */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
+        <NavLink
+          to="/"
+          aria-label={t('explore')}
+          onClick={() => { if (mobileOpen) onMobileClose?.() }}
+          className="flex items-center gap-3 min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+        >
         <div className="relative flex-shrink-0">
           <svg width="34" height="34" viewBox="0 0 40 40" fill="none" aria-hidden="true">
             {/* The Velocity Spike — a leaning anomaly caught mid-motion.
@@ -255,6 +269,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             <p className="text-[9px] text-text-on-dark-muted mt-1 truncate tracking-[0.14em] uppercase font-mono">{t('tagline')}</p>
           </div>
         )}
+        </NavLink>
         {/* Mobile close button */}
         {mobileOpen && (
           <Button

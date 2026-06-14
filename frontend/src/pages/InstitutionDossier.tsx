@@ -40,7 +40,8 @@ import {
   type WayfindingLinkState,
 } from '@/lib/nav/wayfinding'
 import { formatEntityName } from '@/lib/entity/format'
-import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { toTitleCase } from '@/lib/utils'
 
 // ─── Reference-section header — tight, left-aligned (mirrors VendorDossier) ──
 
@@ -191,6 +192,15 @@ export default function InstitutionDossier() {
     staleTime: 5 * 60 * 1000,
   })
 
+  // Responsables de la Unidad Compradora (2018+). >=50-contract floor suppresses
+  // thin-n homonym noise; sorted by volume (neutral), never lead with risk.
+  const { data: officialsData } = useQuery({
+    queryKey: ['institution-dossier', institutionId, 'officials', 50],
+    queryFn: () => institutionApi.getOfficials(institutionId, 50),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+  })
+
   if (!validId) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
@@ -236,6 +246,13 @@ export default function InstitutionDossier() {
   const supplierMeta = institution.vendor_count
     ? `${institution.vendor_count.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')} ${lang === 'es' ? 'proveedores' : 'suppliers'}`
     : undefined
+
+  // Volume sort (neutral) — never lead with a risk ranking of named individuals
+  // (defamation guardrail); the risk column is a labeled indicator, not a verdict.
+  const topOfficials = [...(officialsData?.officials ?? [])]
+    .sort((a, b) => b.total_contracts - a.total_contracts)
+    .slice(0, 12)
+  const hasOfficials = (officialsData?.data_available ?? false) && topOfficials.length > 0
 
   return (
     <DossierOriginProvider value={{ route: `/institutions/${institutionId}`, label: formatEntityName('institution', institution.name, 'sm') }}>
@@ -306,6 +323,67 @@ export default function InstitutionDossier() {
           />
         </section>
       </div>
+
+      {/* §4 — Responsables de la Unidad Compradora (signing officers of record).
+          Populated 2026-06-14 from contracts.responsible_uc; >=50 contract floor
+          + volume sort + labeled risk indicator (guardrails against thin-n
+          homonym defamation). */}
+      {hasOfficials && (
+        <div className="mt-12">
+          <section id="officials" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="officials"
+              eyebrow={lang === 'es' ? 'Responsables de la UC' : 'Procurement officers'}
+              title={lang === 'es' ? 'Quién firmó las compras' : 'Who ran the buying units'}
+              meta={lang === 'es' ? `Los ${topOfficials.length} más activos · 2018+` : `Top ${topOfficials.length} by volume · 2018+`}
+              accent={sectorAccent}
+            />
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">
+                    <th className="text-left font-medium py-2 pr-3">{lang === 'es' ? 'Funcionario' : 'Officer'}</th>
+                    <th className="text-right font-medium py-2 px-3">{lang === 'es' ? 'Contratos' : 'Contracts'}</th>
+                    <th className="text-right font-medium py-2 px-3">{lang === 'es' ? 'Adj. directa' : 'Direct award'}</th>
+                    <th className="text-right font-medium py-2 px-3">{lang === 'es' ? 'Postor único' : 'Single bid'}</th>
+                    <th className="text-right font-medium py-2 px-3">{lang === 'es' ? 'Proveedores' : 'Vendors'}</th>
+                    <th className="text-right font-medium py-2 pl-3">{lang === 'es' ? 'Indicador' : 'Risk ind.'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topOfficials.map((o) => {
+                    const level = getRiskLevelFromScore(o.avg_risk_score)
+                    const locale = lang === 'es' ? 'es-MX' : 'en-US'
+                    return (
+                      <tr key={o.official_name} className="border-b border-border/40 hover:bg-background-card/50">
+                        <td className="py-2 pr-3 text-text-primary font-medium max-w-[22rem] truncate" title={toTitleCase(o.official_name)}>
+                          {toTitleCase(o.official_name)}
+                          {(o.first_contract_year || o.last_contract_year) && (
+                            <span className="ml-2 text-[10px] font-mono text-text-muted">{o.first_contract_year}–{o.last_contract_year}</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{o.total_contracts.toLocaleString(locale)}</td>
+                        <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{o.direct_award_pct.toFixed(0)}%</td>
+                        <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{o.single_bid_pct.toFixed(0)}%</td>
+                        <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{o.vendor_diversity.toLocaleString(locale)}</td>
+                        <td className="py-2 pl-3 text-right tabular-nums">
+                          <span className="inline-flex items-center gap-1.5 justify-end">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: RISK_COLORS[level] }} aria-hidden="true" />
+                            <span style={{ color: RISK_COLORS[level] }}>{o.avg_risk_score.toFixed(2)}</span>
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {officialsData?.note && (
+              <p className="mt-3 text-[11px] leading-relaxed text-text-muted max-w-2xl">{officialsData.note}</p>
+            )}
+          </section>
+        </div>
+      )}
 
       <ProvenanceFooter lang={lang} />
     </div>
