@@ -2828,9 +2828,12 @@ export function InlineRoster({
         {pts.map((p, idx) => {
           const rank = String(idx + 1).padStart(2, '0')
           const highlight = !!p.highlight
-          const rail = highlight ? ANCHOR_COLOR : 'transparent'
-          const glyph = highlight ? '●' : '◇'
-          const glyphColor = highlight ? ANCHOR_COLOR : 'var(--color-text-muted)'
+          // Per-point semantic color (sanctioned palette only) drives the rail,
+          // glyph and value; falls back to the amber highlight / muted default.
+          const accent = resolveRowColor(p.color) ?? (highlight ? ANCHOR_COLOR : undefined)
+          const rail = accent ?? 'transparent'
+          const glyph = accent ? '●' : '◇'
+          const glyphColor = accent ?? 'var(--color-text-muted)'
           return (
             <li
               key={`${p.label}-${idx}`}
@@ -2896,7 +2899,7 @@ export function InlineRoster({
                     fontSize: 'clamp(1.6rem, 2.6vw, 1.9rem)',
                     lineHeight: 0.95,
                     letterSpacing: '-0.02em',
-                    color: highlight ? ANCHOR_COLOR : 'var(--color-text-primary)',
+                    color: accent ?? 'var(--color-text-primary)',
                   }}
                 >
                   {p.value.toLocaleString()}

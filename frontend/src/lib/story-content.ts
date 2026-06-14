@@ -493,6 +493,7 @@ export const STORIES: StoryDef[] = [
                 annotation: 'PERSONA FÍSICA · INDIVIDUAL CONTRACTOR · 2 CONTRACTS',
                 annotation_es: 'PERSONA FÍSICA · CONTRATISTA INDIVIDUAL · 2 CONTRATOS',
                 highlight: true,
+                color: '#dc2626',
               },
               {
                 label: 'ARTURO PUEBLITA FERNÁNDEZ',
@@ -500,6 +501,7 @@ export const STORIES: StoryDef[] = [
                 annotation: 'PERSONA FÍSICA · INDIVIDUAL CONTRACTOR · 2 CONTRACTS',
                 annotation_es: 'PERSONA FÍSICA · CONTRATISTA INDIVIDUAL · 2 CONTRATOS',
                 highlight: true,
+                color: '#dc2626',
               },
               {
                 label: 'VALERIA FERNÁNDEZ DÍAZ',
@@ -507,6 +509,7 @@ export const STORIES: StoryDef[] = [
                 annotation: 'PERSONA FÍSICA · INDIVIDUAL CONTRACTOR · 2 CONTRACTS',
                 annotation_es: 'PERSONA FÍSICA · CONTRATISTA INDIVIDUAL · 2 CONTRATOS',
                 highlight: true,
+                color: '#dc2626',
               },
             ],
             unit: 'MDP',
@@ -572,9 +575,9 @@ export const STORIES: StoryDef[] = [
               },
             ],
             annotation:
-              'Each dot = 1 vendor. 6,118 total flagged by RUBLI P2 algorithm across 2002-2025.',
+              'Each dot = 1 vendor; 6,118 flagged by RUBLI P2 (2002–2025). Only 42 — the red sliver, 0.7% — are SAT-confirmed; the other 6,076 are still contracting.',
             annotation_es:
-              'Cada punto = 1 proveedor. 6,118 marcados en total por el algoritmo P2 de RUBLI entre 2002-2025.',
+              'Cada punto = 1 proveedor; 6,118 marcados por el P2 de RUBLI (2002–2025). Solo 42 — la astilla roja, 0.7% — están confirmados por el SAT; los otros 6,076 siguen contratando.',
           },
         },
         pullquote: {
@@ -4537,6 +4540,7 @@ export const STORIES: StoryDef[] = [
                 label_es: 'IMSS',
                 value: 588,
                 highlight: true,
+                color: '#dc2626',
                 annotation: 'SALUD · MEDICAL SUPPLY · 2,109 CONTRACTS · 519.5M MXN',
                 annotation_es: 'SALUD · INSUMOS MÉDICOS · 2,109 CONTRATOS · 519.5 M MXN',
               },
@@ -4552,6 +4556,7 @@ export const STORIES: StoryDef[] = [
                 label_es: 'ISSSTE',
                 value: 77,
                 highlight: true,
+                color: '#dc2626',
                 annotation: 'SALUD · MEDICAL SUPPLY · 302 CONTRACTS · 75.1M MXN',
                 annotation_es: 'SALUD · INSUMOS MÉDICOS · 302 CONTRATOS · 75.1 M MXN',
               },
@@ -4560,6 +4565,7 @@ export const STORIES: StoryDef[] = [
                 label_es: 'INCMNSZ Salvador Zubirán',
                 value: 69,
                 highlight: true,
+                color: '#dc2626',
                 annotation: 'SALUD · MEDICAL SUPPLY · 268 CONTRACTS · 65.7M MXN',
                 annotation_es: 'SALUD · INSUMOS MÉDICOS · 268 CONTRATOS · 65.7 M MXN',
               },
