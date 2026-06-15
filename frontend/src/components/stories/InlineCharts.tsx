@@ -190,7 +190,7 @@ function maxVal(points: StoryChartPoint[], provided?: number): number {
 // the dashboard tile rhythm).
 // ---------------------------------------------------------------------------
 
-function ChartCard({
+export function ChartCard({
   title,
   eyebrow,
   anchor,

@@ -1,16 +1,22 @@
 /**
- * VendorPriceTrajectory — Ch.2 of "Volatilidad" story (n-P3)
+ * VendorPriceTrajectory — Ch.1 of "Volatilidad" story.
  *
  * Illustrative time-series of a single vendor's contract history.
  * X = signing date (2019-2022), Y = unit price (log scale, MXN),
  * dot size = total contract value. One outlier contract is ringed with
- * a callout: "MX$27M — same category as MX$3M, four months earlier."
+ * a callout: "MX$27M — 9× the category median, four months later."
  *
- * Self-contained: hardcoded illustrative data, no live API call.
- * SVG-based, no recharts.
+ * 2026-06-15: brought into the cream editorial system — wraps the SVG in
+ * the shared `ChartCard` shell (same as every InlineChart) and recolors the
+ * grid/axes/callout for the light background. Was a dark charcoal figure
+ * inconsistent with the rest of the story's charts.
+ *
+ * Self-contained: hardcoded illustrative data, no live API call. The
+ * "illustrative" caveat is carried honestly in the card annotation.
  */
 import { useMemo } from 'react'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { ChartCard } from './InlineCharts'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -78,26 +84,20 @@ function dotRadius(totalValue: number): number {
 
 const PRICE_TICKS = [2_000_000, 5_000_000, 10_000_000, 20_000_000, 30_000_000]
 
-function fmtPrice(v: number, lang: 'en' | 'es'): string {
-  const m = v / 1_000_000
-  if (lang === 'es') return `$${m.toFixed(0)}M`
-  return `$${m.toFixed(0)}M`
+function fmtPrice(v: number): string {
+  return `$${(v / 1_000_000).toFixed(0)}M`
 }
-
-// fmtYear was used in an early draft of the X-axis tick formatter; current
-// markup formats inline so the helper is unused.
-// removed: function fmtYear(d: Date): string { return d.getFullYear().toString() }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function VendorPriceTrajectory({ lang = 'es' }: Props) {
   // SVG layout constants
   const W  = 780
-  const H  = 380
+  const H  = 360
   const ML = 64   // margin left (Y-axis labels)
   const MR = 24
-  const MT = 40
-  const MB = 52   // margin bottom (X-axis labels)
+  const MT = 30
+  const MB = 44   // margin bottom (X-axis labels)
 
   const xMin    = ML
   const xWidth  = W - ML - MR
@@ -106,8 +106,8 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
 
   const accent    = SECTOR_COLORS.salud          // #dc2626 (red — danger signal)
   const ghostFill = SECTOR_COLORS.otros          // #64748b (neutral dots)
-  const textMuted = '#78716c'
-  // textDark = SECTOR_TEXT_COLORS.salud — reserved for outlier label upgrade in follow-up
+  const gridStroke = 'var(--color-border)'
+  const textMuted  = 'var(--color-text-muted)'
 
   // Compute dot positions
   const dots = useMemo(() =>
@@ -133,7 +133,7 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
   const outlierDot = dots.find(d => d.outlier)
 
   // Callout box geometry
-  const CALLOUT_W = 190
+  const CALLOUT_W = 196
   const CALLOUT_H = 44
   const calloutX = outlierDot
     ? Math.min(outlierDot.cx - CALLOUT_W / 2, W - MR - CALLOUT_W)
@@ -142,195 +142,167 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
     ? outlierDot.cy - outlierDot.r - CALLOUT_H - 10
     : 0
 
-  const title    = lang === 'es' ? 'Historial de contratos: distribuidor farmacéutico, IMSS 2019–2022' : 'Contract history: pharmaceutical distributor, IMSS 2019–2022'
-  const subtitle = lang === 'es' ? 'Precio unitario por contrato (escala logarítmica) · tamaño = valor total' : 'Unit price per contract (log scale) · size = total contract value'
+  const title = lang === 'es'
+    ? 'Historial de contratos: distribuidor farmacéutico, IMSS 2019–2022'
+    : 'Contract history: pharmaceutical distributor, IMSS 2019–2022'
   const zoneLabel = lang === 'es' ? 'Zona de precios esperada (±30%)' : 'Expected price zone (±30%)'
-  // calloutLabel reserved for callout box markup pending in follow-up
-  // ES: 'MX$27M · misma categoría, cuatro meses después del contrato de MX$3M'
-  // EN: 'MX$27M · same category, four months after the MX$3M contract'
-  const srcLabel = lang === 'es'
-    ? 'DATOS ILUSTRATIVOS · RUBLI análisis de volatilidad de precios v0.8.5'
-    : 'ILLUSTRATIVE DATA · RUBLI price volatility analysis v0.8.5'
+  const yKicker = lang === 'es' ? 'PRECIO UNITARIO (MXN) · ESCALA LOG' : 'UNIT PRICE (MXN) · LOG SCALE'
+  const annotation = lang === 'es'
+    ? 'Patrón ilustrativo de un solo proveedor — las proporciones reproducen las firmas observadas de price_volatility (SHAP). El tamaño del punto = valor total del contrato; la banda sombreada es la zona de precio esperada (±30% de la mediana de categoría). Un contrato salta a 9× la mediana en la misma categoría cuatro meses después.'
+    : 'Illustrative single-vendor pattern — proportions reproduce the observed price_volatility (SHAP) signatures. Dot size = total contract value; the shaded band is the expected-price zone (±30% of the category median). One contract jumps to 9× the median in the same category four months later.'
 
   return (
-    <figure
-      className="rounded-sm overflow-hidden"
-      style={{ background: '#1c1917', border: '1px solid #292524' }}
-      aria-label={title}
-      role="img"
+    <ChartCard
+      title={title}
+      eyebrow="PRICE SCATTER · LOG MXN · 14 CONTRACTS"
+      anchor={{
+        value: '9×',
+        label: lang === 'es' ? 'el atípico vs la mediana de categoría' : 'the outlier vs the category median',
+        color: accent,
+      }}
+      annotation={annotation}
     >
-      {/* Header */}
-      <div className="px-6 pt-5 pb-3" style={{ borderBottom: '1px solid #292524' }}>
-        <p
-          className="text-xs font-mono uppercase tracking-widest mb-1"
-          style={{ color: textMuted }}
-        >
-          {lang === 'es' ? '§ 2 · DENTRO DE UN PROVEEDOR' : '§ 2 · INSIDE ONE VENDOR'}
-        </p>
-        <p className="text-sm font-medium" style={{ color: '#e7e5e4' }}>
-          {title}
-        </p>
-        <p className="text-xs mt-0.5" style={{ color: textMuted }}>
-          {subtitle}
-        </p>
+      <div
+        className="text-[9px] font-mono uppercase tracking-[0.06em] mb-1 pl-2"
+        style={{ color: textMuted }}
+      >
+        {yKicker}
       </div>
-
-      {/* SVG chart */}
-      <div className="px-2 py-4">
-        <p
-          className="text-[9px] font-mono uppercase tracking-[0.06em] mb-1 pl-2"
-          style={{ color: textMuted }}
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="w-full"
+        aria-hidden="true"
+      >
+        {/* Expected price zone band */}
+        <rect
+          x={xMin}
+          y={bandTop}
+          width={xWidth}
+          height={bandBottom - bandTop}
+          fill="var(--color-text-muted)"
+          fillOpacity={0.12}
+        />
+        <text
+          x={xMin + 8}
+          y={bandTop + 13}
+          fontSize={9}
+          fontFamily="monospace"
+          fill="var(--color-text-muted)"
         >
-          {lang === 'es' ? 'PRECIO UNITARIO (MXN)' : 'UNIT PRICE (MXN)'}
-        </p>
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          width="100%"
-          style={{ display: 'block', maxWidth: W }}
-          aria-hidden="true"
-        >
-          {/* Expected price zone band */}
-          <rect
-            x={xMin}
-            y={bandTop}
-            width={xWidth}
-            height={bandBottom - bandTop}
-            fill="var(--color-text-muted)"
-            fillOpacity={0.16}
-          />
-          <text
-            x={xMin + 8}
-            y={bandTop + 13}
-            fontSize={9}
-            fontFamily="monospace"
-            fill="var(--color-text-muted)"
-            fillOpacity={0.9}
-          >
-            {zoneLabel}
-          </text>
+          {zoneLabel}
+        </text>
 
-          {/* Y-axis log ticks */}
-          {PRICE_TICKS.map(p => {
-            const y = toLogY(p, yMin, yHeight)
-            return (
-              <g key={p}>
-                <line x1={xMin - 4} y1={y} x2={xMin + xWidth} y2={y}
-                  stroke="#44403c" strokeWidth={0.5} strokeDasharray="3 4" />
-                <text x={xMin - 8} y={y + 4} fontSize={10} fontFamily="monospace"
-                  fill={textMuted} textAnchor="end">
-                  {fmtPrice(p, lang)}
-                </text>
-              </g>
-            )
-          })}
-
-          {/* X-axis year ticks */}
-          {yearTicks.map(({ yr, x }) => (
-            <g key={yr}>
-              <line x1={x} y1={yMin} x2={x} y2={yMin + yHeight}
-                stroke="#44403c" strokeWidth={0.5} strokeDasharray="3 4" />
-              <text x={x} y={yMin + yHeight + 18} fontSize={11} fontFamily="monospace"
-                fill={textMuted} textAnchor="middle">
-                {yr}
+        {/* Y-axis log ticks */}
+        {PRICE_TICKS.map(p => {
+          const y = toLogY(p, yMin, yHeight)
+          return (
+            <g key={p}>
+              <line x1={xMin - 4} y1={y} x2={xMin + xWidth} y2={y}
+                stroke={gridStroke} strokeWidth={0.5} strokeDasharray="3 4" />
+              <text x={xMin - 8} y={y + 4} fontSize={10} fontFamily="monospace"
+                fill={textMuted} textAnchor="end">
+                {fmtPrice(p)}
               </text>
             </g>
-          ))}
+          )
+        })}
 
-          {/* Axis borders */}
-          <line x1={xMin} y1={yMin} x2={xMin} y2={yMin + yHeight}
-            stroke="#57534e" strokeWidth={1} />
-          <line x1={xMin} y1={yMin + yHeight} x2={xMin + xWidth} y2={yMin + yHeight}
-            stroke="#57534e" strokeWidth={1} />
+        {/* X-axis year ticks */}
+        {yearTicks.map(({ yr, x }) => (
+          <g key={yr}>
+            <line x1={x} y1={yMin} x2={x} y2={yMin + yHeight}
+              stroke={gridStroke} strokeWidth={0.5} strokeDasharray="3 4" />
+            <text x={x} y={yMin + yHeight + 18} fontSize={11} fontFamily="monospace"
+              fill={textMuted} textAnchor="middle">
+              {yr}
+            </text>
+          </g>
+        ))}
 
-          {/* Contract dots */}
-          {dots.map(d => (
-            <circle
-              key={d.id}
-              cx={d.cx}
-              cy={d.cy}
-              r={d.r}
-              fill={d.outlier ? accent : ghostFill}
-              fillOpacity={d.outlier ? 0.9 : 0.55}
-              stroke={d.outlier ? accent : 'transparent'}
-              strokeWidth={d.outlier ? 2 : 0}
-            />
-          ))}
+        {/* Axis borders */}
+        <line x1={xMin} y1={yMin} x2={xMin} y2={yMin + yHeight}
+          stroke="var(--color-border)" strokeWidth={1} />
+        <line x1={xMin} y1={yMin + yHeight} x2={xMin + xWidth} y2={yMin + yHeight}
+          stroke="var(--color-border)" strokeWidth={1} />
 
-          {/* Outlier pulse ring */}
-          {outlierDot && (
-            <circle
-              cx={outlierDot.cx}
-              cy={outlierDot.cy}
-              r={outlierDot.r + 8}
-              fill="none"
-              stroke={accent}
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-              opacity={0.75}
-            />
-          )}
+        {/* Contract dots */}
+        {dots.map(d => (
+          <circle
+            key={d.id}
+            cx={d.cx}
+            cy={d.cy}
+            r={d.r}
+            fill={d.outlier ? accent : ghostFill}
+            fillOpacity={d.outlier ? 0.92 : 0.5}
+            stroke={d.outlier ? accent : 'transparent'}
+            strokeWidth={d.outlier ? 2 : 0}
+          />
+        ))}
 
-          {/* Callout connector line */}
-          {outlierDot && (
-            <line
-              x1={outlierDot.cx}
-              y1={outlierDot.cy - outlierDot.r - 2}
-              x2={outlierDot.cx}
-              y2={calloutY + CALLOUT_H}
+        {/* Outlier pulse ring */}
+        {outlierDot && (
+          <circle
+            cx={outlierDot.cx}
+            cy={outlierDot.cy}
+            r={outlierDot.r + 8}
+            fill="none"
+            stroke={accent}
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            opacity={0.75}
+          />
+        )}
+
+        {/* Callout connector line */}
+        {outlierDot && (
+          <line
+            x1={outlierDot.cx}
+            y1={outlierDot.cy - outlierDot.r - 2}
+            x2={outlierDot.cx}
+            y2={calloutY + CALLOUT_H}
+            stroke={accent}
+            strokeWidth={1}
+            strokeDasharray="2 3"
+          />
+        )}
+
+        {/* Callout box */}
+        {outlierDot && (
+          <g>
+            <rect
+              x={calloutX}
+              y={calloutY}
+              width={CALLOUT_W}
+              height={CALLOUT_H}
+              rx={3}
+              fill="var(--color-background-card)"
               stroke={accent}
               strokeWidth={1}
-              strokeDasharray="2 3"
             />
-          )}
-
-          {/* Callout box */}
-          {outlierDot && (
-            <g>
-              <rect
-                x={calloutX}
-                y={calloutY}
-                width={CALLOUT_W}
-                height={CALLOUT_H}
-                rx={3}
-                fill="#1c1917"
-                stroke={accent}
-                strokeWidth={1}
-              />
-              <text
-                x={calloutX + 10}
-                y={calloutY + 17}
-                fontSize={10}
-                fontFamily="monospace"
-                fontWeight="600"
-                fill={accent}
-              >
-                {lang === 'es' ? 'MX$27M · PRECIO 9× SUPERIOR' : 'MX$27M · PRICE 9× HIGHER'}
-              </text>
-              <text
-                x={calloutX + 10}
-                y={calloutY + 33}
-                fontSize={9}
-                fontFamily="monospace"
-                fill={textMuted}
-              >
-                {lang === 'es' ? 'misma categoría · jun 2020' : 'same category · jun 2020'}
-              </text>
-            </g>
-          )}
-
-          {/* Y-axis label — moved from rotated SVG text to horizontal kicker
-              above the chart to avoid clipping when label > plot height */}
-        </svg>
-      </div>
-
-      {/* Footer */}
-      <div
-        className="px-6 py-3 text-xs font-mono"
-        style={{ color: textMuted, borderTop: '1px solid #292524' }}
-      >
-        {srcLabel}
-      </div>
-    </figure>
+            <text
+              x={calloutX + 10}
+              y={calloutY + 17}
+              fontSize={10}
+              fontFamily="monospace"
+              fontWeight="700"
+              fill={accent}
+            >
+              {lang === 'es' ? 'MX$27M · PRECIO 9× SUPERIOR' : 'MX$27M · PRICE 9× HIGHER'}
+            </text>
+            <text
+              x={calloutX + 10}
+              y={calloutY + 33}
+              fontSize={9}
+              fontFamily="monospace"
+              fill={textMuted}
+            >
+              {lang === 'es' ? 'misma categoría · jun 2020' : 'same category · jun 2020'}
+            </text>
+          </g>
+        )}
+      </svg>
+    </ChartCard>
   )
 }
 
