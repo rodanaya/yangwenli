@@ -70,7 +70,7 @@ export default function Executive() {
 
   const stats = useMemo(() => {
     const d = dashboard
-    const totalContracts = d?.overview?.total_contracts ?? 3_051_294
+    const totalContracts = d?.overview?.total_contracts ?? 3_058_286
     const totalValue = d?.overview?.total_value_mxn ?? 9_881_000_000_000
     const rd = Array.isArray(d?.risk_distribution) ? d!.risk_distribution : []
     const highCriticalCount =
@@ -261,10 +261,13 @@ export default function Executive() {
             </button>
           </div>
 
+          {/* Dateline anchors to the frozen data horizon (Sep 28 2025), not
+              new Date() — the upstream COMPRANET feed froze there and the model
+              is fixed at v0.8.5. A live today's-date implied a freshness the
+              data doesn't have (same neutralization applied across the June QA
+              sweep; the global masthead clock keeps showing "today"). */}
           <div className="text-[11px] font-mono text-text-muted mb-4">
-            {new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'es-MX', {
-              year: 'numeric', month: 'long', day: 'numeric',
-            })}
+            {lang === 'en' ? 'Data through Sep 2025' : 'Datos hasta sep 2025'}
             {' · '}
             {lang === 'en' ? 'Mexico Federal Procurement Analysis' : 'Análisis de Contratación Federal México'}
           </div>
@@ -547,7 +550,7 @@ export default function Executive() {
                 kicker: { en: 'The spend', es: 'El gasto' },
                 tail:   { en: 'of which —', es: 'del cual —' },
                 story: '/stories/el-gran-precio',
-                ariaLabel: { en: 'Read: The Bigger the Contract the Higher the Risk', es: 'Leer: A Mayor Contrato, Mayor Riesgo' },
+                ariaLabel: { en: 'Chapter I, The Spend — Read: The Bigger the Contract the Higher the Risk', es: 'Capítulo I, El gasto — Leer: A Mayor Contrato, Mayor Riesgo' },
               },
               {
                 roman: 'II',
@@ -555,7 +558,7 @@ export default function Executive() {
                 kicker: { en: 'The bypass', es: 'El desvío' },
                 tail:   { en: 'inside that bypass —', es: 'dentro de ese desvío —' },
                 story: '/stories/marea-de-adjudicaciones',
-                ariaLabel: { en: 'Read: The Direct Award Tide', es: 'Leer: La Marea de las Adjudicaciones' },
+                ariaLabel: { en: 'Chapter II, The Bypass — Read: The Direct Award Tide', es: 'Capítulo II, El desvío — Leer: La Marea de las Adjudicaciones' },
               },
               {
                 roman: 'III',
@@ -563,7 +566,7 @@ export default function Executive() {
                 kicker: { en: 'The flag', es: 'La marca' },
                 tail:   { en: 'and the catch —', es: 'y la captura —' },
                 story: '/stories/el-sexenio-del-riesgo',
-                ariaLabel: { en: 'Read: The Era of Risk', es: 'Leer: El Sexenio del Riesgo' },
+                ariaLabel: { en: 'Chapter III, The Flag — Read: The Era of Risk', es: 'Capítulo III, La marca — Leer: El Sexenio del Riesgo' },
               },
               {
                 roman: 'IV',
@@ -571,7 +574,7 @@ export default function Executive() {
                 kicker: { en: 'The catch', es: 'La captura' },
                 tail: null,
                 story: '/stories/volatilidad-el-precio-del-riesgo',
-                ariaLabel: { en: 'Read: Price Volatility — The Algorithm\'s Smoking Gun', es: 'Leer: Volatilidad — El Precio del Riesgo' },
+                ariaLabel: { en: 'Chapter IV, The Catch — Read: Price Volatility — The Algorithm\'s Smoking Gun', es: 'Capítulo IV, La captura — Leer: Volatilidad — El Precio del Riesgo' },
               },
             ]
 
@@ -1028,16 +1031,16 @@ export default function Executive() {
                       transition={{ duration: 0.35, delay: 0.92 }}
                     >
                       <span
-                        className="font-mono font-bold text-[36px] leading-none tabular-nums"
+                        className={`font-mono font-bold leading-none tabular-nums ${lang === 'en' ? 'text-[36px]' : 'text-[28px]'}`}
                         style={{ color: 'var(--color-risk-high)' }}
                       >
-                        {lang === 'en' ? 'MX$1.25T' : 'MX$1.25 bln'}
+                        {lang === 'en' ? 'MX$1.25T' : 'MX$1.25 billones'}
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1.5"
                         style={{ color: 'var(--color-risk-high)', opacity: 0.7 }}
                       >
-                        {lang === 'en' ? '95% never audited' : '95% sin auditar · billones'}
+                        {lang === 'en' ? '95% never audited' : '95% sin auditar'}
                       </span>
                     </motion.div>
                   </div>
@@ -1508,8 +1511,8 @@ export default function Executive() {
             folio="VIII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
             caption={lang === 'en'
-              ? 'Cascade — from 3.1M COMPRANET records to 299 hand-investigable T1 vendors. Each filter step\'s retention shown in log-scale; 43 GT cases anchor the model below.'
-              : 'Cascada — de 3.1M registros COMPRANET a 299 proveedores T1 investigables a mano. La retención de cada paso se muestra en escala logarítmica; 43 casos GT anclan el modelo abajo.'}
+              ? 'Cascade — from 3.1M COMPRANET records to 299 hand-investigable T1 vendors. Each filter step\'s retention shown in log-scale; 43 named cases anchor the model below.'
+              : 'Cascada — de 3.1M registros COMPRANET a 299 proveedores T1 investigables a mano. La retención de cada paso se muestra en escala logarítmica; 43 casos con nombre anclan el modelo abajo.'}
           >
             {(() => {
               // ── Cascade Ledger — 4 log-scaled rungs + GT anchor band ──
@@ -1723,8 +1726,8 @@ export default function Executive() {
                     className="group block mt-5 pt-3 transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     style={{ borderTop: '1px dashed rgba(160, 104, 32, 0.45)' }}
                     aria-label={lang === 'en'
-                      ? `43 documented cases · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} GT vendors — training corpus`
-                      : `43 casos documentados · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} proveedores GT — corpus de entrenamiento`}
+                      ? `43 named cases · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} GT vendors — training corpus`
+                      : `43 casos con nombre · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} proveedores GT — corpus de entrenamiento`}
                   >
                     <div className="grid items-baseline gap-x-4" style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}>
                       {/* Eyebrow + count, indented to align under count column */}
@@ -1752,8 +1755,8 @@ export default function Executive() {
                         </div>
                         <div className="text-[11px] text-text-secondary group-hover:text-text-primary transition-colors leading-[1.4]">
                           {lang === 'en'
-                            ? <>43 documented · <span className="tabular-nums">{formatNumber(gtVendors)}</span> GT vendors</>
-                            : <>43 documentados · <span className="tabular-nums">{formatNumber(gtVendors)}</span> proveedores GT</>}
+                            ? <>43 named cases · <span className="tabular-nums">{formatNumber(gtVendors)}</span> GT vendors</>
+                            : <>43 casos con nombre · <span className="tabular-nums">{formatNumber(gtVendors)}</span> proveedores GT</>}
                         </div>
                         <div
                           className="text-[10px] leading-[1.4] mt-0.5"
