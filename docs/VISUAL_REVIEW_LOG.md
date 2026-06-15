@@ -4818,3 +4818,48 @@ Grep scans on `frontend/src/pages/` and `frontend/src/components/` completed. Al
 
 ### Overall: WARN
 HTTP and API checks blocked by Anthropic Egress Gateway — persistent infrastructure constraint, not a site failure. To fix: add `rubli.xyz` to the network egress allowlist in environment settings at code.claude.com. Bilingual scan clean; no source regressions detected in local codebase.
+
+---
+## Visual Review — 2026-06-15T00:07:23Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (egress blocked) | BLOCKED |
+| https://rubli.xyz/atlas | 403 (egress blocked) | BLOCKED |
+| https://rubli.xyz/aria | 403 (egress blocked) | BLOCKED |
+| https://rubli.xyz/sectors | 403 (egress blocked) | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 (egress blocked) | BLOCKED |
+| https://rubli.xyz/cases | 403 (egress blocked) | BLOCKED |
+| https://rubli.xyz/methodology | 403 (egress blocked) | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress blocked) | BLOCKED |
+
+> All 403s originate from the Anthropic Egress Gateway (`x-deny-reason: host_not_allowed`). Not indicative of site failure. To fix: add `rubli.xyz` to the network egress allowlist in environment settings at code.claude.com.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 egress blocked — empty body | BLOCKED |
+| /api/v1/cases?limit=5 | 403 egress blocked — empty body | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 egress blocked — empty body | BLOCKED |
+| /api/v1/sectors | 403 egress blocked — empty body | BLOCKED |
+
+> All API calls blocked by the same egress restriction. Not indicative of backend failure.
+
+### Bilingual Gaps
+Grep scans on `frontend/src/pages/` and `frontend/src/components/` completed. All regex matches are false positives:
+- `CaseLibrary.tsx:19` — inline comment referencing FRAUDTYPES enum. Not rendered text. OK.
+- `Methodology.tsx:125` — academic citation (Mahalanobis, P.C. 1936). Untranslatable proper noun. OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` code accessor, not rendered string. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property (`target_type: 'vendor'`). Not user-facing. OK.
+- `ExpedienteSpine.tsx:72` — TypeScript return type annotation. OK.
+- `ExploreCanvas.tsx:1476–1491` — comment block + corporate-form token array (`S.A.`, `C.V.`, etc.). Not rendered. OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155–165` — pattern labels properly bilingual via `isEs ? ES : EN` ternaries. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by Anthropic Egress Gateway — persistent infrastructure constraint, not a site failure. Bilingual scan clean; no source regressions detected in local codebase. Action required: add `rubli.xyz` to the network egress allowlist in environment settings (code.claude.com/docs).
