@@ -84,7 +84,7 @@
   "incompleteDataset": "Conjunto de Datos Incompleto",
   "incompleteDatasetDescription": "La administración de Sheinbaum inicio en octubre de 2024. Estos datos cubren ~4 meses vs. terminos completos de 6 años para otros presidentes. Las comparaciones directas pueden ser engañosas.",
   "aiDetectedAnomalies": "Anomalías Detectadas por IA",
-  "anomaliesNote": "años que se desvían >1.8σ de la línea base de 23 años",
+  "anomaliesNote": "años que se desvían >1.8σ de la línea base 2002–2025",
   "sectorCorrelations": "Correlaciones de Riesgo Sectorial",
   "sectorCorrelationsNote": "Pares de sectores con trayectorias de riesgo correlacionadas (|r| ≥ 0.70) durante esta administración",
   "heatmapSubtitle": "Métricas de riesgo por sector durante la administración seleccionada — ordenadas por porcentaje de contratos de alto riesgo.",
@@ -281,5 +281,7 @@
     "kicker": "Hallazgo sexenal · Adjudicación directa {{direction}} {{absDelta}} pp",
     "deck": "El traspaso de {{prevName}} a {{currName}} trajo el mayor giro en contratación sin concurso del periodo analizado: la adjudicación directa {{direction}} de {{prevPct}}% a {{currPct}}% — una señal de cómo cambia la competencia cuando cambia el régimen.",
     "viewDossier": "Ver expediente de {{name}}"
-  }
+  },
+  "loadError": "Datos no disponibles",
+  "loadErrorDetail": "El servidor puede estar temporalmente no disponible. Los datos de las administraciones aparecerán una vez que se restablezca la conexión."
 }

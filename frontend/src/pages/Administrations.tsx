@@ -74,7 +74,16 @@ const ERA_KEYS: Record<string, string> = {
 }
 
 // ADMIN_DISPLAY_NAMES (diacritics map) moved to components/administrations/data.ts
-// (2026-06-07) — shared with AdminSectorMatrix + AdminSummaryCard. Imported above.
+// (2026-06-07) — shared with AdminSummaryCard. Imported above.
+
+// Localized labels for the §I anomaly-chip metric keys (AD = Adjudicación
+// Directa, AR = Alto Riesgo — the abbreviations used elsewhere on the page).
+const ANOMALY_METRIC_LABELS: Record<string, { en: string; es: string }> = {
+  contracts: { en: 'contracts', es: 'contratos' },
+  risk:      { en: 'risk',      es: 'riesgo' },
+  'DA%':     { en: 'DA%',       es: 'AD%' },
+  'HR%':     { en: 'HR%',       es: 'AR%' },
+}
 
 // =============================================================================
 // Helpers
@@ -319,12 +328,18 @@ export default function Administrations() {
   // all-time baseline (all 24 years).
   const yearAnomalies = useMemo(() => {
     if (!selectedAgg || yoyData.length < 5) return []
-    const allContracts = yoyData.map((y) => y.contracts)
-    const allRisk     = yoyData.map((y) => y.avg_risk * 100)
-    const allDA       = yoyData.map((y) => y.direct_award_pct)
-    const allHR       = yoyData.map((y) => y.high_risk_pct)
+    // Baseline excludes junk micro-volume years (2000: 1 contract, 2001: 19,
+    // 2004: 7) whose extreme rates (HR 100%/0% on a handful of contracts) blow
+    // up the std and shift the mean, distorting which years get flagged. DC9.
+    const baseYears = yoyData.filter((y) => y.contracts >= 1000)
+    if (baseYears.length < 5) return []
+    const allContracts = baseYears.map((y) => y.contracts)
+    const allRisk     = baseYears.map((y) => y.avg_risk * 100)
+    const allDA       = baseYears.map((y) => y.direct_award_pct)
+    const allHR       = baseYears.map((y) => y.high_risk_pct)
     const anomalies: Array<{ year: number; metric: string; z: number }> = []
     for (const yr of selectedAgg.years) {
+      if (yr.contracts < 1000) continue
       const checks = [
         { metric: 'contracts', z: computeZScore(allContracts, yr.contracts) },
         { metric: 'risk',      z: computeZScore(allRisk,      yr.avg_risk * 100) },
@@ -503,11 +518,14 @@ export default function Administrations() {
               // Reference: FT "small multiples" + NYT Upshot annotated single series.
               const first = years[0]
               const last = years[years.length - 1]
-              const mean = (k: 'direct_award_pct' | 'single_bid_pct' | 'high_risk_pct') =>
-                years.reduce((s, y) => s + y[k], 0) / years.length
-              const daAvg = mean('direct_award_pct')
-              const sbAvg = mean('single_bid_pct')
-              const hrAvg = mean('high_risk_pct')
+              // Term averages = the SAME contract-weighted aggregates the
+              // summary fingerprint shows (selectedAgg.*), NOT an unweighted
+              // year-mean. The year-mean is badly skewed by micro-volume years
+              // (e.g. Fox 2004 = 7 contracts at DA 71%), which made §I disagree
+              // with the card above it — Fox read DA 17.9% here vs 0.0% there. DC1.
+              const daAvg = selectedAgg.directAwardPct
+              const sbAvg = selectedAgg.singleBidPct
+              const hrAvg = selectedAgg.highRiskPct
               const maxHR = Math.max(...years.map((y) => y.high_risk_pct))
               const daDelta = daAvg - allTimeAvg.da
               const sbDelta = sbAvg - allTimeAvg.sb
@@ -659,7 +677,10 @@ export default function Administrations() {
                     <span className="text-[10px] text-text-muted">— {t('anomaliesNote')}</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {yearAnomalies.map((a) => (
+                    {yearAnomalies.map((a) => {
+                      const ml = ANOMALY_METRIC_LABELS[a.metric] ?? { en: a.metric, es: a.metric }
+                      const mLabel = isEs ? ml.es : ml.en
+                      return (
                       <span
                         key={`${a.year}-${a.metric}`}
                         className={cn(
@@ -668,11 +689,14 @@ export default function Administrations() {
                             ? 'bg-risk-critical/10 text-risk-critical border border-risk-critical/20'
                             : 'bg-risk-medium/10 text-risk-medium border border-risk-medium/20'
                         )}
-                        title={`${a.metric} in ${a.year}: ${a.z.toFixed(2)}σ from all-time average`}
+                        title={isEs
+                          ? `${mLabel} en ${a.year}: ${a.z.toFixed(2)}σ del promedio histórico`
+                          : `${mLabel} in ${a.year}: ${a.z.toFixed(2)}σ from all-time average`}
                       >
-                        {a.year} {a.metric} {a.z > 0 ? '+' : ''}{a.z.toFixed(1)}σ
+                        {a.year} {mLabel} {a.z > 0 ? '+' : ''}{a.z.toFixed(1)}σ
                       </span>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -751,7 +775,7 @@ export default function Administrations() {
                 <div>
                   <ChapterKicker numeral="II" es="LA HUELLA SECTORIAL" en="THE SECTOR FOOTPRINT" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
                   <h3 className="text-sm font-mono text-text-primary">
-                    {t('sectorProfile', { admin: selectedAdmin })}
+                    {t('sectorProfile', { admin: selectedDisplay })}
                   </h3>
                   <p className="text-xs text-text-muted mt-1">
                     {t('heatmapSubtitle')}
@@ -761,10 +785,10 @@ export default function Administrations() {
                   filename="rubli-administraciones-sectores.csv"
                   data={sectorHeatmap.filter((s) => s.contracts > 0).map((s) => ({
                     sector: s.name,
-                    direct_award_pct: s.da.toFixed(1) + '%',
-                    single_bid_pct: s.sb.toFixed(1) + '%',
-                    high_risk_pct: s.hr.toFixed(1) + '%',
-                    avg_risk: (s.risk * 100).toFixed(1) + '%',
+                    [isEs ? 'adj_directa_pct' : 'direct_award_pct']: s.da.toFixed(1) + '%',
+                    [isEs ? 'lic_unica_pct' : 'single_bid_pct']: s.sb.toFixed(1) + '%',
+                    [isEs ? 'alto_riesgo_pct' : 'high_risk_pct']: s.hr.toFixed(1) + '%',
+                    [isEs ? 'riesgo_prom' : 'avg_risk']: (s.risk * 100).toFixed(1) + '%',
                   }))}
                   className="shrink-0"
                 />
@@ -830,7 +854,7 @@ export default function Administrations() {
                 <div className="min-w-0">
                   <ChapterKicker numeral="III" es="EL EXPEDIENTE" en="THE CASE FILE" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
                   <h3 className="text-sm font-mono text-text-primary">
-                    {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
+                    {t('keyEvents', { admin: selectedDisplay, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
                   </h3>
                   <p className="text-xs text-text-muted mt-1">{t('keyEventsSubtitle')}</p>
                 </div>
@@ -1209,9 +1233,13 @@ export default function Administrations() {
                   </tbody>
                 </table>
               </div>
-              {moversResp.note && (
-                <p className="mt-3 text-[11px] leading-relaxed text-text-muted max-w-2xl">{moversResp.note}</p>
-              )}
+              {/* Provenance note. The server note (moversResp.note) is Spanish-only,
+                  so render a locale-matched string — the English branch mirrors it. */}
+              <p className="mt-3 text-[11px] leading-relaxed text-text-muted max-w-2xl">
+                {isEs
+                  ? (moversResp.note ?? 'Responsables de la Unidad Compradora que firmaron en más de una institución · 2018+ (COMPRANET Estructura C/D). Indicador de riesgo del modelo — no es una acusación.')
+                  : 'Procurement officers of record who signed at more than one institution · 2018+ (COMPRANET Structure C/D). Model risk indicator — not an accusation.'}
+              </p>
             </section>
           )}
 
@@ -1229,35 +1257,38 @@ export default function Administrations() {
 // Hardcoded key events per administration — sourced from public records.
 // Bilingual since 2026-06-07: `title` EN, `titleEs` ES (previously English-only,
 // which leaked untranslated strings into the Spanish UI).
-const HARDCODED_EVENTS: Record<string, Array<{ year: number; title: string; titleEs: string; type: 'reform' | 'scandal' | 'audit' | 'crisis'; impact: 'high' | 'medium' | 'low' }>> = {
+// `dupScandal` marks a curated event that restates a DOSSIER_DATA scandal of
+// that key — ExpedienteSpine drops it when the scandal is present so §III shows
+// each affair once (the case-linked scandal wins). DC4.
+const HARDCODED_EVENTS: Record<string, Array<{ year: number; title: string; titleEs: string; type: 'reform' | 'scandal' | 'audit' | 'crisis'; impact: 'high' | 'medium' | 'low'; dupScandal?: string }>> = {
   Fox: [
     { year: 2002, title: 'COMPRANET launched as digital procurement platform', titleEs: 'COMPRANET se lanza como plataforma digital de contratación', type: 'reform', impact: 'medium' },
     { year: 2003, title: 'First ASF audit on widespread direct-award contracting', titleEs: 'Primera auditoría de la ASF sobre adjudicación directa generalizada', type: 'audit', impact: 'medium' },
-    { year: 2004, title: 'PEMEXGATE scandal: diversions in maintenance contracts', titleEs: 'Escándalo PEMEXGATE: desvíos en contratos de mantenimiento', type: 'scandal', impact: 'high' },
+    { year: 2004, title: 'PEMEXGATE scandal: diversions in maintenance contracts', titleEs: 'Escándalo PEMEXGATE: desvíos en contratos de mantenimiento', type: 'scandal', impact: 'high', dupScandal: 'pemexgate' },
     { year: 2005, title: 'Acquisitions Law reform — new transparency requirements', titleEs: 'Reforma a la Ley de Adquisiciones — nuevos requisitos de transparencia', type: 'reform', impact: 'medium' },
   ],
   Calderon: [
     { year: 2007, title: 'National Security Strategy launched — surge in defense contracts', titleEs: 'Estrategia Nacional de Seguridad — auge de contratos de defensa', type: 'crisis', impact: 'medium' },
     { year: 2008, title: 'Global financial crisis — federal spending contraction', titleEs: 'Crisis financiera global — contracción del gasto federal', type: 'crisis', impact: 'medium' },
     { year: 2009, title: 'AH1N1 flu: emergency procurement with minimal bidding', titleEs: 'Influenza AH1N1: compras de emergencia con licitación mínima', type: 'crisis', impact: 'high' },
-    { year: 2010, title: 'PEMEX hires Odebrecht for Etileno XXI — bribery scheme begins', titleEs: 'PEMEX contrata a Odebrecht para Etileno XXI — inicia esquema de sobornos', type: 'scandal', impact: 'high' },
+    { year: 2010, title: 'PEMEX hires Odebrecht for Etileno XXI — bribery scheme begins', titleEs: 'PEMEX contrata a Odebrecht para Etileno XXI — inicia esquema de sobornos', type: 'scandal', impact: 'high', dupScandal: 'odebrecht' },
     { year: 2012, title: 'New Government Procurement Law — broadest reform in 15 years', titleEs: 'Nueva Ley de Contrataciones Públicas — la reforma más amplia en 15 años', type: 'reform', impact: 'high' },
   ],
   'Pena Nieto': [
-    { year: 2014, title: 'Casa Blanca scandal — conflict of interest with contractor Grupo Higa', titleEs: 'Escándalo de la Casa Blanca — conflicto de interés con el contratista Grupo Higa', type: 'scandal', impact: 'high' },
-    { year: 2015, title: 'IMSS ghost-company network uncovered by ASF audit', titleEs: 'Red de empresas fantasma del IMSS descubierta por auditoría de la ASF', type: 'scandal', impact: 'high' },
-    { year: 2016, title: 'Odebrecht-PEMEX investigation — bribes for infrastructure contracts', titleEs: 'Investigación Odebrecht-PEMEX — sobornos por contratos de infraestructura', type: 'scandal', impact: 'high' },
-    { year: 2017, title: 'La Estafa Maestra: MXN 7.6B diverted through public universities', titleEs: 'La Estafa Maestra: 7,600 MDP desviados a través de universidades públicas', type: 'scandal', impact: 'high' },
+    { year: 2014, title: 'Casa Blanca scandal — conflict of interest with contractor Grupo Higa', titleEs: 'Escándalo de la Casa Blanca — conflicto de interés con el contratista Grupo Higa', type: 'scandal', impact: 'high', dupScandal: 'casa_blanca' },
+    { year: 2015, title: 'IMSS ghost-company network uncovered by ASF audit', titleEs: 'Red de empresas fantasma del IMSS descubierta por auditoría de la ASF', type: 'scandal', impact: 'high', dupScandal: 'imss_ghost' },
+    { year: 2016, title: 'Odebrecht-PEMEX investigation — bribes for infrastructure contracts', titleEs: 'Investigación Odebrecht-PEMEX — sobornos por contratos de infraestructura', type: 'scandal', impact: 'high', dupScandal: 'odebrecht' },
+    { year: 2017, title: 'La Estafa Maestra: MXN 7.6B diverted through public universities', titleEs: 'La Estafa Maestra: 7,600 MDP desviados a través de universidades públicas', type: 'scandal', impact: 'high', dupScandal: 'estafa_maestra' },
     { year: 2017, title: 'September earthquakes — emergency procurement without bidding', titleEs: 'Sismos de septiembre — compras de emergencia sin licitación', type: 'crisis', impact: 'medium' },
     { year: 2018, title: 'CompraNet 5.0 reform — improved traceability', titleEs: 'Reforma CompraNet 5.0 — mejor trazabilidad', type: 'reform', impact: 'medium' },
   ],
   AMLO: [
     { year: 2019, title: 'Austerity decree — drastic reduction in service contracts', titleEs: 'Decreto de austeridad — reducción drástica de contratos de servicios', type: 'reform', impact: 'high' },
     { year: 2019, title: 'Militarization of megaprojects (AIFA, Tren Maya) — direct awards to Army', titleEs: 'Militarización de megaproyectos (AIFA, Tren Maya) — adjudicaciones directas al Ejército', type: 'reform', impact: 'high' },
-    { year: 2020, title: 'COVID-19 pandemic: emergency procurement of ventilators and medicines', titleEs: 'Pandemia de COVID-19: compras de emergencia de ventiladores y medicinas', type: 'crisis', impact: 'high' },
-    { year: 2021, title: 'Segalmex scandal — MXN 9.4B fraud in food distribution', titleEs: 'Escándalo Segalmex — fraude de 9,400 MDP en distribución de alimentos', type: 'scandal', impact: 'high' },
-    { year: 2022, title: 'SAT publishes final EFOS list: 38 COMPRANET vendors confirmed as ghost companies', titleEs: 'El SAT publica la lista definitiva de EFOS: 38 proveedores de COMPRANET confirmados como empresas fantasma', type: 'audit', impact: 'high' },
-    { year: 2023, title: 'Tren Maya: FONATUR awards MXN 180M in direct contracts to Sedena', titleEs: 'Tren Maya: FONATUR adjudica 180 MDP en contratos directos a la Sedena', type: 'scandal', impact: 'medium' },
+    { year: 2020, title: 'COVID-19 pandemic: emergency procurement of ventilators and medicines', titleEs: 'Pandemia de COVID-19: compras de emergencia de ventiladores y medicinas', type: 'crisis', impact: 'high', dupScandal: 'covid_procurement' },
+    { year: 2021, title: 'Segalmex scandal — MXN 9.4B fraud in food distribution', titleEs: 'Escándalo Segalmex — fraude de 9,400 MDP en distribución de alimentos', type: 'scandal', impact: 'high', dupScandal: 'segalmex' },
+    { year: 2022, title: 'SAT publishes final EFOS list: 38 COMPRANET vendors confirmed as ghost companies', titleEs: 'El SAT publica la lista definitiva de EFOS: 38 proveedores de COMPRANET confirmados como empresas fantasma', type: 'audit', impact: 'high', dupScandal: 'efos_sat' },
+    { year: 2023, title: 'Tren Maya: FONATUR awards MXN 180M in direct contracts to Sedena', titleEs: 'Tren Maya: FONATUR adjudica 180 MDP en contratos directos a la Sedena', type: 'scandal', impact: 'medium', dupScandal: 'tren_maya' },
   ],
   Sheinbaum: [
     { year: 2024, title: "Claudia Sheinbaum inaugurated — Mexico's first female president", titleEs: 'Claudia Sheinbaum toma posesión — primera presidenta de México', type: 'reform', impact: 'low' },

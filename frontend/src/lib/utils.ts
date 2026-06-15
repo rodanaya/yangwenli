@@ -312,8 +312,14 @@ export function normalizeValue(value: number, min: number, max: number): number 
  */
 export function toTitleCase(text: string): string {
   if (!text) return ''
-  // Already mixed case (not ALL CAPS and not all-lowercase) — return as-is
-  if (text !== text.toUpperCase() && text !== text.toLowerCase()) return text
+  // Already genuine mixed case (has BOTH a lowercase AND an uppercase ASCII
+  // letter) — leave it alone. We test ASCII case only on purpose: COMPRANET
+  // stores many names ASCII-UPPERCASE with their accented vowels left lowercase
+  // (SQLite UPPER() is ASCII-only), e.g. "ANNA HIDA CHáVEZ ALEMáN". The old
+  // `text !== text.toUpperCase()` guard treated that lone lowercase "á" as
+  // mixed-case and returned the mangled string unchanged; the ASCII-only test
+  // correctly recognises it as effectively all-caps and title-cases it.
+  if (/[a-z]/.test(text) && /[A-Z]/.test(text)) return text
 
   let lower = text.toLowerCase()
 

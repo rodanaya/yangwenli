@@ -308,7 +308,7 @@ export function ComparePeriodView() {
           )}
 
           {/* Portrait cards grid */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Period A portrait */}
             <div className="card">
               <div className="px-4 py-3 border-b border-border/60 bg-background-card">

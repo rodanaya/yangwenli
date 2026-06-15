@@ -28,6 +28,10 @@ export interface ExpedienteSpineProps {
     titleEs: string
     type: 'reform' | 'scandal' | 'audit' | 'crisis'
     impact: 'high' | 'medium' | 'low'
+    /** When set, this curated event restates a DOSSIER_DATA scandal of this
+     *  key — it is dropped from the spine when that scandal is present, so the
+     *  richer (case-linked) scandal entry is the single source of truth. */
+    dupScandal?: string
   }>
 }
 
@@ -73,18 +77,25 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
   const { adminName, isEs, events } = props
   const { t } = useTranslation('administrations')
 
-  // (a) events → spine entries
-  const eventEntries: EventSpineEntry[] = events.map((e) => ({
-    kind: 'event',
-    year: e.year,
-    type: e.type,
-    impact: e.impact,
-    text: isEs ? e.titleEs : e.title,
-  }))
-
   // (b) DOSSIER_DATA scandals → spine entries (year via SCANDAL_YEARS, 9999 fallback)
   const scandals = DOSSIER_DATA[adminName]?.scandals ?? []
   const yearMap = SCANDAL_YEARS[adminName] ?? {}
+
+  // (a) events → spine entries. Drop any curated event that merely restates a
+  // scandal present here (dupScandal) — otherwise every major affair renders
+  // twice (curated event + GT scandal). The scandal carries the case link, so
+  // it wins. DC4.
+  const scandalKeys = new Set(scandals.map((s) => s.key))
+  const eventEntries: EventSpineEntry[] = events
+    .filter((e) => !(e.dupScandal && scandalKeys.has(e.dupScandal)))
+    .map((e) => ({
+      kind: 'event',
+      year: e.year,
+      type: e.type,
+      impact: e.impact,
+      text: isEs ? e.titleEs : e.title,
+    }))
+
   const scandalEntries: ScandalSpineEntry[] = scandals.map((s) => ({
     kind: 'scandal',
     year: yearMap[s.key] ?? 9999,

@@ -146,10 +146,15 @@ function appendAnchors(
     })
   }
   if (decSpikePct != null && decSpikePct > 10) {
+    // decSpikePct is December's SHARE of the whole term's spend; a uniform
+    // month would be 1/12 ≈ 8.3%. Express it as a multiple of a typical month
+    // — the old copy mislabelled the raw share as "% above the average" (which
+    // both misframed the metric and understated the spike ~8×). DC2.
+    const decMult = decSpikePct / (100 / 12)
     segments.push({
       text: isEs
-        ? ` El gasto de diciembre se dispara ${decSpikePct.toFixed(0)}% sobre el promedio mensual.`
-        : ` December spending spikes ${decSpikePct.toFixed(0)}% above the monthly average.`,
+        ? ` El gasto de diciembre equivale a ${decMult.toFixed(1)}× un mes promedio (${decSpikePct.toFixed(0)}% del gasto del sexenio).`
+        : ` December spending runs ${decMult.toFixed(1)}× a typical month (${decSpikePct.toFixed(0)}% of the term's spend).`,
     })
   }
 }
