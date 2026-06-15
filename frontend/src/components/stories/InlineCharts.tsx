@@ -725,7 +725,10 @@ export function InlineLineChart({
 }) {
   const pts = data.points
   const mx = maxVal(pts, data.maxValue)
-  const mn = 0
+  // Optional zoomed axis floor: a series in a narrow band (e.g. 71–87% on a
+  // 0–90 scale) reads flat without this. When set, drop the area fill (a
+  // filled area off a non-zero baseline would overstate the magnitude).
+  const mn = data.yMin ?? 0
   const W = 560
   const H = 170
   const PAD = { top: 18, right: 24, bottom: 28, left: 44 }
@@ -785,8 +788,9 @@ export function InlineLineChart({
               opacity={0.65}
             />
             <text
-              x={W - PAD.right + 2}
-              y={plotY(data.referenceLine.value) + 4}
+              x={PAD.left - 3}
+              y={plotY(data.referenceLine.value) + 3}
+              textAnchor="end"
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
@@ -796,8 +800,33 @@ export function InlineLineChart({
             </text>
           </>
         )}
+        {data.referenceLine2 && (
+          <>
+            <line
+              x1={PAD.left}
+              y1={plotY(data.referenceLine2.value)}
+              x2={W - PAD.right}
+              y2={plotY(data.referenceLine2.value)}
+              stroke={data.referenceLine2.color ?? 'var(--color-text-muted)'}
+              strokeWidth={1}
+              strokeDasharray="4 3"
+              opacity={0.6}
+            />
+            <text
+              x={PAD.left - 3}
+              y={plotY(data.referenceLine2.value) + 3}
+              textAnchor="end"
+              fontSize={10}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill={data.referenceLine2.color ?? 'var(--color-text-muted)'}
+              opacity={0.9}
+            >
+              {lineRefLabel(data.referenceLine2)}
+            </text>
+          </>
+        )}
 
-        {pts.length > 1 && (
+        {pts.length > 1 && !data.yMin && (
           <path
             d={buildAreaPath(pts, plotX, plotY, PAD.top + plotH)}
             fill="url(#line-grad)"
@@ -2157,19 +2186,28 @@ export function AnnotatedThermometer({
               >
                 {labelFor(pt)}
               </text>
-              {/* Value: share% · absolute */}
-              <text
-                x={LABEL_W + Math.max(2, barPx) + 6}
-                y={rowY + ROW_H / 2 + 1}
-                textAnchor="start"
-                dominantBaseline="middle"
-                fontSize={11}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight={700}
-                fill={valueColor}
-              >
-                {sharePct.toFixed(1)}% · {pt.value.toLocaleString()}{data.unit ? ` ${data.unit}` : ''}
-              </text>
+              {/* Value: share% · absolute. On a long bar, render the readout
+                  INSIDE the bar (right-aligned, contrast-safe ink) so it does
+                  not collide with the contracts annotation at the far right —
+                  the collision that made the top sectors unreadable. */}
+              {(() => {
+                const valTxt = `${sharePct.toFixed(1)}% · ${pt.value.toLocaleString()}${data.unit ? ` ${data.unit}` : ''}`
+                const inBar = barPx > 150
+                return (
+                  <text
+                    x={inBar ? LABEL_W + barPx - 6 : LABEL_W + Math.max(2, barPx) + 6}
+                    y={rowY + ROW_H / 2 + 1}
+                    textAnchor={inBar ? 'end' : 'start'}
+                    dominantBaseline="middle"
+                    fontSize={11}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fontWeight={700}
+                    fill={inBar ? labelInkOn(barFill) : valueColor}
+                  >
+                    {valTxt}
+                  </text>
+                )
+              })()}
               {/* Annotation for highlighted rows */}
               {aboveRef && anno && (
                 <text
@@ -2397,12 +2435,20 @@ export function ClevelandPairChart({
     )
   }
 
-  // Sort by gap (value - value2) descending
-  const sorted = [...data.points].sort((a, b) => {
-    const gapA = a.value - (a.value2 ?? 0)
-    const gapB = b.value - (b.value2 ?? 0)
-    return gapB - gapA
-  })
+  // Sort rows. Default: by absolute gap (value − value2) descending. When
+  // sortBy='ratio' (editorial metric is the share, e.g. gapFormat 'ratio'),
+  // rank by value/value2 descending so the most-distorted row reads at the top
+  // and the anchor stat names it — otherwise a ratio story gets sorted by
+  // sector size and buries its own lede.
+  const ratioOf = (p: StoryChartPoint) => {
+    const denom = p.value2 ?? 0
+    return denom > 0 ? p.value / denom : 0
+  }
+  const sorted = [...data.points].sort((a, b) =>
+    data.sortBy === 'ratio'
+      ? ratioOf(b) - ratioOf(a)
+      : (b.value - (b.value2 ?? 0)) - (a.value - (a.value2 ?? 0))
+  )
 
   // Scale: max of all values and value2
   const allVals = data.points.flatMap((p) => [p.value, p.value2 ?? 0])
@@ -2411,12 +2457,17 @@ export function ClevelandPairChart({
 
   const totalSvgH = sorted.length * (ROW_H + ROW_GAP) + 36
 
-  // Anchor stat: gap of first (largest-gap) row
+  // Anchor stat: the top row. In ratio-sort mode the headline is the share
+  // itself (e.g. "19.6%"); otherwise the absolute gap of the largest-gap row.
   const firstPt = sorted[0]
   const firstGap = firstPt ? firstPt.value - (firstPt.value2 ?? 0) : 0
+  const anchorValue =
+    data.sortBy === 'ratio' && firstPt?.value2
+      ? `${((firstPt.value / firstPt.value2) * 100).toFixed(1)}%`
+      : firstGap.toLocaleString()
   const anchor = firstPt
     ? {
-        value: firstGap.toLocaleString(),
+        value: anchorValue,
         label: labelFor(firstPt),
         color: firstPt.color ?? HIGHLIGHT_COLOR,
       }

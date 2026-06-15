@@ -150,6 +150,15 @@ export interface StoryInlineChartData {
    *  percentage — used when value is a subset of value2 (e.g. single-bid
    *  wins out of total wins) and the gap is always negative + meaningless. */
   gapFormat?: 'signed' | 'ratio'
+  /** InlineLineChart-only: zoom the y-axis to a non-zero floor so a series
+   *  that lives in a narrow band (e.g. DA rate 71–87% on a 0–90 scale) shows
+   *  its variation instead of hugging the top. Default 0. */
+  yMin?: number
+  /** ClevelandPairChart-only (pair mode): rank rows by the value/value2 ratio
+   *  descending instead of the default absolute gap — use when the editorial
+   *  metric IS the share (gapFormat 'ratio'), so the most-distorted row reads
+   *  at the top. Opt-in so charts ranking by magnitude are unaffected. */
+  sortBy?: 'gap' | 'ratio'
   /** ThresholdDistribution-only: draw a faint ordered connector through the
    *  dots (e.g. the rising "water line" across administrations) so the
    *  trajectory reads as a single climb rather than disconnected points. */
@@ -893,6 +902,7 @@ export const STORIES: StoryDef[] = [
             },
             unit: 'risk score',
             maxValue: 1,
+            connectDots: true,
             yLabel: 'Average v0.8.5 risk score',
             yLabel_es: 'Riesgo promedio v0.8.5',
             annotation:
@@ -2575,8 +2585,8 @@ export const STORIES: StoryDef[] = [
                 value: 401.8,
                 color: '#dc2626',
                 highlight: true,
-                annotation: '3,415 vendors · 392K contracts',
-                annotation_es: '3,415 proveedores · 392K contratos',
+                annotation: '2.6× the avg buyer · 3,415 vendors',
+                annotation_es: '2.6× el comprador promedio · 3,415 prov.',
               },
               {
                 label: 'CFE',
@@ -2622,11 +2632,17 @@ export const STORIES: StoryDef[] = [
                 annotation_es: '281 proveedores · 5,988 contratos',
               },
             ],
+            referenceLine: {
+              value: 151.7,
+              label: 'avg of the 7 · 151.7B',
+              label_es: 'prom. de las 7 · 151.7B',
+              color: '#64748b',
+            },
             unit: 'B MXN',
             annotation:
-              "Each bar shows the total value of P6-pattern contracting where the listed institution is the vendor's primary buyer. Health institutions (IMSS, ISSSTE — red highlight) account for 451.9B MXN; energy (CFE, PEMEX) accounts for 440.5B MXN. The seven institutions sum to 1.06 trillion pesos.",
+              "Each bar shows the total value of P6-pattern contracting where the listed institution is the vendor's primary buyer. Dashed line = the seven-institution average (151.7B); IMSS runs 2.6× it. Health institutions (IMSS, ISSSTE — red highlight) account for 451.9B MXN; energy (CFE, PEMEX) accounts for 440.5B MXN. The seven institutions sum to 1.06 trillion pesos.",
             annotation_es:
-              'Cada barra muestra el valor total de contratación con patrón P6 donde la institución listada es el comprador principal del proveedor. Las instituciones de salud (IMSS, ISSSTE — resaltadas en rojo) suman 451.9 mil millones; energía (CFE, PEMEX) suma 440.5 mil millones. Las siete instituciones suman 1.06 billones de pesos.',
+              'Cada barra muestra el valor total de contratación con patrón P6 donde la institución listada es el comprador principal del proveedor. La línea punteada = el promedio de las siete instituciones (151.7 mil M); el IMSS corre 2.6× eso. Las instituciones de salud (IMSS, ISSSTE — resaltadas en rojo) suman 451.9 mil millones; energía (CFE, PEMEX) suma 440.5 mil millones. Las siete instituciones suman 1.06 billones de pesos.',
           },
         },
         pullquote: {
@@ -2734,6 +2750,7 @@ export const STORIES: StoryDef[] = [
             ],
             unit: 'B MXN',
             gapFormat: 'ratio',
+            sortBy: 'ratio',
             annotation:
               "Filled dot = P3 intermediary spend (B MXN). Open dot = sector total at high or critical risk (B MXN). Right column = P3 share of the sector's at-risk footprint. Infrastructure routes 19.6% of its high-risk spend through P3 intermediaries — roughly three times the share seen in Health (6.0%) or Hacienda (6.5%).",
             annotation_es:
@@ -5362,7 +5379,7 @@ export const STORIES: StoryDef[] = [
           'Ese es el replanteamiento que el año exige. La emergencia no corrompió el sistema. Eliminó el único requisito — la justificación — que mantenía a raya el default no-competitivo, y una vez eliminado, el requisito no regresó. La línea en el tiempo se cruzó en una sola dirección.',
         ],
         chartConfig: {
-          type: 'inline-timeline',
+          type: 'inline-line',
           title: 'The Line in Time · Direct-Award Rate, Annual 2015–2024',
           title_es: 'La línea en el tiempo · Tasa de adjudicación directa, anual 2015–2024',
           chartId: 'covid-da-rate-annual',
@@ -5394,8 +5411,8 @@ export const STORIES: StoryDef[] = [
                 label: '2020',
                 value: 87,
                 highlight: true,
-                annotation: 'COVID peak',
-                annotation_es: 'pico COVID',
+                annotation: 'COVID peak · +14pp vs baseline',
+                annotation_es: 'pico COVID · +14pp vs base',
               },
               {
                 label: '2021',
@@ -5406,8 +5423,8 @@ export const STORIES: StoryDef[] = [
                 label: '2022',
                 value: 79.4,
                 highlight: true,
-                annotation: 'post-COVID trough',
-                annotation_es: 'mínimo post-COVID',
+                annotation: 'post-COVID trough — still +7pp',
+                annotation_es: 'mínimo post-COVID — aún +7pp',
               },
               {
                 label: '2023',
@@ -5421,21 +5438,23 @@ export const STORIES: StoryDef[] = [
               },
             ],
             maxValue: 90,
+            yMin: 60,
             unit: '%',
             referenceLine: {
-              value: 87,
-              label: 'ratchet window — DA never returns below 79.4%',
-              label_es: 'ventana del trinquete — la AD nunca regresa por debajo del 79.4%',
+              value: 79.4,
+              label: '79.4%',
+              label_es: '79.4%',
+              color: '#dc2626',
             },
             referenceLine2: {
-              value: 71.2,
-              label: 'pre-COVID baseline · five-year avg 72.7%',
-              label_es: 'línea base pre-COVID · promedio cinco años 72.7%',
+              value: 72.7,
+              label: '72.7%',
+              label_es: '72.7%',
             },
             annotation:
-              'The 2020 spike never resets. The post-emergency floor sits 7pp above the pre-COVID average.',
+              'Upper red line = the post-COVID floor (79.4%, never breached downward since 2020). Lower line = the pre-COVID baseline (72.7%, five-year average). The 2020 spike never resets — the floor settles ~7pp above the pre-COVID average.',
             annotation_es:
-              'El pico de 2020 no se reinicia. El piso post-emergencia queda 7pp sobre el promedio pre-COVID.',
+              'Línea roja superior = el piso post-COVID (79.4%, nunca rebasado a la baja desde 2020). Línea inferior = la línea base pre-COVID (72.7%, promedio de cinco años). El pico de 2020 no se reinicia — el piso queda ~7pp sobre el promedio pre-COVID.',
           },
         },
         pullquote: {
