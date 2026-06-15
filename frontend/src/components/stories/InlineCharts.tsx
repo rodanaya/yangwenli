@@ -1443,6 +1443,40 @@ export function InlineMultiLine({
           )
         })}
 
+        {/* Event markers — vertical rules for structural breaks (e.g. the
+            2020 INSABI/BIRMEX consolidation that cut Grupo Fármacos to zero).
+            Drawn before the series so the data lines read on top. */}
+        {data.eventLines?.map((ev, i) => {
+          const ex = plotX(ev.xIndex)
+          const evLabel = lang === 'es' ? (ev.label_es ?? ev.label) : ev.label
+          const evColor = ev.color ?? 'var(--color-text-muted)'
+          return (
+            <g key={`ev-${i}`}>
+              <line
+                x1={ex}
+                y1={PAD.top}
+                x2={ex}
+                y2={PAD.top + plotH}
+                stroke={evColor}
+                strokeWidth={1}
+                strokeDasharray="2 3"
+                opacity={0.75}
+              />
+              <text
+                x={ex}
+                y={PAD.top + 2}
+                textAnchor="middle"
+                fontSize={9}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill={evColor}
+                fontWeight={700}
+              >
+                {evLabel}
+              </text>
+            </g>
+          )
+        })}
+
         {/* Each series — line + dots */}
         {series.map((s, sIdx) => {
           const linePts = s.values
@@ -1853,6 +1887,55 @@ export function ThresholdDistribution({
           </>
         )}
 
+        {/* Optional ordered connector — the rising "water line" across
+            administrations. Drawn behind the dots; opt-in via data.connectDots
+            (a ranked distribution must NOT set it). */}
+        {data.connectDots && pts.length > 1 && (
+          <polyline
+            points={pts.map((p, i) => `${dotX(i)},${dotY(p.value)}`).join(' ')}
+            fill="none"
+            stroke="var(--color-text-muted)"
+            strokeWidth={1.25}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            opacity={0.4}
+          />
+        )}
+
+        {/* Optional riser — a vertical measure from the threshold up to one dot,
+            captioned with the multiple ("≈6×"), so "N times the red flag" is a
+            visible bracket rather than a footer sentence. */}
+        {data.riser && data.referenceLine && (() => {
+          const rp = pts[data.riser.index]
+          if (!rp) return null
+          const rx = dotX(data.riser.index)
+          const yTop = dotY(rp.value)
+          const yBot = dotY(data.referenceLine.value)
+          const rColor = data.riser.color ?? HIGHLIGHT_COLOR
+          const midY = (yTop + yBot) / 2
+          const mLabel = lang === 'es'
+            ? (data.riser.multipleLabel_es ?? data.riser.multipleLabel)
+            : data.riser.multipleLabel
+          return (
+            <g>
+              <line x1={rx} y1={yTop} x2={rx} y2={yBot} stroke={rColor} strokeWidth={1} strokeDasharray="2 2" opacity={0.75} />
+              <line x1={rx - 3} y1={yBot} x2={rx + 3} y2={yBot} stroke={rColor} strokeWidth={1} opacity={0.75} />
+              <text
+                x={rx + 7}
+                y={midY + 3}
+                textAnchor="start"
+                fontSize={11}
+                fontFamily="'Playfair Display', Georgia, serif"
+                fontStyle="italic"
+                fontWeight={800}
+                fill={rColor}
+              >
+                {mLabel}
+              </text>
+            </g>
+          )
+        })()}
+
         {/* Dots and labels */}
         {pts.map((pt, i) => {
           const cx = dotX(i)
@@ -1896,6 +1979,21 @@ export function ThresholdDistribution({
                   fill={aboveTop ? (pt.color ?? HIGHLIGHT_COLOR) : ANCHOR_COLOR}
                 >
                   {valueLabel}
+                </text>
+              )}
+              {/* Optional delta callout below the dot — bakes the climb/gap
+                  into the chart (e.g. "+37.1pp vs Calderón" on the peak admin). */}
+              {pt.delta && (
+                <text
+                  x={cx}
+                  y={cy + r + 13}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fontWeight={700}
+                  fill={pt.color ?? HIGHLIGHT_COLOR}
+                >
+                  {lang === 'es' ? (pt.delta_es ?? pt.delta) : pt.delta}
                 </text>
               )}
               {/* X-axis label — rotated -40° */}
@@ -2817,6 +2915,11 @@ export function InlineRoster({
   const labelFor = (p: StoryChartPoint) => (lang === 'es' ? (p.label_es ?? p.label) : p.label)
   const annotationFor = (p: StoryChartPoint) =>
     lang === 'es' ? (p.annotation_es ?? p.annotation ?? '') : (p.annotation ?? '')
+  // Optional benchmark: when a referenceLine is supplied, each value gets a
+  // "N× {label}" caption (e.g. "3.2× OECD ceiling") — bakes the comparison
+  // into the roster instead of leaving the ceiling only in the footer.
+  const ref = data.referenceLine
+  const refLabel = ref ? (lang === 'es' ? (ref.label_es ?? ref.label) : ref.label) : ''
 
   return (
     <ChartCard
@@ -2915,6 +3018,18 @@ export function InlineRoster({
                   >
                     {unit}
                   </span>
+                )}
+                {ref && (
+                  <div
+                    className="font-mono uppercase mt-1 tabular-nums"
+                    style={{
+                      fontSize: 9.5,
+                      letterSpacing: '0.1em',
+                      color: 'var(--color-text-muted)',
+                    }}
+                  >
+                    {(p.value / ref.value).toFixed(1)}× {refLabel}
+                  </div>
                 )}
               </div>
             </li>

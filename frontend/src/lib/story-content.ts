@@ -121,6 +121,12 @@ export interface StoryChartPoint {
    *  field get risk-tier coloring; everything else keeps its current
    *  palette path. */
   riskScore?: number
+  /** Optional delta callout (e.g. "+37.1pp vs Calderón"). ThresholdDistribution
+   *  renders this below the dot for the point that supplies it — used to bake
+   *  the climb/gap into the chart instead of leaving it in the prose. */
+  delta?: string
+  /** Optional Spanish translation of `delta`. */
+  delta_es?: string
 }
 
 export interface StoryInlineChartData {
@@ -144,6 +150,20 @@ export interface StoryInlineChartData {
    *  percentage — used when value is a subset of value2 (e.g. single-bid
    *  wins out of total wins) and the gap is always negative + meaningless. */
   gapFormat?: 'signed' | 'ratio'
+  /** ThresholdDistribution-only: draw a faint ordered connector through the
+   *  dots (e.g. the rising "water line" across administrations) so the
+   *  trajectory reads as a single climb rather than disconnected points. */
+  connectDots?: boolean
+  /** ThresholdDistribution-only: a vertical "riser" bracket from the
+   *  referenceLine up to the dot at `index`, captioned with the multiple
+   *  (e.g. "≈6×") — makes "N times the threshold" a visible measure rather
+   *  than a footer sentence. Requires `referenceLine`. */
+  riser?: {
+    index: number
+    multipleLabel: string
+    multipleLabel_es?: string
+    color?: string
+  }
 }
 
 /**
@@ -173,6 +193,11 @@ export interface StoryMultiSeriesData {
   yLabel_es?: string
   annotation?: string
   annotation_es?: string
+  /** Optional vertical event markers (e.g. the 2020 INSABI/BIRMEX break that
+   *  cut Grupo Fármacos to zero). Each draws a dashed vertical rule at the
+   *  x index with a top label — baking the structural cause of a cliff into
+   *  the chart instead of leaving it only in the prose. */
+  eventLines?: Array<{ xIndex: number; label: string; label_es?: string; color?: string }>
 }
 
 /**
@@ -1777,6 +1802,14 @@ export const STORIES: StoryDef[] = [
               "Read the relay: PISA dominates 2003-2009 → Grupo Fármacos / Maypo / DIMM dominate 2010-2019 → 2020 cliff (Grupo F. + DIMM collapse) → PISA returns and explodes in 2025 (19.46B, matching Grupo F.'s 2017 all-time peak). The architecture that produced these contracts changed three times. The dependency did not.",
             annotation_es:
               'Lee el relevo: PISA domina 2003-2009 → Grupo Fármacos / Maypo / DIMM dominan 2010-2019 → desplome 2020 (Grupo F. + DIMM colapsan) → PISA regresa y explota en 2025 (19.46B, igualando el pico histórico de 2017 de Grupo F.). La arquitectura que produjo estos contratos cambió tres veces. La dependencia no.',
+            eventLines: [
+              {
+                xIndex: 17,
+                label: '2020 · INSABI/BIRMEX',
+                label_es: '2020 · INSABI/BIRMEX',
+                color: '#64748b',
+              },
+            ],
           },
         },
         pullquote: {
@@ -2367,6 +2400,12 @@ export const STORIES: StoryDef[] = [
             },
             unit: '%',
             maxValue: 100,
+            riser: {
+              index: 0,
+              multipleLabel: '≈6×',
+              multipleLabel_es: '≈6×',
+              color: '#dc2626',
+            },
             yLabel: 'Single-bid share of competitive procedures',
             yLabel_es: 'Tasa de oferta única en procedimientos competitivos',
             annotation:
@@ -2926,6 +2965,8 @@ export const STORIES: StoryDef[] = [
                 highlight: true,
                 annotation: '1.05M contracts · 1.06T MXN',
                 annotation_es: '1.05M contratos · 1.06 billones MXN',
+                delta: '+37.1pp vs Calderón',
+                delta_es: '+37.1pp vs Calderón',
               },
               {
                 label: 'Sheinbaum',
@@ -2943,6 +2984,7 @@ export const STORIES: StoryDef[] = [
             },
             unit: '%',
             maxValue: 100,
+            connectDots: true,
             yLabel: 'Average direct award rate (%)',
             yLabel_es: 'Tasa promedio de adjudicación directa (%)',
             annotation:
@@ -5527,6 +5569,11 @@ export const STORIES: StoryDef[] = [
               },
             ],
             unit: '% DA',
+            referenceLine: {
+              value: 30,
+              label: 'OECD ceiling',
+              label_es: 'techo OCDE',
+            },
             annotation:
               'All three above 88% direct-award. OECD ceiling for direct award: 30%. The voucher market has no competitive check.',
             annotation_es:
