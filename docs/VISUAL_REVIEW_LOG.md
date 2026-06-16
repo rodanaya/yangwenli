@@ -1,4 +1,51 @@
 ---
+## Visual Review — 2026-06-16T06:06:12Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 | WARN |
+| /atlas | 403 | WARN |
+| /aria | 403 | WARN |
+| /sectors | 403 | WARN |
+| /sectors/salud | 403 | WARN |
+| /cases | 403 | WARN |
+| /methodology | 403 | WARN |
+| /stories/el-ejercito-fantasma | 403 | WARN |
+
+> **Note**: All 403s originate from the Anthropic cloud runner egress gateway (`x-deny-reason: host_not_allowed` — `Host not in allowlist: rubli.xyz`). TLS handshake completes (37.60.232.109:443 over TLSv1.3); this is a network policy block, not a site outage. Add `rubli.xyz` to egress allowlist in environment settings to enable live HTTP checks.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — Anthropic egress gateway (403) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — Anthropic egress gateway (403) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — Anthropic egress gateway (403) | WARN |
+| /api/v1/sectors | BLOCKED — Anthropic egress gateway (403) | WARN |
+
+> Same egress restriction as HTTP routes. Not indicative of backend failure.
+
+### Bilingual Gaps
+Grep scans completed (3 patterns checked). All matches confirmed false positives — stable baseline, no new regressions vs. 2026-06-16T00:06:25Z run:
+- `CaseLibrary.tsx:19` — inline comment only. OK.
+- `Methodology.tsx:125` — academic citation (Mahalanobis, P.C. 1936). Untranslatable bibliographic reference. OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` code references, not rendered text. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property. Not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — `JSX.Element` TypeScript return type annotation. OK.
+- `RegisterRow.tsx:160` — `PATTERN_CHIP[item.primary_pattern]` lookup table accessor, not rendered text. OK.
+- `ExploreCanvas.tsx:1476–1557` — comment block + corporate-form token array (`S.A.`, `C.V.`, etc.). OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155–167` — all pattern labels properly bilingual via `isEs ? ES : EN`. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx` — `label="Risk Score"` / `label="Risk Factors"` hardcoded English labels without Spanish variants. Low severity, stable, not a regression.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by Anthropic Egress Gateway network policy (cloud runner IP not in rubli.xyz allowlist). Not a site failure. Bilingual scan clean. No regressions vs. prior run (2026-06-16T00:06:25Z).
+
+---
 ## Visual Review — 2026-06-16T00:06:25Z
 
 ### HTTP Status
