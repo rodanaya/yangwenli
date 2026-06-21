@@ -5917,3 +5917,46 @@ Local scan of `frontend/src/pages/` and `frontend/src/components/`:
 
 ### Overall: FAIL
 Network egress policy in this execution environment blocks all outbound connections to `rubli.xyz`. HTTP status checks and API health checks could not be performed. Bilingual local scan passed. **Action required: add `rubli.xyz` to the environment's network egress allowlist** so future scheduled runs can actually reach the live site.
+
+---
+## Visual Review — 2026-06-21T06:04:09Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | BLOCKED | ❌ |
+| /atlas | BLOCKED | ❌ |
+| /aria | BLOCKED | ❌ |
+| /sectors | BLOCKED | ❌ |
+| /sectors/salud | BLOCKED | ❌ |
+| /cases | BLOCKED | ❌ |
+| /methodology | BLOCKED | ❌ |
+| /stories/el-ejercito-fantasma | BLOCKED | ❌ |
+
+> All curl requests returned HTTP 403 `x-deny-reason: host_not_allowed` — the environment's network egress policy blocks outbound access to `rubli.xyz`. This is not a live-site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/sectors | BLOCKED — egress gateway, empty body | ❌ |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — inline comment referencing FRAUDTYPES enum; not rendered text. OK.
+- `Methodology.tsx:125` — academic citation (Mahalanobis, P.C. 1936); untranslatable. OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` code accessor, not rendered string. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property (`target_type`); not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — TypeScript return-type annotation (`JSX.Element`). OK.
+- `ExploreCanvas.tsx:1476–1491` — comment block + corporate-form token array (`S.A.`, `C.V.`); not rendered. OK.
+- `ConcentrationConstellation.tsx:155–165` — correctly bilingual throughout (`isEs ? … : …`). OK.
+- **Hardcoded "Generate Report"**: None found.
+- **Hardcoded "SIGN IN" / "INICIAR SESIÓN"**: None found.
+
+None detected.
+
+### Overall: WARN
+HTTP and API checks are infrastructure-blocked (egress policy — `x-deny-reason: host_not_allowed`). This is a persistent environment constraint, not a site failure. Bilingual local scan clean, no new gaps.
+**Action required**: add `rubli.xyz` to the execution environment's network egress allowlist to enable live site verification.
