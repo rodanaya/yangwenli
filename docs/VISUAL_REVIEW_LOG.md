@@ -5879,3 +5879,41 @@ Grep scans completed (3 patterns checked). No new regressions vs prior run:
 
 ### Overall: WARN
 HTTP and API checks blocked by Anthropic Egress Gateway — same persistent infrastructure constraint as all prior runs. Bilingual scan clean. **Recurring action item: add `rubli.xyz` to egress allowlist** in environment settings so future health checks can reach the live site.
+
+---
+## Visual Review — 2026-06-21T00:04:17Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | BLOCKED | ❌ |
+| /atlas | BLOCKED | ❌ |
+| /aria | BLOCKED | ❌ |
+| /sectors | BLOCKED | ❌ |
+| /sectors/salud | BLOCKED | ❌ |
+| /cases | BLOCKED | ❌ |
+| /methodology | BLOCKED | ❌ |
+| /stories/el-ejercito-fantasma | BLOCKED | ❌ |
+
+> **Note**: All curl requests to rubli.xyz returned HTTP 403 with `x-deny-reason: host_not_allowed` from the remote execution environment's network egress policy. The 403 is from the container sandbox, not the live site. Add `rubli.xyz` to the environment's egress allowlist to enable HTTP checks.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (egress policy) | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED (egress policy) | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (egress policy) | ❌ |
+| /api/v1/sectors | BLOCKED (egress policy) | ❌ |
+
+> All API checks could not be performed for the same reason: outbound access to rubli.xyz is blocked by the execution environment.
+
+### Bilingual Gaps
+Local scan of `frontend/src/pages/` and `frontend/src/components/`:
+- **Raw i18n key leaks**: Grep pattern matched comment lines, TypeScript type annotations (`JSX.Element`), constant lookups (`PATTERN_CHIP.P5`, `TIER_STYLES.Excelente.color`), and properly-bilingual `isEs` ternaries in `ConcentrationConstellation.tsx`. No UI-visible bare key strings detected.
+- **Hardcoded "Generate Report"**: None found.
+- **Hardcoded "SIGN IN" / "INICIAR SESIÓN"**: None found.
+
+**None detected** (local code scan only — live render verification blocked by egress policy).
+
+### Overall: FAIL
+Network egress policy in this execution environment blocks all outbound connections to `rubli.xyz`. HTTP status checks and API health checks could not be performed. Bilingual local scan passed. **Action required: add `rubli.xyz` to the environment's network egress allowlist** so future scheduled runs can actually reach the live site.
