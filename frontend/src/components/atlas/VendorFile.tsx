@@ -18,6 +18,7 @@
  *   - 'inline' : accordion body under a drawer IndexRow (walk the long tail)
  */
 import type { ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { vendorApi, type AtlasClusterVendorItem } from '@/api/client'
 import { RISK_COLORS, riskRamp } from '@/lib/constants'
@@ -140,6 +141,24 @@ export function VendorFile({
   const lvl = item.risk_level
   const riskColor = lvl === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[lvl]
 
+  // ── Scroll cue (panel only): the file is taller than its docked frame, so the
+  // last bands (buyers / records) sit below the fold with no visible scrollbar
+  // on Windows. A bottom fade + ▾ tells the reader there's more to scroll to.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [moreBelow, setMoreBelow] = useState(false)
+  const recalcFade = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setMoreBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 8)
+  }, [])
+  // Re-measure after every render — band queries resolve async and grow the
+  // content; setState bails when unchanged, so this can't loop.
+  useEffect(() => { recalcFade() })
+  useEffect(() => {
+    window.addEventListener('resize', recalcFade)
+    return () => window.removeEventListener('resize', recalcFade)
+  }, [recalcFade])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: variant === 'panel' ? '100%' : 'auto', background: variant === 'panel' ? 'var(--color-background-card)' : 'transparent' }}>
       {/* ── Identity header (zero fetch — everything is on the cluster item) ── */}
@@ -186,7 +205,9 @@ export function VendorFile({
       )}
 
       {/* ── Scrollable band stack ── */}
-      <div style={{ flex: variant === 'panel' ? 1 : undefined, overflowY: variant === 'panel' ? 'auto' : undefined, minHeight: 0 }}>
+      {(() => {
+        const bands = (
+          <>
 
         {/* Band 1 — why flagged */}
         <Band title={es ? '¿Por qué señalado?' : 'Why flagged?'} accent={accent} pad={pad}>
@@ -325,7 +346,33 @@ export function VendorFile({
             </div>
           )}
         </Band>
-      </div>
+          </>
+        )
+        if (variant !== 'panel') return <div>{bands}</div>
+        return (
+          <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+            <div ref={scrollRef} onScroll={recalcFade} style={{ height: '100%', overflowY: 'auto' }}>
+              {bands}
+              {/* breathing room so the last band never jams the CTA */}
+              <div aria-hidden="true" style={{ height: 14 }} />
+            </div>
+            {/* scroll cue — fades in while more of the file lies below the fold */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute', left: 0, right: 0, bottom: 0, height: 38,
+                pointerEvents: 'none',
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4,
+                background: 'linear-gradient(to bottom, transparent, var(--color-background-card) 80%)',
+                opacity: moreBelow ? 1 : 0,
+                transition: 'opacity 160ms ease',
+              }}
+            >
+              <span className="font-mono" style={{ fontSize: 11, lineHeight: 1, color: 'var(--color-text-muted)' }}>▾</span>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Exit CTA — the ONLY navigation away ── */}
       <div style={{ padding: variant === 'panel' ? '10px 16px' : '8px 12px', borderTop: '1px solid var(--color-border)', flexShrink: 0 }}>
