@@ -272,9 +272,13 @@ export default function Executive() {
             {lang === 'en' ? 'Mexico Federal Procurement Analysis' : 'Análisis de Contratación Federal México'}
           </div>
 
-          {/* Headline — EB Garamond italic 500, ochre/red normal-weight accents */}
+          {/* Headline — EB Garamond italic 500, ochre/red normal-weight accents.
+              max-w 15.5em caps the measure to the headline's natural longest
+              line (~975px at 64px), so the column hugs the text instead of
+              leaving a dead right gutter. em-based → scales with the responsive
+              font sizes and only binds on wide screens where the gap appears. */}
           <h1
-            className="text-[36px] sm:text-[52px] md:text-[64px] leading-[0.98] text-text-primary mb-4 text-balance"
+            className="text-[36px] sm:text-[52px] md:text-[64px] leading-[0.98] text-text-primary mb-4 text-balance max-w-[15.5em]"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'italic',
