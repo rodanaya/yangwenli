@@ -145,3 +145,58 @@ class TestContractAmountValidation:
         data = response.json()
         assert "data" in data
         assert "pagination" in data
+
+    def test_list_includes_documented_case_seal_fields(self, client, base_url):
+        """Every list row carries the documented-case seal fields (default False)."""
+        response = client.get(f"{base_url}/contracts?per_page=5")
+        assert response.status_code == 200
+        rows = response.json()["data"]
+        assert rows, "expected at least one contract"
+        for row in rows:
+            assert "is_documented_case" in row
+            assert "case_slug" in row
+            # A non-documented row must not carry a stray slug.
+            if not row["is_documented_case"]:
+                assert row["case_slug"] is None
+
+
+class TestContractHighlights:
+    """Tests for GET /api/v1/contracts/highlights — the "Los Señalados" band."""
+
+    def test_highlights_returns_list(self, client, base_url):
+        response = client.get(f"{base_url}/contracts/highlights")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) <= 8
+
+    def test_highlights_respects_limit(self, client, base_url):
+        response = client.get(f"{base_url}/contracts/highlights?limit=3")
+        assert response.status_code == 200
+        assert len(response.json()) <= 3
+
+    def test_highlights_items_carry_seal_and_risk(self, client, base_url):
+        """Each highlighted item must expose the seal + risk fields the band renders."""
+        response = client.get(f"{base_url}/contracts/highlights?limit=4")
+        assert response.status_code == 200
+        for item in response.json():
+            assert "is_documented_case" in item
+            assert "risk_score" in item
+            assert "title" in item
+            if item["is_documented_case"]:
+                # A sealed item must resolve to a /cases/:slug destination.
+                assert item["case_slug"]
+
+    def test_highlights_documented_lead(self, client, base_url):
+        """Unfiltered, documented cases sort ahead of undocumented fill."""
+        response = client.get(f"{base_url}/contracts/highlights?limit=6")
+        assert response.status_code == 200
+        flags = [bool(i["is_documented_case"]) for i in response.json()]
+        if True in flags and False in flags:
+            # No undocumented item may appear before a documented one.
+            assert flags.index(False) > flags.index(True)
+
+    def test_highlights_filter_and_validation(self, client, base_url):
+        """Filters pass through; an invalid risk_level is rejected."""
+        assert client.get(f"{base_url}/contracts/highlights?sector_id=1").status_code == 200
+        assert client.get(f"{base_url}/contracts/highlights?risk_level=bogus").status_code == 400

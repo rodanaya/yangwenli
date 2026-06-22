@@ -44,6 +44,13 @@ class ContractListItem(ContractBase):
     publication_delay_days: Optional[int] = None
     risk_model_version: Optional[str] = None
     exception_article: Optional[str] = None
+    # Documented-case seal — set only when the contract is in a strong-evidence
+    # ground-truth row AND tied to a named procurement scandal (links to
+    # /cases/:slug). Weak GT name-matches get no seal. See contract_service.
+    is_documented_case: bool = False
+    case_slug: Optional[str] = None
+    case_name_es: Optional[str] = None
+    case_name_en: Optional[str] = None
 
     @model_validator(mode='after')
     def mask_individual_rfc(self) -> 'ContractListItem':

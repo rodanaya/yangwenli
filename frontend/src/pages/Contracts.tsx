@@ -1,9 +1,8 @@
 import React, { lazy, Suspense, useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { slideUp } from '@/lib/animations'
-import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,14 +14,11 @@ import {
   getPaginationRange,
   clampPage,
   toTitleCase,
-  getAnomalyInfo,
   getRiskLevel,
 } from '@/lib/utils'
 import { contractApi, exportApi } from '@/api/client'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
-import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
-import { DotBar } from '@/components/ui/DotBar'
 import { RiskExplainTooltip } from '@/components/RiskExplainTooltip'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
@@ -44,10 +40,10 @@ import {
   RefreshCw,
   Copy,
   Check,
-  Eye,
   AlertTriangle,
   TrendingUp,
   ExternalLink,
+  ArrowRight,
   Flame,
   Crown,
   Zap,
@@ -64,11 +60,12 @@ const ContractDetailModal = lazy(() =>
   import('@/components/ContractDetailModal').then((m) => ({ default: m.ContractDetailModal }))
 )
 import { ContractCompareModal } from '@/components/ContractCompareModal'
-import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
-import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
+import { ExpandableProvider, useExpandable } from '@/components/ExpandableRow'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { Act } from '@/components/layout/Act'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { VerdictSeal } from '@/components/contracts/VerdictSeal'
+import { SenaladosBand, CaseSeal, WhyFlags } from '@/components/contracts/SenaladosBand'
 
 // =============================================================================
 // Configuration
@@ -188,16 +185,14 @@ interface ColumnDef {
   thClass?: string
 }
 
-// Column definitions — labels resolved via t() inside the component (Fix 4)
+// Column definitions — labels resolved via t() inside the component.
+// Re-ranked by investigative weight: WHAT (title) → WHO → HOW MUCH → WHEN → RISK.
 const CONTRACT_COLUMN_DEFS: ColumnDef[] = [
-  { key: 'risk', labelKey: 'columns.risk', align: 'center', sortField: 'risk_score', thClass: 'w-16' },
-  { key: 'amount', labelKey: 'columns.amount', align: 'right', sortField: 'amount_mxn', thClass: 'w-28' },
-  { key: 'vendor', labelKey: 'columns.vendor', align: 'left', sortField: 'vendor_name', thClass: 'w-44' },
-  { key: 'institution', labelKey: 'columns.institution', align: 'left', sortField: 'institution_name', thClass: 'w-44' },
-  { key: 'sector', labelKey: 'columns.sector', align: 'left', sortField: 'sector_id', thClass: 'w-24' },
-  { key: 'date', labelKey: 'columns.date', align: 'right', sortField: 'contract_date', thClass: 'w-24' },
-  { key: 'procedure', labelKey: 'columns.procedure', align: 'left', thClass: 'w-24' },
-  { key: 'anomaly', labelKey: 'columns.anomalyScore', align: 'right', sortField: 'mahalanobis_distance', thClass: 'w-20' },
+  { key: 'contract', labelKey: 'columns.contract', align: 'left' },
+  { key: 'vendor', labelKey: 'columns.who', align: 'left', sortField: 'vendor_name', thClass: 'w-44' },
+  { key: 'amount', labelKey: 'columns.amount', align: 'right', sortField: 'amount_mxn', thClass: 'w-24' },
+  { key: 'date', labelKey: 'columns.date', align: 'right', sortField: 'contract_date', thClass: 'w-16' },
+  { key: 'risk', labelKey: 'columns.risk', align: 'right', sortField: 'risk_score', thClass: 'w-28' },
 ]
 
 // =============================================================================
@@ -205,17 +200,15 @@ const CONTRACT_COLUMN_DEFS: ColumnDef[] = [
 // =============================================================================
 
 export function Contracts() {
-  const { t } = useTranslation('contracts')
+  const { t, i18n } = useTranslation('contracts')
   const { t: ts } = useTranslation('sectors')
+  const lang = i18n.language?.startsWith('es') ? 'es' : 'en'
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
-  // #9 — toggle for ensemble anomaly score column
-  const [showAnomalyScore, setShowAnomalyScore] = useState(false)
   // Pre-2010 data quality banner dismissal (sessionStorage so it resets per session)
   const [pre2010Dismissed, setPre2010Dismissed] = useState(
     () => sessionStorage.getItem('rubli_pre2010_dismissed') === '1'
   )
-  const { open: openEntityDrawer } = useEntityDrawer()
 
   const {
     inputValue: searchInput,
@@ -525,26 +518,6 @@ export function Contracts() {
     const daCount = contracts.filter((c) => c.is_direct_award).length
     const daPct = contracts.length > 0 ? (daCount / contracts.length) * 100 : 0
     return { totalValue, avgRisk, criticalCount, highPlusCount, daPct }
-  }, [data])
-
-  // Risk distribution histogram data computed from current page results
-  const riskHistogram = useMemo(() => {
-    if (!data?.data?.length) return null
-    // Phase 1 canonical palette — low uses zinc (no green) on a corruption platform.
-    const buckets = [
-      { label: '0–0.25', min: 0, max: RISK_THRESHOLDS.medium, color: RISK_COLORS.low, count: 0 },
-      { label: '0.25–0.40', min: RISK_THRESHOLDS.medium, max: RISK_THRESHOLDS.high, color: RISK_COLORS.medium, count: 0 },
-      { label: '0.40–0.60', min: RISK_THRESHOLDS.high, max: RISK_THRESHOLDS.critical, color: RISK_COLORS.high, count: 0 },
-      { label: '0.60–1.0', min: RISK_THRESHOLDS.critical, max: 1.01, color: RISK_COLORS.critical, count: 0 },
-    ]
-    for (const c of data.data) {
-      const score = c.risk_score ?? 0
-      for (const b of buckets) {
-        if (score >= b.min && score < b.max) { b.count++; break }
-      }
-    }
-    const maxCount = Math.max(...buckets.map((b) => b.count), 1)
-    return buckets.map((b) => ({ ...b, pct: (b.count / maxCount) * 100 }))
   }, [data])
 
   const pageExportData = useMemo(() => {
@@ -901,21 +874,6 @@ export function Contracts() {
           {t('filters.singleBid')}
         </button>
 
-        {/* #9 — Toggle anomaly score column */}
-        <button
-          onClick={() => setShowAnomalyScore((v) => !v)}
-          className={cn(
-            'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
-            showAnomalyScore
-              ? 'border-accent-data text-accent-data bg-accent-data/10 font-semibold'
-              : 'border-border text-text-muted hover:border-accent-data/50 hover:text-accent-data'
-          )}
-          aria-pressed={showAnomalyScore}
-          title="Toggle PyOD ensemble anomaly score column"
-        >
-          {t('columns.anomalyScore')}
-        </button>
-
         {/* Per page — Fix 6: value always from filters.per_page */}
         <select
           className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
@@ -1007,25 +965,10 @@ export function Contracts() {
       </div>
       </div>{/* end filter container */}
 
-      {/* Risk distribution mini-histogram */}
-      {riskHistogram && (
-        <div className="flex items-end gap-1.5 h-10" aria-label="Risk score distribution for current page" role="img">
-          {riskHistogram.map((bucket) => (
-            <div key={bucket.label} className="flex flex-col items-center gap-0.5" title={`${bucket.label}: ${bucket.count} contracts`}>
-              <div
-                className="w-8 rounded-t transition-all duration-300"
-                style={{
-                  height: `${Math.max(4, (bucket.pct / 100) * 28)}px`,
-                  backgroundColor: bucket.color,
-                  opacity: bucket.count === 0 ? 0.15 : 0.75,
-                }}
-              />
-              <span className="text-[9px] text-text-muted/60 font-mono leading-none">{bucket.label}</span>
-            </div>
-          ))}
-          <span className="ml-1 text-[10px] text-text-muted/50 self-center leading-tight">page<br/>dist.</span>
-        </div>
-      )}
+      {/* LOS SEÑALADOS — the flagged contracts in the current filter (documented
+          cases first, then high+critical). Replaces the page-slice histogram:
+          a real, named, sourced "what matters here" signal. */}
+      <SenaladosBand filters={filters} lang={lang} />
 
       {/* Summary stats + Active filters */}
       <motion.div
@@ -1156,7 +1099,6 @@ export function Contracts() {
                           col.thClass
                         )}
                         onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
-                        title={col.key === 'anomaly' ? t('table.anomalyTooltip') : undefined}
                       >
                         {t(col.labelKey)}
                         {col.key === 'risk' && (
@@ -1173,17 +1115,6 @@ export function Contracts() {
                         )}
                       </th>
                     ))}
-                    {/* #9 — optional ensemble anomaly score column header */}
-                    {showAnomalyScore && (
-                      <th
-                        scope="col"
-                        className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-accent-data select-none whitespace-nowrap"
-                        title="PyOD ensemble anomaly score (0-1). Higher = more anomalous by ML model."
-                      >
-                        PyOD
-                      </th>
-                    )}
-                    <th scope="col" className="px-2 py-2 w-8" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
@@ -1191,11 +1122,9 @@ export function Contracts() {
                     <ContractRow
                       key={contract.id}
                       contract={contract}
-                      onView={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
                       isSelected={compareIds.has(contract.id)}
                       onToggleCompare={toggleCompare}
-                      onOpenVendorDrawer={openEntityDrawer}
-                      showAnomalyScore={showAnomalyScore}
+                      lang={lang}
                     />
                   ))}
                 </tbody>
@@ -1361,370 +1290,213 @@ function abbreviateProcedure(raw: string): string {
 
 function ContractRow({
   contract,
-  onView,
   isSelected,
   onToggleCompare,
-  onOpenVendorDrawer,
-  showAnomalyScore,
+  lang,
 }: {
   contract: ContractListItem
-  onView: (id: number) => void
   isSelected: boolean
   onToggleCompare: (id: number) => void
-  onOpenVendorDrawer: (id: number, type: 'vendor' | 'institution') => void
-  showAnomalyScore?: boolean
+  lang: string
 }) {
   const { t } = useTranslation('contracts')
   const { t: ts } = useTranslation('sectors')
-  const anomalyInfo = getAnomalyInfo(contract.mahalanobis_distance)
+  const navigate = useNavigate()
+  const { toggle, isExpanded } = useExpandable()
+  const expanded = isExpanded(contract.id)
   const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : (contract.risk_level ?? null)
   const sector = contract.sector_id ? SECTORS.find((s) => s.id === contract.sector_id) : null
+  const title =
+    toTitleCase(contract.title || '') ||
+    contract.contract_number ||
+    (lang === 'es' ? `Contrato #${contract.id}` : `Contract #${contract.id}`)
 
   const rowBorder =
     riskLevel === 'critical' ? 'border-l-4 border-l-risk-critical'
     : riskLevel === 'high' ? 'border-l-4 border-l-risk-high'
     : riskLevel === 'medium' ? 'border-l-4 border-l-risk-medium'
-    : ''
+    : 'border-l-4 border-l-transparent'
 
-  const cells = (
+  const goToDossier = () => navigate(`/contracts/${contract.id}`, { state: { from: 'archive' } })
+  const stop = (e: React.MouseEvent) => e.stopPropagation()
+
+  return (
     <>
-      {/* Checkbox: select for comparison */}
-      <td className="px-2 py-2 w-8">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleCompare(contract.id)}
-          onClick={(e) => e.stopPropagation()}
-          className="w-3.5 h-3.5 rounded border-border accent-accent cursor-pointer"
-          aria-label={`Select contract ${contract.contract_number || contract.id} for comparison`}
-        />
-      </td>
-      <td className="px-2 py-2 w-8">
-        <ExpandChevron id={contract.id} />
-      </td>
+      <tr
+        className={cn('group cursor-pointer transition-colors hover:bg-background-elevated/40', expanded && 'bg-background-elevated/30', rowBorder)}
+        onClick={goToDossier}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); goToDossier() } }}
+        aria-label={lang === 'es' ? `Abrir expediente: ${title}` : `Open dossier: ${title}`}
+      >
+        {/* Compare checkbox */}
+        <td className="px-2 py-2.5 w-8" onClick={stop}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleCompare(contract.id)}
+            className="w-3.5 h-3.5 rounded border-border accent-accent cursor-pointer"
+            aria-label={lang === 'es' ? `Comparar contrato ${contract.contract_number || contract.id}` : `Select contract ${contract.contract_number || contract.id} for comparison`}
+          />
+        </td>
+        {/* Peek chevron */}
+        <td className="px-1 py-2.5 w-8" onClick={stop}>
+          <button
+            onClick={() => toggle(contract.id)}
+            aria-expanded={expanded}
+            aria-label={t('table.peek', 'Quick look')}
+            title={t('table.peek', 'Quick look')}
+            className="text-text-muted hover:text-accent transition-colors p-0.5"
+          >
+            <ChevronRight className={cn('h-4 w-4 transition-transform', expanded && 'rotate-90')} aria-hidden="true" />
+          </button>
+        </td>
 
-      {/* Risk: mini-bar + colored pill */}
-      <td className="px-3 py-2">
-        <div className="flex flex-col items-center gap-1">
-          {/* Colored risk level pill */}
+        {/* CONTRATO — title (the surfaced gold) + why-flagged strip */}
+        <td className="px-3 py-2.5 min-w-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {sector && (
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sector.color }} title={ts(sector.code)} />
+              )}
+              <span className="truncate text-sm font-medium text-text-primary group-hover:text-accent" title={title}>
+                {title}
+              </span>
+            </div>
+            {(contract.is_documented_case || (contract.risk_factors?.length ?? 0) > 0 || contract.is_direct_award || contract.is_single_bid || (contract.mahalanobis_distance ?? 0) > 20) && (
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                <CaseSeal contract={contract} lang={lang} />
+                <WhyFlags contract={contract} lang={lang} max={2} />
+              </div>
+            )}
+          </div>
+        </td>
+
+        {/* QUIÉN — vendor → institution */}
+        <td className="px-3 py-2.5 w-44">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            {contract.vendor_id ? (
+              <div className="flex min-w-0 items-center gap-1" onClick={stop}>
+                {contract.vendor_is_individual && (
+                  <span
+                    className="shrink-0 rounded border border-risk-high/40 bg-risk-high/10 px-1 py-0.5 text-[9px] font-bold leading-none text-risk-high"
+                    title={lang === 'es' ? 'Persona física — no es una empresa' : 'Natural person (individual) — not a company'}
+                  >
+                    {lang === 'es' ? 'P. FÍSICA' : 'PERSON'}
+                  </span>
+                )}
+                <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || ''} size="xs" />
+              </div>
+            ) : (
+              <span className="truncate text-xs text-text-muted" title={contract.vendor_name || ''}>
+                {contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}
+              </span>
+            )}
+            {contract.institution_id ? (
+              <div className="min-w-0" onClick={stop}>
+                <EntityIdentityChip type="institution" id={contract.institution_id} name={contract.institution_name || `Inst #${contract.institution_id}`} size="xs" />
+              </div>
+            ) : contract.institution_name ? (
+              <span className="truncate text-[11px] text-text-muted" title={contract.institution_name}>{contract.institution_name}</span>
+            ) : null}
+          </div>
+        </td>
+
+        {/* MONTO */}
+        <td className="px-3 py-2.5 text-right w-24">
+          <span className="font-mono text-xs font-medium tabular-nums text-text-primary">
+            {formatCompactMXN(contract.amount_mxn)}
+          </span>
+        </td>
+
+        {/* FECHA */}
+        <td className="px-3 py-2.5 text-right w-16">
+          <span className="whitespace-nowrap font-mono text-xs tabular-nums text-text-muted">
+            {contract.contract_date ? contract.contract_date.slice(0, 7) : contract.contract_year || '—'}
+          </span>
+        </td>
+
+        {/* RIESGO — the Verdict Seal (collision-proof) */}
+        <td className="px-3 py-2.5 w-28" onClick={stop}>
           {riskLevel ? (
             <RiskExplainTooltip contractId={contract.id} riskScore={contract.risk_score ?? 0} riskLevel={riskLevel}>
-              <span>
-                <RiskLevelPill level={riskLevel as 'critical' | 'high' | 'medium' | 'low'} score={contract.risk_score ?? undefined} size="sm" />
+              <span className="inline-block">
+                <VerdictSeal score={contract.risk_score} level={contract.risk_level} align="right" />
               </span>
             </RiskExplainTooltip>
           ) : (
-            <span className="text-xs text-text-muted/30">&middot;</span>
-          )}
-          {/* Mini score bar */}
-          {contract.risk_score != null && (
-            <div className="flex items-center gap-1.5">
-              {(() => {
-                const color = contract.risk_score >= RISK_THRESHOLDS.critical ? RISK_COLORS.critical
-                  : contract.risk_score >= RISK_THRESHOLDS.high ? RISK_COLORS.high
-                  : contract.risk_score >= RISK_THRESHOLDS.medium ? RISK_COLORS.medium
-                  : RISK_COLORS.low
-                return (
-                  <DotBar
-                    value={contract.risk_score}
-                    max={1}
-                    color={color}
-                    dots={12}
-                    dotR={1.75}
-                    dotGap={4}
-                    thresholds={[0.25, 0.40, 0.60]}
-                  />
-                )
-              })()}
-              <span className="font-mono text-[10px] text-text-muted tabular-nums">{contract.risk_score.toFixed(3)}</span>
-            </div>
-          )}
-          <RiskFeedbackButton
-            entityType="contract"
-            entityId={contract.id}
-            className="h-5 w-5"
-          />
-          <AddToDossierButton
-            entityType="contract"
-            entityId={contract.id}
-            entityName={contract.title ?? contract.contract_number ?? `Contract #${contract.id}`}
-            className="h-5 w-5"
-          />
-        </div>
-      </td>
-
-      {/* Amount */}
-      <td className="px-3 py-2 text-right">
-        <span className="text-xs font-mono tabular-nums font-medium text-text-primary">
-          {formatCompactMXN(contract.amount_mxn)}
-        </span>
-      </td>
-
-      {/* Vendor */}
-      <td className="px-3 py-2 max-w-[180px]">
-        {contract.vendor_id ? (
-          <div className="flex items-center gap-1 min-w-0">
-            {contract.vendor_is_individual && (
-              <span
-                className="shrink-0 text-[9px] font-bold px-1 py-0.5 rounded border border-risk-high/40 bg-risk-high/10 text-risk-high leading-none"
-                title="Natural person (individual) — not a company"
-              >
-                PERSON
-              </span>
-            )}
-            <button
-              className="text-xs font-medium text-text-primary hover:text-accent transition-colors truncate text-left flex-1"
-              title={toTitleCase(contract.vendor_name || 'Unknown')}
-              onClick={(e) => { e.stopPropagation(); onOpenVendorDrawer(contract.vendor_id!, 'vendor') }}
-            >
-              {toTitleCase(contract.vendor_name || 'Unknown')}
-            </button>
-            <EntityIdentityChip type="vendor" id={contract.vendor_id!} name={contract.vendor_name || ''} size="xs" />
-          </div>
-        ) : (
-          <span className="text-xs text-text-muted truncate block" title={contract.vendor_name || ''}>
-            {contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}
-          </span>
-        )}
-      </td>
-
-      {/* Institution */}
-      <td className="px-3 py-2 max-w-[180px]">
-        {contract.institution_id ? (
-          <div onClick={(e) => e.stopPropagation()}>
-            <EntityIdentityChip
-              type="institution"
-              id={contract.institution_id}
-              name={contract.institution_name || `Inst #${contract.institution_id}`}
-              size="xs"
-            />
-          </div>
-        ) : (
-          <span className="text-xs text-text-muted truncate block" title={contract.institution_name || ''}>
-            {contract.institution_name || '—'}
-          </span>
-        )}
-      </td>
-
-      {/* Sector */}
-      <td className="px-3 py-2">
-        {sector ? (
-          <span className="text-xs font-medium whitespace-nowrap" style={{ color: sector.color }}>
-            {ts(sector.code)}
-          </span>
-        ) : (
-          <span className="text-xs text-text-muted">—</span>
-        )}
-      </td>
-
-      {/* Date: year-month only for density */}
-      <td className="px-3 py-2 text-right">
-        <span className="text-xs text-text-muted font-mono tabular-nums whitespace-nowrap">
-          {contract.contract_date
-            ? contract.contract_date.slice(0, 7)
-            : contract.contract_year || '—'}
-        </span>
-      </td>
-
-      {/* Procedure type */}
-      <td className="px-3 py-2 max-w-[120px]">
-        <span className="text-xs text-text-muted block whitespace-nowrap" title={contract.procedure_type || ''}>
-          {contract.procedure_type ? abbreviateProcedure(contract.procedure_type) : '—'}
-        </span>
-      </td>
-
-      {/* Anomaly (Mahalanobis D²) — Fix 5: 2 decimal places + i18n tooltip + #12 multivariate warning */}
-      <td className="px-3 py-2 text-right">
-        {contract.mahalanobis_distance != null ? (
-          <span className="inline-flex items-center gap-1 justify-end">
-            {/* #12: multivariate anomaly warning when D² > 20 */}
-            {contract.mahalanobis_distance > 20 && (
-              <span
-                title={`Anomalía multivariada detectada (distancia=${contract.mahalanobis_distance.toFixed(1)})`}
-                aria-label="Multivariate anomaly detected"
-                className="text-risk-high cursor-help leading-none inline-flex"
-              >
-                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-              </span>
-            )}
-            <span
-              className="text-xs tabular-nums font-mono"
-              style={anomalyInfo ? { color: anomalyInfo.dotClass.includes('red') ? RISK_COLORS.critical : anomalyInfo.dotClass.includes('amber') ? RISK_COLORS.medium : 'inherit' } : undefined}
-              title={t('table.anomalyTooltip')}
-            >
-              {contract.mahalanobis_distance.toFixed(2)}
-            </span>
-          </span>
-        ) : (
-          <span className="text-xs text-text-muted">—</span>
-        )}
-      </td>
-
-      {/* #9 — Ensemble anomaly score column (optional) */}
-      {showAnomalyScore && (
-        <td className="px-3 py-2 text-right">
-          {contract.ensemble_anomaly_score != null ? (
-            <div className="flex items-center gap-1.5 justify-end" title={`PyOD ensemble score: ${contract.ensemble_anomaly_score.toFixed(3)}`}>
-              {(() => {
-                const color = contract.ensemble_anomaly_score > 0.7 ? '#ef4444'
-                  : contract.ensemble_anomaly_score > 0.5 ? '#f97316'
-                  : '#94a3b8'
-                return (
-                  <DotBar
-                    value={contract.ensemble_anomaly_score}
-                    max={1}
-                    color={color}
-                    dots={12}
-                    dotR={1.75}
-                    dotGap={4}
-                  />
-                )
-              })()}
-              <span
-                className="font-mono text-[10px] tabular-nums"
-                style={{
-                  color:
-                    contract.ensemble_anomaly_score > 0.7 ? '#ef4444'
-                    : contract.ensemble_anomaly_score > 0.5 ? '#f97316'
-                    : '#94a3b8',
-                }}
-              >
-                {contract.ensemble_anomaly_score.toFixed(2)}
-              </span>
-            </div>
-          ) : (
-            <span className="text-xs text-text-muted">—</span>
+            <div className="text-right text-xs text-text-muted">—</div>
           )}
         </td>
-      )}
+      </tr>
 
-      {/* View link */}
-      <td className="px-2 py-2 text-right">
-        <div className="inline-flex items-center gap-1">
-          <button
-            className="text-text-muted hover:text-accent transition-colors p-1"
-            title={t('table.viewFullDetails')}
-            onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
-            aria-label={`View details for ${contract.contract_number || contract.id}`}
-          >
-            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-          <Link
-            to={`/contracts/${contract.id}`}
-            className="text-text-muted hover:text-accent transition-colors p-1"
-            title="Open full dossier page"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={`Open full page for ${contract.contract_number || contract.id}`}
-          >
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-          </Link>
-        </div>
-      </td>
-    </>
-  )
+      {/* Rich peek (chevron) — title, full why-strip, actions, full-dossier CTA */}
+      {expanded && (
+        <tr className="bg-background-elevated/20">
+          <td colSpan={7} className="border-b border-border px-4 py-3">
+            <div className="space-y-3" onClick={stop}>
+              <p className="text-sm text-text-primary">{title}</p>
 
-  const factors = contract.risk_factors?.filter(Boolean) || []
+              {(contract.is_documented_case || (contract.risk_factors?.length ?? 0) > 0 || contract.is_direct_award || contract.is_single_bid) && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <CaseSeal contract={contract} lang={lang} />
+                  <WhyFlags contract={contract} lang={lang} max={99} />
+                </div>
+              )}
 
-  const detail = (
-    <div className="space-y-3">
-      {contract.title && (
-        <p className="text-sm text-text-primary line-clamp-3 break-words" title={contract.title}>{contract.title}</p>
-      )}
+              <div className="grid grid-cols-1 gap-x-6 gap-y-1 text-xs text-text-muted sm:grid-cols-2">
+                {contract.contract_date && <p>{t('columns.date')}: {formatDate(contract.contract_date)}</p>}
+                {contract.procedure_type && <p title={contract.procedure_type}>{t('columns.procedure')}: {abbreviateProcedure(contract.procedure_type)}</p>}
+                {contract.contract_number && <p>{t('detail.numberLabel')}: {contract.contract_number}</p>}
+                {contract.mahalanobis_distance != null && (
+                  <p>{t('detail.anomalyLabel')}: D²={contract.mahalanobis_distance.toFixed(2)}</p>
+                )}
+              </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {factors.length > 0 && (
-          <div>
-            <p className="text-xs font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">Risk Factors</p>
-            <div className="flex flex-wrap gap-1.5">
-              {factors.map((raw) => {
-                const parsed = parseFactorLabel(raw)
-                const catColor = getFactorCategoryColor(parsed.category)
-                return (
-                  <span
-                    key={raw}
-                    className="text-xs font-medium px-1.5 py-0.5 rounded border"
-                    style={{
-                      backgroundColor: `${catColor}15`,
-                      color: catColor,
-                      borderColor: `${catColor}30`,
-                    }}
-                    title={raw}
+              <div className="flex flex-wrap items-center gap-3 border-t border-border/30 pt-2">
+                {contract.vendor_id && (
+                  <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || `Vendor #${contract.vendor_id}`} size="sm" />
+                )}
+                {contract.institution_id && (
+                  <EntityIdentityChip type="institution" id={contract.institution_id} name={contract.institution_name || `Inst #${contract.institution_id}`} size="xs" />
+                )}
+                {contract.contract_number && (
+                  <a
+                    href={`https://compranet.hacienda.gob.mx/esop/toolkit/opportunity/opportunityDetail.do?opportunityId=${encodeURIComponent(contract.contract_number)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-text-muted hover:text-accent"
+                    title="COMPRANET"
                   >
-                    {parsed.label}
-                  </span>
-                )
-              })}
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                    COMPRANET<span className="sr-only"> (opens in new tab)</span>
+                  </a>
+                )}
+                <div className="ml-auto flex items-center gap-2">
+                  <RiskFeedbackButton entityType="contract" entityId={contract.id} className="h-6 w-6" />
+                  <AddToDossierButton
+                    entityType="contract"
+                    entityId={contract.id}
+                    entityName={contract.title ?? contract.contract_number ?? `Contract #${contract.id}`}
+                    className="h-6 w-6"
+                  />
+                  <Link
+                    to={`/contracts/${contract.id}`}
+                    state={{ from: 'archive' }}
+                    className="inline-flex items-center gap-1.5 rounded-sm bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
+                    title={t('peek.openDossier', 'Open full dossier')}
+                  >
+                    {t('peek.openDossier', 'Open full dossier')}
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-
-        <div className="text-xs text-text-muted space-y-1">
-          {contract.contract_date && <p>{t('columns.date')}: {formatDate(contract.contract_date)}</p>}
-          {contract.procedure_type && <p title={contract.procedure_type}>{t('columns.procedure')}: {abbreviateProcedure(contract.procedure_type)}</p>}
-          {contract.contract_number && <p>{t('detail.numberLabel')}: {contract.contract_number}</p>}
-          {anomalyInfo && contract.mahalanobis_distance != null && (
-            <p>{t('detail.anomalyLabel')}: {anomalyInfo.label} (D²={contract.mahalanobis_distance.toFixed(2)})</p>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 pt-2 border-t border-border/30">
-        {contract.vendor_id && (
-          <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || `Vendor #${contract.vendor_id}`} size="sm" />
-        )}
-        {contract.institution_id && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <EntityIdentityChip
-              type="institution"
-              id={contract.institution_id}
-              name={contract.institution_name || `Inst #${contract.institution_id}`}
-              size="xs"
-            />
-          </div>
-        )}
-        {contract.contract_number && (
-          <a
-            href={`https://compranet.hacienda.gob.mx/esop/toolkit/opportunity/opportunityDetail.do?opportunityId=${encodeURIComponent(contract.contract_number)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-text-muted hover:text-accent flex items-center gap-1"
-            onClick={(e) => e.stopPropagation()}
-            title="View on COMPRANET"
-          >
-            <ExternalLink className="h-3 w-3" aria-hidden="true" />
-            COMPRANET
-          <span className="sr-only"> (opens in new tab)</span></a>
-        )}
-        <div className="ml-auto flex items-center gap-3">
-          <button
-            className="text-xs text-accent hover:underline flex items-center gap-1"
-            onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
-          >
-            <Eye className="h-3 w-3" aria-hidden="true" />
-            {t('table.fullDetails')}
-          </button>
-          <Link
-            to={`/contracts/${contract.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="text-xs text-accent hover:underline flex items-center gap-1"
-            title="Open full page"
-          >
-            <ExternalLink className="h-3 w-3" aria-hidden="true" />
-            Full page
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
-
-  return (
-    <ExpandableRow
-      id={contract.id}
-      cells={cells}
-      detail={detail}
-      colSpan={showAnomalyScore ? 12 : 11}
-      className={cn('hover:bg-background-card/[0.02] cursor-pointer transition-colors group', rowBorder)}
-    />
+          </td>
+        </tr>
+      )}
+    </>
   )
 }
 

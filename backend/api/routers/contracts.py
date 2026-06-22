@@ -184,6 +184,58 @@ def list_contracts(
         )
 
 
+@router.get("/highlights", response_model=List[ContractListItem])
+def contract_highlights(
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),
+    year: Optional[int] = Query(None, ge=2002, le=2026, description="Filter by contract year"),
+    vendor_id: Optional[int] = Query(None, description="Filter by vendor ID"),
+    institution_id: Optional[int] = Query(None, description="Filter by institution ID"),
+    risk_level: Optional[str] = Query(None, description="Filter by risk level"),
+    is_direct_award: Optional[bool] = Query(None, description="Filter direct awards"),
+    is_single_bid: Optional[bool] = Query(None, description="Filter single-bid contracts"),
+    risk_factor: Optional[str] = Query(None, description="Filter by risk factor"),
+    category_id: Optional[int] = Query(None, description="Filter by spending category (partida) ID"),
+    min_amount: Optional[float] = Query(None, ge=0, description="Minimum contract amount"),
+    max_amount: Optional[float] = Query(None, le=100_000_000_000, description="Maximum contract amount"),
+    limit: int = Query(8, ge=1, le=12, description="Number of highlighted contracts (max 12)"),
+):
+    """Top contracts by risk for the current filter — feeds the "Los Señalados" band.
+
+    Same filters as the list endpoint, but no free-text search, pagination, or
+    custom sort: results are always the highest-risk contracts matching the
+    filter, with the documented-case seal so the band can lead with named cases.
+    One lightweight query (LIMIT ~8); the frontend re-orders documented-first.
+    """
+    if risk_level is not None and risk_level.lower() not in VALID_RISK_LEVELS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid risk_level '{risk_level}'. Must be one of: {', '.join(sorted(VALID_RISK_LEVELS))}",
+        )
+    if max_amount is not None and max_amount > MAX_CONTRACT_VALUE:
+        raise HTTPException(
+            status_code=422,
+            detail=f"max_amount exceeds maximum allowed value of {MAX_CONTRACT_VALUE}",
+        )
+
+    with get_db() as conn:
+        rows = contract_service.highlights(
+            conn,
+            sector_id=sector_id,
+            year=year,
+            vendor_id=vendor_id,
+            institution_id=institution_id,
+            risk_level=risk_level,
+            is_direct_award=is_direct_award,
+            is_single_bid=is_single_bid,
+            risk_factor=risk_factor,
+            category_id=category_id,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            limit=limit,
+        )
+        return [ContractListItem(**item) for item in rows]
+
+
 @router.get("/statistics", response_model=ContractStatistics)
 def get_contract_statistics(
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector ID (1-12)"),

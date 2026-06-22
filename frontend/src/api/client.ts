@@ -456,6 +456,18 @@ export const contractApi = {
   },
 
   /**
+   * Get the "Los Señalados" highlights for the current filter — the top
+   * flagged contracts (documented cases first, then high+critical risk).
+   * Accepts the same filter params as getAll (search/sort/page are ignored).
+   */
+  async getHighlights(params: Partial<ContractFilterParams> = {}, limit = 8): Promise<ContractListItem[]> {
+    const { search: _s, sort_by: _sb, sort_order: _so, page: _p, per_page: _pp, ...rest } = params
+    const queryParams = buildQueryParams({ ...rest, limit } as QueryParams)
+    const { data } = await api.get<ContractListItem[]>(`/contracts/highlights?${queryParams}`)
+    return data
+  },
+
+  /**
    * Get contract statistics with optional filters
    */
   async getStatistics(params: Partial<ContractFilterParams> = {}): Promise<ContractStatistics> {

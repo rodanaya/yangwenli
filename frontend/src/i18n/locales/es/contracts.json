@@ -65,7 +65,9 @@
     "date": "Fecha",
     "sector": "Sector",
     "procedure": "Procedimiento",
-    "anomalyScore": "Anomalía D²"
+    "anomalyScore": "Anomalía D²",
+    "contract": "Contrato",
+    "who": "Quién"
   },
   "detail": {
     "title": "Detalle del Contrato",
@@ -123,7 +125,8 @@
     "viewFullDetails": "Ver detalles completos",
     "fullDetails": "Detalles completos",
     "riskScoreTooltipTitle": "Sobre la puntuación de riesgo",
-    "riskScoreTooltipBody": "La puntuación de riesgo (0-1) mide similitud con patrones de corrupción documentados. No es prueba de irregularidad — es una señal de investigación."
+    "riskScoreTooltipBody": "La puntuación de riesgo (0-1) mide similitud con patrones de corrupción documentados. No es prueba de irregularidad — es una señal de investigación.",
+    "peek": "Vista rápida"
   },
   "actions": {
     "filterSaved": "Guardado"
@@ -148,5 +151,13 @@
     "medium": "Medio",
     "low": "Bajo"
   },
-  "statsBar": {}
+  "statsBar": {},
+  "peek": {
+    "openDossier": "Abrir expediente completo"
+  },
+  "senalados": {
+    "kicker": "LOS SEÑALADOS",
+    "honesty": "Señalados por el modelo y por casos documentados — no es una acusación.",
+    "empty": "Sin señalamientos destacados en este filtro."
+  }
 }

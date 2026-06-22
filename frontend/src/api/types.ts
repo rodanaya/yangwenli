@@ -146,6 +146,12 @@ export interface ContractListItem extends ContractBase {
   risk_factors?: string[]
   ensemble_anomaly_score?: number
   pyod_is_outlier?: boolean
+  // Documented-case seal — set only for strong-evidence GT contracts tied to a
+  // named procurement scandal (links to /cases/:slug). See contract_service.
+  is_documented_case?: boolean
+  case_slug?: string | null
+  case_name_es?: string | null
+  case_name_en?: string | null
 }
 
 export interface ContractDetail extends ContractBase {

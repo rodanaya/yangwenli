@@ -65,7 +65,9 @@
     "date": "Date",
     "sector": "Sector",
     "procedure": "Procedure",
-    "anomalyScore": "Anomaly D²"
+    "anomalyScore": "Anomaly D²",
+    "contract": "Contract",
+    "who": "Who"
   },
   "detail": {
     "title": "Contract Detail",
@@ -123,7 +125,8 @@
     "viewFullDetails": "View full details",
     "fullDetails": "Full details",
     "riskScoreTooltipTitle": "About the risk score",
-    "riskScoreTooltipBody": "The risk score (0-1) measures similarity to documented corruption patterns. It is not proof of irregularity — it is an investigation signal."
+    "riskScoreTooltipBody": "The risk score (0-1) measures similarity to documented corruption patterns. It is not proof of irregularity — it is an investigation signal.",
+    "peek": "Quick look"
   },
   "actions": {
     "filterSaved": "Saved"
@@ -148,5 +151,13 @@
     "medium": "Medium",
     "low": "Low"
   },
-  "statsBar": {}
+  "statsBar": {},
+  "peek": {
+    "openDossier": "Open full dossier"
+  },
+  "senalados": {
+    "kicker": "THE FLAGGED",
+    "honesty": "Flagged by the model and documented cases — not an accusation.",
+    "empty": "No standout flags in this filter."
+  }
 }
