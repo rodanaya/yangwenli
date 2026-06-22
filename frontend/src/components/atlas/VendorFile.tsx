@@ -247,7 +247,7 @@ export function VendorFile({
                   : null
                 return (
                   <div key={inst.institution_id}>
-                    <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="xs" hideIcon />
+                    <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="xs" hideIcon fullName />
                     <div className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)', paddingLeft: 2, marginTop: 1 }}>
                       {tenure ? `${tenure} · ` : ''}{formatNumber(inst.contract_count)} {es ? 'contratos' : 'contracts'}
                       {share > 0.005 ? ` · ${Math.round(share * 100)}% ${es ? 'del valor' : 'of value'}` : ''}
@@ -318,7 +318,7 @@ export function VendorFile({
               {(gtQ.data?.cases?.length ?? 0) > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {(gtQ.data?.cases ?? []).slice(0, 2).map((c) => (
-                    <EntityIdentityChip key={c.case_id} type="case" id={c.case_id} name={c.case_name} size="xs" />
+                    <EntityIdentityChip key={c.case_id} type="case" id={c.case_id} name={c.case_name} size="xs" fullName />
                   ))}
                 </div>
               )}
