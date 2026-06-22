@@ -6178,3 +6178,46 @@ None detected.
 ### Overall: WARN
 HTTP and API checks are infrastructure-blocked (persistent egress policy — outbound connections to rubli.xyz denied by Anthropic gateway). Not a live-site failure. Bilingual scan clean; no new gaps.
 **Action required**: add `rubli.xyz` to the execution environment's network egress allowlist. See https://code.claude.com/docs/en/claude-code-on-the-web for environment configuration docs.
+
+---
+## Visual Review — 2026-06-22T18:04:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 — egress gateway block (host_not_allowed) | ❌ |
+| https://rubli.xyz/atlas | 403 — egress gateway block | ❌ |
+| https://rubli.xyz/aria | 403 — egress gateway block | ❌ |
+| https://rubli.xyz/sectors | 403 — egress gateway block | ❌ |
+| https://rubli.xyz/sectors/salud | 403 — egress gateway block | ❌ |
+| https://rubli.xyz/cases | 403 — egress gateway block | ❌ |
+| https://rubli.xyz/methodology | 403 — egress gateway block | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 — egress gateway block | ❌ |
+
+Note: `x-deny-reason: host_not_allowed` — all 403s originate from the Anthropic remote-execution egress proxy, not from rubli.xyz itself. The site resolves (37.60.232.109); outbound traffic to rubli.xyz is blocked by the container's network policy.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/sectors | BLOCKED — egress gateway, empty body | ❌ |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — comment referencing FRAUDTYPES enum; not rendered. OK.
+- `Methodology.tsx:125` — academic citation (untranslatable). OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` code accessor; not rendered string. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property; not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — TS return-type annotation. OK.
+- `ExploreCanvas.tsx:1476–1491` — comment block + corporate-form token array; not rendered. OK.
+- `ConcentrationConstellation.tsx:155–165` — correctly bilingual (`isEs ? … : …`). OK.
+- Hardcoded "Generate Report": None found.
+- Hardcoded "SIGN IN" / "INICIAR SESIÓN": None found.
+
+None detected.
+
+### Overall: WARN
+HTTP and API checks infrastructure-blocked (persistent egress policy — rubli.xyz denied by Anthropic gateway). Not a live-site failure. Bilingual scan clean.
+**Action required**: add `rubli.xyz` to execution environment's network egress allowlist (https://code.claude.com/docs/en/claude-code-on-the-web).
