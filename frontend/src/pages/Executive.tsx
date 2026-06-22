@@ -273,12 +273,14 @@ export default function Executive() {
           </div>
 
           {/* Headline — EB Garamond italic 500, ochre/red normal-weight accents.
-              max-w 15.5em caps the measure to the headline's natural longest
-              line (~975px at 64px), so the column hugs the text instead of
-              leaving a dead right gutter. em-based → scales with the responsive
-              font sizes and only binds on wide screens where the gap appears. */}
+              md:text-justify flushes lines 1..n-1 to both column edges so the
+              ragged right gutter is gone on desktop (the natural last line stays
+              left). A max-width cap can't fix the gutter — the text is
+              left-aligned, so trimming the box doesn't move the text; only
+              justify fills it. Scoped to md+ to avoid stretched word-spacing
+              ("rivers") on narrow mobile lines, where it stays balanced-ragged. */}
           <h1
-            className="text-[36px] sm:text-[52px] md:text-[64px] leading-[0.98] text-text-primary mb-4 text-balance max-w-[15.5em]"
+            className="text-[36px] sm:text-[52px] md:text-[64px] leading-[0.98] text-text-primary mb-4 text-balance md:text-justify"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'italic',
