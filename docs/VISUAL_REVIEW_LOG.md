@@ -6046,3 +6046,46 @@ None detected.
 ### Overall: WARN
 HTTP and API checks are infrastructure-blocked (egress policy — `x-deny-reason: host_not_allowed`). Persistent constraint, not a site failure. Bilingual scan clean; no new gaps.
 **Action required**: add `rubli.xyz` to the execution environment's network egress allowlist. See https://code.claude.com/docs/en/claude-code-on-the-web for environment configuration docs.
+
+---
+## Visual Review — 2026-06-22T00:04:30Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 host_not_allowed | ❌ |
+| /atlas | 403 host_not_allowed | ❌ |
+| /aria | 403 host_not_allowed | ❌ |
+| /sectors | 403 host_not_allowed | ❌ |
+| /sectors/salud | 403 host_not_allowed | ❌ |
+| /cases | 403 host_not_allowed | ❌ |
+| /methodology | 403 host_not_allowed | ❌ |
+| /stories/el-ejercito-fantasma | 403 host_not_allowed | ❌ |
+
+> All curl requests returned HTTP 403 `x-deny-reason: host_not_allowed` — the execution environment's network egress policy blocks outbound access to `rubli.xyz`. Persistent infrastructure constraint, not a live-site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway, empty body | ❌ |
+| /api/v1/sectors | BLOCKED — egress gateway, empty body | ❌ |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — inline comment referencing FRAUDTYPES enum; not rendered text. OK.
+- `Methodology.tsx:125` — academic citation (Mahalanobis, P.C. 1936); untranslatable. OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` code accessor, not rendered string. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property (`target_type`); not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — TypeScript return-type annotation (`JSX.Element`). OK.
+- `ExploreCanvas.tsx:1476–1491` — comment block + corporate-form token array (`S.A.`, `C.V.`); not rendered. OK.
+- `ConcentrationConstellation.tsx:155–165` — correctly bilingual throughout (`isEs ? … : …`). OK.
+- **Hardcoded "Generate Report"**: None found.
+- **Hardcoded "SIGN IN" / "INICIAR SESIÓN"**: None found.
+
+None detected.
+
+### Overall: WARN
+HTTP and API checks are infrastructure-blocked (egress policy — `x-deny-reason: host_not_allowed`). Persistent constraint, not a live-site failure. Bilingual scan clean; no new gaps.
+**Action required**: add `rubli.xyz` to the execution environment's network egress allowlist. See https://code.claude.com/docs/en/claude-code-on-the-web for environment configuration docs.
