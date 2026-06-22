@@ -350,9 +350,11 @@ export default function Executive() {
             </div>
           )}
 
-          {/* Lede — EB Garamond regular 17px / 1.55, max-width 68ch */}
+          {/* Lede — EB Garamond regular 17px / 1.55. Spans the full content
+              column (no 68ch cap) so the paragraph extends across the width
+              instead of leaving a large empty gutter on its right. */}
           <p
-            className="max-w-[68ch] text-pretty"
+            className="text-pretty"
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
               fontSize: '17px',
