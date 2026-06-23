@@ -224,7 +224,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
             stacked column below `lg`. Mirrors VendorHero's lede + companion. */}
         <div className="mt-6 grid items-start gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
           {/* Lede with drop cap */}
-          <div style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
+          <div style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20 }}>
             <p
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',

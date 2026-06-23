@@ -158,7 +158,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
 
       {/* editorial callout */}
       <p
-        className="mt-3 max-w-prose"
+        className="mt-3"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'italic',

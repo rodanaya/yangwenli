@@ -122,8 +122,7 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
         key={adminName}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
-        className="max-w-[70ch]"
+        transition={{ duration: 0.25, ease: 'easeOut' }}
       >
         <p className="py-8 text-center text-xs text-text-secondary">{t('eventsNoData')}</p>
         {groundTruthNote}
