@@ -251,13 +251,14 @@ export function Sectors() {
 
   // Registry display mode — the Plate and the Register render the SAME
   // 12-sector data; show one at a time behind a toggle instead of stacking
-  // both. Default 'register' (the legible table); 'plate' = the visual.
-  // URL-synced (?reg=plate). Lens (VaR/Intensity) stays shared across views.
+  // both. Default 'plate' (the innovative visual — the page centrepiece);
+  // 'register' = the legible table. URL-synced (?reg=register). Lens
+  // (VaR/Intensity) stays shared across views.
   const regView: 'register' | 'plate' =
-    searchParams.get('reg') === 'plate' ? 'plate' : 'register'
+    searchParams.get('reg') === 'register' ? 'register' : 'plate'
   const setRegView = (v: 'register' | 'plate') => {
     const next = new URLSearchParams(searchParams)
-    if (v === 'register') next.delete('reg')
+    if (v === 'plate') next.delete('reg')
     else next.set('reg', v)
     setSearchParams(next, { replace: true })
   }
@@ -1135,16 +1136,13 @@ export function Sectors() {
                   </p>
                 </section>
 
-                {/* §C — SELF-CAPTURE HONOR ROLL (intensity highlight) ─────
-                    Moved up under the lede: it names the 3 sectors that prove
-                    the thesis before the full registry lets you explore all 12. */}
-                <SelfCaptureBand rows={ledgerRows} lang={lang} />
-
                 {/* §B+§D — THE REGISTRY (one section, two views) ───────────
-                    The Confound Plate (visual) and the Audited Register (table)
-                    are two renderings of the SAME 12-sector data sharing the
-                    same VaR/Intensity lens. Toggle between them — don't stack. */}
-                <div aria-label={lang === 'es' ? 'Registro de exposición sectorial' : 'Registry of sector exposure'}>
+                    The Confound Plate (the innovative visual) and the Audited
+                    Register (table) are two renderings of the SAME 12-sector
+                    data sharing the same VaR/Intensity lens. The Plate is the
+                    page centrepiece — kept first, right under the lede, as the
+                    DEFAULT view; the table is a toggle-away view. Don't stack. */}
+                <div className="mb-6" aria-label={lang === 'es' ? 'Registro de exposición sectorial' : 'Registry of sector exposure'}>
                   <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
                     <p
                       style={{
@@ -1158,15 +1156,15 @@ export function Sectors() {
                     >
                       {lang === 'es' ? '§ Registro de exposición sectorial' : '§ Registry of sector exposure'}
                     </p>
-                    {/* Register / Plate view toggle (lens stays shared) */}
+                    {/* Plate / Register view toggle (Plate default; lens shared) */}
                     <div
                       className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0"
                       role="group"
                       aria-label={lang === 'es' ? 'Cambiar vista del registro' : 'Switch registry view'}
                     >
                       {([
-                        { key: 'register', es: 'Registro', en: 'Register' },
                         { key: 'plate', es: 'Lámina', en: 'Plate' },
+                        { key: 'register', es: 'Registro', en: 'Register' },
                       ] as const).map(({ key, es, en }) => (
                         <button
                           key={key}
@@ -1192,6 +1190,11 @@ export function Sectors() {
                     <ExposureLedger rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
                   )}
                 </div>
+
+                {/* §C — SELF-CAPTURE HONOR ROLL (intensity highlight) ─────
+                    The 3 sectors whose intensity rank most exceeds their VaR
+                    rank — the plate's thesis, named. */}
+                <SelfCaptureBand rows={ledgerRows} lang={lang} />
               </>
             )}
           </>
