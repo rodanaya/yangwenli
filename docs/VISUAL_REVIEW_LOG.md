@@ -1,4 +1,41 @@
 ---
+## Visual Review — 2026-06-23T18:03:30Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | BLOCKED — proxy connect_rejected 403 | ❌ |
+| /atlas | BLOCKED — proxy connect_rejected 403 | ❌ |
+| /aria | BLOCKED — proxy connect_rejected 403 | ❌ |
+| /sectors | BLOCKED — proxy connect_rejected 403 | ❌ |
+| /sectors/salud | BLOCKED — proxy connect_rejected 403 | ❌ |
+| /cases | BLOCKED — proxy connect_rejected 403 | ❌ |
+| /methodology | BLOCKED — proxy connect_rejected 403 | ❌ |
+| /stories/el-ejercito-fantasma | BLOCKED — proxy connect_rejected 403 | ❌ |
+
+> **Note**: All requests blocked by Anthropic cloud runner egress gateway (`x-deny-reason: host_not_allowed`). Persistent infrastructure constraint — not a site outage. Add `rubli.xyz` to egress allowlist in environment settings to enable live checks.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway | WARN |
+| /api/v1/sectors | BLOCKED — egress gateway | WARN |
+
+> Same egress restriction blocks all API calls. Not indicative of backend failure.
+
+### Bilingual Gaps
+Grep scans completed (3 patterns checked). No new regressions — stable false-positive baseline, same as prior runs.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by Anthropic Egress Gateway (persistent infrastructure constraint, not a site regression). Bilingual scan clean. No new issues detected. **Action required: add `rubli.xyz` to environment egress allowlist** so health checks can reach the live site.
+
+---
 ## Visual Review — 2026-06-22T12:05:14Z
 
 ### HTTP Status
