@@ -6,18 +6,37 @@
  * separated mono, and a LAZY footer — top contract + GT linkage fetched only
  * when the card is active (react-query `enabled` gate; nothing eager).
  *
- * Rendered two ways by ExposureLedger:
+ * Rendered two ways by ConfoundPlate (the single merged registry view, since
+ * 2026-06-23):
  *   - desktop: inside a floating, edge-flipping, pointer-events-none panel
  *   - mobile:  inline, inside the row's tap-to-expand block
+ *
+ * The dossier now also carries the two cells the retired Audited Register
+ * showed inline — the DA-vs-OECD process bullet and the per-row risk
+ * trajectory sparkline — so nothing was lost when the table folded in.
  */
 import { useQuery } from '@tanstack/react-query'
 import { sectorApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { RISK_COLORS } from '@/lib/constants'
+import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
+import { RISK_COLORS, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
+import type { SectorTrajectoryPoint } from '@/api/types'
 import type { LedgerRow } from './ExposureLedger'
 import { intensityColor, compactCount } from './ExposureLedger'
 import { ownSpendShare } from './confoundScales'
+
+// OECD direct-award ceiling as a percentage (0–100). Single source: constants.
+const OECD_DA_CEILING = OECD_DIRECT_AWARD_LIMIT * 100
+
+// Direction of a risk trajectory — rising risk is the signal we tint amber.
+function trajectoryDirection(traj: SectorTrajectoryPoint[]): { glyph: string; rising: boolean } {
+  if (!traj || traj.length < 2) return { glyph: '·', rising: false }
+  const delta = traj[traj.length - 1].avg_risk - traj[0].avg_risk
+  if (delta > 0.02) return { glyph: '↑', rising: true }
+  if (delta < -0.02) return { glyph: '↓', rising: false }
+  return { glyph: '→', rising: false }
+}
 
 export function SectorDossierCard({
   row,
@@ -38,6 +57,8 @@ export function SectorDossierCard({
   const critFrac = row.varMxn > 0 ? Math.max(0, Math.min(1, row.criticalMxn / row.varMxn)) : 0
   const critPct = row.contracts > 0 ? (row.criticalCount / row.contracts) * 100 : 0
   const sbHot = row.sbPct > 25
+  const hasTraj = Boolean(row.trajectory && row.trajectory.length > 1)
+  const dir = trajectoryDirection(row.trajectory)
 
   const { data: topContracts, isLoading: tcLoading } = useQuery({
     queryKey: ['sectors', 'top-contracts', row.sectorId],
@@ -107,6 +128,43 @@ export function SectorDossierCard({
         </div>
       </div>
 
+      {/* process integrity — DA% vs the OECD ceiling (the register's signature
+          FT-bullet; overshoot silhouette in amber) */}
+      <div className="mt-2.5 flex items-center gap-2">
+        <span
+          className="font-mono shrink-0"
+          style={{ fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+        >
+          DA · {isEs ? 'OCDE' : 'OECD'} ≤{OECD_DA_CEILING.toFixed(0)}%
+        </span>
+        <DABullet daPct={row.daPct} />
+        <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+          {row.daPct.toFixed(0)}%
+        </span>
+      </div>
+
+      {/* risk trajectory — the register's per-row sparkline + direction glyph */}
+      {hasTraj && (
+        <div className="mt-1.5 flex items-center gap-2">
+          <span
+            className="font-mono shrink-0"
+            style={{ fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+          >
+            {isEs ? 'Trayectoria' : 'Trajectory'}
+          </span>
+          <span className="flex-1 min-w-0">
+            <EditorialSparkline data={row.trajectory} yKey="avg_risk" colorToken="text-muted" height={24} kind="line" />
+          </span>
+          <span
+            className="font-mono shrink-0"
+            style={{ fontSize: 11, color: dir.rising ? RISK_COLORS.high : 'var(--color-text-muted)' }}
+            aria-hidden="true"
+          >
+            {dir.glyph}
+          </span>
+        </div>
+      )}
+
       {/* top institution */}
       {row.topInstitution && (
         <div className="mt-2 flex items-center gap-1.5 flex-wrap">
@@ -129,7 +187,6 @@ export function SectorDossierCard({
           <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 1, background: RISK_COLORS.critical, flexShrink: 0 }} />
           {isEs ? 'crít' : 'crit'} {critPct.toFixed(1)}%
         </span>
-        <span className="whitespace-nowrap">DA {row.daPct.toFixed(0)}%</span>
         <span className="whitespace-nowrap" style={{ color: sbHot ? RISK_COLORS.critical : undefined }}>
           1P {row.sbPct.toFixed(1)}%
         </span>
