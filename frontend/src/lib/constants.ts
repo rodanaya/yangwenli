@@ -153,6 +153,22 @@ export function getCaseFraudColor(fraudType: string): string {
   return CASE_FRAUD_TYPE_COLORS[fraudType] ?? CASE_FRAUD_TYPE_COLORS.other
 }
 
+// Newsroom section-kicker colors — AA-safe on the warm-paper background so they
+// can be used as both kicker TEXT and a thin left-rule (Guardian-style section
+// accents on /journalists). Keyed by the investigation `type`. No green.
+export const NEWS_TYPE_COLOR: Record<string, string> = {
+  procurement_fraud: '#b45309', // amber-700
+  monopoly:          '#1d4ed8', // blue-700
+  ghost_company:     '#b91c1c', // red-700
+  overpricing:       '#9a3412', // orange-800
+  embezzlement:      '#a16207', // amber-800
+} as const
+
+/** Resolve a newsroom section-kicker color (falls back to slate-600). */
+export function getNewsTypeColor(type: string): string {
+  return NEWS_TYPE_COLOR[type] ?? '#475569'
+}
+
 // Case legal-status styling — status dot, English fallback label, and AA-safe
 // text color for the Case Library status line. Keyed by `legal_status`
 // (LegalStatus union, plus an `unresolved` default). `dot` / `text` may be a hex
@@ -228,7 +244,7 @@ export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1554
 
 
 
-export const BUILD_ID = '2026-06-23-contracts-who-fullnames'
+export const BUILD_ID = '2026-06-23-journalists-frontpage'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
