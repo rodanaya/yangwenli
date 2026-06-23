@@ -2179,8 +2179,12 @@ function Z1Panel({
         <motion.div
           variants={bandVariants}
           custom={2}
-          className="flex-1 min-h-0 overflow-y-auto mx-3 sm:mx-4 mb-2"
+          className="flex-1 min-h-0 overflow-auto mx-3 sm:mx-4 mb-2"
         >
+          {/* min-width keeps the desktop column grid intact on phones; the
+              container scrolls horizontally instead of collapsing the name
+              column to zero (a no-op on desktop where the panel is wider). */}
+          <div className="min-w-[780px]">
           {isLoading && (
             <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
@@ -2256,6 +2260,7 @@ function Z1Panel({
               />
             </div>
           )}
+          </div>
         </motion.div>
 
         {/* Pull-line — band 3 in cascade. The "more than the rest of the
@@ -2904,8 +2909,12 @@ function Z2Panel({
         <motion.div
           variants={bandVariants}
           custom={4}
-          className="flex-1 min-h-0 overflow-y-auto mx-3 sm:mx-4 mb-2"
+          className="flex-1 min-h-0 overflow-auto mx-3 sm:mx-4 mb-2"
         >
+          {/* min-width keeps the desktop column grid intact on phones; the
+              container scrolls horizontally instead of collapsing the name
+              column to zero (a no-op on desktop where the panel is wider). */}
+          <div className="min-w-[780px]">
           {isLoading && (
             <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
@@ -2986,6 +2995,7 @@ function Z2Panel({
               />
             </div>
           )}
+          </div>
         </motion.div>
 
         {/* Jumpline bar — register count · copy-link · dossier exit (W5).
