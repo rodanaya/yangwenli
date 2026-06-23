@@ -348,7 +348,7 @@ function ProvenanceNote({ lang }: { lang: 'en' | 'es' }) {
         § {lang === 'es' ? 'Procedencia' : 'Provenance'}
       </p>
       <p
-        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, color: 'var(--color-text-secondary)', maxWidth: '78ch' }}
+        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}
       >
         {lang === 'es'
           ? '72 categorías activas cubren el 99.73% del gasto clasificable (códigos Partida/CUCoP); la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La regla de adjudicación directa marca el techo OCDE del 30%; el punto de único postor colorea >25% crítico / ≥15% alto. Indicador de riesgo, no estimación de fraude. RUBLI v0.8.5.'
@@ -557,7 +557,6 @@ export default function CategoriesIndex() {
                     fontSize: 'clamp(1.25rem, 2.2vw, 1.6rem)',
                     lineHeight: 1.4,
                     color: 'var(--color-text-secondary)',
-                    maxWidth: '52ch',
                   }}
                 >
                   {isEs ? (
@@ -764,7 +763,7 @@ export default function CategoriesIndex() {
               {/* dagger margin note */}
               <p
                 className="mt-3"
-                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11, lineHeight: 1.45, color: 'var(--color-text-secondary)', maxWidth: '64ch' }}
+                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11, lineHeight: 1.45, color: 'var(--color-text-secondary)' }}
               >
                 {isEs
                   ? '† Sectores con una sola categoría activa — expansión de taxonomía pendiente (S.10–S.12).'

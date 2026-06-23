@@ -561,7 +561,7 @@ function MethodologyCoda({ lang }: { lang: 'en' | 'es' }) {
       </p>
       <p
         className="text-xs text-text-muted mb-4"
-        style={{ maxWidth: '60ch', lineHeight: 1.55 }}
+        style={{ lineHeight: 1.55 }}
       >
         {isEs
           ? 'La metodología no es un destino. Lleva el indicador de riesgo a donde se vuelve accionable.'
@@ -627,7 +627,6 @@ function MethodologyProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           fontStyle: 'italic',
           fontSize: 13.5,
           color: 'var(--color-text-secondary)',
-          maxWidth: '72ch',
           lineHeight: 1.55,
         }}
       >
@@ -644,7 +643,6 @@ function MethodologyProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
             fontStyle: 'italic',
             fontSize: 13.5,
             color: 'var(--color-text-secondary)',
-            maxWidth: '72ch',
             lineHeight: 1.55,
           }}
         >

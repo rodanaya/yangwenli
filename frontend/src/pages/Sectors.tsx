@@ -1054,7 +1054,6 @@ export function Sectors() {
                       fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
                       lineHeight: 1.15,
                       letterSpacing: '-0.015em',
-                      maxWidth: '48ch',
                     }}
                   >
                     {lang === 'es' ? (
@@ -1091,7 +1090,6 @@ export function Sectors() {
                       fontSize: '15px',
                       lineHeight: 1.55,
                       color: 'var(--color-text-secondary)',
-                      maxWidth: '68ch',
                     }}
                   >
                     {lang === 'es' ? (
