@@ -282,7 +282,7 @@ export function InstitutionThread() {
           accent={sectorColor}
         />
         <p
-          className="text-text-secondary max-w-3xl mb-8"
+          className="text-text-secondary mb-8"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
             fontSize: '17px',
@@ -354,7 +354,7 @@ export function InstitutionThread() {
         />
         {vendors && vendors.data && vendors.data.length > 0 ? (
           <>
-            <p className="text-text-secondary max-w-3xl mb-6 text-sm leading-relaxed">
+            <p className="text-text-secondary mb-6 text-sm leading-relaxed">
               {isEs
                 ? `Los proveedores más grandes concentran la mayor parte del gasto. La barra muestra el valor relativo dentro del top; el porcentaje, su participación en el gasto total de la institución.`
                 : `The largest vendors absorb most of the spend. The bar shows relative value within the top; the percentage shows their share of total institutional spending.`}
@@ -421,7 +421,7 @@ export function InstitutionThread() {
         />
         {timelineArray.length > 0 ? (
           <>
-            <p className="text-text-secondary max-w-3xl mb-6 text-sm leading-relaxed">
+            <p className="text-text-secondary mb-6 text-sm leading-relaxed">
               {isEs
                 ? 'Cada año se muestra coloreado por su indicador de riesgo promedio. Un patrón ascendente sugiere captura institucional o concentración creciente.'
                 : 'Each year is colored by its average risk indicator. An ascending pattern suggests institutional capture or growing concentration.'}

@@ -681,7 +681,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
       </div>
 
       {/* Honesty guard — fragmentation is not a clean bill of health. */}
-      <p className="mt-2 font-mono leading-relaxed text-text-muted max-w-prose" style={{ fontSize: 9.5 }}>
+      <p className="mt-2 font-mono leading-relaxed text-text-muted" style={{ fontSize: 9.5 }}>
         {isEs
           ? 'Concentración baja no certifica integridad — un cártel puede operar repartiendo lotes entre varias firmas; esto mide dispersión, no riesgo.'
           : 'Low concentration does not certify integrity — a cartel can operate by splitting lots across firms; this measures dispersion, not risk.'}

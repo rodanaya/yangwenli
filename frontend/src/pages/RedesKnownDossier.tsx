@@ -1388,7 +1388,7 @@ export default function RedesKnownDossier() {
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1.5">
             {isEs ? 'Metodología' : 'Methodology'}
           </p>
-          <p className="text-[12px] text-text-secondary leading-relaxed max-w-3xl">
+          <p className="text-[12px] text-text-secondary leading-relaxed">
             {isEs ? (
               <>
                 Las aristas provienen de pares reales de co-licitación (proveedores que participaron en los mismos

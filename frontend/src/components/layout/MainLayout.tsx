@@ -123,7 +123,7 @@ export function MainLayout() {
             <span>{t('footerBrand')} <span className="text-text-muted mx-1 opacity-60">·</span> {t('footerTagline')}</span>
             <span className="text-text-muted">{t('footerStats')}</span>
           </div>
-          <p className="text-[10px] text-text-muted leading-relaxed max-w-3xl tracking-wide">
+          <p className="text-[10px] text-text-muted leading-relaxed tracking-wide">
             {t('aboutData')}
           </p>
         </footer>

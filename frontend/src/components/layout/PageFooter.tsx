@@ -55,7 +55,7 @@ export function PageFooter({ note, className }: PageFooterProps) {
       </div>
       {note && (
         <p
-          className="mt-3 max-w-2xl text-[11px] leading-relaxed text-text-secondary"
+          className="mt-3 text-[11px] leading-relaxed text-text-secondary"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {note}

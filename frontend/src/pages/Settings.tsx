@@ -134,7 +134,7 @@ export function Settings() {
         >
           {t('pageTitle', 'Platform Settings')}
         </h1>
-        <p className="text-sm text-text-secondary max-w-xl">
+        <p className="text-sm text-text-secondary">
           {t('pageDescription', 'Export data, review quality metrics, and configure platform preferences.')}
         </p>
       </header>

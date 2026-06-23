@@ -50,7 +50,7 @@ export function TwoWorldsExhibit() {
         <h3 className="mt-2 text-text-primary leading-[1.1]" style={{ fontFamily: SERIF, fontWeight: 800, fontSize: 'clamp(22px, 3vw, 34px)', letterSpacing: '-0.02em', maxWidth: '20ch' }}>
           {lang === 'es' ? 'Dos formas de ver la corrupción. Casi nunca coinciden.' : 'Two ways of seeing corruption. They almost never agree.'}
         </h3>
-        <p className="mt-3 text-text-secondary max-w-[62ch]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 'clamp(15px, 1.8vw, 18px)', lineHeight: 1.5 }}>
+        <p className="mt-3 text-text-secondary" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 'clamp(15px, 1.8vw, 18px)', lineHeight: 1.5 }}>
           {lang === 'es'
             ? <>El modelo de RUBLI marca <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.model_flags)}</strong> proveedores de alto riesgo. El registro oficial del Estado — SAT EFOS + SFP — lista <strong className="tabular-nums" style={{ color: C_RECORD }}>{formatNumber(w.official_record)}</strong>. Comparten <strong className="tabular-nums" style={{ color: C_OVERLAP }}>{formatNumber(w.overlap)}</strong>. Si el modelo solo repitiera la lista oficial, sobraría; no lo hace.</>
             : <>RUBLI's model flags <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.model_flags)}</strong> high-risk suppliers. The state's official record — SAT EFOS + SFP — lists <strong className="tabular-nums" style={{ color: C_RECORD }}>{formatNumber(w.official_record)}</strong>. They share <strong className="tabular-nums" style={{ color: C_OVERLAP }}>{formatNumber(w.overlap)}</strong>. If the model just echoed the official list it would be redundant; it doesn't.</>}
@@ -106,7 +106,7 @@ export function TwoWorldsExhibit() {
       </div>
 
       <div className="px-5 sm:px-6 py-4">
-        <p className="text-[11px] leading-[1.6] text-text-secondary max-w-[78ch]">
+        <p className="text-[11px] leading-[1.6] text-text-secondary">
           {lang === 'es'
             ? <>El «registro oficial» son solo SAT EFOS (Art. 69-B) + SFP — <strong className="text-text-primary">no</strong> incluye el corpus de casos de RUBLI, que sería circular (el modelo se entrenó con él). Los <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.ghost_signature)}</strong> proveedores que solo el modelo ve son las pistas de investigación — viven en <Link to="/aria" className="underline underline-offset-2 hover:text-text-primary">La Cola (ARIA)</Link>.</>
             : <>"Official record" is SAT EFOS (Art. 69-B) + SFP only — it does <strong className="text-text-primary">not</strong> include RUBLI's own case corpus, which would be circular (the model trained on it). The <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.ghost_signature)}</strong> suppliers only the model sees are the investigation leads — they live in <Link to="/aria" className="underline underline-offset-2 hover:text-text-primary">the Queue (ARIA)</Link>.</>}

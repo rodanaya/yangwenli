@@ -169,7 +169,7 @@ export default function OfficialProfile() {
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-text-muted max-w-2xl">{data.note}</p>
+        <p className="mt-3 text-[11px] leading-relaxed text-text-muted">{data.note}</p>
       </section>
     </div>
   )

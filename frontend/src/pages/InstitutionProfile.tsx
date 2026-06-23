@@ -1346,7 +1346,7 @@ export function InstitutionProfile() {
               {lang === 'en' ? 'Officials & Tenure' : 'Funcionarios y Permanencia'}
             </h3>
           <div className="space-y-4">
-            <p className="text-[11px] text-text-muted italic leading-relaxed max-w-2xl">
+            <p className="text-[11px] text-text-muted italic leading-relaxed">
               {lang === 'en'
                 ? 'Based on Coviello & Gagliarducci (2017) — official tenure correlates with single-bidder rates. Data available for contracts 2018+ (COMPRANET Structure C/D).'
                 : 'Basado en Coviello & Gagliarducci (2017) — la permanencia de funcionarios correlaciona con tasas de licitante unico. Datos disponibles para contratos 2018+ (COMPRANET Estructura C/D).'}

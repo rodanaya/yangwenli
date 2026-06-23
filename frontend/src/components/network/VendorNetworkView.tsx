@@ -382,7 +382,7 @@ function InstitutionsView({
           <h2 className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
             {isEs ? '§ DÓNDE FLUYÓ EL DINERO' : '§ WHERE THE MONEY FLOWED'}
           </h2>
-          <p className="text-xs text-text-secondary mt-1 max-w-xl leading-relaxed">
+          <p className="text-xs text-text-secondary mt-1 leading-relaxed">
             {isEs
               ? 'Cada institución compradora ocupa una franja en el eje temporal compartido. La franja abarca de su primer a su último contrato; grosor = valor, color = riesgo. Clic en una fila para ver los contratos.'
               : 'Each buying institution occupies a band on the shared time axis. The band spans first → last contract; thickness = value, color = risk. Click any row to expand contracts.'}
@@ -791,7 +791,7 @@ function CoBiddersView({
         <h2 className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
           {isEs ? '§ QUIÉN LICITÓ JUNTO AL PROVEEDOR' : '§ WHO BID ALONGSIDE'}
         </h2>
-        <p className="text-xs text-text-secondary mt-1 max-w-2xl leading-relaxed">
+        <p className="text-xs text-text-secondary mt-1 leading-relaxed">
           {isEs
             ? 'Co-licitantes agrupados por rol detectado. La tasa de éxito (victorias ÷ apariciones) determina la clasificación: señuelos pierden casi siempre, cómplices ganan casi siempre, rotación alterna.'
             : 'Co-bidders grouped by detected role. Win rate (wins ÷ appearances) drives the classification: decoys lose almost always, accomplices win almost always, rotation alternates.'}

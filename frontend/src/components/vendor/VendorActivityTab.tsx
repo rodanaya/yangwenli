@@ -247,7 +247,7 @@ export function VendorActivityTab({
             <SubSectionTitle id="dinero-title">
               {isEs ? '§ El Dinero' : '§ The Money'}
             </SubSectionTitle>
-            <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
+            <p className="text-sm text-text-secondary leading-relaxed mb-4">
               {isEs
                 ? `Posición de este proveedor dentro del sector ${vendor.primary_sector_name ?? ''} por valor total y riesgo.`
                 : `Where this vendor ranks within the ${vendor.primary_sector_name ?? 'sector'} by total value and risk.`}

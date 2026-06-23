@@ -185,7 +185,7 @@ export function PairDossierRow({
 
             {/* Deck quote — italic serif, like a lede */}
             <p
-              className="mt-3 text-text-secondary max-w-3xl"
+              className="mt-3 text-text-secondary"
               style={{
                 fontFamily: 'var(--font-family-serif)',
                 fontStyle: 'italic',

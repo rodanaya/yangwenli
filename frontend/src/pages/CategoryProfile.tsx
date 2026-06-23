@@ -500,7 +500,7 @@ export default function CategoryProfile() {
                 >
                   {isEs ? (category.name_es || category.name_en) : (category.name_en || category.name_es)}
                 </h1>
-                <p className="text-sm text-text-secondary leading-[1.6] mt-3 max-w-prose"
+                <p className="text-sm text-text-secondary leading-[1.6] mt-3"
                   style={{ fontFamily: 'var(--font-family-serif)' }}>
                   {getLedeForCategory({
                     category_name: category.name_es,

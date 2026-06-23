@@ -295,7 +295,7 @@ export default function Relationships() {
               <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
                 {lang === 'en' ? 'Methodology' : 'Metodología'}
               </p>
-              <p className="text-[12px] leading-[1.7] text-text-secondary max-w-prose">
+              <p className="text-[12px] leading-[1.7] text-text-secondary">
                 {lang === 'en' ? (
                   <>
                     Computed over {capData.total_unfiltered} (institution, vendor) candidates
@@ -348,7 +348,7 @@ export default function Relationships() {
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
               {lang === 'en' ? '§ · Where to go next' : '§ · Adónde ir'}
             </p>
-            <p className="text-[13px] text-text-secondary leading-[1.55] max-w-prose mb-4">
+            <p className="text-[13px] text-text-secondary leading-[1.55] mb-4">
               {lang === 'en'
                 ? "Trace the strongest capture to its source — the captured institution, the vendor that dominated it, or the full capture pattern in the model's queue."
                 : 'Sigue la captura más fuerte hasta su origen — la institución capturada, el proveedor que la dominó, o el patrón de captura completo en la cola del modelo.'}

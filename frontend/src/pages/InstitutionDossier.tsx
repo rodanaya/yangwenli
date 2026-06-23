@@ -379,7 +379,7 @@ export default function InstitutionDossier() {
               </table>
             </div>
             {officialsData?.note && (
-              <p className="mt-3 text-[11px] leading-relaxed text-text-muted max-w-2xl">{officialsData.note}</p>
+              <p className="mt-3 text-[11px] leading-relaxed text-text-muted">{officialsData.note}</p>
             )}
           </section>
         </div>

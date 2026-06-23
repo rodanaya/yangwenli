@@ -123,7 +123,7 @@ export function EditorialChartFrame({
         {headline}
       </h3>
       {lede && (
-        <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
+        <p className="text-sm text-text-secondary leading-relaxed">
           {lede}
         </p>
       )}

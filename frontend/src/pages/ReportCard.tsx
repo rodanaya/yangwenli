@@ -1213,7 +1213,7 @@ function ReportCard() {
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-text-primary">
             {t('pageTitle')}
           </h1>
-          <p className="text-sm mt-2 text-text-secondary max-w-2xl leading-relaxed">
+          <p className="text-sm mt-2 text-text-secondary leading-relaxed">
             {t('heroIntro')}
           </p>
           <p className="text-[11px] mt-1 text-text-muted font-mono">

@@ -1389,7 +1389,7 @@ export default function YearInReview() {
               >
                 {t('sectorAll.headline', { year: validYear })}
               </p>
-              <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+              <p className="text-xs text-text-muted mb-4 leading-relaxed">
                 {t('sectorAll.subtitle')}
               </p>
 
@@ -1419,7 +1419,7 @@ export default function YearInReview() {
               >
                 {t('sectorGrowthFull.headline', { prior: validYear - 1 })}
               </p>
-              <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+              <p className="text-xs text-text-muted mb-4 leading-relaxed">
                 {t('sectorGrowthFull.subtitle')}
               </p>
 
@@ -1452,7 +1452,7 @@ export default function YearInReview() {
               >
                 {t('riskEvolution.headline', { year: validYear })}
               </p>
-              <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+              <p className="text-xs text-text-muted mb-4 leading-relaxed">
                 {t('riskEvolution.subtitle')}
               </p>
 
@@ -1493,7 +1493,7 @@ export default function YearInReview() {
             >
               {t('monthly.headline', { year: validYear })}
             </p>
-            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+            <p className="text-xs text-text-muted mb-4 leading-relaxed">
               {t('monthly.subtitle')}
             </p>
 
@@ -1577,7 +1577,7 @@ export default function YearInReview() {
             >
               {t('topVendorsFull.headline', { year: validYear })}
             </p>
-            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+            <p className="text-xs text-text-muted mb-4 leading-relaxed">
               {t('topVendorsFull.subtitle')}
             </p>
 
@@ -1609,7 +1609,7 @@ export default function YearInReview() {
             >
               {t('notableRisks.headline', { year: validYear })}
             </p>
-            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+            <p className="text-xs text-text-muted mb-4 leading-relaxed">
               {t('notableRisks.subtitle')}
             </p>
 

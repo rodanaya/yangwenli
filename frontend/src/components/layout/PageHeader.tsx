@@ -77,7 +77,7 @@ export function PageHeader({ title, subtitle, icon: Icon, actions, breadcrumb, l
               </h1>
             </div>
             {subtitle && (
-              <p className="mt-1 text-sm text-text-muted max-w-2xl leading-relaxed">{subtitle}</p>
+              <p className="mt-1 text-sm text-text-muted leading-relaxed">{subtitle}</p>
             )}
           </div>
         </div>

@@ -174,7 +174,7 @@ function SectionHeadline({ eyebrow, headline, deck }: { eyebrow: string; headlin
       </h2>
       {deck && (
         <p
-          className="text-text-secondary max-w-3xl"
+          className="text-text-secondary"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontStyle: 'italic',
@@ -697,7 +697,7 @@ function AuditTrailTab() {
 
                 {/* Narrative */}
                 <p
-                  className="text-text-secondary max-w-3xl"
+                  className="text-text-secondary"
                   style={{
                     fontFamily: 'var(--font-family-serif)',
                     fontSize: '0.98rem',

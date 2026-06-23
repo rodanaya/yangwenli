@@ -75,7 +75,7 @@ export function EditorialPageShell({
             cold-reading the page needs to know who published this and what
             the data window is before trusting the lede. */}
         {!loading && (
-          <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-text-muted mb-5 max-w-prose">
+          <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-text-muted mb-5">
             {dateline ?? DEFAULT_DATELINE}
           </p>
         )}

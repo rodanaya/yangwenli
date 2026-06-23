@@ -276,7 +276,7 @@ export function CaptureField({ landscape, lang }: Props) {
               />
             ) : (
               <div className="hidden lg:flex items-center justify-center border border-dashed border-border rounded-sm px-4 text-center">
-                <p className="text-[11px] text-text-muted leading-relaxed max-w-[24ch]">
+                <p className="text-[11px] text-text-muted leading-relaxed">
                   {lang === 'en'
                     ? 'Look up an institution — or click a tick — to open its file here.'
                     : 'Busque una institución — o pulse una marca — para abrir su ficha aquí.'}

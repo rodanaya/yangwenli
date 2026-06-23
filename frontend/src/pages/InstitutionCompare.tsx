@@ -374,7 +374,7 @@ function VeredictoHeader({
       {/* Narrative */}
       {narrative && (
         <p
-          className="text-sm text-text-secondary italic leading-relaxed max-w-2xl"
+          className="text-sm text-text-secondary italic leading-relaxed"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {narrative}

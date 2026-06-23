@@ -109,7 +109,7 @@ export function VendorEvidenceTab({
         <SubSectionTitle id="waterfall-title">
           {isEs ? 'Descomposición del riesgo' : 'Risk decomposition'}
         </SubSectionTitle>
-        <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
+        <p className="text-sm text-text-secondary leading-relaxed mb-4">
           {t('vendors:waterfall.description')}
         </p>
         {waterfallLoading ? (
@@ -166,7 +166,7 @@ export function VendorEvidenceTab({
             >
               {isEs ? 'Descomposición no disponible' : 'Decomposition unavailable'}
             </p>
-            <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
+            <p className="text-sm text-text-secondary leading-relaxed">
               {isEs
                 ? 'El modelo v0.8.5 no produjo una descomposición SHAP para este proveedor: sus contratos carecen de las variables normalizadas (z-scores) que requiere el análisis — típico de registros COMPRANET de 2002–2010 (Estructura A), donde la cobertura de RFC y precios es mínima. La ausencia de descomposición no implica ausencia de riesgo.'
                 : 'The v0.8.5 model produced no SHAP decomposition for this vendor: its contracts lack the normalized features (z-scores) the analysis requires — typical of 2002–2010 COMPRANET records (Structure A), where RFC and price coverage is minimal. Missing decomposition does not mean absence of risk.'}
@@ -215,7 +215,7 @@ export function VendorEvidenceTab({
           <SubSectionTitle id="peer-title">
             {isEs ? '§ El Desvío (vs sector)' : '§ The Deviation (vs sector)'}
           </SubSectionTitle>
-          <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
+          <p className="text-sm text-text-secondary leading-relaxed mb-4">
             {isEs
               ? `Qué tan lejos opera de la mediana de ${vendor.primary_sector_name ?? 'su sector'} — adjudicación directa, único postor, riesgo y precio por contrato. Sobre la población completa de contratos.`
               : `How far it operates from the ${vendor.primary_sector_name ?? 'sector'} median — direct award, single bid, risk, and price per contract. Over the full contract population.`}
@@ -237,7 +237,7 @@ export function VendorEvidenceTab({
           <SubSectionTitle id="signos-title">
             {isEs ? '§ Los Signos' : '§ External Signals'}
           </SubSectionTitle>
-          <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
+          <p className="text-sm text-text-secondary leading-relaxed mb-4">
             {isEs
               ? 'Registros documentados en fuentes externas: casos de corrupción confirmados, listas negras fiscales, sanciones administrativas.'
               : 'Records in external sources: documented corruption cases, tax blacklists, administrative sanctions.'}
@@ -356,7 +356,7 @@ export function VendorEvidenceTab({
               >
                 {isEs ? verdict.label_es : verdict.label_en}
               </span>
-              <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
+              <p className="text-sm text-text-secondary leading-relaxed">
                 {isEs ? verdict.rationale_es : verdict.rationale_en}
               </p>
             </div>
@@ -372,7 +372,7 @@ export function VendorEvidenceTab({
         <SubSectionTitle id="method-title">
           {isEs ? 'Metodología' : 'Methodology'}
         </SubSectionTitle>
-        <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
+        <p className="text-sm text-text-secondary leading-relaxed">
           {t('vendors:flags.disclaimer')}
         </p>
         <a

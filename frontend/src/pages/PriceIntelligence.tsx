@@ -586,7 +586,7 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
       </button>
 
       {open && (
-        <div className="mt-4 space-y-4 text-sm text-text-secondary leading-relaxed max-w-3xl">
+        <div className="mt-4 space-y-4 text-sm text-text-secondary leading-relaxed">
           <p>
             <strong className="text-text-secondary">{t('methodologyPara1Title')}</strong> {t('methodologyPara1')}
           </p>
@@ -1113,7 +1113,7 @@ function OverpricingTimelineSection({
         >
           ¿Cuándo se dispararon los precios anómalos?
         </h2>
-        <p className="text-xs text-text-muted mt-0.5 max-w-2xl">
+        <p className="text-xs text-text-muted mt-0.5">
           Barras = número de contratos anómalos. La línea punteada sigue el valor total adjudicado
           en sobreprecio. Un pico en ambos indica gasto concentrado en un ejercicio fiscal.
         </p>
@@ -1375,7 +1375,7 @@ function RiskLevelPriceGap({
         >
           El precio que paga el Estado por procurement sospechoso
         </h2>
-        <p className="text-xs text-text-muted mt-0.5 max-w-2xl">
+        <p className="text-xs text-text-muted mt-0.5">
           Contratos con <strong className="text-risk-high">múltiples banderas de riesgo</strong>{' '}
           (crítico + alto) vs contratos con riesgo medio o bajo. La diferencia en precio promedio
           revela la prima que introducen los patrones de corrupción.
@@ -1655,7 +1655,7 @@ export default function PriceIntelligence() {
           <ShareButton label={t('share')} className="mt-1 flex-shrink-0" aria-hidden="true" />
         </div>
         <p
-          className="mt-3 max-w-2xl text-text-secondary mb-4"
+          className="mt-3 text-text-secondary mb-4"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontStyle: 'italic',
@@ -1727,7 +1727,7 @@ export default function PriceIntelligence() {
             return (
               <div className="space-y-5">
                 <p
-                  className="text-base md:text-lg text-text-secondary leading-relaxed max-w-3xl"
+                  className="text-base md:text-lg text-text-secondary leading-relaxed"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                   dangerouslySetInnerHTML={{
                     __html: t('kpiLede', {
@@ -1937,7 +1937,7 @@ export default function PriceIntelligence() {
               >
                 ¿Qué sectores pagan los peores sobreprecios?
               </h3>
-              <p className="text-xs text-text-muted mb-3 max-w-2xl">
+              <p className="text-xs text-text-muted mb-3">
                 Desviación promedio de precio (Z-score) por sector. Rojo profundo = sobreprecio
                 extremo. La línea cyan marca el umbral de outlier estadístico (z=3σ).
               </p>
@@ -1957,7 +1957,7 @@ export default function PriceIntelligence() {
               >
                 Dónde termina lo normal y empieza la anomalía
               </h3>
-              <p className="text-xs text-text-muted mb-3 max-w-2xl">
+              <p className="text-xs text-text-muted mb-3">
                 Cada curva representa la distribución de precios de un sector. La zona roja (z≥3σ)
                 es el tail de outliers. La marca coloreada indica el z-score promedio observado
                 en los contratos anómalos del sector.
