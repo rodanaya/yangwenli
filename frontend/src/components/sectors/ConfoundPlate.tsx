@@ -144,8 +144,8 @@ export function ConfoundPlate({
   const isEs = lang === 'es'
 
   const caption = isEs
-    ? 'Dos escalas, una línea: VaR absoluto (●, log) contra exposición sobre el gasto propio (○). Casi todo el registro rebasa la bandera de ½ — el modelo pondera anomalías de monto alto — pero ninguna argolla llega tan lejos como la de mayor intensidad. Cambie el orden a intensidad y mire la inversión.'
-    : 'Two scales, one line: absolute VaR (●, log) against exposure over own spend (○). Nearly the whole registry clears the ½ flag — the model weights high-value anomalies — but no ring reaches as far as the intensity leader. Flip the sort to intensity and watch the inversion.'
+    ? 'Dos escalas, una línea: dinero señalado (●, log) contra exposición sobre el gasto propio (○). Casi todo el registro rebasa la bandera de ½ — el modelo pondera anomalías de monto alto — pero ninguna argolla llega tan lejos como la de mayor intensidad. Cambie el orden a intensidad y mire la inversión.'
+    : 'Two scales, one line: money flagged (●, log) against exposure over own spend (○). Nearly the whole registry clears the ½ flag — the model weights high-value anomalies — but no ring reaches as far as the intensity leader. Flip the sort to intensity and watch the inversion.'
 
   const sortControl = (
     <div className="flex items-center gap-1" role="group" aria-label={isEs ? 'Ordenar el registro' : 'Sort the registry'}>
@@ -186,6 +186,51 @@ export function ConfoundPlate({
       contextLabel={{ en: 'Registry of sector exposure', es: 'Registro de exposición sectorial' }}
       caption={caption}
     >
+      {/* ── How to read — plain-language key (both breakpoints) ────────────
+          The plate's whole trick is two markers on two scales; spell it out
+          so the reader can name what ● and ○ mean before decoding any row. */}
+      <div className="mb-4 pb-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        <p className="font-mono mb-2" style={{ ...MONO_MICRO, fontSize: 9, color: 'var(--color-text-muted)' }}>
+          {isEs ? 'Cómo leer · dos marcadores, dos preguntas' : 'How to read · two markers, two questions'}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-7">
+          <span className="flex items-baseline gap-2">
+            <span
+              aria-hidden="true"
+              className="shrink-0 self-center rounded-full"
+              style={{ width: 9, height: 9, background: RISK_COLORS.critical }}
+            />
+            <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13.5, lineHeight: 1.4, color: 'var(--color-text-secondary)' }}>
+              <strong style={{ color: 'var(--color-text-primary)', fontStyle: 'italic', fontWeight: 600 }}>
+                {isEs ? '¿Cuánto dinero?' : 'How much money?'}
+              </strong>{' '}
+              {isEs ? 'pesos señalados por el modelo. Escala log: cada paso vale 10×.' : 'pesos the model flags. Log scale — each step is 10× the last.'}
+            </span>
+          </span>
+          <span className="flex items-baseline gap-2">
+            <span
+              aria-hidden="true"
+              className="shrink-0 self-center rounded-full"
+              style={{ width: 9, height: 9, border: '1.5px solid var(--color-text-secondary)', background: 'var(--color-background)' }}
+            />
+            <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13.5, lineHeight: 1.4, color: 'var(--color-text-secondary)' }}>
+              <strong style={{ color: 'var(--color-text-primary)', fontStyle: 'italic', fontWeight: 600 }}>
+                {isEs ? '¿Qué tan saturado?' : 'How saturated?'}
+              </strong>{' '}
+              {isEs ? 'qué parte del gasto propio del sector está señalada (0–100%).' : "the share of the sector's own spend that's flagged (0–100%)."}
+            </span>
+          </span>
+        </div>
+        <p
+          className="mt-2"
+          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-text-muted)', maxWidth: '72ch' }}
+        >
+          {isEs
+            ? 'Son dos rankings distintos. Cuando no coinciden, el sector es chico en pesos pero arde en su propia casa — eso es el confundido.'
+            : "They're two different rankings. When they disagree, a sector is small in pesos but burning hot in its own house — that's the confound."}
+        </p>
+      </div>
+
       {/* ── Desktop plate (md+) ──────────────────────────────────────────── */}
       <div className="hidden md:block">
         {/* Sort control — its own full-width row, right-aligned */}
@@ -200,7 +245,7 @@ export function ConfoundPlate({
               className="absolute top-0 left-0 font-mono whitespace-nowrap"
               style={{ ...MONO_MICRO, fontSize: 9, color: 'var(--color-text-muted)' }}
             >
-              ● {isEs ? 'VaR absoluto · log' : 'Absolute VaR · log'}
+              ● {isEs ? 'Dinero señalado · log' : 'Money flagged · log'}
             </span>
           </span>
           <span />

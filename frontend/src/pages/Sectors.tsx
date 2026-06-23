@@ -249,6 +249,19 @@ export function Sectors() {
     setSearchParams(next, { replace: true })
   }
 
+  // Registry display mode — the Plate and the Register render the SAME
+  // 12-sector data; show one at a time behind a toggle instead of stacking
+  // both. Default 'register' (the legible table); 'plate' = the visual.
+  // URL-synced (?reg=plate). Lens (VaR/Intensity) stays shared across views.
+  const regView: 'register' | 'plate' =
+    searchParams.get('reg') === 'plate' ? 'plate' : 'register'
+  const setRegView = (v: 'register' | 'plate') => {
+    const next = new URLSearchParams(searchParams)
+    if (v === 'register') next.delete('reg')
+    else next.set('reg', v)
+    setSearchParams(next, { replace: true })
+  }
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['sectors', 'list'],
     queryFn: () => sectorApi.getAll(),
@@ -1122,32 +1135,63 @@ export function Sectors() {
                   </p>
                 </section>
 
-                {/* §B — THE CONFOUND PLATE (centrepiece) ─────────────────── */}
-                <section
-                  aria-label={lang === 'es' ? 'La lámina del confundido' : 'The confound plate'}
-                  className="mb-6"
-                >
-                  <ConfoundPlate rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
-                </section>
-
-                {/* §C — SELF-CAPTURE HONOR ROLL ──────────────────────────── */}
+                {/* §C — SELF-CAPTURE HONOR ROLL (intensity highlight) ─────
+                    Moved up under the lede: it names the 3 sectors that prove
+                    the thesis before the full registry lets you explore all 12. */}
                 <SelfCaptureBand rows={ledgerRows} lang={lang} />
 
-                {/* §D — EL REGISTRO AUDITADO ─────────────────────────────── */}
-                <p
-                  className="mb-2"
-                  style={{
-                    fontFamily: '"IBM Plex Mono", monospace',
-                    fontSize: 10,
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-text-muted)',
-                    fontWeight: 700,
-                  }}
-                >
-                  {lang === 'es' ? '§ El registro auditado' : '§ The audited register'}
-                </p>
-                <ExposureLedger rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
+                {/* §B+§D — THE REGISTRY (one section, two views) ───────────
+                    The Confound Plate (visual) and the Audited Register (table)
+                    are two renderings of the SAME 12-sector data sharing the
+                    same VaR/Intensity lens. Toggle between them — don't stack. */}
+                <div aria-label={lang === 'es' ? 'Registro de exposición sectorial' : 'Registry of sector exposure'}>
+                  <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
+                    <p
+                      style={{
+                        fontFamily: '"IBM Plex Mono", monospace',
+                        fontSize: 10,
+                        letterSpacing: '0.18em',
+                        textTransform: 'uppercase',
+                        color: 'var(--color-text-muted)',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {lang === 'es' ? '§ Registro de exposición sectorial' : '§ Registry of sector exposure'}
+                    </p>
+                    {/* Register / Plate view toggle (lens stays shared) */}
+                    <div
+                      className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0"
+                      role="group"
+                      aria-label={lang === 'es' ? 'Cambiar vista del registro' : 'Switch registry view'}
+                    >
+                      {([
+                        { key: 'register', es: 'Registro', en: 'Register' },
+                        { key: 'plate', es: 'Lámina', en: 'Plate' },
+                      ] as const).map(({ key, es, en }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setRegView(key)}
+                          className={cn(
+                            'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                            regView === key
+                              ? 'bg-text-primary text-background'
+                              : 'text-text-muted hover:text-text-secondary',
+                          )}
+                          aria-pressed={regView === key}
+                        >
+                          {lang === 'es' ? es : en}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {regView === 'plate' ? (
+                    <ConfoundPlate rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
+                  ) : (
+                    <ExposureLedger rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
+                  )}
+                </div>
               </>
             )}
           </>
