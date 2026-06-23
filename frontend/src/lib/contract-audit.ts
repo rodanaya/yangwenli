@@ -25,7 +25,14 @@ export type ContractLike = {
 }
 
 export function cleanContractDescription(raw: string): { objeto: string | null; expediente: string | null } {
-  const s = (raw ?? '').replace(/\s+/g, ' ').trim()
+  const s = (raw ?? '')
+    // Strip Excel/CSV escape artifacts (_x000D_ = CR, _x000A_ = LF, etc.) that
+    // leak into ~3.6K COMPRANET titles, plus any stray control chars, before
+    // tokenising — otherwise they cling to words ("México:_x000D_ Paquete").
+    .replace(/_x[0-9A-Fa-f]{4}_/g, ' ')
+    .replace(/[\x00-\x1f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
   if (!s) return { objeto: null, expediente: null }
   const tokens = s.split(' ')
   const core = (t: string) => t.replace(/^[^0-9a-záéíóúñü]+/i, '').replace(/[^0-9a-záéíóúñü]+$/i, '')

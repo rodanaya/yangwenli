@@ -66,6 +66,7 @@ import { Act } from '@/components/layout/Act'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { VerdictSeal } from '@/components/contracts/VerdictSeal'
 import { SenaladosBand, CaseSeal, WhyFlags } from '@/components/contracts/SenaladosBand'
+import { cleanContractDescription } from '@/lib/contract-audit'
 
 // =============================================================================
 // Configuration
@@ -189,7 +190,7 @@ interface ColumnDef {
 // Re-ranked by investigative weight: WHAT (title) → WHO → HOW MUCH → WHEN → RISK.
 const CONTRACT_COLUMN_DEFS: ColumnDef[] = [
   { key: 'contract', labelKey: 'columns.contract', align: 'left' },
-  { key: 'vendor', labelKey: 'columns.who', align: 'left', sortField: 'vendor_name', thClass: 'w-44' },
+  { key: 'vendor', labelKey: 'columns.who', align: 'left', sortField: 'vendor_name', thClass: 'w-64' },
   { key: 'amount', labelKey: 'columns.amount', align: 'right', sortField: 'amount_mxn', thClass: 'w-24' },
   { key: 'date', labelKey: 'columns.date', align: 'right', sortField: 'contract_date', thClass: 'w-16' },
   { key: 'risk', labelKey: 'columns.risk', align: 'right', sortField: 'risk_score', thClass: 'w-28' },
@@ -1307,7 +1308,7 @@ function ContractRow({
   const riskLevel = contract.risk_score != null ? getRiskLevel(contract.risk_score) : (contract.risk_level ?? null)
   const sector = contract.sector_id ? SECTORS.find((s) => s.id === contract.sector_id) : null
   const title =
-    toTitleCase(contract.title || '') ||
+    cleanContractDescription(contract.title || '').objeto ||
     contract.contract_number ||
     (lang === 'es' ? `Contrato #${contract.id}` : `Contract #${contract.id}`)
 
@@ -1374,8 +1375,8 @@ function ContractRow({
         </td>
 
         {/* QUIÉN — vendor → institution */}
-        <td className="px-3 py-2.5 w-44">
-          <div className="flex min-w-0 flex-col gap-0.5">
+        <td className="px-3 py-2.5 w-64">
+          <div className="flex min-w-0 flex-col gap-1">
             {contract.vendor_id ? (
               <div className="flex min-w-0 items-center gap-1" onClick={stop}>
                 {contract.vendor_is_individual && (
@@ -1386,10 +1387,10 @@ function ContractRow({
                     {lang === 'es' ? 'P. FÍSICA' : 'PERSON'}
                   </span>
                 )}
-                <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || ''} size="xs" />
+                <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || ''} size="sm" />
               </div>
             ) : (
-              <span className="truncate text-xs text-text-muted" title={contract.vendor_name || ''}>
+              <span className="truncate text-sm text-text-secondary" title={contract.vendor_name || ''}>
                 {contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}
               </span>
             )}
@@ -1398,7 +1399,7 @@ function ContractRow({
                 <EntityIdentityChip type="institution" id={contract.institution_id} name={contract.institution_name || `Inst #${contract.institution_id}`} size="xs" />
               </div>
             ) : contract.institution_name ? (
-              <span className="truncate text-[11px] text-text-muted" title={contract.institution_name}>{contract.institution_name}</span>
+              <span className="truncate text-xs text-text-muted" title={contract.institution_name}>{contract.institution_name}</span>
             ) : null}
           </div>
         </td>

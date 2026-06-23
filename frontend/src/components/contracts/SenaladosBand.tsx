@@ -19,6 +19,7 @@ import { VerdictSeal } from './VerdictSeal'
 import { cn, formatCompactMXN, toTitleCase } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
+import { cleanContractDescription } from '@/lib/contract-audit'
 
 // ---------------------------------------------------------------------------
 // Shared bits (reused by ContractRow)
@@ -164,7 +165,7 @@ function SenaladoEntry({
   const navigate = useNavigate()
   const sector = contract.sector_id ? SECTORS.find((s) => s.id === contract.sector_id) : null
   const title =
-    toTitleCase(contract.title || '') ||
+    cleanContractDescription(contract.title || '').objeto ||
     contract.contract_number ||
     (lang === 'es' ? `Contrato #${contract.id}` : `Contract #${contract.id}`)
   // A clickable div (NOT an <a>) so the inner EntityIdentityChip links aren't
