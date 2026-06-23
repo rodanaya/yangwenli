@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   LayoutDashboard,
+  Map,
   BarChart3,
   BookOpen,
   ChevronLeft,
@@ -68,14 +69,14 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.portada',
     items: [
-      // The executive briefing leads the front page (most legible
-      // orientation surface), then the two editorial surfaces. El Mapa
-      // (the spatial map) is still the homepage route (/) and is reachable
-      // by clicking the sidebar logo — it no longer holds its own nav row.
-      // Its slot was re-pointed to El Archivo (the queryable contract
-      // corpus) under EXPLORAR per the new-tab committee (2026-06-14):
-      // a finished, high-value surface that was discoverable only by
-      // deep-link. Atlas storytelling stays at /atlas.
+      // El Mapa (the spatial map) IS the homepage route (/) and the front
+      // door of the platform. Its dedicated nav row was dropped on
+      // 2026-06-14 (slot re-pointed to El Archivo) on the theory that the
+      // logo click was discoverable enough — but it wasn't: users couldn't
+      // find the map (restored 2026-06-23). The logo still links to / too;
+      // El Archivo keeps its own row under EXPLORAR. Then the executive
+      // briefing and the two editorial surfaces. Atlas storytelling at /atlas.
+      { i18nKey: 'explore', href: '/', icon: Map },
       { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
       { i18nKey: 'newsroom', href: '/journalists', icon: Newspaper },
