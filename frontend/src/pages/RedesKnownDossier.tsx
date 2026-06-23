@@ -478,7 +478,6 @@ export default function RedesKnownDossier() {
               fontFamily: '"EB Garamond", Georgia, serif',
               fontSize: '17px',
               lineHeight: 1.55,
-              maxWidth: '68ch',
               color: 'var(--color-text-secondary)',
               letterSpacing: '0.005em',
             }}

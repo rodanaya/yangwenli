@@ -121,7 +121,7 @@ export default function Relationships() {
           </h1>
           <p
             className="mt-4"
-            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: '17px', lineHeight: 1.55, maxWidth: '68ch', color: 'var(--color-text-secondary)', letterSpacing: '0.005em' }}
+            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: '17px', lineHeight: 1.55, color: 'var(--color-text-secondary)', letterSpacing: '0.005em' }}
           >
             {lang === 'en'
               ? 'Monotonic concentration: the vendor began below 25% and ended above 50%, year after year, for at least four years. The climb is not proof of wrongdoing — but the geometry is publishable.'
@@ -153,7 +153,6 @@ export default function Relationships() {
                 fontFamily: '"EB Garamond", Georgia, serif',
                 fontSize: '19px',
                 lineHeight: 1.5,
-                maxWidth: '70ch',
                 color: 'var(--color-text-secondary)',
               }}
             >
@@ -221,7 +220,6 @@ export default function Relationships() {
                 fontFamily: '"EB Garamond", Georgia, serif',
                 fontSize: '19px',
                 lineHeight: 1.5,
-                maxWidth: '70ch',
                 color: 'var(--color-text-secondary)',
                 letterSpacing: '0.004em',
               }}
@@ -438,7 +436,6 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           fontStyle: 'italic',
           fontSize: 13.5,
           color: 'var(--color-text-secondary)',
-          maxWidth: '72ch',
           lineHeight: 1.55,
         }}
       >
@@ -453,7 +450,6 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
             fontStyle: 'italic',
             fontSize: 13.5,
             color: 'var(--color-text-secondary)',
-            maxWidth: '72ch',
             lineHeight: 1.55,
           }}
         >
