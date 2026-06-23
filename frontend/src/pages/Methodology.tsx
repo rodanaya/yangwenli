@@ -967,8 +967,11 @@ export function Methodology() {
           the honesty pair as the technical changelog (was ModelEvolutionTimeline). */}
       <ModelTimeline />
 
-      {/* Layout: TOC sidebar + content */}
-      <div className="grid gap-5 lg:grid-cols-[1fr_200px]">
+      {/* Layout: TOC sidebar + content. grid-cols-1 base is required — without
+          an explicit mobile column the grid falls back to a single content-sized
+          (max-content) track, forcing the model-internals prose to ~496px and
+          clipping it under <main overflow-x-hidden> on phones. */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_200px]">
         {/* Main Content */}
         <motion.div
           className="space-y-4"
