@@ -147,8 +147,8 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
     <div>
       {/* Editorial column header — printed rank-order page, not a chart legend. */}
       <div
-        className="grid items-end gap-x-4 pb-2 text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted"
-        style={{ gridTemplateColumns: '28px minmax(0,1fr) 176px 110px 18px', borderBottom: '1px solid rgba(160, 104, 32, 0.22)' }}
+        className="grid items-end gap-x-3 sm:gap-x-4 pb-2 text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted grid-cols-[28px_minmax(0,1fr)_auto_18px] sm:grid-cols-[28px_minmax(0,1fr)_176px_110px_18px]"
+        style={{ borderBottom: '1px solid rgba(160, 104, 32, 0.22)' }}
       >
         <span>{lang === 'en' ? 'Rk' : 'No'}</span>
         <span>{lang === 'en' ? 'Category · sector' : 'Categoría · sector'}</span>
@@ -182,8 +182,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: '-20px' }}
               transition={{ duration: 0.42, delay: idx * 0.045, ease: 'easeOut' }}
-              className="group cursor-pointer relative grid items-center gap-x-4 py-3 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              style={{ gridTemplateColumns: '28px minmax(0,1fr) 176px 110px 18px' }}
+              className="group cursor-pointer relative grid items-center gap-x-3 sm:gap-x-4 py-3 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent grid-cols-[28px_minmax(0,1fr)_auto_18px] sm:grid-cols-[28px_minmax(0,1fr)_176px_110px_18px]"
               onClick={() => navigate(`/categories/${cat.id}`)}
               onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/categories/${cat.id}`) }}
               tabIndex={0}
@@ -233,8 +232,8 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                 </div>
               </div>
 
-              {/* Proportional DotBar — canonical primitive */}
-              <div className="flex items-center gap-2 justify-self-start">
+              {/* Proportional DotBar — canonical primitive (hidden on mobile; column dropped to fit) */}
+              <div className="hidden sm:flex items-center gap-2 justify-self-start">
                 <DotBar
                   value={cat.total_value}
                   max={maxValue}
