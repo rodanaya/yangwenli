@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ariaApi, caseLibraryApi } from '@/api/client'
-import { formatCompactMXN, formatCompactUSD } from '@/lib/utils'
+import { formatCompactMXN } from '@/lib/utils'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { getStoriesByLensTag, type AriaPattern, type SectorCode } from '@/lib/story-content'
 import { SECTOR_NAMES_EN, RISK_COLORS } from '@/lib/constants'
@@ -434,93 +434,90 @@ export default function Journalists() {
     <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* ============================ BYLINE + NAMEPLATE ============================ */}
-        <header className="pt-14 sm:pt-20 pb-8">
-          <div className="flex items-center gap-3 mb-6 pb-3 border-b border-border">
+        <header className="pt-14 sm:pt-20 pb-10">
+          {/* Kicker — desk + frozen-data dateline (dashboard gold template) */}
+          <div className="flex items-center justify-between gap-3 mb-5 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-secondary">RUBLI</span>
+              <span className="font-bold tracking-[0.2em] text-text-secondary">RUBLI</span>
+              <span aria-hidden="true">·</span>
+              <span>{isEs ? 'Sala de Redacción' : 'Investigations Desk'}</span>
             </span>
-            <span className="text-text-primary" aria-hidden="true">·</span>
-            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
-              {isEs ? 'Sala de Redacción' : 'Investigations Desk'}
-            </span>
-            <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums">
-              {isEs ? 'Datos hasta sep 2025' : 'Data through Sep 2025'}
-            </span>
+            <span className="tabular-nums">{isEs ? 'Datos hasta sep 2025' : 'Data through Sep 2025'}</span>
           </div>
 
+          {/* Headline — ONE editorial sentence; the big numbers are inline
+              colored accents (no standalone giant number — the dashboard
+              removed that as redundant). EB Garamond italic 500, md:text-justify. */}
           <h1
-            className="text-text-primary"
+            className="text-[34px] sm:text-[46px] md:text-[58px] leading-[1.02] text-text-primary mb-5 text-balance md:text-justify"
             style={{
-              fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
-              fontSize: 'clamp(2.25rem, 5.5vw, 4rem)',
-              fontWeight: 800,
-              letterSpacing: '-0.04em',
-              lineHeight: 0.95,
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              letterSpacing: '-0.012em',
             }}
           >
-            RUBLI <span className="italic text-risk-critical">{isEs ? 'Investigaciones' : 'Investigations'}</span>
+            {isEs ? (
+              <>
+                Veintitrés años.{' '}
+                <span style={{ fontWeight: 600, color: 'var(--color-accent)', whiteSpace: 'nowrap' }}>MX${totalValueT.toFixed(1)} billones</span>{' '}
+                en contratos federales —{' '}
+                <span style={{ fontWeight: 600, color: 'var(--color-risk-critical)', whiteSpace: 'nowrap' }}>{INVESTIGATIONS.length} investigaciones</span>{' '}
+                lo desglosan.
+              </>
+            ) : (
+              <>
+                Twenty-three years.{' '}
+                <span style={{ fontWeight: 600, color: 'var(--color-accent)', whiteSpace: 'nowrap' }}>MX${totalValueT.toFixed(1)} trillion</span>{' '}
+                in federal contracts —{' '}
+                <span style={{ fontWeight: 600, color: 'var(--color-risk-critical)', whiteSpace: 'nowrap' }}>{INVESTIGATIONS.length} investigations</span>{' '}
+                break it down.
+              </>
+            )}
           </h1>
-        </header>
 
-        {/* ============================ §0 — EL VEREDICTO (anchor) ============================ */}
-        <section className="mb-12 sm:mb-14">
-          <div className="surface-card rounded-sm p-8 md:p-12 relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: accent }} aria-hidden="true" />
-            <div className="font-mono text-[11px] uppercase tracking-[0.18em] mb-4 text-text-muted">
-              {isEs ? 'En 23 años de contratación federal, mapeada' : 'Over 23 years of federal contracting, mapped'}
-            </div>
-            <div className="flex items-baseline flex-wrap gap-x-4">
-              <span
-                className="leading-[0.9] font-extrabold italic tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 'clamp(64px, 11vw, 128px)',
-                  color: accent,
-                  letterSpacing: '-0.03em',
-                }}
-                aria-hidden="true"
-              >
-                {totalValueT.toFixed(1)}
-              </span>
-              <span
-                className="font-serif italic text-text-primary"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(20px, 3vw, 34px)' }}
-              >
-                {isEs ? 'billones MXN' : 'T MXN'}
-              </span>
-            </div>
-            <p
-              className="text-[18px] md:text-[22px] font-serif leading-[1.3] mt-4 mb-4 max-w-[42ch]"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif", color: 'var(--color-text-secondary)' }}
-            >
-              {isEs ? `${INVESTIGATIONS.length} investigaciones lo desglosan.` : `${INVESTIGATIONS.length} investigations break it down.`}
-            </p>
-            <div className="w-16 mb-4" style={{ height: 2, background: 'var(--color-border-hover)', opacity: 0.6 }} aria-hidden="true" />
-            <div className="flex flex-wrap items-baseline gap-x-7 gap-y-2">
-              {[
-                { value: statContracts.toLocaleString('en-US'), label: isEs ? 'contratos' : 'contracts' },
-                { value: hrDisplay, label: isEs ? 'riesgo alto+' : 'high-risk+' },
-                { value: String(INVESTIGATIONS.length), label: isEs ? 'investigaciones' : 'investigations' },
-                ...(!isEs ? [{ value: formatCompactUSD(totalValueMXN), label: 'USD scale' }] : []),
-              ].map((s) => (
-                <div key={s.label} className="flex items-baseline gap-2">
-                  <span
-                    className="tabular-nums font-semibold italic"
-                    style={{ fontFamily: 'var(--font-family-serif)', fontSize: 17, color: 'var(--color-text-primary)' }}
-                  >
-                    {s.value}
-                  </span>
-                  <span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
-                    {s.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Provenance — archival mono */}
+          <p
+            className="mb-6"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontStyle: 'italic',
+            }}
+          >
+            {isEs
+              ? 'Por RUBLI · Datos: COMPRANET 2002–2025 · Modelo v0.8.5'
+              : 'Built by RUBLI · Data: COMPRANET 2002–2025 · Model v0.8.5'}
+          </p>
 
-          {/* Utility rail (demoted "Start here") */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+          {/* Lede — EB Garamond 17, honest framing (signals, not verdicts) */}
+          <p
+            className="text-pretty max-w-3xl"
+            style={{
+              fontFamily: '"EB Garamond", Georgia, serif',
+              fontSize: '17px',
+              lineHeight: 1.55,
+              color: 'var(--color-text-secondary, var(--color-text-muted))',
+              letterSpacing: '0.005em',
+            }}
+          >
+            {isEs ? (
+              <>
+                RUBLI analizó <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{statContracts.toLocaleString('es-MX')} contratos</em> en 23 años y ahora señala <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{hrDisplay} con riesgo alto o crítico</em> según patrones de corrupción documentados. Son señales de investigación, no veredictos.
+              </>
+            ) : (
+              <>
+                RUBLI analyzed <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{statContracts.toLocaleString('en-US')} contracts</em> across 23 years and now flags <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{hrDisplay} at high or critical risk</em> against documented corruption patterns. These are investigation signals, not verdicts.
+              </>
+            )}
+          </p>
+
+          {/* Utility rail — demoted "Start here" */}
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-text-muted">
               {isEs ? 'Empieza aquí' : 'Start here'}
             </span>
@@ -534,20 +531,14 @@ export default function Journalists() {
               {isEs ? 'Biblioteca de casos →' : 'Case library →'}
             </Link>
           </div>
-        </section>
+        </header>
 
         {/* ============================ §1 — LA LÍNEA DEL SAQUEO ============================ */}
         <section className="mb-4">
-          <div className="mb-4">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-muted mb-1.5">
-              ◆ {isEs ? 'La Línea del Saqueo' : 'The Line of the Looting'}
-            </p>
-            <h2
-              className="text-text-primary"
-              style={{ fontFamily: 'var(--font-family-serif, "Playfair Display", serif)', fontSize: 'clamp(1.5rem, 2.4vw, 2rem)', fontWeight: 700, letterSpacing: '-0.02em' }}
-            >
-              {isEs ? 'Cada investigación, en su escala y su tiempo' : 'Every investigation, by scale and time'}
-            </h2>
+          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-3">
+            {isEs
+              ? '§ 1 · La Línea del Saqueo — cada investigación por escala y tiempo'
+              : '§ 1 · The Line of the Looting — every investigation by scale and time'}
           </div>
 
           {/* Lens-filter pill (from the Atlas) */}
@@ -599,19 +590,11 @@ export default function Journalists() {
 
         {/* ============================ §3 — EL REGISTRO (register) ============================ */}
         <section className="mb-8">
-          <div className="flex items-end justify-between gap-6 mb-4">
-            <div>
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-muted mb-1.5">
-                ◆ {isEs ? 'El escritorio, por magnitud' : 'The desk, ranked'}
-              </p>
-              <h2
-                className="text-text-primary"
-                style={{ fontFamily: 'var(--font-family-serif, "Playfair Display", serif)', fontSize: 'clamp(1.5rem, 2.4vw, 2rem)', fontWeight: 700, letterSpacing: '-0.02em' }}
-              >
-                {isEs ? 'Las 13 investigaciones' : 'Every investigation in the desk'}
-              </h2>
+          <div className="flex items-end justify-between gap-6 mb-3">
+            <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
+              {isEs ? '§ 2 · El escritorio, por magnitud' : '§ 2 · The desk, ranked'}
             </div>
-            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums pb-2">
+            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums">
               {visibleRows.length} / {allRows.length} {isEs ? 'mostrando' : 'showing'}
             </span>
           </div>
