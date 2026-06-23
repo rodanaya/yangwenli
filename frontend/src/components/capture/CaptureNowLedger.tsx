@@ -73,7 +73,6 @@ export function CaptureNowLedger({
           fontStyle: 'italic',
           fontSize: 13,
           lineHeight: 1.55,
-          maxWidth: '72ch',
           color: 'var(--color-text-secondary)',
         }}
       >

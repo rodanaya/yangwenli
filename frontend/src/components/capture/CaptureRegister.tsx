@@ -103,7 +103,6 @@ export function CaptureRegister({ data, thresholds, landscape, lang }: Props) {
           fontStyle: 'italic',
           fontSize: 13.5,
           lineHeight: 1.55,
-          maxWidth: '72ch',
           color: 'var(--color-text-secondary)',
         }}
       >
