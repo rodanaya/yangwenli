@@ -6264,3 +6264,46 @@ None detected.
 ### Overall: WARN
 HTTP and API checks infrastructure-blocked (persistent egress policy — rubli.xyz denied by Anthropic gateway). Not a live-site failure. Bilingual scan clean.
 **Action required**: add `rubli.xyz` to execution environment's network egress allowlist (https://code.claude.com/docs/en/claude-code-on-the-web).
+
+---
+## Visual Review — 2026-06-23T12:05:49Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 (egress blocked) | ❌ |
+| /atlas | 403 (egress blocked) | ❌ |
+| /aria | 403 (egress blocked) | ❌ |
+| /sectors | 403 (egress blocked) | ❌ |
+| /sectors/salud | 403 (egress blocked) | ❌ |
+| /cases | 403 (egress blocked) | ❌ |
+| /methodology | 403 (egress blocked) | ❌ |
+| /stories/el-ejercito-fantasma | 403 (egress blocked) | ❌ |
+
+**Note**: All 403s are from the Anthropic cloud gateway egress filter (`x-deny-reason: host_not_allowed`), NOT from rubli.xyz itself. This is an environment network policy restriction, not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway (empty body) | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway (empty body) | ❌ |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway (empty body) | ❌ |
+| /api/v1/sectors | BLOCKED — egress gateway (empty body) | ❌ |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — comment referencing FRAUDTYPES enum; not rendered. OK.
+- `Methodology.tsx:125` — academic citation (untranslatable). OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` code accessor; not rendered string. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property; not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — TS return-type annotation. OK.
+- `ExploreCanvas.tsx:1476–1491` — comment block + corporate-form token array; not rendered. OK.
+- `ConcentrationConstellation.tsx:155–165` — correctly bilingual (`isEs ? … : …`). OK.
+- Hardcoded "Generate Report": None found.
+- Hardcoded "SIGN IN" / "INICIAR SESIÓN": None found.
+
+None detected.
+
+### Overall: WARN
+HTTP and API checks infrastructure-blocked (persistent egress policy — rubli.xyz denied by Anthropic gateway). Not a confirmed live-site failure. Bilingual scan clean.
+**Action required**: add `rubli.xyz` to execution environment's network egress allowlist (https://code.claude.com/docs/en/claude-code-on-the-web). This has now blocked checks in multiple consecutive runs.
