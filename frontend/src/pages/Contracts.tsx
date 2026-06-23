@@ -1390,19 +1390,19 @@ function ContractRow({
                     {lang === 'es' ? 'P. FÍSICA' : 'PERSON'}
                   </span>
                 )}
-                <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || ''} size="sm" />
+                <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || ''} size="sm" fullName />
               </div>
             ) : (
-              <span className="truncate text-sm text-text-secondary" title={contract.vendor_name || ''}>
+              <span className="text-sm text-text-secondary" title={contract.vendor_name || ''}>
                 {contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}
               </span>
             )}
             {contract.institution_id ? (
               <div className="min-w-0" onClick={stop}>
-                <EntityIdentityChip type="institution" id={contract.institution_id} name={contract.institution_name || `Inst #${contract.institution_id}`} size="sm" />
+                <EntityIdentityChip type="institution" id={contract.institution_id} name={contract.institution_name || `Inst #${contract.institution_id}`} size="sm" fullName />
               </div>
             ) : contract.institution_name ? (
-              <span className="truncate text-xs text-text-muted" title={contract.institution_name}>{contract.institution_name}</span>
+              <span className="text-xs text-text-muted" title={contract.institution_name}>{contract.institution_name}</span>
             ) : null}
           </div>
         </td>
@@ -1483,6 +1483,7 @@ function ContractRow({
                     entityType="contract"
                     entityId={contract.id}
                     entityName={contract.title ?? contract.contract_number ?? `Contract #${contract.id}`}
+                    iconOnly
                     className="h-6 w-6"
                   />
                   <Link

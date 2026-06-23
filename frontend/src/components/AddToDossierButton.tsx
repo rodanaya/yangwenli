@@ -20,6 +20,12 @@ interface AddToDossierButtonProps {
   entityId: number
   entityName: string
   className?: string
+  /**
+   * Compact icon-only rendering (no text label / chevron) for tight action
+   * bars like the /contracts row peek, where a fixed h-6 w-6 box can't hold
+   * the full "Agregar al expediente" label without overflowing onto siblings.
+   */
+  iconOnly?: boolean
 }
 
 export function AddToDossierButton({
@@ -27,6 +33,7 @@ export function AddToDossierButton({
   entityId,
   entityName,
   className,
+  iconOnly = false,
 }: AddToDossierButtonProps) {
   const { t } = useTranslation('common')
   const queryClient = useQueryClient()
@@ -87,19 +94,34 @@ export function AddToDossierButton({
 
   return (
     <div className="relative">
-      <Button
-        ref={buttonRef}
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen((prev) => !prev)}
-        className={className}
-        aria-label={t('dossier.addToDossier')}
-        aria-expanded={open}
-      >
-        <FolderPlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
-        {t('dossier.addToDossier')}
-        <ChevronDown className={`h-3 w-3 ml-1 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
-      </Button>
+      {iconOnly ? (
+        <Button
+          ref={buttonRef}
+          variant="ghost"
+          size="icon"
+          onClick={() => setOpen((prev) => !prev)}
+          className={className}
+          aria-label={t('dossier.addToDossier')}
+          title={t('dossier.addToDossier')}
+          aria-expanded={open}
+        >
+          <FolderPlus className="h-3.5 w-3.5" aria-hidden="true" />
+        </Button>
+      ) : (
+        <Button
+          ref={buttonRef}
+          variant="outline"
+          size="sm"
+          onClick={() => setOpen((prev) => !prev)}
+          className={className}
+          aria-label={t('dossier.addToDossier')}
+          aria-expanded={open}
+        >
+          <FolderPlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+          {t('dossier.addToDossier')}
+          <ChevronDown className={`h-3 w-3 ml-1 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+        </Button>
+      )}
 
       {open && (
         <div
