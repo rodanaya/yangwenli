@@ -4386,6 +4386,11 @@ function Z3Panel({
             </div>
           )}
 
+          {/* Register scrolls horizontally on phones — its column grid is too
+              wide for ~390px. Wraps only the register (the timeline + deviation
+              grid above fit natively); a no-op on desktop (panel wider). */}
+          <div className="overflow-x-auto">
+          <div className="min-w-[720px]">
           {/* Column header — aligns with the table row */}
           {!isLoading && !isError && visibleContracts.length > 0 && (
             <div className="flex items-center gap-2.5 pl-2.5 pr-2 pb-1" style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -4432,6 +4437,8 @@ function Z3Panel({
               ))}
             </ul>
           )}
+          </div>
+          </div>
 
           {/* "view all" disclosure when we have more than RENDER_LIMIT */}
           {!isLoading && !isError && filtered.length > RENDER_LIMIT && (
