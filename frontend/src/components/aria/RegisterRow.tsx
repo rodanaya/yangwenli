@@ -132,6 +132,7 @@ export function RegisterRow({ item, isEs, rank, expanded, onToggle }: RegisterRo
           riskScore={item.avg_risk_score}
           sectorCode={item.primary_sector_name ?? null}
           hideIcon
+          fullName
         />
       </span>
 
