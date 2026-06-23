@@ -2184,7 +2184,7 @@ function Z1Panel({
           {/* min-width keeps the desktop column grid intact on phones; the
               container scrolls horizontally instead of collapsing the name
               column to zero (a no-op on desktop where the panel is wider). */}
-          <div className="min-w-[780px]">
+          <div className="min-w-[900px]">
           {isLoading && (
             <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
@@ -2914,7 +2914,7 @@ function Z2Panel({
           {/* min-width keeps the desktop column grid intact on phones; the
               container scrolls horizontally instead of collapsing the name
               column to zero (a no-op on desktop where the panel is wider). */}
-          <div className="min-w-[780px]">
+          <div className="min-w-[900px]">
           {isLoading && (
             <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
