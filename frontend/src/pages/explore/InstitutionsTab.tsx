@@ -640,7 +640,7 @@ function ValueConcentrationAlerts() {
               <p className="text-xs text-text-muted">{t('concentration.noAlerts')}</p>
             </div>
           ) : (
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="rounded-lg border border-border overflow-x-auto">
               <table className="w-full text-xs" role="table" aria-label="Value concentration alerts">
                 <thead>
                   <tr className="bg-background-elevated/50">

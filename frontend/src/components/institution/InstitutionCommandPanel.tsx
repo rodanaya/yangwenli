@@ -286,7 +286,7 @@ export function InstitutionSupplierTable({
           ? `Los 10 mayores concentran el ${top10Share.toFixed(0)}% del gasto institucional.`
           : `The top 10 concentrate ${top10Share.toFixed(0)}% of institutional spend.`}
       </p>
-      <div className="border border-border rounded-sm overflow-hidden">
+      <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm" aria-label={isEs ? 'Proveedores de la institución' : 'Institution suppliers'}>
           <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
             <tr>

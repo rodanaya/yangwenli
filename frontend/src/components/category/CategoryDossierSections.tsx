@@ -453,7 +453,7 @@ export function CapturePairs({
     return <EmptyNote text={t(lang, 'Sin pares recurrentes proveedor × institución.', 'No recurring vendor × institution pairs.')} />
   }
   return (
-    <div className="border border-border rounded-sm overflow-hidden">
+    <div className="border border-border rounded-sm overflow-x-auto">
       <table className="w-full text-sm" aria-label={t(lang, 'Pares proveedor × institución', 'Vendor × institution pairs')}>
         <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
           <tr>

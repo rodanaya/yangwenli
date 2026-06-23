@@ -409,7 +409,7 @@ export function SectorInstitutionTable({
           ? `Las 10 mayores concentran el ${Math.round(top10Share)}% del gasto sectorial.`
           : `The top 10 concentrate ${Math.round(top10Share)}% of sector spend.`}
       </p>
-      <div className="border border-border rounded-sm overflow-hidden">
+      <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm" aria-label={isEs ? 'Instituciones del sector' : 'Sector institutions'}>
           <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
             <tr>

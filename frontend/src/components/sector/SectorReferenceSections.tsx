@@ -158,7 +158,7 @@ export function SectorVendorTable({
           `The top 10 capture ${Math.round(top10Share)}% of sector spend · the largest, ${leadShare.toFixed(1)}%.`,
         )}
       </p>
-      <div className="border border-border rounded-sm overflow-hidden">
+      <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm" aria-label={t(lang, 'Proveedores del sector', 'Sector vendors')}>
           <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
             <tr>

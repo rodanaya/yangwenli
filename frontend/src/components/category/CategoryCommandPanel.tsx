@@ -285,7 +285,7 @@ export function CategoryVendorTable({
           ? `Los 10 mayores capturan el ${Math.round(top10Share)}% del mercado de la categoría.`
           : `The top 10 capture ${Math.round(top10Share)}% of the category market.`}
       </p>
-      <div className="border border-border rounded-sm overflow-hidden">
+      <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm" aria-label={isEs ? 'Proveedores de la categoría' : 'Category vendors'}>
           <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
             <tr>
