@@ -679,7 +679,7 @@ export default function CapturaHeatmap() {
         >
           {t('titleV2')}
         </h1>
-        <p className="text-sm text-text-secondary max-w-2xl">
+        <p className="text-sm text-text-secondary">
           {t('subtitle')}
         </p>
       </div>

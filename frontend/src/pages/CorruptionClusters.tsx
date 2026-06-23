@@ -1077,7 +1077,7 @@ export default function CorruptionClusters() {
         title={<>{isEs ? 'La firma estadística de cada patrón' : 'The statistical signature of each pattern'}</>}
         className="mt-8"
       >
-        <p className="text-xs text-text-muted leading-relaxed max-w-prose mb-6">
+        <p className="text-xs text-text-muted leading-relaxed mb-6">
           {isEs ? (
             <>
               Cada tipología deja una huella distintiva en seis dimensiones de
@@ -1149,7 +1149,7 @@ export default function CorruptionClusters() {
               {isEs ? 'Top 5 sectores · ARIA T1' : 'Top 5 sectors · ARIA T1'}
             </span>
           </div>
-          <p className="text-xs text-text-muted leading-relaxed max-w-prose">
+          <p className="text-xs text-text-muted leading-relaxed">
             {isEs ? (
               <>
                 Cada punto es un proveedor T1 confirmado en esa combinación
@@ -1192,7 +1192,7 @@ export default function CorruptionClusters() {
         }
         className="mt-10"
       >
-        <p className="text-xs text-text-muted leading-relaxed max-w-prose mb-6">
+        <p className="text-xs text-text-muted leading-relaxed mb-6">
           {isEs ? (
             <>
               Los siete patrones ARIA cubren la mayoría de las señales detectables en
@@ -1241,7 +1241,7 @@ export default function CorruptionClusters() {
               {gtTotal.toLocaleString()} {isEs ? 'casos · GT v1.1' : 'cases · GT v1.1'}
             </span>
           </div>
-          <p className="text-xs text-text-muted leading-relaxed max-w-prose">
+          <p className="text-xs text-text-muted leading-relaxed">
             {isEs
               ? 'La biblioteca de casos confirmados (ground truth) que alimenta ARIA. Cada patrón hereda su lógica de clasificación de estos casos documentados — sanciones SFP, auditorías ASF, investigaciones periodísticas y listas EFOS del SAT.'
               : 'The library of confirmed cases (ground truth) that feeds ARIA. Each pattern inherits its classification logic from these documented cases — SFP sanctions, ASF audits, investigative journalism, and SAT EFOS lists.'}
@@ -1294,7 +1294,7 @@ export default function CorruptionClusters() {
           title={<>{isEs ? 'Los nombres detrás de cada patrón' : 'The names behind each pattern'}</>}
           className="mt-10"
         >
-          <p className="text-xs text-text-muted leading-relaxed max-w-prose mb-6">
+          <p className="text-xs text-text-muted leading-relaxed mb-6">
             {isEs ? (
               <>
                 Proveedores Tier 1 y Tier 2 de la cola ARIA clasificados por patrón.

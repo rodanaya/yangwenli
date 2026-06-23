@@ -1112,7 +1112,7 @@ export default function InstitutionLeague() {
                 <span style={{ color: 'var(--color-accent)' }}>{t('headline.accent')}</span>
               </h1>
               {totalInstitutions > 0 && (
-                <p className="text-sm sm:text-[15px] text-text-secondary mt-3 max-w-xl leading-relaxed">
+                <p className="text-sm sm:text-[15px] text-text-secondary mt-3 leading-relaxed">
                   {t('lede', { total: formatNumber(totalInstitutions) })}
                 </p>
               )}
@@ -1167,7 +1167,7 @@ export default function InstitutionLeague() {
                 </div>
               </div>
             </div>
-            <p className="text-[10px] font-mono leading-relaxed text-text-muted mt-2 max-w-3xl">
+            <p className="text-[10px] font-mono leading-relaxed text-text-muted mt-2">
               {t(scope === 'federal'
                 ? 'scope.disclaimerFederal'
                 : scope === 'subnational'
@@ -1201,7 +1201,7 @@ export default function InstitutionLeague() {
             {t('hallazgo')}
           </p>
           <p
-            className="text-text-primary leading-snug max-w-3xl"
+            className="text-text-primary leading-snug"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'italic',
@@ -1241,7 +1241,7 @@ export default function InstitutionLeague() {
               >
                 {t('redFlags.headline')}
               </h2>
-              <p className="text-text-secondary text-sm mt-2 italic max-w-2xl">
+              <p className="text-text-secondary text-sm mt-2 italic">
                 {t('redFlags.sub')}
               </p>
             </div>
@@ -1277,7 +1277,7 @@ export default function InstitutionLeague() {
               >
                 {t('exposure.headline')}
               </h2>
-              <p className="text-text-secondary text-sm mt-1 italic max-w-2xl">{t('exposure.sub')}</p>
+              <p className="text-text-secondary text-sm mt-1 italic">{t('exposure.sub')}</p>
             </div>
             <div className="rounded-sm border border-border/60 bg-background-elevated/20 divide-y divide-border/40" role="list">
               {exposureItems.slice(0, 5).map((item, idx) => {

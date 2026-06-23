@@ -456,7 +456,7 @@ export default function AriaPage() {
           >
             {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
           </h1>
-          <p className="mt-1 text-sm text-text-secondary max-w-2xl leading-snug">
+          <p className="mt-1 text-sm text-text-secondary leading-snug">
             {isEs
               ? 'La cola priorizada de ARIA — proveedores ordenados por indicador de riesgo del modelo y señales de patrón, listos para investigar.'
               : 'ARIA’s prioritized queue — vendors ranked by the model’s risk indicator and pattern signals, ready to investigate.'}
@@ -482,7 +482,7 @@ export default function AriaPage() {
           {statsLoading ? (
             <span className="h-3 w-3/4 max-w-lg rounded bg-background-elevated animate-pulse inline-block" />
           ) : (
-            <p className="text-sm sm:text-[15px] text-text-secondary leading-relaxed max-w-3xl">
+            <p className="text-sm sm:text-[15px] text-text-secondary leading-relaxed">
               {/* GT/DISC clause is computed-guarded: "todos anclados" renders only
                   while summary.novel_leads_t1 === 0 (the verified structural truth);
                   the 831 anchor deep-links to the T2 discoveries register. */}

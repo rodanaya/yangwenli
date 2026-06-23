@@ -1236,7 +1236,7 @@ export function Contracts() {
           {t('dictionary.title')}
           <ChevronDown className="h-3.5 w-3.5 ml-auto transition-transform group-open:rotate-180" aria-hidden="true" />
         </summary>
-        <div className="mt-3 space-y-3 text-xs leading-relaxed text-text-secondary max-w-3xl">
+        <div className="mt-3 space-y-3 text-xs leading-relaxed text-text-secondary">
           <p>{t('dictionary.frozen')}</p>
           <p>{t('dictionary.export')}</p>
           <div>

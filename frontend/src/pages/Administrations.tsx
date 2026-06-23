@@ -453,7 +453,7 @@ export default function Administrations() {
               </h1>
               <p
                 style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
-                className="mt-2 text-[15px] leading-relaxed text-text-secondary max-w-[64ch]"
+                className="mt-2 text-[15px] leading-relaxed text-text-secondary"
               >
                 {isEs
                   ? 'Tres millones de contratos federales bajo cinco presidentes. Elija una administración — el expediente responde.'
@@ -1036,7 +1036,7 @@ export default function Administrations() {
                 <>The <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span> term, year by year.</>
               )}
             </h2>
-            <p className="mt-1.5 text-xs text-text-muted max-w-[64ch] leading-relaxed">
+            <p className="mt-1.5 text-xs text-text-muted leading-relaxed">
               {isEs
                 ? 'Trayectoria de riesgo por año de mandato y huella por sector — solo esta administración, contra el promedio nacional.'
                 : 'Risk trajectory by year in office and the sector scorecard — this administration only, against the national average.'}
@@ -1186,7 +1186,7 @@ export default function Administrations() {
               <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 22, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
                 {isEs ? 'Los itinerantes' : 'The itinerants'}
               </h2>
-              <p className="mt-1.5 text-xs text-text-secondary max-w-2xl leading-relaxed">
+              <p className="mt-1.5 text-xs text-text-secondary leading-relaxed">
                 {isEs
                   ? 'Responsables de la Unidad Compradora que firmaron en más de una institución — la señal de rotación que ninguna ficha de una sola entidad puede mostrar. Ordenados por número de instituciones.'
                   : 'Procurement officers of record who signed at more than one institution — the rotation signal no single-entity surface can show. Ranked by institution count.'}
@@ -1235,7 +1235,7 @@ export default function Administrations() {
               </div>
               {/* Provenance note. The server note (moversResp.note) is Spanish-only,
                   so render a locale-matched string — the English branch mirrors it. */}
-              <p className="mt-3 text-[11px] leading-relaxed text-text-muted max-w-2xl">
+              <p className="mt-3 text-[11px] leading-relaxed text-text-muted">
                 {isEs
                   ? (moversResp.note ?? 'Responsables de la Unidad Compradora que firmaron en más de una institución · 2018+ (COMPRANET Estructura C/D). Indicador de riesgo del modelo — no es una acusación.')
                   : 'Procurement officers of record who signed at more than one institution · 2018+ (COMPRANET Structure C/D). Model risk indicator — not an accusation.'}

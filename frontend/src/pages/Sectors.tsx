@@ -553,7 +553,7 @@ export function Sectors() {
           {/* Subtitle paragraph: only for WHAT view; suppressed for WHO per spec */}
           {subtitleText && (
             <p
-              className="mt-3 max-w-[68ch]"
+              className="mt-3"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
                 fontSize: '16px',
@@ -661,7 +661,7 @@ export function Sectors() {
                         </>
                       )}
                     </h2>
-                    <p className="text-sm text-text-secondary leading-[1.6] max-w-prose">
+                    <p className="text-sm text-text-secondary leading-[1.6]">
                       {lang === 'es' ? (
                         <>
                           Las categorías agrupan <strong className="text-text-primary">qué</strong> compró el gobierno — medicamentos, obra pública, software — independientemente de quién. Por volumen, <strong className="text-text-primary">{topByValue.name_es}</strong> lidera con <strong className="text-text-primary">{formatSpend(topByValue.total_value)}</strong> en contratos. Por riesgo, {topByRisk.name_es} encabeza la lista.
@@ -950,7 +950,7 @@ export function Sectors() {
                       </div>
                     )
                   })()}
-                  <p className="mt-4 text-[11px] text-text-muted leading-relaxed max-w-prose">
+                  <p className="mt-4 text-[11px] text-text-muted leading-relaxed">
                     {lang === 'es'
                       ? <>Las categorías usan códigos Partida/CUCoP. La cobertura confiable es 2023–2025 (100% Partida en Estructura D); años anteriores pueden tener clasificación parcial. Haz clic en una categoría para ver contratos, proveedores e instituciones.</>
                       : <>Categories use Partida/CUCoP codes. Reliable coverage is 2023–2025 (100% Partida in Structure D); earlier years may have partial classification. Click any category to drill into contracts, vendors, and institutions.</>

@@ -516,7 +516,7 @@ export default function CategoriesIndex() {
               </div>
             )}
           </div>
-          <p className="mt-3 max-w-[68ch]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 16, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
+          <p className="mt-3" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 16, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
             {isEs
               ? 'Las categorías agrupan qué compró el gobierno —medicamentos, obra pública, software— sin importar quién. 72 categorías activas clasifican casi todo el gasto federal; aquí, ordenadas por dónde mirar primero.'
               : 'Categories group what the government bought — medicines, civil works, software — regardless of who. 72 active categories classify nearly all federal spend; here, ranked by where to look first.'}

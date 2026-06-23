@@ -1940,7 +1940,7 @@ export default function Executive() {
             >
               {lang === 'en' ? 'Investigate a vendor.' : 'Investigar un proveedor.'}
             </h3>
-            <p className="text-sm text-text-secondary mb-6 max-w-[56ch] leading-[1.6]">
+            <p className="text-sm text-text-secondary mb-6 leading-[1.6]">
               {lang === 'en'
                 ? 'Search by RFC, company name, or browse ARIA Tier 1 — 299 GT-anchored vendors at the top of the investigation queue.'
                 : 'Busca por RFC, nombre de empresa, o explora ARIA Nivel 1 — 299 proveedores anclados en GT al tope de la cola de investigación.'}
@@ -1976,7 +1976,7 @@ export default function Executive() {
             >
               {lang === 'en' ? '§ · WHERE TO GO NEXT' : '§ · ADÓNDE IR'}
             </div>
-            <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[64ch] text-pretty">
+            <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
               {lang === 'en'
                 ? 'The patterns above resolve to specific entities. Open the investigation queue, or pull the most exposed sector and vendors on record — each opens a live dossier with the evidence behind its risk indicator.'
                 : 'Los patrones de arriba se resuelven en entidades concretas. Abre la cola de investigación, o entra al sector y los proveedores más expuestos del registro — cada uno abre un dossier en vivo con la evidencia detrás de su indicador de riesgo.'}

@@ -734,7 +734,7 @@ export function Methodology() {
       {/* Editorial Hero */}
       <header className="relative pt-4 pb-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex items-start justify-between gap-6">
-          <div className="max-w-3xl">
+          <div>
             <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
@@ -759,7 +759,7 @@ export function Methodology() {
               {t('pageHeadline')}
             </h1>
             <p
-              className="mt-5 max-w-[68ch]"
+              className="mt-5"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
                 fontSize: '17px',
@@ -862,7 +862,7 @@ export function Methodology() {
                 {t('tiers.kicker')}
               </span>
             </div>
-            <p className="text-xs text-text-muted mt-1 max-w-2xl">
+            <p className="text-xs text-text-muted mt-1">
               {t('tiers.intro')}
             </p>
           </div>

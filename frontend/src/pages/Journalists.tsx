@@ -380,7 +380,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
           </h2>
 
           <p
-            className="text-text-secondary leading-[1.55] mb-7 text-pretty max-w-2xl italic"
+            className="text-text-secondary leading-[1.55] mb-7 text-pretty italic"
             style={{
               fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
               fontSize: 'clamp(1rem, 1.4vw, 1.2rem)',
@@ -862,7 +862,7 @@ export default function Journalists() {
 
           {/* Deck — scope-true, no conflicting number */}
           <p
-            className="mt-6 max-w-3xl text-text-secondary"
+            className="mt-6 text-text-secondary"
             style={{
               fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
               fontStyle: 'italic',
