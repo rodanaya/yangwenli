@@ -43,7 +43,10 @@ export function cleanContractDescription(raw: string): { objeto: string | null; 
   while (i < tokens.length && !isWord(tokens[i])) { codeParts.push(tokens[i]); i++ }
   const objWords: string[] = []
   for (const t of tokens.slice(i)) { if (isCode(t)) codeParts.push(t); else objWords.push(t) }
-  const objectRaw = objWords.join(' ').trim()
+  // Strip leading wrapper quotes/punctuation — a leading `"` survives
+  // shortenContractName's uppercase pass and then defeats its first-letter
+  // capitalisation, rendering '"fletamento…' all-lowercase.
+  const objectRaw = objWords.join(' ').trim().replace(/^["'«»¿¡:;,.\-\s]+/, '')
   const objeto = objectRaw ? shortenContractName(objectRaw, 90) : null
   const codeFirst = codeParts[0] ? codeParts[0].toUpperCase().slice(0, 28) : ''
   const expediente = codeFirst ? (codeParts.length > 1 ? `${codeFirst} …` : codeFirst) : null

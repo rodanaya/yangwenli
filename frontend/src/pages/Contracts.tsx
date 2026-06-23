@@ -188,12 +188,15 @@ interface ColumnDef {
 
 // Column definitions — labels resolved via t() inside the component.
 // Re-ranked by investigative weight: WHAT (title) → WHO → HOW MUCH → WHEN → RISK.
+// Percentage widths (table is table-fixed) so the title can't sprawl and
+// starve the WHO column — CONTRACT is bounded, WHO gets enough room to show the
+// full provider + institution instead of truncating them to "Instituto…".
 const CONTRACT_COLUMN_DEFS: ColumnDef[] = [
-  { key: 'contract', labelKey: 'columns.contract', align: 'left' },
-  { key: 'vendor', labelKey: 'columns.who', align: 'left', sortField: 'vendor_name', thClass: 'w-64' },
-  { key: 'amount', labelKey: 'columns.amount', align: 'right', sortField: 'amount_mxn', thClass: 'w-24' },
-  { key: 'date', labelKey: 'columns.date', align: 'right', sortField: 'contract_date', thClass: 'w-16' },
-  { key: 'risk', labelKey: 'columns.risk', align: 'right', sortField: 'risk_score', thClass: 'w-28' },
+  { key: 'contract', labelKey: 'columns.contract', align: 'left', thClass: 'w-[38%]' },
+  { key: 'vendor', labelKey: 'columns.who', align: 'left', sortField: 'vendor_name', thClass: 'w-[32%]' },
+  { key: 'amount', labelKey: 'columns.amount', align: 'right', sortField: 'amount_mxn', thClass: 'w-[12%]' },
+  { key: 'date', labelKey: 'columns.date', align: 'right', sortField: 'contract_date', thClass: 'w-[8%]' },
+  { key: 'risk', labelKey: 'columns.risk', align: 'right', sortField: 'risk_score', thClass: 'w-[10%]' },
 ]
 
 // =============================================================================
@@ -1375,7 +1378,7 @@ function ContractRow({
         </td>
 
         {/* QUIÉN — vendor → institution */}
-        <td className="px-3 py-2.5 w-64">
+        <td className="px-3 py-2.5 w-[32%]">
           <div className="flex min-w-0 flex-col gap-1">
             {contract.vendor_id ? (
               <div className="flex min-w-0 items-center gap-1" onClick={stop}>
@@ -1396,7 +1399,7 @@ function ContractRow({
             )}
             {contract.institution_id ? (
               <div className="min-w-0" onClick={stop}>
-                <EntityIdentityChip type="institution" id={contract.institution_id} name={contract.institution_name || `Inst #${contract.institution_id}`} size="xs" />
+                <EntityIdentityChip type="institution" id={contract.institution_id} name={contract.institution_name || `Inst #${contract.institution_id}`} size="sm" />
               </div>
             ) : contract.institution_name ? (
               <span className="truncate text-xs text-text-muted" title={contract.institution_name}>{contract.institution_name}</span>
