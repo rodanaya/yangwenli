@@ -2791,6 +2791,7 @@ function Z2Panel({
 
   // Risk-tier shelves when sorted by RISK. Flat ranked list when by SPEND.
   const useShelf = mode === 'risk'
+  const isMobile = useIsMobile()
   // Canonical thresholds via getRiskLevelFromScore (hard rule #2).
   const shelfCritical = useShelf ? sortedVendors.filter((v) => getRiskLevelFromScore(v.avg_risk_score ?? 0) === 'critical') : []
   const shelfHigh     = useShelf ? sortedVendors.filter((v) => getRiskLevelFromScore(v.avg_risk_score ?? 0) === 'high') : []
@@ -2941,7 +2942,7 @@ function Z2Panel({
           {/* min-width keeps the desktop column grid intact on phones; the
               container scrolls horizontally instead of collapsing the name
               column to zero (a no-op on desktop where the panel is wider). */}
-          <div className="min-w-[900px]">
+          <div className={isMobile ? '' : 'min-w-[900px]'}>
           {isLoading && (
             <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
@@ -2952,11 +2953,11 @@ function Z2Panel({
               {lang === 'en' ? 'no vendor data available.' : 'sin datos de proveedores.'}
             </div>
           )}
-          {!isLoading && !isError && sortedVendors.length > 0 && (
+          {!isMobile && !isLoading && !isError && sortedVendors.length > 0 && (
             <Z2ColumnHeader lang={lang} mode={mode} onSort={setMode} />
           )}
           {!isLoading && !isError && !useShelf && (
-            <ul role="list" className="space-y-px">
+            <ul role="list" className={isMobile ? 'divide-y divide-border/40' : 'space-y-px'}>
               {sortedVendors.map((v, i) => (
                 <Z2Row
                   key={v.vendor_id}
@@ -3214,6 +3215,7 @@ function Z2Row({
   layoutTransition: { duration: number; ease?: typeof Z_EASE }
   prefersReducedMotion: boolean
 }) {
+  const isMobile = useIsMobile()
   const score = v.avg_risk_score ?? 0
   const riskPct = Math.round(score * 100)
   // Canonical thresholds (hard rule #2) — low renders muted, never green.
@@ -3268,6 +3270,24 @@ function Z2Row({
   // Role badges — priority-ordered, max 2 visible.
   const badges = computeZ2Badges(v, lang)
   const editorialName = toEditorialCase(cleanName)
+
+  // Mobile-native compact card — replaces the desktop multi-column vendor row.
+  if (isMobile) {
+    return (
+      <MobileRegisterRow
+        rank={rank}
+        title={editorialName}
+        onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: cleanName })}
+        ariaLabel={`${cleanName}, ${formatCompactMXN(v.total_value_mxn)}, ${lang === 'en' ? 'avg risk' : 'riesgo promedio'} ${riskPct}%`}
+        chips={[
+          ...badges.map((b) => ({ value: b.label, color: b.color })),
+          { value: formatCompactMXN(v.total_value_mxn), bold: true },
+          ...(flagsKnown ? [{ value: `${daPct.toFixed(0)}% DA` }] : []),
+          { value: `${riskPct}`, color: riskColor, dot: true },
+        ]}
+      />
+    )
+  }
 
   return (
     <motion.li
@@ -3448,6 +3468,7 @@ function Z2Shelf({
   totalRegisterCount?: number
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  const isMobile = useIsMobile()
   if (items.length === 0) return null
   const shelfSpend = items.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
 
@@ -3502,7 +3523,7 @@ function Z2Shelf({
         </div>
       )}
       {open && (
-        <ul role="list" className="space-y-px mt-0.5">
+        <ul role="list" className={isMobile ? 'divide-y divide-border/40 mt-0.5' : 'space-y-px mt-0.5'}>
           {items.map((v, i) =>
             isLongTail ? (
               <Z2RowDense
@@ -3557,8 +3578,11 @@ function Z2RowDense({
   layoutTransition: { duration: number; ease?: typeof Z_EASE }
   prefersReducedMotion: boolean
 }) {
+  const isMobile = useIsMobile()
   const score = v.avg_risk_score ?? 0
   const riskPct = Math.round(score * 100)
+  const riskLevel = getRiskLevelFromScore(score)
+  const riskColor = riskLevel === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[riskLevel]
   const cleanName = formatVendorName(v.vendor_name, 300)
   const editorialName = toEditorialCase(cleanName)
   const initials = (() => {
@@ -3567,6 +3591,23 @@ function Z2RowDense({
     const second = (parts[1]?.[0] ?? parts[0]?.[1] ?? '').toUpperCase()
     return (first + second).slice(0, 2) || '?'
   })()
+
+  // Mobile-native compact card — long-tail vendor, minimal chips.
+  if (isMobile) {
+    return (
+      <MobileRegisterRow
+        rank={rank}
+        title={editorialName}
+        onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: cleanName })}
+        ariaLabel={`${cleanName}, ${formatCompactMXN(v.total_value_mxn)}, avg risk ${riskPct}%`}
+        chips={[
+          { value: formatCompactMXN(v.total_value_mxn), bold: true },
+          { value: `${v.share_of_institution_pct.toFixed(0)}%` },
+          { value: `${riskPct}`, color: riskColor, dot: true },
+        ]}
+      />
+    )
+  }
 
   return (
     <motion.li
