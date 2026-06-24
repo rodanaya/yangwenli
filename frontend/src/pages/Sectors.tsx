@@ -2,9 +2,8 @@
  * Sectors — 12 Sectors of Mexican Federal Procurement
  *
  * WHO view: "El Libro Mayor de la Exposición / The Exposure Ledger"
- * Single-page ranked exposure ledger. Lede strip + the Confound Plate (the
- * single merged registry — dumbbell rows + hover/tap dossier) + RegistrySummary
- * (∑ totals + footnotes). No toggle, no card grid, no beeswarm, no slope chart.
+ * Single-page ranked exposure ledger. Lede strip + CumulativeRibbon +
+ * ExposureLedger table + ∑ sum rule. No card grid, no beeswarm, no slope chart.
  *
  * WHAT view: category tree/list — untouched from previous version.
  */
@@ -27,6 +26,7 @@ import type { SectorStatistics } from '@/api/types'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
+import { ExposureLedger } from '@/components/sectors/ExposureLedger'
 import type { LedgerRow } from '@/components/sectors/ExposureLedger'
 import { ConfoundPlate } from '@/components/sectors/ConfoundPlate'
 import { SelfCaptureBand } from '@/components/sectors/SelfCaptureBand'
@@ -239,13 +239,27 @@ export function Sectors() {
     setSearchParams(next, { replace: true })
   }
 
-  // Confounded Ledger sort lens — URL-synced (?lens=intensity); drives the
-  // §B plate's FLIP reorder (the dossier inherits it via rankVar).
+  // Confounded Ledger sort lens — URL-synced (?lens=intensity); shared by the
+  // §B plate's FLIP reorder and the §D register's sortable headers.
   const lens: PlateLens = searchParams.get('lens') === 'intensity' ? 'intensity' : 'var'
   const setLens = (l: PlateLens) => {
     const next = new URLSearchParams(searchParams)
     if (l === 'var') next.delete('lens')
     else next.set('lens', l)
+    setSearchParams(next, { replace: true })
+  }
+
+  // Registry display mode — the Plate and the Register render the SAME
+  // 12-sector data; show one at a time behind a toggle instead of stacking
+  // both. Default 'plate' (the innovative visual — the page centrepiece);
+  // 'register' = the legible table. URL-synced (?reg=register). Lens
+  // (VaR/Intensity) stays shared across views.
+  const regView: 'register' | 'plate' =
+    searchParams.get('reg') === 'register' ? 'register' : 'plate'
+  const setRegView = (v: 'register' | 'plate') => {
+    const next = new URLSearchParams(searchParams)
+    if (v === 'plate') next.delete('reg')
+    else next.set('reg', v)
     setSearchParams(next, { replace: true })
   }
 
@@ -1122,13 +1136,12 @@ export function Sectors() {
                   </p>
                 </section>
 
-                {/* §B+§D — THE REGISTRY (one merged view) ──────────────────
-                    The Confound Plate IS the registry. The Audited Register
-                    table was folded in on 2026-06-23: its auditable detail
-                    (DA-vs-OECD bullet, intensity, trajectory, top contract, GT
-                    links) now lives in the plate's hover/tap dossier, and its
-                    platform totals + footnotes render beneath the plate via
-                    RegistrySummary. No toggle, no stacking. */}
+                {/* §B+§D — THE REGISTRY (one section, two views) ───────────
+                    The Confound Plate (the innovative visual) and the Audited
+                    Register (table) are two renderings of the SAME 12-sector
+                    data sharing the same VaR/Intensity lens. The Plate is the
+                    page centrepiece — kept first, right under the lede, as the
+                    DEFAULT view; the table is a toggle-away view. Don't stack. */}
                 <div className="mb-6" aria-label={lang === 'es' ? 'Registro de exposición sectorial' : 'Registry of sector exposure'}>
                   <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
                     <p
@@ -1143,9 +1156,39 @@ export function Sectors() {
                     >
                       {lang === 'es' ? '§ Registro de exposición sectorial' : '§ Registry of sector exposure'}
                     </p>
+                    {/* Plate / Register view toggle (Plate default; lens shared) */}
+                    <div
+                      className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0"
+                      role="group"
+                      aria-label={lang === 'es' ? 'Cambiar vista del registro' : 'Switch registry view'}
+                    >
+                      {([
+                        { key: 'plate', es: 'Lámina', en: 'Plate' },
+                        { key: 'register', es: 'Registro', en: 'Register' },
+                      ] as const).map(({ key, es, en }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setRegView(key)}
+                          className={cn(
+                            'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                            regView === key
+                              ? 'bg-text-primary text-background'
+                              : 'text-text-muted hover:text-text-secondary',
+                          )}
+                          aria-pressed={regView === key}
+                        >
+                          {lang === 'es' ? es : en}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <ConfoundPlate rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
+                  {regView === 'plate' ? (
+                    <ConfoundPlate rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
+                  ) : (
+                    <ExposureLedger rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
+                  )}
                 </div>
 
                 {/* §C — SELF-CAPTURE HONOR ROLL (intensity highlight) ─────

@@ -24,13 +24,12 @@
  * FLIP reorder.
  */
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { LedgerRow } from './ExposureLedger'
-import { intensityColor, RegistrySummary, DAGGER_SECTORS } from './ExposureLedger'
-import { SectorDossierCard } from './SectorHoverDossier'
+import { intensityColor } from './ExposureLedger'
 import { makeLogFrac, ownSpendShare, orderForLens } from './confoundScales'
 import type { PlateLens } from './confoundScales'
 
@@ -118,20 +117,12 @@ export function ConfoundPlate({
 }) {
   const navigate = useNavigate()
   const [hovered, setHovered] = useState<number | null>(null)
-  // Mobile tap-to-expand dossier (desktop uses the floating hover panel).
-  const [expandedId, setExpandedId] = useState<number | null>(null)
 
   const logFrac = useMemo(() => makeLogFrac(rows), [rows])
   const ordered = useMemo(() => orderForLens(rows, lens), [rows, lens])
   const orderIndex = useMemo(
     () => new Map(ordered.map((r, i) => [r.sectorId, i])),
     [ordered],
-  )
-  // Rank by VaR (1-based) — rows arrive varMxn-descending. Shared by the
-  // dossier header so the rank is stable regardless of the active sort lens.
-  const rankVarById = useMemo(
-    () => new Map(rows.map((r, i) => [r.sectorId, i + 1])),
-    [rows],
   )
 
   // The two named outliers — computed argmax, never hardcoded (Reuters
@@ -189,7 +180,6 @@ export function ConfoundPlate({
   )
 
   return (
-    <>
     <PlateFrame
       lang={lang}
       folio="II·b"
@@ -322,7 +312,6 @@ export function ConfoundPlate({
             const isHover = hovered === r.sectorId
             const dimmed = hovered !== null && !isHover
             const sharePct = (share * 100).toFixed(0)
-            const hasDagger = DAGGER_SECTORS.has(r.sectorCode)
 
             const aria = isEs
               ? `${r.name} — ${formatCompactMXN(r.varMxn)} exposición señalada · ${sharePct}% de su propio gasto`
@@ -374,9 +363,6 @@ export function ConfoundPlate({
                     }}
                   >
                     {r.name}
-                    {hasDagger && (
-                      <sup className="font-mono" style={{ fontSize: 8, color: 'var(--color-text-muted)' }} aria-hidden="true">†</sup>
-                    )}
                   </span>
 
                   {/* Lane 1 — log VaR */}
@@ -500,38 +486,6 @@ export function ConfoundPlate({
               </div>
             )
           })}
-
-          {/* Floating hover dossier (desktop) — the folded-in Audited Register
-              detail; edge-flips above/below the registry mid-line so it never
-              runs off the plate. pointer-events-none so it never steals hover. */}
-          {hovered !== null && (() => {
-            const hr = rows.find((r) => r.sectorId === hovered)
-            if (!hr) return null
-            const hIdx = orderIndex.get(hovered) ?? 0
-            const rowTop = hIdx * ROW_H
-            const below = hIdx < rows.length / 2
-            return (
-              <div
-                className="pointer-events-none absolute z-20"
-                style={{
-                  right: 8,
-                  ...(below
-                    ? { top: rowTop + ROW_H + 6 }
-                    : { bottom: rows.length * ROW_H - rowTop + 6 }),
-                }}
-              >
-                <div className="rounded-md border border-border bg-background-card p-3 shadow-xl" style={{ width: 330 }}>
-                  <SectorDossierCard
-                    row={hr}
-                    rankVar={rankVarById.get(hr.sectorId) ?? 0}
-                    totalRows={rows.length}
-                    lang={lang}
-                    active
-                  />
-                </div>
-              </div>
-            )
-          })()}
         </div>
 
         {/* Ruler row: lane-1 log ticks + lane-2 quartile ruler */}
@@ -593,8 +547,6 @@ export function ConfoundPlate({
             const share = ownSpendShare(r)
             const ringColor = intensityColor(r.avgRiskScore)
             const sector = SECTOR_COLORS[r.sectorCode] ?? SECTOR_COLORS.otros
-            const expanded = expandedId === r.sectorId
-            const hasDagger = DAGGER_SECTORS.has(r.sectorCode)
             return (
               <div
                 key={r.sectorId}
@@ -621,9 +573,6 @@ export function ConfoundPlate({
                   </span>
                   <span className="flex-1 truncate" style={{ ...SERIF_NAME, fontSize: 14, color: 'var(--color-text-primary)' }}>
                     {r.name}
-                    {hasDagger && (
-                      <sup className="font-mono" style={{ fontSize: 7, color: 'var(--color-text-muted)' }} aria-hidden="true">†</sup>
-                    )}
                   </span>
                   <span className="font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
                     {formatCompactMXN(r.varMxn)}
@@ -642,62 +591,13 @@ export function ConfoundPlate({
                   >
                     {(share * 100).toFixed(0)}%
                   </span>
-                  {/* tap-to-expand the folded-in dossier (row tap still navigates) */}
-                  <button
-                    type="button"
-                    className="shrink-0 font-mono px-1 -mr-1"
-                    style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
-                    aria-expanded={expanded}
-                    aria-label={
-                      isEs
-                        ? `${expanded ? 'Cerrar' : 'Abrir'} dossier de ${r.name}`
-                        : `${expanded ? 'Close' : 'Open'} ${r.name} dossier`
-                    }
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setExpandedId(expanded ? null : r.sectorId)
-                    }}
-                  >
-                    {expanded ? '▴' : '▾'}
-                  </button>
                 </div>
                 <OwnSpendTrack share={share} ringColor={ringColor} height={20} />
-                {expanded && (
-                  <div
-                    className="mt-2 pb-1"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                  >
-                    <SectorDossierCard
-                      row={r}
-                      rankVar={rankVarById.get(r.sectorId) ?? idx + 1}
-                      totalRows={rows.length}
-                      lang={lang}
-                      active={expanded}
-                    />
-                    <Link
-                      to={`/sectors/${r.sectorId}`}
-                      className="mt-2 inline-block font-mono underline decoration-1 underline-offset-2"
-                      style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {isEs ? 'ver dossier del sector ↗' : 'view sector dossier ↗'}
-                    </Link>
-                  </div>
-                )}
               </div>
             )
           })}
         </div>
       </div>
     </PlateFrame>
-
-    {/* ── Registry footer — platform totals (∑) + caveat footnotes ───────────
-        The retired Audited Register's only home of totals, now beneath the
-        single plate registry. */}
-    <div className="mt-2">
-      <RegistrySummary rows={rows} lang={lang} />
-    </div>
-    </>
   )
 }
