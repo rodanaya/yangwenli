@@ -26,7 +26,8 @@ export interface RegisterChip {
 }
 
 interface MobileRegisterRowProps {
-  rank: number
+  /** rank index — omit for unranked registers (e.g. contracts) */
+  rank?: number
   /** leading visual — a logo chip / avatar / glyph */
   leading?: ReactNode
   /** short uppercase code before the title (acronym / siglas) */
@@ -54,9 +55,11 @@ export function MobileRegisterRow({
         aria-label={ariaLabel}
         className="w-full text-left flex items-start gap-2.5 px-2 py-2.5 rounded-sm transition-colors active:bg-background-elevated/60 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
       >
-        <span className="shrink-0 w-5 pt-1 text-right font-mono tabular-nums text-[10px] text-text-muted">
-          {rank}
-        </span>
+        {rank != null ? (
+          <span className="shrink-0 w-5 pt-1 text-right font-mono tabular-nums text-[10px] text-text-muted">
+            {rank}
+          </span>
+        ) : null}
         {leading ? <span className="shrink-0">{leading}</span> : null}
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-1.5 min-w-0">
@@ -78,7 +81,7 @@ export function MobileRegisterRow({
                   />
                 ) : null}
                 <span
-                  className={c.bold ? 'font-semibold' : undefined}
+                  className={c.bold ? 'font-semibold text-text-primary' : undefined}
                   style={c.color ? { color: c.color } : undefined}
                 >
                   {c.value}

@@ -3910,6 +3910,7 @@ function Z3Panel({
   dispatch: ReturnType<typeof useExploreDispatch>
   highlightContractId?: number | null
 }) {
+  const isMobile = useIsMobile()
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z3', vendorId],
     queryFn: async () => {
@@ -4457,10 +4458,10 @@ function Z3Panel({
           {/* Register scrolls horizontally on phones — its column grid is too
               wide for ~390px. Wraps only the register (the timeline + deviation
               grid above fit natively); a no-op on desktop (panel wider). */}
-          <div className="overflow-x-auto">
-          <div className="min-w-[720px]">
-          {/* Column header — aligns with the table row */}
-          {!isLoading && !isError && visibleContracts.length > 0 && (
+          <div className={isMobile ? '' : 'overflow-x-auto'}>
+          <div className={isMobile ? '' : 'min-w-[720px]'}>
+          {/* Column header — aligns with the table row (desktop only; mobile uses cards) */}
+          {!isMobile && !isLoading && !isError && visibleContracts.length > 0 && (
             <div className="flex items-center gap-2.5 pl-2.5 pr-2 pb-1" style={{ borderBottom: '1px solid var(--color-border)' }}>
               <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 96, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Amount' : 'Monto'}
@@ -4488,7 +4489,7 @@ function Z3Panel({
 
           {/* Dense register — top 30 contracts, disclosure to /vendors/{id} for full list */}
           {!isLoading && !isError && visibleContracts.length > 0 && (
-            <ul role="list" className="space-y-px">
+            <ul role="list" className={isMobile ? 'divide-y divide-border/40' : 'space-y-px'}>
               {visibleContracts.map((c) => (
                 <Z3ContractRow
                   key={c.id}
@@ -4720,6 +4721,7 @@ function Z3ContractRow({
   layoutTransition: { duration: number; ease?: typeof Z_EASE }
   prefersReducedMotion: boolean
 }) {
+  const isMobile = useIsMobile()
   const score = Number(c.risk_score ?? 0)
   const rail = RISK_COLORS[getRiskLevelFromScore(score)]
   const amount = Number(c.amount_mxn ?? 0)
@@ -4759,6 +4761,24 @@ function Z3ContractRow({
     : (c.is_direct_award || ptRaw.includes('adjudicaci') || ptRaw.includes('direct')) ? (lang === 'en' ? 'DIRECT' : 'ADJ. DIRECTA')
     : '—'
   const title = `${fecha} · ${formatCompactMXN(amount)} · ${proc}${expediente ? ` · ${expediente}` : ''}${flags.repeated ? ` · ${repeatLabel}` : ''}\n${objeto ?? ''}`
+
+  // Mobile-native compact card — replaces the desktop multi-column contract row.
+  if (isMobile) {
+    return (
+      <MobileRegisterRow
+        title={objeto || expediente || (lang === 'en' ? '(no description)' : '(sin descripción)')}
+        onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
+        ariaLabel={`${objeto ?? expediente ?? 'contract'}, ${formatCompactMXN(amount)}, ${fecha}, ${proc}, ${lang === 'en' ? 'risk' : 'riesgo'} ${Math.round(score * 100)}%`}
+        chips={[
+          { value: formatCompactMXN(amount), bold: true, color: flags.count >= 2 ? RISK_COLORS.critical : undefined },
+          { value: fecha },
+          { value: proc, color: proc === 'DIRECT' || proc === 'ADJ. DIRECTA' ? OCHRE : undefined },
+          ...slots.filter((s) => s.on).map((s) => ({ value: s.glyph, color: s.color })),
+          { value: `${Math.round(score * 100)}`, color: rail, dot: true },
+        ]}
+      />
+    )
+  }
 
   return (
     <motion.li
