@@ -6528,3 +6528,48 @@ None detected (no new gaps vs prior runs).
 ### Overall: WARN
 HTTP and API checks blocked by persistent egress policy — `rubli.xyz` denied by Anthropic gateway (`connect_rejected`). Not a confirmed live-site failure; site status unknown from this environment. Bilingual scan clean. Infrastructure constraint persists across all runs since at least 2026-06-03.
 **Action required**: add `rubli.xyz` to the execution environment's network egress allowlist (https://code.claude.com/docs/en/claude-code-on-the-web).
+
+---
+## Visual Review — 2026-06-24T18:03:44Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | WARN |
+| https://rubli.xyz/atlas | BLOCKED | WARN |
+| https://rubli.xyz/aria | BLOCKED | WARN |
+| https://rubli.xyz/sectors | BLOCKED | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED | WARN |
+| https://rubli.xyz/cases | BLOCKED | WARN |
+| https://rubli.xyz/methodology | BLOCKED | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | WARN |
+
+**Note**: All failures are `connect_rejected` from the Anthropic cloud gateway egress filter (`gateway answered 403 to CONNECT`). Persistent environment network policy restriction — `rubli.xyz:443` not in the egress allowlist. Not a confirmed site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/sectors | BLOCKED — egress gateway 403 | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — comment referencing FRAUDTYPES enum; not rendered. OK.
+- `Methodology.tsx:125` — academic citation (untranslatable proper noun). OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` code accessor; not rendered string. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property; not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — TS return-type annotation in comment. OK.
+- `ExploreCanvas.tsx:1478-1493` — comment block + corporate-form token array; not rendered. OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155-165` — correctly bilingual (`isEs ? … : …`). OK.
+- `RegisterRow.tsx:161` — `PATTERN_CHIP[item.primary_pattern]` code accessor; not a rendered string. OK.
+- Hardcoded "Generate Report": None found.
+- Hardcoded "SIGN IN" / "INICIAR SESIÓN": None found.
+
+None detected (no new gaps vs prior runs).
+
+### Overall: WARN
+HTTP and API checks blocked by persistent egress policy — `rubli.xyz` denied by Anthropic gateway (`connect_rejected`). Not a confirmed live-site failure; site status unknown from this environment. Bilingual scan clean. Infrastructure constraint persists across all runs.
+**Action required**: add `rubli.xyz` to the execution environment's network egress allowlist (https://code.claude.com/docs/en/claude-code-on-the-web).
