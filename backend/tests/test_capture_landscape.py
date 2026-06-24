@@ -66,3 +66,34 @@ class TestCaptureLandscape:
         second = client.get(f"{base_url}/capture/landscape").json()
         assert first["qualifying_count"] == second["qualifying_count"]
         assert first["generated_at"] == second["generated_at"]  # not rebuilt
+
+
+class TestCaptureTopAriaFold:
+    """The additive ARIA cross-light folded into /capture/top so the
+    model-vs-arithmetic seal renders at rest (DESIGNUS captura-2026-06-23)."""
+
+    def test_top_items_carry_aria_crosslight(self, client, base_url):
+        data = client.get(f"{base_url}/capture/top?limit=50").json()
+        items = data["data"]
+        assert len(items) >= 1
+        for it in items:
+            assert "aria" in it, "missing aria cross-light on capture item"
+            if it["aria"] is not None:
+                for k in (
+                    "in_ground_truth", "ips_tier",
+                    "is_efos_definitivo", "is_sfp_sanctioned",
+                ):
+                    assert k in it["aria"], f"aria missing {k}"
+                assert isinstance(it["aria"]["in_ground_truth"], bool)
+                assert isinstance(it["aria"]["is_efos_definitivo"], bool)
+
+    def test_model_agrees_on_some(self, client, base_url):
+        """Two methods, one conclusion — the model independently flags some of
+        the arithmetic captures (ground truth or ARIA Tier-1)."""
+        items = client.get(f"{base_url}/capture/top?limit=50").json()["data"]
+        agree = [
+            it for it in items
+            if it.get("aria")
+            and (it["aria"]["in_ground_truth"] or it["aria"]["ips_tier"] == 1)
+        ]
+        assert len(agree) >= 1

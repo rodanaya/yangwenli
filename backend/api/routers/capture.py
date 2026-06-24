@@ -219,6 +219,51 @@ def _enrich_with_names(
     return enriched
 
 
+def _attach_aria_crosslight(conn: sqlite3.Connection, data: list[dict]) -> None:
+    """Fold the ARIA cross-light onto each capture item IN PLACE so the
+    model-vs-arithmetic seal (GT / IPS tier / EFOS / SFP) renders AT REST
+    without a per-row fetch. Additive, sub-millisecond IN-join on the indexed
+    `aria_queue` (≤13 distinct vendor_ids) — never touches `contracts`.
+
+    Anti-model identity preserved: this is cross-light commentary, never a
+    headline. Vendors absent from the queue degrade to `aria = None`.
+    """
+    if not data:
+        return
+    has_table = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='aria_queue'"
+    ).fetchone()
+    if not has_table:
+        for c in data:
+            c["aria"] = None
+        return
+    vids = sorted({c["vendor_id"] for c in data if c.get("vendor_id") is not None})
+    if not vids:
+        return
+    placeholders = ",".join("?" * len(vids))
+    aria = {
+        r["vendor_id"]: r
+        for r in conn.execute(
+            f"""SELECT vendor_id, in_ground_truth, ips_tier,
+                       is_efos_definitivo, is_sfp_sanctioned
+                FROM aria_queue WHERE vendor_id IN ({placeholders})""",
+            vids,
+        ).fetchall()
+    }
+    for c in data:
+        a = aria.get(c.get("vendor_id"))
+        c["aria"] = (
+            {
+                "in_ground_truth": bool(a["in_ground_truth"]),
+                "ips_tier": a["ips_tier"],
+                "is_efos_definitivo": bool(a["is_efos_definitivo"]),
+                "is_sfp_sanctioned": bool(a["is_sfp_sanctioned"]),
+            }
+            if a is not None
+            else None
+        )
+
+
 def _read_precomputed(
     conn: sqlite3.Connection,
     limit: int,
@@ -249,6 +294,8 @@ def _read_precomputed(
         rec = {k: r[k] for k in r.keys()}
         rec["timeline"] = _json.loads(rec["timeline"]) if rec.get("timeline") else []
         data.append(rec)
+
+    _attach_aria_crosslight(conn, data)
 
     response = {
         "thresholds": {
@@ -313,6 +360,7 @@ def get_top_captures(
 
     enriched.sort(key=lambda c: c["score"], reverse=True)
     top = enriched[:limit]
+    _attach_aria_crosslight(conn, top)
 
     response = {
         "thresholds": {

@@ -3549,6 +3549,17 @@ export interface CaptureItem {
   institution_total_window: number
   score: number
   timeline: CapturePoint[]
+  /**
+   * ARIA model cross-light, folded into /capture/top additively (sub-ms IN-join).
+   * The arithmetic leads; this is commentary only — "two methods, one conclusion".
+   * null when the vendor is absent from the ARIA queue.
+   */
+  aria: {
+    in_ground_truth: boolean
+    ips_tier: number | null
+    is_efos_definitivo: boolean
+    is_sfp_sanctioned: boolean
+  } | null
 }
 
 export interface CaptureTopResponse {
