@@ -32,6 +32,8 @@ import { formatCompactMXN, formatCompactUSD, formatCompactUSDByYear, formatNumbe
 import { cleanContractDescription, computeContractFlags, type ContractFlags } from '@/lib/contract-audit'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { getAdministrationByYear } from '@/lib/administrations'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import { MobileRegisterRow } from '@/components/mobile/MobileRegisterRow'
 import { ShareViewButton } from './CanvasControls'
 import {
   getPinAnnotation,
@@ -2097,6 +2099,7 @@ function Z1Panel({
   // Risk-tier shelves. When sorted by RISK, group by tier. When sorted by
   // SPEND, shelves dissolve to a flat ranked list (matching Z2's canon).
   const useShelf = mode === 'risk'
+  const isMobile = useIsMobile()
   // Canonical thresholds via getRiskLevelFromScore (hard rule #2).
   const shelfCritical = useShelf ? sortedInstitutions.filter((i) => getRiskLevelFromScore(i.risk ?? 0) === 'critical') : []
   const shelfHigh     = useShelf ? sortedInstitutions.filter((i) => getRiskLevelFromScore(i.risk ?? 0) === 'high') : []
@@ -2184,15 +2187,15 @@ function Z1Panel({
           {/* min-width keeps the desktop column grid intact on phones; the
               container scrolls horizontally instead of collapsing the name
               column to zero (a no-op on desktop where the panel is wider). */}
-          <div className="min-w-[900px]">
+          <div className={isMobile ? '' : 'min-w-[900px]'}>
           {isLoading && (
             <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
             </div>
           )}
-          {!isLoading && sortedInstitutions.length > 0 && <Z1ColumnHeader lang={lang} />}
+          {!isMobile && !isLoading && sortedInstitutions.length > 0 && <Z1ColumnHeader lang={lang} />}
           {!isLoading && !useShelf && (
-            <ul role="list" className="space-y-px">
+            <ul role="list" className={isMobile ? 'divide-y divide-border/40' : 'space-y-px'}>
               {sortedInstitutions.map((inst, i) => (
                 <Z1Row
                   key={inst.institution_id}
@@ -2204,6 +2207,7 @@ function Z1Panel({
                   lang={lang}
                   layoutTransition={layoutTransition}
                   prefersReducedMotion={prefersReducedMotion}
+                  isMobile={isMobile}
                 />
               ))}
             </ul>
@@ -2471,6 +2475,7 @@ function Z1Row({
   lang,
   layoutTransition,
   prefersReducedMotion,
+  isMobile,
 }: {
   inst: SpatialInstitution
   rank: number
@@ -2480,6 +2485,7 @@ function Z1Row({
   lang: 'en' | 'es'
   layoutTransition: { duration: number; ease?: typeof Z_EASE }
   prefersReducedMotion: boolean
+  isMobile?: boolean
 }) {
   const risk = inst.risk ?? 0
   // Canonical thresholds (hard rule #2) — low renders muted, never green.
@@ -2508,6 +2514,25 @@ function Z1Row({
   const hrBarPct = Math.min(100, Math.max(0, hrPct))
   const hrBarColor = hrPct >= 50 ? RISK_COLORS.critical : hrPct >= 25 ? RISK_COLORS.high : hrPct >= 10 ? RISK_COLORS.medium : 'var(--color-text-muted)'
   const daColor = daPct >= 80 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
+
+  // Mobile-native compact card — replaces the desktop multi-column table row.
+  if (isMobile) {
+    return (
+      <MobileRegisterRow
+        rank={rank}
+        code={acronym}
+        title={inst.name}
+        onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
+        ariaLabel={`${inst.name}, ${formatCompactMXN(inst.total_amount_mxn)}, ${lang === 'en' ? 'high-risk' : 'alto riesgo'} ${hrPct.toFixed(0)}%, ${lang === 'en' ? 'direct award' : 'adjudicación directa'} ${daPct.toFixed(0)}%, ${lang === 'en' ? 'avg risk' : 'riesgo promedio'} ${riskPct}%`}
+        chips={[
+          { value: formatCompactMXN(inst.total_amount_mxn), bold: true },
+          { value: `${hrPct.toFixed(0)}% HR`, color: hrBarColor },
+          { value: `${daPct.toFixed(0)}% DA` },
+          { value: `${riskPct}`, color: riskColor, dot: true },
+        ]}
+      />
+    )
+  }
 
   return (
     <motion.li
@@ -2639,6 +2664,7 @@ function Z1Shelf({
   defaultOpen: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  const isMobile = useIsMobile()
   if (items.length === 0) return null
   return (
     <div>
@@ -2654,7 +2680,7 @@ function Z1Shelf({
         <span className="font-mono tabular-nums" style={{ fontSize: 10 }}>{items.length}</span>
       </button>
       {open && (
-        <ul role="list" className="space-y-px mt-0.5">
+        <ul role="list" className={isMobile ? 'divide-y divide-border/40 mt-0.5' : 'space-y-px mt-0.5'}>
           {items.map((inst, i) => (
             <Z1Row
               key={inst.institution_id}
@@ -2666,6 +2692,7 @@ function Z1Shelf({
               lang={lang}
               layoutTransition={layoutTransition}
               prefersReducedMotion={prefersReducedMotion}
+              isMobile={isMobile}
             />
           ))}
         </ul>
