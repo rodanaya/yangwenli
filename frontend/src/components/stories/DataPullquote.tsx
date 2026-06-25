@@ -50,6 +50,10 @@ interface DataPullquoteProps {
   statColor?: string
   barValue?: number
   barLabel?: string
+  /** Optional Spanish translation of `barLabel`. When set, the Spanish UI
+   *  renders this instead of the English `barLabel`. Without this the EN
+   *  label appears in both locales. */
+  barLabel_es?: string
   outlet?: OutletType
   className?: string
   vizTemplate?: VizTemplate
@@ -498,6 +502,7 @@ export default function DataPullquote({
   statColor = 'text-risk-critical',
   barValue,
   barLabel,
+  barLabel_es,
   outlet,
   className,
   vizTemplate,
@@ -505,6 +510,7 @@ export default function DataPullquote({
 }: DataPullquoteProps) {
   const { i18n, t: tc } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  const localizedBarLabel = lang === 'es' ? (barLabel_es ?? barLabel) : barLabel
   const stat = localizeAmount(rawStat, lang)
   const parsed = parseStatNumber(stat)
   const { ref: countRef, value: animatedValue } = useCountUp(
@@ -530,12 +536,12 @@ export default function DataPullquote({
     : 'var(--color-sector-salud)'
 
   const [vizRef, revealed] = useReveal()
-  const template = vizTemplate ?? autoSelectTemplate(barValue ?? 0, stat, barLabel)
+  const template = vizTemplate ?? autoSelectTemplate(barValue ?? 0, stat, localizedBarLabel)
   const family = TEMPLATE_FAMILY[template]
   const vizProps: VizProps = {
     value: barValue ?? 0,
     color: accent,
-    label: barLabel,
+    label: localizedBarLabel,
     stat,
     revealed,
     lang,
@@ -748,10 +754,10 @@ export default function DataPullquote({
               >
                 {familyEyebrow(family, lang)}
               </div>
-              <div role="img" aria-label={`${stat}${barLabel ? ` — ${barLabel}` : ''}`}>
+              <div role="img" aria-label={`${stat}${localizedBarLabel ? ` — ${localizedBarLabel}` : ''}`}>
                 {renderViz(template, vizProps)}
               </div>
-              {barLabel && (
+              {localizedBarLabel && (
                 <p
                   className="font-mono leading-[1.45]"
                   style={{
@@ -760,7 +766,7 @@ export default function DataPullquote({
                     marginTop: family === 'threshold' ? 18 : 10,
                   }}
                 >
-                  {barLabel}
+                  {localizedBarLabel}
                 </p>
               )}
             </div>

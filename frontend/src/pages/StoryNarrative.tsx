@@ -420,6 +420,7 @@ function renderPullquote(chapter: StoryChapterDef, story: StoryDef, className = 
         statLabel={chapter.pullquote.statLabel}
         barValue={chapter.pullquote.barValue}
         barLabel={chapter.pullquote.barLabel}
+        barLabel_es={chapter.pullquote.barLabel_es}
         outlet={story.outlet}
         statColor={story.leadStat.color}
         vizTemplate={chapter.pullquote.vizTemplate}

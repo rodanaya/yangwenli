@@ -195,18 +195,28 @@ export function ChartCard({
   eyebrow,
   anchor,
   annotation,
+  stamp,
+  lang,
   children,
 }: {
   title: string
   eyebrow?: string
   anchor?: { value: string; label: string; color?: string }
   annotation?: string
+  /** §D — opt-in provenance watermark. When present, renders a mono tag
+   *  in the eyebrow row (right of eyebrow label, left of v0.8.5).
+   *  Inspired by Ordnance Survey / ProPublica document-reader provenance.
+   *  0px cost when absent — 8 other call sites untouched. */
+  stamp?: { en: string; es: string }
+  /** Required only when stamp is present; otherwise eyebrow is EN only. */
+  lang?: 'en' | 'es'
   children: React.ReactNode
 }) {
   // Translate structural eyebrow text per language. Numeric tokens
   // (point/bar/vendor counts) interpolate via regex capture.
   const translateEyebrow = useEyebrow()
   const localizedEyebrow = translateEyebrow(eyebrow ?? 'CHART · COMPRANET')
+  const stampText = stamp ? (lang === 'es' ? stamp.es : stamp.en) : undefined
   return (
     <figure
       className="w-full bg-background-card overflow-hidden my-8"
@@ -229,7 +239,23 @@ export function ChartCard({
         }}
       >
         <span>{localizedEyebrow}</span>
-        <span aria-hidden>v0.8.5</span>
+        <span className="flex items-center gap-2">
+          {stampText && (
+            <span
+              aria-label={stampText}
+              style={{
+                fontSize: 8.5,
+                letterSpacing: '0.18em',
+                color: 'var(--color-text-muted)',
+                borderLeft: `1px solid ${ANCHOR_COLOR}`,
+                paddingLeft: 5,
+              }}
+            >
+              {stampText}
+            </span>
+          )}
+          <span aria-hidden>v0.8.5</span>
+        </span>
       </div>
       <figcaption className="px-5 pb-2">
         <h3
@@ -533,12 +559,148 @@ export function InlineBarChart({
     ? (data.annotation_es ?? data.annotation)
     : data.annotation
 
+  // ── §A dominance band path (FT Visual Vocabulary bullet chart) ──────────
+  // Opt-in via `data.mode === 'dominance'` ONLY. All other 6 bar call sites
+  // keep the existing row loop verbatim. Set this on el-vacio ch3 only.
+  if (data.mode === 'dominance') {
+    const BAND_W = 340
+    const H_TRACK = 26
+    const TOP = 16                 // headroom so the OECD cap label sits above the band
+    const MINOR_ROW_H = 15         // stacked mini-register row height
+    const PCT_Y = TOP + H_TRACK / 2
+    const domSvgW = LABEL_W + BAND_W + VALUE_W + 8
+
+    // Total = Σ all point values (share-of-whole denominator).
+    const total = data.points.reduce((s, p) => s + p.value, 0) || 1
+    // Anchor = the highlighted / dominant point.
+    const anchorPt = data.points.find((p) => p.highlight) ?? data.points[0]
+    const anchorShare = anchorPt.value / total
+    const bandW = anchorShare * BAND_W
+
+    // Band fill: risk-tier color wins, then RISK_COLORS.critical as canonical
+    // token (el-vacio dominant bar is critical-tier). Hex resolved through
+    // token — never a raw literal.
+    const bandFill = riskTierColor(anchorPt) ?? RISK_COLORS.critical
+
+    // Dashed OECD rule: referenceLine.value ≤ 1 → fraction of Σ.
+    // ruleX = x0 + fraction * BAND_W so denominator matches the band.
+    const ruleX = data.referenceLine
+      ? LABEL_W + (data.referenceLine.value <= 1
+          ? data.referenceLine.value * BAND_W
+          : (data.referenceLine.value / total) * BAND_W)
+      : null
+
+    // Non-anchor points → a STACKED mini-register below the band (one row each:
+    // label · proportional bar · %) so the demoted labels never collide.
+    const minorPts = data.points.filter((p) => !p.highlight)
+    const minorStartY = TOP + H_TRACK + 10
+    const DOM_SVG_H = minorStartY + minorPts.length * MINOR_ROW_H + 4
+
+    const domAnchorStat = {
+      value: `${(anchorShare * 100).toFixed(1)}%`,
+      label: labelFor(anchorPt),
+      color: bandFill,
+    }
+    const domRefLabel = data.referenceLine
+      ? (lang === 'es'
+          ? (data.referenceLine.label_es ?? data.referenceLine.label)
+          : data.referenceLine.label)
+      : undefined
+
+    return (
+      <ChartCard
+        title={title}
+        eyebrow="HORIZONTAL · RANKED"
+        anchor={domAnchorStat}
+        annotation={cardAnnotation}
+        stamp={data.stamp}
+        lang={lang}
+      >
+        <svg
+          viewBox={`0 0 ${domSvgW} ${DOM_SVG_H}`}
+          preserveAspectRatio="xMinYMin meet"
+          className="w-full"
+          aria-hidden="true"
+        >
+          {/* Label */}
+          <text
+            x={LABEL_W - 6}
+            y={PCT_Y}
+            textAnchor="end"
+            dominantBaseline="middle"
+            fontSize={11}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="var(--color-text-secondary)"
+          >
+            {labelFor(anchorPt)}
+          </text>
+
+          {/* Empty remainder track */}
+          <rect x={LABEL_W} y={TOP} width={BAND_W} height={H_TRACK} fill="none"
+            stroke="var(--color-border)" strokeWidth={1} rx={1} />
+
+          {/* Dominant band fill */}
+          <g aria-label={`${labelFor(anchorPt)}: ${anchorPt.value.toLocaleString()}${unit ? ` ${unit}` : ''}, ${(anchorShare * 100).toFixed(1)}%${ruleX !== null && data.referenceLine ? `, vs OECD benchmark ${(data.referenceLine.value * 100).toFixed(0)}%` : ''}`}>
+            <rect x={LABEL_W} y={TOP} width={bandW} height={H_TRACK} fill={bandFill} opacity={0.92} rx={1} />
+          </g>
+
+          {/* OECD dashed rule — band visibly overshoots this */}
+          {ruleX !== null && (
+            <line x1={ruleX} y1={TOP - 4} x2={ruleX} y2={TOP + H_TRACK + 3}
+              stroke={ANCHOR_COLOR} strokeWidth={1.5} strokeDasharray="3 3" opacity={0.9} />
+          )}
+
+          {/* OECD cap label — ABOVE the rule, clear of the stacked rows below */}
+          {ruleX !== null && domRefLabel && (
+            <text x={ruleX + 3} y={TOP - 6} fontSize={8.5}
+              fontFamily="var(--font-family-mono, monospace)" fill={ANCHOR_COLOR} opacity={0.9}>
+              {domRefLabel}
+            </text>
+          )}
+
+          {/* Per-point percent right of band — Playfair Italic 800 */}
+          <text x={LABEL_W + bandW + 6} y={PCT_Y} textAnchor="start" dominantBaseline="middle"
+            fontSize={13} fontFamily="'Playfair Display', Georgia, serif" fontStyle="italic"
+            fontWeight={800} style={{ color: bandFill }} fill={bandFill}>
+            {(anchorShare * 100).toFixed(1)}%
+          </text>
+
+          {/* Stacked minor register — one row each (label · proportional bar · %), never overlapping */}
+          {minorPts.map((pt, i) => {
+            const rowY = minorStartY + i * MINOR_ROW_H
+            const cy = rowY + MINOR_ROW_H / 2
+            const ptShare = pt.value / total
+            const barW = Math.max(2, ptShare * BAND_W)
+            const tierC = riskTierColor(pt) ?? getColor(pt, data.points.indexOf(pt))
+            return (
+              <g key={i} aria-label={`${labelFor(pt)}: ${(ptShare * 100).toFixed(1)}%`}>
+                <text x={LABEL_W - 8} y={cy} textAnchor="end" dominantBaseline="middle"
+                  fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
+                  {labelFor(pt)}
+                </text>
+                <rect x={LABEL_W} y={rowY + 2} width={barW} height={MINOR_ROW_H - 6}
+                  fill={tierC} opacity={0.5} rx={1} />
+                <text x={LABEL_W + barW + 5} y={cy} dominantBaseline="middle"
+                  fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
+                  {(ptShare * 100).toFixed(1)}%
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      </ChartCard>
+    )
+  }
+  // ── end dominance band path ──────────────────────────────────────────────
+
   return (
     <ChartCard
       title={title}
       eyebrow="HORIZONTAL · RANKED"
       anchor={anchor}
       annotation={cardAnnotation}
+      stamp={data.stamp}
+      lang={lang}
     >
       <svg
         viewBox={`0 0 ${svgW} ${svgH}`}
@@ -2972,27 +3134,54 @@ export function InlineRoster({
   const ref = data.referenceLine
   const refLabel = ref ? (lang === 'es' ? (ref.label_es ?? ref.label) : ref.label) : ''
 
+  // §B — abs-normalization (NYT Upshot annotated dot strip).
+  // Math.max(|value|) handles negatives (volatilidad model-coefficient roster
+  // ~L5050 carries 0.558, −0.388, −0.247). Never assume positives/integers.
+  const maxAbs = Math.max(...pts.map((p) => Math.abs(p.value)), 1e-9)
+
+  // Dot-strip geometry (inline, pure SVG — no shared DotStrip import needed).
+  // N=28, R=2.5, GAP=6 → viewBox width 168px. Mobile: viewBox scales via
+  // preserveAspectRatio; no JS breakpoint hook (the hook does not exist as a
+  // shared module — pure-SVG responsiveness per spec §B fix 5).
+  const DOT_N = 28
+  const DOT_R = 2.5
+  const DOT_GAP = 6
+  const STRIP_W = DOT_N * (DOT_R * 2 + DOT_GAP) // 308px (28 × 11)
+  const STRIP_H = DOT_R * 2 + 4               // ~9px
+
   return (
     <ChartCard
       title={title}
       eyebrow={`ROSTER · ${pts.length} NAMED`}
       annotation={annotation}
+      stamp={data.stamp}
+      lang={lang}
     >
       <ol className="divide-y divide-border/60 px-2">
         {pts.map((p, idx) => {
           const rank = String(idx + 1).padStart(2, '0')
           const highlight = !!p.highlight
           // Per-point semantic color (sanctioned palette only) drives the rail,
-          // glyph and value; falls back to the amber highlight / muted default.
+          // glyph, magnitude dots and value; falls back to amber highlight / muted.
           const accent = resolveRowColor(p.color) ?? (highlight ? ANCHOR_COLOR : undefined)
           const rail = accent ?? 'transparent'
           const glyph = accent ? '●' : '◇'
           const glyphColor = accent ?? 'var(--color-text-muted)'
+
+          // Magnitude dot-strip (abs-normalized; negatives handled). dotFill follows
+          // the semantic accent so the strip matches rail/glyph; never green (§3.10).
+          const frac = Math.abs(p.value) / maxAbs
+          const isNeg = p.value < 0
+          const filled = Math.round(frac * DOT_N)
+          const dotFill = accent ?? 'var(--color-text-muted)'
+          const pctOfLargest = Math.round(frac * 100)
+          const ariaLabelStr = `${idx + 1}. ${labelFor(p)}: ${isNeg ? '−' : ''}${Math.abs(p.value)}${unit ? ` ${unit}` : ''}, ${pctOfLargest}% of largest`
           return (
             <li
               key={`${p.label}-${idx}`}
-              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 py-4 pl-3 pr-2"
+              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 py-3 pl-3 pr-2"
               style={{ borderLeft: `2px solid ${rail}` }}
+              aria-label={ariaLabelStr}
             >
               {/* Rank — Playfair Italic, dimmed */}
               <span
@@ -3012,7 +3201,7 @@ export function InlineRoster({
                 {rank}
               </span>
 
-              {/* Name + type badge */}
+              {/* Name + magnitude strip + type badge */}
               <div className="min-w-0">
                 <div
                   className="text-text-primary"
@@ -3027,9 +3216,75 @@ export function InlineRoster({
                 >
                   {labelFor(p)}
                 </div>
+
+                {/* Magnitude dot strip — inline SVG, pure-SVG responsive.
+                    Negatives grow right-to-left from center zero (isNeg path).
+                    GRAFT: when value2 present, renders solid recovered head
+                    + hatched estimated tail (Reuters Forever Pollution two-state
+                    lane). No-op on el-vacio and all current rosters (value2=undefined).
+                    width:100% + maxWidth caps at natural size on desktop and scales
+                    the whole strip down on narrow (mobile) columns so the magnitude
+                    tail is never clipped by <main overflow-x-hidden>. */}
+                <svg
+                  viewBox={`0 0 ${STRIP_W} ${STRIP_H}`}
+                  preserveAspectRatio="xMinYMin meet"
+                  className="mt-1.5 block"
+                  aria-hidden="true"
+                  style={{ width: '100%', maxWidth: STRIP_W }}
+                >
+                  {Array.from({ length: DOT_N }, (_, di) => {
+                    const cx = di * (DOT_R * 2 + DOT_GAP) + DOT_R + 1
+                    const cy = DOT_R + 2
+                    const isFilled = isNeg
+                      ? di >= DOT_N - filled  // negatives fill from right
+                      : di < filled
+
+                    // GRAFT — two-state recovered/estimated lane when value2 present.
+                    // Solid head up to `value` fraction; hatched tail from `value`
+                    // to `value2`. Default-off (value2 === undefined on el-vacio).
+                    let fillColor = isFilled ? dotFill : 'var(--color-border)'
+                    let fillOpacity = isFilled ? 0.9 : 1
+                    let isHatched = false
+                    if (p.value2 !== undefined && p.value2 > 0) {
+                      const fracRecovered = Math.abs(p.value) / maxAbs
+                      const fracEstimated = Math.abs(p.value2) / maxAbs
+                      const filledRecovered = Math.round(fracRecovered * DOT_N)
+                      const filledEstimated = Math.round(fracEstimated * DOT_N)
+                      const inRecovered = isNeg ? di >= DOT_N - filledRecovered : di < filledRecovered
+                      const inEstimated = isNeg ? di >= DOT_N - filledEstimated : di < filledEstimated
+                      if (inRecovered) {
+                        fillColor = dotFill
+                        fillOpacity = 0.9
+                        isHatched = false
+                      } else if (inEstimated) {
+                        fillColor = dotFill
+                        fillOpacity = 0.35
+                        isHatched = true
+                      } else {
+                        fillColor = 'var(--color-border)'
+                        fillOpacity = 1
+                        isHatched = false
+                      }
+                    }
+
+                    return (
+                      <circle
+                        key={di}
+                        cx={cx}
+                        cy={cy}
+                        r={DOT_R}
+                        fill={isHatched ? 'none' : fillColor}
+                        stroke={isHatched ? fillColor : 'none'}
+                        strokeWidth={isHatched ? 1 : 0}
+                        opacity={fillOpacity}
+                      />
+                    )
+                  })}
+                </svg>
+
                 {annotationFor(p) && (
                   <div
-                    className="font-mono uppercase mt-1.5 flex items-center gap-1.5"
+                    className="font-mono uppercase mt-1 flex items-center gap-1.5"
                     style={{
                       fontSize: 9.5,
                       letterSpacing: '0.16em',
@@ -3042,7 +3297,8 @@ export function InlineRoster({
                 )}
               </div>
 
-              {/* Value — Playfair Italic 800, right-aligned */}
+              {/* Value — Playfair Italic 800, right-aligned, per-point semantic
+                  accent. Negative values get a leading − on the readout. */}
               <div className="text-right whitespace-nowrap">
                 <span
                   className="tabular-nums"
@@ -3056,7 +3312,7 @@ export function InlineRoster({
                     color: accent ?? 'var(--color-text-primary)',
                   }}
                 >
-                  {p.value.toLocaleString()}
+                  {isNeg ? '−' : ''}{Math.abs(p.value).toLocaleString()}
                 </span>
                 {unit && (
                   <span
