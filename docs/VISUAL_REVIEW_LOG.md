@@ -1,4 +1,50 @@
 ---
+## Visual Review — 2026-06-25T06:04:50Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | WARN |
+| https://rubli.xyz/atlas | BLOCKED | WARN |
+| https://rubli.xyz/aria | BLOCKED | WARN |
+| https://rubli.xyz/sectors | BLOCKED | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED | WARN |
+| https://rubli.xyz/cases | BLOCKED | WARN |
+| https://rubli.xyz/methodology | BLOCKED | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | WARN |
+
+> **Note**: All connections refused by Anthropic cloud runner egress gateway — proxy log shows `connect_rejected: gateway answered 403 to CONNECT (policy denial)` for `rubli.xyz:443`. Persistent infrastructure constraint; not a site outage. Add `rubli.xyz` to environment egress allowlist to enable live checks.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway (403) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway (403) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway (403) | WARN |
+| /api/v1/sectors | BLOCKED — egress gateway (403) | WARN |
+
+> Same egress restriction blocks all API calls. Not indicative of backend failure.
+
+### Bilingual Gaps
+Grep scans completed (3 patterns checked). No new regressions — stable false-positive baseline, same as prior runs:
+- `CaseLibrary.tsx:19` — inline comment referencing FRAUDTYPES enum; not rendered text. OK.
+- `Methodology.tsx:125` — academic citation (Mahalanobis, P.C. 1936); untranslatable proper noun. OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` code accessor, not rendered string. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property; not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — TypeScript return-type annotation. OK.
+- `ExploreCanvas.tsx:1476–1491` — comment block + corporate-form token array; not rendered. OK.
+- `VendorHero.tsx:717` — code comment only. OK.
+- `ConcentrationConstellation.tsx:155–165` — pattern labels properly bilingual via `isEs ? ES : EN` ternaries. OK.
+- `RegisterRow.tsx:160` — `PATTERN_CHIP[item.primary_pattern]` code accessor; not a rendered string. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**New bilingual gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by Anthropic Egress Gateway (persistent infrastructure constraint — `rubli.xyz:443` on policy deny list). Bilingual scan clean. No new code regressions detected. **Action required: add `rubli.xyz` to environment egress allowlist** so health checks can reach the live site.
+
+---
 ## Visual Review — 2026-06-23T18:03:30Z
 
 ### HTTP Status
