@@ -1,4 +1,48 @@
 ---
+## Visual Review — 2026-06-26T06:05:34Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/aria | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/cases | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+
+Note: Persistent CDN/WAF block on cloud egress IP (`connect_rejected` at proxy gateway). Consistent with all prior runs — not indicative of site downtime.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (cloud egress policy denial — empty body) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (cloud egress policy denial — empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (cloud egress policy denial — empty body) | WARN |
+| /api/v1/sectors | BLOCKED (cloud egress policy denial — empty body) | WARN |
+
+### Bilingual Gaps
+Scan results (false positives filtered — same stable baseline as prior runs):
+- `TIER_STYLES.Excelente.color` in `InstitutionLeague.tsx:211,692` — object property access, not a rendered string. OK.
+- Academic citation in `Methodology.tsx:125` — untranslatable bibliographic reference. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ... : ...`). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx:1493` — code data (S.A., C.V. etc.), not rendered UI labels. OK.
+- `VendorHero.tsx:717` — code comment with vendor name example, not rendered. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — `target_name: 'Maypo S.A.'` in chart data constants, vendor proper name. OK.
+- `CaseLibrary.tsx:19` — JSX comment, not rendered. OK.
+- `PATTERN_CHIP[item.primary_pattern]` in `RegisterRow.tsx:161` — object accessor, not a rendered string. OK.
+- `ExpedienteSpine.tsx:76` — JSX.Element return type annotation, not rendered text. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx` — `label="Risk Score"` / `label="Risk Factors"` hardcoded English labels without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by persistent server-side IP allowlist (cloud egress → CDN WAF). Persistent infrastructure constraint consistent with all prior runs, not a site failure. Bilingual scan clean — no new gaps detected since last run.
+
+---
 ## Visual Review — 2026-06-26T00:04:57Z
 
 ### HTTP Status
