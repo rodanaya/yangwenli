@@ -1,4 +1,45 @@
 ---
+## Visual Review — 2026-06-26T12:05:38Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/aria | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/cases | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+
+> **Note**: All requests fail with curl exit 56 — `connect_rejected` from Anthropic cloud gateway (`gateway answered 403 to CONNECT rubli.xyz:443`). Persistent environment network policy restriction. Not a confirmed site outage. General internet reachable (github.com 200).
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/sectors | BLOCKED — egress gateway 403 | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — JSDoc comment referencing FRAUDTYPES enum; not rendered. OK.
+- `Methodology.tsx:125` — academic citation property value (untranslatable proper noun). OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property; not user-facing. OK.
+- `ExploreCanvas.tsx:1478-1493` — comment block + corporate-form token array; not rendered. OK.
+- `VendorHero.tsx:717` — JSDoc comment only. OK.
+- Hardcoded "Generate Report": None found.
+- Hardcoded "SIGN IN" / "INICIAR SESIÓN": None found.
+
+**New gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by persistent egress policy — `rubli.xyz` denied by Anthropic gateway (`connect_rejected`). Not a confirmed live-site failure; site status unknown from this environment. Bilingual scan clean; no new gaps. Infrastructure constraint persists across all runs.
+**Action required**: add `rubli.xyz` to the execution environment's network egress allowlist.
+
+---
 ## Visual Review — 2026-06-26T06:05:34Z
 
 ### HTTP Status
