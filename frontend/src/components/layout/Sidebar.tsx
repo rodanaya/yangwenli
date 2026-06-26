@@ -23,6 +23,7 @@ import {
   Sparkles,
   Tag,
   Archive,
+  FileSearch,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -93,6 +94,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.explore',
     items: [
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+      { i18nKey: 'gap', href: '/gap', icon: FileSearch },
       { i18nKey: 'categories', href: '/categories', icon: Tag },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'network', href: '/network', icon: Network },

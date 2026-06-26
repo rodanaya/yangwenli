@@ -107,6 +107,7 @@ from .routers.intersection import router as intersection_router
 from .routers.capture import router as capture_router
 from .routers.dossier import router as dossier_export_router
 from .routers.atlas import router as atlas_router
+from .routers.gap import router as gap_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -583,6 +584,7 @@ app.include_router(scorecards_router)  # Scorecards has its own /api/v1/scorecar
 app.include_router(stories_router)    # Story endpoints for journalist investigation starting-points
 # Health router — registered before the inline /health decorator so it takes precedence.
 # Provides fast health check (<100ms) using precomputed_stats instead of COUNT(*).
+app.include_router(gap_router)  # Post-CompraNet gap — own /api/v1/gap prefix
 app.include_router(health_router)  # No prefix — endpoint defines /health directly
 # Also register at the /api/v1 prefix so external monitors that follow the
 # documented path (/api/v1/health) get the same response.

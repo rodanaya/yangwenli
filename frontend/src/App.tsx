@@ -54,6 +54,7 @@ const SpatialMap = lazy(() => import('@/pages/SpatialMap'))
 // Both DeepLinkRedirect components retired 2026-05-25/26 (DESIGNUS rounds 6+7):
 // /vendors/:id → VendorDossier · /institutions/:id → InstitutionDossier.
 const Sectors = lazy(() => import('@/pages/Sectors'))
+const Gap = lazy(() => import('@/pages/Gap'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const SectorDossier = lazy(() => import('@/pages/SectorDossier'))
 const Settings = lazy(() => import('@/pages/Settings'))
@@ -374,6 +375,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<SectorsSkeleton />}>
                     <Sectors />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="gap"
+                element={
+                  <SuspenseBoundary fallback={<div className="p-8" />}>
+                    <Gap />
                   </SuspenseBoundary>
                 }
               />

@@ -119,6 +119,9 @@ import type {
   AdminBreakdownResponse,
   AdminVendorsDeepResponse,
   AdminInstitutionsResponse,
+  GapSummaryResponse,
+  GapContractsResponse,
+  GapContractFilterParams,
 } from './types'
 
 // Re-export types that were moved from client.ts to types.ts for backward compatibility
@@ -3778,6 +3781,31 @@ export const atlasApi = {
   },
 }
 
+// Gap Endpoints — post-CompraNet 2025-2026 recovery (ComprasMX scrape)
+// ============================================================================
+
+export const gapApi = {
+  /**
+   * Summary stats for the post-Sep-28-2025 procurement gap.
+   * Returns DA%, recovered amounts, young-vendor count, exception articles.
+   */
+  async getSummary(): Promise<GapSummaryResponse> {
+    const { data } = await api.get<GapSummaryResponse>('/gap/summary')
+    return data
+  },
+
+  /**
+   * Paginated contract register from the ComprasMX scrape.
+   * Supports DA filter, recovered-only, young-only, sector, text search,
+   * and sort by amount or date.
+   */
+  async getContracts(params: GapContractFilterParams = {}): Promise<GapContractsResponse> {
+    const queryParams = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<GapContractsResponse>(`/gap/contracts?${queryParams}`)
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -3806,4 +3834,5 @@ export default {
   stories: storiesApi,
   collusion: collusionApi,
   atlas: atlasApi,
+  gap: gapApi,
 }

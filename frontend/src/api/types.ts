@@ -2876,3 +2876,89 @@ export interface CollusionStats {
   total_shared_procedures: number
   max_co_bid_rate: number
 }
+
+// ============================================================================
+// Gap Endpoints — post-CompraNet 2025-2026 recovery (ComprasMX scrape)
+// ============================================================================
+
+export interface GapExceptionArticle {
+  article: string
+  count: number
+}
+
+export interface GapSectorBreakdown {
+  sector_id: number
+  sector: string
+  count: number
+}
+
+export interface GapSummaryResponse {
+  available: boolean
+  total_contracts: number
+  direct_award_count: number
+  direct_award_pct: number
+  recovered_count: number
+  recovered_sum_mxn: number
+  best_available_sum_mxn: number
+  young_vendor_count: number
+  efos_count: number
+  by_exception_article: GapExceptionArticle[]
+  by_sector: GapSectorBreakdown[]
+  by_risk_level: { critical: number; high: number; medium: number; low: number }
+  worst_institutions: GapWorstInstitution[]
+  grade_methodology: string
+  data_window: string
+  source: string
+}
+
+export interface GapWorstInstitution {
+  siglas: string
+  avg_score: number
+  count: number
+}
+
+export interface GapContractItem {
+  procedure_number: string
+  title: string
+  institution: string
+  institution_siglas: string
+  sector_id: number
+  sector: string
+  procedure_type: string
+  is_direct_award: boolean
+  exception_article: string | null
+  cucop: string | null
+  vendor: string | null
+  vendor_rfc: string | null
+  vendor_incorp_year: number | null
+  is_young_vendor: boolean
+  efos_flag: boolean
+  amount_recovered: number | null
+  amount_best: number | null
+  amount_source: 'fallo_ocr' | 'estimated' | 'none'
+  publication_date: string | null
+  character: string | null
+  contract_number: string | null
+  risk_score: number | null
+  risk_level: 'critical' | 'high' | 'medium' | 'low' | null
+  flag_no_amount: boolean
+  flag_big_amount: boolean
+  flag_concentration: boolean
+}
+
+export interface GapContractFilterParams {
+  direct_award?: 0 | 1
+  sector_id?: number
+  recovered_only?: boolean
+  young_only?: boolean
+  risk_level?: 'critical' | 'high' | 'medium' | 'low'
+  q?: string
+  sort?: 'amount' | 'date' | 'risk'
+  page?: number
+  per_page?: number
+}
+
+export interface GapContractsResponse {
+  data: GapContractItem[]
+  pagination: PaginationMeta
+}
