@@ -39,15 +39,27 @@ function TermSparkline({
   color: string
   isEs: boolean
 }) {
-  if (yearly.length < 2) {
-    return (
-      <span className="block w-[56px] text-center text-[10px] font-mono text-text-muted">
-        ·
-      </span>
-    )
-  }
   const W = 56
   const H = 18
+  // Single-year vendors have no trajectory to draw — render a faint flat
+  // baseline with a centered tick instead of a bare "·" (which read as broken).
+  if (yearly.length < 2) {
+    const Y = H / 2
+    return (
+      <svg
+        width={W}
+        height={H}
+        viewBox={`0 0 ${W} ${H}`}
+        className="shrink-0 w-[56px]"
+        role="img"
+        aria-label={isEs ? 'Actividad de un solo año' : 'Single-year activity'}
+      >
+        <title>{yearly[0]?.year ?? ''}</title>
+        <line x1={2} x2={W - 2} y1={Y} y2={Y} stroke={color} strokeWidth={1} strokeOpacity={0.3} />
+        <circle cx={W / 2} cy={Y} r={1.6} fill={color} fillOpacity={0.8} />
+      </svg>
+    )
+  }
   const pad = 2
   const xs = yearly.map((y) => y.year)
   const vs = yearly.map((y) => y.total_mxn)
@@ -270,6 +282,7 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
                     id={v.vendor_id}
                     name={v.vendor_name}
                     size="xs"
+                    fullName
                     riskScore={v.avg_risk ?? undefined}
                     hideIcon={false}
                     className="min-w-0"

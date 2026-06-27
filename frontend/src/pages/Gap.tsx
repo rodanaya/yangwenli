@@ -471,7 +471,7 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
                 )}
               </td>
               <td className="px-3 py-2.5 align-top">
-                <div className="font-medium text-text-primary leading-snug line-clamp-2 text-xs">
+                <div className="font-medium text-text-primary leading-snug line-clamp-3 text-xs" title={item.title || undefined}>
                   {item.title || <span className="text-text-muted">—</span>}
                 </div>
                 {item.publication_date && (
@@ -710,37 +710,81 @@ export default function Gap() {
       className="max-w-6xl mx-auto px-4 py-8 space-y-8"
       aria-label={
         lang === 'es'
-          ? 'El Vacío — contratos post-CompraNet 2025-2026'
-          : 'The Gap — post-CompraNet 2025-2026 procurement'
+          ? 'El Apagón — contratos post-CompraNet 2025-2026'
+          : 'The Blackout — post-CompraNet 2025-2026 procurement'
       }
     >
-      {/* ── header ── */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono">
-          <FileSearch className="w-3 h-3" />
-          {lang === 'es'
-            ? 'EL VACÍO · RECUPERACIÓN COMPRASMX · SEP 2025–2026'
-            : 'THE GAP · COMPRASMX RECOVERY · SEP 2025–2026'}
-        </div>
-        <h1 className="font-serif text-3xl font-bold text-text-primary">
-          {lang === 'es' ? 'El Vacío' : 'The Gap'}
-        </h1>
-        <p className="text-text-secondary leading-relaxed max-w-2xl">
-          {lang === 'es'
-            ? 'El feed masivo de CompraNet se congeló el 28 de septiembre de 2025 cuando el sistema fue abolido legalmente. Mediante ingeniería inversa de su sucesor —ComprasMX (Secretaría Anticorrupción)— recuperamos las adjudicaciones post-cierre que de otro modo quedaban fuera del registro público.'
-            : 'The CompraNet bulk feed froze on September 28 2025 when the system was legally abolished. By reverse-engineering its successor — ComprasMX (Secretaría Anticorrupción) — we recovered the post-freeze awards that would otherwise fall outside the public record.'}
-        </p>
-        {summary && !summaryLoading && (
-          <div className="flex items-center gap-2 text-xs text-text-muted font-mono pt-1">
-            <span className="opacity-60">
-              {lang === 'es' ? 'Ventana de datos:' : 'Data window:'} {summary.data_window}
-            </span>
-            <span className="opacity-40">·</span>
-            <span className="opacity-60">
-              {lang === 'es' ? 'Fuente:' : 'Source:'} {summary.source}
-            </span>
+      {/* ── hero band — headline on the left, key figures fill the right
+          gutter. Previously the header was a left-only block with the stat
+          tiles in a full-width row below, leaving the whole right side of
+          the headline as dead whitespace. ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] items-start gap-x-10 gap-y-6">
+        {/* header (left column) */}
+        <div className="space-y-2 min-w-0">
+          <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono">
+            <FileSearch className="w-3 h-3" />
+            {lang === 'es'
+              ? 'EL APAGÓN · RECUPERACIÓN COMPRASMX · SEP 2025–2026'
+              : 'THE BLACKOUT · COMPRASMX RECOVERY · SEP 2025–2026'}
           </div>
-        )}
+          <h1 className="font-serif text-3xl font-bold text-text-primary">
+            {lang === 'es' ? 'El Apagón' : 'The Blackout'}
+          </h1>
+          <p className="text-text-secondary leading-relaxed">
+            {lang === 'es'
+              ? 'El feed masivo de CompraNet se congeló el 28 de septiembre de 2025 cuando el sistema fue abolido legalmente. Mediante ingeniería inversa de su sucesor —ComprasMX (Secretaría Anticorrupción)— recuperamos las adjudicaciones post-cierre que de otro modo quedaban fuera del registro público.'
+              : 'The CompraNet bulk feed froze on September 28 2025 when the system was legally abolished. By reverse-engineering its successor — ComprasMX (Secretaría Anticorrupción) — we recovered the post-freeze awards that would otherwise fall outside the public record.'}
+          </p>
+          {summary && !summaryLoading && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted font-mono pt-1">
+              <span className="opacity-60">
+                {lang === 'es' ? 'Ventana de datos:' : 'Data window:'} {summary.data_window}
+              </span>
+              <span className="opacity-40">·</span>
+              <span className="opacity-60">
+                {lang === 'es' ? 'Fuente:' : 'Source:'} {summary.source}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* key figures (right column) — moved up from below to fill the gutter */}
+        {summaryLoading ? (
+          <div className="grid w-full grid-cols-2 gap-3">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-sm" />
+            ))}
+          </div>
+        ) : summary && summary.available ? (
+          <div className="grid w-full grid-cols-2 gap-3">
+            <StatTile
+              icon={FileSearch}
+              label={lang === 'es' ? 'Procedimientos recuperados' : 'Procedures recovered'}
+              value={formatNumber(summary.total_contracts)}
+              sub={lang === 'es' ? 'post-28 sep 2025' : 'post-Sep 28 2025'}
+            />
+            <StatTile
+              icon={AlertTriangle}
+              label={lang === 'es' ? 'Sin licitación' : 'No-bid awards'}
+              value={`${summary.direct_award_pct.toFixed(1)}%`}
+              sub={`${formatNumber(summary.direct_award_count)} ${lang === 'es' ? 'adjudicaciones directas' : 'direct awards'}`}
+              accent={RISK_COLORS.critical}
+            />
+            <StatTile
+              icon={ShieldAlert}
+              label={lang === 'es' ? 'Montos OCR recuperados' : 'OCR-recovered amounts'}
+              value={formatCompactMXN(summary.recovered_sum_mxn)}
+              sub={`${formatNumber(summary.recovered_count)} ${lang === 'es' ? 'con monto real' : 'with real amount'}`}
+            />
+            <StatTile
+              icon={Users}
+              label={lang === 'es' ? 'Empresas <3 años' : 'Companies <3 yrs old'}
+              value={formatNumber(summary.young_vendor_count)}
+              sub={lang === 'es' ? 'ganaron adjudicaciones' : 'winning awards'}
+              accent={RISK_COLORS.medium}
+            />
+          </div>
+        ) : null}
       </div>
 
       {/* ── availability gate ── */}
@@ -765,44 +809,6 @@ export default function Gap() {
           </div>
         </div>
       )}
-
-      {/* ── stat tiles ── */}
-      {summaryLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-sm" />
-          ))}
-        </div>
-      ) : summary ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatTile
-            icon={FileSearch}
-            label={lang === 'es' ? 'Procedimientos recuperados' : 'Procedures recovered'}
-            value={formatNumber(summary.total_contracts)}
-            sub={lang === 'es' ? 'post-28 sep 2025' : 'post-Sep 28 2025'}
-          />
-          <StatTile
-            icon={AlertTriangle}
-            label={lang === 'es' ? 'Sin licitación' : 'No-bid awards'}
-            value={`${summary.direct_award_pct.toFixed(1)}%`}
-            sub={`${formatNumber(summary.direct_award_count)} ${lang === 'es' ? 'adjudicaciones directas' : 'direct awards'}`}
-            accent={RISK_COLORS.critical}
-          />
-          <StatTile
-            icon={ShieldAlert}
-            label={lang === 'es' ? 'Montos OCR recuperados' : 'OCR-recovered amounts'}
-            value={formatCompactMXN(summary.recovered_sum_mxn)}
-            sub={`${formatNumber(summary.recovered_count)} ${lang === 'es' ? 'con monto real' : 'with real amount'}`}
-          />
-          <StatTile
-            icon={Users}
-            label={lang === 'es' ? 'Empresas <3 años' : 'Companies <3 yrs old'}
-            value={formatNumber(summary.young_vendor_count)}
-            sub={lang === 'es' ? 'ganaron adjudicaciones' : 'winning awards'}
-            accent={RISK_COLORS.medium}
-          />
-        </div>
-      ) : null}
 
       {/* ── editorial callout ── */}
       {summary && (

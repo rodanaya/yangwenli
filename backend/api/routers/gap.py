@@ -113,8 +113,10 @@ def gap_contracts(
     order = ("gap_risk_score DESC" if sort == "risk"
              else "CAST(amount_mxn_best AS REAL) DESC" if sort == "amount"
              else "publication_date DESC")
+    has_desc = "description" in {r[1] for r in db.execute("PRAGMA table_info(gap_contracts)")}
+    desc_col = "description, " if has_desc else ""
     rows = db.execute(f"""
-        SELECT procedure_number, title, institution_name, institution_siglas, sector_id,
+        SELECT procedure_number, title, {desc_col}institution_name, institution_siglas, sector_id,
                procedure_type, is_direct_award, exception_article, cucop_primary,
                vendor, vendor_rfc, vendor_incorp_year, is_young_vendor, efos_flag,
                amount_mxn_recovered, amount_mxn_best, amount_source, publication_date,
@@ -128,7 +130,7 @@ def gap_contracts(
         sid = int(x["sector_id"]) if x["sector_id"] else 12
         data.append({
             "procedure_number": x["procedure_number"],
-            "title": x["title"],
+            "title": (x["description"] if has_desc else None) or x["title"],
             "institution": x["institution_name"],
             "institution_siglas": x["institution_siglas"],
             "sector_id": sid, "sector": SECTOR_NAMES.get(sid, "otros"),

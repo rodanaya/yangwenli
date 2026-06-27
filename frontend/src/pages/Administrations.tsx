@@ -26,6 +26,7 @@ import { AdminCycleSmallMultiples } from '@/components/administrations/AdminCycl
 import { ExpedienteSpine } from '@/components/administrations/ExpedienteSpine'
 import { AdminVendorsDeepList } from '@/components/administrations/AdminVendorsDeepList'
 import { AdminBuyersSection } from '@/components/administrations/AdminBuyersSection'
+import { GapRecoveryPanel } from '@/components/gap/GapRecoveryPanel'
 import {
   ADMINISTRATIONS,
   ADMIN_DISPLAY_NAMES,
@@ -179,8 +180,9 @@ export default function Administrations() {
     return (match?.name ?? 'AMLO') as AdminName
   })
   const [compareOpen, setCompareOpen] = useState(false)
-  // §IV drill-down: the top-100 beneficiaries archive drawer (lazy, mount-on-open)
-  const [vendorsDeepOpen, setVendorsDeepOpen] = useState(false)
+  // §IV drill-down: the top-100 beneficiaries archive drawer (lazy, mount-on-open).
+  // Open by default — the full ledger is the section users came for.
+  const [vendorsDeepOpen, setVendorsDeepOpen] = useState(true)
 
   // Keep ?admin= synced with the selection so a chosen administration is a
   // shareable, reload-safe deep link (e.g. /administrations?admin=amlo).
@@ -767,6 +769,11 @@ export default function Administrations() {
               })()}
             </div>
           </div>
+
+          {/* ── § EL APAGÓN — post-CompraNet recovered awards. Only Sheinbaum:
+              the gap window (Sep 2025+) lies entirely within her term. Labeled
+              recovery tier, never blended into the scored corpus (Option C). ── */}
+          {selectedAdmin === 'Sheinbaum' && <GapRecoveryPanel isEs={isEs} />}
 
           {/* ── § II · LA HUELLA SECTORIAL — sector risk profile ── */}
           <div className="border-t border-border/40 px-4 sm:px-5 py-4">

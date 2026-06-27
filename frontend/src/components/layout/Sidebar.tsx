@@ -269,7 +269,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               <span className="text-text-on-dark-primary font-bold text-lg tracking-[-0.02em] leading-none" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)' }}>RUBLI</span>
               <span className="text-text-on-dark-muted font-mono text-[9px] leading-none tracking-[0.05em]">v0.8.5</span>
             </div>
-            <p className="text-[9px] text-text-on-dark-muted mt-1 truncate tracking-[0.14em] uppercase font-mono">{t('tagline')}</p>
           </div>
         )}
         </NavLink>
