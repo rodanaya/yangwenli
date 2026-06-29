@@ -3689,3 +3689,47 @@ None detected — no actionable bilingual gaps.
 
 ### Overall: WARN
 Site HTTP/API checks could not be completed — rubli.xyz is blocked by the cloud egress policy (`connect_rejected 403`). This is a recurring environment limitation (also blocked on 2026-06-26). Bilingual gap scan: clean. Recommend enabling rubli.xyz in the session's egress policy, or running HTTP/API checks from a machine with direct access.
+
+---
+## Visual Review — 2026-06-29T06:05:52Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/aria | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/cases | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (cloud egress policy denial — connect_rejected 403) | WARN |
+
+> **Note**: All requests fail with curl exit 56 — `connect_rejected` from Anthropic cloud gateway (`gateway answered 403 to CONNECT rubli.xyz:443`). Persistent environment network policy restriction. Not a confirmed site outage. Same block observed on 2026-06-26.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress gateway 403 | WARN |
+| /api/v1/sectors | BLOCKED — egress gateway 403 | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — JSDoc comment referencing FRAUDTYPES enum; not UI-rendered. OK.
+- `Methodology.tsx:125` — academic citation data (untranslatable proper noun). OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` is a JS property access, not a key leak. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property, not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — JSX.Element return type annotation. OK.
+- `RegisterRow.tsx:161` — `PATTERN_CHIP[...]` lookup, not a key leak. OK.
+- `ExploreCanvas.tsx:1478,1479,1493` — inline comments. OK.
+- `VendorHero.tsx:717` — JSDoc comment. OK.
+- `ConcentrationConstellation.tsx:155–167` — all bilingual (`isEs ? ES : EN` pattern). OK.
+- "Generate Report" hardcoded: **None found**.
+- "SIGN IN" hardcoded: **None found**.
+
+None detected — no actionable bilingual gaps.
+
+### Overall: WARN
+Site HTTP/API checks could not be completed — rubli.xyz is blocked by the cloud egress policy (`connect_rejected 403`). This is a recurring environment limitation (also blocked on 2026-06-26 and prior runs). Bilingual gap scan: clean. To get live HTTP/API health data, run the checks from a machine with direct internet access or configure rubli.xyz as an allowed egress target.
