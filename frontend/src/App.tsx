@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { NotFound } from './pages/NotFound'
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
-import { AuthProvider } from '@/contexts/AuthContext'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider, QueryCache, keepPreviousData } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -134,6 +134,16 @@ const queryClient = new QueryClient({
   },
 })
 
+// Auth gate — every app route lives under MainLayout, which is wrapped in this.
+// While the stored token is being validated, show a skeleton; if there's no
+// authenticated user, bounce to the login wall. Mirrors the backend middleware.
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth()
+  if (isLoading) return <GenericPageSkeleton />
+  if (!user) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -174,7 +184,7 @@ function App() {
                 </SuspenseBoundary>
               }
             />
-            <Route path="/" element={<MainLayout />}>
+            <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
               {/* 2026-05-10 Phase 7: Spatial Map IS the homepage.
                   The Star-Fox-style /explore drill experience replaces the
                   static Executive briefing as the front door. Executive

@@ -445,6 +445,35 @@ if RATE_LIMITING_ENABLED and limiter:
 # Request logging middleware (must be added before CORS/GZip so it wraps them)
 app.add_middleware(RequestLoggingMiddleware)
 
+# ── Auth gate (2026-06-27 lockdown) ──────────────────────────────────────────
+# The entire API is private. Only login + health are public; every other
+# /api/v1 path requires a valid Bearer JWT, so the curated data cannot be read
+# or scraped anonymously. The frontend <ProtectedRoute> mirrors this on the
+# client. Defined before CORS so CORS wraps the 401 response.
+from fastapi.responses import JSONResponse as _GateJSON
+from jose import jwt as _gate_jwt, JWTError as _GateJWTError
+_GATE_SECRET = os.environ.get("RUBLI_JWT_SECRET", "rubli-dev-secret-change-in-prod")
+_GATE_PUBLIC = {"/api/v1/auth/login", "/api/v1/health"}
+
+@app.middleware("http")
+async def require_auth_gate(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    path = request.url.path
+    if path.startswith("/api/v1/") and path not in _GATE_PUBLIC:
+        auth = request.headers.get("Authorization", "")
+        token = auth[7:].strip() if auth[:7].lower() == "bearer " else ""
+        valid = False
+        if token:
+            try:
+                _gate_jwt.decode(token, _GATE_SECRET, algorithms=["HS256"])
+                valid = True
+            except _GateJWTError:
+                valid = False
+        if not valid:
+            return _GateJSON({"detail": "Authentication required"}, status_code=401)
+    return await call_next(request)
+
 # CORS middleware for frontend access
 cors_origins = [
     o.strip()

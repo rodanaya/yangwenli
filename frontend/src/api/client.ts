@@ -286,6 +286,23 @@ api.interceptors.response.use(
   },
   (error: AxiosError) => {
     console.error('API Error:', error.response?.data || error.message)
+    // Auth gate: a 401 on any endpoint means the token is missing, expired, or
+    // was invalidated (e.g. JWT secret rotation). Clear it and bounce to the
+    // login wall — unless we're already on an auth page (wrong-password 401s
+    // there must stay on the form, not loop).
+    if (
+      error.response?.status === 401 &&
+      typeof window !== 'undefined' &&
+      window.location.pathname !== '/login' &&
+      window.location.pathname !== '/register'
+    ) {
+      try {
+        localStorage.removeItem('rubli_jwt')
+      } catch {
+        /* localStorage unavailable — ignore */
+      }
+      window.location.assign('/login')
+    }
     return Promise.reject(error)
   }
 )
