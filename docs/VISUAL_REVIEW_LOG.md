@@ -3366,3 +3366,40 @@ None detected — no new actionable bilingual gaps.
 
 ### Overall: WARN
 HTTP and API checks could not be completed — `rubli.xyz:443` blocked by cloud egress policy (`connect_rejected 403`). Recurring environment limitation (same as prior run). Bilingual gap scan: clean. To obtain live HTTP/API health, run from a machine with direct internet access or add `rubli.xyz` to the allowed egress targets in the cloud environment network policy.
+
+---
+## Visual Review — 2026-06-30T18:08:50Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — egress policy denial (403 from proxy) | WARN |
+| https://rubli.xyz/atlas | BLOCKED — egress policy denial (403 from proxy) | WARN |
+| https://rubli.xyz/aria | BLOCKED — egress policy denial (403 from proxy) | WARN |
+| https://rubli.xyz/sectors | BLOCKED — egress policy denial (403 from proxy) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED — egress policy denial (403 from proxy) | WARN |
+| https://rubli.xyz/cases | BLOCKED — egress policy denial (403 from proxy) | WARN |
+| https://rubli.xyz/methodology | BLOCKED — egress policy denial (403 from proxy) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — egress policy denial (403 from proxy) | WARN |
+
+Note: Proxy (`HTTPS_PROXY=http://127.0.0.1:36661`) issues `connect_rejected` (gateway 403) for `rubli.xyz:443`. Same persistent cloud-egress policy restriction observed in all prior runs. Not indicative of site downtime — TLS traffic from this managed environment to rubli.xyz is blocked by network policy, not by the server.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — same proxy egress denial | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — same proxy egress denial | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — same proxy egress denial | WARN |
+| /api/v1/sectors | BLOCKED — same proxy egress denial | WARN |
+
+### Bilingual Gaps
+Scan clean — no new issues found:
+- `TIER_STYLES.Excelente.color` in `InstitutionLeague.tsx:211,692` — style constant lookup, not a rendered UI string. OK.
+- `PATTERN_CHIP[item.primary_pattern]` in `RegisterRow.tsx:161` — component map lookup, not a raw key leak. OK.
+- `PATTERN_COLORS.P*` in `ConcentrationConstellation.tsx` — color constant access, all strings are properly bilingual inline (`isEs ? '...' : '...'`). OK.
+- Academic citation `Mahalanobis, P.C.` in `Methodology.tsx:125` — untranslatable bibliographic reference. OK.
+- No "Generate Report" hardcoded strings found.
+- No "SIGN IN" hardcoded strings found.
+
+### Overall: WARN
+All HTTP and API checks blocked by managed environment egress policy (same condition as all prior runs — not site downtime). Bilingual scan: clean. Site health cannot be confirmed from this execution environment; verify externally if needed.
