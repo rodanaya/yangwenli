@@ -3234,3 +3234,47 @@ None detected — no new actionable bilingual gaps.
 
 ### Overall: WARN
 HTTP and API checks could not be completed — `rubli.xyz:443` is blocked by the cloud egress policy (`connect_rejected 403`). This is a recurring environment limitation (also blocked on prior runs). Bilingual gap scan: clean. To obtain live HTTP/API health, run checks from a machine with direct internet access or add `rubli.xyz` to the allowed egress targets in the environment network policy.
+
+---
+## Visual Review — 2026-06-30T00:05:35Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — egress policy (connect_rejected 403) | ✗ |
+| https://rubli.xyz/atlas | BLOCKED — egress policy | ✗ |
+| https://rubli.xyz/aria | BLOCKED — egress policy | ✗ |
+| https://rubli.xyz/sectors | BLOCKED — egress policy | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED — egress policy | ✗ |
+| https://rubli.xyz/cases | BLOCKED — egress policy | ✗ |
+| https://rubli.xyz/methodology | BLOCKED — egress policy | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — egress policy | ✗ |
+
+Note: Consistent with all prior runs — cloud egress policy denies CONNECT to `rubli.xyz:443` (gateway 403). Not indicative of site downtime. Run from a machine with direct internet access to obtain live status.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress policy | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED — egress policy | ✗ |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress policy | ✗ |
+| /api/v1/sectors | BLOCKED — egress policy | ✗ |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — JSDoc comment referencing FRAUDTYPES enum; not UI-rendered. OK.
+- `Methodology.tsx:125` — academic citation data (untranslatable proper noun). OK.
+- `InstitutionLeague.tsx:211,692` — `TIER_STYLES.Excelente.color` is a JS property access, not a key leak. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property, not user-facing. OK.
+- `ExpedienteSpine.tsx:76` — JSX.Element return type annotation. OK.
+- `RegisterRow.tsx:161` — `PATTERN_CHIP[...]` lookup, not a key leak. OK.
+- `ExploreCanvas.tsx:1478,1479,1493` — inline comments. OK.
+- `VendorHero.tsx:717` — JSDoc comment. OK.
+- `ConcentrationConstellation.tsx:155–167` — all bilingual (`isEs ? ES : EN` pattern). OK.
+- "Generate Report" hardcoded: **None found**.
+- "SIGN IN" hardcoded: **None found**.
+
+None detected — no new actionable bilingual gaps.
+
+### Overall: WARN
+HTTP and API checks could not be completed — `rubli.xyz:443` blocked by cloud egress policy (`connect_rejected 403`). Recurring environment limitation consistent with all prior runs. Bilingual gap scan: clean. To obtain live HTTP/API health, run from a machine with direct internet access or add `rubli.xyz` to the allowed egress targets.
