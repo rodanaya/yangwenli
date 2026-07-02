@@ -2,11 +2,14 @@
   "kicker": "INSTITUTIONS · WHERE THE HIGH-RISK MONEY IS",
   "meta": "FEDERAL · 2018–2025 · v0.8.5",
   "headline": {
-    "before": "Five agencies account for",
-    "accent": "2.7 trillion pesos in high-risk awards."
+    "beforeNone": "Of {{total}} federal buyers, ",
+    "accentNone": "none reaches Excellent",
+    "afterNone": " — and {{failing}} operate at Deficient or worse.",
+    "beforeSome": "Of {{total}} federal buyers, only ",
+    "accentSome": "{{n}} reach Excellent",
+    "afterSome": " — and {{failing}} operate at Deficient or worse."
   },
-  "lede": "IMSS alone carries 996 billion MXN in high- and critical-risk contracts — more than a third of the top five's combined exposure and larger than PEMEX Exploración, the next biggest. Its direct-award rate is 68 percent, more than double the OECD ceiling. PEMEX, CFE, ISSSTE and the Secretaría de Infraestructura round out the top five. The defunct INSABI — dissolved in 2023 but still holding 3,560 contracts on the books — has two in five of its contracts flagged high-risk, a 40 percent ratio.",
-  "lede_none": "IMSS alone carries 996 billion MXN in high- and critical-risk contracts — more than a third of the top five's combined exposure. Its direct-award rate is 68 percent, more than double the OECD ceiling.",
+  "lede": "The {{name}} concentrates {{money}} in high- and critical-risk contracts — the highest exposure on the federal register. Position on the plate below is the integrity score; stroke height is money at risk.",
   "podiumAriaLabel": "#{{rank}}: {{name}}, score {{score}}",
   "tableKicker": "Full Table",
   "tableHeadline": "Complete ranking — {{total}} institutions",
@@ -16,7 +19,7 @@
   },
   "champions": {
     "kicker": "THE HONOR ROLL",
-    "headline": "Five institutions worth modeling on",
+    "headline": "Honor roll — with reservations",
     "sub": "These agencies rank highest on openness, price fairness and vendor diversity. They prove it is possible."
   },
   "redFlags": {
@@ -40,8 +43,19 @@
     "process": "External Flags",
     "external": "Vendor Independence"
   },
+  "boleta": {
+    "title": "The scorecard — five pillars",
+    "ariaLabel": "Pillar scorecard for {{name}}"
+  },
+  "peerPercentileLine": "Worse than {{pct}}% of its sector",
+  "confidenceLine": "Confidence: {{band}}",
+  "p90Line": "P90 risk indicator {{score}}",
+  "redSignalsLine": "{{n}} red signals",
+  "moneyAtRiskLine": "{{money}} at risk",
+  "weakestPillarLine": "Weakest pillar: {{label}} — {{value}}/{{max}}",
   "expandRow": "Show pillar breakdown",
   "collapseRow": "Hide pillar breakdown",
+  "openDossier": "Open full dossier",
   "finding": {
     "critical": "Only {{pct}}% of institutions reach Satisfactory or better. {{failing}} are flagged at the Critical level.",
     "normal": "Only {{pct}}% of {{total}} evaluated institutions reach the Satisfactory level or better."
@@ -93,6 +107,8 @@
     "grade": "Level",
     "score": "Score",
     "pillars": "Pillars",
+    "weakPillar": "Weak pillar",
+    "moneyAtRisk": "Money at risk",
     "trend": "Trend",
     "percentile": "National %ile"
   },
@@ -120,6 +136,8 @@
   "loadingShort": "Loading…",
   "error": "Failed to load institution rankings. Please try again.",
   "sortAriaLabel": "Sort by {{label}}",
+  "dossierLinkAriaLabel": "Open full institution dossier for {{name}}",
+  "dossierLinkTitle": "Open full dossier",
   "methodologyFootnote": "RUBLI Procurement Health Index v0.8.5 · COMPRANET 2002–2025 · OECD / IMF methodology",
   "tabs": {
     "ranking": "Ranking",
@@ -130,5 +148,14 @@
     "kicker": "Money-at-Risk",
     "headline": "The biggest exposures the integrity score can't see",
     "sub": "Ranked by value flowing through high- and critical-risk contracts — a distinct axis from transparency. Institutions with 100+ contracts."
+  },
+  "plate": {
+    "eyebrow": "PLATE · I — THE SPECTRAL REGISTER",
+    "emptyExcelente": "No federal institution reaches this band",
+    "medianTag": "MEDIAN {{score}}",
+    "tooltipScore": "Score {{score}}/100",
+    "tooltipContracts": "{{n}} contracts",
+    "unavailableSubnational": "The Spectral Register plots only the federal board — state and municipal institutions have incomparable sample sizes and procedures. Switch to Federal scope to see the plate.",
+    "unavailableAll": "The Spectral Register plots only the federal board. Switch to Federal scope to see the plate."
   }
 }

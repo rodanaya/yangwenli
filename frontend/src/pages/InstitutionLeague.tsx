@@ -14,7 +14,6 @@
  */
 
 import React, { useMemo, useCallback, lazy, Suspense, useState } from 'react'
-import { DotBar } from '@/components/ui/DotBar'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
@@ -48,12 +47,15 @@ import { scorecardApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS, getSectorName } from '@/lib/constants'
 import {
   INSTITUTION_PILLARS,
-  INSTITUTION_PILLAR_LETTERS,
   pillarLabel,
 } from '@/lib/institution-pillars'
-import { formatNumber, formatCompactMXN } from '@/lib/utils'
+import { formatNumber, formatDualCurrency, formatCompactMXN } from '@/lib/utils'
+import { formatEntityName } from '@/lib/entity/format'
 import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import { PageFooter } from '@/components/layout/PageFooter'
+import { useLeagueField } from '@/hooks/useLeagueField'
+import { SpectralRegister, SpectralRegisterUnavailableNote } from '@/components/institution/SpectralRegister'
+import { PillarBoleta, getWeakestPillar, pillarDeficitColor } from '@/components/institution/PillarBoleta'
 
 // Reverse-lookup: sector display name (Spanish or English) → canonical code,
 // so we can resolve a SECTOR_COLORS swatch from the `sector_name` returned by
@@ -139,6 +141,7 @@ type SortKey =
   | 'total_score'
   | 'national_percentile'
   | 'institution_name'
+  | 'money_at_risk'
   | 'pillar_openness'
   | 'pillar_price'
   | 'pillar_vendors'
@@ -180,73 +183,21 @@ function TrendIcon({ direction }: { direction: string | null }) {
 }
 
 /**
- * Five-pillar heat strip — one calm row of solid cells, replacing the old
- * multi-colour "equalizer" of partial-height vertical bars (illegible at
- * 18px). Each cell's colour reads the 3-stop risk band (steel = strong,
- * amber = mid, red = weak — no green per Bible §3.10); magnitude within
- * the band is encoded as a gentle opacity ramp. Faint O/P/V/R/E axis below.
- * The "strong" band uses the Excelente steel tone (Steel & Ember) so a
- * healthy pillar reads cool, not gray.
- * Labels/maxes come from the canonical INSTITUTION_PILLARS map so they can
- * never drift from what compute_scorecards.py actually stores.
+ * Weak-pillar cell — the single legible fact that replaced PillarSparkBars'
+ * five illegible 14px heat cells. `{letter} {v}/{max}`, deficit-band colored.
  */
-function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
+function WeakPillarCell({ item }: { item: InstitutionScorecardItem }) {
   const { i18n } = useTranslation('institutionleague')
   const lang = i18n.language
-  const pillars = INSTITUTION_PILLARS.map((p) => ({
-    key: p.letter,
-    label: pillarLabel(p, lang),
-    value: (item[p.dbField] as number) ?? 0,
-    max: p.max,
-  }))
-  const tooltip = pillars.map(p => `${p.label}: ${p.value.toFixed(0)}/${p.max}`).join(' · ')
-  return (
-    <div
-      className="flex items-center gap-[5px]"
-      title={tooltip}
-      aria-hidden="true"
-    >
-      {pillars.map(({ key, value, max }) => {
-        const frac = Math.min(1, Math.max(0, value / max))
-        const color = frac > 0.65 ? TIER_STYLES.Excelente.color : frac > 0.35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
-        return (
-          <div key={key} className="flex flex-col items-center gap-1">
-            <span
-              className="block w-3.5 h-3.5 rounded-[3px] ring-1 ring-inset ring-border/40 transition-opacity"
-              style={{ backgroundColor: color, opacity: 0.42 + frac * 0.58 }}
-            />
-            <span className="text-[7px] font-mono leading-none text-text-muted/70 select-none">{key}</span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Risk driver pill
-// ---------------------------------------------------------------------------
-
-function RiskDriverPill({ driver }: { driver: string }) {
-  const { i18n } = useTranslation('institutionleague')
-  // top_risk_driver arrives as the canonical ES pillar label (compute_scorecards.py).
-  // Resolve it to the SoT pillar so EN renders the English label, not Spanish.
-  const pillar = INSTITUTION_PILLARS.find((p) => p.label_es === driver)
-  const label = pillar ? pillarLabel(pillar, i18n.language) : driver
+  const weakest = getWeakestPillar(item, lang)
+  const color = pillarDeficitColor(weakest.frac)
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-mono uppercase tracking-wide mt-0.5"
-      style={{
-        backgroundColor: 'color-mix(in srgb, var(--color-risk-critical) 10%, transparent)',
-        border: '1px solid color-mix(in srgb, var(--color-risk-critical) 30%, transparent)',
-        color: 'var(--color-risk-critical)',
-      }}
+      className="font-mono text-[11px] tabular-nums whitespace-nowrap"
+      style={{ color }}
+      title={weakest.label}
     >
-      <span
-        className="h-1 w-1 rounded-full flex-shrink-0"
-        style={{ backgroundColor: 'var(--color-risk-critical)' }}
-      />
-      {label}
+      {weakest.pillar.letter} {weakest.value.toFixed(0)}/{weakest.pillar.max}
     </span>
   )
 }
@@ -285,7 +236,7 @@ function ChampionCard({
 
       {/* Institution name — single line, demoted weight */}
       <span className="flex-1 min-w-0 truncate text-text-secondary text-[13px] group-hover:text-text-primary transition-colors">
-        {item.institution_name}
+        {formatEntityName('institution', item.institution_name, 'sm')}
       </span>
 
       {/* Sector dot */}
@@ -315,10 +266,15 @@ function ChampionCard({
 }
 
 // ---------------------------------------------------------------------------
-// RedFlagCard — red warning card for bottom performers
+// ActaCard — «Las Actas»: the verdict card for bottom performers.
+// Keeps the 60px EB Garamond italic rank numeral (the best thing on the
+// page); replaces PillarSparkBars + RiskDriverPill with a single computed
+// worst-pillar deficit line, merged with the prosecutorial fields the API
+// returns but no surface previously rendered (peer_percentile_sector,
+// money_at_risk_mxn, signal_count_red).
 // ---------------------------------------------------------------------------
 
-function RedFlagCard({
+function ActaCard({
   rank,
   item,
   onNavigate,
@@ -332,6 +288,21 @@ function RedFlagCard({
   const getTier = useTierInfo()
   const tier = getTier(item.grade)
   const sectorColor = getSectorColorFromName(item.sector_name)
+  const weakest = getWeakestPillar(item, lang)
+  const weakestColor = pillarDeficitColor(weakest.frac)
+
+  const agateParts: string[] = [
+    t('weakestPillarLine', { label: weakest.label, value: weakest.value.toFixed(0), max: weakest.pillar.max }),
+  ]
+  if (item.peer_percentile_sector != null) {
+    agateParts.push(t('peerPercentileLine', { pct: Math.round((1 - item.peer_percentile_sector) * 100) }))
+  }
+  if (item.money_at_risk_mxn != null) {
+    agateParts.push(t('moneyAtRiskLine', { money: formatCompactMXN(item.money_at_risk_mxn) }))
+  }
+  if (item.signal_count_red != null) {
+    agateParts.push(t('redSignalsLine', { n: item.signal_count_red }))
+  }
 
   return (
     <button
@@ -348,7 +319,7 @@ function RedFlagCard({
       }}
       aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
     >
-      <div className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto] items-center gap-4 sm:gap-6 px-4 sm:px-6 py-4">
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 sm:gap-6 px-4 sm:px-6 py-4">
 
         {/* Rank — cinematic Playfair numeral, left-anchored */}
         <div className="flex items-baseline gap-2 min-w-[58px]">
@@ -379,7 +350,7 @@ function RedFlagCard({
               letterSpacing: '-0.005em',
             }}
           >
-            {item.institution_name}
+            {formatEntityName('institution', item.institution_name, 'md')}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             {/* Tier verdict pill — inline */}
@@ -414,15 +385,16 @@ function RedFlagCard({
                 {localizedSectorName(item.sector_name, lang)}
               </span>
             )}
-            {item.top_risk_driver && (
-              <RiskDriverPill driver={item.top_risk_driver} />
-            )}
           </div>
-        </div>
-
-        {/* Pillar sparks — inline right, only at >=sm */}
-        <div className="hidden sm:flex flex-shrink-0">
-          <PillarSparkBars item={item} />
+          {/* Worst-pillar deficit line — merges the old top_risk_driver pill
+              and the five-cell PillarSparkBars into one computed, legible fact,
+              plus the peer-percentile / money-at-risk / red-signal agate. */}
+          <p
+            className="text-[9px] font-mono tracking-wide leading-relaxed"
+            style={{ color: weakestColor }}
+          >
+            {agateParts.join(' · ')}
+          </p>
         </div>
 
         {/* Trailing affordance — trend + chevron, sits at far right */}
@@ -435,282 +407,6 @@ function RedFlagCard({
   )
 }
 
-// ---------------------------------------------------------------------------
-// ScoreHistogram — visual distribution of scores across 5 bands
-// Editorial histogram with tier colors; taller bar = more institutions
-// ---------------------------------------------------------------------------
-
-interface HistogramBand {
-  min: number
-  max: number
-  count: number
-  tierKey: TierKey
-}
-
-function ScoreHistogram({
-  distribution,
-  total,
-  median,
-}: {
-  distribution: Record<string, number>
-  total: number
-  median: number
-}) {
-  const { t } = useTranslation('institutionleague')
-  const getTier = useTierByKey()
-
-  // Map 10-letter grades → 5 tier bands (each band = 20 points of score)
-  // Excelente=80–100, Satisfactorio=60–80, Regular=40–60, Deficiente=20–40, Critico=0–20
-  const bands: HistogramBand[] = useMemo(() => {
-    const mk = (min: number, max: number, tierKey: TierKey): HistogramBand => {
-      const grades = TIER_GRADE_MAP[tierKey]
-      const count = grades.reduce((s, g) => s + (distribution[g] ?? 0), 0)
-      return { min, max, count, tierKey }
-    }
-    return [
-      mk(0, 20, 'Critico'),
-      mk(20, 40, 'Deficiente'),
-      mk(40, 60, 'Regular'),
-      mk(60, 80, 'Satisfactorio'),
-      mk(80, 100, 'Excelente'),
-    ]
-  }, [distribution])
-
-  const maxCount = Math.max(...bands.map(b => b.count), 1)
-
-  // Position of median marker on 0–100 axis, in percent
-  const medianPct = Math.max(0, Math.min(100, median))
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-          {t('histogram.kicker')}
-        </p>
-        <h3 className="text-lg font-serif font-bold text-text-primary leading-tight">
-          {t('histogram.headline', { total: formatNumber(total) })}
-        </h3>
-        <p className="text-text-secondary text-xs mt-1">
-          {t('histogram.sub', { median: median.toFixed(1) })}
-        </p>
-      </div>
-
-      {/* Histogram: 5 bars, shared baseline, fixed height 160px */}
-      <div
-        className="relative rounded-sm border border-border bg-background/50 p-5"
-        role="img"
-        aria-label={t('histogram.ariaLabel')}
-      >
-        <div className="grid grid-cols-5 gap-3 h-[180px] items-end">
-          {bands.map((band) => {
-            const tier = getTier(band.tierKey)
-            const heightPct = Math.max(band.count > 0 ? 6 : 0, (band.count / maxCount) * 100)
-            const bandPct = total > 0 ? ((band.count / total) * 100) : 0
-            return (
-              <div key={band.tierKey} className="flex flex-col items-center justify-end h-full gap-1.5">
-                {/* count label above bar */}
-                <div className="flex flex-col items-center">
-                  <span className="text-lg font-mono font-bold tabular-nums leading-none" style={{ color: tier.color }}>
-                    {formatNumber(band.count)}
-                  </span>
-                  <span className="text-[9px] text-text-muted font-mono tabular-nums leading-tight mt-0.5">
-                    {bandPct.toFixed(1)}%
-                  </span>
-                </div>
-                <div
-                  className="w-full rounded-t-md transition-all"
-                  style={{
-                    height: `${heightPct}%`,
-                    background: `linear-gradient(to top, ${tier.color}, ${tier.color}cc)`,
-                    minHeight: band.count > 0 ? '8px' : '0',
-                    boxShadow: `0 0 20px ${tier.color}22`,
-                  }}
-                  title={`${tier.label}: ${band.count}`}
-                />
-              </div>
-            )
-          })}
-        </div>
-
-        {/* X-axis labels: score ranges + tier names */}
-        <div className="grid grid-cols-5 gap-3 mt-3 pt-3 border-t border-border">
-          {bands.map((band) => {
-            const tier = getTier(band.tierKey)
-            return (
-              <div key={band.tierKey} className="flex flex-col items-center gap-0.5 text-center">
-                <span className="text-[10px] font-mono font-bold tabular-nums text-text-secondary">
-                  {t('histogram.bandLabel', { min: band.min, max: band.max })}
-                </span>
-                <span className="text-[9px] font-mono uppercase tracking-wide truncate w-full" style={{ color: tier.color }}>
-                  {tier.label}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Median marker line across the chart */}
-        <div
-          className="absolute top-5 bottom-14 border-l border-dashed border-risk-high/60 pointer-events-none"
-          style={{ left: `calc(${medianPct}% * 0.9 + 5%)` }}
-          aria-hidden="true"
-        >
-          <span className="absolute -top-1 -translate-x-1/2 text-[9px] font-mono font-bold uppercase tracking-wide bg-amber-500/20 text-risk-high px-1.5 py-0.5 rounded whitespace-nowrap">
-            Median {median.toFixed(0)}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// PillarRadar — SVG spider/radar for the 5 pillars. Shown on row expand.
-// ---------------------------------------------------------------------------
-
-function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
-  const { t, i18n } = useTranslation('institutionleague')
-  const lang = i18n.language
-  // Normalize each pillar to 0-1 based on its TRUE max (canonical map).
-  const pillars = useMemo(() => INSTITUTION_PILLARS.map((p) => ({
-    label: pillarLabel(p, lang),
-    value: ((item[p.dbField] as number) ?? 0) / p.max,
-  })), [item, lang])
-
-  const size = 200
-  const center = size / 2
-  const radius = 72
-  const labelRadius = 90
-
-  // Compute polygon points
-  const pts = pillars.map((p, i) => {
-    const angle = (i * 2 * Math.PI) / pillars.length - Math.PI / 2
-    const r = Math.max(0, Math.min(1, p.value)) * radius
-    return { x: center + r * Math.cos(angle), y: center + r * Math.sin(angle), angle, value: p.value, label: p.label }
-  })
-  const labelPts = pillars.map((p, i) => {
-    const angle = (i * 2 * Math.PI) / pillars.length - Math.PI / 2
-    return { x: center + labelRadius * Math.cos(angle), y: center + labelRadius * Math.sin(angle), label: p.label, value: p.value }
-  })
-
-  const polyStr = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-
-  // Rings at 25/50/75/100%
-  const rings = [0.25, 0.5, 0.75, 1]
-
-  const getTier = useTierInfo()
-  const tier = getTier(item.grade)
-
-  return (
-    <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start justify-center py-3">
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        role="img"
-        aria-label={t('pillarRadar.ariaLabel', { name: item.institution_name })}
-      >
-        {/* Rings */}
-        {rings.map(r => (
-          <circle
-            key={r}
-            cx={center}
-            cy={center}
-            r={radius * r}
-            fill="none"
-            stroke="var(--color-border-hover)"
-            strokeWidth="0.5"
-          />
-        ))}
-        {/* Axes */}
-        {pillars.map((_, i) => {
-          const angle = (i * 2 * Math.PI) / pillars.length - Math.PI / 2
-          const x = center + radius * Math.cos(angle)
-          const y = center + radius * Math.sin(angle)
-          return (
-            <line
-              key={i}
-              x1={center}
-              y1={center}
-              x2={x}
-              y2={y}
-              stroke="var(--color-border-hover)"
-              strokeWidth="0.5"
-            />
-          )
-        })}
-        {/* Polygon */}
-        <polygon
-          points={polyStr}
-          fill={tier.color}
-          fillOpacity="0.25"
-          stroke={tier.color}
-          strokeWidth="1.5"
-        />
-        {/* Dots at each vertex */}
-        {pts.map((p, i) => (
-          <circle
-            key={i}
-            cx={p.x}
-            cy={p.y}
-            r="3"
-            fill={tier.color}
-          />
-        ))}
-        {/* Labels */}
-        {labelPts.map((p, i) => {
-          const anchor = p.x < center - 5 ? 'end' : p.x > center + 5 ? 'start' : 'middle'
-          return (
-            <text
-              key={i}
-              x={p.x}
-              y={p.y}
-              textAnchor={anchor}
-              dominantBaseline="middle"
-              fontSize="10"
-              fontFamily="monospace"
-              fill="var(--color-text-muted)"
-              className="uppercase tracking-wide"
-            >
-              {p.label}
-            </text>
-          )
-        })}
-      </svg>
-
-      {/* Numeric breakdown column */}
-      <div className="flex flex-col gap-2 min-w-[160px]">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-          {t('pillarRadar.title')}
-        </p>
-        {INSTITUTION_PILLARS.map((pillar) => ({
-          label: pillarLabel(pillar, lang),
-          value: (item[pillar.dbField] as number) ?? 0,
-          max: pillar.max,
-        })).map((p) => {
-          const pct = (p.value / p.max) * 100
-          const barColor = pct > 65 ? TIER_STYLES.Excelente.color : pct > 35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
-          return (
-            <div key={p.label} className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted w-20">{p.label}</span>
-              <DotBar
-                value={pct}
-                max={100}
-                color={barColor}
-                emptyColor="var(--color-background-elevated)"
-                emptyStroke="var(--color-border-hover)"
-                dots={20}
-              />
-              <span className="text-[10px] font-mono tabular-nums text-text-secondary w-10 text-right">
-                {p.value.toFixed(0)}/{p.max}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
 
 // ---------------------------------------------------------------------------
 // Sort header button
@@ -754,104 +450,6 @@ function SortHeader({
 }
 
 // ---------------------------------------------------------------------------
-// HeroStatRail — bordered scorecard panel for the hero's right column.
-// Fills the empty right gutter that opened up when narrative text sat in a
-// narrow measure inside the xl container. Holds the three headline numbers
-// (evaluated / deficient-critical / median) as a compact 3-up, plus a tier
-// distribution spine — surfacing data that previously hid in the collapsed
-// Act III methodology drawer.
-// ---------------------------------------------------------------------------
-
-function HeroStatRail({
-  totalInstitutions,
-  highRiskInstitutions,
-  median,
-  distribution,
-}: {
-  totalInstitutions: number
-  highRiskInstitutions: number
-  median: number | null
-  distribution: Record<string, number> | undefined
-}) {
-  const { t } = useTranslation('institutionleague')
-  const getTier = useTierByKey()
-
-  const tiers = useMemo(
-    () =>
-      TIER_NAMES.map((key) => {
-        const grades = TIER_GRADE_MAP[key]
-        const count = grades.reduce((s, g) => s + (distribution?.[g] ?? 0), 0)
-        return { tier: getTier(key), count }
-      }),
-    [distribution, getTier],
-  )
-  const distTotal = tiers.reduce((s, x) => s + x.count, 0)
-
-  const stats = [
-    { value: formatNumber(totalInstitutions), label: t('stats.evaluated'), color: 'var(--color-text-primary)' },
-    { value: formatNumber(highRiskInstitutions), label: t('stats.critical'), color: 'var(--color-risk-critical)' },
-    { value: median != null ? median.toFixed(1) : '—', label: t('stats.median'), color: 'var(--color-text-primary)' },
-  ]
-
-  return (
-    <aside className="rounded-sm border border-border bg-background-elevated/30 divide-y divide-border/60">
-      {/* Three headline numbers — compact 3-up, hairline-divided */}
-      <div className="grid grid-cols-3 divide-x divide-border/60">
-        {stats.map((s) => (
-          <div key={s.label} className="flex flex-col px-3 py-3.5">
-            <span
-              className="leading-none tabular-nums"
-              style={{
-                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
-                fontWeight: 800,
-                fontSize: 'clamp(26px, 2.6vw, 34px)',
-                color: s.color,
-                letterSpacing: '-0.015em',
-              }}
-            >
-              {s.value}
-            </span>
-            <span className="mt-1.5 text-[8px] font-mono uppercase tracking-[0.16em] text-text-muted leading-tight">
-              {s.label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Tier distribution spine */}
-      {distTotal > 0 && (
-        <div className="px-3.5 py-3.5 space-y-2">
-          <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-            {t('distribution.title')}
-          </p>
-          {tiers.map(({ tier, count }) => {
-            const pct = (count / distTotal) * 100
-            return (
-              <div key={tier.key} className="flex items-center gap-2">
-                <span
-                  className="text-[9px] font-mono uppercase tracking-[0.1em] w-[78px] flex-shrink-0 truncate"
-                  style={{ color: tier.color }}
-                >
-                  {tier.label}
-                </span>
-                <span className="flex-1 h-1.5 rounded-full bg-background-elevated overflow-hidden">
-                  <span
-                    className="block h-full rounded-full"
-                    style={{ width: `${Math.max(pct, count > 0 ? 2 : 0)}%`, backgroundColor: tier.color, opacity: 0.85 }}
-                  />
-                </span>
-                <span className="text-[9px] font-mono tabular-nums text-text-muted w-7 text-right flex-shrink-0">
-                  {count}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </aside>
-  )
-}
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -1016,6 +614,21 @@ export default function InstitutionLeague() {
     return (d['D'] ?? 0) + (d['D-'] ?? 0) + (d['F'] ?? 0) + (d['F-'] ?? 0)
   }, [statsData])
 
+  // Excelente headcount (tier S+A) — drives the plate's empty-band annotation
+  // and the computed headline (none-reaches vs only-N-reach).
+  const excelenteCount = useMemo(() => {
+    const d = statsData?.grade_distribution
+    if (!d) return 0
+    const grades = TIER_GRADE_MAP['Excelente'] ?? []
+    return grades.reduce((sum, g) => sum + (d[g] ?? 0), 0)
+  }, [statsData])
+
+  // Top-exposure institution for the lede (highest money-at-risk).
+  const topExposure = exposureItems[0]
+
+  // Full federal field for the Spectral Register plate (paged, federal-only).
+  const { data: fieldData } = useLeagueField(scope)
+
   const sectorOptions = useMemo(
     () => SECTORS.map((s) => ({ value: s.code, label: s.name })),
     [],
@@ -1052,7 +665,6 @@ export default function InstitutionLeague() {
   }
 
   const totalInstitutions = statsData?.total_scored ?? 0
-  const highRiskInstitutions = failingCount
 
   return (
     <div className="min-h-screen bg-background text-text-primary">
@@ -1108,24 +720,30 @@ export default function InstitutionLeague() {
                   letterSpacing: '-0.012em',
                 }}
               >
-                {t('headline.before')}{' '}
-                <span style={{ color: 'var(--color-accent)' }}>{t('headline.accent')}</span>
+                {excelenteCount === 0 ? (
+                  <>
+                    {t('headline.beforeNone', { total: formatNumber(totalInstitutions) })}
+                    <span style={{ color: 'var(--color-accent)' }}>{t('headline.accentNone')}</span>
+                    {t('headline.afterNone', { failing: formatNumber(failingCount) })}
+                  </>
+                ) : (
+                  <>
+                    {t('headline.beforeSome', { total: formatNumber(totalInstitutions) })}
+                    <span style={{ color: 'var(--color-accent)' }}>{t('headline.accentSome', { n: formatNumber(excelenteCount) })}</span>
+                    {t('headline.afterSome', { failing: formatNumber(failingCount) })}
+                  </>
+                )}
               </h1>
-              {totalInstitutions > 0 && (
+              {topExposure && (
                 <p className="text-sm sm:text-[15px] text-text-secondary mt-3 leading-relaxed">
-                  {t('lede', { total: formatNumber(totalInstitutions) })}
+                  {t('lede', {
+                    name: formatEntityName('institution', topExposure.institution_name, 'md'),
+                    money: formatDualCurrency(topExposure.money_at_risk_mxn ?? 0),
+                  })}
                 </p>
               )}
             </div>
 
-            {!isLoading && (
-              <HeroStatRail
-                totalInstitutions={totalInstitutions}
-                highRiskInstitutions={highRiskInstitutions}
-                median={statsData?.median_score ?? null}
-                distribution={statsData?.grade_distribution}
-              />
-            )}
           </div>
 
           {/* Federal scope segmented control + disclaimer.
@@ -1219,6 +837,22 @@ export default function InstitutionLeague() {
 
       <div className="space-y-8">
 
+        {/* ─── LA PLACA — the Spectral Register: the whole federal field on one
+            integrity axis (position = score, stroke height = money-at-risk).
+            Absorbs the old HeroStatRail, Exposure list, and ScoreHistogram. */}
+        {scope === 'federal' ? (
+          fieldData && fieldData.length > 0 ? (
+            <SpectralRegister
+              items={fieldData}
+              median={statsData?.median_score ?? null}
+              totalScored={statsData?.total_scored ?? fieldData.length}
+              failingCount={failingCount}
+            />
+          ) : null
+        ) : (
+          <SpectralRegisterUnavailableNote scope={scope} />
+        )}
+
         {/* ─── ACT I — THE VERDICT ──────────────────────────────────────────
             Red Flags lead (dominant grid). Bright Spots is a quieter
             counterweight that follows. Editorial logic: this is an
@@ -1247,7 +881,7 @@ export default function InstitutionLeague() {
             </div>
             <div className="space-y-1">
               {redFlagItems.slice(0, 5).map((item, idx) => (
-                <RedFlagCard
+                <ActaCard
                   key={item.institution_id}
                   rank={idx + 1}
                   item={item}
@@ -1258,52 +892,6 @@ export default function InstitutionLeague() {
           </section>
         )}
 
-        {/* ─── Money-at-Risk — THE EXPOSURE LENS ────────────────────────────
-            The integrity score ranks transparency; this ranks EXPOSURE — the
-            value flowing through high/critical-risk contracts. Surfaces the
-            billion-peso outliers (IMSS, PEMEX, GACM/NAICM, FONATUR) that a
-            clean transparency score structurally cannot rank. nc>=100 only. */}
-        {!hasFilters && exposureItems.length >= 3 && (
-          <section aria-labelledby="exposure-heading" className="space-y-3 pt-2">
-            <div className="border-l-2 border-accent pl-4">
-              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-accent mb-1 flex items-center gap-2">
-                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                {t('exposure.kicker')}
-              </p>
-              <h2
-                id="exposure-heading"
-                className="text-xl sm:text-2xl text-text-primary leading-tight"
-                style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500 }}
-              >
-                {t('exposure.headline')}
-              </h2>
-              <p className="text-text-secondary text-sm mt-1 italic">{t('exposure.sub')}</p>
-            </div>
-            <div className="rounded-sm border border-border/60 bg-background-elevated/20 divide-y divide-border/40" role="list">
-              {exposureItems.slice(0, 5).map((item, idx) => {
-                const maxVar = exposureItems[0]?.money_at_risk_mxn || 1
-                const pct = Math.max(2, ((item.money_at_risk_mxn || 0) / maxVar) * 100)
-                const tier = getTier(item.grade)
-                return (
-                  <button
-                    key={item.institution_id}
-                    role="listitem"
-                    onClick={() => navigate(`/institutions/${item.institution_id}`, { state: { institutionName: item.institution_name } })}
-                    className="w-full text-left group flex items-center gap-3 px-3 py-2.5 hover:bg-background-elevated/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/40 transition-colors"
-                  >
-                    <span className="text-[11px] font-mono font-bold tabular-nums w-5 flex-shrink-0 text-text-muted">{idx + 1}</span>
-                    <span className="flex-1 min-w-0 truncate text-text-secondary text-[13px] group-hover:text-text-primary transition-colors">{item.institution_name}</span>
-                    <div className="hidden sm:block flex-shrink-0">
-                      <DotBar value={pct} max={100} color="var(--color-accent)" emptyColor="var(--color-background-elevated)" emptyStroke="var(--color-border-hover)" dots={18} />
-                    </div>
-                    <span className="font-mono tabular-nums text-[12px] text-text-primary w-24 text-right flex-shrink-0">{formatCompactMXN(item.money_at_risk_mxn || 0)}</span>
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-[0.1em] w-20 text-right flex-shrink-0 hidden md:block" style={{ color: tier.color }}>{tier.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-        )}
 
         {/* Bright Spots — quieter counterweight, demoted below Red Flags.
             Rendered as a flat list (one institution per row) rather than a
@@ -1535,7 +1123,7 @@ export default function InstitutionLeague() {
                     </th>
                     <th scope="col" className="px-2 py-2 text-left hidden sm:table-cell w-28" title={pillarLegendTitle}>
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
-                        {t('columns.pillars')} <span className="opacity-50 normal-case">{INSTITUTION_PILLAR_LETTERS}</span>
+                        {t('columns.weakPillar')}
                       </span>
                     </th>
                     <th scope="col" className="px-2 py-2 text-center w-12 hidden sm:table-cell">
@@ -1550,6 +1138,16 @@ export default function InstitutionLeague() {
                         currentKey={sortBy}
                         currentDir={sortOrder}
                         onSort={handleSort}
+                      />
+                    </th>
+                    <th scope="col" className="px-2 py-2 text-right hidden lg:table-cell w-28">
+                      <SortHeader
+                        label={t('columns.moneyAtRisk')}
+                        sortKey="money_at_risk"
+                        currentKey={sortBy}
+                        currentDir={sortOrder}
+                        onSort={handleSort}
+                        className="justify-end"
                       />
                     </th>
                     <th scope="col" className="px-2 py-2 w-8" aria-label="Dossier" />
@@ -1652,16 +1250,11 @@ export default function InstitutionLeague() {
                               className="text-[13px] text-text-secondary group-hover:text-text-primary transition-colors font-medium truncate"
                               title={item.institution_name}
                             >
-                              {item.institution_name}
+                              {formatEntityName('institution', item.institution_name, 'sm')}
                             </span>
                             {item.sector_name && (
                               <span className="text-text-muted text-[9px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">
                                 · {localizedSectorName(item.sector_name, lang)}
-                              </span>
-                            )}
-                            {item.top_risk_driver && (
-                              <span className="flex-shrink-0 hidden xl:inline">
-                                <RiskDriverPill driver={item.top_risk_driver} />
                               </span>
                             )}
                           </div>
@@ -1710,9 +1303,9 @@ export default function InstitutionLeague() {
                           </div>
                         </td>
 
-                        {/* Pillar sparkbars — denser */}
+                        {/* Weak pillar — the single legible pillar fact */}
                         <td className="px-2 py-0 hidden sm:table-cell align-middle">
-                          <PillarSparkBars item={item} />
+                          <WeakPillarCell item={item} />
                         </td>
 
                         {/* Trend icon */}
@@ -1729,14 +1322,23 @@ export default function InstitutionLeague() {
                           </span>
                         </td>
 
+                        {/* Money at risk — the exposure the integrity score can't see */}
+                        <td className="px-2 py-0 text-right hidden lg:table-cell align-middle">
+                          <span className="text-text-secondary text-[11px] font-mono tabular-nums">
+                            {item.money_at_risk_mxn != null && item.money_at_risk_mxn > 0
+                              ? formatCompactMXN(item.money_at_risk_mxn)
+                              : '—'}
+                          </span>
+                        </td>
+
                         {/* Dossier icon link */}
                         <td className="px-1 py-0 align-middle">
                           <Link
-                            to={`/print/institutions/${item.institution_id}`}
+                            to={`/institutions/${item.institution_id}`}
                             onClick={(e) => e.stopPropagation()}
                             className="shrink-0 p-1 rounded text-text-muted hover:text-accent-data hover:bg-accent-data/10 transition-colors inline-flex"
-                            title="Open full dossier"
-                            aria-label="Open full institution dossier"
+                            title={t('openDossier')}
+                            aria-label={t('openDossier')}
                           >
                             <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                           </Link>
@@ -1747,8 +1349,8 @@ export default function InstitutionLeague() {
                           className="border-b border-border bg-background/60"
                           style={{ borderLeft: `3px solid ${tier.color}` }}
                         >
-                          <td colSpan={7} className="px-5 py-4">
-                            <PillarRadar item={item} />
+                          <td colSpan={9} className="px-5 py-4">
+                            <PillarBoleta item={item} />
                           </td>
                         </tr>
                       )}
@@ -1826,14 +1428,6 @@ export default function InstitutionLeague() {
 
         {methodologyOpen && (
           <div className="space-y-6 mt-5">
-            {/* Score Distribution Histogram */}
-            {statsData?.grade_distribution && (
-              <ScoreHistogram
-                distribution={statsData.grade_distribution}
-                total={statsData.total_scored}
-                median={statsData.median_score}
-              />
-            )}
 
             {/* Source footnote */}
             <p className="text-[10px] text-text-muted font-mono pt-4 border-t border-border">

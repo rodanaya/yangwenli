@@ -65,5 +65,17 @@
   "impactSummaryAria": "Resumen de impacto de salud de compras",
   "gradeMethodology": {
     "body": "Calificación basada en 5 dimensiones: tasa de adjudicación directa, concentración de proveedores, tasa de riesgo crítico, indicadores de fraccionamiento, y cobertura de datos. OCDE recomienda <25% adjudicaciones directas — México promedió 79.4% por número de procedimientos (menor por valor de contrato — ver contexto OCDE)."
+  },
+  "corteTitle": "El Corte Nacional",
+  "corteHeadlinePrefix": "El sistema de compras públicas federal de México califica",
+  "corteHeadlineSuffix": " a nivel nacional.",
+  "corteCaption": "{{value}} analizados en {{contracts}} contratos federales · {{cases}} casos documentados alimentan el modelo de riesgo",
+  "verdictTitle": "El veredicto, contra los techos de la OCDE",
+  "tierLabel": {
+    "Excelente": "Excelente",
+    "Satisfactorio": "Satisfactorio",
+    "Regular": "Regular",
+    "Deficiente": "Deficiente",
+    "Critico": "Crítico"
   }
 }

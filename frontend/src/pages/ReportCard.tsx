@@ -1,21 +1,30 @@
 /**
- * National Procurement Health Report Card
+ * El Corte Nacional / The National Cut
  *
- * Annual-report style editorial page showing Mexico's overall procurement
- * health grade with sector breakdowns, trend analysis, and OECD context.
+ * One-screen national verdict that feeds the Register (/institutions).
+ * Folio voice, zero SaaS chrome: a Playfair Display Italic sledgehammer
+ * numeral for the national PHI score, an FT-bullet verdict block against
+ * OECD ceilings, a sector register of deviation bars anchored on the
+ * OECD 25% direct-award line, and a compact annotated trend line.
  *
- * Dark-mode first: zinc-900/950 palette, serif headlines, large grade display.
+ * Rebuilt 2026-07-02 per docs spec §3.4 "EL CORTE NACIONAL" — killed the
+ * 66/100 gauge ring, the SemaforoIndicator traffic light, all framer-motion
+ * spring entrances, both inline <circle> dot-strip charts, and the private
+ * gradeToMexican() zinc grade ladder. One tier ladder only: lib/tiers.ts
+ * TIER_STYLES via gradeToTierKey.
  */
 
 import { useMemo } from 'react'
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { phiApi, analysisApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS, RISK_COLORS, getSectorName } from '@/lib/constants'
-import { DotBar } from '@/components/ui/DotBar'
+import { SECTORS, SECTOR_COLORS, getSectorName } from '@/lib/constants'
+import { formatDualCurrency } from '@/lib/utils'
+import { gradeToTierKey, TIER_STYLES, type TierKey } from '@/lib/tiers'
+import { BenchmarkRow } from '@/components/editorial/BenchmarkRow'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -97,856 +106,383 @@ interface TrendYear {
 }
 
 // ---------------------------------------------------------------------------
-// Mexican traffic-light system (semaforo) -- replaces US letter grades
-// Colors: neutral zinc tones for "good" grades (a corruption platform should
-// not use green to imply confidence), amber/red for problematic ones.
+// National hero — Playfair Display Italic 800 numeral + EB Garamond
+// italic headline with a single ochre tier fragment. One ladder only:
+// TIER_STYLES via gradeToTierKey (Steel & Ember — no green anywhere).
 // ---------------------------------------------------------------------------
 
-interface MexicanGrade {
-  label: string
-  labelEN: string
-  color: string
-  bg: string
-  border: string
-  semaforo: 'verde' | 'amarillo' | 'rojo'
-  tier: 'good' | 'ok' | 'poor' | 'bad'
-}
+const OCHRE = '#a06820'
 
-function gradeToMexican(grade: string, _score?: number): MexicanGrade {
-  switch (grade) {
-    case 'S':
-    case 'A':
-      // Excelente -- neutral light zinc (no green, avoid false confidence)
-      return { label: 'Excelente', labelEN: 'Excellent', color: '#d4d4d8', bg: 'rgba(212,212,216,0.06)', border: 'rgba(212,212,216,0.20)', semaforo: 'verde', tier: 'good' }
-    case 'B+':
-    case 'B':
-      // Satisfactorio -- mid zinc
-      return { label: 'Satisfactorio', labelEN: 'Satisfactory', color: '#a1a1aa', bg: 'rgba(161,161,170,0.06)', border: 'rgba(161,161,170,0.20)', semaforo: 'verde', tier: 'ok' }
-    case 'C+':
-    case 'C':
-      // Regular -- amber
-      return { label: 'Regular', labelEN: 'Fair', color: 'var(--color-risk-high)', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)', semaforo: 'amarillo', tier: 'poor' }
-    case 'D':
-    case 'D-':
-      // Deficiente -- darker amber
-      return { label: 'Deficiente', labelEN: 'Deficient', color: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)', semaforo: 'rojo', tier: 'bad' }
-    default:
-      // Critico -- red
-      return { label: 'Critico', labelEN: 'Critical', color: 'var(--color-risk-critical)', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', semaforo: 'rojo', tier: 'bad' }
-  }
-}
-
-/** Semaforo (traffic light) indicator -- 3 stacked CSS circles
- *  Note: keeps semaforo green for the visual metaphor (verde light is conventional),
- *  but grade text colors elsewhere use neutral zinc to avoid false confidence. */
-function SemaforoIndicator({ active }: { active: 'verde' | 'amarillo' | 'rojo' }) {
-  const lights: Array<{ key: 'verde' | 'amarillo' | 'rojo'; color: string }> = [
-    { key: 'verde', color: '#a1a1aa' },
-    { key: 'amarillo', color: 'var(--color-risk-high)' },
-    { key: 'rojo', color: 'var(--color-risk-critical)' },
-  ]
-  return (
-    <div
-      className="flex flex-col gap-1 items-center bg-background-elevated rounded-full px-1.5 py-2"
-      role="img"
-      aria-label={`Semaforo: ${active}`}
-    >
-      {lights.map(({ key, color }) => (
-        <span
-          key={key}
-          className="block rounded-full"
-          style={{
-            width: 12,
-            height: 12,
-            backgroundColor: key === active ? color : 'rgba(255,255,255,0.06)',
-            boxShadow: key === active ? `0 0 8px ${color}60` : 'none',
-            transition: 'all 0.3s ease',
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-
-
-// Sector display names resolve through the canonical getSectorName(code, lang)
-// helper (accent-correct ES + real EN) — never a local accent-stripped map.
-
-// ---------------------------------------------------------------------------
-// Animation variants
-// ---------------------------------------------------------------------------
-
-const cardContainerVariants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
-}
-
-const cardItemVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.96 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: 'spring' as const, stiffness: 280, damping: 26 },
-  },
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Convert raw high_risk_pct (0-1 or 0-100) to "1 in N" integer. */
-function highRiskToOneIn(pct: number): number {
-  const fraction = pct > 1 ? pct / 100 : pct
-  if (fraction <= 0) return 100
-  return Math.round(1 / fraction)
-}
-
-/** Format trillions of MXN for the hero stat: 9.9 */
-function formatTrillions(mxn: number): string {
-  const trillions = mxn / 1_000_000_000_000
-  return trillions.toFixed(1)
-}
-
-// ---------------------------------------------------------------------------
-// Hero Impact Section -- dark card with key stats above the grade hero
-// ---------------------------------------------------------------------------
-
-function HeroImpactSection({
+function NationalHero({
   national,
-  totalValueMxn,
-}: {
-  national: PHINational
-  totalValueMxn: number | null
-}) {
-  const { t } = useTranslation('reportcard')
-  const dist = national.risk_distribution
-
-  const valueMxn = totalValueMxn ?? national.total_value_mxn ?? null
-  const valueLabel: string = valueMxn != null
-    ? `MX$${formatTrillions(valueMxn)}T`
-    : 'MX$9.9T'
-
-  const criticalCount: number = dist?.critical?.count ?? 184031
-  const criticalCountLabel = criticalCount.toLocaleString('en-US')
-
-  const critPct = dist?.critical?.count_pct ?? 6.01
-  const highPct = dist?.high?.count_pct ?? 7.48
-  const highRiskRate = (critPct + highPct).toFixed(1)
-
-  const totalPct =
-    (dist?.critical?.count_pct ?? 0) +
-    (dist?.high?.count_pct ?? 0) +
-    (dist?.medium?.count_pct ?? 0) +
-    (dist?.low?.count_pct ?? 0)
-
-  // Routed through canonical RISK_COLORS (was 4 hex constants duplicating
-  // the same map elsewhere in the codebase per Batch A critique).
-  const barLevels: Array<{ key: keyof RiskDistribution; color: string; label: string }> = [
-    { key: 'critical', color: RISK_COLORS.critical, label: t('riskLevelCritical') },
-    { key: 'high',     color: RISK_COLORS.high,     label: t('riskLevelHigh')     },
-    { key: 'medium',   color: RISK_COLORS.medium,   label: t('riskLevelMedium')   },
-    { key: 'low',      color: RISK_COLORS.low,      label: t('riskLevelLow')      },
-  ]
-
-  return (
-    <motion.section
-      className="mb-8 surface-card overflow-hidden"
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.55, ease: 'easeOut' }}
-      aria-label={t('impactSummaryAria')}
-      role="region"
-    >
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-y md:divide-y-0 divide-border">
-        {/* Stat 1 -- total value */}
-        <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-text-primary">
-            {valueLabel}
-          </span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
-            {t('statContractsAnalyzed')}
-          </span>
-        </div>
-
-        {/* Stat 2 -- critical contracts */}
-        <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-risk-critical">
-            {criticalCountLabel}
-          </span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
-            {t('statCriticalContracts')}
-          </span>
-        </div>
-
-        {/* Stat 3 -- high-risk rate */}
-        <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-risk-high">
-            {highRiskRate}%
-          </span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
-            {t('statHighRiskRate')}
-            <span className="text-oecd ml-1">{t('statOecdMax15')}</span>
-          </span>
-        </div>
-
-        {/* Stat 4 -- sectors graded */}
-        <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-text-primary">
-            12
-          </span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
-            {t('statSectorsGraded')}
-          </span>
-        </div>
-      </div>
-
-      {/* Risk dot-matrix distribution */}
-      {dist && totalPct > 0 && (
-        <div className="px-6 pb-5 pt-1 border-t border-border">
-          <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-            {t('distByCount')}
-          </p>
-          {(() => {
-            const N = 50, DR = 3, DG = 8
-            const segs = barLevels
-              .map(({ key, color, label }) => ({ pct: dist[key]?.count_pct ?? 0, color, label }))
-              .filter((s) => s.pct >= 0.3)
-            const cells: { color: string; label: string }[] = []
-            segs.forEach((seg) => {
-              const segDots = Math.max(1, Math.round((seg.pct / 100) * N))
-              for (let k = 0; k < segDots && cells.length < N; k++) {
-                cells.push({ color: seg.color, label: seg.label })
-              }
-            })
-            while (cells.length < N && cells.length > 0) {
-              cells.push(cells[cells.length - 1])
-            }
-            return (
-              <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10}
-                role="img" aria-label={t('distByCount')}>
-                {cells.map((c, k) => (
-                  <circle key={k} cx={k * DG + DR} cy={5} r={DR} fill={c.color} fillOpacity={0.9}>
-                    <title>{c.label}</title>
-                  </circle>
-                ))}
-              </svg>
-            )
-          })()}
-          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2">
-            {barLevels.map(({ key, color, label }) => {
-              const entry = dist[key]
-              if (!entry || entry.count_pct < 0.3) return null
-              return (
-                <span
-                  key={key}
-                  className="flex items-center gap-1.5 text-[10px] text-text-muted"
-                >
-                  <span
-                    className="w-2 h-2 rounded-sm flex-shrink-0"
-                    style={{ backgroundColor: color }}
-                    aria-hidden="true"
-                  />
-                  <span className="font-mono font-bold" style={{ color }}>{label}</span>
-                  <span className="font-mono tabular-nums">{entry.count_pct.toFixed(1)}%</span>
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </motion.section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Hero Section -- big grade + plain-language headline
-// ---------------------------------------------------------------------------
-
-function HeroSection({
-  national,
-  highRiskPct,
-}: {
-  national: PHINational
-  highRiskPct: number | null
-}) {
-  const { t, i18n } = useTranslation('reportcard')
-  const mx = gradeToMexican(national.grade, national.phi_composite_score)
-  const isES = i18n.language?.startsWith('es')
-
-  const headlineKey = `heroHeadline_${mx.tier}` as const
-  const displayLabel = isES ? mx.label : mx.labelEN
-  const headline = t(headlineKey, { grade: displayLabel })
-
-  const score = national.phi_composite_score ?? 0
-
-  return (
-    <section className="mb-10">
-      <div
-        className="rounded-sm overflow-hidden"
-        style={{
-          border: `1px solid ${mx.border}`,
-          borderLeftWidth: 6,
-          borderLeftColor: mx.color,
-          backgroundColor: mx.bg,
-        }}
-        role="region"
-        aria-label={t('heroGradeLabel')}
-      >
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 py-10 px-4 sm:px-8">
-          {/* Score + semaforo */}
-          <motion.div
-            className="flex-shrink-0 flex items-center gap-4"
-            initial={{ scale: 2.5, opacity: 0, filter: 'blur(16px)' }}
-            animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-            transition={{ duration: 1.0, type: 'spring', stiffness: 130, damping: 16 }}
-          >
-            <SemaforoIndicator active={mx.semaforo} />
-            <div className="flex flex-col items-center">
-              {/* Extra-large numeric score — national index hero */}
-              {/* Score donut — progress ring + Playfair Italic numeral, per the
-                  folio "Headline Numbers" rule (was a font-black/font-mono number
-                  with an infinite glow loop). The arc fills to score/100. */}
-              <div className="relative flex items-center justify-center" style={{ width: 180, height: 180 }}>
-                <svg viewBox="0 0 100 100" width={180} height={180} className="absolute inset-0 -rotate-90" aria-hidden="true">
-                  <circle cx={50} cy={50} r={44} fill="none" stroke="var(--color-border)" strokeWidth={5} />
-                  <circle
-                    cx={50}
-                    cy={50}
-                    r={44}
-                    fill="none"
-                    stroke={mx.color}
-                    strokeWidth={5}
-                    strokeLinecap="round"
-                    strokeDasharray={`${(Math.min(100, Math.max(0, Math.round(score))) / 100) * (2 * Math.PI * 44)} ${2 * Math.PI * 44}`}
-                  />
-                </svg>
-                <div className="flex flex-col items-center leading-none">
-                  <span
-                    className="tabular-nums"
-                    style={{
-                      fontFamily: '"Playfair Display", Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 800,
-                      fontSize: '3.6rem',
-                      color: mx.color,
-                    }}
-                    aria-label={`${Math.round(score)}/100`}
-                  >
-                    {Math.round(score)}
-                  </span>
-                  <span className="text-xs font-mono font-bold mt-0.5" style={{ color: mx.color, opacity: 0.5 }}>
-                    /100
-                  </span>
-                </div>
-              </div>
-              {/* Colored label badge */}
-              <span
-                className="mt-1 text-xs font-mono font-bold uppercase tracking-[0.15em] px-3 py-1 rounded-full"
-                style={{
-                  color: mx.color,
-                  backgroundColor: mx.bg,
-                  border: `1px solid ${mx.border}`,
-                }}
-              >
-                {displayLabel}
-              </span>
-              <span
-                className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase mt-2"
-                style={{ color: mx.color, opacity: 0.6 }}
-              >
-                {t('heroGradeLabel')}
-              </span>
-              {/* Methodology explanation */}
-              <p className="text-[10px] text-text-muted max-w-sm text-center mt-2 leading-relaxed font-mono">
-                {t('gradeMethodology.body')}
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Headline + sub-text */}
-          <motion.div
-            className="flex-1 min-w-0 text-center sm:text-left"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            <h2 className="text-2xl md:text-3xl font-serif font-bold leading-snug mb-3 text-text-primary">
-              {headline}
-            </h2>
-
-            {/* Risk distribution bar */}
-            {national.risk_distribution && (
-              <RiskBar dist={national.risk_distribution} />
-            )}
-
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-4">
-              {t('heroBadgeLabel', { count: national.total_indicators })}
-            </p>
-
-            {/* High-risk rate pill */}
-            {highRiskPct !== null && (
-              <div className="mt-3 inline-flex items-center gap-2">
-                <span
-                  className="inline-block w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: highRiskPct > 15 ? '#ef4444' : highRiskPct > 10 ? '#f59e0b' : '#a1a1aa' }}
-                  aria-hidden="true"
-                />
-                <span className="text-sm font-medium text-text-secondary">
-                  {highRiskPct.toFixed(1)}% {t('sectorHighRisk')}
-                  {' · '}
-                  <span className="text-oecd">{t('metricRiskNote')}</span>
-                </span>
-              </div>
-            )}
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// OECD Context Panel
-// ---------------------------------------------------------------------------
-
-function OECDContextPanel({ national }: { national: PHINational }) {
-  const { t } = useTranslation('reportcard')
-
-  // Extract DA rate from national indicators if available
-  const daIndicator = national.indicators?.['direct_award_rate']
-  const sbIndicator = national.indicators?.['single_bid_rate']
-
-  const daRate = daIndicator?.value ?? (national.competition_by_value != null ? (100 - national.competition_by_value) : null)
-  const sbRate = sbIndicator?.value ?? null
-
-  return (
-    <section className="mb-10">
-      <div className="rounded-sm border border-oecd/20 bg-oecd/5 p-5">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-oecd mb-3">
-          {t('oecdContextTitle')}
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* DA rate */}
-          <div className="flex items-start gap-3">
-            <span
-              className="block w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-              style={{ backgroundColor: 'var(--color-oecd)' }}
-            />
-            <div>
-              <p className="text-xs text-text-secondary">{t('oecdDALabel')}</p>
-              <p className="text-sm text-text-secondary font-medium">
-                {t('oecdDABenchmark')}
-              </p>
-              {daRate != null && (
-                <p className="text-sm font-mono font-bold mt-0.5" style={{ color: daRate > 25 ? '#ef4444' : '#a1a1aa' }}>
-                  {t('oecdMexicoDA', { pct: daRate.toFixed(1) })}
-                </p>
-              )}
-            </div>
-          </div>
-          {/* Single bid rate */}
-          <div className="flex items-start gap-3">
-            <span
-              className="block w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-              style={{ backgroundColor: 'var(--color-oecd)' }}
-            />
-            <div>
-              <p className="text-xs text-text-secondary">{t('oecdSBLabel')}</p>
-              <p className="text-sm text-text-secondary font-medium">
-                {t('oecdSBBenchmark')}
-              </p>
-              {sbRate != null && (
-                <p className="text-sm font-mono font-bold mt-0.5" style={{ color: sbRate > 15 ? '#ef4444' : '#a1a1aa' }}>
-                  {t('oecdMexicoSB', { pct: sbRate.toFixed(1) })}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Risk distribution bar (stacked horizontal)
-// ---------------------------------------------------------------------------
-
-const RISK_LEVEL_COLORS = {
-  critical: '#ef4444',
-  high:     '#f59e0b',
-  medium:   '#a16207',
-  low:      '#71717a',
-} as const
-
-function RiskBar({ dist }: { dist: RiskDistribution }) {
-  const { t } = useTranslation('reportcard')
-  const total =
-    (dist.critical?.value_mxn ?? 0) +
-    (dist.high?.value_mxn ?? 0) +
-    (dist.medium?.value_mxn ?? 0) +
-    (dist.low?.value_mxn ?? 0)
-  if (total === 0) return null
-
-  const levels = [
-    { key: 'critical' as const, label: t('riskLevelCritical') },
-    { key: 'high'     as const, label: t('riskLevelHigh') },
-    { key: 'medium'   as const, label: t('riskLevelMedium') },
-    { key: 'low'      as const, label: t('riskLevelLow') },
-  ]
-
-  return (
-    <div>
-      <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        {t('distByValue')}
-      </p>
-      {(() => {
-        const N = 40, DR = 2.5, DG = 6
-        const segs = levels
-          .map(({ key, label }) => {
-            const val = dist[key]?.value_mxn ?? 0
-            const pct = (val / total) * 100
-            return { pct, color: RISK_LEVEL_COLORS[key], label }
-          })
-          .filter((s) => s.pct >= 0.5)
-        const cells: { color: string; label: string }[] = []
-        segs.forEach((seg) => {
-          const segDots = Math.max(1, Math.round((seg.pct / 100) * N))
-          for (let k = 0; k < segDots && cells.length < N; k++) {
-            cells.push({ color: seg.color, label: seg.label })
-          }
-        })
-        while (cells.length < N && cells.length > 0) {
-          cells.push(cells[cells.length - 1])
-        }
-        return (
-          <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8}
-            role="img" aria-label={t('distByValue')}>
-            {cells.map((c, k) => (
-              <circle key={k} cx={k * DG + DR} cy={4} r={DR} fill={c.color} fillOpacity={0.9}>
-                <title>{c.label}</title>
-              </circle>
-            ))}
-          </svg>
-        )
-      })()}
-      <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5">
-        {levels.map(({ key, label }) => {
-          const entry = dist[key]
-          if (!entry || entry.value_pct < 0.5) return null
-          return (
-            <span key={key} className="flex items-center gap-1 text-[10px] text-text-muted">
-              <span
-                className="w-2 h-2 rounded-sm flex-shrink-0"
-                style={{ backgroundColor: RISK_LEVEL_COLORS[key] }}
-                aria-hidden="true"
-              />
-              <span className="font-mono font-bold" style={{ color: RISK_LEVEL_COLORS[key] }}>{label}</span>
-              <span className="font-mono tabular-nums">{entry.value_pct.toFixed(0)}%</span>
-            </span>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 3 Key Metrics
-// ---------------------------------------------------------------------------
-
-function KeyMetrics({
-  highRiskPct,
   totalValueMxn,
   totalContracts,
   gtCasesCount,
+  lang,
 }: {
-  highRiskPct: number | null
+  national: PHINational
   totalValueMxn: number | null
   totalContracts: number | null
   gtCasesCount: number
+  lang: 'en' | 'es'
 }) {
   const { t } = useTranslation('reportcard')
+  const tier: TierKey = gradeToTierKey(national.grade)
+  const tierStyle = TIER_STYLES[tier]
+  const score = Math.round(national.phi_composite_score ?? 0)
+  const tierLabel = t(`tierLabel.${tier}`)
 
-  const oneIn = highRiskPct !== null ? highRiskToOneIn(highRiskPct) : null
-  const valueTrillions = totalValueMxn !== null ? formatTrillions(totalValueMxn) : null
-  const contractsFormatted = totalContracts !== null ? totalContracts.toLocaleString() : null
+  const valueLabel = totalValueMxn != null ? formatDualCurrency(totalValueMxn) : null
+  const contractsLabel = totalContracts != null ? totalContracts.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US') : null
 
-  const metrics = [
-    {
-      id: 'risk',
-      title: oneIn !== null ? t('metricRiskTitle', { n: oneIn }) : '--',
-      subtitle: t('metricRiskSubtitle'),
-      note: t('metricRiskNote'),
-      accent: '#ef4444',
-    },
-    {
-      id: 'value',
-      title: valueTrillions !== null ? t('metricValueTitle', { value: valueTrillions }) : '--',
-      subtitle: t('metricValueSubtitle'),
-      note: t('metricValueNote', { contracts: contractsFormatted ?? '3.1M' }),
-      accent: 'var(--color-oecd)',
-    },
-    {
-      id: 'cases',
-      title: t('metricCasesTitle', { count: gtCasesCount }),
-      subtitle: t('metricCasesSubtitle'),
-      note: t('metricCasesNote'),
-      accent: '#f59e0b',
-    },
-  ]
+  const ariaLabel =
+    lang === 'en'
+      ? `National procurement health score: ${score} out of 100, ${tierLabel} tier.`
+      : `Indicador nacional de salud de compras: ${score} de 100, nivel ${tierLabel}.`
 
   return (
-    <motion.div
-      className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"
-      variants={cardContainerVariants}
-      initial="hidden"
-      animate="show"
+    <section
+      className="mb-10 rounded-sm overflow-hidden relative"
+      style={{ border: `1px solid ${tierStyle.border}`, borderLeftWidth: 4, borderLeftColor: tierStyle.color, backgroundColor: tierStyle.bg }}
+      role="region"
+      aria-label={ariaLabel}
     >
-      {metrics.map((m) => (
-        <motion.div
-          key={m.id}
-          variants={cardItemVariants}
-          className="surface-card p-5"
-          style={{ borderLeftWidth: 3, borderLeftColor: m.accent }}
+      <div className="px-6 py-8 md:px-10 md:py-10">
+        <p
+          className="font-mono text-[10px] uppercase tracking-[0.2em] mb-3"
+          style={{ color: 'var(--color-text-muted)' }}
         >
-          <p className="text-lg md:text-xl font-bold leading-tight mb-2 text-text-primary">
-            {m.title}
-          </p>
-          <p className="text-sm leading-relaxed mb-3 text-text-secondary">
-            {m.subtitle}
-          </p>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.1em]" style={{ color: m.accent }}>
-            {m.note}
-          </p>
-        </motion.div>
-      ))}
-    </motion.div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// What This Means (plain-language bullets)
-// ---------------------------------------------------------------------------
-
-function WhatThisMeans({
-  highRiskPct,
-  worstSectors,
-}: {
-  highRiskPct: number | null
-  worstSectors: string[]
-}) {
-  const { t } = useTranslation('reportcard')
-
-  const bullet1Key = highRiskPct !== null && highRiskPct > 15
-    ? 'bullet1_poor'
-    : 'bullet1_ok'
-
-  const sectorNames = worstSectors.slice(0, 3).join(', ')
-
-  const n = highRiskPct && highRiskPct > 0 ? Math.round(100 / highRiskPct) : 9
-
-  const bullets = [
-    t(bullet1Key, { n }),
-    t('bullet2', { sectors: sectorNames }),
-    t('bullet3'),
-  ]
-
-  return (
-    <section className="mb-10">
-      <h2 className="text-lg font-serif font-bold mb-4 text-text-primary">
-        {t('whatThisMeansTitle')}
-      </h2>
-      <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-3">
-          {t('findingKicker')}
+          {t('heroKicker')}
         </p>
-        <ul className="space-y-3" role="list">
-          {bullets.map((bullet, i) => (
-            <li key={i} className="flex gap-3 text-sm leading-relaxed text-text-secondary">
-              <span
-                className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold bg-risk-high/10 text-risk-high border border-risk-high/20"
-                aria-hidden="true"
-              >
-                {i + 1}
-              </span>
-              {bullet}
-            </li>
-          ))}
-        </ul>
+
+        <div className="flex flex-col sm:flex-row sm:items-baseline gap-3 sm:gap-6 mb-4">
+          <span
+            className="leading-none tabular-nums font-extrabold italic"
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 'clamp(72px, 12vw, 128px)',
+              color: tierStyle.color,
+              letterSpacing: '-0.02em',
+            }}
+            aria-hidden="true"
+          >
+            {score}
+            <span className="text-[0.32em] font-mono not-italic font-bold ml-1 align-super" style={{ opacity: 0.55 }}>
+              /100
+            </span>
+          </span>
+
+          <h1
+            className="text-xl md:text-2xl leading-snug max-w-[36ch]"
+            style={{ fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic', color: 'var(--color-text-secondary)' }}
+          >
+            {t('corteHeadlinePrefix')}
+            {' '}
+            <span style={{ color: OCHRE, fontWeight: 600 }}>{tierLabel}</span>
+            {t('corteHeadlineSuffix')}
+          </h1>
+        </div>
+
+        {(valueLabel || contractsLabel) && (
+          <p className="font-mono text-[11px] tracking-[0.02em] text-text-muted">
+            {t('corteCaption', {
+              value: valueLabel ?? '—',
+              contracts: contractsLabel ?? '—',
+              cases: gtCasesCount,
+            })}
+          </p>
+        )}
       </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Sector Breakdown -- horizontal bar chart
+// Verdict block — three FT-bullet BenchmarkRows against OECD ceilings.
+// --color-oecd stays the sanctioned reference token (do not amber it).
 // ---------------------------------------------------------------------------
 
-function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
-  const { t, i18n } = useTranslation('reportcard')
-  const navigate = useNavigate()
+function VerdictBlock({
+  national,
+  highRiskPct,
+  lang,
+}: {
+  national: PHINational
+  highRiskPct: number | null
+  lang: 'en' | 'es'
+}) {
+  const { t } = useTranslation('reportcard')
 
-  // Sort worst -> best by high+critical pct
+  const daIndicator = national.indicators?.['direct_award_rate']
+  const sbIndicator = national.indicators?.['single_bid_rate']
+  const daRate = daIndicator?.value ?? (national.competition_by_value != null ? 100 - national.competition_by_value : null)
+  const sbRate = sbIndicator?.value ?? null
+
+  const MAX_DELTA = 0.5
+
+  const rows: { key: string; label: string; value: number; benchmark: number; benchmarkLabel: string }[] = []
+  if (daRate != null) {
+    rows.push({
+      key: 'da',
+      label: t('oecdDALabel'),
+      value: daRate / 100,
+      benchmark: 0.25,
+      benchmarkLabel: lang === 'es' ? 'techo OCDE 25%' : 'OECD 25% ceiling',
+    })
+  }
+  if (sbRate != null) {
+    rows.push({
+      key: 'sb',
+      label: t('oecdSBLabel'),
+      value: sbRate / 100,
+      benchmark: 0.15,
+      benchmarkLabel: lang === 'es' ? 'techo OCDE 15%' : 'OECD 15% ceiling',
+    })
+  }
+  if (highRiskPct != null) {
+    rows.push({
+      key: 'risk',
+      label: t('statHighRiskRate'),
+      value: highRiskPct / 100,
+      benchmark: 0.15,
+      benchmarkLabel: lang === 'es' ? 'banda OCDE 2–15%' : 'OECD 2–15% band',
+    })
+  }
+
+  if (rows.length === 0) return null
+
+  return (
+    <section className="mb-10">
+      <p className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--color-oecd)' }}>
+        {t('oecdContextTitle')}
+      </p>
+      <h2 className="text-lg font-serif font-bold mb-3 text-text-primary">
+        {t('verdictTitle')}
+      </h2>
+      <div className="rounded-sm border border-border bg-background/40 p-4 space-y-0.5">
+        {rows.map((r) => (
+          <BenchmarkRow key={r.key} label={r.label} value={r.value} benchmark={r.benchmark} benchmarkLabel={r.benchmarkLabel} maxDelta={MAX_DELTA} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Sector register — 12 FT deviation bars anchored on the OECD 25%
+// direct-award line (bars extend left/right of the reference rule),
+// sector-colored via SECTOR_COLORS. Each row links to /sectors/:id
+// through EntityIdentityChip — the sanctioned entity-link pattern.
+// ---------------------------------------------------------------------------
+
+const OECD_DA_ANCHOR_PCT = 25
+const SECTOR_MAX_DELTA_FRAC = 0.5
+
+function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 'es' }) {
+  const sectorMeta = SECTORS.find((s) => s.id === sector.sector_id)
+  const color = SECTOR_COLORS[sector.sector_name] ?? sectorMeta?.color ?? SECTOR_COLORS.otros
+  const displayName = getSectorName(sector.sector_name, lang)
+
+  const daPct = sector.direct_award_rate_by_value ?? (sector.competition_by_value != null ? 100 - sector.competition_by_value : 0)
+  const delta = daPct / 100 - OECD_DA_ANCHOR_PCT / 100
+  const isAbove = delta > 0
+  const barFrac = Math.min(Math.abs(delta) / SECTOR_MAX_DELTA_FRAC, 1)
+  const barWidthPct = barFrac * 50
+  const absPp = Math.abs(Math.round(delta * 100))
+  const arrow = isAbove ? '↑' : '↓'
+
+  const tier = gradeToTierKey(sector.grade)
+  const tierStyle = TIER_STYLES[tier]
+
+  const rowAriaLabel =
+    lang === 'en'
+      ? `${displayName}: ${daPct.toFixed(1)}% direct award by value, ${absPp} points ${isAbove ? 'above' : 'below'} the OECD 25% ceiling.`
+      : `${displayName}: ${daPct.toFixed(1)}% de adjudicación directa por valor, ${absPp} puntos ${isAbove ? 'por encima' : 'por debajo'} del techo OCDE de 25%.`
+
+  return (
+    <div className="flex items-center gap-3 py-1.5 border-b border-border/30 last:border-0" role="row" aria-label={rowAriaLabel}>
+      <div className="w-36 sm:w-44 flex-shrink-0">
+        <EntityIdentityChip type="sector" id={sector.sector_id} name={displayName} size="sm" />
+      </div>
+
+      <div className="flex-1 relative min-w-0" style={{ height: 20 }} aria-hidden="true">
+        {/* Track */}
+        <div className="absolute left-0 right-0" style={{ top: '50%', height: 3, transform: 'translateY(-50%)', background: '#27272a', borderRadius: 2 }} />
+        {/* OECD 25% anchor tick — center of the diverging scale */}
+        <div className="absolute" style={{ left: '50%', top: 2, bottom: 2, width: 1.5, background: 'var(--color-oecd)', opacity: 0.7 }} />
+        {barWidthPct > 0 && (
+          <div
+            className="absolute"
+            style={{
+              top: '50%',
+              transform: 'translateY(-50%)',
+              height: 7,
+              borderRadius: 1,
+              background: color,
+              opacity: 0.85,
+              ...(isAbove ? { left: '50%', width: `${barWidthPct}%` } : { left: `${50 - barWidthPct}%`, width: `${barWidthPct}%` }),
+            }}
+          />
+        )}
+      </div>
+
+      <span className="text-[10px] font-mono shrink-0 text-right tabular-nums leading-tight w-16" style={{ color: isAbove ? '#c41e3a' : '#52525b' }}>
+        {arrow} {absPp}pp
+      </span>
+
+      <span className="text-[10px] font-mono tabular-nums shrink-0 text-right w-12" style={{ color: 'var(--color-text-muted)' }}>
+        {daPct.toFixed(1)}%
+      </span>
+
+      <span
+        className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold shrink-0"
+        style={{ color: tierStyle.color, backgroundColor: tierStyle.bg, border: `1px solid ${tierStyle.border}` }}
+      >
+        {Math.round(sector.phi_composite_score ?? 0)}
+      </span>
+    </div>
+  )
+}
+
+function SectorRegister({ sectors, lang }: { sectors: PHISector[]; lang: 'en' | 'es' }) {
+  const { t } = useTranslation('reportcard')
+
   const sorted = useMemo(() => {
     return [...sectors].sort((a, b) => {
-      const aHighPct =
-        (a.risk_distribution?.critical?.count_pct ?? 0) +
-        (a.risk_distribution?.high?.count_pct ?? 0)
-      const bHighPct =
-        (b.risk_distribution?.critical?.count_pct ?? 0) +
-        (b.risk_distribution?.high?.count_pct ?? 0)
-      return bHighPct - aHighPct
+      const aDa = a.direct_award_rate_by_value ?? (a.competition_by_value != null ? 100 - a.competition_by_value : 0)
+      const bDa = b.direct_award_rate_by_value ?? (b.competition_by_value != null ? 100 - b.competition_by_value : 0)
+      return bDa - aDa
     })
   }, [sectors])
-
-  // Find max for bar scaling
-  const maxPct = useMemo(() => {
-    return sorted.reduce((max, s) => {
-      const pct =
-        (s.risk_distribution?.critical?.count_pct ?? 0) +
-        (s.risk_distribution?.high?.count_pct ?? 0)
-      return Math.max(max, pct)
-    }, 1)
-  }, [sorted])
-
-  const isES = i18n.language?.startsWith('es')
 
   return (
     <section className="mb-10">
       <h2 className="text-lg font-serif font-bold mb-1 text-text-primary">
         {t('sectorTitle')}
       </h2>
-      <p className="text-sm mb-5 text-text-muted">
-        {t('sectorSubtitle')}
+      <p className="text-sm mb-4 text-text-muted">
+        {lang === 'en'
+          ? 'Adjudication share versus the OECD 25% direct-award ceiling — bars right of the line exceed it.'
+          : 'Participación de adjudicación directa contra el techo OCDE de 25% — barras a la derecha de la línea lo exceden.'}
       </p>
-
-      <div className="surface-card overflow-hidden">
-        <div className="divide-y divide-border/60">
-          {sorted.map((sector, idx) => {
-            const sectorMeta = SECTORS.find((s) => s.id === sector.sector_id)
-            const color = SECTOR_COLORS[sector.sector_name] ?? sectorMeta?.color ?? SECTOR_COLORS.otros
-            const displayName = getSectorName(sector.sector_name, isES ? 'es' : 'en')
-
-            const critPct = sector.risk_distribution?.critical?.count_pct ?? 0
-            const highPct = sector.risk_distribution?.high?.count_pct ?? 0
-            const combinedPct = critPct + highPct
-            const barWidth = maxPct > 0 ? (combinedPct / maxPct) * 100 : 0
-
-            const sectorMx = gradeToMexican(sector.grade, sector.phi_composite_score)
-            const sectorScore = sector.phi_composite_score ?? 0
-            const sectorDisplayLabel = isES ? sectorMx.label : sectorMx.labelEN
-
-            return (
-              <motion.div
-                key={sector.sector_id}
-                className={`flex items-center gap-4 px-5 py-3 transition-colors cursor-default ${
-                  idx % 2 === 0 ? 'bg-transparent' : 'bg-background-elevated'
-                }`}
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.04, duration: 0.35 }}
-              >
-                {/* Traffic light dot + sector colour dot + name */}
-                <div className="flex items-center gap-2.5 w-40 flex-shrink-0">
-                  <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{
-                      backgroundColor: sectorMx.color,
-                      boxShadow: `0 0 4px ${sectorMx.color}40`,
-                    }}
-                    aria-hidden="true"
-                    title={sectorMx.semaforo}
-                  />
-                  <span
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: color }}
-                    aria-hidden="true"
-                  />
-                  <span className="text-sm font-medium truncate text-text-secondary">
-                    {displayName}
-                  </span>
-                </div>
-
-                {/* Bar */}
-                <div className="flex-1 flex items-center gap-3">
-                  <div
-                    className="flex-1"
-                    role="meter"
-                    aria-valuenow={combinedPct}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`${displayName}: ${combinedPct.toFixed(1)}% ${t('sectorHighRisk')}`}
-                  >
-                    <DotBar
-                      value={barWidth}
-                      max={100}
-                      color={color}
-                      emptyColor="var(--color-background-elevated)"
-                      emptyStroke="var(--color-border-hover)"
-                      dots={30}
-                      dotR={3}
-                      dotGap={8}
-                    />
-                  </div>
-
-                  {/* Pct label */}
-                  <span
-                    className="text-sm font-bold font-mono tabular-nums w-14 text-right flex-shrink-0"
-                    style={{ color: combinedPct > 20 ? '#ef4444' : combinedPct > 10 ? '#f59e0b' : '#a1a1aa' }}
-                  >
-                    {combinedPct.toFixed(1)}%
-                  </span>
-                </div>
-
-                {/* Score + label badge */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span
-                    className="text-sm font-bold font-mono tabular-nums w-8 text-right"
-                    style={{ color: sectorMx.color }}
-                    title={`${Math.round(sectorScore)}/100`}
-                  >
-                    {Math.round(sectorScore)}
-                  </span>
-                  <span
-                    className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold"
-                    style={{
-                      color: sectorMx.color,
-                      backgroundColor: sectorMx.bg,
-                      border: `1px solid ${sectorMx.border}`,
-                    }}
-                    title={sectorDisplayLabel}
-                  >
-                    {sectorDisplayLabel}
-                  </span>
-                </div>
-
-                {/* Go to sector link */}
-                <button
-                  onClick={() => navigate(`/sectors/${sector.sector_id}`)}
-                  className="text-[10px] font-mono uppercase tracking-wide flex-shrink-0 transition-colors text-risk-high hover:text-accent"
-                  aria-label={`${t('sectorGoTo')}: ${displayName}`}
-                >
-                  {t('sectorGoTo')} &rarr;
-                </button>
-              </motion.div>
-            )
-          })}
-        </div>
+      <div className="surface-card p-4" role="table" aria-label={t('sectorTitle')}>
+        {sorted.map((sector) => (
+          <SectorDeviationRow key={sector.sector_id} sector={sector} lang={lang} />
+        ))}
       </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Trend section -- "Getting better or worse?"
+// Trend — compact annotated line of phi_composite_score by year
+// (Reuters annotated-time-series grammar: direct-labeled endpoints).
 // ---------------------------------------------------------------------------
 
-function TrendSection() {
+function TrendLine({ years, lang }: { years: TrendYear[]; lang: 'en' | 'es' }) {
   const { t } = useTranslation('reportcard')
+
+  const points = useMemo(() => years.filter((y) => y.phi_composite_score != null), [years])
+
+  const trendDirection = useMemo((): 'improving' | 'stable' | 'worsening' => {
+    if (points.length < 4) return 'stable'
+    const recent = points.slice(-3)
+    const prior = points.slice(-6, -3)
+    if (prior.length === 0) return 'stable'
+    const avgRecent = recent.reduce((s, y) => s + (y.phi_composite_score ?? 0), 0) / recent.length
+    const avgPrior = prior.reduce((s, y) => s + (y.phi_composite_score ?? 0), 0) / prior.length
+    const delta = avgRecent - avgPrior
+    if (delta > 2) return 'improving'
+    if (delta < -2) return 'worsening'
+    return 'stable'
+  }, [points])
+
+  const trendConfig = {
+    improving: { color: '#5e7fa8', labelKey: 'trendImproving' as const },
+    stable: { color: 'var(--color-text-muted)', labelKey: 'trendStable' as const },
+    worsening: { color: 'var(--color-risk-critical)', labelKey: 'trendWorsening' as const },
+  }[trendDirection]
+
+  if (points.length < 2) return null
+
+  const W = 640
+  const H = 120
+  const PAD_L = 32
+  const PAD_R = 56
+  const PAD_T = 16
+  const PAD_B = 20
+
+  const scores = points.map((p) => p.phi_composite_score ?? 0)
+  const minY = Math.max(0, Math.min(...scores) - 5)
+  const maxY = Math.min(100, Math.max(...scores) + 5)
+  const yRange = Math.max(1, maxY - minY)
+
+  const xFor = (i: number) => PAD_L + (i / (points.length - 1)) * (W - PAD_L - PAD_R)
+  const yFor = (score: number) => H - PAD_B - ((score - minY) / yRange) * (H - PAD_T - PAD_B)
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xFor(i).toFixed(1)} ${yFor(p.phi_composite_score ?? 0).toFixed(1)}`).join(' ')
+
+  const first = points[0]
+  const last = points[points.length - 1]
+
+  const ariaLabel =
+    lang === 'en'
+      ? `National PHI score trend, ${first.year} to ${last.year}: from ${Math.round(first.phi_composite_score ?? 0)} to ${Math.round(last.phi_composite_score ?? 0)}.`
+      : `Tendencia del indicador PHI nacional, ${first.year} a ${last.year}: de ${Math.round(first.phi_composite_score ?? 0)} a ${Math.round(last.phi_composite_score ?? 0)}.`
+
+  return (
+    <section className="mb-10">
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="text-lg font-serif font-bold text-text-primary">
+          {t('trendTitle')}
+        </h2>
+        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em]" style={{ color: trendConfig.color }}>
+          {t(trendConfig.labelKey)}
+        </span>
+      </div>
+      <div className="surface-card p-4 overflow-x-auto">
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={ariaLabel} preserveAspectRatio="xMinYMid meet">
+          {/* Baseline */}
+          <line x1={PAD_L} y1={H - PAD_B} x2={W - PAD_R} y2={H - PAD_B} stroke="var(--color-border)" strokeWidth={1} />
+          {/* Line */}
+          <path d={pathD} fill="none" stroke={trendConfig.color} strokeWidth={2} />
+          {/* First point + label */}
+          <circle cx={xFor(0)} cy={yFor(first.phi_composite_score ?? 0)} r={2.5} fill={trendConfig.color} />
+          <text x={xFor(0)} y={yFor(first.phi_composite_score ?? 0) - 8} fontSize={9} fontFamily="var(--font-family-mono)" textAnchor="start" fill="var(--color-text-muted)">
+            {first.year}
+          </text>
+          {/* Last point + direct-labeled endpoint */}
+          <circle cx={xFor(points.length - 1)} cy={yFor(last.phi_composite_score ?? 0)} r={3} fill={trendConfig.color} />
+          <text
+            x={xFor(points.length - 1) + 6}
+            y={yFor(last.phi_composite_score ?? 0) + 3}
+            fontSize={11}
+            fontFamily="var(--font-family-mono)"
+            fontWeight={700}
+            textAnchor="start"
+            fill={trendConfig.color}
+          >
+            {Math.round(last.phi_composite_score ?? 0)}
+          </text>
+          <text
+            x={xFor(points.length - 1) + 6}
+            y={yFor(last.phi_composite_score ?? 0) + 14}
+            fontSize={8}
+            fontFamily="var(--font-family-mono)"
+            textAnchor="start"
+            fill="var(--color-text-muted)"
+          >
+            {last.year}
+          </text>
+        </svg>
+      </div>
+    </section>
+  )
+}
+
+function TrendSection() {
+  const { i18n } = useTranslation('reportcard')
+  const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
 
   const { data } = useQuery<{ years: TrendYear[] }>({
     queryKey: ['phi-trend'],
@@ -954,92 +490,9 @@ function TrendSection() {
   })
 
   const years: TrendYear[] = data?.years ?? []
+  if (years.length < 2) return null
 
-  const trendDirection = useMemo((): 'improving' | 'stable' | 'worsening' => {
-    if (years.length < 4) return 'stable'
-    const recent = years.slice(-3)
-    const prior = years.slice(-6, -3)
-    if (prior.length === 0) return 'stable'
-    const avgRecent = recent.reduce((s, y) => s + (y.competition_by_value ?? y.competition_rate ?? 0), 0) / recent.length
-    const avgPrior = prior.reduce((s, y) => s + (y.competition_by_value ?? y.competition_rate ?? 0), 0) / prior.length
-    const delta = avgRecent - avgPrior
-    if (delta > 2) return 'improving'
-    if (delta < -2) return 'worsening'
-    return 'stable'
-  }, [years])
-
-  const trendConfig = {
-    improving: { icon: '\u2191', color: '#a1a1aa', labelKey: 'trendImproving', sentenceKey: 'trendSentence_improving' },
-    stable:    { icon: '\u2192', color: 'var(--color-text-muted)', labelKey: 'trendStable',    sentenceKey: 'trendSentence_stable'    },
-    worsening: { icon: '\u2193', color: 'var(--color-risk-critical)', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
-  }[trendDirection]
-
-  const earliestYear = years.length > 0 ? years[0].year : 2010
-
-  return (
-    <section className="mb-10">
-      <h2 className="text-lg font-serif font-bold mb-4 text-text-primary">
-        {t('trendTitle')}
-      </h2>
-
-      <div className="surface-card p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        {/* Big arrow */}
-        <div className="flex-shrink-0 text-center">
-          <span
-            className="block text-7xl font-bold leading-none"
-            style={{ color: trendConfig.color }}
-            aria-hidden="true"
-          >
-            {trendConfig.icon}
-          </span>
-          <span
-            className="block text-sm font-bold font-mono mt-1"
-            style={{ color: trendConfig.color }}
-          >
-            {t(trendConfig.labelKey)}
-          </span>
-        </div>
-
-        {/* Sentence + small year markers */}
-        <div className="flex-1 min-w-0">
-          <p className="text-base leading-relaxed mb-4 text-text-secondary">
-            {t(trendConfig.sentenceKey, { year: earliestYear })}
-          </p>
-
-          {/* Compact year-grade timeline ribbon */}
-          {years.length > 0 && (
-            <div className="flex items-center gap-1 overflow-x-auto pb-1">
-              <span className="text-[10px] font-mono text-text-muted mr-1 flex-shrink-0">
-                {t('trendSince', { year: earliestYear })}:
-              </span>
-              {years.map((y) => {
-                const ymx = gradeToMexican(y.grade, y.phi_composite_score)
-                const yScore = y.phi_composite_score ?? 0
-                return (
-                  <div key={y.year} className="flex flex-col items-center flex-shrink-0">
-                    <span
-                      className="inline-flex items-center justify-center w-7 h-6 rounded-md text-[10px] font-bold font-mono tabular-nums"
-                      style={{
-                        color: ymx.color,
-                        backgroundColor: ymx.bg,
-                        border: `1px solid ${ymx.border}`,
-                      }}
-                      title={`${String(y.year)}: ${Math.round(yScore)}/100`}
-                    >
-                      {Math.round(yScore)}
-                    </span>
-                    <span className="text-[9px] font-mono mt-0.5 tabular-nums text-text-muted">
-                      {String(y.year).slice(2)}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  )
+  return <TrendLine years={years} lang={lang} />
 }
 
 // ---------------------------------------------------------------------------
@@ -1168,18 +621,6 @@ function ReportCard() {
 
   const { national, sectors } = phiData
 
-  // Compute worst sectors by high+critical rate
-  const sortedBySeverity = [...sectors].sort((a, b) => {
-    const aPct =
-      (a.risk_distribution?.critical?.count_pct ?? 0) +
-      (a.risk_distribution?.high?.count_pct ?? 0)
-    const bPct =
-      (b.risk_distribution?.critical?.count_pct ?? 0) +
-      (b.risk_distribution?.high?.count_pct ?? 0)
-    return bPct - aPct
-  })
-  const worstSectorNames = sortedBySeverity.slice(0, 3).map((s) => getSectorName(s.sector_name, lang))
-
   // High risk pct from PHI national risk_distribution or fast dashboard
   const highRiskPct: number | null = (() => {
     if (national.risk_distribution) {
@@ -1202,7 +643,7 @@ function ReportCard() {
   return (
     <main className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Page header — NATIONAL SYSTEM HEALTH */}
+        {/* Page header */}
         <header className="mb-8 pb-5 border-b border-border">
           <div className="flex items-center gap-2 mb-2">
             <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
@@ -1211,52 +652,29 @@ function ReportCard() {
             </p>
           </div>
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-text-primary">
-            {t('pageTitle')}
+            {t('corteTitle')}
           </h1>
           <p className="text-sm mt-2 text-text-secondary leading-relaxed">
             {t('heroIntro')}
           </p>
-          <p className="text-[11px] mt-1 text-text-muted font-mono">
-            {t('pageSubtitleV2')}
-          </p>
         </header>
 
-        {/* Hero impact: dark card with key numbers */}
-        <HeroImpactSection national={national} totalValueMxn={totalValueMxn} />
-
-        {/* Hero: numeric score + semaforo + headline */}
-        <HeroSection national={national} highRiskPct={highRiskPct} />
-
-        {/* Clear separator between national score and sector breakdown */}
-        <div className="relative my-10" aria-hidden="true">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-background px-4 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-text-muted">
-              {t('sectorBreakdownKicker')}
-            </span>
-          </div>
-        </div>
-
-        {/* OECD context panel */}
-        <OECDContextPanel national={national} />
-
-        {/* 3 key metrics in plain language */}
-        <KeyMetrics
-          highRiskPct={highRiskPct}
+        {/* Hero: national PHI score sledgehammer + tier headline */}
+        <NationalHero
+          national={national}
           totalValueMxn={totalValueMxn}
           totalContracts={totalContracts}
           gtCasesCount={GT_CASES_COUNT}
+          lang={lang}
         />
 
-        {/* Plain-language bullets */}
-        <WhatThisMeans highRiskPct={highRiskPct} worstSectors={worstSectorNames} />
+        {/* Verdict block: three FT-bullet OECD benchmarks */}
+        <VerdictBlock national={national} highRiskPct={highRiskPct} lang={lang} />
 
-        {/* Sector breakdown: horizontal bar chart */}
-        <SectorBreakdown sectors={sectors} />
+        {/* Sector register: deviation bars anchored on OECD 25% */}
+        <SectorRegister sectors={sectors} lang={lang} />
 
-        {/* Trend: better or worse? */}
+        {/* Trend: compact annotated line */}
         <TrendSection />
 
         {/* Methodology link */}

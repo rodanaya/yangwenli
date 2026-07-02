@@ -2,11 +2,14 @@
   "kicker": "INSTITUCIONES · DÓNDE ESTÁ EL DINERO DE ALTO RIESGO",
   "meta": "FEDERAL · 2018–2025 · v0.8.5",
   "headline": {
-    "before": "Cinco dependencias concentran",
-    "accent": "2.7 billones de pesos en adjudicaciones de alto riesgo."
+    "beforeNone": "De {{total}} compradores federales, ",
+    "accentNone": "ninguno alcanza Excelente",
+    "afterNone": " — y {{failing}} operan en deficiencia o peor.",
+    "beforeSome": "De {{total}} compradores federales, solo ",
+    "accentSome": "{{n}} alcanzan Excelente",
+    "afterSome": " — y {{failing}} operan en deficiencia o peor."
   },
-  "lede": "El IMSS por sí solo acumula 996 mil millones de MXN en contratos de riesgo alto y crítico — más de un tercio de la exposición combinada del top cinco y más que Pemex Exploración, la siguiente mayor. Su tasa de adjudicación directa es del 68 por ciento, más del doble del techo de la OCDE. Pemex, CFE, ISSSTE y la Secretaría de Infraestructura completan el top cinco. El extinto INSABI — disuelto en 2023 pero aún con 3,560 contratos en los libros — tiene dos de cada cinco contratos marcados como de alto riesgo, una proporción del 40 por ciento.",
-  "lede_none": "El IMSS por sí solo acumula 996 mil millones de MXN en contratos de riesgo alto y crítico — más de un tercio del top cinco. Su tasa de adjudicación directa es del 68 por ciento, más del doble del techo de la OCDE.",
+  "lede": "El {{name}} concentra {{money}} en contratos de riesgo alto y crítico — la exposición más alta del padrón federal. La posición en la placa de abajo es el indicador de riesgo; la altura del trazo es el dinero en riesgo.",
   "podiumAriaLabel": "#{{rank}}: {{name}}, puntuación {{score}}",
   "tableKicker": "Tabla general",
   "tableHeadline": "Clasificación completa — {{total}} instituciones",
@@ -16,7 +19,7 @@
   },
   "champions": {
     "kicker": "CUADRO DE HONOR",
-    "headline": "Cinco instituciones dignas de replicar",
+    "headline": "Cuadro de honor — con reservas",
     "sub": "Estas agencias encabezan la clasificación en apertura, precios y diversidad de proveedores. Demuestran que se puede."
   },
   "redFlags": {
@@ -40,8 +43,19 @@
     "process": "Alertas Externas",
     "external": "Independencia de Proveedores"
   },
+  "boleta": {
+    "title": "La boleta — cinco pilares",
+    "ariaLabel": "Boleta de pilares de {{name}}"
+  },
+  "peerPercentileLine": "Peor que el {{pct}}% de su sector",
+  "confidenceLine": "Confianza: {{band}}",
+  "p90Line": "Indicador de riesgo P90 {{score}}",
+  "redSignalsLine": "{{n}} señales en rojo",
+  "moneyAtRiskLine": "{{money}} en riesgo",
+  "weakestPillarLine": "Peor pilar: {{label}} — {{value}}/{{max}}",
   "expandRow": "Mostrar desglose de pilares",
   "collapseRow": "Ocultar desglose de pilares",
+  "openDossier": "Abrir expediente completo",
   "finding": {
     "critical": "Solo el {{pct}}% de instituciones alcanza nivel Satisfactorio o superior. {{failing}} se encuentran en nivel Crítico.",
     "normal": "Solo el {{pct}}% de las {{total}} instituciones evaluadas alcanza nivel Satisfactorio o superior."
@@ -93,6 +107,8 @@
     "grade": "Nivel",
     "score": "Puntuación",
     "pillars": "Pilares",
+    "weakPillar": "Pilar débil",
+    "moneyAtRisk": "Dinero en riesgo",
     "trend": "Tendencia",
     "percentile": "Percentil Nacional"
   },
@@ -120,6 +136,8 @@
   "loadingShort": "Cargando…",
   "error": "Error al cargar las clasificaciones. Por favor, intente de nuevo.",
   "sortAriaLabel": "Ordenar por {{label}}",
+  "dossierLinkAriaLabel": "Abrir expediente completo de {{name}}",
+  "dossierLinkTitle": "Abrir expediente completo",
   "methodologyFootnote": "RUBLI Índice de Salud de Contrataciones v0.8.5 · COMPRANET 2002–2025 · Metodología OCDE / FMI",
   "tabs": {
     "ranking": "Ranking",
@@ -130,5 +148,14 @@
     "kicker": "Dinero en riesgo",
     "headline": "Las mayores exposiciones que la calificación no revela",
     "sub": "Ordenado por el valor que fluye por contratos de riesgo alto y crítico — un eje distinto de la transparencia. Instituciones con 100+ contratos."
+  },
+  "plate": {
+    "eyebrow": "PLACA · I — EL ESPECTRO DEL PADRÓN",
+    "emptyExcelente": "Ninguna institución federal alcanza esta banda",
+    "medianTag": "MEDIANA {{score}}",
+    "tooltipScore": "Puntuación {{score}}/100",
+    "tooltipContracts": "{{n}} contratos",
+    "unavailableSubnational": "El Espectro del Padrón solo grafica el tablero federal — las instituciones estatales y municipales tienen tamaños de muestra y procedimientos incomparables. Cambia al alcance Federal para ver la placa.",
+    "unavailableAll": "El Espectro del Padrón solo grafica el tablero federal. Cambia al alcance Federal para ver la placa."
   }
 }

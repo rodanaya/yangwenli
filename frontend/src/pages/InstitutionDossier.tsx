@@ -20,11 +20,13 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { institutionApi } from '@/api/client'
+import { institutionApi, scorecardApi } from '@/api/client'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 
 import { InstitutionHero } from '@/components/institution/InstitutionHero'
 import { InstitutionStatStrip } from '@/components/institution/InstitutionCommandPanel'
+import { PillarBoleta } from '@/components/institution/PillarBoleta'
+import { TIER_STYLES, gradeToTierKey } from '@/lib/tiers'
 import {
   InstitutionReading,
   InstitutionConcentration,
@@ -147,6 +149,13 @@ export default function InstitutionDossier() {
     retry: false,
   })
 
+  const { data: scorecard } = useQuery({
+    queryKey: ['institution-dossier', institutionId, 'scorecard'],
+    queryFn: () => scorecardApi.getInstitution(institutionId).catch(() => null),
+    enabled: validId,
+    staleTime: 5 * 60 * 1000,
+  })
+
   const { data: riskProfile } = useQuery({
     queryKey: ['institution-dossier', institutionId, 'risk-profile'],
     queryFn: () => institutionApi.getRiskProfile(institutionId),
@@ -266,6 +275,64 @@ export default function InstitutionDossier() {
       <div className="mt-6">
         <InstitutionStatStrip institution={institution} timeline={timelineForGrid} lang={lang} />
       </div>
+
+      {/* §0 — La Boleta: the transparency scorecard verdict (closes the league→dossier continuity break) */}
+      {scorecard && (
+        <div className="mt-12">
+          <section id="boleta" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="boleta"
+              eyebrow={lang === 'es' ? 'La boleta' : 'The scorecard'}
+              title={lang === 'es' ? 'La calificación de transparencia' : 'The transparency scorecard'}
+              accent={sectorAccent}
+            />
+            {(() => {
+              const tierKey = gradeToTierKey(scorecard.grade)
+              const boletaColor = TIER_STYLES[tierKey].color
+              const TIER_LABEL_EN: Record<string, string> = {
+                Excelente: 'Excellent', Satisfactorio: 'Satisfactory', Regular: 'Adequate', Deficiente: 'Deficient', 'Crítico': 'Critical',
+              }
+              const tierLabel = lang === 'es' ? tierKey : (TIER_LABEL_EN[tierKey] ?? tierKey)
+              return (
+                <div className="grid gap-8 sm:grid-cols-[auto_1fr] items-start">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-baseline gap-1.5">
+                      <span
+                        className="tabular-nums leading-none"
+                        style={{ fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: '56px', color: boletaColor }}
+                      >
+                        {scorecard.total_score.toFixed(1)}
+                      </span>
+                      <span className="font-mono text-text-muted text-sm">/100</span>
+                    </div>
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] self-start"
+                      style={{ backgroundColor: `color-mix(in srgb, ${boletaColor} 12%, transparent)`, border: `1px solid color-mix(in srgb, ${boletaColor} 35%, transparent)`, color: boletaColor }}
+                    >
+                      {tierLabel}
+                    </span>
+                    {scorecard.national_percentile != null && (
+                      <p className="text-[11px] font-mono text-text-muted tabular-nums">
+                        {lang === 'es'
+                          ? `Percentil nacional ${Math.round(scorecard.national_percentile * 100)}`
+                          : `National percentile ${Math.round(scorecard.national_percentile * 100)}`}
+                      </p>
+                    )}
+                    {scorecard.peer_percentile_sector != null && (
+                      <p className="text-[11px] font-mono text-text-muted tabular-nums">
+                        {lang === 'es'
+                          ? `Peor que el ${Math.round((1 - scorecard.peer_percentile_sector) * 100)}% de su sector`
+                          : `Worse than ${Math.round((1 - scorecard.peer_percentile_sector) * 100)}% of its sector`}
+                      </p>
+                    )}
+                  </div>
+                  <PillarBoleta item={scorecard} />
+                </div>
+              )
+            })()}
+          </section>
+        </div>
+      )}
 
       {/* §1 — The reading: why the two seals read as they do */}
       <div className="mt-12">

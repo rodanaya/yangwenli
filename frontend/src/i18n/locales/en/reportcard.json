@@ -65,5 +65,17 @@
   "impactSummaryAria": "Procurement health impact summary",
   "gradeMethodology": {
     "body": "Grade based on 5 dimensions: direct award rate, vendor concentration, critical risk rate, threshold-splitting indicators, and data coverage. OECD recommends <25% direct awards — Mexico averaged 79.4% by procedure count (lower by contract value — see OECD context)."
+  },
+  "corteTitle": "El Corte Nacional",
+  "corteHeadlinePrefix": "Mexico's federal procurement system rates",
+  "corteHeadlineSuffix": " nationally.",
+  "corteCaption": "{{value}} analyzed across {{contracts}} federal contracts · {{cases}} documented cases feed the risk model",
+  "verdictTitle": "The verdict, against the OECD ceilings",
+  "tierLabel": {
+    "Excelente": "Excellent",
+    "Satisfactorio": "Satisfactory",
+    "Regular": "Fair",
+    "Deficiente": "Deficient",
+    "Critico": "Critical"
   }
 }
