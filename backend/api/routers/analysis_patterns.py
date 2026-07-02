@@ -279,51 +279,80 @@ def get_concentration_patterns(
         with get_db() as conn:
             cursor = conn.cursor()
 
-            cursor.execute("""
-                WITH inst_totals AS (
+            _has_precompute = cursor.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='institution_vendor_concentration'"
+            ).fetchone() is not None
+
+            if _has_precompute:
+                # Fast path: read precomputed value-concentration pairs
+                # (value share >= 10%) instead of a live GROUP BY over the
+                # 3M-row contracts table. Built by precompute_concentration.py.
+                cursor.execute("""
                     SELECT
-                        institution_id,
-                        COUNT(*) as total_contracts,
-                        SUM(amount_mxn) as total_value
-                    FROM contracts
-                    WHERE institution_id IS NOT NULL
-                      AND amount_mxn > 0
-                      AND amount_mxn < ?
-                    GROUP BY institution_id
-                    HAVING total_contracts >= ?
-                ),
-                vendor_shares AS (
+                        ivc.institution_id,
+                        ivc.vendor_id,
+                        ivc.vendor_contracts,
+                        ivc.vendor_value,
+                        ivc.avg_risk_score,
+                        ivc.total_contracts,
+                        ivc.total_value,
+                        ivc.value_share,
+                        v.name as vendor_name,
+                        i.name as institution_name
+                    FROM institution_vendor_concentration ivc
+                    JOIN vendors v ON ivc.vendor_id = v.id
+                    JOIN institutions i ON ivc.institution_id = i.id
+                    WHERE ivc.value_share >= ? AND ivc.total_contracts >= ?
+                    ORDER BY ivc.value_share DESC
+                    LIMIT ?
+                """, (min_share, min_contracts, limit))
+            else:
+                cursor.execute("""
+                    WITH inst_totals AS (
+                        SELECT
+                            institution_id,
+                            COUNT(*) as total_contracts,
+                            SUM(amount_mxn) as total_value
+                        FROM contracts
+                        WHERE institution_id IS NOT NULL
+                          AND amount_mxn > 0
+                          AND amount_mxn < ?
+                        GROUP BY institution_id
+                        HAVING total_contracts >= ?
+                    ),
+                    vendor_shares AS (
+                        SELECT
+                            c.institution_id,
+                            c.vendor_id,
+                            COUNT(*) as vendor_contracts,
+                            SUM(c.amount_mxn) as vendor_value,
+                            AVG(CASE WHEN c.risk_score IS NOT NULL THEN c.risk_score END) as avg_risk_score,
+                            t.total_contracts,
+                            t.total_value
+                        FROM contracts c
+                        JOIN inst_totals t ON c.institution_id = t.institution_id
+                        WHERE c.vendor_id IS NOT NULL AND c.amount_mxn > 0
+                        GROUP BY c.institution_id, c.vendor_id
+                    )
                     SELECT
-                        c.institution_id,
-                        c.vendor_id,
-                        COUNT(*) as vendor_contracts,
-                        SUM(c.amount_mxn) as vendor_value,
-                        AVG(CASE WHEN c.risk_score IS NOT NULL THEN c.risk_score END) as avg_risk_score,
-                        t.total_contracts,
-                        t.total_value
-                    FROM contracts c
-                    JOIN inst_totals t ON c.institution_id = t.institution_id
-                    WHERE c.vendor_id IS NOT NULL AND c.amount_mxn > 0
-                    GROUP BY c.institution_id, c.vendor_id
-                )
-                SELECT
-                    vs.institution_id,
-                    vs.vendor_id,
-                    vs.vendor_contracts,
-                    vs.vendor_value,
-                    vs.avg_risk_score,
-                    vs.total_contracts,
-                    vs.total_value,
-                    CAST(vs.vendor_value AS REAL) / vs.total_value * 100 as value_share,
-                    v.name as vendor_name,
-                    i.name as institution_name
-                FROM vendor_shares vs
-                JOIN vendors v ON vs.vendor_id = v.id
-                JOIN institutions i ON vs.institution_id = i.id
-                WHERE CAST(vs.vendor_value AS REAL) / vs.total_value * 100 >= ?
-                ORDER BY value_share DESC
-                LIMIT ?
-            """, (MAX_CONTRACT_VALUE, min_contracts, min_share, limit))
+                        vs.institution_id,
+                        vs.vendor_id,
+                        vs.vendor_contracts,
+                        vs.vendor_value,
+                        vs.avg_risk_score,
+                        vs.total_contracts,
+                        vs.total_value,
+                        CAST(vs.vendor_value AS REAL) / vs.total_value * 100 as value_share,
+                        v.name as vendor_name,
+                        i.name as institution_name
+                    FROM vendor_shares vs
+                    JOIN vendors v ON vs.vendor_id = v.id
+                    JOIN institutions i ON vs.institution_id = i.id
+                    WHERE CAST(vs.vendor_value AS REAL) / vs.total_value * 100 >= ?
+                    ORDER BY value_share DESC
+                    LIMIT ?
+                """, (MAX_CONTRACT_VALUE, min_contracts, min_share, limit))
 
             alerts = []
             for row in cursor.fetchall():

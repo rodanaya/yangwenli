@@ -1545,20 +1545,20 @@ def get_contract_price_analysis(contract_id: int = Path(...)):
                     elif amount > upper_fence:
                         is_outlier, outlier_type = True, "mild"
 
-            # Vendor comparison
+            # Vendor comparison (skipped on deploy DBs that omit vendor_price_profiles)
             vendor_comparison = None
-            if vendor_id:
+            if vendor_id and table_exists(cursor, "vendor_price_profiles"):
                 cursor.execute("""
-                    SELECT avg_contract_value, median_contract_value, std_dev, contract_count, price_trend
+                    SELECT avg_contract_value, median_contract_value, contract_count, price_trend
                     FROM vendor_price_profiles WHERE vendor_id = ? AND sector_id = ?
                 """, (vendor_id, sector_id))
 
                 vp = cursor.fetchone()
-                if vp and vp[3] >= 3:
+                if vp and vp[2] >= 3:
                     vendor_median = vp[1] or vp[0]
                     vendor_comparison = {
                         "avg_contract_value": vp[0], "median_contract_value": vp[1],
-                        "std_dev": vp[2], "contract_count": vp[3], "price_trend": vp[4],
+                        "std_dev": None, "contract_count": vp[2], "price_trend": vp[3],
                         "ratio_to_vendor_median": round(amount / vendor_median, 2) if vendor_median > 0 else 0
                     }
 

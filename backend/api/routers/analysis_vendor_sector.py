@@ -242,26 +242,50 @@ def get_institution_risk_factors(
         if not table_exists(cursor, "contract_z_features"):
             return InstitutionRiskFactorsResponse(data=[], total=0)
 
-        cursor.execute(
-            f"""
-            SELECT
-                i.id as institution_id,
-                i.name as institution_name,
-                COUNT(c.id) as contract_count,
-                COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
-                {avg_cols}
-            FROM contracts c
-            JOIN institutions i ON c.institution_id = i.id
-            JOIN contract_z_features zf ON c.id = zf.contract_id
-            WHERE COALESCE(c.amount_mxn, 0) <= ?
-                {sector_filter}
-            GROUP BY i.id, i.name
-            HAVING contract_count >= 10
-            ORDER BY avg_risk_score DESC
-            LIMIT ?
-            """,
-            (MAX_CONTRACT_VALUE, *params, limit),
-        )
+        # Fast path: when not filtering by sector, read the per-institution
+        # z-means from the precomputed institution_z_means table (~4.4K rows)
+        # instead of a live 16-AVG aggregate over the 3M-row contracts x
+        # contract_z_features join (which takes >60s).
+        if sector_id is None and table_exists(cursor, "institution_z_means"):
+            zm_cols = ", ".join(f"zm.{f} AS {f}" for f in z_features)
+            cursor.execute(
+                f"""
+                SELECT
+                    i.id AS institution_id,
+                    i.name AS institution_name,
+                    zm.cnt AS contract_count,
+                    COALESCE(ist.avg_risk_score, 0) AS avg_risk_score,
+                    {zm_cols}
+                FROM institution_z_means zm
+                JOIN institutions i ON i.id = zm.institution_id
+                LEFT JOIN institution_stats ist ON ist.institution_id = zm.institution_id
+                WHERE zm.cnt >= 10
+                ORDER BY avg_risk_score DESC
+                LIMIT ?
+                """,
+                (limit,),
+            )
+        else:
+            cursor.execute(
+                f"""
+                SELECT
+                    i.id as institution_id,
+                    i.name as institution_name,
+                    COUNT(c.id) as contract_count,
+                    COALESCE(AVG(c.risk_score), 0) as avg_risk_score,
+                    {avg_cols}
+                FROM contracts c
+                JOIN institutions i ON c.institution_id = i.id
+                JOIN contract_z_features zf ON c.id = zf.contract_id
+                WHERE COALESCE(c.amount_mxn, 0) <= ?
+                    {sector_filter}
+                GROUP BY i.id, i.name
+                HAVING contract_count >= 10
+                ORDER BY avg_risk_score DESC
+                LIMIT ?
+                """,
+                (MAX_CONTRACT_VALUE, *params, limit),
+            )
         rows = cursor.fetchall()
 
     items = []

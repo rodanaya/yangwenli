@@ -591,8 +591,15 @@ def export_vendors_risk_csv(
                 params.append(sector_id)
 
             if risk_level is not None:
-                conditions.append("vs.avg_risk_level = ?")
-                params.append(risk_level.strip().lower())
+                # vendor_stats stores avg_risk_score (numeric), not a level — map
+                # the requested level to its score band (thresholds 0.60/0.40/0.25).
+                _lvl = risk_level.strip().lower()
+                _bands = {"critical": (0.60, 1.01), "high": (0.40, 0.60),
+                          "medium": (0.25, 0.40), "low": (0.0, 0.25)}
+                if _lvl in _bands:
+                    _lo, _hi = _bands[_lvl]
+                    conditions.append("vs.avg_risk_score >= ? AND vs.avg_risk_score < ?")
+                    params.extend([_lo, _hi])
 
             where_clause = " AND ".join(conditions)
 
@@ -605,7 +612,10 @@ def export_vendors_risk_csv(
                     vs.total_contracts,
                     vs.total_value_mxn,
                     ROUND(vs.avg_risk_score, 4) AS avg_risk_score,
-                    vs.avg_risk_level AS risk_level,
+                    CASE WHEN vs.avg_risk_score >= 0.60 THEN 'critical'
+                         WHEN vs.avg_risk_score >= 0.40 THEN 'high'
+                         WHEN vs.avg_risk_score >= 0.25 THEN 'medium'
+                         ELSE 'low' END AS risk_level,
                     ROUND(vs.direct_award_pct, 2) AS direct_award_pct,
                     (vs.last_contract_year - vs.first_contract_year + 1) AS years_active
                 FROM vendor_stats vs
