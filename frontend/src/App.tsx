@@ -94,6 +94,7 @@ const ChartCatalog = lazy(() => import('@/pages/_dev/ChartCatalog'))
 const PatternDossier = lazy(() => import('@/pages/PatternDossier'))
 const PatternConstellation = lazy(() => import('@/pages/PatternConstellation'))
 const AtlasStoryPlayer = lazy(() => import('@/pages/AtlasStoryPlayer'))
+const Gallery = lazy(() => import('@/pages/Gallery'))
 
 // Redirect /sector/:id → /sectors/:id (singular alias)
 function SectorRedirect() {
@@ -584,6 +585,24 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <StoryNarrative />
+                  </SuspenseBoundary>
+                }
+              />
+
+              {/* La Galería — narrated motion films (StoryFilm) + animated story players */}
+              <Route
+                path="gallery"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Gallery />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="gallery/:slug"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Gallery />
                   </SuspenseBoundary>
                 }
               />
