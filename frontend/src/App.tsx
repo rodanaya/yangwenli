@@ -506,7 +506,7 @@ function App() {
               />
               {/* 2026-06-14: /officials/:name — per-official rollup
                   (Responsable de la Unidad Compradora), the destination the
-                  /contracts/:id OfficialCard links into. */}
+                  /contracts/:id acta RESPONSABLE row links into. */}
               <Route
                 path="officials/:name"
                 element={

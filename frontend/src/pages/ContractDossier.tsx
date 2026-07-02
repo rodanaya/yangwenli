@@ -30,14 +30,12 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DossierSectionHeader } from '@/components/dossier/DossierSectionHeader'
-import { ContractSignalTags } from '@/components/contract/ContractSignalTags'
-import { OfficialCard } from '@/components/contract/OfficialCard'
-import { RiskFactorLedger } from '@/components/contract/RiskFactorLedger'
-import { ContractCotejo } from '@/components/contract/ContractCotejo'
+import { ActaLedger } from '@/components/contract/ActaLedger'
+import { RelationSection, getRelationSectionMeta } from '@/components/contract/RelationSection'
 import { localizeProcedure, describeContractFactor } from '@/lib/contract-format'
 import { formatEntityName } from '@/lib/entity/format'
 import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore } from '@/lib/constants'
-import { formatCompactMXN, formatCompactUSD, formatDate } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD } from '@/lib/utils'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -47,21 +45,6 @@ function localizeLevel(level: 'critical' | 'high' | 'medium' | 'low', lang: 'en'
     : level === 'high' ? 'ALTO'
     : level === 'medium' ? 'MEDIO'
     : 'BAJO'
-}
-
-// §1 La transacción field grammar (matches TransactionField's dt/dd styling so
-// the chip-bearing party rows align with the scalar rows).
-const FIELD_LABEL_STYLE: React.CSSProperties = {
-  fontSize: 10,
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  color: 'var(--color-text-muted)',
-}
-const FIELD_VALUE_STYLE: React.CSSProperties = {
-  fontFamily: '"EB Garamond", Georgia, serif',
-  fontSize: 14,
-  color: 'var(--color-text-primary)',
-  lineHeight: 1.4,
 }
 
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
@@ -93,8 +76,8 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           }}
         >
           {lang === 'es'
-            ? 'Datos COMPRANET 2002–2025. La puntuación de riesgo y su descomposición SHAP provienen del modelo v0.8.5; son indicadores estadísticos, no determinaciones legales.'
-            : 'COMPRANET data 2002–2025. Risk score and its SHAP decomposition come from the v0.8.5 model; they are statistical indicators, not legal determinations.'}
+            ? 'Datos COMPRANET 2002–2025. La puntuación de riesgo y sus factores provienen del modelo v0.8.5; son indicadores estadísticos, no determinaciones legales.'
+            : 'COMPRANET data 2002–2025. The risk score and its factors come from the v0.8.5 model; they are statistical indicators, not legal determinations.'}
         </p>
         <button
           type="button"
@@ -224,44 +207,6 @@ export default function ContractDossier() {
   const verdictColor = score > 0 ? RISK_COLORS[level] : 'var(--color-text-muted)'
   const riskPct = score > 0 ? Math.round(score * 100) : null
 
-  // Build signal pills
-  const signals: Array<{ label: string; color: string; tooltip: string }> = []
-  if (contract.is_direct_award) {
-    signals.push({
-      label: lang === 'es' ? 'ADJ. DIRECTA' : 'DIRECT AWARD',
-      color: RISK_COLORS.high,
-      tooltip: lang === 'es' ? 'Otorgado sin licitación pública' : 'Awarded without an open bid',
-    })
-  }
-  if (contract.is_single_bid) {
-    signals.push({
-      label: lang === 'es' ? 'ÚNICO POSTOR' : 'SINGLE BID',
-      color: RISK_COLORS.critical,
-      tooltip: lang === 'es' ? 'Procedimiento competitivo con un solo postor' : 'Competitive procedure with only one bidder',
-    })
-  }
-  if (Number(contract.amount_mxn) > 500_000_000) {
-    signals.push({
-      label: lang === 'es' ? 'ALTO MONTO' : 'LARGE',
-      color: RISK_COLORS.medium,
-      tooltip: lang === 'es' ? 'Valor del contrato supera 500M MXN' : 'Contract value exceeds 500M MXN',
-    })
-  }
-  if (contract.is_year_end) {
-    signals.push({
-      label: lang === 'es' ? 'FIN DE AÑO' : 'YEAR-END',
-      color: RISK_COLORS.medium,
-      tooltip: lang === 'es' ? 'Otorgado en noviembre o diciembre' : 'Awarded in November or December',
-    })
-  }
-  if (contract.is_threshold_gaming) {
-    signals.push({
-      label: lang === 'es' ? 'JUEGO DE UMBRAL' : 'THRESHOLD GAMING',
-      color: RISK_COLORS.critical,
-      tooltip: lang === 'es' ? 'Monto cerca del umbral del procedimiento' : 'Amount suspiciously close to procedure threshold',
-    })
-  }
-
   const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
 
   const sectorName = lang === 'es'
@@ -269,6 +214,8 @@ export default function ContractDossier() {
     : SECTORS.find((s) => s.id === contract.sector_id)?.nameEN
 
   const lede = buildLede({ contract, sectorName, riskBreakdown, lang })
+  const objectionCount = riskBreakdown?.factors?.length ?? 0
+  const relMeta = getRelationSectionMeta(context)
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -330,7 +277,7 @@ export default function ContractDossier() {
               fontWeight: 500,
             }}
           >
-            § {lang === 'es' ? 'EL CONTRATO · EXPEDIENTE' : 'EL CONTRATO · CONTRACT DOSSIER'}
+            § {lang === 'es' ? 'EL COTEJO · ACTA DE CONTRATO' : 'EL COTEJO · CONTRACT RECORD'}
           </div>
 
           <div className="grid gap-6 lg:gap-10" style={{ gridTemplateColumns: 'minmax(0, 1fr) auto' }}>
@@ -428,30 +375,6 @@ export default function ContractDossier() {
                   ? (lang === 'es' ? 'Sin puntuación' : 'Not scored')
                   : (lang === 'es' ? localizeLevel(level, 'es') : level.toUpperCase())}
               </div>
-              {signals.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center gap-1 mt-2">
-                  {signals.slice(0, 3).map((s, i) => (
-                    <span
-                      key={i}
-                      className="font-mono"
-                      style={{
-                        fontSize: 9,
-                        letterSpacing: '0.10em',
-                        textTransform: 'uppercase',
-                        fontWeight: 700,
-                        color: s.color,
-                        background: `${s.color}1f`,
-                        border: `1px solid ${s.color}44`,
-                        padding: '2px 5px',
-                        borderRadius: 2,
-                      }}
-                      title={s.tooltip}
-                    >
-                      {s.label}
-                    </span>
-                  ))}
-                </div>
-              )}
             </aside>
           </div>
 
@@ -475,183 +398,89 @@ export default function ContractDossier() {
         </div>
       </header>
 
-      {/* Reworked body — tight DossierSectionHeader grammar (W3), centered
-          reading column. ChapterShell py-20 + 2 ChapterDividers removed. */}
+      {/* Remade body — «El Acta Anotada»: the annotated record (§1 acta) then
+          the relationship in time (§2 ribbon). Centered reading column. */}
       <div className="mt-10 max-w-3xl mx-auto px-4 sm:px-8 space-y-10">
 
-        {/* §1 · LA TRANSACCIÓN — parties as chips, localized procedure, the
-            named-official card + signal-tag rail + honest quality/era block */}
-        <section id="transaction">
+        {/* §1 · EL ACTA — the contract as an annotated record: risk-model
+            objections pinned in the margin beside the field they indict.
+            Merges the former §1 facts grid + §2 risk ledger + official card
+            + signal tags into one acta (ActaLedger). */}
+        <section id="acta">
           <FadeIn>
             <DossierSectionHeader
-              id="transaction"
+              id="acta"
               eyebrow={lang === 'es' ? 'Acta' : 'Record'}
-              title={lang === 'es' ? 'La transacción' : 'The transaction'}
-              meta={localizeProcedure(contract.procedure_type_normalized ?? contract.procedure_type, lang)}
-              accent={sectorAccent}
-            />
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
-              <div>
-                <dt className="font-mono mb-1.5" style={FIELD_LABEL_STYLE}>{lang === 'es' ? 'Proveedor' : 'Vendor'}</dt>
-                <dd>
-                  {contract.vendor_id && contract.vendor_name ? (
-                    <EntityIdentityChip
-                      type="vendor"
-                      id={contract.vendor_id}
-                      name={contract.vendor_name}
-                      riskScore={score > 0 ? score : null}
-                      sectorCode={sectorCode}
-                      fullName
-                    />
-                  ) : (
-                    <span style={FIELD_VALUE_STYLE}>{contract.vendor_name ? formatEntityName('vendor', contract.vendor_name) : '—'}</span>
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono mb-1.5" style={FIELD_LABEL_STYLE}>{lang === 'es' ? 'Institución' : 'Institution'}</dt>
-                <dd>
-                  {contract.institution_id && contract.institution_name ? (
-                    <EntityIdentityChip
-                      type="institution"
-                      id={contract.institution_id}
-                      name={contract.institution_name}
-                      sectorCode={sectorCode}
-                      fullName
-                    />
-                  ) : (
-                    <span style={FIELD_VALUE_STYLE}>{contract.institution_name ? formatEntityName('institution', contract.institution_name) : '—'}</span>
-                  )}
-                </dd>
-              </div>
-              <TransactionField
-                label={lang === 'es' ? 'Procedimiento' : 'Procedure'}
-                value={localizeProcedure(contract.procedure_type_normalized ?? contract.procedure_type, lang)}
-              />
-              <TransactionField
-                label={lang === 'es' ? 'Número' : 'Number'}
-                value={contract.procedure_number ?? '—'}
-                mono
-              />
-              <TransactionField
-                label={lang === 'es' ? 'Fecha del contrato' : 'Contract date'}
-                value={contract.contract_date ? formatDate(contract.contract_date) : '—'}
-                mono
-              />
-              <TransactionField
-                label={lang === 'es' ? 'Fecha de adjudicación' : 'Award date'}
-                value={contract.award_date ? formatDate(contract.award_date) : '—'}
-                mono
-              />
-              {contract.publication_date && (
-                <TransactionField
-                  label={lang === 'es' ? 'Publicación' : 'Publication'}
-                  value={formatDate(contract.publication_date)}
-                  mono
-                />
-              )}
-              {contract.url && (
-                <div className="sm:col-span-2 pt-1">
-                  <a
-                    href={contract.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
-                    style={{ fontSize: 11, color: 'var(--color-text-secondary)', textDecoration: 'none' }}
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    {lang === 'es' ? 'Documento fuente' : 'Source document'}
-                  </a>
-                </div>
-              )}
-            </dl>
-
-            {/* Named-official accountability card (graft; renders only when the
-                buying official is on record) */}
-            <div className="mt-5">
-              <OfficialCard
-                official={context?.official}
-                contractYear={contract.contract_year}
-                sexenioYear={contract.sexenio_year}
-                isElectionYear={contract.is_election_year}
-                sectorAccent={sectorAccent}
-                lang={lang}
-              />
-            </div>
-
-            {/* Signal-tag rail (TRUE-only) */}
-            <div className="mt-4">
-              <ContractSignalTags contract={contract} lang={lang} />
-            </div>
-
-            {/* Honest quality/era block (replaces the naked grade letter) */}
-            {contract.data_quality_grade && (() => {
-              const ERA: Record<string, string> = { A: '2002–2010', B: '2010–2017', C: '2018–2022', D: '2023–2025' }
-              const struct = contract.source_structure
-              const era = struct ? ERA[struct] : undefined
-              const structText = struct
-                ? `${lang === 'es' ? ' · Estructura' : ' · Structure'} ${struct}${era ? ` — ${era}` : ''}`
-                : ''
-              return (
-                <p
-                  className="mt-3"
-                  style={{
-                    fontFamily: '"EB Garamond", Georgia, serif',
-                    fontStyle: 'italic',
-                    fontSize: 13,
-                    color: 'var(--color-text-muted)',
-                  }}
-                >
-                  {lang === 'es' ? 'Calidad de datos ' : 'Data quality '}{contract.data_quality_grade}{structText}
-                </p>
-              )
-            })()}
-          </FadeIn>
-        </section>
-
-        {/* §2 · POR QUÉ — prod-true severity-ranked risk ledger (W1/W2/W5) */}
-        <section id="por-que">
-          <FadeIn>
-            <DossierSectionHeader
-              id="por-que"
-              eyebrow={lang === 'es' ? 'Diagnóstico' : 'Diagnosis'}
-              title={lang === 'es' ? 'Por qué está marcado' : "Why it's flagged"}
-              meta={riskPct != null ? `${riskPct}/100` : undefined}
-              accent={sectorAccent}
-            />
-            <RiskFactorLedger
-              breakdown={riskBreakdown}
-              explanation={explanation}
-              contract={contract}
-              riskPct={riskPct}
-              lang={lang}
-            />
-          </FadeIn>
-        </section>
-
-        {/* §3 · EL COTEJO — size-in-context bullet + pair register (W6) */}
-        <section id="cotejo">
-          <FadeIn>
-            <DossierSectionHeader
-              id="cotejo"
-              eyebrow={lang === 'es' ? 'Cotejo' : 'Cross-reference'}
-              title={lang === 'es' ? 'El tamaño en contexto' : 'Size in context'}
+              title={lang === 'es' ? 'El acta, con objeciones al margen' : 'The record, with objections in the margin'}
               meta={
-                context?.pair?.this_rank === 1
-                  ? (lang === 'es' ? 'el mayor del par' : 'largest of the pair')
-                  : undefined
+                objectionCount > 0
+                  ? `${objectionCount} ${lang === 'es' ? 'objeciones' : 'objections'}`
+                  : (riskPct != null ? `${riskPct}/100` : undefined)
               }
               accent={sectorAccent}
             />
-            <ContractCotejo
-              context={context}
+            <p
+              className="mb-4"
+              style={{
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: 14,
+                lineHeight: 1.6,
+                color: 'var(--color-text-secondary)',
+              }}
+            >
+              {riskPct != null
+                ? (lang === 'es'
+                    ? `El modelo v0.8.5 lo marca en ${riskPct}/100 — las objeciones aparecen al margen del acta.`
+                    : `The v0.8.5 model rates it ${riskPct}/100 — its objections appear in the record's margin.`)
+                : (lang === 'es'
+                    ? 'Sin puntuación registrada para este contrato. El acta se presenta sin objeciones del modelo.'
+                    : 'No recorded score for this contract. The record is presented without model objections.')}
+            </p>
+            <ActaLedger
               contract={contract}
-              sectorName={sectorName ?? contract.sector_name ?? ''}
+              breakdown={riskBreakdown}
+              explanation={explanation}
+              context={context}
+              riskPct={riskPct}
               sectorAccent={sectorAccent}
               lang={lang}
             />
+            <p
+              className="mt-3 font-mono"
+              style={{ fontSize: 9, letterSpacing: '0.08em', color: 'var(--color-text-muted)', opacity: 0.75 }}
+            >
+              {lang === 'es'
+                ? 'Factores ordenados por severidad — indicadores estadísticos, no probabilidades.'
+                : 'Factors ranked by severity — statistical indicators, not probabilities.'}
+            </p>
           </FadeIn>
         </section>
+
+        {/* §2 · LA RELACIÓN — the vendor↔institution relationship drawn as a
+            time ribbon with this contract inked and named (RelationRibbon);
+            size-only RatioBullet fallback when the pair has ≤1 contract.
+            Dual-mode header via getRelationSectionMeta. */}
+        {relMeta.mode !== 'none' && (
+          <section id="cotejo">
+            <FadeIn>
+              <DossierSectionHeader
+                id="cotejo"
+                eyebrow={lang === 'es' ? relMeta.eyebrow.es : relMeta.eyebrow.en}
+                title={lang === 'es' ? relMeta.title.es : relMeta.title.en}
+                meta={relMeta.meta ? (lang === 'es' ? relMeta.meta.es : relMeta.meta.en) : undefined}
+                accent={sectorAccent}
+              />
+              <RelationSection
+                context={context}
+                contract={contract}
+                sectorName={sectorName ?? contract.sector_name ?? ''}
+                sectorAccent={sectorAccent}
+                lang={lang}
+              />
+            </FadeIn>
+          </section>
+        )}
 
       </div>
 
@@ -707,58 +536,6 @@ export default function ContractDossier() {
       </ChapterShell>
 
       <ProvenanceFooter lang={lang} />
-    </div>
-  )
-}
-
-// ─── TransactionField ──────────────────────────────────────────────────────
-
-function TransactionField({
-  label,
-  value,
-  href,
-  mono,
-}: {
-  label: string
-  value: string
-  href?: string
-  mono?: boolean
-}) {
-  const navigate = useNavigate()
-  const valueStyle: React.CSSProperties = {
-    fontFamily: mono ? 'var(--font-family-mono, monospace)' : '"EB Garamond", Georgia, serif',
-    fontSize: 14,
-    color: 'var(--color-text-primary)',
-    fontVariantNumeric: mono ? 'tabular-nums' : undefined,
-    lineHeight: 1.4,
-  }
-  return (
-    <div>
-      <dt
-        className="font-mono mb-1"
-        style={{
-          fontSize: 10,
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          color: 'var(--color-text-muted)',
-        }}
-      >
-        {label}
-      </dt>
-      <dd>
-        {href ? (
-          <button
-            type="button"
-            onClick={() => navigate(href)}
-            className="text-left hover:opacity-70 transition-opacity cursor-pointer"
-            style={{ ...valueStyle, background: 'none', border: 'none', padding: 0 }}
-          >
-            {value}
-          </button>
-        ) : (
-          <span style={valueStyle}>{value}</span>
-        )}
-      </dd>
     </div>
   )
 }

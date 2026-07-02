@@ -12,7 +12,8 @@
  *    derive the category client-side from the code, and never print the weight.
  */
 import { parseFactorLabel, getFactorCategoryColor, type FactorCategory } from './risk-factors'
-import type { ContractRiskFactor } from '@/api/types'
+import type { ContractRiskFactor, ContractDetail } from '@/api/types'
+import { RISK_COLORS } from './constants'
 
 // ── Procedure type ──────────────────────────────────────────────────────────
 
@@ -92,7 +93,7 @@ const FAMILY_ES: Record<string, string> = {
   inst_risk: 'Riesgo institucional',
 }
 
-function familyKey(code: string): string {
+export function familyKey(code: string): string {
   const head = code.split(':')[0]
   // collapse parametric families (network_3, split_2, short_ad_<5d) to a stem
   if (/^network_\d+$/.test(head)) return 'network_risk'
@@ -160,4 +161,143 @@ export function severityWord(severity: FactorSeverity, lang: 'en' | 'es'): strin
   if (severity === 'alto') return lang === 'es' ? 'ALTO' : 'HIGH'
   if (severity === 'medio') return lang === 'es' ? 'MEDIO' : 'MED'
   return ''
+}
+
+// ── Acta row anchoring (El Acta Anotada, P1) ────────────────────────────────
+//
+// Maps a described risk factor — or a structural boolean flag — to the acta
+// row it indicts, so the margin note renders face-to-face with the exact
+// field it objects to (spec §2.2).
+
+export type ActaRowKey =
+  | 'monto'
+  | 'procedimiento'
+  | 'proveedor'
+  | 'institucion'
+  | 'fechas'
+  | 'general'
+
+const CATEGORY_ROW: Record<FactorCategory, ActaRowKey> = {
+  pricing: 'monto',
+  competition: 'procedimiento',
+  procedural: 'procedimiento',
+  timing: 'fechas',
+  network: 'proveedor',
+  institutional: 'institucion',
+  interaction: 'general',
+}
+
+// familyKey overrides — parametric families collapsed to a stem (see
+// familyKey() above) that route to a specific row regardless of the
+// category the risk-factor parser assigned them.
+const FAMILY_ROW_OVERRIDE: Record<string, ActaRowKey> = {
+  threshold_split: 'monto',
+  industry_mismatch: 'proveedor',
+  vendor_concentration: 'proveedor',
+  year_end: 'fechas',
+  inst_risk: 'institucion',
+}
+
+export function anchorRowOf(f: DescribedFactor): ActaRowKey {
+  const fam = familyKey(f.code)
+  if (fam in FAMILY_ROW_OVERRIDE) return FAMILY_ROW_OVERRIDE[fam]
+  return CATEGORY_ROW[f.category] ?? 'general'
+}
+
+// ── Structural margin notes (absorbed from ContractSignalTags/OfficialCard,
+// P1) — boolean flags + PyOD ensemble outlier rendered as acta objections,
+// each with a dedupeKey so ActaLedger can suppress a note when a matching
+// risk-factor family already anchors that row (spec §2.2 "Absorbed structural
+// signals"). is_high_value / is_direct_award / is_single_bid are intentionally
+// NOT rendered here — see spec for the rationale. ────────────────────────────
+
+const STRUCTURAL_COLOR = '#71717a' // zinc — structural-neutral typology, not a risk color
+
+export interface StructuralNote {
+  row: ActaRowKey
+  /** 'pill' = neutral typology tag rendered inline in the field VALUE column
+   *  (existing tag-pill styling, per spec §2.2 ASCII mockup — [MARCO]
+   *  [PLURIANUAL] sit under the field value, not in the margin). 'note' =
+   *  a real objection rendered in the margin column with the ledger's
+   *  ▲/· + label anatomy (no severity word — structural notes are not
+   *  severity-ranked risk factors). */
+  kind: 'pill' | 'note'
+  glyph: '▲' | '·'
+  color: string
+  label: string
+  param?: string
+  title?: string
+  dedupeKey?: string
+}
+
+export function buildStructuralNotes(contract: ContractDetail, lang: 'en' | 'es'): StructuralNote[] {
+  const isEs = lang === 'es'
+  const notes: StructuralNote[] = []
+
+  if (contract.is_framework) {
+    notes.push({
+      row: 'procedimiento',
+      kind: 'pill',
+      glyph: '·',
+      color: STRUCTURAL_COLOR,
+      label: isEs ? 'MARCO' : 'FRAMEWORK',
+      title: isEs ? 'Contrato marco' : 'Framework contract',
+    })
+  }
+  if (contract.is_consolidated) {
+    notes.push({
+      row: 'procedimiento',
+      kind: 'pill',
+      glyph: '·',
+      color: STRUCTURAL_COLOR,
+      label: isEs ? 'CONSOLIDADO' : 'CONSOLIDATED',
+      title: isEs ? 'Compra consolidada entre dependencias' : 'Consolidated multi-agency purchase',
+    })
+  }
+  if (contract.is_multiannual) {
+    notes.push({
+      row: 'procedimiento',
+      kind: 'pill',
+      glyph: '·',
+      color: STRUCTURAL_COLOR,
+      label: isEs ? 'PLURIANUAL' : 'MULTIANNUAL',
+      title: isEs ? 'Contrato plurianual' : 'Multi-year contract',
+    })
+  }
+  if (contract.pyod_is_outlier && contract.ensemble_anomaly_score != null) {
+    notes.push({
+      row: 'monto',
+      kind: 'note',
+      glyph: '·',
+      color: RISK_COLORS.high,
+      label: `PyOD ▲${contract.ensemble_anomaly_score.toFixed(2)}`,
+      dedupeKey: 'pyod',
+      title: isEs
+        ? 'Valor atípico para el conjunto PyOD (umbral 0.26)'
+        : 'Flagged as an outlier by the PyOD ensemble (threshold 0.26)',
+    })
+  }
+  if (contract.is_threshold_gaming) {
+    notes.push({
+      row: 'monto',
+      kind: 'note',
+      glyph: '▲',
+      color: RISK_COLORS.critical,
+      label: isEs ? 'Juego de umbral' : 'Threshold gaming',
+      dedupeKey: 'threshold_split',
+    })
+  }
+  if (contract.is_year_end) {
+    notes.push({
+      row: 'fechas',
+      kind: 'note',
+      glyph: '▲',
+      color: RISK_COLORS.medium,
+      label: isEs ? 'Concentración fin de año' : 'Year-end concentration',
+      dedupeKey: 'year_end',
+      title: isEs ? 'Adjudicado en noviembre o diciembre' : 'Awarded in November or December',
+    })
+  }
+
+  return notes
 }

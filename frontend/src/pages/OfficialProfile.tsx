@@ -1,7 +1,7 @@
 /**
  * OfficialProfile — per-official rollup at /officials/:name.
  *
- * The destination the /contracts/:id OfficialCard links into: a Responsable de
+ * The destination the /contracts/:id acta RESPONSABLE row links into: a Responsable de
  * la Unidad Compradora aggregated across every buying unit they signed for
  * (2018+, from official_risk_profiles). Volume-led, risk shown only as a
  * labeled indicator — "no es una acusación" (the table names private-ish
