@@ -144,8 +144,8 @@ export function ConfoundPlate({
   const isEs = lang === 'es'
 
   const caption = isEs
-    ? 'Dos escalas, una línea: dinero señalado (●, log) contra exposición sobre el gasto propio (○). Casi todo el registro rebasa la bandera de ½ — el modelo pondera anomalías de monto alto — pero ninguna argolla llega tan lejos como la de mayor intensidad. Cambie el orden a intensidad y mire la inversión.'
-    : 'Two scales, one line: money flagged (●, log) against exposure over own spend (○). Nearly the whole registry clears the ½ flag — the model weights high-value anomalies — but no ring reaches as far as the intensity leader. Flip the sort to intensity and watch the inversion.'
+    ? 'Dos escalas, una línea: monto observado (●, log) contra saturación del gasto propio (○). Casi todo el registro rebasa la bandera de ½ — el modelo pondera anomalías de monto alto — pero ninguna argolla llega tan lejos como la de mayor saturación. Cambie el orden a intensidad y mire la inversión.'
+    : 'Two scales, one line: flagged amount (●, log) against saturation of own spend (○). Nearly the whole registry clears the ½ flag — the model weights high-value anomalies — but no ring reaches as far as the saturation leader. Flip the sort to intensity and watch the inversion.'
 
   const sortControl = (
     <div className="flex items-center gap-1" role="group" aria-label={isEs ? 'Ordenar el registro' : 'Sort the registry'}>
@@ -204,7 +204,7 @@ export function ConfoundPlate({
               <strong style={{ color: 'var(--color-text-primary)', fontStyle: 'italic', fontWeight: 600 }}>
                 {isEs ? '¿Cuánto dinero?' : 'How much money?'}
               </strong>{' '}
-              {isEs ? 'pesos señalados por el modelo. Escala log: cada paso vale 10×.' : 'pesos the model flags. Log scale — each step is 10× the last.'}
+              {isEs ? 'pesos que el modelo observa. Escala log: cada paso vale 10×.' : 'pesos the model flags for review. Log scale — each step is 10× the last.'}
             </span>
           </span>
           <span className="flex items-baseline gap-2">
@@ -245,7 +245,7 @@ export function ConfoundPlate({
               className="absolute top-0 left-0 font-mono whitespace-nowrap"
               style={{ ...MONO_MICRO, fontSize: 9, color: 'var(--color-text-muted)' }}
             >
-              ● {isEs ? 'Dinero señalado · log' : 'Money flagged · log'}
+              ● {isEs ? 'Monto observado · log' : 'Flagged amount · log'}
             </span>
           </span>
           <span />
@@ -314,8 +314,8 @@ export function ConfoundPlate({
             const sharePct = (share * 100).toFixed(0)
 
             const aria = isEs
-              ? `${r.name} — ${formatCompactMXN(r.varMxn)} exposición señalada · ${sharePct}% de su propio gasto`
-              : `${r.name} — ${formatCompactMXN(r.varMxn)} model-flagged exposure · ${sharePct}% of its own spend`
+              ? `${r.name} — ${formatCompactMXN(r.varMxn)} monto observado · ${sharePct}% de su propio gasto`
+              : `${r.name} — ${formatCompactMXN(r.varMxn)} flagged amount · ${sharePct}% of its own spend`
 
             return (
               <div
@@ -464,7 +464,7 @@ export function ConfoundPlate({
                           color: 'var(--color-accent)',
                         }}
                       >
-                        {isEs ? 'mayor intensidad ↘' : 'highest intensity ↘'}
+                        {isEs ? 'mayor saturación ↘' : 'highest saturation ↘'}
                       </span>
                     )}
                   </span>

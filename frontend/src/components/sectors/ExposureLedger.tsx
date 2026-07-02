@@ -19,7 +19,7 @@
  *   - `LedgerRow` is FROZEN — Sectors.tsx builds it; do not change its shape.
  *   - Rows arrive sorted varMxn-descending; display order derives from `lens`.
  *   - Hex colours ONLY via style={{}} (className hex is silently stripped).
- *   - VaR is always "exposición señalada / model-flagged exposure" — never
+ *   - VaR is always "monto observado / flagged amount" — never
  *     "probability of corruption". No green anywhere (Bible §3.10).
  *   - Currency via formatCompactMXN (bilingual; billones/MDP in ES).
  */
@@ -51,6 +51,7 @@ export interface LedgerRow {
   // ── Non-value axes (rev 2) ──────────────────────────────────────────────
   avgRiskScore: number // intensity (0–1) — model's mean risk, size-independent
   criticalCount: number // # critical-level contracts (composition numerator; contracts = denominator)
+  highCount?: number   // # high-level contracts — with criticalCount forms the flagged (high+critical) count rate
   topInstitution: { id: number; name: string; siglas?: string | null; sharePct: number } | null // capture / WHO
   trajectory: SectorTrajectoryPoint[] // risk-by-year series for the per-row sparkline
 }
@@ -184,8 +185,8 @@ function LedgerRowItem({
 
   const ariaLabel =
     lang === 'es'
-      ? `${row.name} — ${formatCompactMXN(row.varMxn)} exposición señalada, intensidad ${intensity.toFixed(2)}, adjudicación directa ${row.daPct.toFixed(0)}%`
-      : `${row.name} — ${formatCompactMXN(row.varMxn)} model-flagged exposure, intensity ${intensity.toFixed(2)}, direct award ${row.daPct.toFixed(0)}%`
+      ? `${row.name} — ${formatCompactMXN(row.varMxn)} monto observado, intensidad ${intensity.toFixed(2)}, adjudicación directa ${row.daPct.toFixed(0)}%`
+      : `${row.name} — ${formatCompactMXN(row.varMxn)} flagged amount, intensity ${intensity.toFixed(2)}, direct award ${row.daPct.toFixed(0)}%`
 
   return (
     <div
@@ -466,13 +467,13 @@ export function ExposureLedger({
           >
             {lang === 'es' ? (
               <>
-                ∑ {rows.length} SECTORES · {formatCompactMXN(totalVaR)} exposición señalada (
+                ∑ {rows.length} SECTORES · {formatCompactMXN(totalVaR)} monto observado (
                 {varSharePct.toFixed(1)}% del valor) · {formatCompactMXN(totalSpend)} gasto ·{' '}
                 {totalContracts.toLocaleString('es-MX')} contratos
               </>
             ) : (
               <>
-                ∑ {rows.length} SECTORS · {formatCompactMXN(totalVaR)} model-flagged exposure (
+                ∑ {rows.length} SECTORS · {formatCompactMXN(totalVaR)} flagged amount (model) (
                 {varSharePct.toFixed(1)}% of value) · {formatCompactMXN(totalSpend)} spend ·{' '}
                 {totalContracts.toLocaleString('en-US')} contracts
               </>
@@ -486,8 +487,8 @@ export function ExposureLedger({
           style={{ fontSize: 10, letterSpacing: '0.02em', color: 'var(--color-text-muted)', lineHeight: 1.5 }}
         >
           {lang === 'es'
-            ? 'Modelo v0.8.5 · exposición = MXN vía contratos alto+crítico · intensidad = riesgo medio del sector · indicador estadístico, no determinación legal · clic en fila → dossier · '
-            : 'Model v0.8.5 · exposure = MXN via high+critical contracts · intensity = sector mean risk · statistical indicator, not a legal determination · click a row → dossier · '}
+            ? 'Modelo v0.8.5 · monto observado = MXN vía contratos alto+crítico · intensidad = riesgo medio del sector · indicador estadístico, no determinación legal · clic en fila → dossier · '
+            : 'Model v0.8.5 · flagged amount = MXN via high+critical contracts · intensity = sector mean risk · statistical indicator, not a legal determination · click a row → dossier · '}
           <Link
             to="/methodology"
             className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"

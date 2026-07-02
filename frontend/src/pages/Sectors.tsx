@@ -14,7 +14,7 @@ import { useSearchParams } from 'react-router-dom'
 import { categoriesApi } from '@/api/client'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCompactMXN, formatNumber, cn } from '@/lib/utils'
+import { formatCompactMXN, formatDualCurrency, formatNumber, cn } from '@/lib/utils'
 import { sectorApi } from '@/api/client'
 import {
   SECTOR_COLORS,
@@ -24,7 +24,9 @@ import {
 } from '@/lib/constants'
 import type { SectorStatistics } from '@/api/types'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
+import { ArqueoMesa } from '@/components/sectors/ArqueoMesa'
+import { ArqueoMesaCategorias } from '@/components/sectors/ArqueoMesaCategorias'
+import { FeDeArqueo } from '@/components/sectors/FeDeArqueo'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
 import { ExposureLedger } from '@/components/sectors/ExposureLedger'
 import type { LedgerRow } from '@/components/sectors/ExposureLedger'
@@ -318,9 +320,6 @@ export function Sectors() {
     [sectors],
   )
 
-  const totalValue = data?.total_value_mxn ?? 0
-  const totalContracts = data?.total_contracts ?? 0
-
   // ── Language helper ──────────────────────────────────────────────────────────
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
 
@@ -363,6 +362,7 @@ export function Sectors() {
           vendors: s.total_vendors ?? 0,
           avgRiskScore: s.avg_risk_score ?? 0,
           criticalCount: s.critical_risk_count ?? 0,
+          highCount: s.high_risk_count ?? 0,
           topInstitution: capBySector.get(s.sector_id) ?? null,
           trajectory: trajBySector[String(s.sector_id)] ?? [],
         }
@@ -414,7 +414,22 @@ export function Sectors() {
     )
     const intLeaderPct = (ownSpendShare(intLeader) * 100).toFixed(0)
 
-    return { top3, sumVar, spendPct, varPct, valuePct, countPct, intLeader, intLeaderPct }
+    // Saturation minimum — the §A counter-case (computed argmin of own-spend
+    // share; today Infraestructura). Big money, lowest saturation, worst
+    // single-bid → names the inverse confound. moneyRank = position in the
+    // VaR-ordered ledger.
+    const minSat = ledgerRows.reduce(
+      (lo, r) => (ownSpendShare(r) < ownSpendShare(lo) ? r : lo),
+      ledgerRows[0],
+    )
+    const minSatMoneyRank = ledgerRows.findIndex((r) => r.sectorId === minSat.sectorId) + 1
+    const minSatSatPct = (ownSpendShare(minSat) * 100).toFixed(0)
+    const minSatSbPct = minSat.sbPct.toFixed(0)
+
+    return {
+      top3, sumVar, sumTotal, sumContracts, spendPct, varPct, valuePct, countPct,
+      intLeader, intLeaderPct, minSat, minSatMoneyRank, minSatSatPct, minSatSbPct,
+    }
   }, [ledgerRows, sectors])
 
   // Grand total model-flagged exposure for masthead anchor
@@ -423,25 +438,16 @@ export function Sectors() {
     [ledgerRows],
   )
 
-  // ── Title / subtitle text ─────────────────────────────────────────────────────
-  const titleText =
+  // ── Per-view deck (masthead subtitle) — «El Arqueo» reinvention ────────────────
+  // The headline is now constant («El Arqueo»); each lens carries its own deck.
+  const deckText =
     view === 'categories'
-      ? t('page.titleCategories', { defaultValue: 'What Mexico Is Buying — by Category' })
-      : lang === 'es'
-        ? 'El Libro Mayor de la Exposición'
-        : 'The Exposure Ledger'
-
-  const subtitleText =
-    view === 'categories'
-      ? (totalValue > 0
-          ? t('page.subtitleCategories', {
-              totalValue: formatSpend(totalValue),
-              defaultValue: '{{totalValue}} routed through 72 procurement categories',
-            })
-          : t('page.subtitleCategoriesFallback', {
-              defaultValue: '72 procurement categories covering 99.7% of federal spend',
-            }))
-      : null // WHO subtitle paragraph is suppressed per spec §0
+      ? (lang === 'es'
+          ? 'Setenta y dos categorías de gasto — qué compró el Estado, y dónde arde el catálogo.'
+          : 'Seventy-two spending categories — what the State bought, and where the catalog runs hot.')
+      : (lang === 'es'
+          ? 'Doce sectores, un solo corte. Cuánto dinero observa el modelo en cada uno — y qué parte del gasto propio de cada quien está en la mesa.'
+          : 'Twelve sectors, one count. How much money the model flags in each — and how much of each one’s own spend is on the table.')
 
   return (
     <div className="min-h-screen">
@@ -464,7 +470,7 @@ export function Sectors() {
             <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·II</span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-              {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
+              {lang === 'es' ? 'Arqueo de caja federal' : 'Federal cash count'}
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               COMPRANET 2002–2025
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
@@ -474,7 +480,7 @@ export function Sectors() {
 
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
-              {/* Headline — EB Garamond italic */}
+              {/* Headline — EB Garamond italic; constant «El Arqueo» with one ochre fragment */}
               <h1
                 className="text-text-primary"
                 style={{
@@ -486,86 +492,56 @@ export function Sectors() {
                   letterSpacing: '-0.012em',
                 }}
               >
-                {titleText}
+                {lang === 'es' ? (
+                  <>El Arqueo: <span style={{ color: 'var(--color-accent)' }}>nueve billones</span> sobre la mesa.</>
+                ) : (
+                  <>The Cash Count: <span style={{ color: 'var(--color-accent)' }}>nine trillion pesos</span> on the table.</>
+                )}
               </h1>
             </div>
 
-            {/* Right: WHO → single VaR anchor; WHAT → 3-stat cluster */}
-            {!isLoading && (
-              view === 'sectors' ? (
-                <div className="text-right">
-                  {totalVarMxn > 0 ? (
-                    <>
-                      <div
-                        aria-label={
-                          lang === 'es'
-                            ? `${formatCompactMXN(totalVarMxn)} exposición señalada`
-                            : `${formatCompactMXN(totalVarMxn)} model-flagged exposure`
-                        }
-                        style={{
-                          fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                          fontStyle: 'italic',
-                          fontWeight: 800,
-                          fontVariantNumeric: 'tabular-nums',
-                          fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
-                          lineHeight: 1,
-                          color: 'var(--color-text-primary)',
-                        }}
-                      >
-                        {formatCompactMXN(totalVarMxn)}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: '"IBM Plex Mono", monospace',
-                          fontSize: '9px',
-                          letterSpacing: '0.12em',
-                          textTransform: 'uppercase',
-                          color: 'var(--color-text-muted)',
-                          marginTop: '4px',
-                        }}
-                      >
-                        {lang === 'es'
-                          ? 'exposición señalada · indicador de riesgo'
-                          : 'model-flagged exposure · risk indicator'}
-                      </div>
-                    </>
-                  ) : (
-                    /* Backend field not live yet — show nothing in masthead anchor */
-                    null
-                  )}
+            {/* Right: unified monto-observado anchor (both views); dual currency
+                per the hero-surface convention. Guarded on the VaR field. */}
+            {!isLoading && totalVarMxn > 0 && (
+              <div className="text-right">
+                <div
+                  aria-label={
+                    lang === 'es'
+                      ? `${formatDualCurrency(totalVarMxn)} monto observado`
+                      : `${formatDualCurrency(totalVarMxn)} flagged amount`
+                  }
+                  style={{
+                    fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontVariantNumeric: 'tabular-nums',
+                    fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
+                    lineHeight: 1,
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
+                  {formatDualCurrency(totalVarMxn)}
                 </div>
-              ) : (
-                /* WHAT view keeps original 3-stat cluster */
-                <div className="flex items-baseline gap-5">
-                  <div className="text-right">
-                    <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">12</div>
-                    <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                      {t('statCards.sectorsTracked')}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
-                      {formatSpend(totalValue)}
-                    </div>
-                    <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                      {t('statCards.totalSpend', { defaultValue: 'Total spend' })}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
-                      {formatNumber(totalContracts)}
-                    </div>
-                    <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                      {t('statCards.totalContracts')}
-                    </div>
-                  </div>
+                <div
+                  style={{
+                    fontFamily: '"IBM Plex Mono", monospace',
+                    fontSize: '9px',
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-text-muted)',
+                    marginTop: '4px',
+                  }}
+                >
+                  {lang === 'es'
+                    ? 'monto observado · indicador de riesgo'
+                    : 'flagged amount · risk indicator'}
                 </div>
-              )
+              </div>
             )}
           </div>
 
-          {/* Subtitle paragraph: only for WHAT view; suppressed for WHO per spec */}
-          {subtitleText && (
+          {/* Deck paragraph — per-view, under the constant «El Arqueo» headline */}
+          {deckText && (
             <p
               className="mt-3"
               style={{
@@ -574,9 +550,10 @@ export function Sectors() {
                 lineHeight: 1.55,
                 color: 'var(--color-text-secondary, var(--color-text-muted))',
                 letterSpacing: '0.005em',
+                maxWidth: '58ch',
               }}
             >
-              {subtitleText}
+              {deckText}
             </p>
           )}
         </div>
@@ -644,7 +621,7 @@ export function Sectors() {
                   {/* Editorial lede */}
                   <div className="mb-3 pb-3 border-b border-border">
                     <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
-                      {lang === 'es' ? 'Hallazgo · Categorías' : 'Finding · Categories'}
+                      {lang === 'es' ? 'Hallazgo · El Catálogo' : 'Finding · The Catalog'}
                     </p>
                     <h2
                       className="text-text-primary leading-[1.1] mb-3"
@@ -660,49 +637,37 @@ export function Sectors() {
                           <span style={{ color: 'var(--color-accent)' }}>
                             {topByRisk.name_es}
                           </span>
-                          {' '}es la categoría de mayor riesgo:{' '}
+                          {' '}es la categoría más caliente del catálogo —{' '}
                           <span style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
-                          {' '}promedio.
+                          {' '}de riesgo promedio — y de las más chicas por valor: {formatSpend(topByRisk.total_value)}.
                         </>
                       ) : (
                         <>
                           <span style={{ color: 'var(--color-accent)' }}>
                             {topByRisk.name_en}
                           </span>
-                          {' '}is the highest-risk category:{' '}
+                          {' '}runs hottest in the catalog —{' '}
                           <span style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
-                          {' '}average.
+                          {' '}mean risk — and among the smaller by value: {formatSpend(topByRisk.total_value)}.
                         </>
                       )}
                     </h2>
                     <p className="text-sm text-text-secondary leading-[1.6]">
                       {lang === 'es' ? (
                         <>
-                          Las categorías agrupan <strong className="text-text-primary">qué</strong> compró el gobierno — medicamentos, obra pública, software — independientemente de quién. Por volumen, <strong className="text-text-primary">{topByValue.name_es}</strong> lidera con <strong className="text-text-primary">{formatSpend(topByValue.total_value)}</strong> en contratos. Por riesgo, {topByRisk.name_es} encabeza la lista.
+                          Las categorías agrupan <strong className="text-text-primary">qué</strong> compró el Estado — medicamentos, obra, seguros — sin importar quién. Por volumen manda <strong className="text-text-primary">{topByValue.name_es}</strong> ({formatSpend(topByValue.total_value)}, {(topByValue.avg_risk * 100).toFixed(1)}% de riesgo — debajo de la regla). El catálogo repite el confundido de los sectores: lo grande casi nunca es lo más caliente.
                         </>
                       ) : (
                         <>
-                          Categories group <strong className="text-text-primary">what</strong> the government bought — medicines, civil works, software — regardless of who bought it. By volume, <strong className="text-text-primary">{topByValue.name_en}</strong> leads with <strong className="text-text-primary">{formatSpend(topByValue.total_value)}</strong> in contracts. By risk, {topByRisk.name_en} tops the list.
+                          Categories group <strong className="text-text-primary">what</strong> the State bought — medicines, works, insurance — regardless of who. By volume, <strong className="text-text-primary">{topByValue.name_en}</strong> leads ({formatSpend(topByValue.total_value)} at {(topByValue.avg_risk * 100).toFixed(1)}% risk — under the rule). The catalog repeats the sector confound: the big is almost never the hottest.
                         </>
                       )}
                     </p>
                   </div>
 
-                  {/* ── § 1 — SWIMLANE HERO ───────────────────────────────── */}
+                  {/* ── § 1 — LA MESA · POR CATEGORÍA (Marimekko hero; self-labels) ── */}
                   <div className="mb-3 pb-3 border-b border-border">
-                    <div className="flex items-baseline gap-3 mb-2">
-                      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
-                        {lang === 'es'
-                          ? '§ Lo que el Estado compra · 12 carriles'
-                          : '§ What the State Buys · 12 Lanes'}
-                      </p>
-                      <span className="text-[9px] text-text-muted/50 font-mono hidden sm:block">
-                        {lang === 'es'
-                          ? 'posición = riesgo · tamaño = gasto'
-                          : 'position = risk · size = spend'}
-                      </span>
-                    </div>
-                    <CategorySectorSwimlane categories={categoryData.data} />
+                    <ArqueoMesaCategorias categories={categoryData.data} lang={lang} />
                   </div>
 
                   {/* ── § 2 — CAPTURE DUMBBELL HERO ─────────────────────── */}
@@ -710,8 +675,8 @@ export function Sectors() {
                     <div className="flex items-baseline gap-3 mb-2">
                       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                         {lang === 'es'
-                          ? '§ La fragmentación · cuánto controla el líder'
-                          : '§ The Fragmentation · how little the leader holds'}
+                          ? '§ La captura · cuánto controla el líder de cada categoría'
+                          : '§ The capture · how much the leader of each category holds'}
                       </p>
                       <span className="text-[9px] text-text-muted/50 font-mono hidden sm:block">
                         {lang === 'es'
@@ -726,8 +691,8 @@ export function Sectors() {
                   <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
                     <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                       {lang === 'es'
-                        ? `§ El Catálogo · ${categoryData.total} categorías`
-                        : `§ The Catalog · ${categoryData.total} categories`}
+                        ? `§ El Catálogo · ${categoryData.total} categorías, asiento por asiento`
+                        : `§ The Catalog · ${categoryData.total} categories, entry by entry`}
                     </p>
                     <div className="flex items-center gap-2">
                       {/* Sort chips — visible UI for catSortKey */}
@@ -964,12 +929,9 @@ export function Sectors() {
                       </div>
                     )
                   })()}
-                  <p className="mt-4 text-[11px] text-text-muted leading-relaxed">
-                    {lang === 'es'
-                      ? <>Las categorías usan códigos Partida/CUCoP. La cobertura confiable es 2023–2025 (100% Partida en Estructura D); años anteriores pueden tener clasificación parcial. Haz clic en una categoría para ver contratos, proveedores e instituciones.</>
-                      : <>Categories use Partida/CUCoP codes. Reliable coverage is 2023–2025 (100% Partida in Structure D); earlier years may have partial classification. Click any category to drill into contracts, vendors, and institutions.</>
-                    }
-                  </p>
+                  <div className="mt-6">
+                    <FeDeArqueo view="categorias" lang={lang} totals={null} />
+                  </div>
                 </>
               )
             })() : (
@@ -1002,6 +964,8 @@ export function Sectors() {
             {/* ── Loading skeletons ────────────────────────────────────── */}
             {isLoading && (
               <div className="space-y-2 mt-4">
+                {/* La Mesa del Arqueo hero slot */}
+                <Skeleton className="h-[360px] w-full mb-6" />
                 {Array.from({ length: 12 }).map((_, i) => (
                   <Skeleton key={i} className="h-10 w-full" />
                 ))}
@@ -1041,6 +1005,11 @@ export function Sectors() {
             {/* ── MAIN LEDGER CONTENT — the Confounded Ledger ──────────── */}
             {!isLoading && !error && ledgerRows.length > 0 && ledeStats && (
               <>
+                {/* Act I — LA MESA DEL ARQUEO (Marimekko hero; self-labels kicker + headline) */}
+                <div className="mb-6 pb-6 border-b border-border">
+                  <ArqueoMesa rows={ledgerRows} lang={lang} />
+                </div>
+
                 {/* §A — THE CONFOUND LEDE (full-width; the ribbon died) ──── */}
                 <section
                   aria-label={lang === 'es' ? 'Hallazgo: el confundido' : 'Finding: the confound'}
@@ -1072,27 +1041,43 @@ export function Sectors() {
                   >
                     {lang === 'es' ? (
                       <>
-                        {'El tamaño manda el orden. La intensidad lo desmiente: '}
+                        {'En un arqueo caben dos preguntas por gaveta. El monto corona a '}
+                        <span style={{ color: 'var(--color-text-primary)' }}>
+                          {ledeStats.top3[0].name}
+                        </span>
+                        {'; la saturación corona a '}
                         <span style={{ color: 'var(--color-accent)' }}>
                           {ledeStats.intLeader.name}
                         </span>
-                        {' señala el '}
+                        {' — '}
                         <span style={{ color: 'var(--color-accent)', fontVariantNumeric: 'tabular-nums' }}>
                           {ledeStats.intLeaderPct}%
                         </span>
-                        {' de su propio gasto — la marca más alta del registro.'}
+                        {' de su propio gasto observado, con '}
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {ledeStats.intLeader.daPct.toFixed(0)}%
+                        </span>
+                        {' adjudicado sin competencia.'}
                       </>
                     ) : (
                       <>
-                        {'Size sets the ranking. Intensity overturns it: '}
+                        {'A cash count asks two questions of every drawer. The amount crowns '}
+                        <span style={{ color: 'var(--color-text-primary)' }}>
+                          {ledeStats.top3[0].name}
+                        </span>
+                        {'; saturation crowns '}
                         <span style={{ color: 'var(--color-accent)' }}>
                           {ledeStats.intLeader.name}
                         </span>
-                        {' has '}
+                        {' — '}
                         <span style={{ color: 'var(--color-accent)', fontVariantNumeric: 'tabular-nums' }}>
                           {ledeStats.intLeaderPct}%
                         </span>
-                        {' of its own spend model-flagged — the highest mark in the registry.'}
+                        {' of its own spend flagged, '}
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {ledeStats.intLeader.daPct.toFixed(0)}%
+                        </span>
+                        {' of it awarded without competition.'}
                       </>
                     )}
                   </h2>
@@ -1108,19 +1093,17 @@ export function Sectors() {
                   >
                     {lang === 'es' ? (
                       <>
-                        {'Dos preguntas, dos escalas. '}
-                        <strong className="text-text-primary">¿Cuánto dinero?</strong>
-                        {' ordena por VaR absoluto. '}
+                        <strong className="text-text-primary">¿Cuántos pesos?</strong>
+                        {' ordena por monto observado — la escala del dinero. '}
                         <strong className="text-text-primary">¿Qué tan saturado?</strong>
-                        {' ordena por exposición sobre el gasto propio del sector. La lámina dibuja ambas en una sola línea.'}
+                        {' ordena por la parte del gasto propio — la escala de la casa. La Lámina dibuja ambas en una sola línea; el Registro las audita columna por columna.'}
                       </>
                     ) : (
                       <>
-                        {'Two questions, two scales. '}
-                        <strong className="text-text-primary">How much money?</strong>
-                        {' ranks by absolute VaR. '}
+                        <strong className="text-text-primary">How many pesos?</strong>
+                        {' ranks by flagged amount — the money scale. '}
                         <strong className="text-text-primary">How saturated?</strong>
-                        {" ranks by exposure over the sector's own spend. The plate draws both on one line."}
+                        {' ranks by share of own spend — the house scale. The Plate draws both on one line; the Register audits them column by column.'}
                       </>
                     )}
                   </p>
@@ -1131,8 +1114,8 @@ export function Sectors() {
                     style={{ fontSize: '10px', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
                   >
                     {lang === 'es'
-                      ? `top 3 = ${ledeStats.varPct}% de la exposición señalada · exposición total = ${ledeStats.valuePct}% del valor · ${ledeStats.countPct}% de los contratos · indicador de riesgo, no estimación de fraude`
-                      : `top 3 = ${ledeStats.varPct}% of model-flagged exposure · total exposure = ${ledeStats.valuePct}% of value · ${ledeStats.countPct}% of contracts · risk indicator, not a fraud estimate`}
+                      ? `top 3 = ${ledeStats.varPct}% del monto observado · ${ledeStats.minSat.name}: ${ledeStats.minSatMoneyRank}.º en dinero, la saturación más baja (${ledeStats.minSatSatPct}%) y ${ledeStats.minSatSbPct}% a licitación de un solo postor · indicador de riesgo, no estimación de fraude`
+                      : `top 3 = ${ledeStats.varPct}% of flagged amount · ${ledeStats.minSat.name}: ${ledeStats.minSatMoneyRank}${ledeStats.minSatMoneyRank === 1 ? 'st' : ledeStats.minSatMoneyRank === 2 ? 'nd' : ledeStats.minSatMoneyRank === 3 ? 'rd' : 'th'} in money, lowest saturation (${ledeStats.minSatSatPct}%) and ${ledeStats.minSatSbPct}% single-bid · risk indicator, not a fraud estimate`}
                   </p>
                 </section>
 
@@ -1142,7 +1125,7 @@ export function Sectors() {
                     data sharing the same VaR/Intensity lens. The Plate is the
                     page centrepiece — kept first, right under the lede, as the
                     DEFAULT view; the table is a toggle-away view. Don't stack. */}
-                <div className="mb-6" aria-label={lang === 'es' ? 'Registro de exposición sectorial' : 'Registry of sector exposure'}>
+                <div className="mb-6" aria-label={lang === 'es' ? 'El Registro del Arqueo' : 'The Count Register'}>
                   <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
                     <p
                       style={{
@@ -1154,7 +1137,7 @@ export function Sectors() {
                         fontWeight: 700,
                       }}
                     >
-                      {lang === 'es' ? '§ Registro de exposición sectorial' : '§ Registry of sector exposure'}
+                      {lang === 'es' ? '§ El Registro del Arqueo · dos vistas, un orden' : '§ The Count Register · two views, one order'}
                     </p>
                     {/* Plate / Register view toggle (Plate default; lens shared) */}
                     <div
@@ -1195,6 +1178,19 @@ export function Sectors() {
                     The 3 sectors whose intensity rank most exceeds their VaR
                     rank — the plate's thesis, named. */}
                 <SelfCaptureBand rows={ledgerRows} lang={lang} />
+
+                {/* Act V — FE DE ARQUEO (closing auditor's note) */}
+                <FeDeArqueo
+                  view="sectores"
+                  lang={lang}
+                  totals={{
+                    totalMxn: ledeStats.sumTotal,
+                    varMxn: totalVarMxn,
+                    contracts: ledeStats.sumContracts,
+                    flaggedSharePct: Number(ledeStats.valuePct),
+                    countPct: Number(ledeStats.countPct),
+                  }}
+                />
               </>
             )}
           </>

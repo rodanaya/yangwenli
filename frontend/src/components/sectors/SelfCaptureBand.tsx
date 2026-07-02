@@ -37,7 +37,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
 
   return (
     <section
-      aria-label={isEs ? 'La intensidad — lo que el tamaño esconde' : 'Intensity — what size hides'}
+      aria-label={isEs ? 'Los que suben en el arqueo — lo que el tamaño esconde' : 'The climbers of the count — what size hides'}
       className="mb-6 pb-6 border-b border-border"
     >
       <p
@@ -51,7 +51,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
           fontWeight: 700,
         }}
       >
-        {isEs ? '§ La intensidad · lo que el tamaño esconde' : '§ Intensity · what size hides'}
+        {isEs ? '§ Los que suben en el arqueo · lo que el tamaño esconde' : '§ The climbers of the count · what size hides'}
       </p>
 
       <div role="list">
@@ -168,8 +168,8 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
         }}
       >
         {isEs
-          ? 'Estos sectores pesan poco en el libro mayor del dinero pero queman caliente en el suyo propio. El orden por VaR los entierra; la intensidad los expone.'
-          : 'These sectors weigh little on the money ledger but burn hot on their own. The VaR ranking buries them; intensity exposes them.'}
+          ? 'Estos sectores pesan poco en la mesa del dinero pero queman caliente en su propia gaveta. El orden por monto los entierra; la saturación los expone.'
+          : 'These sectors weigh little on the money table but burn hot in their own drawer. The amount ranking buries them; saturation exposes them.'}
       </p>
     </section>
   )
