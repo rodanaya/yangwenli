@@ -34,6 +34,7 @@ import type { CommunityGraphResponse, CommunityGraphNode } from '@/api/client'
 import { RISK_COLORS, RISK_TEXT_COLORS, PATTERN_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
+import type { EvidenceMark } from '@/lib/network/evidence'
 
 const VIEW_W = 920
 const VIEW_H = 600
@@ -57,6 +58,13 @@ interface CommunityForceGraphProps {
   lang: 'en' | 'es'
   selectedVendorId?: number | null
   onSelectVendor?: (vendorId: number | null) => void
+  /**
+   * Optional forensic evidence marks (El Croquis §3.4). Additive, default-off:
+   * when undefined, the graph renders exactly as before. Each mark pins a
+   * numbered ochre "tent" to a node (vendorId) or an edge midpoint (edge),
+   * decoded by the EvidenceIndex strip below the plate.
+   */
+  evidence?: EvidenceMark[]
 }
 
 /** Risk fill — low band renders neutral zinc, never green (Bible §3.10). */
@@ -76,6 +84,7 @@ export function CommunityForceGraph({
   lang,
   selectedVendorId = null,
   onSelectVendor,
+  evidence,
 }: CommunityForceGraphProps) {
   const isEs = lang === 'es'
   const [hoverId, setHoverId] = useState<number | null>(null)
@@ -274,6 +283,62 @@ export function CommunityForceGraph({
               </text>
             ))}
         </g>
+
+        {/* Evidence marks (El Croquis §3.4) — numbered ochre tents pinned to
+            the scene. Additive + default-off: renders nothing when `evidence`
+            is undefined. Each mark reads from the memoized layout, so it
+            re-resolves automatically per community. pointer-events off. */}
+        {evidence && evidence.length > 0 && (
+          <g style={{ pointerEvents: 'none' }}>
+            {evidence.map((m) => {
+              let ax: number
+              let ay: number
+              if (m.edge) {
+                const na = nodes.find((n) => n.id === m.edge![0])
+                const nb = nodes.find((n) => n.id === m.edge![1])
+                if (!na || !nb) return null
+                ax = ((na.x ?? 0) + (nb.x ?? 0)) / 2
+                ay = ((na.y ?? 0) + (nb.y ?? 0)) / 2
+              } else {
+                const n = nodes.find((x) => x.id === m.vendorId)
+                if (!n) return null
+                ax = (n.x ?? 0) + n.r * 0.7
+                ay = (n.y ?? 0) - n.r * 0.7
+              }
+              // Tent sits up-and-right of the anchor, clamped into the plate.
+              const tx = Math.min(VIEW_W - MARGIN - 11, ax + 6)
+              const ty = Math.max(MARGIN, ay - 16)
+              return (
+                <g key={m.id}>
+                  <line
+                    x1={ax}
+                    y1={ay}
+                    x2={tx + 5.5}
+                    y2={ty + 11}
+                    stroke="var(--color-accent)"
+                    strokeWidth={0.75}
+                    strokeOpacity={0.85}
+                  />
+                  <rect x={tx} y={ty} width={11} height={11} rx={1} fill="var(--color-accent)" />
+                  <text
+                    x={tx + 5.5}
+                    y={ty + 8.4}
+                    textAnchor="middle"
+                    style={{
+                      fontFamily: '"JetBrains Mono", monospace',
+                      fontSize: '7px',
+                      fontWeight: 700,
+                      letterSpacing: '0.02em',
+                      fill: 'var(--color-background)',
+                    }}
+                  >
+                    {m.id}
+                  </text>
+                </g>
+              )
+            })}
+          </g>
+        )}
       </svg>
 
       {/* Hover dossier card — editorial sidebar voice, not chart-help tooltip */}

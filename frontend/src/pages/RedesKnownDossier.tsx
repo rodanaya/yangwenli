@@ -35,16 +35,20 @@ import {
 } from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { DotBar } from '@/components/ui/DotBar'
 import { DossierOriginProvider } from '@/lib/nav/wayfinding'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { CommunityForceGraph } from '@/components/network/CommunityForceGraph'
 import { InstitutionStarGraph } from '@/components/network/InstitutionStarGraph'
 import { VendorNetworkView } from '@/components/network/VendorNetworkView'
+import { MeshPlano, signalDensity } from '@/components/network/MeshPlano'
+import { ClusterActa } from '@/components/network/ClusterActa'
+import { EvidenceIndex } from '@/components/network/EvidenceIndex'
+import { buildEvidenceMarks } from '@/lib/network/evidence'
+import { getClusterVerdict } from '@/lib/network/cluster-verdict'
 
 const PINS_KEY = 'rubli_trama_pins_v1'
 
-type SortKey = 'value' | 'risk' | 'size' | 'sb' | 'gt'
+type SortKey = 'senal' | 'value' | 'risk' | 'size' | 'sb' | 'gt'
 type LensKey = 'clusters' | 'institutions'
 type InstSortKey = 'value' | 'top1_share' | 'hhi' | 'risk'
 const HHI_CONCENTRATED = 2500 // DOJ/FTC threshold: highly concentrated market
@@ -203,7 +207,7 @@ export default function RedesKnownDossier() {
   })
   const [instSort, setInstSort] = useState<InstSortKey>('value')
   const [selectedVendor, setSelectedVendor] = useState<number | null>(null)
-  const [sortBy, setSortBy] = useState<SortKey>('value')
+  const [sortBy, setSortBy] = useState<SortKey>('senal')
   const [patternFilter, setPatternFilter] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [showAll, setShowAll] = useState(false)
@@ -258,7 +262,15 @@ export default function RedesKnownDossier() {
 
   // Default to the highest-value community: the real mesh must be
   // visceral on first paint, not hidden behind a click.
-  const effectiveComm = commId ?? index?.communities[0]?.community_id ?? null
+  // Default the plate to the highest-SIGNAL knot (not the top-value giant):
+  // the page argues the signal lives in the small dense knots, so lead with one.
+  const topSignalComm =
+    index && index.communities.length
+      ? index.communities.reduce((b, c) => (signalDensity(c) > signalDensity(b) ? c : b)).community_id
+      : null
+  const effectiveComm = commId ?? topSignalComm ?? null
+  const effectiveCommItem =
+    index?.communities.find((c) => c.community_id === effectiveComm) ?? null
 
   const { data: graph, isLoading: graphLoading, isError: graphError } = useQuery({
     queryKey: ['trama-graph', effectiveComm],
@@ -274,7 +286,9 @@ export default function RedesKnownDossier() {
     queryFn: () => networkApi.getInstitutionCapture(120, 'value'),
     staleTime: 60 * 60 * 1000,
     retry: 2,
-    enabled: vendorId == null && lens === 'institutions',
+    // Fetched in BOTH lenses (cached 1h): the clusters lens needs it to invert
+    // feeding_communities → «compradores asediados» for the selected knot.
+    enabled: vendorId == null,
   })
 
   const sortedInstitutions = useMemo(() => {
@@ -335,6 +349,10 @@ export default function RedesKnownDossier() {
     }
     const sorted = [...list]
     switch (sortBy) {
+      case 'senal':
+        // Signal density = risk × value ÷ actors (the inversion default).
+        sorted.sort((a, b) => signalDensity(b) - signalDensity(a))
+        break
       case 'risk':
         sorted.sort((a, b) => b.avg_risk - a.avg_risk)
         break
@@ -363,15 +381,28 @@ export default function RedesKnownDossier() {
 
   const visible = showAll ? filtered : filtered.slice(0, 60)
 
-  const totals = useMemo(() => {
-    if (!index) return null
-    return {
-      communities: index.total_communities,
-      value: index.communities.reduce((s, c) => s + c.total_value_mxn, 0),
-      gt: index.communities.reduce((s, c) => s + c.gt_vendor_count, 0),
-      sanctioned: index.communities.reduce((s, c) => s + c.sanctioned_count, 0),
-    }
+  // Mesh-median risk anchors the cluster verdict (the "{x}× the mesh median"
+  // clause) and the rail verdict ticks. Computed over the live index.
+  const meshMedianRisk = useMemo(() => {
+    if (!index || index.communities.length === 0) return 0.15
+    const s = index.communities.map((c) => c.avg_risk).sort((a, b) => a - b)
+    const mid = Math.floor(s.length / 2)
+    return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2
   }, [index])
+
+  // «Compradores asediados» — invert feeding_communities: the top-120 federal
+  // buyers whose top-vendor clans include the selected knot. Frontend-only join.
+  const besiegedBuyers = useMemo(() => {
+    if (!capture || effectiveComm == null) return []
+    return capture.institutions
+      .map((i) => {
+        const ref = i.feeding_communities.find((f) => f.community_id === effectiveComm)
+        return ref ? { institutionId: i.institution_id, name: i.name, vendorCount: ref.vendor_count } : null
+      })
+      .filter((x): x is { institutionId: number; name: string; vendorCount: number } => x != null)
+      .sort((a, b) => b.vendorCount - a.vendorCount)
+      .slice(0, 4)
+  }, [capture, effectiveComm])
 
   // RUNG 2 early return AFTER all hooks (rules of hooks).
   if (vendorId !== null && Number.isFinite(vendorId) && vendorId > 0) {
@@ -399,12 +430,17 @@ export default function RedesKnownDossier() {
   }
 
   const sortLabels: Record<SortKey, { en: string; es: string }> = {
+    senal: { en: 'Signal', es: 'Señal' },
     value: { en: 'Value', es: 'Valor' },
     risk: { en: 'Risk', es: 'Riesgo' },
     size: { en: 'Size', es: 'Tamaño' },
     sb: { en: 'Single bid', es: 'Prop. única' },
     gt: { en: 'GT cases', es: 'Casos GT' },
   }
+
+  // Forensic evidence marks for the active knot (El Croquis §3.4/§3.5).
+  // Cheap (≤100 nodes); pins onto the graph + decoded by EvidenceIndex.
+  const evidenceEntries = graph ? buildEvidenceMarks(graph) : []
 
   // W4 — one origin provider over the body tree so an actor opened to its vendor
   // dossier (RUNG-3) gets a "← Volver a La Trama" thread back to the exact cluster
@@ -444,7 +480,7 @@ export default function RedesKnownDossier() {
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
               <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
-              <span>{isEs ? 'Grafo de co-licitación · Louvain' : 'Co-bidding graph · Louvain'}</span>
+              <span>{isEs ? 'Croquis de co-licitación · comunidades Louvain' : 'Co-bidding sketch · Louvain communities'}</span>
             </span>
           </div>
 
@@ -461,14 +497,13 @@ export default function RedesKnownDossier() {
           >
             {isEs ? (
               <>
-                La{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>trama</span>{' '}
-                real.
+                La trama se lee por sus{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>«nudos»</span>.
               </>
             ) : (
               <>
-                The real{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>mesh</span>.
+                The mesh is read by its{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>«knots»</span>.
               </>
             )}
           </h1>
@@ -484,66 +519,36 @@ export default function RedesKnownDossier() {
           >
             {isEs ? (
               <>
-                El Atlas dibuja una metáfora. Esta lámina dibuja el{' '}
-                <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>grafo forense</em>: cada
-                arista es un par real de proveedores que licitaron juntos; cada cúmulo, una comunidad detectada
-                sobre la red de co-licitación. Sin posiciones inventadas.
+                El Atlas dibuja una metáfora; esta lámina levanta el{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>croquis</em>: cada arista es
+                un par real de proveedores que licitaron juntos, cada cúmulo una comunidad detectada sobre la red de
+                co-licitación. Sin posiciones inventadas. Y una instrucción de lectura: los cúmulos gigantes son
+                plomería de mercado — la señal vive en los nudos pequeños y densos.
               </>
             ) : (
               <>
-                The Atlas draws a metaphor. This plate draws the{' '}
-                <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>forensic graph</em>: every
-                edge is a real pair of vendors that bid together; every cluster, a community detected over the
-                co-bidding network. No invented positions.
+                The Atlas draws a metaphor; this plate lifts the{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>scene sketch</em>: every edge
+                is a real pair of vendors that bid together, every cluster a community detected over the co-bidding
+                network. No invented positions. And one reading instruction: the giant clusters are market plumbing —
+                the signal lives in the small, dense knots.
               </>
             )}
           </p>
-
-          {/* Stat band — everything from the live index, nothing invented */}
-          {totals && (
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                {
-                  v: formatNumber(totals.communities),
-                  l: isEs ? 'cúmulos de co-licitación' : 'co-bidding clusters',
-                },
-                {
-                  v: formatCompactMXN(totals.value),
-                  l: isEs ? 'valor en cúmulos indexados' : 'value across indexed clusters',
-                },
-                {
-                  v: formatNumber(totals.gt),
-                  l: isEs ? 'proveedores con caso GT' : 'vendors with GT case',
-                },
-                {
-                  v: formatNumber(totals.sanctioned),
-                  l: isEs ? 'sancionados SFP en cúmulos' : 'SFP-sanctioned in clusters',
-                },
-              ].map((s, i) => (
-                <div
-                  key={i}
-                  className="rounded-sm border border-border bg-background-card px-4 py-3"
-                  style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
-                >
-                  <p
-                    className="text-text-primary"
-                    style={{
-                      fontFamily: '"Playfair Display", Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 800,
-                      fontSize: '24px',
-                      fontVariantNumeric: 'tabular-nums',
-                      lineHeight: 1.1,
-                    }}
-                  >
-                    {s.v}
-                  </p>
-                  <p className="mt-1 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70">{s.l}</p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
+
+        {/* ── Plano general — the size≠signal inversion, made visible ─── */}
+        {lens === 'clusters' && index && (
+          <div className="mt-8">
+            <MeshPlano
+              communities={index.communities}
+              totalCommunities={index.total_communities}
+              selectedId={effectiveComm}
+              onSelect={selectCommunity}
+              lang={lang}
+            />
+          </div>
+        )}
 
         {/* ── Instrument: index rail ←→ mesh plate ─────────────────── */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-[370px_1fr] gap-6 items-start">
@@ -581,7 +586,7 @@ export default function RedesKnownDossier() {
                 )}
               >
                 <Building2 className="h-3 w-3" aria-hidden="true" />
-                {isEs ? 'Instituciones' : 'Institutions'}
+                {isEs ? 'Compradores' : 'Buyers'}
               </button>
             </div>
 
@@ -771,6 +776,13 @@ export default function RedesKnownDossier() {
                   <button
                     key={k}
                     onClick={() => setSortBy(k)}
+                    title={
+                      k === 'senal'
+                        ? isEs
+                          ? 'valor × indicador de riesgo ÷ actores'
+                          : 'value × risk indicator ÷ actors'
+                        : undefined
+                    }
                     className={cn(
                       'px-2 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider border transition-colors',
                       sortBy === k
@@ -837,6 +849,7 @@ export default function RedesKnownDossier() {
                   const active = c.community_id === effectiveComm
                   const pinned = pins.includes(c.community_id)
                   const daHot = (c.da_rate ?? 0) > OECD_DIRECT_AWARD_LIMIT
+                  const verdict = getClusterVerdict(c, meshMedianRisk)
                   return (
                     <div
                       key={c.community_id}
@@ -863,6 +876,12 @@ export default function RedesKnownDossier() {
                           <span className="text-[10px] font-mono font-bold text-text-muted/60 mr-1.5">
                             {rank + 1}
                           </span>
+                          <span
+                            aria-hidden="true"
+                            className="inline-block rounded-[1px] mr-1 align-middle"
+                            style={{ width: 6, height: 6, background: verdict.color }}
+                            title={isEs ? verdict.label_es : verdict.label_en}
+                          />
                           <span className="text-[11px] font-mono font-bold text-text-primary">{lbl.code}</span>
                         </span>
                         <span className="shrink-0 inline-flex items-center gap-1.5">
@@ -976,8 +995,8 @@ export default function RedesKnownDossier() {
               <>
                 <PlateFrame
                   lang={lang}
-                  folio="XIV"
-                  contextLabel={{ en: 'The real mesh · co-bidding graph', es: 'La trama real · grafo de co-licitación' }}
+                  folio="XIV·B"
+                  contextLabel={{ en: "Detail plan · the knot's mesh", es: 'Plano de detalle · la trama del nudo' }}
                   caption={
                     isEs
                       ? `Lámina — Cúmulo C-${graph.community_id}: ${graph.rendered_members}${graph.truncated ? ` de ${formatNumber(graph.total_members)}` : ''} actores y ${formatNumber(graph.edges.length)} aristas reales de co-licitación. Posiciones por fuerza dirigida sobre co_bidding_stats; ningún vínculo es ilustrativo.`
@@ -989,6 +1008,7 @@ export default function RedesKnownDossier() {
                     lang={lang}
                     selectedVendorId={selectedVendor}
                     onSelectVendor={setSelectedVendor}
+                    evidence={evidenceEntries}
                   />
                   {/* Truncation honesty strip (locked decision: giants → top-100).
                       Below the canvas — above it, it collides with the
@@ -1001,166 +1021,38 @@ export default function RedesKnownDossier() {
                       {graph.edges_truncated && (isEs ? ' · aristas recortadas a 2,500' : ' · edges capped at 2,500')}
                     </p>
                   )}
+                  <EvidenceIndex
+                    entries={evidenceEntries}
+                    onFocusVendor={setSelectedVendor}
+                    lang={lang}
+                  />
                 </PlateFrame>
 
-                {/* Dossier strip — stats + roster */}
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div
-                    className="rounded-sm border border-border bg-background-card px-4 py-3.5"
-                    style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
-                  >
-                    <p className="mb-2.5 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
-                      {isEs ? '§ Firma del cúmulo' : '§ Cluster signature'}
-                    </p>
-                    <div className="space-y-2.5">
-                      <DeviationRow
-                        label={isEs ? 'Adjudicación directa' : 'Direct award'}
-                        value={graph.stats.da_rate ?? 0}
-                        benchmark={OECD_DIRECT_AWARD_LIMIT}
-                        benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
-                        maxDelta={0.75}
-                      />
-                      <DeviationRow
-                        label={isEs ? 'Propuesta única' : 'Single bid'}
-                        value={graph.stats.sb_rate ?? 0}
-                        benchmark={OECD_SINGLE_BID_LIMIT}
-                        benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
-                        maxDelta={0.75}
-                      />
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] font-mono text-text-muted">
-                      <span>
-                        {isEs ? 'Valor total' : 'Total value'}{' '}
-                        <span className="text-text-primary font-bold">{formatCompactMXN(graph.stats.total_value_mxn)}</span>
-                      </span>
-                      <span>
-                        {isEs ? 'Riesgo medio' : 'Avg risk'}{' '}
-                        <span style={{ color: RISK_TEXT_COLORS[getRiskLevelFromScore(graph.stats.avg_risk)], fontWeight: 700 }}>
-                          {Math.round(graph.stats.avg_risk * 100)}%
-                        </span>
-                      </span>
-                      <span>
-                        {isEs ? 'Casos GT' : 'GT cases'}{' '}
-                        <span className="text-accent font-bold">{graph.stats.gt_vendor_count}</span>
-                      </span>
-                      <span>
-                        {isEs ? 'Sancionados' : 'Sanctioned'}{' '}
-                        <span style={{ color: RISK_TEXT_COLORS.critical, fontWeight: 700 }}>{graph.stats.sanctioned_count}</span>
-                      </span>
-                    </div>
-                    {graph.stats.labeled_count / Math.max(graph.total_members, 1) >= 0.3 &&
-                      graph.stats.pattern_mix.length > 0 && (
-                        <div className="mt-3 border-t border-border/50 pt-2.5">
-                          <p className="mb-1 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
-                            {isEs ? 'Mezcla de patrones ARIA' : 'ARIA pattern mix'}
-                          </p>
-                          <div className="flex h-[5px] w-full overflow-hidden rounded-full bg-border/40" aria-hidden="true">
-                            {graph.stats.pattern_mix.map((m) => (
-                              <span
-                                key={m.pattern}
-                                style={{
-                                  width: `${(m.count / Math.max(graph.stats.labeled_count, 1)) * 100}%`,
-                                  background: PATTERN_COLORS[m.pattern] ?? 'var(--color-text-muted)',
-                                }}
-                              />
-                            ))}
-                          </div>
-                          <p className="mt-1 text-[8.5px] font-mono text-text-muted/60">
-                            {graph.stats.pattern_mix
-                              .map((m) => `${m.pattern} ${Math.round((m.count / Math.max(graph.stats.labeled_count, 1)) * 100)}%`)
-                              .join(' · ')}{' '}
-                            — {isEs ? `sobre ${graph.stats.labeled_count} clasificados` : `over ${graph.stats.labeled_count} labeled`}
-                          </p>
-                        </div>
-                      )}
+                {/* El acta del nudo — the cluster read as a prosecutable case */}
+                {effectiveCommItem && (
+                  <div className="mt-4">
+                    <ClusterActa
+                      community={effectiveCommItem}
+                      graph={graph}
+                      meshMedianRisk={meshMedianRisk}
+                      besiegedBuyers={besiegedBuyers}
+                      selectedVendorId={selectedVendor}
+                      onViewVendorRing={(vid) => {
+                        const next = new URLSearchParams(searchParams)
+                        next.set('vendor', String(vid))
+                        if (effectiveComm != null) next.set('comm', String(effectiveComm))
+                        setSearchParams(next)
+                      }}
+                      onOpenBuyerSiege={(instId) => {
+                        setLens('institutions')
+                        setInstId(instId)
+                        setSelectedVendor(null)
+                        setQuery('')
+                      }}
+                      lang={lang}
+                    />
                   </div>
-
-                  {/* Roster — keyboard-reachable fallback for the graph */}
-                  <div
-                    className="rounded-sm border border-border bg-background-card px-4 py-3.5"
-                    style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
-                  >
-                    {/* W2 — header reconciles the sort (pagerank centrality) with
-                        what the eye reads. The order now tracks a VISIBLE channel
-                        (the influence bar); degree is demoted to muted context. */}
-                    <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
-                      {isEs ? '§ Más centrales · por influencia' : '§ Most central · by influence'}
-                    </p>
-                    <p className="mb-2.5 text-[8.5px] font-mono text-text-muted/45">
-                      {isEs ? 'centralidad pagerank · conexiones = grado' : 'pagerank centrality · ties = degree'}
-                    </p>
-                    {(() => {
-                      const roster = [...graph.nodes].sort((a, b) => b.pagerank - a.pagerank).slice(0, 10)
-                      // √pagerank domain — keeps the descending channel visible under
-                      // the near-power-law pagerank distribution (audit caution C).
-                      const maxInfl = Math.sqrt(roster[0]?.pagerank ?? 1) || 1
-                      return (
-                    <ul className="space-y-2">
-                      {roster.map((n) => {
-                        const pat = n.primary_pattern && PATTERN_COLORS[n.primary_pattern] ? n.primary_pattern : null
-                        return (
-                          <li key={n.vendor_id} className="min-w-0">
-                            <EntityIdentityChip
-                              type="vendor"
-                              id={n.vendor_id}
-                              name={n.name}
-                              size="sm"
-                              riskScore={n.risk_score}
-                              fullName
-                            />
-                            <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-                              <DotBar
-                                value={Math.sqrt(n.pagerank)}
-                                max={maxInfl}
-                                color="var(--color-accent)"
-                                ariaLabel={isEs ? 'Influencia (centralidad pagerank)' : 'Influence (pagerank centrality)'}
-                              />
-                              {pat && (
-                                <span
-                                  className="text-[8.5px] font-mono font-bold px-1 rounded-sm"
-                                  style={{ color: PATTERN_COLORS[pat], background: `${PATTERN_COLORS[pat]}1f` }}
-                                >
-                                  {pat}
-                                </span>
-                              )}
-                              <span
-                                className="text-[9px] font-mono text-text-muted/55"
-                                title={isEs ? 'conteo bruto de co-licitaciones' : 'raw co-bidding tie count'}
-                              >
-                                {n.degree} {isEs ? 'conexiones' : 'ties'}
-                                {n.is_sanctioned && (
-                                  <span style={{ color: RISK_TEXT_COLORS.critical }}> · SFP</span>
-                                )}
-                              </span>
-                            </div>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                      )
-                    })()}
-                    {selectedVendor != null && (
-                      <div className="mt-3 border-t border-border/50 pt-2.5 flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-mono text-text-muted/70">
-                          {isEs ? 'Actor seleccionado en la trama' : 'Actor selected in the mesh'}
-                        </span>
-                        <button
-                          onClick={() => {
-                            const next = new URLSearchParams(searchParams)
-                            next.set('vendor', String(selectedVendor))
-                            // Anchor the breadcrumb ladder: the C-NNN crumb
-                            // needs comm in the URL even on the default view.
-                            if (effectiveComm != null) next.set('comm', String(effectiveComm))
-                            setSearchParams(next)
-                          }}
-                          className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[9.5px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
-                        >
-                          {isEs ? 'Ver su red →' : 'View its ring →'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </>
             )}
             {lens === 'clusters' && !graph && !graphLoading && !graphError && !indexLoading && (
@@ -1384,29 +1276,61 @@ export default function RedesKnownDossier() {
 
         {/* ── Methodology footer ───────────────────────────────────── */}
         <div className="mt-8 rounded-sm border border-border bg-background-card px-5 py-4">
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1.5">
-            {isEs ? 'Metodología' : 'Methodology'}
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-3">
+            {isEs ? 'Fe de método' : 'Attestation of method'}
           </p>
-          <p className="text-[12px] text-text-secondary leading-relaxed">
-            {isEs ? (
-              <>
-                Las aristas provienen de pares reales de co-licitación (proveedores que participaron en los mismos
-                procedimientos). Los cúmulos son comunidades Louvain detectadas sobre esa red; la centralidad de cada
-                actor es su pagerank dentro del grafo. Tasas DA/propuesta única promediadas del motor ARIA por
-                cúmulo; riesgo del modelo v0.8.5 (AUC test 0.785). Es un{' '}
-                <em>indicador de riesgo</em>, no una probabilidad de corrupción. Los cúmulos de más de 150 actores se
-                muestran recortados a sus 100 más centrales.
-              </>
-            ) : (
-              <>
-                Edges come from real co-bidding pairs (vendors that participated in the same procedures). Clusters are
-                Louvain communities detected over that network; each actor&apos;s centrality is its pagerank within the
-                graph. DA/single-bid rates are ARIA engine averages per cluster; risk from model v0.8.5 (test AUC
-                0.785). This is a <em>risk indicator</em>, not a probability of corruption. Clusters above 150 actors
-                are truncated to their 100 most central members.
-              </>
-            )}
-          </p>
+          <ol className="space-y-2.5">
+            {[
+              {
+                es: 'Las aristas provienen de pares reales de co-licitación: proveedores que participaron en los mismos procedimientos. Ninguna posición es ilustrativa.',
+                en: 'Edges come from real co-bidding pairs: vendors that participated in the same procedures. No position is illustrative.',
+              },
+              {
+                es: 'Los cúmulos son comunidades Louvain (tamaño ≥5) detectadas sobre esa red; la centralidad de cada actor es su pagerank dentro del grafo.',
+                en: 'Clusters are Louvain communities (size ≥5) detected over that network; each actor’s centrality is its pagerank within the graph.',
+              },
+              {
+                es: 'Los cúmulos de más de 150 actores se dibujan recortados a sus 100 más centrales; las aristas se recortan a 2,500.',
+                en: 'Clusters above 150 actors are drawn truncated to their 100 most central; edges are capped at 2,500.',
+              },
+              {
+                es: `Tasas de adjudicación directa y propuesta única promediadas del motor ARIA por cúmulo; referencias OCDE ${Math.round(OECD_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(OECD_SINGLE_BID_LIMIT * 100)}%.`,
+                en: `Direct-award and single-bid rates are ARIA engine averages per cluster; OECD references ${Math.round(OECD_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(OECD_SINGLE_BID_LIMIT * 100)}%.`,
+              },
+              {
+                es: (
+                  <>
+                    El riesgo proviene del modelo v0.8.5 (AUC de prueba 0.785). Es un <em>indicador de riesgo</em>, no
+                    una probabilidad de corrupción; riesgo bajo no certifica integridad.
+                  </>
+                ),
+                en: (
+                  <>
+                    Risk comes from model v0.8.5 (test AUC 0.785). It is a <em>risk indicator</em>, not a probability of
+                    corruption; low risk does not certify integrity.
+                  </>
+                ),
+              },
+              {
+                es: 'La «señal» ordena por valor × indicador de riesgo ÷ actores: pesos ponderados por riesgo por cada miembro del cúmulo.',
+                en: '“Signal” sorts by value × risk indicator ÷ actors: risk-weighted pesos per cluster member.',
+              },
+              {
+                es: 'La cobertura de RFC es de 0.1% en 2002–2010: la red de co-licitación está subrepresentada antes de 2010 y este croquis es más confiable de 2010 en adelante.',
+                en: 'RFC coverage is 0.1% for 2002–2010: the co-bidding network is under-represented before 2010 and this sketch is most reliable from 2010 onward.',
+              },
+            ].map((cl, i) => (
+              <li key={i} className="flex gap-3 text-[12px] text-text-secondary leading-relaxed">
+                <span
+                  className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-accent/70 pt-0.5"
+                  style={{ minWidth: '2rem' }}
+                >
+                  ({['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii'][i]})
+                </span>
+                <span>{isEs ? cl.es : cl.en}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </div>
