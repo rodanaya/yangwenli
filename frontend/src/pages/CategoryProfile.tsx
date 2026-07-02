@@ -437,7 +437,7 @@ export default function CategoryProfile() {
             {t('profile.breadcrumb')}
           </Link>
           <ChevronRight className="h-3 w-3" aria-hidden="true" />
-          <span className="truncate max-w-[220px] text-text-secondary">
+          <span className="max-w-[240px] whitespace-normal break-words leading-tight text-text-secondary">
             {isEs ? (category?.name_es || category?.name_en) : (category?.name_en || category?.name_es)}
           </span>
         </nav>
@@ -1020,11 +1020,11 @@ export default function CategoryProfile() {
                       >
                         <span className="text-[10px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">{idx + 1}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-text-secondary truncate" title={c.title ?? ''}>
+                          <p className="text-xs text-text-secondary whitespace-normal break-words leading-tight" title={c.title ?? ''}>
                             {c.title ? shortenContractName(c.title, 72) : t('profile.actions.noTitle')}
                           </p>
                           {c.institution_name && (
-                            <p className="text-[10px] text-text-muted/50 font-mono mt-0.5 truncate" title={c.institution_name ?? ''}>
+                            <p className="text-[10px] text-text-muted/50 font-mono mt-0.5 whitespace-normal break-words leading-tight" title={c.institution_name ?? ''}>
                               {c.institution_name}
                             </p>
                           )}

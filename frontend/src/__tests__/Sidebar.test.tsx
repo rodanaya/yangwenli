@@ -61,7 +61,7 @@ describe('Sidebar', () => {
 
   it('renders investigate nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Risk Queue')).toBeInTheDocument()
+    expect(screen.getByText('Watchlist')).toBeInTheDocument()
     expect(screen.getByText('Cases')).toBeInTheDocument()
     expect(screen.getByText('Networks')).toBeInTheDocument()
   })

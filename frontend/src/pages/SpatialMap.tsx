@@ -77,7 +77,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
   const hintExits: Array<{ to: string; en: string; es: string }> = [
     { to: '/dashboard', en: 'Dashboard', es: 'Panel' },
     { to: '/cases', en: 'Cases', es: 'Casos' },
-    { to: '/aria', en: 'The Queue', es: 'La Cola' },
+    { to: '/aria', en: 'Watchlist', es: 'Lista de Vigilancia' },
   ]
 
   return (

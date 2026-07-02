@@ -913,7 +913,7 @@ export default function Administrations() {
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between text-[10px] mb-0.5">
-                                <span className="text-text-secondary truncate">{sector.name}</span>
+                                <span className="text-text-secondary whitespace-normal break-words leading-tight">{sector.name}</span>
                                 <span className="font-mono text-text-muted ml-1 flex-shrink-0">
                                   {formatNumber(sector.contracts)}
                                 </span>

@@ -254,8 +254,7 @@ function ExceptionPanel({ items, lang }: { items: GapSummaryResponse['by_excepti
           return (
             <div key={item.article} className="flex items-center gap-2">
               <div
-                className="w-32 shrink-0 text-xs font-mono text-text-secondary truncate"
-                title={item.article}
+                className="w-44 shrink-0 text-xs font-mono text-text-secondary whitespace-normal break-words leading-tight"
               >
                 {item.article || (lang === 'es' ? 'No especificado' : 'Unspecified')}
               </div>
@@ -305,8 +304,7 @@ function SectorBar({ items, lang }: { items: GapSummaryResponse['by_sector']; la
           return (
             <div key={item.sector_id} className="flex items-center gap-2">
               <div
-                className="w-24 shrink-0 text-xs font-mono text-text-secondary truncate"
-                title={label}
+                className="w-36 shrink-0 text-xs font-mono text-text-secondary whitespace-normal break-words leading-tight"
               >
                 {label}
               </div>
@@ -488,7 +486,7 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
               <td className="px-3 py-2.5 align-top">
                 <div className="text-xs text-text-secondary leading-snug">
                   {item.vendor ? (
-                    formatVendorName(item.vendor, 36)
+                    formatVendorName(item.vendor, 999)
                   ) : (
                     <span className="text-text-muted font-mono">—</span>
                   )}

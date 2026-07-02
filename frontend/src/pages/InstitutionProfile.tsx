@@ -509,7 +509,7 @@ export function InstitutionProfile() {
           {t('profile.breadcrumb')}
         </Link>
         <ChevronRight className="h-3 w-3" aria-hidden="true" />
-        <span className="text-text-secondary truncate max-w-[300px]">{toTitleCase(institution.name)}</span>
+        <span className="text-text-secondary max-w-[300px] whitespace-normal break-words leading-tight">{toTitleCase(institution.name)}</span>
       </nav>
 
       {/* ---- EDITORIAL HERO ---- */}
@@ -961,7 +961,7 @@ export function InstitutionProfile() {
                         <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
                           <span className="font-bold" style={{ color: contractColor }}>{t('profile.overview.riskLabel')} {(contractRiskScore * 100).toFixed(1)}%</span>
                           {topContract.amount_mxn != null && <span className="text-text-secondary">{formatCompactMXN(topContract.amount_mxn)}</span>}
-                          {topContract.vendor_name && <span className="text-text-muted truncate max-w-[200px]" title={topContract.vendor_name}>{topContract.vendor_name}</span>}
+                          {topContract.vendor_name && <span className="text-text-muted max-w-[220px] whitespace-normal break-words leading-tight">{topContract.vendor_name}</span>}
                           {topContract.contract_year && <span className="text-text-muted">{topContract.contract_year}</span>}
                           {topContract.is_direct_award && <span className="text-risk-high">{t('profile.overview.directAward')}</span>}
                           {topContract.is_single_bid && <span className="text-risk-critical">{t('profile.overview.singleBidder')}</span>}
@@ -1419,7 +1419,7 @@ export function InstitutionProfile() {
                               isRedRow ? 'bg-risk-critical/5' : 'hover:bg-background-elevated/30'
                             )}
                           >
-                            <td className="px-3 py-2 font-medium text-text-primary max-w-[200px] truncate" title={off.official_name}>
+                            <td className="px-3 py-2 font-medium text-text-primary max-w-[240px] whitespace-normal break-words leading-tight" title={off.official_name}>
                               {toTitleCase(off.official_name)}
                             </td>
                             <td className="px-3 py-2 text-center font-mono text-text-muted">
@@ -2242,13 +2242,13 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
       <div className="flex items-center gap-2.5 min-w-0">
         <FileText className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
         <div className="min-w-0">
-          <p className="text-xs font-medium truncate max-w-[260px] text-text-primary">{contract.title || t('profile.untitled')}</p>
+          <p className="text-xs font-medium max-w-[280px] whitespace-normal break-words leading-tight text-text-primary">{contract.title || t('profile.untitled')}</p>
           <div className="flex items-center gap-1.5 text-xs text-text-muted mt-0.5">
             <span>{contract.contract_date ? formatDate(contract.contract_date) : contract.contract_year}</span>
             {contract.vendor_name && (
               <>
                 <span>·</span>
-                <span className="truncate max-w-[120px]">{formatVendorName(contract.vendor_name, 24)}</span>
+                <span className="max-w-[180px] whitespace-normal break-words leading-tight">{formatVendorName(contract.vendor_name, 999)}</span>
               </>
             )}
           </div>

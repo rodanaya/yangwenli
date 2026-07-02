@@ -704,7 +704,7 @@ export function SectorQueueRibbon({
           className="font-mono uppercase tracking-widest hover:opacity-70 transition-opacity"
           style={{ fontSize: 10, color: 'var(--color-accent)' }}
         >
-          {t(lang, 'Ver la cola', 'Open the queue')} →
+          {t(lang, 'Ver la Lista de Vigilancia', 'Open the Watchlist')} →
         </Link>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">

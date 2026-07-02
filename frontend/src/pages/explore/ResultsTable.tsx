@@ -546,7 +546,7 @@ function InlineDossierTrigger({
                     ) : (
                       <Folder className="h-3 w-3 shrink-0" style={{ color: d.color }} aria-hidden="true" />
                     )}
-                    <span className="truncate text-text-secondary">{d.name}</span>
+                    <span className="whitespace-normal break-words leading-tight text-text-secondary">{d.name}</span>
                   </button>
                 )
               })

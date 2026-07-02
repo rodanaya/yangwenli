@@ -1364,7 +1364,7 @@ function ContractRow({
               {sector && (
                 <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sector.color }} title={ts(sector.code)} />
               )}
-              <span className="truncate text-sm font-medium text-text-primary group-hover:text-accent" title={title}>
+              <span className="whitespace-normal break-words leading-tight text-sm font-medium text-text-primary group-hover:text-accent">
                 {title}
               </span>
             </div>

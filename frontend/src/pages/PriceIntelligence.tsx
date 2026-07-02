@@ -276,7 +276,7 @@ function ExtremeCaseCard({
       </p>
 
       {/* Vendor */}
-      <p className="text-sm text-text-secondary truncate mb-0.5">
+      <p className="text-sm text-text-secondary whitespace-normal break-words leading-tight mb-0.5">
         {contract.vendor_id ? (
           <EntityIdentityChip type="vendor" id={contract.vendor_id} name={formatVendorName(contract.vendor_name, 40)} size="sm" />
         ) : (
@@ -285,7 +285,7 @@ function ExtremeCaseCard({
       </p>
 
       {/* Institution */}
-      <p className="text-xs text-text-muted truncate mb-3">
+      <p className="text-xs text-text-muted whitespace-normal break-words leading-tight mb-3">
         {contract.institution_name}
       </p>
 

@@ -108,7 +108,7 @@ export function TwoWorldsExhibit() {
       <div className="px-5 sm:px-6 py-4">
         <p className="text-[11px] leading-[1.6] text-text-secondary">
           {lang === 'es'
-            ? <>El «registro oficial» son solo SAT EFOS (Art. 69-B) + SFP — <strong className="text-text-primary">no</strong> incluye el corpus de casos de RUBLI, que sería circular (el modelo se entrenó con él). Los <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.ghost_signature)}</strong> proveedores que solo el modelo ve son las pistas de investigación — viven en <Link to="/aria" className="underline underline-offset-2 hover:text-text-primary">La Cola (ARIA)</Link>.</>
+            ? <>El «registro oficial» son solo SAT EFOS (Art. 69-B) + SFP — <strong className="text-text-primary">no</strong> incluye el corpus de casos de RUBLI, que sería circular (el modelo se entrenó con él). Los <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.ghost_signature)}</strong> proveedores que solo el modelo ve son las pistas de investigación — viven en <Link to="/aria" className="underline underline-offset-2 hover:text-text-primary">la Lista de Vigilancia (ARIA)</Link>.</>
             : <>"Official record" is SAT EFOS (Art. 69-B) + SFP only — it does <strong className="text-text-primary">not</strong> include RUBLI's own case corpus, which would be circular (the model trained on it). The <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.ghost_signature)}</strong> suppliers only the model sees are the investigation leads — they live in <Link to="/aria" className="underline underline-offset-2 hover:text-text-primary">the Queue (ARIA)</Link>.</>}
         </p>
       </div>

@@ -1,5 +1,5 @@
 /**
- * ARIA — Cola de Riesgo · «El Registro de Asignación»
+ * ARIA — Lista de Vigilancia · «El Registro de Asignación»
  *
  * La máquina propone, el analista dispone. Spec:
  * .claude/designs/aria-cola-2026-06-11-spec.md (DESIGNUS panel, APPROVED 2026-06-12).
@@ -454,7 +454,7 @@ export default function AriaPage() {
               letterSpacing: '-0.012em',
             }}
           >
-            {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
+            {isEs ? 'Lista de Vigilancia' : 'Watchlist'}
           </h1>
           <p className="mt-1 text-sm text-text-secondary leading-snug">
             {isEs
@@ -983,7 +983,7 @@ export default function AriaPage() {
           {codaVendors.length > 0 && (
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5">
-                {isEs ? 'Encabezan la cola' : 'Leading the queue'}
+                {isEs ? 'Encabezan la lista' : 'Leading the watchlist'}
               </p>
               <div className="flex flex-wrap items-center gap-1.5">
                 {codaVendors.map((v) => (

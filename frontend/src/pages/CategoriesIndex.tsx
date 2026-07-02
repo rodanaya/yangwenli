@@ -847,7 +847,7 @@ export default function CategoriesIndex() {
                   className="font-mono uppercase tracking-wide transition-opacity hover:opacity-70"
                   style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--color-accent)', background: 'none', border: 0, cursor: 'pointer' }}
                 >
-                  {isEs ? 'Ver la cola de investigación →' : 'See the investigation queue →'}
+                  {isEs ? 'Ver la Lista de Vigilancia →' : 'Open the Watchlist →'}
                 </button>
                 <div className="flex items-center flex-wrap gap-2">
                   {codaRiskiest && (

@@ -493,7 +493,7 @@ export function InstitutionRecord({
               const name = (isEs ? c.name_es : c.name_en) || c.name_es || c.name_en || (isEs ? 'Sin categoría' : 'Uncategorized')
               return (
                 <div key={c.category_id ?? `cat-${i}`} className="flex items-center gap-3">
-                  <span className="min-w-0 flex-1 truncate" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }} title={name}>{name}</span>
+                  <span className="min-w-0 flex-1 whitespace-normal break-words leading-tight" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }} title={name}>{name}</span>
                   <DotBar value={c.total_value_mxn || 0} max={catMax} color={sectorAccent} dots={24} ariaLabel={name} className="flex-shrink-0" />
                   <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 76, fontSize: 11, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(c.total_value_mxn || 0)}</span>
                 </div>
@@ -525,7 +525,7 @@ export function InstitutionRecord({
                   return (
                     <tr key={c.id} className="border-t border-border/30">
                       <td className="py-2 pr-3" style={{ color: 'var(--color-text-secondary)', maxWidth: 280 }}>
-                        <span className="block truncate" title={c.title ?? ''}>{c.title ? shortenContractName(c.title, 64) : `#${c.contract_number ?? c.id}`}</span>
+                        <span className="block whitespace-normal break-words leading-tight" title={c.title ?? ''}>{c.title ? shortenContractName(c.title, 64) : `#${c.contract_number ?? c.id}`}</span>
                       </td>
                       <td className="py-2 pr-3">
                         {c.vendor_id && c.vendor_name ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" /> : <span style={{ color: 'var(--color-text-muted)' }}>—</span>}

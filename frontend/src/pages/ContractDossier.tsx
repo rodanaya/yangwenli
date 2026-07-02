@@ -497,10 +497,10 @@ export default function ContractDossier() {
               state={{ from: '/contracts', vendorId: contract.vendor_id }}
               className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
               style={{ fontSize: 11, color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}
-              aria-label={lang === 'es' ? 'Ver al proveedor en La Cola de investigación de ARIA' : 'See this vendor in the ARIA investigation queue'}
+              aria-label={lang === 'es' ? 'Ver al proveedor en la Lista de Vigilancia de ARIA' : 'See this vendor in the ARIA Watchlist'}
             >
               <ExternalLink className="w-3 h-3" aria-hidden="true" />
-              {lang === 'es' ? 'Ver proveedor en La Cola' : 'See vendor in the queue'} →
+              {lang === 'es' ? 'Ver proveedor en la Lista de Vigilancia' : 'See vendor in the Watchlist'} →
             </Link>
 
             {/* Related-entity chips — recomposed from already-fetched contract data */}

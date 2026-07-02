@@ -234,9 +234,9 @@ function ChampionCard({
         {rank}
       </span>
 
-      {/* Institution name — single line, demoted weight */}
-      <span className="flex-1 min-w-0 truncate text-text-secondary text-[13px] group-hover:text-text-primary transition-colors">
-        {formatEntityName('institution', item.institution_name, 'sm')}
+      {/* Institution name — full name, wraps to 2 lines; demoted weight */}
+      <span className="flex-1 min-w-0 whitespace-normal break-words leading-tight text-text-secondary text-[13px] group-hover:text-text-primary transition-colors">
+        {formatEntityName('institution', item.institution_name, 'full')}
       </span>
 
       {/* Sector dot */}
@@ -350,7 +350,7 @@ function ActaCard({
               letterSpacing: '-0.005em',
             }}
           >
-            {formatEntityName('institution', item.institution_name, 'md')}
+            {formatEntityName('institution', item.institution_name, 'full')}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             {/* Tier verdict pill — inline */}
@@ -1247,10 +1247,9 @@ export default function InstitutionLeague() {
                               title={localizedSectorName(item.sector_name, lang)}
                             />
                             <span
-                              className="text-[13px] text-text-secondary group-hover:text-text-primary transition-colors font-medium truncate"
-                              title={item.institution_name}
+                              className="text-[13px] text-text-secondary group-hover:text-text-primary transition-colors font-medium whitespace-normal break-words leading-tight"
                             >
-                              {formatEntityName('institution', item.institution_name, 'sm')}
+                              {formatEntityName('institution', item.institution_name, 'full')}
                             </span>
                             {item.sector_name && (
                               <span className="text-text-muted text-[9px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">

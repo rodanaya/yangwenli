@@ -949,7 +949,7 @@ function InstitutionSearchInput({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <span className="font-medium text-text-primary block truncate">
+                    <span className="font-medium text-text-primary block whitespace-normal break-words leading-tight">
                       {toTitleCase(inst.name)}
                     </span>
                     {inst.siglas && (

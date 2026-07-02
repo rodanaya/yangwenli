@@ -718,7 +718,7 @@ export default function RedesKnownDossier() {
                                   title={inst.name}
                                   style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.25 }}
                                 >
-                                  {formatEntityName('institution', inst.name, 'md')}
+                                  {formatEntityName('institution', inst.name, 'full')}
                                 </span>
                               </span>
                               <span className="shrink-0 text-[11px] font-mono font-bold text-text-primary">

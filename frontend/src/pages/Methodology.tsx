@@ -209,7 +209,7 @@ function MethodologyCoda({ lang }: { lang: 'en' | 'es' }) {
     },
     {
       to: '/aria',
-      label: isEs ? 'La Cola (ARIA)' : 'The Queue (ARIA)',
+      label: isEs ? 'Lista de Vigilancia (ARIA)' : 'Watchlist (ARIA)',
       sub: isEs
         ? 'Los proveedores priorizados para investigación'
         : 'Vendors prioritised for investigation',

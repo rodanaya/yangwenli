@@ -764,7 +764,7 @@ export default function PatternDossier() {
               <div className="space-y-1.5">
                 {sectorBreakdown.map(({ name: sectorName, count, color }) => (
                   <div key={sectorName} className="flex items-center gap-3">
-                    <span className="text-[11px] font-mono text-text-secondary w-32 flex-shrink-0 truncate">
+                    <span className="text-[11px] font-mono text-text-secondary w-40 flex-shrink-0 whitespace-normal break-words leading-tight">
                       {sectorName}
                     </span>
                     <DotBar
