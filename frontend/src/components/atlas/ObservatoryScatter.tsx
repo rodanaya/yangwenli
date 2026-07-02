@@ -45,6 +45,13 @@ interface Props {
   lang: 'en' | 'es'
   onOpenDossier: (code: string) => void
   onVendorClick: (vendorId: number) => void
+  /**
+   * Additive, default-off: draw a survey ring around the body with this code
+   * on the base firmament (macro view). Wired to `pinnedCode` — revives both
+   * the dormant `?pin=` state and story-chapter → chart binding without any
+   * new state, effect, or camera math. Unknown codes render nothing.
+   */
+  spotlightCode?: string | null
 }
 
 const W = 1180
@@ -126,7 +133,7 @@ function boxHit(a: Box, b: Box, pad = 2): boolean {
   return !(a.x + a.w + pad < b.x || b.x + b.w + pad < a.x || a.y + a.h + pad < b.y || b.y + b.h + pad < a.y)
 }
 
-export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVendorClick }: Props) {
+export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVendorClick, spotlightCode }: Props) {
   const [focused, setFocused] = useState<string | null>(null)
   const [hoverVendor, setHoverVendor] = useState<number | null>(null)
   const [hoverBody, setHoverBody] = useState<string | null>(null)
@@ -651,6 +658,19 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               </motion.g>
             )
           })}
+          {/* Survey ring — additive, default-off. Marks the pinned / story-chapter
+              body on the macro plate (NYT "How the Virus Got Out" / ICIJ Pandora
+              chapter-driven highlight). No dimming, no state, no camera math. */}
+          {spotlightCode && !focused && (() => {
+            const b = bodies.find((x) => x.code === spotlightCode)
+            if (!b) return null
+            return (
+              <g style={{ pointerEvents: 'none' }}>
+                <circle cx={b.cx} cy={b.cy} r={b.r + 7} fill="none" strokeWidth={1.6} strokeDasharray="3 4" style={{ stroke: 'var(--color-accent)', opacity: 0.85 }} />
+                <circle cx={b.cx} cy={b.cy} r={b.r + 11} fill="none" strokeWidth={1.6} strokeDasharray="3 4" style={{ stroke: 'var(--color-accent)', opacity: 0.3 }} />
+              </g>
+            )
+          })()}
           {labels.map((l, i) => (
             <motion.g key={`t-${l.code}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 + i * 0.05, duration: 0.5 }} style={{ pointerEvents: 'none' }}>
               <text x={l.tx} y={l.ty + 14} textAnchor={l.anchor} fill={C.ink} fontSize={16} fontFamily='"EB Garamond",Georgia,serif' fontWeight={600}>{l.name}</text>

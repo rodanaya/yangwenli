@@ -81,7 +81,11 @@ import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellat
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
-import { AtlasMasthead } from '@/components/atlas/AtlasMasthead'
+// §7 «La Carta del Cielo» — folio scaffold reinvented around the untouched scatter engine.
+import { CartaMasthead } from '@/components/atlas/CartaMasthead'
+import { CartaLensIndex } from '@/components/atlas/CartaLensIndex'
+import { CartaItinerarios } from '@/components/atlas/CartaItinerarios'
+import { CartaColofon } from '@/components/atlas/CartaColofon'
 import { AtlasToolbar } from '@/components/atlas/AtlasToolbar'
 // atlas-C-P5: URL state encode/decode
 import { hasAtlasCParams } from '@/lib/atlas/url-state'
@@ -1165,6 +1169,7 @@ function CanvasAtlasView({
           lang={lang}
           onOpenDossier={handleScatterNav}
           onVendorClick={(id) => navigate(`/vendors/${id}`)}
+          spotlightCode={pinnedCode}
         />
       ) : (
       <>
@@ -1956,6 +1961,36 @@ export default function Atlas() {
 
   const totalContractsForYear = snapshot.totalContracts
 
+  // §7 «La Carta del Cielo» — honest plate caption for the faithful scatter.
+  // Kills PlateFrame's default "constellation of N contracts, year YYYY" (three
+  // lies: it's a cohort scatter, N is illustrative, year is meaningless all-time).
+  // Live lenses stamp "en vivo"; archival lenses (curated aggregates) say so.
+  const cartaCaption = useMemo(() => {
+    const K = activeConstellationMeta.length
+    const folioLetter: Record<ConstellationMode, string> = {
+      patterns: 'a', sectors: 'b', categories: 'c', sexenios: 'd',
+    }
+    const lensLabelMap: Record<ConstellationMode, { en: string; es: string }> = {
+      patterns:   { en: 'corruption patterns',    es: 'patrones de corrupción' },
+      sectors:    { en: 'federal sectors',         es: 'sectores federales' },
+      categories: { en: 'spending categories',     es: 'categorías de gasto' },
+      sexenios:   { en: 'presidential terms',      es: 'sexenios presidenciales' },
+    }
+    const isLive = mode === 'patterns' || mode === 'sectors'
+    const letter = folioLetter[mode]
+    const lensLabel = lensLabelMap[mode][lang]
+    if (lang === 'en') {
+      const provenance = isLive
+        ? 'Live aggregates from the register · data cut 2025·09·28.'
+        : 'Archival plate: curated aggregates, live computation pending · data cut 2025·09·28.'
+      return `Plate IX·${letter} — ${K} bodies: each a vendor cohort (${lensLabel}), placed by scale (x, log) and high-risk rate (y); area is the count of priority files (T1). ${provenance}`
+    }
+    const provenance = isLive
+      ? 'Agregados en vivo del padrón · corte de datos 28·09·2025.'
+      : 'Lámina de archivo: agregados curados, cómputo en vivo pendiente · corte de datos 28·09·2025.'
+    return `Lámina IX·${letter} — ${K} cuerpos: cada uno una cohorte de proveedores (${lensLabel}), situada por escala (x, log) y tasa de alto riesgo (y); el área es la cuenta de expedientes prioritarios (T1). ${provenance}`
+  }, [mode, lang, activeConstellationMeta])
+
   // ─── atlas-C-P1: bridge callbacks for left rail ──────────────────────────
   // The left rail dispatches into AtlasContext AND calls these bridge
   // callbacks to keep Atlas.tsx's existing useState hooks in sync.
@@ -2071,28 +2106,37 @@ export default function Atlas() {
           closer to a bound atlas plate than a generic dashboard title.
           Lede sits in a narrower measure with EB Garamond regular italic for
           the inline emphasis tokens. */}
-      {/* M-OBS Phase 1 (FALCO): compressed 56px masthead replaces the
-          ~250px FOLIO·IX hero. See designs/M-OBS-spec.md · Replacement 1. */}
-      <AtlasMasthead lang={lang} />
+      {/* §7 «La Carta del Cielo»: masthead states the survey's finding (thesis
+          + computed-argmax dek) instead of a static stat strip. */}
+      <CartaMasthead lang={lang} />
 
-      {/* M-OBS Phase 1 (FALCO): consolidated 36px toolbar replaces the
-          vendor-search row + Stories button + Share + Compare-Years toggle
-          + the RISK FLOOR chip row. See designs/M-OBS-spec.md · Replacement 2. */}
-      <AtlasToolbar
-        lang={lang}
-        mode={mode}
-        setMode={setMode}
-        yearIndex={yearIndex}
-        setYearIndex={setYearIndex}
-        years={YEAR_SNAPSHOTS.map((s) => s.year)}
-        riskFloor={riskFloor}
-        setRiskFloor={setRiskFloor}
-        onStoriesOpen={() => setStoriesMenuOpen(true)}
-        isPlaying={isPlaying}
-        setIsPlaying={setIsPlaying}
-        compareMode={compareMode}
-        setCompareMode={setCompareMode}
-      />
+      {/* §7 «La Carta del Cielo»: the faithful view shows the visible PLATE INDEX
+          (four folio-numbered, provenance-stamped tabs). The legacy engine keeps
+          its full toolbar (year scrubber, autoplay, risk floor, compare). */}
+      {faithfulObservatory ? (
+        <CartaLensIndex
+          lang={lang}
+          mode={mode}
+          setMode={setMode}
+          onStoriesOpen={() => setStoriesMenuOpen(true)}
+        />
+      ) : (
+        <AtlasToolbar
+          lang={lang}
+          mode={mode}
+          setMode={setMode}
+          yearIndex={yearIndex}
+          setYearIndex={setYearIndex}
+          years={YEAR_SNAPSHOTS.map((s) => s.year)}
+          riskFloor={riskFloor}
+          setRiskFloor={setRiskFloor}
+          onStoriesOpen={() => setStoriesMenuOpen(true)}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          compareMode={compareMode}
+          setCompareMode={setCompareMode}
+        />
+      )}
 
       {/* M-OBS Phase 1 (FALCO): Stories popover — anchored to the toolbar
           BookOpen icon via fixed-position overlay. State controlled by
@@ -2524,8 +2568,12 @@ export default function Atlas() {
         clusterCount={activeConstellationMeta.length}
         totalContracts={totalContractsForYear}
         lang={lang}
+        /* §7: honest caption for the faithful scatter (cohort scatter, live vs
+           archival provenance, data cut). Legacy engine keeps its own accurate
+           year/contract caption (undefined → PlateFrame's default). */
+        caption={faithfulObservatory ? cartaCaption : undefined}
         /* M-OBS Phase 1 (FALCO): suppress PlateFrame's own folio header
-           strip — AtlasMasthead above carries the FOLIO·IX kicker. */
+           strip — CartaMasthead above carries the FOLIO·IX kicker. */
         minimal
       >
         {/* omega-N: chapter strip overlay — pinned over the chart while a story is playing.
@@ -2596,6 +2644,18 @@ export default function Atlas() {
         {z1Enabled && <Z1Overlay lang={lang} />}
       </PlateFrame>
 
+      {/* §7 «La Carta del Cielo»: the itinerary shelf — the three guided routes
+          surfaced as first-class discovery below the plate (faithful view only;
+          legacy keeps its exact layout). */}
+      {faithfulObservatory && (
+        <CartaItinerarios
+          stories={ATLAS_STORIES}
+          activeStoryId={activeStory?.id ?? null}
+          onOpen={handleRailStoryOpen}
+          lang={lang}
+        />
+      )}
+
       {/* M-OBS Phase 1 (FALCO): bottom YearScrubber deleted — year stepper
           lives in AtlasToolbar (◆ ←/→). KEY EVENT annotation row is gone with it
           (was rendered inside the YearScrubber component). */}
@@ -2640,9 +2700,10 @@ export default function Atlas() {
         )
       })()}
 
-      {/* M-OBS Phase 1 (FALCO): far-bottom editorial methodology footer
-          deleted — promotional copy that pushed the canvas off-screen.
-          Methodology lives at /methodology. */}
+      {/* §7 «La Carta del Cielo»: «Fe de carta» — the surveyor's honesty note.
+          Applies to both engines (not lens-gated); replaces the deleted
+          promotional footer with a method-and-limits record. */}
+      <CartaColofon lang={lang} totalContracts={dashboard?.overview?.total_contracts ?? null} />
 
           </div>{/* /folio-skin content wrapper */}
           </div>
