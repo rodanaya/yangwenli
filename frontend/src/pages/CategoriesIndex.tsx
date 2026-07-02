@@ -1,15 +1,18 @@
 /**
- * CategoriesIndex — "EL CONCENTRADO" / "What Mexico Buys"
+ * CategoriesIndex — «El Inventario» / The Stocktake
  *
- * 2026-06-10 (DESIGNUS rebuild, judge synthesis — Confounded-Ledger family,
- * Archetype B). The one finding: Mexican procurement spending is wildly
- * concentrated — and the categories that swallow the most money are not the ones
- * the model flags hardest. Spend orders the page; risk undermines the order.
+ * 2026-07-02 (Fable-remake §6). After /sectors «El Arqueo» counts the cash,
+ * «El Inventario» counts the goods: 72 anaqueles (shelves = categories), each
+ * with its book value, dominant supplier, and descuadre (spend-rank vs
+ * risk-rank mismatch). The one finding: the shelves that hold the most money
+ * are not the ones that burn hottest on the indicator — proven in a single
+ * view (§ El anaquel), no lens toggle required.
  *
  * Anatomy: Folio → § EL SALDO (sentence lede) → § HALLAZGOS (3 finding cards) →
- * El Filtro (URL-synced sort + sector) → § EL CONCENTRADO (dual-lens plate, the
- * centerpiece) → § LO QUE EL GASTO ESCONDE (honor roll) → § EL REGISTRO (all 72
- * rows, hover dossier, dagger disclosure) → § ADÓNDE IR (coda) → Procedencia.
+ * El Filtro (URL-synced sort + sector) → § EL ANAQUEL (beeswarm centerpiece) →
+ * § EL CONCENTRADO (dual-lens plate) → § EL DESCUADRE (slope) → § LA HOJA DE
+ * CONTEO (all 72 rows + δ column, hover dossier, dagger disclosure) →
+ * § ADÓNDE IR (coda) → Procedencia.
  *
  * Runs on ONE endpoint — categoriesApi.getSummary(). No per-row fetches.
  */
@@ -23,7 +26,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { FindingsBand, type Finding } from '@/components/dossier/FindingsBand'
 import { CategoryConcentrationPlate } from '@/components/categories/CategoryConcentrationPlate'
-import { RiskRankBand } from '@/components/categories/RiskRankBand'
+import { InventarioAnaquel } from '@/components/categories/InventarioAnaquel'
+import { DescuadreSlope } from '@/components/categories/DescuadreSlope'
 import { CategoryHoverDossier } from '@/components/categories/CategoryHoverDossier'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
 import {
@@ -217,6 +221,7 @@ function LedgerRow({
   rank,
   maxValue,
   showVendor,
+  descuadre,
   lang,
   onHover,
   onLeave,
@@ -225,6 +230,8 @@ function LedgerRow({
   rank: number
   maxValue: number
   showVendor: boolean
+  /** δ = spend rank − risk rank over the qualified pool; null for sub-floor rows. */
+  descuadre: number | null
   lang: 'en' | 'es'
   onHover: (id: number, el: HTMLElement) => void
   onLeave: () => void
@@ -313,6 +320,22 @@ function LedgerRow({
         </div>
       </div>
 
+      {/* Descuadre (δ = spend rank − risk rank over the qualified pool) */}
+      <div className="flex-shrink-0 min-w-[44px] text-right">
+        {descuadre == null ? (
+          <span className="font-mono text-[11px] tabular-nums" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>—</span>
+        ) : descuadre === 0 ? (
+          <span className="font-mono text-[11px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>·</span>
+        ) : (
+          <span
+            className="font-mono text-[11px] font-bold tabular-nums"
+            style={{ color: descuadre >= 10 ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
+          >
+            {descuadre > 0 ? `+${descuadre}` : `−${Math.abs(descuadre)}`}
+          </span>
+        )}
+      </div>
+
       {/* Direct award (with single-bid dot + OECD reference) */}
       <div className="flex-shrink-0 min-w-[78px]">
         <div className="flex items-center justify-end gap-1.5">
@@ -351,8 +374,8 @@ function ProvenanceNote({ lang }: { lang: 'en' | 'es' }) {
         style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}
       >
         {lang === 'es'
-          ? '72 categorías activas cubren el 99.73% del gasto clasificable (códigos Partida/CUCoP); la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La regla de adjudicación directa marca el techo OCDE del 30%; el punto de único postor colorea >25% crítico / ≥15% alto. Indicador de riesgo, no estimación de fraude. RUBLI v0.8.5.'
-          : '72 active categories cover 99.73% of classifiable spend (Partida/CUCoP codes); reliable coverage is 2023–2025 (Structure D, 100% Partida) — earlier years may be partially classified. The direct-award rule marks the OECD 30% ceiling; the single-bid dot reddens >25% critical / ≥15% high. Risk indicator, not a fraud estimate. RUBLI v0.8.5.'}
+          ? 'El inventario levanta 72 anaqueles activos que cubren el 99.73% del gasto clasificable (códigos Partida/CUCoP); la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La regla de adjudicación directa marca el techo OCDE del 30%; el punto de único postor colorea >25% crítico / ≥15% alto. Indicador de riesgo, no estimación de fraude. RUBLI v0.8.5.'
+          : 'The stocktake counts 72 active shelves covering 99.73% of classifiable spend (Partida/CUCoP codes); reliable coverage is 2023–2025 (Structure D, 100% Partida) — earlier years may be partially classified. The direct-award rule marks the OECD 30% ceiling; the single-bid dot reddens >25% critical / ≥15% high. Risk indicator, not a fraud estimate. RUBLI v0.8.5.'}
       </p>
     </section>
   )
@@ -427,6 +450,25 @@ export default function CategoriesIndex() {
 
   const maxValue = useMemo(() => (displayed.length ? Math.max(...displayed.map((c) => c.total_value)) : 0), [displayed])
 
+  // Descuadre map (δ = spend rank − risk rank), computed once over all 72 with
+  // ranks scoped to the qualified pool so it agrees with § El descuadre. Sub-floor
+  // categories have no risk rank → null → rendered "—" in the register.
+  const descuadreMap = useMemo(() => {
+    const map = new Map<number, number | null>()
+    if (!data?.data) return map
+    const qualified = data.data.filter((c) => c.total_contracts >= CONTRACT_FLOOR)
+    const spendRank = new Map<number, number>()
+    const riskRank = new Map<number, number>()
+    ;[...qualified].sort((a, b) => b.total_value - a.total_value).forEach((c, i) => spendRank.set(c.category_id, i + 1))
+    ;[...qualified].sort((a, b) => b.avg_risk - a.avg_risk).forEach((c, i) => riskRank.set(c.category_id, i + 1))
+    for (const c of data.data) {
+      const sr = spendRank.get(c.category_id)
+      const rr = riskRank.get(c.category_id)
+      map.set(c.category_id, sr != null && rr != null ? sr - rr : null)
+    }
+    return map
+  }, [data])
+
   // ── Wayfinding (El Hilo P1+) — publish the ranked ledger as the sibling list
   // so a dossier's Prev/Next stepper honours this exact sort/filter, and
   // restore the origin row on browser-back.
@@ -489,10 +531,10 @@ export default function CategoriesIndex() {
       <header className="border-b border-border px-4 sm:px-6 lg:px-8 py-7">
         <div className="max-w-7xl mx-auto">
           <div className="mb-3 flex items-center gap-3 font-mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>El Qué</span>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>{isEs ? 'El Inventario' : 'The Stocktake'}</span>
             <span aria-hidden="true" style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-              {isEs ? '72 categorías' : '72 categories'}
+              {isEs ? 'levantamiento físico del gasto' : 'a physical count of federal spend'}
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>COMPRANET 2002–2025
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>v0.8.5
             </span>
@@ -501,25 +543,34 @@ export default function CategoriesIndex() {
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <h1
               className="text-text-primary"
-              style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 0.98, letterSpacing: '-0.012em' }}
+              style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.05, letterSpacing: '-0.012em' }}
             >
-              {isEs ? 'Qué compra México' : 'What Mexico Buys'}
+              {isEs ? 'Setenta y dos anaqueles guardan' : 'Seventy-two shelves hold'}
+              {saldo && totalValue > 0 ? (
+                <>
+                  {' '}
+                  <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 400 }}>{formatDualCurrency(totalValue)}</span>
+                  {isEs ? `; la mitad cabe en ${saldo.k50}.` : `; half of it fits on ${saldo.k50}.`}
+                </>
+              ) : (
+                isEs ? ' el gasto federal.' : ' federal spend.'
+              )}
             </h1>
-            {totalValue > 0 && (
+            {totalContracts > 0 && (
               <div className="text-right">
                 <div className="tabular-nums" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 'clamp(1.25rem, 2vw, 1.5rem)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
-                  {formatDualCurrency(totalValue)}
+                  {formatNumber(totalContracts)}
                 </div>
                 <div className="font-mono mt-1" style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                  {isEs ? `gasto validado · ${formatNumber(totalContracts)} contratos` : `validated spend · ${formatNumber(totalContracts)} contracts`}
+                  {isEs ? 'contratos validados' : 'validated contracts'}
                 </div>
               </div>
             )}
           </div>
           <p className="mt-3" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 16, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
             {isEs
-              ? 'Las categorías agrupan qué compró el gobierno —medicamentos, obra pública, software— sin importar quién. 72 categorías activas clasifican casi todo el gasto federal; aquí, ordenadas por dónde mirar primero.'
-              : 'Categories group what the government bought — medicines, civil works, software — regardless of who. 72 active categories classify nearly all federal spend; here, ranked by where to look first.'}
+              ? 'Las categorías agrupan qué compró el gobierno —medicamentos, obra, software— sin importar quién. Aquí, el conteo físico: cada anaquel con su valor en libros, su surtidor dominante y su columna de descuadres.'
+              : 'Categories group what the government bought — medicines, civil works, software — regardless of who. Here, the physical count: every shelf with its book value, its dominant supplier, and its column of discrepancies.'}
           </p>
         </div>
       </header>
@@ -568,7 +619,7 @@ export default function CategoriesIndex() {
                         {saldo.riskiest.name_es}
                       </span>{' '}
                       marca <SaldoNum>{saldo.riskiest.avg_risk.toFixed(2)}</SaldoNum> de indicador,{' '}
-                      {saldo.ratio.toFixed(1)}× el promedio del libro.
+                      {saldo.ratio.toFixed(1)}× el promedio del inventario.
                     </>
                   ) : (
                     <>
@@ -579,7 +630,7 @@ export default function CategoriesIndex() {
                         {saldo.riskiest.name_en}
                       </span>{' '}
                       posts a <SaldoNum>{saldo.riskiest.avg_risk.toFixed(2)}</SaldoNum> indicator,{' '}
-                      {saldo.ratio.toFixed(1)}× the book average.
+                      {saldo.ratio.toFixed(1)}× the inventory average.
                     </>
                   )}
                 </p>
@@ -651,21 +702,26 @@ export default function CategoriesIndex() {
               </div>
             </div>
 
-            {/* ── B3 · § EL CONCENTRADO (centerpiece) ──────────────────────── */}
+            {/* ── B2.5 · § EL ANAQUEL (beeswarm — the size≠risk proof, single view) ── */}
+            <div className="mb-6 pb-6 border-b border-border">
+              <InventarioAnaquel items={data.data} highlightSector={activeSector} lang={lang} />
+            </div>
+
+            {/* ── B3 · § EL CONCENTRADO (where the money stacks) ────────────── */}
             <section className="mb-6 pb-6 border-b border-border" aria-label={isEs ? 'El concentrado' : 'The concentrate'}>
               <p className="font-mono mb-3.5" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
-                § {isEs ? 'El concentrado · el tamaño no es el riesgo' : 'The concentrate · size is not risk'}
+                § {isEs ? 'El concentrado · dónde se apila el dinero' : 'The concentrate · where the money stacks'}
               </p>
               <CategoryConcentrationPlate items={data.data} lang={lang} lens={lens} onLensChange={setLens} />
             </section>
 
-            {/* ── B3.5 · § LO QUE EL GASTO ESCONDE (honor roll) ────────────── */}
-            <RiskRankBand items={data.data} lang={lang} />
+            {/* ── B3.5 · § EL DESCUADRE (slope — spend rank vs risk rank) ───── */}
+            <DescuadreSlope items={data.data} lang={lang} />
 
             {/* ── B4 · § EL REGISTRO ───────────────────────────────────────── */}
             <section aria-label={isEs ? 'El registro' : 'The register'}>
               <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
-                § {isEs ? 'El registro · las 72 categorías' : 'The register · all 72 categories'}
+                § {isEs ? 'La hoja de conteo · los 72 anaqueles' : 'The count sheet · all 72 shelves'}
               </p>
               <div className="rounded-sm border border-border overflow-hidden">
                 <table className="w-full border-collapse" style={{ display: 'block' }}>
@@ -699,6 +755,13 @@ export default function CategoriesIndex() {
                         onSort={setSortKey}
                         className="flex-shrink-0 min-w-[78px] text-right"
                       />
+                      <th
+                        className="flex-shrink-0 min-w-[44px] text-right font-medium"
+                        scope="col"
+                        title={isEs ? 'δ · puesto por gasto − puesto por riesgo' : 'δ · spend rank − risk rank'}
+                      >
+                        δ
+                      </th>
                       <SortHeaderTh<SortKey>
                         field="direct_award"
                         label={isEs ? 'Adj. dir.' : 'Direct'}
@@ -721,6 +784,7 @@ export default function CategoriesIndex() {
                           rank={idx + 1}
                           maxValue={maxValue}
                           showVendor={idx < 15}
+                          descuadre={descuadreMap.get(item.category_id) ?? null}
                           lang={lang}
                           onHover={(id, el) => setHover({ id, ...captureRect(el) })}
                           onLeave={() => setHover(null)}

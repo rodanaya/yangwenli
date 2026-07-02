@@ -49,7 +49,9 @@ import {
   type LargeContractRow,
   type TopBuyerRow,
 } from '@/components/category/CategoryDossierSections'
-import { SectorSexenioStrip } from '@/components/sector/SectorReferenceSections'
+import { KardexPosicion } from '@/components/category/KardexPosicion'
+import { KardexCinta } from '@/components/category/KardexCinta'
+import type { CategorySummaryItem } from '@/components/categories/types'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { WayfindingSpine } from '@/components/nav/WayfindingSpine'
 import {
@@ -330,10 +332,10 @@ export default function CategoryDossier() {
         <div aria-hidden="true" className="absolute left-0 right-0" style={{ top: 0, height: 6, background: accent }} />
         <div className="pt-8 pb-8">
           <div className="font-mono tabular-nums mb-3" style={{ fontSize: 11, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-            CAT · C-{String(c.category_id).padStart(3, '0')}{sectorCode && (<> · {sectorCode.toUpperCase()}</>)}
+            KARDEX · C-{String(c.category_id).padStart(3, '0')}{sectorCode && (<> · {sectorCode.toUpperCase()}</>)}
           </div>
           <div className="font-mono mb-4" style={{ fontSize: 10, fontStyle: 'italic', letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 500 }}>
-            § {lang === 'es' ? 'EL EXPEDIENTE · CATEGORÍA' : 'EL EXPEDIENTE · CATEGORY DOSSIER'}
+            § {lang === 'es' ? 'FICHA DE INVENTARIO · CATEGORÍA' : 'STOCK CARD · CATEGORY DOSSIER'}
           </div>
 
           <div className="grid gap-6 lg:gap-10" style={{ gridTemplateColumns: 'minmax(0, 1fr) auto' }}>
@@ -403,6 +405,41 @@ export default function CategoryDossier() {
         <CategoryStatStrip category={c} trends={categoryTrends} lang={lang} />
       </div>
 
+      {/* § LA POSICIÓN — this shelf among the 72 (peer context · zero-fetch) */}
+      {summaryData?.data && summaryData.data.length > 1 && (
+        <div className="mt-14">
+          <section id="position" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="position"
+              eyebrow={lang === 'es' ? 'La posición' : 'The position'}
+              title={lang === 'es' ? 'Este anaquel entre los 72' : 'This shelf among the 72'}
+              accent={accent}
+            />
+            <KardexPosicion
+              category={c as unknown as CategorySummaryItem}
+              all={summaryData.data as unknown as CategorySummaryItem[]}
+              accent={accent}
+              lang={lang}
+            />
+          </section>
+        </div>
+      )}
+
+      {/* § LA CINTA KARDEX — year-by-year movements 2002–2025 */}
+      {categoryTrends.length > 1 && (
+        <div className="mt-12">
+          <section id="trajectory" className="scroll-mt-20">
+            <DossierSectionHeader
+              id="trajectory"
+              eyebrow={lang === 'es' ? 'La cinta kardex' : 'The kardex tape'}
+              title={lang === 'es' ? 'Movimientos 2002–2025' : 'Movements 2002–2025'}
+              accent={accent}
+            />
+            <KardexCinta trend={categoryTrends} accent={accent} lang={lang} />
+          </section>
+        </div>
+      )}
+
       {/* § I — LA COMPETENCIA · the procedure split (count vs value) */}
       {competitionData && (competitionData.procedure_breakdown?.length ?? 0) > 0 && (
         <div className="mt-14">
@@ -410,7 +447,7 @@ export default function CategoryDossier() {
             <DossierSectionHeader
               id="competition"
               eyebrow={lang === 'es' ? 'Competencia' : 'Competition'}
-              title={lang === 'es' ? 'El reparto del procedimiento' : 'The procedure split'}
+              title={lang === 'es' ? 'Cómo se surte el anaquel' : 'How the shelf is filled'}
               meta={lang === 'es' ? 'conteo vs valor' : 'count vs value'}
               accent={accent}
             />
@@ -425,7 +462,7 @@ export default function CategoryDossier() {
           <DossierSectionHeader
             id="market"
             eyebrow={lang === 'es' ? 'Mercado' : 'Market'}
-            title={lang === 'es' ? 'Concentración y estructura' : 'Concentration & structure'}
+            title={lang === 'es' ? 'Los surtidores dominantes' : 'The dominant suppliers'}
             accent={accent}
           />
           <CategoryDiagnosticGrid
@@ -471,29 +508,7 @@ export default function CategoryDossier() {
         </div>
       )}
 
-      {/* § IV — LA TRAYECTORIA · spend & risk across administrations */}
-      {categoryTrends.length > 1 && (
-        <div className="mt-12">
-          <section id="trajectory" className="scroll-mt-20">
-            <DossierSectionHeader
-              id="trajectory"
-              eyebrow={lang === 'es' ? 'Sexenio' : 'Administrations'}
-              title={lang === 'es' ? 'El gasto por sexenio' : 'Spend across administrations'}
-              accent={accent}
-            />
-            <SectorSexenioStrip
-              trends={categoryTrends.map((p) => ({
-                year: p.year,
-                total_contracts: p.total_contracts,
-                total_value_mxn: p.total_value,
-                avg_risk_score: p.avg_risk ?? 0,
-              }))}
-              accent={accent}
-              lang={lang}
-            />
-          </section>
-        </div>
-      )}
+      {/* § IV trajectory relocated above as § La cinta kardex (right after § La posición). */}
 
       {/* § V — LA COMPOSICIÓN · subcategories (conditional — many categories have none) */}
       {subcatData && subcatData.data && subcatData.data.length > 0 && (
@@ -502,7 +517,7 @@ export default function CategoryDossier() {
             <DossierSectionHeader
               id="composition"
               eyebrow={lang === 'es' ? 'Composición' : 'Composition'}
-              title={lang === 'es' ? 'Qué hay dentro' : "What's inside"}
+              title={lang === 'es' ? 'Qué hay en el anaquel' : "What's on the shelf"}
               meta={lang === 'es' ? `${subcatData.data.length} subcategorías` : `${subcatData.data.length} subcategories`}
               accent={accent}
             />
@@ -518,7 +533,7 @@ export default function CategoryDossier() {
             <DossierSectionHeader
               id="size"
               eyebrow={lang === 'es' ? 'Tamaño' : 'Size'}
-              title={lang === 'es' ? 'El tamaño del contrato' : 'Contract size'}
+              title={lang === 'es' ? 'El precio de lista' : 'The list price'}
               meta={lang === 'es' ? 'mediana vs promedio' : 'median vs mean'}
               accent={accent}
             />
@@ -549,7 +564,7 @@ export default function CategoryDossier() {
           <DossierSectionHeader
             id="vendors"
             eyebrow={lang === 'es' ? 'Proveedores' : 'Vendors'}
-            title={lang === 'es' ? 'Registro de proveedores' : 'Vendor register'}
+            title={lang === 'es' ? 'El registro de surtidores' : 'The supplier register'}
             meta={vendorRows.length ? (lang === 'es' ? `Los ${vendorRows.length} mayores` : `Top ${vendorRows.length}`) : undefined}
             accent={accent}
           />
