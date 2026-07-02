@@ -138,7 +138,11 @@ const queryClient = new QueryClient({
 // While the stored token is being validated, show a skeleton; if there's no
 // authenticated user, bounce to the login wall. Mirrors the backend middleware.
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  // RUBLI is open to everyone by default. Set VITE_REQUIRE_AUTH=1 to restore
+  // the login wall (mirrors the backend RUBLI_REQUIRE_AUTH gate).
+  const requireAuth = import.meta.env.VITE_REQUIRE_AUTH === '1'
   const { user, isLoading } = useAuth()
+  if (!requireAuth) return <>{children}</>
   if (isLoading) return <GenericPageSkeleton />
   if (!user) return <Navigate to="/login" replace />
   return <>{children}</>

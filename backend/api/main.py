@@ -452,12 +452,18 @@ app.add_middleware(RequestLoggingMiddleware)
 # client. Defined before CORS so CORS wraps the 401 response.
 from fastapi.responses import JSONResponse as _GateJSON
 from jose import jwt as _gate_jwt, JWTError as _GateJWTError
-_GATE_SECRET = os.environ.get("RUBLI_JWT_SECRET", "rubli-dev-secret-change-in-prod")
+# Auth gate — OPT-IN. RUBLI is open to everyone by default; the whole API is
+# public. Set RUBLI_REQUIRE_AUTH=1 (with a strong RUBLI_JWT_SECRET) to lock it
+# behind a Bearer JWT instead.
+_GATE_SECRET = os.environ.get("RUBLI_JWT_SECRET")
 _GATE_PUBLIC = {"/api/v1/auth/login", "/api/v1/health"}
+_GATE_ENABLED = os.environ.get("RUBLI_REQUIRE_AUTH", "").lower() in ("1", "true", "yes")
+if _GATE_ENABLED and not _GATE_SECRET:
+    raise RuntimeError("RUBLI_REQUIRE_AUTH is set but RUBLI_JWT_SECRET is missing")
 
 @app.middleware("http")
 async def require_auth_gate(request: Request, call_next):
-    if request.method == "OPTIONS":
+    if not _GATE_ENABLED or request.method == "OPTIONS":
         return await call_next(request)
     path = request.url.path
     if path.startswith("/api/v1/") and path not in _GATE_PUBLIC:
