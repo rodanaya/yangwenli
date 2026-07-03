@@ -6,13 +6,19 @@
  * with its book value, dominant supplier, and descuadre (spend-rank vs
  * risk-rank mismatch). The one finding: the shelves that hold the most money
  * are not the ones that burn hottest on the indicator — proven in a single
- * view (§ El anaquel), no lens toggle required.
+ * view (§ El alzado), no lens toggle required.
+ *
+ * 2026-07-03 (DESIGNUS consolidation). The three-chart proof cluster (§ EL
+ * ANAQUEL beeswarm + § EL CONCENTRADO dual-lens plate + § EL DESCUADRE slope)
+ * collapsed into ONE bar-mekko — § EL ALZADO (`CategoryAlzado`): width = a
+ * category's cumulative slice of spend (concentration), height = its risk
+ * indicator on a zero baseline (size≠risk). Both theses on one mark, learned
+ * once. The `?lens=` URL param and the SPEND/RISK toggle are retired.
  *
  * Anatomy: Folio → § EL SALDO (sentence lede) → § HALLAZGOS (3 finding cards) →
- * El Filtro (URL-synced sort + sector) → § EL ANAQUEL (beeswarm centerpiece) →
- * § EL CONCENTRADO (dual-lens plate) → § EL DESCUADRE (slope) → § LA HOJA DE
- * CONTEO (all 72 rows + δ column, hover dossier, dagger disclosure) →
- * § ADÓNDE IR (coda) → Procedencia.
+ * El Filtro (URL-synced sort + sector) → § EL ALZADO (bar-mekko centerpiece) →
+ * § LA HOJA DE CONTEO (all 72 rows + δ column, hover dossier, dagger
+ * disclosure) → § ADÓNDE IR (coda) → Procedencia.
  *
  * Runs on ONE endpoint — categoriesApi.getSummary(). No per-row fetches.
  */
@@ -25,14 +31,11 @@ import { categoriesApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { FindingsBand, type Finding } from '@/components/dossier/FindingsBand'
-import { CategoryConcentrationPlate } from '@/components/categories/CategoryConcentrationPlate'
-import { InventarioAnaquel } from '@/components/categories/InventarioAnaquel'
-import { DescuadreSlope } from '@/components/categories/DescuadreSlope'
+import { CategoryAlzado } from '@/components/categories/CategoryAlzado'
 import { CategoryHoverDossier } from '@/components/categories/CategoryHoverDossier'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
 import {
   type CategorySummaryItem,
-  type PlateLens,
   CONTRACT_FLOOR,
   intensityColor,
 } from '@/components/categories/types'
@@ -84,10 +87,7 @@ function useCategoriesUrlState() {
   const activeSector: string | null =
     rawSector && (ALL_SECTOR_CODES as string[]).includes(rawSector) ? rawSector : null
 
-  const rawLens = params.get('lens')
-  const lens: PlateLens = rawLens === 'risk' ? 'risk' : 'concentration'
-
-  const patch = (next: { sort?: SortKey; sector?: string | null; lens?: PlateLens }) => {
+  const patch = (next: { sort?: SortKey; sector?: string | null }) => {
     setParams(
       (prev) => {
         const out = new URLSearchParams(prev)
@@ -99,10 +99,6 @@ function useCategoriesUrlState() {
           if (next.sector === null) out.delete('sector')
           else out.set('sector', next.sector)
         }
-        if (next.lens !== undefined) {
-          if (next.lens === 'concentration') out.delete('lens')
-          else out.set('lens', next.lens)
-        }
         return out
       },
       { replace: true },
@@ -112,10 +108,8 @@ function useCategoriesUrlState() {
   return {
     sortKey,
     activeSector,
-    lens,
     setSortKey: (s: SortKey) => patch({ sort: s }),
     setActiveSector: (s: string | null) => patch({ sector: s }),
-    setLens: (l: PlateLens) => patch({ lens: l }),
   }
 }
 
@@ -389,7 +383,7 @@ export default function CategoriesIndex() {
   const isEs = lang === 'es'
   const navigate = useNavigate()
 
-  const { sortKey, activeSector, lens, setSortKey, setActiveSector, setLens } = useCategoriesUrlState()
+  const { sortKey, activeSector, setSortKey, setActiveSector } = useCategoriesUrlState()
   // Raw query string re-exposed for the wayfinding backTo link (El Hilo P1+).
   const [searchParams] = useSearchParams()
 
@@ -702,21 +696,11 @@ export default function CategoriesIndex() {
               </div>
             </div>
 
-            {/* ── B2.5 · § EL ANAQUEL (beeswarm — the size≠risk proof, single view) ── */}
-            <div className="mb-6 pb-6 border-b border-border">
-              <InventarioAnaquel items={data.data} highlightSector={activeSector} lang={lang} />
-            </div>
-
-            {/* ── B3 · § EL CONCENTRADO (where the money stacks) ────────────── */}
-            <section className="mb-6 pb-6 border-b border-border" aria-label={isEs ? 'El concentrado' : 'The concentrate'}>
-              <p className="font-mono mb-3.5" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
-                § {isEs ? 'El concentrado · dónde se apila el dinero' : 'The concentrate · where the money stacks'}
-              </p>
-              <CategoryConcentrationPlate items={data.data} lang={lang} lens={lens} onLensChange={setLens} />
+            {/* ── B2.5 · § EL ALZADO (bar-mekko — both theses in one mark, replaces
+                    the retired EL ANAQUEL + EL CONCENTRADO + EL DESCUADRE cluster) ── */}
+            <section className="mb-6 pb-6 border-b border-border" aria-label={isEs ? 'El alzado' : 'The elevation'}>
+              <CategoryAlzado items={data.data} highlightSector={activeSector} lang={lang} />
             </section>
-
-            {/* ── B3.5 · § EL DESCUADRE (slope — spend rank vs risk rank) ───── */}
-            <DescuadreSlope items={data.data} lang={lang} />
 
             {/* ── B4 · § EL REGISTRO ───────────────────────────────────────── */}
             <section aria-label={isEs ? 'El registro' : 'The register'}>
