@@ -19,10 +19,13 @@
  */
 
 import { useMemo, useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { AdminSummaryCard } from '@/components/administrations/AdminSummaryCard'
 import { ComparePeriodView } from '@/components/administrations/ComparePeriodView'
-import { AdminCycleSmallMultiples } from '@/components/administrations/AdminCycleSmallMultiples'
+import { AdminSurvivorsSlope, type SurvivorColumn } from '@/components/administrations/AdminSurvivorsSlope'
+import { SeamStrip, type SeamPoint, type SeamAdmin, type Seam } from '@/components/administrations/SeamStrip'
+import { AdminSectorDeviation, type SectorDeviationRow } from '@/components/administrations/AdminSectorDeviation'
+import { OfficialTenureBands } from '@/components/administrations/OfficialTenureBands'
 import { ExpedienteSpine } from '@/components/administrations/ExpedienteSpine'
 import { AdminVendorsDeepList } from '@/components/administrations/AdminVendorsDeepList'
 import { AdminBuyersSection } from '@/components/administrations/AdminBuyersSection'
@@ -39,8 +42,8 @@ import type {
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatNumber, toTitleCase, formatCompactMXN } from '@/lib/utils'
-import { SECTORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { cn, formatNumber } from '@/lib/utils'
+import { SECTORS } from '@/lib/constants'
 import { analysisApi, officialsApi } from '@/api/client'
 import type { YearOverYearChange } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -53,11 +56,8 @@ import { ShareButton } from '@/components/ShareButton'
 import { DotBar } from '@/components/ui/DotBar'
 import {
   EditorialSparkline,
-  DotStrip,
-  scaleToColor,
   tokenColor,
   formatValue,
-  type DotStripRow,
 } from '@/components/charts/editorial'
 import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
 
@@ -259,23 +259,6 @@ export default function Administrations() {
     return { gtCaseCount: era?.gt_case_count, decSpikePct: era?.dec_spike_pct }
   }, [breakdownResp, selectedAdmin])
 
-  // Build AdminCycleSmallMultiples data — one per administration, term year 1–6
-  const adminCycleData = useMemo(() =>
-    ADMINISTRATIONS.map((a) => {
-      const agg = adminAggs.find((x) => x.name === a.name)
-      const displayName = ADMIN_DISPLAY_NAMES[a.name] ?? a.name
-      return {
-        name: a.name,
-        displayName,
-        color: a.color,
-        yearData: (agg?.years ?? []).map((y) => ({
-          termYear: y.year - a.dataStart + 1,
-          risk: y.avg_risk * 100,
-        })).filter((d) => d.termYear >= 1 && d.termYear <= 6),
-      }
-    }),
-    [adminAggs],
-  )
 
   // Selected admin top vendors from breakdown endpoint
   const selectedVendors = useMemo(() => {
@@ -394,6 +377,59 @@ export default function Administrations() {
   const folderColor = PARTY_COLORS[selectedMeta.party] || '#64748b'
   const selectedDisplay = ADMIN_DISPLAY_NAMES[selectedAdmin] ?? selectedAdmin
   const adminTag = `${selectedDisplay} · ${selectedMeta.dataStart}–${Math.min(selectedMeta.end, 2025)}`
+  // ── Fable-remake §8 «LOS SOBREVIVIENTES» — ACTO I/III data. All derived from
+  //    the 4 eager payloads already in memory: 0 new endpoints, 0 new eager calls.
+  const PARTY_ABBR: Record<string, string> = { PAN: 'PAN', PRI: 'PRI', MORENA: 'MOR' }
+  const survivorColumns: SurvivorColumn[] = ADMINISTRATIONS.map((a) => {
+    const era = (breakdownResp?.eras ?? []).find((e) => e.era === ERA_KEYS[a.name])
+    return {
+      adminName: a.name,
+      displayName: ADMIN_DISPLAY_NAMES[a.name] ?? a.name,
+      yearsLabel: `${a.dataStart}–${Math.min(a.end, 2025)}`,
+      party: a.party,
+      color: PARTY_COLORS[a.party] ?? a.color,
+      seats: (era?.top_vendors ?? []).slice(0, 6).map((v) => ({
+        name: v.vendor_name,
+        totalMxn: v.total_mxn,
+        contracts: v.contracts,
+        riskPct: (v.avg_risk ?? 0) * 100,
+      })),
+    }
+  })
+  const seamSeries: SeamPoint[] = [...yoyData]
+    .filter((y) => y.year >= 2002 && y.year <= 2025)
+    .sort((a, b) => a.year - b.year)
+    .map((y) => ({ year: y.year, highRiskPct: y.high_risk_pct }))
+  const seamAdmins: SeamAdmin[] = ADMINISTRATIONS.map((a) => ({
+    name: a.name,
+    displayName: ADMIN_DISPLAY_NAMES[a.name] ?? a.name,
+    abbr: PARTY_ABBR[a.party] ?? a.party,
+    party: a.party,
+    color: PARTY_COLORS[a.party] ?? a.color,
+    start: a.dataStart,
+    end: Math.min(a.end, 2025),
+  }))
+  const seams: Seam[] = [
+    { xYear: 2006.92, fromAdmin: 'Fox', toAdmin: 'Calderon', structureA: true },
+    { xYear: 2012.92, fromAdmin: 'Calderon', toAdmin: 'Pena Nieto' },
+    { xYear: 2018.92, fromAdmin: 'Pena Nieto', toAdmin: 'AMLO' },
+    { xYear: 2024.75, fromAdmin: 'AMLO', toAdmin: 'Sheinbaum', partial: true },
+  ]
+  const sectorDeviationRows: SectorDeviationRow[] = sectorHeatmap.map((s) => ({
+    sectorId: s.sectorId,
+    name: s.name,
+    color: s.color,
+    hrFraction: s.hr / 100,
+    daPct: s.da,
+    contracts: s.contracts,
+  }))
+  const termBenchmarkFraction = (selectedAgg?.highRiskPct ?? 0) / 100
+  const nDaOver50 = adminAggs.filter((a) => a.directAwardPct > 50).length
+  const nHrOverNatl = adminAggs.filter((a) => a.highRiskPct > allTimeAvg.hr).length
+  const onSelectAdmin = (name: string) => {
+    setSelectedAdmin(name as AdminName)
+    document.getElementById('expediente-file')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -461,6 +497,13 @@ export default function Administrations() {
                   ? 'Tres millones de contratos federales bajo cinco presidentes. Elija una administración — el expediente responde.'
                   : 'Three million federal contracts under five presidents. Choose an administration — the file answers.'}
               </p>
+              <p style={{ fontFamily: '"EB Garamond", Georgia, serif' }} className="mt-2 text-[15px] leading-relaxed text-text-secondary">
+                {isEs ? (
+                  <><span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nDaOver50}</span> de 5 administraciones adjudicaron más de la mitad de sus contratos sin competencia · <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nHrOverNatl}</span> de 5 por encima del promedio nacional de alto riesgo.</>
+                ) : (
+                  <><span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nDaOver50}</span> of 5 administrations awarded over half their contracts without competition · <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nHrOverNatl}</span> of 5 above the national high-risk average.</>
+                )}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
               <FuentePill source="COMPRANET" verified={true} />
@@ -475,13 +518,34 @@ export default function Administrations() {
         </header>
 
         <div className="space-y-6 max-w-[1600px] mx-auto">
-
-          {/* ════════════════════════════════════════════════════════════════
-              MÓDULO 1 · EL EXPEDIENTE — one bounded folder. EVERYTHING inside
-              (summary + chapters § I–IV) belongs to the SELECTED administration.
-              The party-color spine runs the full height (M7c cohesion refactor).
-              ════════════════════════════════════════════════════════════════ */}
+          {/* ==== ACTO I - EL PATRON: the thesis proven above the fold, no tab
+              needed. Sec.A named survivors across party turnover; Sec.B the risk
+              line across four handovers. Both computed from payloads in memory. ==== */}
+          <div className="mb-2 text-[10px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+            <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{isEs ? 'Acto I' : 'Act I'}</span>
+            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            {isEs ? 'El patrón' : 'The pattern'}
+          </div>
           <section
+            aria-label={isEs ? 'El patrón — supervivencia entre sexenios' : 'The pattern — survival across terms'}
+            className="rounded-sm border border-border/50 bg-background-card overflow-hidden mb-6"
+            style={{ borderLeftWidth: 4, borderLeftColor: 'var(--color-accent)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
+          >
+            <div className="px-4 sm:px-5 py-4">
+              <AdminSurvivorsSlope columns={survivorColumns} isEs={isEs} onSelectAdmin={onSelectAdmin} />
+            </div>
+            <div className="border-t border-border/40 px-4 sm:px-5 py-4">
+              <SeamStrip series={seamSeries} nationalAvgPct={allTimeAvg.hr} admins={seamAdmins} seams={seams} isEs={isEs} onSelectAdmin={onSelectAdmin} />
+            </div>
+          </section>
+          {/* ==== ACTO II - EL EXPEDIENTE: the selected administration's file ==== */}
+          <div className="mb-2 text-[10px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+            <span style={{ color: folderColor, fontWeight: 600 }}>{isEs ? 'Acto II' : 'Act II'}</span>
+            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            {isEs ? 'El expediente' : 'The file'}
+          </div>
+          <section
+            id="expediente-file"
             aria-label={isEs ? `Expediente · ${selectedDisplay}` : `Case file · ${selectedDisplay}`}
             className="rounded-sm border border-border/50 bg-background-card overflow-hidden"
             style={{
@@ -775,17 +839,21 @@ export default function Administrations() {
               recovery tier, never blended into the scored corpus (Option C). ── */}
           {selectedAdmin === 'Sheinbaum' && <GapRecoveryPanel isEs={isEs} />}
 
-          {/* ── § II · LA HUELLA SECTORIAL — sector risk profile ── */}
+          {/* -- Sec.II - LA DESVIACION SECTORIAL - sector risk vs the term's own average -- */}
           <div className="border-t border-border/40 px-4 sm:px-5 py-4">
             <div className="mb-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <ChapterKicker numeral="II" es="LA HUELLA SECTORIAL" en="THE SECTOR FOOTPRINT" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
+                  <ChapterKicker numeral="II" es="LA DESVIACIÓN SECTORIAL" en="THE SECTOR DEVIATION" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
                   <h3 className="text-sm font-mono text-text-primary">
-                    {t('sectorProfile', { admin: selectedDisplay })}
+                    {isEs
+                      ? `Qué sectores corrieron por encima del propio promedio de ${selectedDisplay}`
+                      : `Which sectors ran hotter than ${selectedDisplay}'s own average`}
                   </h3>
                   <p className="text-xs text-text-muted mt-1">
-                    {t('heatmapSubtitle')}
+                    {isEs
+                      ? 'Desviación del alto riesgo de cada sector frente al promedio del sexenio — no un semáforo, una acusación medida.'
+                      : "Each sector's high-risk rate against the term's own average — not a heatmap, a measured indictment."}
                   </p>
                 </div>
                 <TableExportButton
@@ -801,57 +869,7 @@ export default function Administrations() {
                 />
               </div>
             </div>
-            <div>
-              {(() => {
-                const ranked = sectorHeatmap.filter((s) => s.contracts > 0).sort((a, b) => b.hr - a.hr)
-                if (ranked.length === 0) {
-                  return <div className="h-24 flex items-center justify-center text-text-muted text-sm">{t('noData')}</div>
-                }
-                const adminAvgHR = selectedAgg?.highRiskPct ?? 0
-                const top = ranked[0]
-                const scaleMax = Math.max(...ranked.map((s) => s.hr), adminAvgHR, 1) * 1.15
-                const toRow = (s: typeof ranked[number]): DotStripRow => ({
-                  label: s.name,
-                  sublabel: `DA ${s.da.toFixed(0)}% · ${formatNumber(s.contracts)}`,
-                  fraction: s.hr / scaleMax,
-                  colorRaw: s.color,
-                  valueLabel: s.hr.toFixed(1) + '%',
-                })
-                // Two dense columns that fill the width — with N trimmed to 40
-                // so each 40·GAP=320px track fits inside its half-column. (The
-                // old bug was N=50's 400px track overflowing the ~194px cell;
-                // fitting N keeps native uniform dots AND kills the dead space a
-                // single full-width column left on the right.)
-                const mid = Math.ceil(ranked.length / 2)
-                const halves = ranked.length > 6 ? [ranked.slice(0, mid), ranked.slice(mid)] : [ranked]
-                const oecdMark = {
-                  fraction: adminAvgHR / scaleMax,
-                  label: `${isEs ? 'Prom. sexenio' : 'Term avg'} · ${adminAvgHR.toFixed(1)}%`,
-                }
-                return (
-                  <>
-                    {adminAvgHR > 0 && (
-                      <p className="text-[11px] font-mono mb-3 leading-relaxed text-text-secondary">
-                        <span style={{ color: 'var(--color-accent)' }}>▲</span> {top.name}: {top.hr.toFixed(1)}% {isEs ? 'alto riesgo' : 'high risk'} —{' '}
-                        <span style={{ color: 'var(--color-accent)' }}>{(top.hr / adminAvgHR).toFixed(1)}×</span> {isEs ? 'el promedio del sexenio' : 'the term average'}
-                      </p>
-                    )}
-                    <div className={halves.length > 1 ? 'grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1' : ''}>
-                      {halves.map((half, h) => (
-                        <DotStrip
-                          key={h}
-                          rows={half.map(toRow)}
-                          N={40}
-                          labelWidth={140}
-                          rowHeight={28}
-                          oecdMark={oecdMark}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )
-              })()}
-            </div>
+            <AdminSectorDeviation rows={sectorDeviationRows} termBenchmarkFraction={termBenchmarkFraction} isEs={isEs} />
           </div>
 
           {/* ── § III · EL EXPEDIENTE — chronological case-file spine (R3) ── */}
@@ -1003,167 +1021,19 @@ export default function Administrations() {
             </span>
           </div>
           </section>
-
-          {/* ════════════════════════════════════════════════════════════════
-              MÓDULO 2 · EL CICLO — single-administration analytical folder.
-              The dossier is about ONE term, so this module focuses entirely on
-              the selected administration: its term-cycle trajectory + its
-              sector scorecard. (Was "EL PATRÓN", a five-term comparison —
-              retired 2026-06-08: it diluted the single-admin focus and
-              duplicated §I/§II. Cross-term comparison lives in the on-demand
-              "Comparar dos periodos" tool below.) Ochre spine = analytical voice.
-              ════════════════════════════════════════════════════════════════ */}
-          <section
-            aria-label={isEs ? `El ciclo — ${selectedDisplay}` : `The cycle — ${selectedDisplay}`}
-            className="rounded-sm border border-border/50 bg-background-card overflow-hidden"
-            style={{
-              borderLeftWidth: 4,
-              borderLeftColor: 'var(--color-accent)',
-              boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
-            }}
-          >
-          {/* Module header */}
-          <div className="px-4 sm:px-5 py-4">
-            <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1.5">
-              § VI · {isEs ? 'EL CICLO DEL SEXENIO' : 'THE TERM CYCLE'} — {adminTag}
-            </div>
-            <h2
-              style={{
-                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
-                fontWeight: 500,
-                fontSize: 'clamp(20px, 2.6vw, 28px)',
-                lineHeight: 1.1,
-              }}
-              className="text-text-primary"
-            >
-              {isEs ? (
-                <>El sexenio de <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span>, año por año.</>
-              ) : (
-                <>The <span style={{ fontStyle: 'normal', fontWeight: 600, color: folderColor }}>{selectedDisplay}</span> term, year by year.</>
-              )}
-            </h2>
-            <p className="mt-1.5 text-xs text-text-muted leading-relaxed">
-              {isEs
-                ? 'Trayectoria de riesgo por año de mandato y huella por sector — solo esta administración, contra el promedio nacional.'
-                : 'Risk trajectory by year in office and the sector scorecard — this administration only, against the national average.'}
-            </p>
+          {/* ==== ACTO III - LOS QUE PERMANECEN: officials who kept signing across
+              a change of government, + the on-demand two-period compare. ==== */}
+          <div className="mt-8 mb-2 text-[10px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+            <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{isEs ? 'Acto III' : 'Act III'}</span>
+            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            {isEs ? 'Los que permanecen' : 'The ones who remain'}
           </div>
+          {moversResp?.data_available && moversResp.movers.length > 0 && (
+            <OfficialTenureBands movers={moversResp.movers} isEs={isEs} />
+          )}
 
-          {/* Term-year trajectory + sector scorecard — side by side so the
-              module fills its full width (kills the right-half dead space the
-              stacked narrow blocks left behind). */}
-          <div className="border-t border-border/40 px-4 sm:px-5 py-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-8 items-start">
-              {/* LEFT — term-year trajectory */}
-              <div className="min-w-0">
-                <AdminCycleSmallMultiples
-                  administrations={adminCycleData}
-                  isEs={isEs}
-                  referencePct={allTimeAvg.risk * 100}
-                  selectedName={selectedAdmin}
-                  focusName={selectedAdmin}
-                  bare
-                />
-              </div>
-
-              {/* RIGHT — sector scorecard */}
-              <div className="min-w-0">
-                <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
-                  {isEs ? '§ TARJETA SECTORIAL' : '§ SECTOR SCORECARD'}
-                </div>
-                <p className="text-xs text-text-muted mb-3 leading-relaxed">
-                  {isEs
-                    ? `Cuatro métricas por sector bajo ${selectedDisplay}. La intensidad colorea cada columna por separado — más rojo = peor entre los sectores.`
-                    : `Four metrics per sector under ${selectedDisplay}. Intensity is column-relative — redder = worst among the sectors.`}
-                </p>
-                <div className="overflow-x-auto">
-                  {(() => {
-                    const order = [...sectorHeatmap].filter((s) => s.contracts > 0).sort((a, b) => b.hr - a.hr)
-                    if (order.length === 0) {
-                      return <div className="h-20 flex items-center justify-center text-text-muted text-sm">{t('noData')}</div>
-                    }
-                    const metrics = [
-                      { key: 'risk', label: isEs ? 'Riesgo' : 'Risk', get: (s: typeof order[number]) => s.risk * 100 },
-                      { key: 'da',   label: isEs ? 'Adj. Dir.' : 'Direct', get: (s: typeof order[number]) => s.da },
-                      { key: 'sb',   label: isEs ? 'Lic. Única' : 'Single Bid', get: (s: typeof order[number]) => s.sb },
-                      { key: 'hr',   label: isEs ? 'Alto Riesgo' : 'High Risk', get: (s: typeof order[number]) => s.hr },
-                    ]
-                    const ranges = metrics.map((m) => {
-                      const vals = order.map(m.get)
-                      return { min: Math.min(...vals), max: Math.max(...vals) }
-                    })
-                    return (
-                      <table className="w-full border-separate" style={{ borderSpacing: 3 }} aria-label={isEs ? 'Tarjeta sectorial' : 'Sector scorecard'}>
-                        <thead>
-                          <tr>
-                            <th scope="col" className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal whitespace-nowrap w-px">
-                              {isEs ? 'Sector' : 'Sector'}
-                            </th>
-                            {metrics.map((m) => (
-                              <th key={m.key} scope="col" className="text-center pb-1 px-1 text-[9px] font-mono font-semibold tracking-wider text-text-muted">
-                                {m.label}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {order.map((s) => (
-                            <tr key={s.sectorId}>
-                              <td className="pr-3 py-0.5 w-px">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                                  <span className="text-[10px] font-mono text-text-secondary whitespace-nowrap">{s.name}</span>
-                                </div>
-                              </td>
-                              {metrics.map((m, mi) => {
-                                const val = m.get(s)
-                                const { min, max } = ranges[mi]
-                                const t01 = max === min ? 0 : Math.max(0, Math.min(1, (val - min) / (max - min)))
-                                return (
-                                  <td key={m.key} className="p-0">
-                                    <div
-                                      className="flex items-center justify-center select-none w-full"
-                                      style={{
-                                        minHeight: 36,
-                                        backgroundColor: scaleToColor(val, min, max, 'risk'),
-                                        border: '1px solid var(--color-border)',
-                                        borderRadius: 3,
-                                      }}
-                                      title={`${s.name} · ${m.label}: ${val.toFixed(1)}%`}
-                                    >
-                                      <span
-                                        className="font-bold tabular-nums leading-none"
-                                        style={{ fontFamily: 'var(--font-family-serif)', fontSize: 15, color: t01 > 0.62 ? '#ffffff' : 'var(--color-text-primary)' }}
-                                      >
-                                        {val.toFixed(0)}%
-                                      </span>
-                                    </div>
-                                  </td>
-                                )
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )
-                  })()}
-                </div>
-                <div className="mt-2.5 flex items-center gap-1.5 text-[9px] font-mono text-text-muted">
-                  <span>{isEs ? 'menor' : 'lower'}</span>
-                  <span
-                    className="h-2.5 w-20 rounded-sm"
-                    style={{ background: 'linear-gradient(90deg, #f3f1ec, #f59e0b, #ef4444)', border: '1px solid var(--color-border)' }}
-                    aria-hidden="true"
-                  />
-                  <span>{isEs ? 'mayor' : 'higher'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Period Comparison tool (collapsed footer utility) */}
-          <div className="border-t border-border/40">
+          {/* Period Comparison tool (collapsed footer utility, relocated from the retired MODULO 2) */}
+          <div className="mt-6 border border-border/50 rounded-sm bg-background-card overflow-hidden">
             <button
               className="w-full flex items-center justify-between px-4 sm:px-5 py-3 text-left hover:bg-background-elevated/40 transition-colors"
               onClick={() => setCompareOpen((v) => !v)}
@@ -1180,75 +1050,6 @@ export default function Administrations() {
               </div>
             )}
           </div>
-          </section>
-
-          {/* ── LOS ITINERANTES — cross-institution movers (2018+, window-wide;
-               administration-agnostic coda). Each name links to its /officials
-               rollup. Ranked by institution count, never a raw risk ranking. ── */}
-          {moversResp?.data_available && moversResp.movers.length > 0 && (
-            <section className="mt-10 pt-8 border-t border-border" aria-label={isEs ? 'Funcionarios itinerantes' : 'Itinerant officials'}>
-              <div className="font-mono mb-1" style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                {isEs ? 'Ventana 2018+ · todas las administraciones' : '2018+ window · across administrations'}
-              </div>
-              <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 22, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
-                {isEs ? 'Los itinerantes' : 'The itinerants'}
-              </h2>
-              <p className="mt-1.5 text-xs text-text-secondary leading-relaxed">
-                {isEs
-                  ? 'Responsables de la Unidad Compradora que firmaron en más de una institución — la señal de rotación que ninguna ficha de una sola entidad puede mostrar. Ordenados por número de instituciones.'
-                  : 'Procurement officers of record who signed at more than one institution — the rotation signal no single-entity surface can show. Ranked by institution count.'}
-              </p>
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-xs border-collapse">
-                  <thead>
-                    <tr className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">
-                      <th className="text-left font-medium py-2 pr-3">{isEs ? 'Funcionario' : 'Officer'}</th>
-                      <th className="text-right font-medium py-2 px-3">{isEs ? 'Inst.' : 'Inst.'}</th>
-                      <th className="text-right font-medium py-2 px-3">{isEs ? 'Contratos' : 'Contracts'}</th>
-                      <th className="text-right font-medium py-2 px-3">{isEs ? 'Valor' : 'Value'}</th>
-                      <th className="text-right font-medium py-2 px-3">{isEs ? 'Adj. directa' : 'Direct award'}</th>
-                      <th className="text-right font-medium py-2 pl-3">{isEs ? 'Indicador' : 'Risk ind.'}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {moversResp.movers.map((m) => {
-                      const level = getRiskLevelFromScore(m.avg_risk_score)
-                      const locale = isEs ? 'es-MX' : 'en-US'
-                      return (
-                        <tr key={m.official_name} className="border-b border-border/40 hover:bg-background-elevated/40">
-                          <td className="py-2 pr-3">
-                            <Link
-                              to={`/officials/${encodeURIComponent(m.official_name)}`}
-                              className="text-text-primary font-medium hover:opacity-70 transition-opacity"
-                            >
-                              {toTitleCase(m.official_name)}
-                            </Link>
-                          </td>
-                          <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{m.institution_count}</td>
-                          <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{m.total_contracts.toLocaleString(locale)}</td>
-                          <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{formatCompactMXN(m.total_value_mxn)}</td>
-                          <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{m.direct_award_pct.toFixed(0)}%</td>
-                          <td className="py-2 pl-3 text-right tabular-nums">
-                            <span className="inline-flex items-center gap-1.5 justify-end">
-                              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: RISK_COLORS[level] }} aria-hidden="true" />
-                              <span style={{ color: RISK_COLORS[level] }}>{m.avg_risk_score.toFixed(2)}</span>
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              {/* Provenance note. The server note (moversResp.note) is Spanish-only,
-                  so render a locale-matched string — the English branch mirrors it. */}
-              <p className="mt-3 text-[11px] leading-relaxed text-text-muted">
-                {isEs
-                  ? (moversResp.note ?? 'Responsables de la Unidad Compradora que firmaron en más de una institución · 2018+ (COMPRANET Estructura C/D). Indicador de riesgo del modelo — no es una acusación.')
-                  : 'Procurement officers of record who signed at more than one institution · 2018+ (COMPRANET Structure C/D). Model risk indicator — not an accusation.'}
-              </p>
-            </section>
-          )}
 
           <PageFooter />
         </div>
