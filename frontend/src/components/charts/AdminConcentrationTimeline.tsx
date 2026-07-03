@@ -180,7 +180,7 @@ function AdminConcentrationTimeline({
         ) : isError || !data || chartData.length === 0 ? (
           <div
             className="flex items-center justify-center text-text-secondary font-mono"
-            style={{ height, fontSize: 11 }}
+            style={{ height, fontSize: 13 }}
           >
             {lang === 'en' ? 'Could not load concentration data.' : 'No se pudieron cargar los datos de concentración.'}
           </div>

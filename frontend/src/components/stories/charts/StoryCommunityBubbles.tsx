@@ -50,7 +50,7 @@ export function StoryCommunityBubbles() {
     >
       <div className="rounded-sm border border-border bg-background p-8 flex flex-col items-center justify-center text-center min-h-[220px]">
         <Network className="h-8 w-8 text-text-muted mb-3" aria-hidden="true" />
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-2">
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-2">
           {t('communityBubbles.pendingKicker')}
         </p>
         <p className="text-sm text-text-secondary max-w-md leading-relaxed">

@@ -127,7 +127,7 @@ export function MacroArc({ lang }: Props) {
                 x={(x1 + x2) / 2}
                 y={PAD_T - 18}
                 textAnchor="middle"
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight="700"
                 fill={era.color}
@@ -157,7 +157,7 @@ export function MacroArc({ lang }: Props) {
               x={PAD_L - 6}
               y={yOf(t) + 3}
               textAnchor="end"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -173,7 +173,7 @@ export function MacroArc({ lang }: Props) {
             x={xOf(y)}
             y={AXIS_Y + 18}
             textAnchor="middle"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
           >
@@ -195,7 +195,7 @@ export function MacroArc({ lang }: Props) {
         <text
           x={PAD_L + CW + 6}
           y={OECD_Y + 3}
-          fontSize={9.5}
+          fontSize={13}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight="700"
           fill="#22d3ee"
@@ -247,7 +247,7 @@ export function MacroArc({ lang }: Props) {
             <text
               x={xOf(last.year) + 6}
               y={yOf(last.da) + 3}
-              fontSize={10.5}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fontWeight="700"
               fill="#dc2626"
@@ -258,7 +258,7 @@ export function MacroArc({ lang }: Props) {
         })()}
 
         {/* Annotation callouts BELOW the line at staggered depths.
-            COVID 2020 (peak at 87%) gets a Playfair italic pull-out;
+            COVID 2020 (peak at 87%) gets a Playfair pull-out;
             the other three use the standard FT-style mono box. */}
         {CALLOUTS.map((c) => {
           const cx = xOf(c.year)
@@ -270,7 +270,7 @@ export function MacroArc({ lang }: Props) {
           const maxX2 = PAD_L + CW - 2
 
           if (c.year === 2020) {
-            // Playfair italic editorial pull-out — peak event deserves visual promotion
+            // Playfair editorial pull-out — peak event deserves visual promotion
             const boxW = Math.min(label.length * 7.4 + 24, 120)
             const boxH = 24
             let boxX = cx - boxW / 2
@@ -286,9 +286,9 @@ export function MacroArc({ lang }: Props) {
                   x={boxX + boxW / 2}
                   y={boxY + 16}
                   textAnchor="middle"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="'Playfair Display', Georgia, serif"
-                  fontStyle="italic"
+                  fontStyle="normal"
                   fontWeight="700"
                   fill="#dc2626"
                 >
@@ -332,7 +332,7 @@ export function MacroArc({ lang }: Props) {
                 x={boxX + boxW / 2}
                 y={boxY + 11}
                 textAnchor="middle"
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight="600"
                 fill="var(--color-text-secondary)"
@@ -365,7 +365,7 @@ export function MacroArc({ lang }: Props) {
                 x={tx}
                 y={ty - 10}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight="800"
                 fill="#dc2626"
@@ -378,7 +378,7 @@ export function MacroArc({ lang }: Props) {
       </svg>
 
       {/* Caption — minimal, methodology-only */}
-      <p className="mt-2 text-[10px] font-mono text-text-muted leading-relaxed">
+      <p className="mt-2 text-[12px] font-mono text-text-muted leading-relaxed">
         {isEs
           ? `Tasa de adjudicación directa anual · bandas administrativas · OCDE recomienda ≤ 25%. Fuente: COMPRANET 2002–2025.`
           : `Yearly direct-award rate · admin wash bands · OECD recommends ≤ 25%. Source: COMPRANET 2002–2025.`}

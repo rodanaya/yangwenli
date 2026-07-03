@@ -97,9 +97,9 @@ export default function Relationships() {
         <header className="mb-8 pb-6 border-b border-border">
           <div
             className="flex items-center gap-3 mb-3"
-            style={{ fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace', fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 400 }}
+            style={{ fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace', fontSize: '12px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 400 }}
           >
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               <span>{lang === 'en' ? 'Institutional capture · monotonic concentration' : 'Captura institucional · concentración monótona'}</span>
@@ -108,7 +108,7 @@ export default function Relationships() {
           <h1
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: 'clamp(28px, 4vw, 48px)',
               lineHeight: 1.04,
@@ -147,7 +147,7 @@ export default function Relationships() {
           </div>
         ) : funnelTiers ? (
           <section className="mb-10" aria-label={lang === 'en' ? 'The funnel' : 'El embudo'}>
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-4">
+            <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-4">
               {lang === 'en' ? '§ THE FUNNEL' : '§ EL EMBUDO'}
             </p>
             <FunnelStrip tiers={funnelTiers} lang={lang} />
@@ -161,7 +161,7 @@ export default function Relationships() {
           </div>
         ) : landscape ? (
           <section className="mb-12" aria-label={lang === 'en' ? 'The reckoning' : 'El saldo'}>
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+            <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
               {lang === 'en' ? '§ THE RECKONING' : '§ EL SALDO'}
             </p>
             <MoneySledgehammer
@@ -210,7 +210,7 @@ export default function Relationships() {
 
             {/* Methodology — live thresholds */}
             <div className="mt-8 pt-4 border-t border-border">
-              <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              <p className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
                 {lang === 'en' ? 'Methodology' : 'Metodología'}
               </p>
               <p className="text-[12px] leading-[1.7] text-text-secondary max-w-3xl">
@@ -241,17 +241,17 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
     <section className="mt-10 pt-5" style={{ borderTop: '1px solid var(--color-border)' }}>
       <p
         className="font-mono mb-2"
-        style={{ fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
+        style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
       >
         § {lang === 'en' ? "What this plate can't tell you" : 'Lo que esta lámina no puede decir'}
       </p>
-      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
+      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
         {lang === 'en'
           ? 'Monotonic concentration reads how spend was awarded — not how it was performed. A high risk indicator marks a publishable geometry, not proof of wrongdoing, which only courts establish.'
           : 'La concentración monótona lee cómo se adjudicó el gasto, no cómo se ejecutó. Un indicador de riesgo alto señala una geometría publicable, no prueba de un delito, que solo los tribunales determinan.'}
       </p>
       <div className="mt-4">
-        <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
+        <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
           {lang === 'en'
             ? 'COMPRANET data 2002–2025; data horizon Sep 28 2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'
             : 'Datos COMPRANET 2002–2025; horizonte de datos 28 sep 2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'}
@@ -260,7 +260,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           type="button"
           onClick={() => navigate('/methodology')}
           className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-          style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+          style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
         >
           {lang === 'en' ? 'See full methodology' : 'Ver metodología completa'} ↗
         </button>

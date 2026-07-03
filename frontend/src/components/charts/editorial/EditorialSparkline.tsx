@@ -58,7 +58,7 @@ export function EditorialSparkline<T extends object>({
     <div className="flex items-center gap-2 w-full">
       <div className="flex-1 min-w-0">{chart}</div>
       <span
-        className="flex-shrink-0 text-[11px] font-mono tabular-nums"
+        className="flex-shrink-0 text-[13px] font-mono tabular-nums"
         style={{ color }}
       >
         {lastValue}

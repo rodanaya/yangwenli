@@ -103,7 +103,7 @@ export default function AdministrationAct({
             </h3>
             <span
               className={cn(
-                'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase leading-none',
+                'inline-flex items-center px-2 py-0.5 rounded text-[12px] font-bold tracking-wider uppercase leading-none',
                 partyStyle.badge,
                 partyStyle.badgeText
               )}
@@ -121,7 +121,7 @@ export default function AdministrationAct({
               key={s.label}
               className="rounded-md bg-background-elevated px-3 py-2.5"
             >
-              <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">{s.label}</p>
+              <p className="text-[12px] uppercase tracking-wider text-text-muted mb-1">{s.label}</p>
               <AnimatedNumber
                 value={s.value}
                 suffix={s.suffix}
@@ -140,7 +140,7 @@ export default function AdministrationAct({
 
         {/* DA% comparison bar */}
         <div className="px-5 pb-4">
-          <div className="flex items-center gap-3 text-[10px] text-text-muted mb-1">
+          <div className="flex items-center gap-3 text-[12px] text-text-muted mb-1">
             <span>{t('actCard.daVsOecd', { pct: OECD_DA_BENCHMARK })}</span>
           </div>
           <div className="relative">
@@ -158,9 +158,9 @@ export default function AdministrationAct({
             />
           </div>
           <div className="flex justify-between mt-1">
-            <span className="text-[10px] text-text-muted">0%</span>
-            <span className="text-[10px] text-text-muted">{t('actCard.oecdBenchmark', { pct: OECD_DA_BENCHMARK })}</span>
-            <span className="text-[10px] text-text-muted">100%</span>
+            <span className="text-[12px] text-text-muted">0%</span>
+            <span className="text-[12px] text-text-muted">{t('actCard.oecdBenchmark', { pct: OECD_DA_BENCHMARK })}</span>
+            <span className="text-[12px] text-text-muted">100%</span>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ export default function AdministrationAct({
           }}
         >
           <p className={cn(
-            'italic text-text-secondary leading-relaxed',
+            'text-text-secondary leading-relaxed',
             isHighlight ? 'text-base md:text-lg' : 'text-sm md:text-base'
           )}>
             {verdict}

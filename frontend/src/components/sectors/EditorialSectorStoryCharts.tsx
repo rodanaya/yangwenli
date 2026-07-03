@@ -50,7 +50,7 @@ function ChartLoadingShell() {
     >
       <span
         className="font-mono uppercase"
-        style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
+        style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
       >
         Cargando…
       </span>

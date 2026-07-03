@@ -24,17 +24,17 @@ export function StoryRiskCalendar() {
       <div className="flex items-center gap-4 py-2 border-y border-border">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-risk-critical" />
-          <span className="text-[10px] text-text-secondary">{t('riskCalendar.legendHigh')}</span>
+          <span className="text-[12px] text-text-secondary">{t('riskCalendar.legendHigh')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-risk-high" />
-          <span className="text-[10px] text-text-secondary">{t('riskCalendar.legendMedium')}</span>
+          <span className="text-[12px] text-text-secondary">{t('riskCalendar.legendMedium')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-text-muted" />
-          <span className="text-[10px] text-text-secondary">{t('riskCalendar.legendLow')}</span>
+          <span className="text-[12px] text-text-secondary">{t('riskCalendar.legendLow')}</span>
         </div>
-        <span className="text-[10px] text-text-muted ml-auto">{t('riskCalendar.hoverHint')}</span>
+        <span className="text-[12px] text-text-muted ml-auto">{t('riskCalendar.hoverHint')}</span>
       </div>
 
       {/* Chart */}
@@ -45,13 +45,13 @@ export function StoryRiskCalendar() {
       {/* Year annotations */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 p-3">
-          <div className="text-[10px] font-mono text-risk-critical uppercase tracking-wide">{t('riskCalendar.covidLabel')}</div>
+          <div className="text-[12px] font-mono text-risk-critical uppercase tracking-wide">{t('riskCalendar.covidLabel')}</div>
           <p className="text-xs text-text-secondary mt-1">
             {t('riskCalendar.covidBody')}
           </p>
         </div>
         <div className="rounded-lg border border-risk-high/20 bg-risk-high/5 p-3">
-          <div className="text-[10px] font-mono text-risk-high uppercase tracking-wide">{t('riskCalendar.decemberLabel')}</div>
+          <div className="text-[12px] font-mono text-risk-high uppercase tracking-wide">{t('riskCalendar.decemberLabel')}</div>
           <p className="text-xs text-text-secondary mt-1">
             {t('riskCalendar.decemberBody')}
           </p>

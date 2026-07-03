@@ -90,15 +90,15 @@ function DossierSectionHeader({
   return (
     <div className="flex items-baseline justify-between gap-4 pb-2 mb-5" style={{ borderBottom: `1px solid ${accent}33` }}>
       <div className="flex items-baseline gap-3 min-w-0">
-        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
+        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
           § {eyebrow}
         </span>
-        <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
+        <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
           {title}
         </h2>
       </div>
       {meta && (
-        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
           {meta}
         </span>
       )}
@@ -110,10 +110,10 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
   const navigate = useNavigate()
   return (
     <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <p className="font-mono mb-2" style={{ fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+      <p className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
       </p>
-      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
+      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Categorías clasificadas con el modelo automático. Modelo de riesgo v0.8.5. Las señales agregadas a nivel de categoría son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. Categories classified by the auto-model. v0.8.5 risk model. Category-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
@@ -122,7 +122,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         type="button"
         onClick={() => navigate('/methodology')}
         className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-        style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
       >
         {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
       </button>
@@ -331,10 +331,10 @@ export default function CategoryDossier() {
       <header className="relative">
         <div aria-hidden="true" className="absolute left-0 right-0" style={{ top: 0, height: 6, background: accent }} />
         <div className="pt-8 pb-8">
-          <div className="font-mono tabular-nums mb-3" style={{ fontSize: 11, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+          <div className="font-mono tabular-nums mb-3" style={{ fontSize: 13, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
             KARDEX · C-{String(c.category_id).padStart(3, '0')}{sectorCode && (<> · {sectorCode.toUpperCase()}</>)}
           </div>
-          <div className="font-mono mb-4" style={{ fontSize: 10, fontStyle: 'italic', letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 500 }}>
+          <div className="font-mono mb-4" style={{ fontSize: 12, fontStyle: 'normal', letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 500 }}>
             § {lang === 'es' ? 'FICHA DE INVENTARIO · CATEGORÍA' : 'STOCK CARD · CATEGORY DOSSIER'}
           </div>
 
@@ -342,7 +342,7 @@ export default function CategoryDossier() {
             <div className="min-w-0">
               <h1
                 className="text-balance mb-2"
-                style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(32px, 4.4vw, 46px)', lineHeight: 1.04, letterSpacing: '-0.012em', color: 'var(--color-text-primary)' }}
+                style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 'clamp(32px, 4.4vw, 46px)', lineHeight: 1.04, letterSpacing: '-0.012em', color: 'var(--color-text-primary)' }}
               >
                 {displayName}
               </h1>
@@ -361,26 +361,26 @@ export default function CategoryDossier() {
             <aside className="flex-shrink-0 relative" style={{ width: 168, paddingTop: 6, paddingBottom: 8, paddingLeft: 18, paddingRight: 18 }}>
               <div aria-hidden="true" className="absolute top-0 left-0 right-0" style={{ height: 2, background: verdictColor }} />
               <div className="text-center">
-                <div className="tabular-nums" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 46, lineHeight: 1, color: verdictColor, letterSpacing: '-0.02em' }}>
+                <div className="tabular-nums" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 46, lineHeight: 1, color: verdictColor, letterSpacing: '-0.02em' }}>
                   {sealNumber || '—'}
                   {hrAvailable && <span className="font-mono" style={{ fontSize: 18, fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: 2 }}>%</span>}
                 </div>
-                <div className="font-mono mt-1" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.6, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+                <div className="font-mono mt-1" style={{ fontSize: 13, color: 'var(--color-text-muted)', opacity: 0.6, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
                   {hrAvailable
                     ? (lang === 'es' ? 'contratos de alto riesgo' : 'high-risk contracts')
                     : (lang === 'es' ? 'riesgo prom. · de 100' : 'avg risk · of 100')}
                 </div>
               </div>
               <div aria-hidden="true" className="my-3 mx-auto" style={{ height: 1, width: '60%', background: 'var(--color-border)' }} />
-              <div className="font-mono text-center" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: verdictColor, fontWeight: 700 }}>
+              <div className="font-mono text-center" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: verdictColor, fontWeight: 700 }}>
                 {lang === 'es' ? localizeLevel(sealLevel, 'es') : sealLevel.toUpperCase()}
               </div>
               {hrAvailable && riskPct > 0 && (
-                <div className="font-mono text-center mt-1" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
+                <div className="font-mono text-center mt-1" style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
                   {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {riskPct}
                 </div>
               )}
-              <div className="font-mono text-center mt-1" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
+              <div className="font-mono text-center mt-1" style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
                 {Math.round(daPct)}% {lang === 'es' ? 'adj. directa' : 'direct-award'}
               </div>
             </aside>
@@ -390,8 +390,8 @@ export default function CategoryDossier() {
 
           {/* Lede */}
           <div className="mt-6" style={{ borderLeft: `2px solid ${accent}`, paddingLeft: 20, maxWidth: '68ch' }}>
-            <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 17, lineHeight: 1.55, color: 'var(--color-text-secondary)', letterSpacing: '0.005em' }}>
-              <span aria-hidden="true" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: '3.5em', float: 'left', lineHeight: 0.85, color: accent, marginRight: '0.08em', marginTop: '0.05em', marginBottom: '-0.05em' }}>
+            <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 17, lineHeight: 1.55, color: 'var(--color-text-secondary)', letterSpacing: '0.005em' }}>
+              <span aria-hidden="true" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: '3.5em', float: 'left', lineHeight: 0.85, color: accent, marginRight: '0.08em', marginTop: '0.05em', marginBottom: '-0.05em' }}>
                 {dropChar}
               </span>
               {lede.slice(dropChar.length)}
@@ -489,7 +489,7 @@ export default function CategoryDossier() {
             <div className="grid gap-8 md:grid-cols-2">
               {seasonalityData && (
                 <div>
-                  <p className="font-mono mb-3" style={{ fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                  <p className="font-mono mb-3" style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                     {lang === 'es' ? 'La señal de diciembre' : 'The December tell'}
                   </p>
                   <SeasonalityTell data={seasonalityData as SeasonalityData} accent={accent} lang={lang} />
@@ -497,7 +497,7 @@ export default function CategoryDossier() {
               )}
               {patternsData && patternsData.vendors_in_aria > 0 && (
                 <div>
-                  <p className="font-mono mb-3" style={{ fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                  <p className="font-mono mb-3" style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                     {lang === 'es' ? 'La huella ARIA' : 'The ARIA fingerprint'}
                   </p>
                   <AriaFingerprint data={patternsData as PatternsData} lang={lang} />

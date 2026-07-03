@@ -80,7 +80,7 @@ export function SexenioComparisonChart() {
         {SEXENIO_ROWS.map((r) => (
           <div key={r.key} className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: r.color, opacity: r.opacity }} />
-            <span className="text-[10px] font-mono text-text-muted">{r.label}</span>
+            <span className="text-[12px] font-mono text-text-muted">{r.label}</span>
           </div>
         ))}
       </div>
@@ -98,7 +98,7 @@ export function SexenioComparisonChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -109,7 +109,7 @@ export function SexenioComparisonChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -128,7 +128,7 @@ export function SexenioComparisonChart() {
                   y={blockY}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -159,7 +159,7 @@ export function SexenioComparisonChart() {
                         y={yStrip + STRIP_H / 2 + 3}
                         textAnchor="end"
                         fill="var(--color-text-muted)"
-                        fontSize={9}
+                        fontSize={13}
                         fontFamily="var(--font-family-mono)"
                       >
                         {sx.label}
@@ -190,7 +190,7 @@ export function SexenioComparisonChart() {
                         x={LABEL_W + COL_W + 8}
                         y={yStrip + STRIP_H / 2 + 3}
                         fill={sx.color}
-                        fontSize={9}
+                        fontSize={13}
                         fontFamily="var(--font-family-mono)"
                         fontWeight={sx.key === 'amlo' ? 700 : 500}
                         opacity={sx.key === 'amlo' ? 1 : 0.85}

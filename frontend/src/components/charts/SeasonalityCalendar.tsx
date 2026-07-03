@@ -167,7 +167,7 @@ export function SeasonalityCalendar() {
                     <text
                       x={cx}
                       y={HEIGHT + 12}
-                      fontSize={9}
+                      fontSize={13}
                       fontFamily="monospace"
                       fill={d.month === 12 ? RISK_COLORS.critical : 'var(--color-text-muted)'}
                       fontWeight={d.month === 12 ? 700 : 400}
@@ -184,7 +184,7 @@ export function SeasonalityCalendar() {
         <p className="mt-3 text-center text-xs font-mono text-text-muted flex items-baseline justify-center gap-2">
           <span className="text-risk-critical font-bold">{t('months.Dec')}</span>
           <span
-            className="font-playfair-display italic font-extrabold tabular-nums text-2xl"
+            className="font-playfair-display font-extrabold tabular-nums text-2xl"
             style={{ color: RISK_COLORS.critical }}
           >
             +{decRiskPctHigher}%
@@ -198,10 +198,10 @@ export function SeasonalityCalendar() {
         <span className="text-risk-critical text-xs font-bold font-mono flex-shrink-0 mt-0.5">
           DEC
         </span>
-        <p className="text-[11px] text-text-secondary leading-relaxed">
+        <p className="text-[13px] text-text-secondary leading-relaxed">
           {t('seasonality.annotation_label')}{' '}
           <span
-            className="font-playfair-display italic font-extrabold tabular-nums"
+            className="font-playfair-display font-extrabold tabular-nums"
             style={{ color: RISK_COLORS.critical }}
           >
             +{decRiskPctHigher}%
@@ -212,12 +212,12 @@ export function SeasonalityCalendar() {
       </div>
 
       {/* Insight callout */}
-      <p className="text-[11px] text-text-secondary leading-relaxed px-1">
+      <p className="text-[13px] text-text-secondary leading-relaxed px-1">
         {t('seasonality.callout')}
       </p>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-text-muted">
+      <div className="flex items-center justify-center gap-4 text-[12px] font-mono text-text-muted">
         <span className="flex items-center gap-1">
           <span className="inline-block w-2.5 h-2.5 rounded-sm bg-risk-critical" />
           {t('seasonality.legend_dec')}

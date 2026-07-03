@@ -137,7 +137,7 @@ export default function FraudTimelineRibbon({
               style={{ left: `${getPositionPct(year)}%` }}
             >
               <div className="w-[1px] h-4 bg-background-elevated mx-auto" aria-hidden="true" />
-              <span className="text-[10px] text-text-muted font-mono tabular-nums block text-center mt-0.5">
+              <span className="text-[12px] text-text-muted font-mono tabular-nums block text-center mt-0.5">
                 {year}
               </span>
             </div>
@@ -202,7 +202,7 @@ export default function FraudTimelineRibbon({
                     aria-label={`${c.caseName}, ${c.year}${c.valueBn ? `, ${c.valueBn}B MXN` : ''}`}
                   >
                     <p
-                      className="text-[10px] font-bold font-mono tabular-nums mb-0.5"
+                      className="text-[12px] font-bold font-mono tabular-nums mb-0.5"
                       style={{ color: eraColor }}
                     >
                       {c.year}
@@ -211,7 +211,7 @@ export default function FraudTimelineRibbon({
                       {c.caseName}
                     </p>
                     {c.valueBn !== undefined && (
-                      <p className="text-[11px] font-bold text-risk-critical font-mono tabular-nums">
+                      <p className="text-[13px] font-bold text-risk-critical font-mono tabular-nums">
                         {c.valueBn.toLocaleString('es-MX', { maximumFractionDigits: 1 })}B MXN
                       </p>
                     )}
@@ -224,7 +224,7 @@ export default function FraudTimelineRibbon({
       </div>
 
       {/* Scroll hint for mobile */}
-      <div className="flex items-center justify-center gap-1 mt-1 text-[10px] text-text-muted lg:hidden">
+      <div className="flex items-center justify-center gap-1 mt-1 text-[12px] text-text-muted lg:hidden">
         <span aria-hidden="true">&larr;</span>
         <span>Deslizar para ver mas</span>
         <span aria-hidden="true">&rarr;</span>

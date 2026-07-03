@@ -71,7 +71,7 @@ export function AmloEraComparisonChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -82,7 +82,7 @@ export function AmloEraComparisonChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -104,7 +104,7 @@ export function AmloEraComparisonChart() {
             x={LABEL_W + oecdDot * DOT_GAP + DOT_R + 4}
             y={38}
             fill={OECD_COLOR}
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {t('amloEra.oecdLabel')}
@@ -125,7 +125,7 @@ export function AmloEraComparisonChart() {
                   y={y0 + STRIP_H / 2}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                 >
                   {row.era}
@@ -166,7 +166,7 @@ export function AmloEraComparisonChart() {
                   x={LABEL_W + COL_W + 8}
                   y={y0 + STRIP_H / 2 + 3}
                   fill={color}
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >

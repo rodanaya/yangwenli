@@ -167,17 +167,17 @@ export function RiskFeedbackButton({
                     <div className="text-xs font-medium leading-tight">
                       {opt.label}
                       {isSelected && (
-                        <span className="ml-1.5 text-[10px] text-text-muted font-normal">
+                        <span className="ml-1.5 text-[12px] text-text-muted font-normal">
                           (current)
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-text-muted mt-0.5 leading-tight">
+                    <div className="text-[13px] text-text-muted mt-0.5 leading-tight">
                       {opt.description}
                     </div>
                   </div>
                   {isLoading && (
-                    <span className="ml-auto text-[10px] text-text-muted">saving…</span>
+                    <span className="ml-auto text-[12px] text-text-muted">saving…</span>
                   )}
                 </button>
               )

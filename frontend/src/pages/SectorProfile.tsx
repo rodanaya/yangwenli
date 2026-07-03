@@ -212,7 +212,7 @@ function InstitutionList({
                 single-row flex squeezed institution names down to "Institu..."
                 because the money + risk pill claimed the right column. */}
             <div className="flex items-baseline gap-2 min-w-0 mb-1">
-              <span className="text-[10px] font-mono text-text-muted w-4 flex-shrink-0">
+              <span className="text-[12px] font-mono text-text-muted w-4 flex-shrink-0">
                 #{i + 1}
               </span>
               <div className="min-w-0 flex-1">
@@ -230,13 +230,13 @@ function InstitutionList({
               </span>
               {f.avg_risk != null && (
                 <span
-                  className="rounded px-1.5 py-0.5 text-[10px] font-bold font-mono"
+                  className="rounded px-1.5 py-0.5 text-[12px] font-bold font-mono"
                   style={{ color: riskColor, backgroundColor: `${riskColor}18` }}
                 >
                   {Math.round(f.avg_risk * 100)}%
                 </span>
               )}
-              <span className="text-[10px] font-mono text-text-muted ml-auto tabular-nums">
+              <span className="text-[12px] font-mono text-text-muted ml-auto tabular-nums">
                 {formatNumber(f.contracts)} {f.contracts === 1 ? 'contrato' : 'contratos'}
               </span>
             </div>
@@ -412,7 +412,7 @@ function RiskDonut({
               </div>
               <div className="flex items-center gap-2">
                 <span className="tabular-nums font-mono text-text-secondary">{d.pct.toFixed(1)}%</span>
-                <span className="tabular-nums font-mono text-text-muted text-[10px]">
+                <span className="tabular-nums font-mono text-text-muted text-[12px]">
                   {formatNumber(d.count)}
                 </span>
               </div>
@@ -457,17 +457,17 @@ function FactorRankList({
           <div key={d.factor}>
             <div className="flex items-center justify-between mb-0.5 gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-[10px] font-mono text-text-muted w-4 flex-shrink-0">
+                <span className="text-[12px] font-mono text-text-muted w-4 flex-shrink-0">
                   #{i + 1}
                 </span>
                 <span className="text-xs font-semibold text-text-primary truncate" title={label}>{label}</span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-[10px] font-mono text-text-secondary tabular-nums">
+                <span className="text-[12px] font-mono text-text-secondary tabular-nums">
                   {d.percentage.toFixed(1)}%
                 </span>
                 <span
-                  className="rounded px-1.5 py-0.5 text-[10px] font-bold font-mono tabular-nums"
+                  className="rounded px-1.5 py-0.5 text-[12px] font-bold font-mono tabular-nums"
                   style={{ color: riskColor, backgroundColor: `${riskColor}18` }}
                 >
                   {Math.round(d.avg_risk_score * 100)}% risk
@@ -475,7 +475,7 @@ function FactorRankList({
               </div>
             </div>
             {desc && (
-              <p className="text-[10px] text-text-muted ml-6 mb-1 leading-tight">{desc}</p>
+              <p className="text-[12px] text-text-muted ml-6 mb-1 leading-tight">{desc}</p>
             )}
             <div className="ml-6">
               <DotBar
@@ -600,11 +600,11 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
             <span className="text-[13px] font-mono text-text-muted">—</span>
           )}
           {score != null && (
-            <span className="text-[11px] font-mono text-text-muted mt-1.5 tabular-nums">
+            <span className="text-[13px] font-mono text-text-muted mt-1.5 tabular-nums">
               {score.toFixed(1)}/100
             </span>
           )}
-          <span className="text-[9px] uppercase tracking-widest text-text-muted mt-1 font-semibold"
+          <span className="text-[13px] uppercase tracking-widest text-text-muted mt-1 font-semibold"
             style={{ fontFamily: 'var(--font-family-mono)' }}>
             PHI
           </span>
@@ -625,8 +625,8 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
               >
                 {ind.value ?? '—'}
               </span>
-              <span className="text-[11px] text-text-secondary mt-0.5 font-semibold">{ind.label}</span>
-              <span className="text-[10px] text-text-muted mt-0.5">{ind.benchmark}</span>
+              <span className="text-[13px] text-text-secondary mt-0.5 font-semibold">{ind.label}</span>
+              <span className="text-[12px] text-text-muted mt-0.5">{ind.benchmark}</span>
             </div>
           ))}
         </div>
@@ -666,7 +666,7 @@ function RiskTrendChart({ years }: { years: TimelineYear[] }) {
         <p className="text-sm text-text-muted">
           {lang === 'en' ? 'No risk trend data for this sector.' : 'Sin datos de evolución de riesgo para este sector.'}
         </p>
-        <p className="text-[11px] text-text-muted mt-1">
+        <p className="text-[13px] text-text-muted mt-1">
           {lang === 'en'
             ? 'Requires at least two years with scored contracts.'
             : 'Requiere al menos dos años con contratos calificados.'}
@@ -777,7 +777,7 @@ function ConcentrationGiniChart({ history, isEs }: { history: ConcentrationYear[
         })()}
       </div>
       {/* FT-style annotations below chart */}
-      <div className="flex items-start justify-between gap-4 mt-2 text-[10px] font-mono text-text-muted">
+      <div className="flex items-start justify-between gap-4 mt-2 text-[12px] font-mono text-text-muted">
         {/* Peak callout */}
         <span>
           {isEs
@@ -791,7 +791,7 @@ function ConcentrationGiniChart({ history, isEs }: { history: ConcentrationYear[
             : `${lastEntry.year} · Gini ${lastEntry.gini.toFixed(2)}`}
         </span>
       </div>
-      <p className="text-[9px] font-mono text-text-muted mt-1 opacity-70">
+      <p className="text-[13px] font-mono text-text-muted mt-1 opacity-70">
         {isEs
           ? 'Umbral de mercado competitivo = 0.5 (línea punteada)'
           : 'Competitive market threshold = 0.5 (dashed line)'}
@@ -861,7 +861,7 @@ function InvestigationCallout({
               size="xs"
             />
             <span
-              className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded flex-shrink-0"
+              className="text-[12px] font-bold font-mono px-1.5 py-0.5 rounded flex-shrink-0"
               style={{
                 color:
                   c.severity >= 4 ? '#f87171' :
@@ -1158,7 +1158,7 @@ export function SectorProfile() {
       >
         <Link
           to="/sectors"
-          className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-widest text-text-muted hover:text-text-primary transition-colors"
+          className="inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-widest text-text-muted hover:text-text-primary transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
           {t('profile.backToSectors')}
@@ -1196,16 +1196,16 @@ export function SectorProfile() {
           className="mb-3 flex items-center gap-3"
           style={{
             fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-            fontSize: '10px',
+            fontSize: '12px',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: 'var(--color-text-muted)',
             fontWeight: 400,
           }}
         >
-          <span style={{ color: sectorColor, fontStyle: 'italic', fontWeight: 500 }}>Folio·{sector.code?.toUpperCase()}</span>
+          <span style={{ color: sectorColor, fontStyle: 'normal', fontWeight: 500 }}>Folio·{sector.code?.toUpperCase()}</span>
           <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+          <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
             Sector profile
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             v0.8.5
@@ -1217,7 +1217,7 @@ export function SectorProfile() {
               className="text-text-primary capitalize"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(28px, 4vw, 40px)',
                 lineHeight: 0.98,
@@ -1235,19 +1235,19 @@ export function SectorProfile() {
                   <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: sectorColor }}>
                     {formatCompactMXN(stats.total_value_mxn)}
                   </div>
-                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.totalSpend')}</div>
+                  <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.totalSpend')}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
                     {formatNumber(stats.total_contracts)}
                   </div>
-                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.contracts')}</div>
+                  <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.contracts')}</div>
                 </div>
                 <div className="text-right">
                   <div className={`text-xl sm:text-2xl font-bold tabular-nums leading-none ${parseFloat(highRiskPct) > 15 ? 'text-risk-high' : 'text-text-primary'}`}>
                     {highRiskPct}%
                   </div>
-                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.highPlusCritical')}</div>
+                  <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.highPlusCritical')}</div>
                 </div>
               </div>
             )}
@@ -1261,7 +1261,7 @@ export function SectorProfile() {
               className="tabular-nums"
               style={{
                 fontFamily: 'var(--font-family-serif)',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 800,
                 fontSize: 'clamp(20px, 3vw, 28px)',
                 color: sectorColor,
@@ -1403,7 +1403,7 @@ export function SectorProfile() {
                     chart instead of a bottom legend (FT/JBM rule). The chart
                     component itself owns its right-edge series labels; this
                     block describes the dual-line encoding once. */}
-                <p className="text-[10px] font-mono text-text-muted mt-2 ml-1">
+                <p className="text-[12px] font-mono text-text-muted mt-2 ml-1">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-risk-high align-middle mr-1" aria-hidden /> {t('profile.avgRiskLegend')}
                   <span className="mx-2 text-text-muted/40">·</span>
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-risk-critical align-middle mr-1" aria-hidden /> {t('profile.highRiskLegend')}
@@ -1517,7 +1517,7 @@ export function SectorProfile() {
                         key={cat.category_id}
                         className="flex items-center gap-3 px-3 py-2 hover:bg-background-elevated/40 transition-colors"
                       >
-                        <span className="text-[10px] font-mono text-text-muted/40 w-4 shrink-0">
+                        <span className="text-[12px] font-mono text-text-muted/40 w-4 shrink-0">
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -1581,7 +1581,7 @@ export function SectorProfile() {
             const top3Share = stats.total_value_mxn > 0 ? top3Sum / stats.total_value_mxn : 0
             return (
               <div className="flex items-center gap-3 px-3 py-2 mb-2 rounded-sm border border-border bg-background/40">
-                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted flex-shrink-0">
+                <span className="font-mono text-[12px] uppercase tracking-[0.12em] text-text-muted flex-shrink-0">
                   {isEs ? 'Concentración' : 'Concentration'}
                 </span>
                 <span className="text-sm font-bold text-text-primary tabular-nums">
@@ -1639,7 +1639,7 @@ export function SectorProfile() {
           {/* sp-P3 — Risk distribution — § kicker added above constellation */}
           <section aria-labelledby="risk-distribution-heading">
             <p
-              className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1"
+              className="font-mono text-[12px] uppercase tracking-[0.18em] mb-1"
               style={{ color: SECTOR_TEXT_COLORS[sector.code ?? ''] ?? sectorColor }}
             >
               {isEs ? '§ 3 DISTRIBUCIÓN DE RIESGO' : '§ 3 RISK DISTRIBUTION'}
@@ -1720,7 +1720,7 @@ export function SectorProfile() {
           {stats && (
             <section aria-labelledby="procurement-patterns-heading">
               <p
-                className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1"
+                className="font-mono text-[12px] uppercase tracking-[0.18em] mb-1"
                 style={{ color: SECTOR_TEXT_COLORS[sector.code ?? ''] ?? sectorColor }}
               >
                 {isEs ? '§ 3 LA PATOLOGÍA DEL SECTOR' : '§ 3 THE SECTOR PATHOLOGY'}
@@ -1770,14 +1770,14 @@ export function SectorProfile() {
                   ))
                 })()}
                 <div className="pt-2 mt-2 border-t border-border/40">
-                  <span className="text-[10px] font-mono text-text-muted">
+                  <span className="text-[12px] font-mono text-text-muted">
                     {isEs
                       ? `${formatNumber(stats.total_vendors ?? 0)} proveedores activos en este sector`
                       : `${formatNumber(stats.total_vendors ?? 0)} active vendors in this sector`}
                   </span>
                 </div>
               </div>
-              <p className="text-[9px] font-mono text-text-muted mt-2 opacity-60">
+              <p className="text-[13px] font-mono text-text-muted mt-2 opacity-60">
                 {isEs
                   ? 'OCDE: adj. directa ≤25%, un solo postor ≤10% · Plataforma: riesgo prom. 11.0%'
                   : 'OECD: direct award ≤25%, single-bid ≤10% · Platform: avg risk 11.0%'}
@@ -1844,7 +1844,7 @@ export function SectorProfile() {
                       <div key={patternKey} className="flex items-center gap-3 px-4 py-2.5">
                         <Link
                           to={`/patterns/${code.toLowerCase()}`}
-                          className="flex-shrink-0 inline-flex items-center justify-center w-8 h-6 rounded text-[10px] font-bold font-mono border border-border hover:border-border-hover transition-colors"
+                          className="flex-shrink-0 inline-flex items-center justify-center w-8 h-6 rounded text-[12px] font-bold font-mono border border-border hover:border-border-hover transition-colors"
                           style={{ color: sectorColor }}
                         >
                           {meta.code}
@@ -1912,7 +1912,7 @@ export function SectorProfile() {
                   Ver en el Atlas
                   <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
                 </Link>
-                <span className="text-[10px] text-text-muted font-mono ml-auto">
+                <span className="text-[12px] text-text-muted font-mono ml-auto">
                   Indicador estadístico · no prueba de irregularidades
                 </span>
               </div>
@@ -2016,7 +2016,7 @@ export function SectorProfile() {
                         <div className="flex items-center justify-between gap-4 mb-2">
                           <div className="min-w-0">
                             <div className="text-xs font-semibold text-text-primary">{row.long}</div>
-                            <div className="text-[10px] text-text-muted font-mono">
+                            <div className="text-[12px] text-text-muted font-mono">
                               {row.yearStart}–{Math.min(row.yearEnd, new Date().getFullYear())}
                               {' · '}{formatNumber(row.total_contracts)} contratos
                             </div>
@@ -2034,14 +2034,14 @@ export function SectorProfile() {
                               <div className="text-xs font-mono tabular-nums" style={{ color: riskColor }}>
                                 {(avgRisk * 100).toFixed(0)}
                               </div>
-                              <div className="text-[9px] text-text-muted uppercase tracking-wide">riesgo</div>
+                              <div className="text-[13px] text-text-muted uppercase tracking-wide">riesgo</div>
                             </div>
                             {avgDa !== null && (
                               <div>
                                 <div className="text-xs font-mono tabular-nums text-text-secondary">
                                   {avgDa.toFixed(0)}%
                                 </div>
-                                <div className="text-[9px] text-text-muted uppercase tracking-wide">adj. dir.</div>
+                                <div className="text-[13px] text-text-muted uppercase tracking-wide">adj. dir.</div>
                               </div>
                             )}
                           </div>

@@ -233,7 +233,7 @@ export function ChartCard({
       <div
         className="flex items-center justify-between px-5 pt-4 pb-2 font-mono uppercase"
         style={{
-          fontSize: 9,
+          fontSize: 13,
           letterSpacing: '0.18em',
           color: 'var(--color-text-muted)',
         }}
@@ -279,7 +279,7 @@ export function ChartCard({
             className="tabular-nums"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 800,
               fontSize: 'clamp(1.8rem, 3.6vw, 2.4rem)',
               lineHeight: 0.95,
@@ -292,7 +292,7 @@ export function ChartCard({
           <span
             className="font-mono uppercase"
             style={{
-              fontSize: 9,
+              fontSize: 13,
               letterSpacing: '0.16em',
               color: 'var(--color-text-muted)',
             }}
@@ -306,7 +306,7 @@ export function ChartCard({
       {annotation && (
         <p
           className="px-5 pb-4 pt-1 font-mono leading-[1.55]"
-          style={{ fontSize: 10.5, color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 12, color: 'var(--color-text-muted)' }}
         >
           {annotation}
         </p>
@@ -398,7 +398,7 @@ export function InlineDotGrid({
                 className="tabular-nums"
                 style={{
                   fontFamily: "'Playfair Display', Georgia, serif",
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 'clamp(1.8rem, 3.4vw, 2.4rem)',
                   lineHeight: 0.95,
@@ -411,7 +411,7 @@ export function InlineDotGrid({
               <div
                 className="font-mono uppercase mt-1.5"
                 style={{
-                  fontSize: 9,
+                  fontSize: 13,
                   letterSpacing: '0.16em',
                   color: 'var(--color-text-muted)',
                 }}
@@ -463,7 +463,7 @@ export function InlineDotGrid({
           <div
             key={i}
             className="flex items-center gap-1.5 font-mono"
-            style={{ fontSize: 10.5, color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
           >
             <span
               className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
@@ -478,7 +478,7 @@ export function InlineDotGrid({
         {scale < 1 && (
           <span
             className="self-center font-mono"
-            style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}
+            style={{ fontSize: 13, color: 'var(--color-text-muted)' }}
           >
             ({displayed.toLocaleString()} of {total.toLocaleString()})
           </span>
@@ -628,7 +628,7 @@ export function InlineBarChart({
             y={PCT_Y}
             textAnchor="end"
             dominantBaseline="middle"
-            fontSize={11}
+            fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-secondary)"
           >
@@ -660,7 +660,7 @@ export function InlineBarChart({
 
           {/* Per-point percent right of band — Playfair Italic 800 */}
           <text x={LABEL_W + bandW + 6} y={PCT_Y} textAnchor="start" dominantBaseline="middle"
-            fontSize={13} fontFamily="'Playfair Display', Georgia, serif" fontStyle="italic"
+            fontSize={13} fontFamily="'Playfair Display', Georgia, serif" fontStyle="normal"
             fontWeight={800} style={{ color: bandFill }} fill={bandFill}>
             {(anchorShare * 100).toFixed(1)}%
           </text>
@@ -675,13 +675,13 @@ export function InlineBarChart({
             return (
               <g key={i} aria-label={`${labelFor(pt)}: ${(ptShare * 100).toFixed(1)}%`}>
                 <text x={LABEL_W - 8} y={cy} textAnchor="end" dominantBaseline="middle"
-                  fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
+                  fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
                   {labelFor(pt)}
                 </text>
                 <rect x={LABEL_W} y={rowY + 2} width={barW} height={MINOR_ROW_H - 6}
                   fill={tierC} opacity={0.5} rx={1} />
                 <text x={LABEL_W + barW + 5} y={cy} dominantBaseline="middle"
-                  fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
+                  fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
                   {(ptShare * 100).toFixed(1)}%
                 </text>
               </g>
@@ -753,7 +753,7 @@ export function InlineBarChart({
                 y={y + BAR_HEIGHT / 2 + 1}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-secondary)"
               >
@@ -778,7 +778,7 @@ export function InlineBarChart({
                     y={y + BAR_HEIGHT / 2 + 1}
                     textAnchor="end"
                     dominantBaseline="middle"
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono, monospace)"
                     fill={labelInkOn(color)}
                   >
@@ -792,7 +792,7 @@ export function InlineBarChart({
                 y={y + BAR_HEIGHT / 2 + 1}
                 textAnchor="start"
                 dominantBaseline="middle"
-                fontSize={10.5}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={pt.highlight ? HIGHLIGHT_COLOR : 'var(--color-text-muted)'}
                 fontWeight={pt.highlight ? 700 : 400}
@@ -807,7 +807,7 @@ export function InlineBarChart({
           <text
             x={refX(data.referenceLine.value) + 3}
             y={svgH - 4}
-            fontSize={10}
+            fontSize={12}
             fontFamily="var(--font-family-mono, monospace)"
             fill={data.referenceLine.color ?? REFERENCE_COLOR}
             opacity={0.9}
@@ -819,7 +819,7 @@ export function InlineBarChart({
           <text
             x={refX(data.referenceLine2.value) + 3}
             y={svgH - 4}
-            fontSize={10}
+            fontSize={12}
             fontFamily="var(--font-family-mono, monospace)"
             fill={data.referenceLine2.color ?? 'var(--color-sector-energia)'}
             opacity={0.9}
@@ -920,7 +920,7 @@ export function InlineLineChart({
       annotation={lineAnnotation}
     >
       {lineYLabel && (
-        <div className="text-[9px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
+        <div className="text-[13px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
           {lineYLabel}
         </div>
       )}
@@ -953,7 +953,7 @@ export function InlineLineChart({
               x={PAD.left - 3}
               y={plotY(data.referenceLine.value) + 3}
               textAnchor="end"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
               opacity={0.9}
@@ -978,7 +978,7 @@ export function InlineLineChart({
               x={PAD.left - 3}
               y={plotY(data.referenceLine2.value) + 3}
               textAnchor="end"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine2.color ?? 'var(--color-text-muted)'}
               opacity={0.9}
@@ -1024,7 +1024,7 @@ export function InlineLineChart({
               x={plotX(i)}
               y={plotY(pt.value) - 12}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={HIGHLIGHT_COLOR}
               fontWeight={700}
@@ -1041,7 +1041,7 @@ export function InlineLineChart({
               x={plotX(i)}
               y={H - 4}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -1099,7 +1099,7 @@ export function InlineAreaChart({
       annotation={areaAnnotation}
     >
       {areaYLabel && (
-        <div className="text-[9px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
+        <div className="text-[13px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
           {areaYLabel}
         </div>
       )}
@@ -1138,7 +1138,7 @@ export function InlineAreaChart({
             <text
               x={W - PAD.right + 2}
               y={plotY(data.referenceLine.value) + 4}
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
               opacity={0.9}
@@ -1176,7 +1176,7 @@ export function InlineAreaChart({
               x={plotX(i)}
               y={plotY(pt.value) - 12}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={HIGHLIGHT_COLOR}
               fontWeight={700}
@@ -1193,7 +1193,7 @@ export function InlineAreaChart({
               x={plotX(i)}
               y={H - 4}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -1282,7 +1282,7 @@ export function InlineSpikeChart({
                     x={bx + barW / 2}
                     y={Math.max(12, by - 4)}
                     textAnchor="middle"
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono, monospace)"
                     fill={HIGHLIGHT_COLOR}
                     fontWeight={700}
@@ -1297,7 +1297,7 @@ export function InlineSpikeChart({
                   x={bx + barW / 2}
                   y={Math.max(12, by - 4)}
                   textAnchor="middle"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={HIGHLIGHT_COLOR}
                   fontWeight={700}
@@ -1311,7 +1311,7 @@ export function InlineSpikeChart({
                   x={bx + barW / 2}
                   y={PAD.top + plotH + 6}
                   textAnchor="end"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-muted)"
                   transform={`rotate(-45, ${bx + barW / 2}, ${PAD.top + plotH + 6})`}
@@ -1323,7 +1323,7 @@ export function InlineSpikeChart({
                   x={bx + barW / 2}
                   y={PAD.top + plotH + 14}
                   textAnchor="middle"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-muted)"
                 >
@@ -1349,7 +1349,7 @@ export function InlineSpikeChart({
             <text
               x={PAD.left + 2}
               y={PAD.top + plotH - (data.referenceLine.value / mx) * plotH - 3}
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
               opacity={0.9}
@@ -1461,7 +1461,7 @@ export function InlineDivergingBar({
           x={centerX}
           y={H - 4}
           textAnchor="middle"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
         >
@@ -1496,7 +1496,7 @@ export function InlineDivergingBar({
                 y={y + BAR_HEIGHT / 2 + 1}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={pt.highlight ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'}
                 fontWeight={pt.highlight ? 700 : 400}
@@ -1519,7 +1519,7 @@ export function InlineDivergingBar({
                 y={y + BAR_HEIGHT / 2 + 1}
                 textAnchor={isPos ? 'start' : 'end'}
                 dominantBaseline="middle"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={pt.highlight ? color : 'var(--color-text-muted)'}
                 fontWeight={pt.highlight ? 700 : 400}
@@ -1532,7 +1532,7 @@ export function InlineDivergingBar({
                   x={isPos ? centerX + 4 : centerX - 4}
                   y={y + BAR_HEIGHT + 10}
                   textAnchor={isPos ? 'start' : 'end'}
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={color}
                   opacity={0.92}
@@ -1595,7 +1595,7 @@ export function InlineMultiLine({
       annotation={annotation}
     >
       {yLabel && (
-        <div className="text-[9px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
+        <div className="text-[13px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
           {yLabel}{unit ? ` (${unit})` : ''}
         </div>
       )}
@@ -1624,7 +1624,7 @@ export function InlineMultiLine({
                 x={PAD.left - 6}
                 y={y + 3}
                 textAnchor="end"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-muted)"
               >
@@ -1657,7 +1657,7 @@ export function InlineMultiLine({
                 x={ex}
                 y={PAD.top + 2}
                 textAnchor="middle"
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={evColor}
                 fontWeight={700}
@@ -1695,7 +1695,7 @@ export function InlineMultiLine({
                   <text
                     x={plotX(lastIdx) + 4}
                     y={plotY(lastV) + 3}
-                    fontSize={10}
+                    fontSize={12}
                     fontFamily="var(--font-family-mono, monospace)"
                     fill={seriesColors[sIdx]}
                     fontWeight={700}
@@ -1725,7 +1725,7 @@ export function InlineMultiLine({
                   x={plotX(s.annotation.xIndex)}
                   y={plotY(s.values[s.annotation.xIndex]) - 10}
                   textAnchor="middle"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={seriesColors[sIdx]}
                   fontWeight={700}
@@ -1746,7 +1746,7 @@ export function InlineMultiLine({
               x={plotX(i)}
               y={H - 28}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -1773,7 +1773,7 @@ export function InlineMultiLine({
               <span
                 className="font-mono"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   color: 'var(--color-text-secondary)',
                   fontWeight: 600,
                 }}
@@ -1783,7 +1783,7 @@ export function InlineMultiLine({
               {legendCaption && (
                 <span
                   className="font-mono tabular-nums"
-                  style={{ fontSize: 10.5, color: 'var(--color-text-muted)' }}
+                  style={{ fontSize: 12, color: 'var(--color-text-muted)' }}
                 >
                   {legendCaption}
                 </span>
@@ -1897,7 +1897,7 @@ export function InlineNetwork({
                     x={mx}
                     y={my + 3}
                     textAnchor="middle"
-                    fontSize={10}
+                    fontSize={12}
                     fontFamily="var(--font-family-mono, monospace)"
                     fill="var(--color-text-secondary)"
                     fontWeight={700}
@@ -1935,7 +1935,7 @@ export function InlineNetwork({
                 x={p.x}
                 y={p.y + r + 14}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight={700}
                 fill="var(--color-text-primary)"
@@ -1947,7 +1947,7 @@ export function InlineNetwork({
                   x={p.x}
                   y={p.y + r + 27}
                   textAnchor="middle"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fontWeight={400}
                   fill="var(--color-text-muted)"
@@ -2046,7 +2046,7 @@ export function ThresholdDistribution({
             <text
               x={margin.left + plotW + 4}
               y={dotY(topThreshold) + 4}
-              fontSize={9.5}
+              fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -2069,7 +2069,7 @@ export function ThresholdDistribution({
             <text
               x={margin.left + plotW + 4}
               y={dotY(midThreshold) + 4}
-              fontSize={9.5}
+              fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -2115,9 +2115,9 @@ export function ThresholdDistribution({
                 x={rx + 7}
                 y={midY + 3}
                 textAnchor="start"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="'Playfair Display', Georgia, serif"
-                fontStyle="italic"
+                fontStyle="normal"
                 fontWeight={800}
                 fill={rColor}
               >
@@ -2166,7 +2166,7 @@ export function ThresholdDistribution({
                   dominantBaseline="auto"
                   fontSize={aboveTop ? 11.5 : 10}
                   fontFamily={aboveTop ? "'Playfair Display', Georgia, serif" : 'var(--font-family-mono, monospace)'}
-                  fontStyle={aboveTop ? 'italic' : 'normal'}
+                  fontStyle="normal"
                   fill={aboveTop ? (pt.color ?? HIGHLIGHT_COLOR) : ANCHOR_COLOR}
                 >
                   {valueLabel}
@@ -2179,7 +2179,7 @@ export function ThresholdDistribution({
                   x={cx}
                   y={cy + r + 13}
                   textAnchor="middle"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono, monospace)"
                   fontWeight={700}
                   fill={pt.color ?? HIGHLIGHT_COLOR}
@@ -2193,7 +2193,7 @@ export function ThresholdDistribution({
                 y={margin.top + plotH + 8}
                 textAnchor="end"
                 dominantBaseline="hanging"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={aboveTop ? (pt.color ?? HIGHLIGHT_COLOR) : 'var(--color-text-muted)'}
                 transform={`rotate(-40, ${cx}, ${margin.top + plotH + 8})`}
@@ -2285,7 +2285,7 @@ export function AnnotatedThermometer({
             x={LABEL_W + refPx}
             y={12}
             textAnchor={refPx > BAR_W * 0.5 ? 'end' : 'start'}
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
           >
@@ -2342,7 +2342,7 @@ export function AnnotatedThermometer({
                 y={rowY + ROW_H / 2 + 1}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-secondary)"
               >
@@ -2361,7 +2361,7 @@ export function AnnotatedThermometer({
                     y={rowY + ROW_H / 2 + 1}
                     textAnchor={inBar ? 'end' : 'start'}
                     dominantBaseline="middle"
-                    fontSize={11}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono, monospace)"
                     fontWeight={700}
                     fill={inBar ? labelInkOn(barFill) : valueColor}
@@ -2377,7 +2377,7 @@ export function AnnotatedThermometer({
                   y={rowY + ROW_H / 2 + 1}
                   textAnchor="end"
                   dominantBaseline="middle"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-muted)"
                 >
@@ -2492,7 +2492,7 @@ export function ClevelandPairChart({
             x={axisX}
             y={12}
             textAnchor="middle"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
             letterSpacing="0.14em"
@@ -2531,7 +2531,7 @@ export function ClevelandPairChart({
                   y={yC + 1}
                   textAnchor="end"
                   dominantBaseline="middle"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-secondary)"
                 >
@@ -2555,7 +2555,7 @@ export function ClevelandPairChart({
                   y={yC + 1}
                   textAnchor="start"
                   dominantBaseline="middle"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={barC}
                   fontWeight={700}
@@ -2575,7 +2575,7 @@ export function ClevelandPairChart({
 
         {/* Risk-tier legend */}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-2 pt-3 pb-1 font-mono"
-          style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+          style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-2 rounded-sm" style={{ background: RISK_COLORS.critical, opacity: 0.9 }} />
             <span>{lang === 'es' ? 'brecha crítica' : 'critical breach'} (≥15 pp)</span>
@@ -2656,7 +2656,7 @@ export function ClevelandPairChart({
         <text
           x={LABEL_W + 8}
           y={14}
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
           textAnchor="start"
@@ -2666,7 +2666,7 @@ export function ClevelandPairChart({
         <text
           x={LABEL_W + DOT_AREA - 8}
           y={14}
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
           textAnchor="end"
@@ -2715,7 +2715,7 @@ export function ClevelandPairChart({
                 y={yCenter + 1}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-secondary)"
               >
@@ -2728,7 +2728,7 @@ export function ClevelandPairChart({
                 y={yCenter + 1}
                 textAnchor="start"
                 dominantBaseline="middle"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-muted)"
               >
@@ -2837,7 +2837,7 @@ export function InlineStackedBar({
             x={leftBarRight - 4}
             y={14}
             textAnchor="end"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
             letterSpacing="0.16em"
@@ -2848,7 +2848,7 @@ export function InlineStackedBar({
             x={rightBarLeft + 4}
             y={14}
             textAnchor="start"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
             letterSpacing="0.16em"
@@ -2908,7 +2908,7 @@ export function InlineStackedBar({
                   y={y + ROW_H_M / 2 + 1}
                   textAnchor="end"
                   dominantBaseline="middle"
-                  fontSize={10.5}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-muted)"
                   fontWeight={700}
@@ -2935,7 +2935,7 @@ export function InlineStackedBar({
                   y={y + ROW_H_M / 2 + 1}
                   textAnchor="start"
                   dominantBaseline="middle"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-primary)"
                   fontWeight={700}
@@ -2952,7 +2952,7 @@ export function InlineStackedBar({
                     y={y + ROW_H_M / 2 + 14}
                     textAnchor="start"
                     dominantBaseline="middle"
-                    fontSize={9.5}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono, monospace)"
                     fill={rightFill}
                   >
@@ -2966,7 +2966,7 @@ export function InlineStackedBar({
 
         {/* Legend */}
         <div className="flex items-center gap-5 px-2 pt-3 pb-1 font-mono"
-          style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+          style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-2 rounded-sm" style={{ background: base, opacity: 0.28 }} />
             <span>{legendBase}{unit ? ` · ${unit}` : ''}</span>
@@ -3053,7 +3053,7 @@ export function InlineStackedBar({
                 y={y + ROW_H / 2 + 1}
                 textAnchor="start"
                 dominantBaseline="middle"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-primary)"
                 fontWeight={700}
@@ -3071,7 +3071,7 @@ export function InlineStackedBar({
                   y={y + ROW_H / 2 + 14}
                   textAnchor="start"
                   dominantBaseline="middle"
-                  fontSize={9.5}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={r.color ?? hi}
                 >
@@ -3085,7 +3085,7 @@ export function InlineStackedBar({
 
       {/* Compact legend explaining the two segments */}
       <div className="flex items-center gap-5 px-2 pt-3 pb-1 font-mono"
-        style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+        style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
         <div className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-2 rounded-sm" style={{ background: hi, opacity: 0.92 }} />
           <span>{legendHi}</span>
@@ -3188,7 +3188,7 @@ export function InlineRoster({
                 className="tabular-nums select-none"
                 style={{
                   fontFamily: "'Playfair Display', Georgia, serif",
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 24,
                   lineHeight: 0.95,
@@ -3286,12 +3286,12 @@ export function InlineRoster({
                   <div
                     className="font-mono uppercase mt-1 flex items-center gap-1.5"
                     style={{
-                      fontSize: 9.5,
+                      fontSize: 13,
                       letterSpacing: '0.16em',
                       color: 'var(--color-text-muted)',
                     }}
                   >
-                    <span aria-hidden style={{ color: glyphColor, fontSize: 11 }}>{glyph}</span>
+                    <span aria-hidden style={{ color: glyphColor, fontSize: 13 }}>{glyph}</span>
                     <span>{annotationFor(p)}</span>
                   </div>
                 )}
@@ -3304,7 +3304,7 @@ export function InlineRoster({
                   className="tabular-nums"
                   style={{
                     fontFamily: "'Playfair Display', Georgia, serif",
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 800,
                     fontSize: 'clamp(1.6rem, 2.6vw, 1.9rem)',
                     lineHeight: 0.95,
@@ -3318,7 +3318,7 @@ export function InlineRoster({
                   <span
                     className="font-mono uppercase ml-1.5"
                     style={{
-                      fontSize: 9.5,
+                      fontSize: 13,
                       letterSpacing: '0.16em',
                       color: 'var(--color-text-muted)',
                     }}
@@ -3330,7 +3330,7 @@ export function InlineRoster({
                   <div
                     className="font-mono uppercase mt-1 tabular-nums"
                     style={{
-                      fontSize: 9.5,
+                      fontSize: 13,
                       letterSpacing: '0.1em',
                       color: 'var(--color-text-muted)',
                     }}
@@ -3451,7 +3451,7 @@ export function InlineTimeline({
               x={xFor(tv)}
               y={trackY + 18}
               textAnchor="middle"
-              fontSize={9.5}
+              fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
               opacity={0.6}
@@ -3465,7 +3465,7 @@ export function InlineTimeline({
           x={W - PAD_R + 4}
           y={trackY + 18}
           textAnchor="start"
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
           opacity={0.55}
@@ -3488,7 +3488,7 @@ export function InlineTimeline({
               x={(xFor(hiMin) + xFor(hiMax)) / 2}
               y={trackY - 58}
               textAnchor="middle"
-              fontSize={9.5}
+              fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill={ANCHOR_COLOR}
               style={{ letterSpacing: '0.18em', textTransform: 'uppercase' }}
@@ -3512,7 +3512,7 @@ export function InlineTimeline({
               x={(xFor(otMin) + xFor(otMax)) / 2}
               y={trackY + 86}
               textAnchor="middle"
-              fontSize={9.5}
+              fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
               style={{ letterSpacing: '0.18em', textTransform: 'uppercase' }}
@@ -3549,7 +3549,7 @@ export function InlineTimeline({
                 y={valueY}
                 textAnchor="middle"
                 fontFamily="'Playfair Display', Georgia, serif"
-                fontStyle="italic"
+                fontStyle="normal"
                 fontWeight={800}
                 fontSize={highlight ? 28 : 22}
                 fill={highlight ? ANCHOR_COLOR : 'var(--color-text-primary)'}
@@ -3561,7 +3561,7 @@ export function InlineTimeline({
                   fontFamily="var(--font-family-mono, monospace)"
                   fontStyle="normal"
                   fontWeight={500}
-                  fontSize={9}
+                  fontSize={13}
                   fill="var(--color-text-muted)"
                   style={{ letterSpacing: '0.16em', textTransform: 'uppercase' }}
                 >
@@ -3585,7 +3585,7 @@ export function InlineTimeline({
                 x={cx}
                 y={captionY}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={highlight ? ANCHOR_COLOR : 'var(--color-text-secondary)'}
                 style={{ letterSpacing: '0.16em', textTransform: 'uppercase' }}
@@ -3598,7 +3598,7 @@ export function InlineTimeline({
                   x={cx}
                   y={captionY + 14}
                   textAnchor="middle"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-muted)"
                   opacity={0.85}

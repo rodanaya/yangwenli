@@ -116,7 +116,7 @@ function FilterMenu({
       <summary
         className="list-none cursor-pointer select-none inline-flex items-center gap-1.5 font-mono uppercase px-2.5 py-1.5 transition-colors"
         style={{
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.14em',
           color: activeLabel ? '#ffffff' : 'var(--color-text-secondary)',
           background: activeLabel ? 'var(--color-accent)' : 'transparent',
@@ -139,7 +139,7 @@ function FilterMenu({
           type="button"
           onClick={() => { onClear(); close() }}
           className="w-full text-left px-3 py-1.5 font-mono uppercase hover:bg-background-elevated transition-colors"
-          style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
         >
           {lang === 'es' ? 'Todos' : 'All'}
         </button>
@@ -152,14 +152,14 @@ function FilterMenu({
           >
             <span
               className="font-mono uppercase"
-              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-primary)' }}
+              style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-primary)' }}
             >
               {o.label}
             </span>
             {o.count != null && (
               <span
                 className="font-mono tabular-nums"
-                style={{ fontSize: 10, color: 'var(--color-text-muted)' }}
+                style={{ fontSize: 12, color: 'var(--color-text-muted)' }}
               >
                 {o.count}
               </span>
@@ -307,9 +307,9 @@ export default function CaseLibrary() {
         <header className="pb-5" style={{ borderBottom: '2px solid var(--color-text-primary)' }}>
           <p
             className="font-mono uppercase mb-3"
-            style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 500 }}
+            style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 500 }}
           >
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 600 }}>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 600 }}>
               {lang === 'es' ? 'El Padrón' : 'The Docket'}
             </span>
             <span className="mx-2 opacity-50">·</span>
@@ -320,7 +320,7 @@ export default function CaseLibrary() {
             <h1
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(30px, 4.6vw, 54px)',
                 lineHeight: 1.0,
@@ -431,7 +431,7 @@ export default function CaseLibrary() {
                 type="button"
                 onClick={clearAll}
                 className="inline-flex items-center gap-1 font-mono uppercase text-text-muted hover:text-accent transition-colors"
-                style={{ fontSize: 10, letterSpacing: '0.12em' }}
+                style={{ fontSize: 12, letterSpacing: '0.12em' }}
               >
                 <X className="h-3 w-3" aria-hidden="true" />
                 {lang === 'es' ? 'Limpiar' : 'Clear'}
@@ -439,7 +439,7 @@ export default function CaseLibrary() {
             )}
             <span
               className="font-mono tabular-nums uppercase"
-              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
             >
               {data
                 ? hasFilters
@@ -500,7 +500,7 @@ export default function CaseLibrary() {
                   type="button"
                   onClick={clearAll}
                   className="mt-3 inline-flex items-center gap-1.5 font-mono uppercase text-accent hover:opacity-70 transition-opacity"
-                  style={{ fontSize: 11, letterSpacing: '0.12em' }}
+                  style={{ fontSize: 13, letterSpacing: '0.12em' }}
                 >
                   <X className="h-3 w-3" aria-hidden="true" />
                   {lang === 'es' ? 'Limpiar filtros' : 'Clear filters'}
@@ -514,7 +514,7 @@ export default function CaseLibrary() {
                   <section aria-label={lang === 'es' ? 'Más en portada' : 'More on the front page'}>
                     <div
                       className="flex items-center gap-3 mt-6 mb-1 font-mono uppercase"
-                      style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
+                      style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
                     >
                       <span>
                         {lang === 'es'
@@ -539,7 +539,7 @@ export default function CaseLibrary() {
                 {/* Sort control */}
                 <div
                   className="mt-6 flex items-center justify-end gap-1.5 flex-wrap font-mono uppercase"
-                  style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
+                  style={{ fontSize: 12, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
                 >
                   <span>{lang === 'es' ? 'Ordenar' : 'Sort'}</span>
                   {([
@@ -590,7 +590,7 @@ export default function CaseLibrary() {
                 className="mt-10 text-center"
                 style={{
                   fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontSize: 14,
                   color: 'var(--color-text-secondary)',
                 }}
@@ -602,7 +602,7 @@ export default function CaseLibrary() {
             )}
             <p
               className="mt-4 font-mono uppercase flex items-center justify-center gap-2 flex-wrap"
-              style={{ fontSize: 9.5, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
             >
               <span>{lang === 'es' ? 'Fuentes' : 'Sources'}</span>
               <span aria-hidden="true">·</span>
@@ -636,7 +636,7 @@ function MastheadStat({
         className="tabular-nums"
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 800,
           fontSize: 'clamp(22px, 2.6vw, 32px)',
           lineHeight: 1,

@@ -85,7 +85,7 @@ function RatioBullet({
       <div className="flex items-baseline justify-between gap-3 mb-1.5">
         <span
           className="font-mono"
-          style={{ fontSize: 10, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 12, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
         >
           {isEs ? 'Tamaño vs. el percentil 99 del sector' : 'Size vs. the sector 99th percentile'}
         </span>
@@ -93,7 +93,7 @@ function RatioBullet({
           className="tabular-nums"
           style={{
             fontFamily: '"Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 800,
             fontSize: 22,
             lineHeight: 1,
@@ -117,7 +117,7 @@ function RatioBullet({
         <div className="absolute left-0 top-0 bottom-0" style={{ width: 2, background: REF_ZINC }} aria-hidden="true" />
       </div>
       <div className="flex items-baseline justify-between gap-3 mt-1.5">
-        <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: REF_ZINC, letterSpacing: '0.06em' }}>
+        <span className="font-mono tabular-nums" style={{ fontSize: 13, color: REF_ZINC, letterSpacing: '0.06em' }}>
           {isEs ? `×1 = p99 ${sectorName} · ${formatCompactMXN(p99)}` : `×1 = ${sectorName} p99 · ${formatCompactMXN(p99)}`}
         </span>
       </div>
@@ -154,10 +154,10 @@ function RegisterRow({
         background: isSubject ? `${sectorAccent}0f` : undefined,
       }}
     >
-      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 11, color: 'var(--color-text-muted)', minWidth: 38 }}>
+      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, color: 'var(--color-text-muted)', minWidth: 38 }}>
         #{rank}
       </span>
-      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 11, color: 'var(--color-text-secondary)', minWidth: 36 }}>
+      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, color: 'var(--color-text-secondary)', minWidth: 36 }}>
         {year}
       </span>
       <span
@@ -166,11 +166,11 @@ function RegisterRow({
       >
         {formatCompactMXN(c.amount_mxn ?? 0)}
       </span>
-      <span className="font-mono flex-shrink-0" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)', minWidth: 44, textAlign: 'right' }}>
+      <span className="font-mono flex-shrink-0" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)', minWidth: 44, textAlign: 'right' }}>
         {flags.join(' ')}
       </span>
       {isSubject && (
-        <span className="font-mono flex-shrink-0" style={{ fontSize: 9, letterSpacing: '0.10em', textTransform: 'uppercase', color: sectorAccent, fontWeight: 700 }}>
+        <span className="font-mono flex-shrink-0" style={{ fontSize: 13, letterSpacing: '0.10em', textTransform: 'uppercase', color: sectorAccent, fontWeight: 700 }}>
           {isEs ? '◀ este' : '◀ this'}
         </span>
       )}
@@ -303,7 +303,7 @@ export function RelationSection({
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: 'var(--color-accent)',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
             }}
           >
@@ -335,7 +335,7 @@ export function RelationSection({
             onClick={() => setRegisterOpen((v) => !v)}
             aria-expanded={registerOpen}
             className="font-mono uppercase tracking-[0.10em] hover:opacity-70 transition-opacity cursor-pointer"
-            style={{ fontSize: 10, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: '4px 0' }}
+            style={{ fontSize: 12, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: '4px 0' }}
           >
             {registerOpen
               ? (isEs ? '⌃ Ocultar el registro' : '⌃ Hide the register')
@@ -356,7 +356,7 @@ export function RelationSection({
                         sectorAccent={sectorAccent}
                         lang={lang}
                       />
-                      <div className="px-3 py-1 text-center font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                      <div className="px-3 py-1 text-center font-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                         ⋮ {isEs ? 'mayores del par' : 'largest of the pair'}
                       </div>
                     </>
@@ -373,7 +373,7 @@ export function RelationSection({
                   ))}
                 </div>
               ) : (
-                <div className="px-3 py-6 text-center font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                <div className="px-3 py-6 text-center font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                   {isEs ? 'Sin contratos comparables.' : 'No comparable contracts.'}
                 </div>
               )}
@@ -394,7 +394,7 @@ export function RelationSection({
           <p
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontSize: 15,
               lineHeight: 1.55,
               color: 'var(--color-text-secondary)',

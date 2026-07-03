@@ -47,7 +47,7 @@ const VAR_TICKS = [1e11, 5e11, 1e12]
 
 const SERIF_NAME: React.CSSProperties = {
   fontFamily: '"EB Garamond", Georgia, serif',
-  fontStyle: 'italic',
+  fontStyle: 'normal',
   fontWeight: 500,
 }
 
@@ -149,7 +149,7 @@ export function ConfoundPlate({
 
   const sortControl = (
     <div className="flex items-center gap-1" role="group" aria-label={isEs ? 'Ordenar el registro' : 'Sort the registry'}>
-      <span className="font-mono" style={{ ...MONO_MICRO, fontSize: 9, color: 'var(--color-text-muted)' }}>
+      <span className="font-mono" style={{ ...MONO_MICRO, fontSize: 13, color: 'var(--color-text-muted)' }}>
         {isEs ? 'Ordenar' : 'Sort'}
       </span>
       {(
@@ -166,7 +166,7 @@ export function ConfoundPlate({
           className="px-2 py-1 font-mono rounded-sm border transition-colors"
           style={{
             ...MONO_MICRO,
-            fontSize: 9,
+            fontSize: 13,
             fontWeight: 700,
             ...(lens === b.key
               ? { background: 'var(--color-text-primary)', color: 'var(--color-background)', borderColor: 'transparent' }
@@ -190,7 +190,7 @@ export function ConfoundPlate({
           The plate's whole trick is two markers on two scales; spell it out
           so the reader can name what ● and ○ mean before decoding any row. */}
       <div className="mb-4 pb-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
-        <p className="font-mono mb-2" style={{ ...MONO_MICRO, fontSize: 9, color: 'var(--color-text-muted)' }}>
+        <p className="font-mono mb-2" style={{ ...MONO_MICRO, fontSize: 13, color: 'var(--color-text-muted)' }}>
           {isEs ? 'Cómo leer · dos marcadores, dos preguntas' : 'How to read · two markers, two questions'}
         </p>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-7">
@@ -201,7 +201,7 @@ export function ConfoundPlate({
               style={{ width: 9, height: 9, background: RISK_COLORS.critical }}
             />
             <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13.5, lineHeight: 1.4, color: 'var(--color-text-secondary)' }}>
-              <strong style={{ color: 'var(--color-text-primary)', fontStyle: 'italic', fontWeight: 600 }}>
+              <strong style={{ color: 'var(--color-text-primary)', fontStyle: 'normal', fontWeight: 600 }}>
                 {isEs ? '¿Cuánto dinero?' : 'How much money?'}
               </strong>{' '}
               {isEs ? 'pesos que el modelo observa. Escala log: cada paso vale 10×.' : 'pesos the model flags for review. Log scale — each step is 10× the last.'}
@@ -214,7 +214,7 @@ export function ConfoundPlate({
               style={{ width: 9, height: 9, border: '1.5px solid var(--color-text-secondary)', background: 'var(--color-background)' }}
             />
             <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13.5, lineHeight: 1.4, color: 'var(--color-text-secondary)' }}>
-              <strong style={{ color: 'var(--color-text-primary)', fontStyle: 'italic', fontWeight: 600 }}>
+              <strong style={{ color: 'var(--color-text-primary)', fontStyle: 'normal', fontWeight: 600 }}>
                 {isEs ? '¿Qué tan saturado?' : 'How saturated?'}
               </strong>{' '}
               {isEs ? 'qué parte del gasto propio del sector está señalada (0–100%).' : "the share of the sector's own spend that's flagged (0–100%)."}
@@ -223,7 +223,7 @@ export function ConfoundPlate({
         </div>
         <p
           className="mt-2"
-          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-text-muted)', maxWidth: '72ch' }}
+          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-text-muted)', maxWidth: '72ch' }}
         >
           {isEs
             ? 'Son dos rankings distintos. Cuando no coinciden, el sector es chico en pesos pero arde en su propia casa — eso es el confundido.'
@@ -243,7 +243,7 @@ export function ConfoundPlate({
           <span className="relative self-stretch" style={{ minHeight: 42 }}>
             <span
               className="absolute top-0 left-0 font-mono whitespace-nowrap"
-              style={{ ...MONO_MICRO, fontSize: 9, color: 'var(--color-text-muted)' }}
+              style={{ ...MONO_MICRO, fontSize: 13, color: 'var(--color-text-muted)' }}
             >
               ● {isEs ? 'Monto observado · log' : 'Flagged amount · log'}
             </span>
@@ -252,7 +252,7 @@ export function ConfoundPlate({
           <span className="relative self-stretch" style={{ minHeight: 42 }}>
             <span
               className="absolute top-0 left-0 font-mono whitespace-nowrap"
-              style={{ ...MONO_MICRO, fontSize: 9, color: 'var(--color-text-muted)' }}
+              style={{ ...MONO_MICRO, fontSize: 13, color: 'var(--color-text-muted)' }}
             >
               ○ {isEs ? '% del gasto propio' : '% of own spend'}
             </span>
@@ -266,7 +266,7 @@ export function ConfoundPlate({
                 <span
                   style={{
                     fontFamily: '"EB Garamond", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 700,
                     fontSize: 13,
                     lineHeight: 1,
@@ -344,7 +344,7 @@ export function ConfoundPlate({
               >
                 <div style={{ ...GRID, height: '100%' }}>
                   {/* rank in the ACTIVE lens */}
-                  <span className="font-mono tabular-nums text-right" style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                  <span className="font-mono tabular-nums text-right" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                     {String(idx + 1).padStart(2, '0')}
                   </span>
 
@@ -401,7 +401,7 @@ export function ConfoundPlate({
                           right: dotFrac >= 0.62 ? `calc(${(1 - dotFrac) * 100}% + 12px)` : undefined,
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          fontSize: 10,
+                          fontSize: 12,
                           color: 'var(--color-text-secondary)',
                         }}
                       >
@@ -417,7 +417,7 @@ export function ConfoundPlate({
                           top: '50%',
                           transform: 'translateY(-50%)',
                           fontSize: 8.5,
-                          fontStyle: 'italic',
+                          fontStyle: 'normal',
                           letterSpacing: '0.06em',
                           color: 'var(--color-text-muted)',
                         }}
@@ -459,7 +459,7 @@ export function ConfoundPlate({
                           right: `calc(${(1 - share) * 100}% + 10px)`,
                           top: 3,
                           fontSize: 8.5,
-                          fontStyle: 'italic',
+                          fontStyle: 'normal',
                           letterSpacing: '0.06em',
                           color: 'var(--color-accent)',
                         }}
@@ -474,7 +474,7 @@ export function ConfoundPlate({
                     className="text-right tabular-nums"
                     style={{
                       fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                      fontStyle: 'italic',
+                      fontStyle: 'normal',
                       fontWeight: 800,
                       fontSize: 14,
                       color: ringColor,
@@ -568,20 +568,20 @@ export function ConfoundPlate({
                 }
               >
                 <div className="flex items-baseline gap-2">
-                  <span className="font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                     {String(idx + 1).padStart(2, '0')}
                   </span>
                   <span className="flex-1 truncate" style={{ ...SERIF_NAME, fontSize: 14, color: 'var(--color-text-primary)' }}>
                     {r.name}
                   </span>
-                  <span className="font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                     {formatCompactMXN(r.varMxn)}
                   </span>
                   <span
                     className="tabular-nums"
                     style={{
                       fontFamily: '"EB Garamond", Georgia, serif',
-                      fontStyle: 'italic',
+                      fontStyle: 'normal',
                       fontWeight: 800,
                       fontSize: 13,
                       color: ringColor,

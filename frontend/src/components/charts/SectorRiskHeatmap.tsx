@@ -165,7 +165,7 @@ export function SectorRiskHeatmap() {
           <button
             key={m}
             onClick={() => setMetric(m)}
-            className={`px-2.5 py-1 rounded text-[10px] font-mono transition-all ${
+            className={`px-2.5 py-1 rounded text-[12px] font-mono transition-all ${
               metric === m
                 ? 'bg-background-elevated text-text-primary border border-border'
                 : 'border border-border text-text-muted hover:text-text-secondary hover:border-border'
@@ -186,7 +186,7 @@ export function SectorRiskHeatmap() {
               return (
                 <div
                   key={a.name}
-                  className="text-[9px] font-mono font-bold text-center truncate"
+                  className="text-[13px] font-mono font-bold text-center truncate"
                   style={{
                     width: yearsInRange * 21,
                     color: a.color,
@@ -228,7 +228,7 @@ export function SectorRiskHeatmap() {
                       className="w-2 h-2 rounded-sm shrink-0"
                       style={{ backgroundColor: color }}
                     />
-                    <span className="text-[10px] text-text-secondary font-mono truncate capitalize">
+                    <span className="text-[12px] text-text-secondary font-mono truncate capitalize">
                       {sector.nameEN}
                     </span>
                   </div>
@@ -300,7 +300,7 @@ export function SectorRiskHeatmap() {
 
       {/* Color legend using RISK_COLORS */}
       <div className="flex items-center gap-3 pt-2 border-t border-border">
-        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">{t('heatmap.legendLow', 'Low')}</span>
+        <span className="text-[12px] font-mono text-text-muted uppercase tracking-wide">{t('heatmap.legendLow', 'Low')}</span>
         <div className="flex gap-[2px]">
           {[
             { color: CELL_LOW_BG, labelKey: 'heatmap.legendLow', fallback: 'Low' },
@@ -316,10 +316,10 @@ export function SectorRiskHeatmap() {
             />
           ))}
         </div>
-        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">{t('heatmap.legendHigh', 'High')}</span>
+        <span className="text-[12px] font-mono text-text-muted uppercase tracking-wide">{t('heatmap.legendHigh', 'High')}</span>
         <div className="flex items-center gap-1 ml-3">
           <div className="w-4 h-3 rounded-[1px] bg-background-elevated" />
-          <span className="text-[10px] font-mono text-text-muted">{t('heatmap.noData', 'No data')}</span>
+          <span className="text-[12px] font-mono text-text-muted">{t('heatmap.noData', 'No data')}</span>
         </div>
       </div>
     </div>

@@ -44,7 +44,7 @@ function RiskBadge({ score }: { score: number }) {
   const color = RISK_COLORS[level]
   return (
     <span
-      className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold"
+      className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-mono font-semibold"
       style={{ backgroundColor: `${color}22`, color }}
     >
       {score.toFixed(2)}
@@ -59,7 +59,7 @@ function PatternBadge({ pattern }: { pattern: string | null }) {
     ? tAria(`patterns.${pattern}`, { defaultValue: PATTERN_LABELS[pattern] })
     : pattern
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-accent-data/10 text-accent-data border border-accent-data/30">
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-semibold bg-accent-data/10 text-accent-data border border-accent-data/30">
       {pattern} · {label}
     </span>
   )
@@ -86,7 +86,7 @@ function IPSBar({ score }: { score: number }) {
         emptyStroke="var(--color-border-hover)"
         ariaLabel={`IPS ${score.toFixed(2)}`}
       />
-      <span className="text-[11px] font-mono text-text-secondary">{score.toFixed(2)}</span>
+      <span className="text-[13px] font-mono text-text-secondary">{score.toFixed(2)}</span>
     </div>
   )
 }
@@ -171,7 +171,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label={t('ariaWidget.tableAriaLabel', { defaultValue: 'ARIA investigation leads' })}>
             <thead>
-              <tr className="text-left text-[11px] text-text-muted uppercase tracking-wider border-b border-border">
+              <tr className="text-left text-[13px] text-text-muted uppercase tracking-wider border-b border-border">
                 <th scope="col" className="pb-2 pr-2">#</th>
                 <th scope="col" className="pb-2 pr-2">{t('ariaTable.vendor')}</th>
                 <th scope="col" className="pb-2 pr-2">{t('ariaTable.sector')}</th>
@@ -198,7 +198,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
                   </td>
                   <td className="py-2 pr-2">
                     <span
-                      className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-text-primary"
+                      className="inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-semibold text-text-primary"
                       style={{ backgroundColor: getSectorColor(v.primary_sector_name) }}
                     >
                       {v.primary_sector_name ?? 'N/A'}
@@ -226,12 +226,12 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
       {/* Footer */}
       {vendors.length > 0 && (
         <div className="mt-3 pt-3 border-t border-border/50 flex justify-between items-center">
-          <span className="text-[11px] text-text-muted">
+          <span className="text-[13px] text-text-muted">
             {data?.pagination?.total ? `${data.pagination.total.toLocaleString()} en Tier ${tier}` : `${vendors.length} mostrados`}
           </span>
           <Link
             to="/aria"
-            className="text-[11px] text-accent hover:underline flex items-center gap-1"
+            className="text-[13px] text-accent hover:underline flex items-center gap-1"
           >
             {t('ariaWidget.viewFull')} <ExternalLink size={10} />
           </Link>

@@ -168,7 +168,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           <span className="text-xs text-text-muted font-mono tabular-nums">
             Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} vendors · sorted by {sortLabels[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
           </span>
-          <div className="flex items-center gap-3 text-[11px] text-text-muted">
+          <div className="flex items-center gap-3 text-[13px] text-text-muted">
             <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(pageAvgRisk * 100).toFixed(0)}%</span></span>
             <span className="text-border/60">·</span>
             <span>High+ on page: <span className="font-mono font-semibold text-risk-high">{pageHighPlus}<span className="text-text-muted font-normal">/{vendors.length}</span></span></span>
@@ -178,7 +178,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         <div className="mb-2">
           <button
             onClick={() => setAiConfirmedOnly(prev => !prev)}
-            className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded border transition-colors ${
+            className={`inline-flex items-center gap-1.5 text-[13px] px-2 py-0.5 rounded border transition-colors ${
               aiConfirmedOnly
                 ? 'bg-risk-critical/20 text-risk-critical border-risk-critical/40'
                 : 'bg-transparent text-text-muted border-border/40 hover:border-border hover:text-text-primary'
@@ -235,7 +235,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         <span className="text-xs text-text-muted font-mono tabular-nums">
           Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} institutions · sorted by {sortLabels[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
         </span>
-        <div className="flex items-center gap-3 text-[11px] text-text-muted">
+        <div className="flex items-center gap-3 text-[13px] text-text-muted">
           <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(instPageAvgRisk * 100).toFixed(0)}%</span></span>
           <span className="text-border/60">·</span>
           <span>High+ on page: <span className="font-mono font-semibold text-risk-high">{instPageHighPlus}<span className="text-text-muted font-normal">/{institutions.length}</span></span></span>
@@ -293,7 +293,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
           <EntityIdentityChip type="vendor" id={vendor.id} name={formatVendorName(vendor.name, 40)} size="sm" />
         </div>
         {sector && (
-          <div className="ml-3 text-[10px] mt-0.5" style={{ color: sector.color }}>
+          <div className="ml-3 text-[12px] mt-0.5" style={{ color: sector.color }}>
             {ts(sector.code)}
           </div>
         )}
@@ -331,7 +331,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
             )
           })()}
           {(vendor.avg_risk_score || 0) >= 0.50 && (
-            <span className="text-[9px] font-medium text-accent/80 leading-none">
+            <span className="text-[13px] font-medium text-accent/80 leading-none">
               AI confirmed
             </span>
           )}
@@ -400,7 +400,7 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
           <EntityIdentityChip type="institution" id={instId} name={instName} size="sm" />
         </div>
         {sector && (
-          <div className="ml-3 text-[10px] mt-0.5" style={{ color: sector.color }}>
+          <div className="ml-3 text-[12px] mt-0.5" style={{ color: sector.color }}>
             {ts(sector.code)}
           </div>
         )}
@@ -513,7 +513,7 @@ function InlineDossierTrigger({
           role="menu"
         >
           <div className="px-3 py-1.5 border-b border-border/40">
-            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Add to dossier</p>
+            <p className="text-[12px] font-semibold text-text-muted uppercase tracking-wider">Add to dossier</p>
           </div>
           <div className="max-h-[160px] overflow-y-auto py-1">
             {isLoading ? (
@@ -523,7 +523,7 @@ function InlineDossierTrigger({
             ) : activeDossiers.length === 0 ? (
               <div className="px-3 py-3 text-center">
                 <p className="text-xs text-text-muted">Aún no hay dossiers abiertos.</p>
-                <p className="text-[10px] text-text-muted mt-0.5">
+                <p className="text-[12px] text-text-muted mt-0.5">
                   Crea el primero para agrupar esta investigación.
                 </p>
               </div>

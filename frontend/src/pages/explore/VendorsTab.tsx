@@ -469,7 +469,7 @@ export default function VendorsTab() {
           <p className="text-sm text-text-muted">
             No vendors match your filters.
           </p>
-          <p className="text-[11px] text-text-muted mt-1">
+          <p className="text-[13px] text-text-muted mt-1">
             Try broadening the risk level or clearing the search query.
           </p>
         </div>
@@ -630,7 +630,7 @@ function FlashVendorRadar() {
               <p className="text-xs text-text-muted">
                 No flash vendors above the current thresholds.
               </p>
-              <p className="text-[11px] text-text-muted mt-1">
+              <p className="text-[13px] text-text-muted mt-1">
                 Try lowering the risk floor or widening the contract-count filter.
               </p>
             </div>

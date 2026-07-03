@@ -112,7 +112,7 @@ export function DotStrip({
                     {row.label}
                   </div>
                   {row.sublabel && (
-                    <div className="text-[10px] font-mono text-text-muted truncate leading-[1.3]">
+                    <div className="text-[12px] font-mono text-text-muted truncate leading-[1.3]">
                       {row.sublabel}
                     </div>
                   )}
@@ -179,7 +179,7 @@ export function DotStrip({
         })}
       </ul>
       {oecdMark && (
-        <div className="text-[10px] font-mono text-oecd mt-1.5">
+        <div className="text-[12px] font-mono text-oecd mt-1.5">
           {oecdMark.label ?? `OCDE · ${Math.round(oecdMark.fraction * 100)}%`}
         </div>
       )}
@@ -248,12 +248,12 @@ function DotColumns({ rows, N, darkContext, staticMode }: DotColumnsProps) {
                 )
               })}
             </svg>
-            <div className="text-[10px] font-mono text-text-muted text-center">
+            <div className="text-[12px] font-mono text-text-muted text-center">
               {row.label}
             </div>
             {row.valueLabel && (
               <div
-                className="text-[11px] font-mono font-medium tabular-nums"
+                className="text-[13px] font-mono font-medium tabular-nums"
                 style={{ color: filledColor }}
               >
                 {row.valueLabel}

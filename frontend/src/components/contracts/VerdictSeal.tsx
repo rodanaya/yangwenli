@@ -56,7 +56,7 @@ export function VerdictSeal({
             align === 'right' && 'flex-row-reverse',
           )}
         >
-          <span className="font-mono text-[11px] tabular-nums text-text-secondary leading-none">
+          <span className="font-mono text-[13px] tabular-nums text-text-secondary leading-none">
             {score.toFixed(2)}
           </span>
           <DotBar

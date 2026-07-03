@@ -114,7 +114,7 @@ export function EditorialChartFrame({
   return (
     <Wrapper className={containerClass} {...wrapperProps}>
       {/* Kicker */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+      <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         {kicker}
       </p>
 
@@ -157,7 +157,7 @@ export function EditorialChartFrame({
                 >
                   {s.value}
                 </div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
+                <div className="text-[12px] text-text-muted uppercase tracking-wide mt-0.5">
                   {s.label}
                 </div>
               </div>
@@ -184,7 +184,7 @@ export function EditorialChartFrame({
       {/* Footer attribution — div, not p: callers may pass block content
           (e.g. a flex row with a download button), and <div> inside <p> is
           invalid HTML (React validateDOMNesting warning). */}
-      <div className="text-[10px] text-text-muted font-mono">
+      <div className="text-[12px] text-text-muted font-mono">
         {footer}
       </div>
     </Wrapper>

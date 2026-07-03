@@ -85,7 +85,7 @@ export default function ContractDetail() {
         <div className="text-center max-w-md">
           <ShieldAlert className="h-10 w-10 mx-auto mb-4 text-text-muted" aria-hidden="true" />
           <p className="text-text-secondary mb-2">Contract not found or unavailable.</p>
-          <p className="text-[11px] text-text-muted font-mono mb-6">ID: {contractId}</p>
+          <p className="text-[13px] text-text-muted font-mono mb-6">ID: {contractId}</p>
           <button
             onClick={() => navigate('/contracts')}
             className="inline-flex items-center gap-2 text-xs text-text-secondary hover:text-text-secondary border border-border rounded-sm px-3 py-1.5"
@@ -114,7 +114,7 @@ export default function ContractDetail() {
   return (
     <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-6 md:py-10">
       {/* ----- Breadcrumb ----- */}
-      <nav className="flex items-center gap-1.5 text-[11px] text-text-muted mb-8" aria-label="Breadcrumb">
+      <nav className="flex items-center gap-1.5 text-[13px] text-text-muted mb-8" aria-label="Breadcrumb">
         <Link
           to="/contracts"
           className="inline-flex items-center gap-1 hover:text-text-secondary transition-colors"
@@ -131,7 +131,7 @@ export default function ContractDetail() {
       {/* ----- EDITORIAL HERO ----- */}
       <header className="mb-10 md:mb-14">
         {/* Dateline strip */}
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-4 pb-3 border-b border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center gap-3 text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted mb-4 pb-3 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
             <span className="text-text-secondary">RUBLI</span>
@@ -161,7 +161,7 @@ export default function ContractDetail() {
         {/* Risk pill + kicker row */}
         <div className="flex items-center gap-3 mb-4 flex-wrap">
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-[0.15em] border ${riskPalette.bg} ${riskPalette.border}`}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[12px] font-bold uppercase tracking-[0.15em] border ${riskPalette.bg} ${riskPalette.border}`}
             style={{ color: riskPalette.color }}
           >
             <span
@@ -171,12 +171,12 @@ export default function ContractDetail() {
             {riskPalette.label} · {riskScorePct}%
           </span>
           {contract.sector_name && (
-            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+            <span className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
               SECTOR · {contract.sector_name}
             </span>
           )}
           {contract.is_election_year && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10 text-risk-high border border-risk-high/30">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[12px] font-medium bg-risk-high/10 text-risk-high border border-risk-high/30">
               <Zap className="h-2.5 w-2.5" aria-hidden="true" />
               ELECTION YEAR
             </span>
@@ -310,10 +310,10 @@ export default function ContractDetail() {
                     >
                       {riskScorePct}%
                     </span>
-                    <RiskBadge score={contract.risk_score ?? 0} className="text-[11px]" />
+                    <RiskBadge score={contract.risk_score ?? 0} className="text-[13px]" />
                   </div>
                   {contract.risk_confidence_lower != null && contract.risk_confidence_upper != null && (
-                    <span className="text-[11px] text-text-muted font-mono tabular-nums">
+                    <span className="text-[13px] text-text-muted font-mono tabular-nums">
                       95% CI [{(contract.risk_confidence_lower * 100).toFixed(1)}% – {(contract.risk_confidence_upper * 100).toFixed(1)}%]
                     </span>
                   )}
@@ -330,7 +330,7 @@ export default function ContractDetail() {
                   dotGap={8}
                   thresholds={[0.25, 0.40, 0.60]}
                 />
-                <div className="flex items-center justify-between mt-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                <div className="flex items-center justify-between mt-2 text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   <span>0.00 · Low</span>
                   <span>1.00 · Critical</span>
                 </div>
@@ -339,7 +339,7 @@ export default function ContractDetail() {
                 {isHighRisk && (
                   <div className="mt-4 flex items-start gap-2 rounded-sm bg-risk-high/5 border border-risk-high/20 px-3 py-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-risk-high/80 mt-0.5 shrink-0" aria-hidden="true" />
-                    <p className="text-[11px] text-text-secondary leading-relaxed">
+                    <p className="text-[13px] text-text-secondary leading-relaxed">
                       High risk score indicates similarity to documented corruption patterns — it is
                       an investigative signal, not a verdict.
                     </p>
@@ -354,7 +354,7 @@ export default function ContractDetail() {
                 contract.is_high_value ||
                 contract.is_threshold_gaming) && (
                 <div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2">
+                  <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2">
                     Procurement flags
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -393,7 +393,7 @@ export default function ContractDetail() {
               {/* Raw risk factors */}
               {contract.risk_factors && contract.risk_factors.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                  <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                     Risk factors triggered
                   </p>
                   <ul className="space-y-1.5">
@@ -410,7 +410,7 @@ export default function ContractDetail() {
                             style={{ backgroundColor: getFactorCategoryColor(parsed.category) }}
                           />
                           <span>{parsed.label}</span>
-                          <span className="text-[10px] text-text-muted font-mono ml-1 uppercase tracking-[0.15em]">
+                          <span className="text-[12px] text-text-muted font-mono ml-1 uppercase tracking-[0.15em]">
                             {parsed.category}
                           </span>
                         </li>
@@ -511,7 +511,7 @@ export default function ContractDetail() {
                   {toTitleCase(contract.description)}
                 </p>
                 {contract.description.length > 600 && (
-                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 pt-3 border-t border-border">
+                  <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 pt-3 border-t border-border">
                     {contract.description.length.toLocaleString()} chars · scroll for full text
                   </p>
                 )}
@@ -528,7 +528,7 @@ export default function ContractDetail() {
               <div className="space-y-3">
                 {contract.data_quality_grade && (
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
+                    <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
                       Grade
                     </p>
                     <p className="text-2xl font-mono font-bold text-text-secondary">
@@ -538,13 +538,13 @@ export default function ContractDetail() {
                 )}
                 {contract.source_structure && (
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
+                    <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
                       Source structure
                     </p>
                     <p className="text-sm font-mono text-text-secondary">
                       Structure {contract.source_structure}
                     </p>
-                    <p className="text-[11px] text-text-muted mt-1">
+                    <p className="text-[13px] text-text-muted mt-1">
                       {contract.source_structure === 'A'
                         ? '2002-2010 · 0.1% RFC coverage'
                         : contract.source_structure === 'B'
@@ -571,7 +571,7 @@ export default function ContractDetail() {
                 <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
                 View on COMPRANET
               <span className="sr-only"> (opens in new tab)</span></a>
-              <p className="text-[11px] text-text-muted mt-2 leading-relaxed">
+              <p className="text-[13px] text-text-muted mt-2 leading-relaxed">
                 Official government procurement record.
               </p>
             </SidebarCard>
@@ -584,7 +584,7 @@ export default function ContractDetail() {
                 <div className="flex items-center gap-2 py-2 border-b border-border last:border-b-0">
                   <User className="h-3.5 w-3.5 text-text-muted shrink-0" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] text-text-muted uppercase tracking-[0.15em] mb-0.5">
+                    <p className="text-[12px] text-text-muted uppercase tracking-[0.15em] mb-0.5">
                       Vendor profile
                     </p>
                     <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name} size="xs" />
@@ -595,7 +595,7 @@ export default function ContractDetail() {
                 <div className="flex items-center gap-2 py-2 border-b border-border last:border-b-0">
                   <Building2 className="h-3.5 w-3.5 text-text-muted shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] text-text-muted uppercase tracking-[0.15em] mb-0.5">
+                    <p className="text-[12px] text-text-muted uppercase tracking-[0.15em] mb-0.5">
                       Institution
                     </p>
                     <EntityIdentityChip
@@ -647,7 +647,7 @@ export default function ContractDetail() {
 
       {/* ----- Footer attribution ----- */}
       <footer className="mt-16 pt-6 border-t border-border">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-text-muted">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[13px] text-text-muted">
           <div className="flex items-center gap-2">
             <Database className="h-3 w-3" aria-hidden="true" />
             <span>Source: COMPRANET · Federal Procurement Data</span>
@@ -683,7 +683,7 @@ function Section({
   return (
     <section>
       <div className="mb-5 border-l-[3px] border-risk-critical pl-5">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
           {overline}
         </p>
         <h2
@@ -713,7 +713,7 @@ function StatBlock({
 }) {
   return (
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
+      <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
         {label}
       </p>
       <p
@@ -724,7 +724,7 @@ function StatBlock({
       >
         {value}
       </p>
-      {sub && <p className="text-[11px] text-text-muted mt-1">{sub}</p>}
+      {sub && <p className="text-[13px] text-text-muted mt-1">{sub}</p>}
     </div>
   )
 }
@@ -741,7 +741,7 @@ function AnomalyScoreCard({
     <div className="rounded-sm border border-border bg-background/40 p-4">
       <div className="flex items-baseline justify-between mb-3">
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-0.5">
+          <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-0.5">
             ML Anomaly · Ensemble
           </p>
           <div className="flex items-baseline gap-2">
@@ -749,7 +749,7 @@ function AnomalyScoreCard({
               {(score * 100).toFixed(0)}%
             </span>
             {isAiConfirmed && (
-              <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
+              <Badge className="inline-flex items-center gap-1 text-[12px] font-medium px-1.5 py-0.5 bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
                 <svg
                   className="h-2.5 w-2.5"
                   viewBox="0 0 24 24"
@@ -769,7 +769,7 @@ function AnomalyScoreCard({
             )}
           </div>
         </div>
-        <span className="text-[10px] text-text-muted font-mono text-right leading-tight">
+        <span className="text-[12px] text-text-muted font-mono text-right leading-tight">
           IForest +<br />COPOD
         </span>
       </div>
@@ -799,7 +799,7 @@ function DetailItem({
   if (!value) return null
   return (
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-1.5">
+      <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-1.5">
         {Icon && <Icon className="h-3 w-3" />}
         {label}
       </p>
@@ -837,39 +837,39 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {delay != null && (
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
               <Clock className="h-3 w-3" aria-hidden="true" />
               Publication → Award
             </p>
             <p className={`text-2xl font-bold font-mono tabular-nums ${delayColor}`}>
               {delay}d
             </p>
-            {delayNote && <p className="text-[11px] text-text-muted mt-1">{delayNote}</p>}
+            {delayNote && <p className="text-[13px] text-text-muted mt-1">{delayNote}</p>}
           </div>
         )}
         {sexenioYear != null && admin && (
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
               Sexenio year
             </p>
             <p className="text-2xl font-bold font-mono tabular-nums text-text-primary">
               Yr {sexenioYear}/6
             </p>
-            <p className="text-[11px] text-text-muted mt-1">
+            <p className="text-[13px] text-text-muted mt-1">
               {admin} administration
             </p>
           </div>
         )}
         {isElection && (
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
               <Zap className="h-3 w-3" aria-hidden="true" />
               Timing
             </p>
             <p className="text-lg font-bold text-risk-high leading-tight">
               Election year
             </p>
-            <p className="text-[11px] text-text-muted mt-1">
+            <p className="text-[13px] text-text-muted mt-1">
               Awarded during federal electoral cycle
             </p>
           </div>
@@ -888,7 +888,7 @@ function SidebarCard({
 }) {
   return (
     <div className="rounded-sm border border-border bg-background/40 p-4">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+      <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
         {overline}
       </p>
       {children}
@@ -906,7 +906,7 @@ function IdRow({ label, value }: { label: string; value: string }) {
   }
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted">{label}</span>
+      <span className="text-[12px] uppercase tracking-[0.15em] text-text-muted">{label}</span>
       <button
         onClick={copy}
         className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary group"

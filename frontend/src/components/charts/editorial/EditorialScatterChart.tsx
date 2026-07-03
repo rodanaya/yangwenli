@@ -67,7 +67,7 @@ export function EditorialScatterChart<T extends object>({
             xLabel
               ? {
                   value: xLabel, position: 'insideBottom', offset: -4,
-                  fill: CHART_TOKENS.axis.tickFill, fontSize: 10,
+                  fill: CHART_TOKENS.axis.tickFill, fontSize: 12,
                   fontFamily: CHART_TOKENS.axis.tickFontFamily,
                 }
               : undefined
@@ -90,7 +90,7 @@ export function EditorialScatterChart<T extends object>({
             yLabel
               ? {
                   value: yLabel, angle: -90, position: 'insideLeft',
-                  fill: CHART_TOKENS.axis.tickFill, fontSize: 10,
+                  fill: CHART_TOKENS.axis.tickFill, fontSize: 12,
                   fontFamily: CHART_TOKENS.axis.tickFontFamily,
                 }
               : undefined
@@ -106,7 +106,7 @@ export function EditorialScatterChart<T extends object>({
             borderRadius: 2,
             padding: '8px 10px',
             color: 'var(--color-text-primary)',
-            fontSize: 11,
+            fontSize: 13,
             fontFamily: 'var(--font-family-mono)',
           }}
           formatter={(value) =>
@@ -135,7 +135,7 @@ export function EditorialScatterChart<T extends object>({
         />
       </ScatterChart>
       {quadrantLabels && (
-        <div className="absolute inset-0 pointer-events-none text-[10px] font-mono text-text-muted">
+        <div className="absolute inset-0 pointer-events-none text-[12px] font-mono text-text-muted">
           <span className="absolute top-2 right-3">{quadrantLabels[0]}</span>
           <span className="absolute top-2 left-10">{quadrantLabels[1]}</span>
           <span className="absolute bottom-8 left-10">{quadrantLabels[2]}</span>

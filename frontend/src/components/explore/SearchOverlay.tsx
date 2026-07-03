@@ -185,7 +185,7 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
           borderRadius: 4,
           color: 'var(--color-text-secondary)',
           cursor: 'pointer',
-          fontSize: 10,
+          fontSize: 12,
           fontFamily: 'var(--font-family-mono, monospace)',
           letterSpacing: '0.06em',
         }}
@@ -239,7 +239,7 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
               )}
               {q.length < 2 && recent.length > 0 && (
                 <>
-                  <div className="px-4 pt-3 pb-1 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
+                  <div className="px-4 pt-3 pb-1 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
                     {lang === 'en' ? 'Recent' : 'Reciente'}
                   </div>
                   {recent.map((r, i) => (
@@ -250,11 +250,11 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
                       className="w-full text-left px-4 py-2 hover:bg-background-elevated transition-colors flex items-center gap-3"
                       style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                     >
-                      <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted w-20">
+                      <span className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted w-20">
                         {r.kind === 'sector' ? (lang === 'en' ? 'Sector' : 'Sector') : r.kind === 'institution' ? (lang === 'en' ? 'Inst.' : 'Inst.') : (lang === 'en' ? 'Vendor' : 'Prov.')}
                       </span>
                       <span className="text-sm text-text-primary flex-1 truncate">{r.label}</span>
-                      <span className="text-[9px] text-text-muted opacity-50">↻</span>
+                      <span className="text-[13px] text-text-muted opacity-50">↻</span>
                     </button>
                   ))}
                 </>
@@ -267,14 +267,14 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
                   className="w-full text-left px-4 py-2 hover:bg-background-elevated transition-colors flex items-center gap-3"
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                 >
-                  <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted w-20">
+                  <span className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted w-20">
                     {r.kind === 'sector' ? (lang === 'en' ? 'Sector' : 'Sector') : r.kind === 'institution' ? (lang === 'en' ? 'Inst.' : 'Inst.') : (lang === 'en' ? 'Vendor' : 'Prov.')}
                   </span>
                   <span className="text-sm text-text-primary flex-1 truncate">{r.label}</span>
                 </button>
               ))}
             </div>
-            <div className="px-4 py-2 text-[9px] font-mono text-text-muted border-t border-border opacity-70">
+            <div className="px-4 py-2 text-[13px] font-mono text-text-muted border-t border-border opacity-70">
               {lang === 'en' ? 'esc to close · ↵ first result' : 'esc para cerrar · ↵ primer resultado'}
             </div>
           </div>

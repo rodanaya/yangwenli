@@ -102,7 +102,7 @@ function DeviationRow({ row }: { row: DeviationRowModel }) {
 
   return (
     <div className="flex items-center gap-3 py-1.5">
-      <span className="flex-shrink-0 font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.08em', color: 'var(--color-text-muted)', width: 104 }}>
+      <span className="flex-shrink-0 font-mono uppercase" style={{ fontSize: 13, letterSpacing: '0.08em', color: 'var(--color-text-muted)', width: 104 }}>
         {row.label}
       </span>
       <span className="flex-1 relative" style={{ height: 22 }}>
@@ -120,11 +120,11 @@ function DeviationRow({ row }: { row: DeviationRowModel }) {
       </span>
       <span className="flex-shrink-0 text-right flex items-baseline justify-end gap-1.5" style={{ width: 132 }}>
         <span className="font-mono tabular-nums" style={{ fontSize: 12.5, fontWeight: 700, color: row.alarm ? RISK_COLORS.critical : 'var(--color-text-primary)' }}>{fmt(row.vendorVal)}</span>
-        <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: overNorm ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'var(--color-text-muted)' }}>
+        <span className="font-mono tabular-nums" style={{ fontSize: 13, color: overNorm ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'var(--color-text-muted)' }}>
           {row.ratio != null ? `${row.ratio.toFixed(1)}×` : hasMedian ? `vs ${fmt(row.medianVal as number)}` : '·'}
         </span>
         {row.percentile != null && (
-          <span className="font-mono tabular-nums" style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-muted)' }}>p{Math.round(row.percentile)}</span>
+          <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)' }}>p{Math.round(row.percentile)}</span>
         )}
       </span>
     </div>
@@ -167,13 +167,13 @@ export function VendorDeviationLedger({
       {finding && (
         <div className="flex items-start gap-3 max-w-3xl mb-3">
           <span className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm" style={{ background: accent }} aria-hidden="true" />
-          <p className="text-text-secondary leading-snug" style={{ fontSize: 15, fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic' }}>{finding}</p>
+          <p className="text-text-secondary leading-snug" style={{ fontSize: 15, fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'normal' }}>{finding}</p>
         </div>
       )}
       <section className="rounded-sm overflow-hidden" style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)', background: 'var(--color-background-elevated)' }}>
         <div className="flex items-baseline justify-between px-4 py-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
-          <div className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
-            <span style={{ color: OCHRE, fontStyle: 'italic', fontWeight: 600 }}>§ {lang === 'en' ? 'The deviation' : 'El desvío'}</span>
+          <div className="font-mono uppercase" style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+            <span style={{ color: OCHRE, fontStyle: 'normal', fontWeight: 600 }}>§ {lang === 'en' ? 'The deviation' : 'El desvío'}</span>
             <span style={{ margin: '0 7px', opacity: 0.45 }}>·</span>
             <span style={{ fontWeight: 300 }}>{lang === 'en' ? 'vs the sector norm' : 'frente a la norma del sector'}</span>
           </div>

@@ -412,7 +412,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
             x={oecdX + 3}
             y={innerH + 14}
             fontFamily="var(--font-family-mono, monospace)"
-            fontSize={9}
+            fontSize={13}
             fill="#22d3ee"
             fillOpacity={0.85}
             aria-hidden="true"
@@ -607,7 +607,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   y={innerH + 16}
                   textAnchor="middle"
                   fontFamily="var(--font-family-mono, monospace)"
-                  fontSize={9}
+                  fontSize={13}
                   fill={isOECD ? '#22d3ee' : 'var(--color-text-muted)'}
                   fillOpacity={isOECD ? 0.9 : 0.7}
                 >
@@ -622,7 +622,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
             y={innerH + 38}
             textAnchor="middle"
             fontFamily="var(--font-family-mono, monospace)"
-            fontSize={9}
+            fontSize={13}
             fill="var(--color-text-muted)"
             fillOpacity={0.6}
             letterSpacing="0.1em"
@@ -655,7 +655,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   y={y + 4}
                   textAnchor="end"
                   fontFamily="var(--font-family-mono, monospace)"
-                  fontSize={9}
+                  fontSize={13}
                   fill="var(--color-text-muted)"
                   fillOpacity={0.7}
                 >
@@ -670,7 +670,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
             y={-56}
             textAnchor="middle"
             fontFamily="var(--font-family-mono, monospace)"
-            fontSize={9}
+            fontSize={13}
             fill="var(--color-text-muted)"
             fillOpacity={0.6}
             letterSpacing="0.1em"
@@ -693,7 +693,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
       )}
 
       {/* ── Keyboard hint ──────────────────────────────────────────────────── */}
-      <p className="mt-2 text-[10px] font-mono text-text-muted opacity-60" aria-live="polite">
+      <p className="mt-2 text-[12px] font-mono text-text-muted opacity-60" aria-live="polite">
         {focusedSector
           ? (isEs
               ? `${getSectorName(focusedSector.sector_code, 'es')} seleccionado — Enter para investigar`
@@ -733,7 +733,7 @@ function BeeswarmTooltip({ sector, isEs, onNavigate }: BeeswarmTooltipProps) {
     >
       {/* Header */}
       <p
-        className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] mb-0.5"
+        className="text-[12px] font-mono font-bold uppercase tracking-[0.12em] mb-0.5"
         style={{ color }}
       >
         {sector.sector_code}
@@ -743,7 +743,7 @@ function BeeswarmTooltip({ sector, isEs, onNavigate }: BeeswarmTooltipProps) {
       </p>
 
       {/* 6 KPIs */}
-      <div className="space-y-1 text-[11px] font-mono">
+      <div className="space-y-1 text-[13px] font-mono">
         <KpiRow
           label={isEs ? 'Riesgo prom.' : 'Avg risk'}
           value={`${(sector.avg_risk_score * 100).toFixed(1)}% (${riskLabels[riskLevel]})`}
@@ -775,7 +775,7 @@ function BeeswarmTooltip({ sector, isEs, onNavigate }: BeeswarmTooltipProps) {
       {/* CTA */}
       <button
         onClick={onNavigate}
-        className="mt-3 w-full text-[10px] font-mono font-bold uppercase tracking-[0.12em] py-1.5 rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2"
+        className="mt-3 w-full text-[12px] font-mono font-bold uppercase tracking-[0.12em] py-1.5 rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2"
         style={{
           backgroundColor: `${color}18`,
           color,

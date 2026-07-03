@@ -71,7 +71,7 @@ export function SanctionsAlertBanner({
               <span
                 key={i}
                 className={cn(
-                  'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] border',
+                  'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[13px] border',
                   getSanctionChipClass(s.list_type)
                 )}
                 title={s.list_type.startsWith('efos') ? EFOS_TOOLTIP : undefined}

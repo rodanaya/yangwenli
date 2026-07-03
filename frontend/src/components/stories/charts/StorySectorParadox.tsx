@@ -97,7 +97,7 @@ export function StorySectorParadox() {
         {[5, 10, 15, 20].map((v) => (
           <g key={`yg-${v}`}>
             <line x1={PAD.left} x2={W - PAD.right} y1={yFor(v)} y2={yFor(v)} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
-            <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)">
               {v}%
             </text>
           </g>
@@ -105,7 +105,7 @@ export function StorySectorParadox() {
         {[70, 80, 90, 100].map((v) => (
           <g key={`xg-${v}`}>
             <line x1={xFor(v)} x2={xFor(v)} y1={PAD.top} y2={H - PAD.bottom} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
-            <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)">
               {v}%
             </text>
           </g>
@@ -117,7 +117,7 @@ export function StorySectorParadox() {
           y={H - 12}
           textAnchor="middle"
           fill="var(--color-text-muted)"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
         >
@@ -128,7 +128,7 @@ export function StorySectorParadox() {
           y={PAD.top + PLOT_H / 2}
           textAnchor="middle"
           fill="var(--color-text-muted)"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
           transform={`rotate(-90, 15, ${PAD.top + PLOT_H / 2})`}
@@ -174,10 +174,10 @@ export function StorySectorParadox() {
 
         {/* Paradox annotations */}
         <g>
-          <text x={xFor(74)} y={yFor(18)} fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={xFor(74)} y={yFor(18)} fill="var(--color-risk-medium)" fontSize={12} fontFamily="var(--font-family-mono)" fontWeight={600}>
             {t('sectorParadox.annotationLeft')}
           </text>
-          <text x={xFor(92)} y={yFor(3)} fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600} textAnchor="end">
+          <text x={xFor(92)} y={yFor(3)} fill="var(--color-risk-medium)" fontSize={12} fontFamily="var(--font-family-mono)" fontWeight={600} textAnchor="end">
             {t('sectorParadox.annotationRight')}
           </text>
         </g>

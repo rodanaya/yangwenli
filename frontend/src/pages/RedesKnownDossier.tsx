@@ -96,8 +96,8 @@ function DeviationRow({
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <span className="text-[10px] font-mono text-text-secondary">{label}</span>
-        <span className="text-[9.5px] font-mono text-text-muted">
+        <span className="text-[12px] font-mono text-text-secondary">{label}</span>
+        <span className="text-[13px] font-mono text-text-muted">
           <span style={{ color: textFill, fontWeight: 700 }}>{Math.round(value * 100)}%</span>
           {' · '}
           {benchmarkLabel} {Math.round(benchmark * 100)}%{' '}
@@ -470,14 +470,14 @@ export default function RedesKnownDossier() {
             className="flex items-center gap-3 mb-4"
             style={{
               fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-              fontSize: '10px',
+              fontSize: '12px',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
               fontWeight: 400,
             }}
           >
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               <span>{isEs ? 'Croquis de co-licitación · comunidades Louvain' : 'Co-bidding sketch · Louvain communities'}</span>
@@ -487,7 +487,7 @@ export default function RedesKnownDossier() {
           <h1
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: 'clamp(34px, 5vw, 60px)',
               lineHeight: 1.02,
@@ -520,7 +520,7 @@ export default function RedesKnownDossier() {
             {isEs ? (
               <>
                 El Atlas dibuja una metáfora; esta lámina levanta el{' '}
-                <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>croquis</em>: cada arista es
+                <em style={{ fontStyle: 'normal', color: 'var(--color-text-primary)' }}>croquis</em>: cada arista es
                 un par real de proveedores que licitaron juntos, cada cúmulo una comunidad detectada sobre la red de
                 co-licitación. Sin posiciones inventadas. Y una instrucción de lectura: los cúmulos gigantes son
                 plomería de mercado — la señal vive en los nudos pequeños y densos.
@@ -528,7 +528,7 @@ export default function RedesKnownDossier() {
             ) : (
               <>
                 The Atlas draws a metaphor; this plate lifts the{' '}
-                <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>scene sketch</em>: every edge
+                <em style={{ fontStyle: 'normal', color: 'var(--color-text-primary)' }}>scene sketch</em>: every edge
                 is a real pair of vendors that bid together, every cluster a community detected over the co-bidding
                 network. No invented positions. And one reading instruction: the giant clusters are market plumbing —
                 the signal lives in the small, dense knots.
@@ -565,7 +565,7 @@ export default function RedesKnownDossier() {
                   setQuery('')
                 }}
                 className={cn(
-                  'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.14em] transition-colors',
+                  'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.14em] transition-colors',
                   lens === 'clusters' ? 'bg-accent/12 text-accent' : 'text-text-muted/60 hover:text-text-secondary',
                 )}
               >
@@ -581,7 +581,7 @@ export default function RedesKnownDossier() {
                   setQuery('')
                 }}
                 className={cn(
-                  'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.14em] border-l border-border transition-colors',
+                  'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.14em] border-l border-border transition-colors',
                   lens === 'institutions' ? 'bg-accent/12 text-accent' : 'text-text-muted/60 hover:text-text-secondary',
                 )}
               >
@@ -591,12 +591,12 @@ export default function RedesKnownDossier() {
             </div>
 
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-accent/90">
+              <span className="text-[12px] font-mono font-bold uppercase tracking-[0.2em] text-accent/90">
                 {lens === 'clusters'
                   ? isEs ? '§ Índice de cúmulos' : '§ Cluster index'
                   : isEs ? '§ Compradores sitiados' : '§ Besieged buyers'}
               </span>
-              <span className="text-[10px] font-mono text-text-muted/50">
+              <span className="text-[12px] font-mono text-text-muted/50">
                 {lens === 'clusters'
                   ? `${filtered.length}/${index?.communities.length ?? 0}`
                   : `${sortedInstitutions.length}/${capture?.total ?? 0}`}
@@ -604,7 +604,7 @@ export default function RedesKnownDossier() {
               <button
                 type="button"
                 onClick={copyTrailLink}
-                className="ml-auto rounded-sm border border-border px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-border/20 transition-colors"
+                className="ml-auto rounded-sm border border-border px-2 py-0.5 text-[13px] font-mono uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-border/20 transition-colors"
               >
                 {linkCopied ? (isEs ? 'Copiado ✓' : 'Copied ✓') : isEs ? 'Copiar enlace' : 'Copy link'}
               </button>
@@ -633,7 +633,7 @@ export default function RedesKnownDossier() {
             {/* Institution sort pills */}
             {lens === 'institutions' && (
               <div className="mb-3 flex flex-wrap items-center gap-1">
-                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
+                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
                   {isEs ? 'Ordenar:' : 'Sort:'}
                 </span>
                 {(
@@ -648,7 +648,7 @@ export default function RedesKnownDossier() {
                     key={k}
                     onClick={() => setInstSort(k)}
                     className={cn(
-                      'px-2 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider border transition-colors',
+                      'px-2 py-0.5 rounded text-[13px] font-mono uppercase tracking-wider border transition-colors',
                       instSort === k
                         ? 'bg-text-primary/8 border-text-primary/20 text-text-primary'
                         : 'border-border text-text-muted/50 hover:border-border-hover hover:text-text-secondary',
@@ -709,8 +709,8 @@ export default function RedesKnownDossier() {
                           <WellDisc inst={inst} maxValue={maxInstValue} />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-baseline justify-between gap-2">
-                              <span className="min-w-0 flex items-baseline gap-1.5 text-[11px] font-mono font-bold text-text-primary">
-                                <span className="shrink-0 text-[10px] text-text-muted/60">{rank + 1}</span>
+                              <span className="min-w-0 flex items-baseline gap-1.5 text-[13px] font-mono font-bold text-text-primary">
+                                <span className="shrink-0 text-[12px] text-text-muted/60">{rank + 1}</span>
                                 {/* W1 — known buyers ("Instituto Mexicano del Seguro Social")
                                     must stay recognizable: md (48) + 2-line clamp, full on hover. */}
                                 <span
@@ -721,11 +721,11 @@ export default function RedesKnownDossier() {
                                   {formatEntityName('institution', inst.name, 'full')}
                                 </span>
                               </span>
-                              <span className="shrink-0 text-[11px] font-mono font-bold text-text-primary">
+                              <span className="shrink-0 text-[13px] font-mono font-bold text-text-primary">
                                 {formatCompactMXN(inst.total_value_mxn)}
                               </span>
                             </div>
-                            <div className="mt-0.5 flex items-center gap-2.5 text-[9.5px] font-mono text-text-muted/70">
+                            <div className="mt-0.5 flex items-center gap-2.5 text-[13px] font-mono text-text-muted/70">
                               <span>
                                 DA{' '}
                                 <span style={daHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
@@ -755,7 +755,7 @@ export default function RedesKnownDossier() {
                       )
                     })}
                     {sortedInstitutions.length === 0 && (
-                      <p className="py-8 text-center text-[11px] font-mono text-text-muted/50">
+                      <p className="py-8 text-center text-[13px] font-mono text-text-muted/50">
                         {isEs ? 'Sin instituciones para esta búsqueda' : 'No institutions match this search'}
                       </p>
                     )}
@@ -769,7 +769,7 @@ export default function RedesKnownDossier() {
             <>
             <div className="mb-3 space-y-1.5">
               <div className="flex flex-wrap items-center gap-1">
-                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
+                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
                   {isEs ? 'Ordenar:' : 'Sort:'}
                 </span>
                 {(Object.keys(sortLabels) as SortKey[]).map((k) => (
@@ -784,7 +784,7 @@ export default function RedesKnownDossier() {
                         : undefined
                     }
                     className={cn(
-                      'px-2 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider border transition-colors',
+                      'px-2 py-0.5 rounded text-[13px] font-mono uppercase tracking-wider border transition-colors',
                       sortBy === k
                         ? 'bg-text-primary/8 border-text-primary/20 text-text-primary'
                         : 'border-border text-text-muted/50 hover:border-border-hover hover:text-text-secondary',
@@ -795,13 +795,13 @@ export default function RedesKnownDossier() {
                 ))}
               </div>
               <div className="flex flex-wrap items-center gap-1">
-                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
+                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
                   {isEs ? 'Patrón dominante:' : 'Dominant pattern:'}
                 </span>
                 <button
                   onClick={() => setPatternFilter(null)}
                   className={cn(
-                    'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase border transition-colors',
+                    'px-2 py-0.5 rounded-full text-[13px] font-mono font-bold uppercase border transition-colors',
                     patternFilter === null
                       ? 'bg-text-primary/10 border-text-primary/30 text-text-primary'
                       : 'border-border text-text-muted/60 hover:border-border-hover',
@@ -814,7 +814,7 @@ export default function RedesKnownDossier() {
                     key={p}
                     onClick={() => setPatternFilter(patternFilter === p ? null : p)}
                     className={cn(
-                      'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase border transition-colors',
+                      'px-2 py-0.5 rounded-full text-[13px] font-mono font-bold uppercase border transition-colors',
                       patternFilter === p ? 'border-transparent text-white' : 'border-border text-text-muted/60 hover:border-border-hover',
                     )}
                     style={patternFilter === p ? { background: PATTERN_COLORS[p] ?? 'var(--color-text-muted)' } : undefined}
@@ -873,7 +873,7 @@ export default function RedesKnownDossier() {
                     >
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="min-w-0 truncate">
-                          <span className="text-[10px] font-mono font-bold text-text-muted/60 mr-1.5">
+                          <span className="text-[12px] font-mono font-bold text-text-muted/60 mr-1.5">
                             {rank + 1}
                           </span>
                           <span
@@ -882,10 +882,10 @@ export default function RedesKnownDossier() {
                             style={{ width: 6, height: 6, background: verdict.color }}
                             title={isEs ? verdict.label_es : verdict.label_en}
                           />
-                          <span className="text-[11px] font-mono font-bold text-text-primary">{lbl.code}</span>
+                          <span className="text-[13px] font-mono font-bold text-text-primary">{lbl.code}</span>
                         </span>
                         <span className="shrink-0 inline-flex items-center gap-1.5">
-                          <span className="text-[11px] font-mono font-bold text-text-primary">
+                          <span className="text-[13px] font-mono font-bold text-text-primary">
                             {formatCompactMXN(c.total_value_mxn)}
                           </span>
                           <button
@@ -912,13 +912,13 @@ export default function RedesKnownDossier() {
                       {/* W1 — the hub firm IS the cluster's identity: own row, 2-line
                           clamp (md=40 chars), full name on native hover. */}
                       <span
-                        className="block mt-0.5 text-[10.5px] font-mono text-text-secondary"
+                        className="block mt-0.5 text-[12px] font-mono text-text-secondary"
                         title={c.hub_vendor_name}
                         style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.25 }}
                       >
                         {lbl.orbit}
                       </span>
-                      <div className="mt-1 flex items-center gap-2.5 text-[9.5px] font-mono text-text-muted/70">
+                      <div className="mt-1 flex items-center gap-2.5 text-[13px] font-mono text-text-muted/70">
                         <span>
                           {c.size.toLocaleString(isEs ? 'es-MX' : 'en-US')} {isEs ? 'actores' : 'actors'}
                         </span>
@@ -956,13 +956,13 @@ export default function RedesKnownDossier() {
                 {!showAll && filtered.length > 60 && (
                   <button
                     onClick={() => setShowAll(true)}
-                    className="w-full rounded-sm border border-border/60 px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-text-muted hover:bg-border/20 transition-colors"
+                    className="w-full rounded-sm border border-border/60 px-3 py-2 text-[12px] font-mono uppercase tracking-wider text-text-muted hover:bg-border/20 transition-colors"
                   >
                     {isEs ? `Mostrar los ${filtered.length} cúmulos` : `Show all ${filtered.length} clusters`}
                   </button>
                 )}
                 {filtered.length === 0 && (
-                  <p className="py-8 text-center text-[11px] font-mono text-text-muted/50">
+                  <p className="py-8 text-center text-[13px] font-mono text-text-muted/50">
                     {isEs ? 'Sin cúmulos para este filtro' : 'No clusters match this filter'}
                   </p>
                 )}
@@ -976,7 +976,7 @@ export default function RedesKnownDossier() {
           <div ref={plateRef} className="order-1 lg:order-2 min-w-0 scroll-mt-4">
             {lens === 'clusters' && graphLoading && (
               <div className="h-[540px] rounded-sm border border-border/40 bg-border/10 animate-pulse flex items-center justify-center">
-                <p className="text-[11px] font-mono text-text-muted/60">
+                <p className="text-[13px] font-mono text-text-muted/60">
                   {isEs ? 'Trazando la trama…' : 'Drawing the mesh…'}
                 </p>
               </div>
@@ -1014,7 +1014,7 @@ export default function RedesKnownDossier() {
                       Below the canvas — above it, it collides with the
                       PlateFrame header at mobile widths. */}
                   {graph.truncated && (
-                    <p className="mt-2 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
+                    <p className="mt-2 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
                       {isEs
                         ? `Mostrando los 100 actores más centrales (pagerank) de ${formatNumber(graph.total_members)}`
                         : `Showing the 100 most central actors (pagerank) of ${formatNumber(graph.total_members)}`}
@@ -1067,7 +1067,7 @@ export default function RedesKnownDossier() {
             {/* ── Institution lens: the siege plate ─────────────────── */}
             {lens === 'institutions' && (starLoading || captureLoading) && (
               <div className="h-[540px] rounded-sm border border-border/40 bg-border/10 animate-pulse flex items-center justify-center">
-                <p className="text-[11px] font-mono text-text-muted/60">
+                <p className="text-[13px] font-mono text-text-muted/60">
                   {isEs ? 'Levantando el sitio…' : 'Raising the siege…'}
                 </p>
               </div>
@@ -1108,7 +1108,7 @@ export default function RedesKnownDossier() {
                     className="rounded-sm border border-border bg-background-card px-4 py-3.5"
                     style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
                   >
-                    <p className="mb-2.5 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+                    <p className="mb-2.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
                       {isEs ? '§ Firma del sitio' : '§ Siege signature'}
                     </p>
                     {selectedCaptureItem ? (
@@ -1129,7 +1129,7 @@ export default function RedesKnownDossier() {
                             maxDelta={0.75}
                           />
                         </div>
-                        <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] font-mono text-text-muted">
+                        <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px] font-mono text-text-muted">
                           <span>
                             {isEs ? 'Gasto total' : 'Total spend'}{' '}
                             <span className="text-text-primary font-bold">
@@ -1174,7 +1174,7 @@ export default function RedesKnownDossier() {
                         </div>
                         {selectedCaptureItem.top1_vendor && (
                           <div className="mt-3 border-t border-border/50 pt-2.5">
-                            <p className="mb-1.5 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
+                            <p className="mb-1.5 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
                               {isEs ? 'Proveedor dominante' : 'Dominant vendor'}
                               {selectedCaptureItem.top1_share_pct != null && (
                                 <span className="text-accent font-bold ml-1.5">
@@ -1194,7 +1194,7 @@ export default function RedesKnownDossier() {
                         )}
                       </>
                     ) : (
-                      <p className="text-[11px] font-mono text-text-muted/60">
+                      <p className="text-[13px] font-mono text-text-muted/60">
                         {isEs ? 'Sin métricas para esta institución.' : 'No metrics for this institution.'}
                       </p>
                     )}
@@ -1205,7 +1205,7 @@ export default function RedesKnownDossier() {
                     className="rounded-sm border border-border bg-background-card px-4 py-3.5"
                     style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
                   >
-                    <p className="mb-2.5 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+                    <p className="mb-2.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
                       {isEs ? '§ Los clanes que se alimentan' : '§ The feeding clans'}
                     </p>
                     {selectedCaptureItem && selectedCaptureItem.feeding_communities.length > 0 ? (
@@ -1215,7 +1215,7 @@ export default function RedesKnownDossier() {
                             key={f.community_id}
                             type="button"
                             onClick={() => jumpToClan(f.community_id)}
-                            className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[9.5px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
+                            className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
                             title={isEs ? 'Abrir el cúmulo en la trama' : 'Open the cluster in the mesh'}
                           >
                             C-{f.community_id} · {f.vendor_count} {isEs ? 'firmas' : 'firms'} →
@@ -1223,13 +1223,13 @@ export default function RedesKnownDossier() {
                         ))}
                       </div>
                     ) : (
-                      <p className="mb-3 text-[10px] font-mono text-text-muted/60">
+                      <p className="mb-3 text-[12px] font-mono text-text-muted/60">
                         {isEs
                           ? 'Ningún clan con ≥2 firmas entre sus proveedores principales.'
                           : 'No clan with ≥2 firms among its top vendors.'}
                       </p>
                     )}
-                    <p className="mb-2 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
+                    <p className="mb-2 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
                       {isEs ? 'Quiénes se llevan el gasto' : 'Who takes the spend'}
                     </p>
                     <ul className="space-y-1.5">
@@ -1243,7 +1243,7 @@ export default function RedesKnownDossier() {
                             riskScore={v.avg_risk_score}
                             fullName
                           />
-                          <span className="shrink-0 text-[9px] font-mono text-text-muted/60">
+                          <span className="shrink-0 text-[13px] font-mono text-text-muted/60">
                             {formatCompactMXN(v.total_value_mxn)}
                             {v.community_id != null && <span> · C-{v.community_id}</span>}
                           </span>
@@ -1252,7 +1252,7 @@ export default function RedesKnownDossier() {
                     </ul>
                     {selectedVendor != null && (
                       <div className="mt-3 border-t border-border/50 pt-2.5 flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-mono text-text-muted/70">
+                        <span className="text-[12px] font-mono text-text-muted/70">
                           {isEs ? 'Actor seleccionado en el sitio' : 'Actor selected in the siege'}
                         </span>
                         <button
@@ -1261,7 +1261,7 @@ export default function RedesKnownDossier() {
                             next.set('vendor', String(selectedVendor))
                             setSearchParams(next)
                           }}
-                          className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[9.5px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
+                          className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
                         >
                           {isEs ? 'Ver su red →' : 'View its ring →'}
                         </button>
@@ -1276,7 +1276,7 @@ export default function RedesKnownDossier() {
 
         {/* ── Methodology footer ───────────────────────────────────── */}
         <div className="mt-8 rounded-sm border border-border bg-background-card px-5 py-4">
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-3">
+          <p className="text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-3">
             {isEs ? 'Fe de método' : 'Attestation of method'}
           </p>
           <ol className="space-y-2.5">
@@ -1322,7 +1322,7 @@ export default function RedesKnownDossier() {
             ].map((cl, i) => (
               <li key={i} className="flex gap-3 text-[12px] text-text-secondary leading-relaxed">
                 <span
-                  className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-accent/70 pt-0.5"
+                  className="shrink-0 font-mono text-[12px] uppercase tracking-[0.14em] text-accent/70 pt-0.5"
                   style={{ minWidth: '2rem' }}
                 >
                   ({['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii'][i]})

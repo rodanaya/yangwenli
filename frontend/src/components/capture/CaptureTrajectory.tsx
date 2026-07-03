@@ -162,7 +162,7 @@ export function CaptureTrajectory({
           x={x(peakYear)}
           y={y(peakSharePct) - 7}
           textAnchor="middle"
-          fontSize={10}
+          fontSize={12}
           fontFamily="JetBrains Mono, monospace"
           fill="var(--color-text-secondary)"
         >

@@ -138,7 +138,7 @@ function CaseHero({
         <div className="flex items-baseline justify-between gap-4 mb-5">
           <div
             className="font-mono tabular-nums uppercase"
-            style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 500 }}
+            style={{ fontSize: 13, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 500 }}
           >
             {folio(scandal.id)}
             {scandal.is_verified ? (
@@ -153,7 +153,7 @@ function CaseHero({
           {sectorName && (
             <div
               className="font-mono uppercase"
-              style={{ fontSize: 11, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: 13, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}
             >
               {sectorName}
             </div>
@@ -163,7 +163,7 @@ function CaseHero({
         {/* § kicker */}
         <p
           className="font-mono uppercase mb-3"
-          style={{ fontSize: 10, letterSpacing: '0.22em', color: 'var(--color-text-muted)', fontWeight: 500 }}
+          style={{ fontSize: 12, letterSpacing: '0.22em', color: 'var(--color-text-muted)', fontWeight: 500 }}
         >
           § {lang === 'es' ? 'El Expediente · Caso Documentado' : 'The Case File · Documented Case'}
         </p>
@@ -172,7 +172,7 @@ function CaseHero({
         <h1
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 500,
             fontSize: 'clamp(32px, 4.6vw, 56px)',
             color: 'var(--color-text-primary)',
@@ -189,20 +189,20 @@ function CaseHero({
           <DispositionSeal status={scandal.legal_status} lang={lang} size="md" />
           <span
             className="font-mono uppercase"
-            style={{ fontSize: 11, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
           >
             {fraudLabel(scandal.fraud_type, lang)}
           </span>
           <span
             className="font-mono uppercase"
-            style={{ fontSize: 11, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
           >
             {sexenioLabel(scandal, lang)}
           </span>
           {periodText && (
             <span
               className="font-mono tabular-nums"
-              style={{ fontSize: 11, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
             >
               {periodText}
             </span>
@@ -210,7 +210,7 @@ function CaseHero({
           <span className="inline-flex items-baseline gap-2">
             <span
               className="font-mono uppercase"
-              style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
             >
               {lang === 'es' ? 'Gravedad' : 'Severity'}
             </span>
@@ -231,12 +231,12 @@ function ProvenanceFooter({ lang }: { lang: Lang }) {
       <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 28, textAlign: 'center' }}>
         <p
           className="font-mono mb-3 uppercase"
-          style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)', fontWeight: 500 }}
+          style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-muted)', fontWeight: 500 }}
         >
           § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
         </p>
         <p
-          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 14, color: 'var(--color-text-secondary)', maxWidth: '64ch', margin: '0 auto', lineHeight: 1.6 }}
+          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 14, color: 'var(--color-text-secondary)', maxWidth: '64ch', margin: '0 auto', lineHeight: 1.6 }}
         >
           {lang === 'es'
             ? 'Casos compilados de periodismo investigativo, auditorías de la ASF y procesos judiciales públicos. Los vínculos a proveedores se construyen con coincidencia exacta de RFC o nombre. La presencia en esta biblioteca no constituye una determinación de culpabilidad.'
@@ -246,7 +246,7 @@ function ProvenanceFooter({ lang }: { lang: Lang }) {
           type="button"
           onClick={() => navigate('/methodology')}
           className="mt-4 font-mono cursor-pointer hover:opacity-70 transition-opacity uppercase"
-          style={{ fontSize: 10, letterSpacing: '0.14em', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+          style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
         >
           {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
         </button>
@@ -274,7 +274,7 @@ function ActorList({ actors, lang }: { actors: KeyActor[]; lang: Lang }) {
         >
           <span
             className="font-mono tabular-nums flex-shrink-0"
-            style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-muted)', width: 24 }}
+            style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-muted)', width: 24 }}
           >
             {String(i + 1).padStart(2, '0')}
           </span>
@@ -282,7 +282,7 @@ function ActorList({ actors, lang }: { actors: KeyActor[]; lang: Lang }) {
             <p
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 16,
                 color: 'var(--color-text-primary)',
@@ -295,7 +295,7 @@ function ActorList({ actors, lang }: { actors: KeyActor[]; lang: Lang }) {
                 Spanish only (no _en twin in the DB) — lang="es" keeps screen
                 readers pronouncing them correctly on the EN page. */}
             {actor.title && (
-              <p lang="es" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+              <p lang="es" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
                 {actor.title}
               </p>
             )}
@@ -335,7 +335,7 @@ function SourceList({ sources, lang }: { sources: ScandalSource[]; lang: Lang })
           <div className="flex items-baseline gap-3 py-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
             <span
               className="font-mono tabular-nums flex-shrink-0"
-              style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 22, letterSpacing: '0.1em' }}
+              style={{ fontSize: 12, color: 'var(--color-text-muted)', width: 22, letterSpacing: '0.1em' }}
             >
               {String(i + 1).padStart(2, '0')}
             </span>
@@ -346,15 +346,15 @@ function SourceList({ sources, lang }: { sources: ScandalSource[]; lang: Lang })
               <div className="mt-0.5 flex items-baseline gap-2 flex-wrap">
                 <span
                   className="font-mono uppercase"
-                  style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-accent)', fontWeight: 700 }}
+                  style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-accent)', fontWeight: 700 }}
                 >
                   {TYPE_LABEL[s.type]?.[lang] ?? s.type}
                 </span>
-                <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+                <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
                   {s.outlet}
                 </span>
                 {s.date && (
-                  <span className="font-mono tabular-nums" style={{ fontSize: 10.5, color: 'var(--color-text-muted)' }}>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                     {s.date}
                   </span>
                 )}
@@ -634,7 +634,7 @@ export default function CaseDossier() {
                         <p
                           style={{
                             fontFamily: '"EB Garamond", Georgia, serif',
-                            fontStyle: 'italic',
+                            fontStyle: 'normal',
                             fontSize: 13.5,
                             color: 'var(--color-text-muted)',
                             maxWidth: '44ch',
@@ -669,14 +669,14 @@ export default function CaseDossier() {
                 >
                   <p
                     className="font-mono mb-1.5 uppercase"
-                    style={{ fontSize: 11, letterSpacing: '0.16em', color: disposition.ink, fontWeight: 700 }}
+                    style={{ fontSize: 13, letterSpacing: '0.16em', color: disposition.ink, fontWeight: 700 }}
                   >
                     {dispositionLabel(scandal.legal_status, lang)}
                   </p>
                   <p
                     style={{
                       fontFamily: '"EB Garamond", Georgia, serif',
-                      fontStyle: 'italic',
+                      fontStyle: 'normal',
                       fontSize: 15.5,
                       lineHeight: 1.55,
                       color: 'var(--color-text-secondary)',
@@ -731,7 +731,7 @@ export default function CaseDossier() {
                   <p
                     style={{
                       fontFamily: '"EB Garamond", Georgia, serif',
-                      fontStyle: 'italic',
+                      fontStyle: 'normal',
                       fontSize: 14.5,
                       color: 'var(--color-text-muted)',
                       maxWidth: '60ch',

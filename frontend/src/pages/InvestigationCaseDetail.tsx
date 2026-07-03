@@ -156,7 +156,7 @@ function StatusPill({ status, t }: { status: InvestigationValidationStatus; t: (
   const Icon = config.icon
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em]"
+      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-mono uppercase tracking-[0.14em]"
       style={{
         color: config.color,
         border: `1px solid ${config.color}44`,
@@ -277,7 +277,7 @@ export function InvestigationCaseDetail() {
     return (
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
         <div style={{ textAlign: 'center', maxWidth: 480 }}>
-          <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.2em', color: INK_FAINT, marginBottom: 16, textTransform: 'uppercase' }}>
+          <p style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.2em', color: INK_FAINT, marginBottom: 16, textTransform: 'uppercase' }}>
             {t('caseDetail.notFoundLabel')}
           </p>
           <h1 style={{ fontSize: 32, fontFamily: 'serif', color: INK, marginBottom: 12, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
@@ -289,7 +289,7 @@ export function InvestigationCaseDetail() {
           <button
             onClick={() => navigate('/investigation')}
             style={{
-              fontSize: 11,
+              fontSize: 13,
               fontFamily: 'monospace',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
@@ -358,7 +358,7 @@ export function InvestigationCaseDetail() {
         <header className="space-y-5" style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24 }}>
           {/* Breadcrumb + Share */}
           <div className="flex items-center justify-between gap-3">
-            <nav aria-label="breadcrumb" className="flex items-center gap-1 text-[11px] font-mono text-text-muted/60">
+            <nav aria-label="breadcrumb" className="flex items-center gap-1 text-[13px] font-mono text-text-muted/60">
               <Link
                 to="/investigation"
                 className="inline-flex items-center gap-1 hover:text-text-muted transition-colors"
@@ -374,7 +374,7 @@ export function InvestigationCaseDetail() {
                 const text = `RUBLI · ${detail.title ?? detail.case_id} — ${window.location.href}`
                 navigator.clipboard?.writeText(text).catch(() => {})
               }}
-              className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-accent transition-colors px-2 py-1 rounded border border-border/40 hover:border-accent/40 shrink-0"
+              className="flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-wider text-text-muted hover:text-accent transition-colors px-2 py-1 rounded border border-border/40 hover:border-accent/40 shrink-0"
               title={i18n.language.startsWith('es') ? 'Copiar enlace del caso' : 'Copy case link'}
             >
               <Share2 className="h-3 w-3" aria-hidden="true" />
@@ -387,7 +387,7 @@ export function InvestigationCaseDetail() {
             <div className="flex-1 min-w-0">
               <p
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   fontFamily: 'monospace',
                   letterSpacing: '0.2em',
                   textTransform: 'uppercase',
@@ -415,7 +415,7 @@ export function InvestigationCaseDetail() {
                 <StatusPill status={detail.validation_status} t={t} />
                 {/* Confidence */}
                 <span
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em]"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-mono uppercase tracking-[0.14em]"
                   style={{
                     color: confidenceColor,
                     border: `1px solid ${confidenceColor}44`,
@@ -429,7 +429,7 @@ export function InvestigationCaseDetail() {
                 {detail.case_type && (
                   <span
                     style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       fontFamily: 'monospace',
                       letterSpacing: '0.14em',
                       textTransform: 'uppercase',
@@ -445,7 +445,7 @@ export function InvestigationCaseDetail() {
                 )}
                 {/* Sector */}
                 <span
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em]"
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-mono uppercase tracking-[0.14em]"
                   style={{
                     backgroundColor: `${sectorColor}18`,
                     color: sectorColor,
@@ -471,7 +471,7 @@ export function InvestigationCaseDetail() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontFamily: 'monospace',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
@@ -491,7 +491,7 @@ export function InvestigationCaseDetail() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontFamily: 'monospace',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
@@ -509,7 +509,7 @@ export function InvestigationCaseDetail() {
                 onClick={() => setShowStatusModal(true)}
                 className="transition-colors hover:opacity-80"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontFamily: 'monospace',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
@@ -527,7 +527,7 @@ export function InvestigationCaseDetail() {
                 onClick={() => setShowEvidenceForm(true)}
                 className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontFamily: 'monospace',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
@@ -547,7 +547,7 @@ export function InvestigationCaseDetail() {
                   onClick={() => setShowPromoteConfirm(true)}
                   className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
                   style={{
-                    fontSize: 11,
+                    fontSize: 13,
                     fontFamily: 'monospace',
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
@@ -574,20 +574,20 @@ export function InvestigationCaseDetail() {
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ backgroundColor: BORDER, border: `1px solid ${BORDER}` }}>
           {/* Vendors */}
           <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
-            <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
+            <div style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
               {t('caseDetail.vendorsInvolved')}
             </div>
             <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: INK, lineHeight: 1, letterSpacing: '-0.01em' }}>
               {formatNumber(detail.vendor_count || detail.vendors.length)}
             </div>
-            <div style={{ fontSize: 11, color: INK_DIM, marginTop: 6 }}>
+            <div style={{ fontSize: 13, color: INK_DIM, marginTop: 6 }}>
               {t('caseDetail.acrossContracts', { n: formatNumber(detail.total_contracts) })}
             </div>
           </div>
 
           {/* Total value */}
           <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
-            <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
+            <div style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
               {t('caseDetail.totalValue')}
             </div>
             <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: INK, lineHeight: 1, letterSpacing: '-0.01em' }}>
@@ -596,14 +596,14 @@ export function InvestigationCaseDetail() {
             <div className="mt-2.5">
               <DotBar value={valueRatio} max={1} color="#f59e0b" dots={20} size={5} gap={2} />
             </div>
-            <div style={{ fontSize: 10, color: INK_FAINT, marginTop: 6, fontFamily: 'monospace' }}>
+            <div style={{ fontSize: 12, color: INK_FAINT, marginTop: 6, fontFamily: 'monospace' }}>
               {t('caseDetail.scaleMXN')}
             </div>
           </div>
 
           {/* Avg suspicion score */}
           <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
-            <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
+            <div style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
               {t('caseDetail.suspicionScore')}
             </div>
             <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: LEVEL_COLOR[priority.level], lineHeight: 1, letterSpacing: '-0.01em' }}>
@@ -613,7 +613,7 @@ export function InvestigationCaseDetail() {
             <div className="mt-2.5">
               <DotBar value={detail.suspicion_score} max={1} color={LEVEL_COLOR[priority.level]} dots={20} size={5} gap={2} />
             </div>
-            <div style={{ fontSize: 10, color: INK_FAINT, marginTop: 6, fontFamily: 'monospace' }}>
+            <div style={{ fontSize: 12, color: INK_FAINT, marginTop: 6, fontFamily: 'monospace' }}>
               {t('caseDetail.riskThresholdHint')}
             </div>
           </div>
@@ -635,7 +635,7 @@ export function InvestigationCaseDetail() {
           >
             <div className="flex items-center gap-2 mb-4">
               <FileText className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
-              <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700 }}>
+              <p style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700 }}>
                 {t('caseDetail.caseNarrative')}
               </p>
             </div>
@@ -678,7 +678,7 @@ export function InvestigationCaseDetail() {
                                       key={ci}
                                       className="px-3 py-2 text-left"
                                       style={{
-                                        fontSize: 11,
+                                        fontSize: 13,
                                         fontWeight: 600,
                                         color: INK,
                                         borderBottom: `1px solid ${BORDER_HI}`,
@@ -741,7 +741,7 @@ export function InvestigationCaseDetail() {
                   marginTop: 16,
                   paddingTop: 16,
                   borderTop: `1px solid ${BORDER}`,
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                 }}
               >
                 {detail.summary}
@@ -751,7 +751,7 @@ export function InvestigationCaseDetail() {
             {/* Signals triggered */}
             {detail.signals_triggered.length > 0 && (
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
-                <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 8, fontWeight: 600 }}>
+                <p style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 8, fontWeight: 600 }}>
                   {t('caseDetail.signalsTriggered')}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -759,7 +759,7 @@ export function InvestigationCaseDetail() {
                     <span
                       key={signal}
                       style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         fontFamily: 'monospace',
                         padding: '3px 8px',
                         borderRadius: 3,
@@ -786,10 +786,10 @@ export function InvestigationCaseDetail() {
             <div className="flex items-baseline justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
-                <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
+                <h2 style={{ fontSize: 13, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                   {t('caseDetail.vendorsInvolved')}
                 </h2>
-                <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
+                <span style={{ fontSize: 13, color: INK_DIM, fontFamily: 'monospace' }}>
                   ({detail.vendors.length})
                 </span>
               </div>
@@ -801,7 +801,7 @@ export function InvestigationCaseDetail() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
                     style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       fontFamily: 'monospace',
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
@@ -820,7 +820,7 @@ export function InvestigationCaseDetail() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
                     style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       fontFamily: 'monospace',
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
@@ -859,13 +859,13 @@ export function InvestigationCaseDetail() {
                         <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.name} size="sm" />
                         <div className="flex items-center gap-2 mt-1">
                           {v.rfc && (
-                            <span style={{ fontSize: 10, fontFamily: 'monospace', color: INK_FAINT, letterSpacing: '0.03em' }}>
+                            <span style={{ fontSize: 12, fontFamily: 'monospace', color: INK_FAINT, letterSpacing: '0.03em' }}>
                               {v.rfc}
                             </span>
                           )}
                           <span
                             style={{
-                              fontSize: 9,
+                              fontSize: 13,
                               fontFamily: 'monospace',
                               letterSpacing: '0.12em',
                               textTransform: 'uppercase',
@@ -884,14 +884,14 @@ export function InvestigationCaseDetail() {
                           <>
                             <div style={{ fontSize: 22, fontFamily: 'monospace', fontWeight: 700, color: vColor, lineHeight: 1, letterSpacing: '-0.01em' }}>
                               {(v.avg_risk_score * 100).toFixed(0)}
-                              <span style={{ fontSize: 11, opacity: 0.6 }}>%</span>
+                              <span style={{ fontSize: 13, opacity: 0.6 }}>%</span>
                             </div>
-                            <div style={{ fontSize: 9, fontFamily: 'monospace', color: INK_FAINT, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>
+                            <div style={{ fontSize: 13, fontFamily: 'monospace', color: INK_FAINT, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>
                               {t('caseDetail.riskLabel')}
                             </div>
                           </>
                         ) : (
-                          <span style={{ fontSize: 11, color: INK_FAINT }}>—</span>
+                          <span style={{ fontSize: 13, color: INK_FAINT }}>—</span>
                         )}
                       </div>
                     </div>
@@ -904,9 +904,9 @@ export function InvestigationCaseDetail() {
                     )}
 
                     {/* Counts row */}
-                    <div className="grid grid-cols-2 gap-3 mb-3" style={{ fontSize: 11 }}>
+                    <div className="grid grid-cols-2 gap-3 mb-3" style={{ fontSize: 13 }}>
                       <div>
-                        <div style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 3 }}>
+                        <div style={{ fontSize: 13, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 3 }}>
                           {t('caseDetail.contractsLabel')}
                         </div>
                         <div style={{ fontSize: 13, fontFamily: 'monospace', color: INK, fontWeight: 600 }}>
@@ -914,7 +914,7 @@ export function InvestigationCaseDetail() {
                         </div>
                       </div>
                       <div>
-                        <div style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 3 }}>
+                        <div style={{ fontSize: 13, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 3 }}>
                           {t('caseDetail.valueLabel')}
                         </div>
                         <div style={{ fontSize: 13, fontFamily: 'monospace', color: INK, fontWeight: 600 }}>
@@ -932,7 +932,7 @@ export function InvestigationCaseDetail() {
                         to={`/contracts?vendor_id=${v.vendor_id}&sort_by=risk_score&sort_order=desc`}
                         className="inline-flex items-center gap-1 transition-colors hover:opacity-80"
                         style={{
-                          fontSize: 10,
+                          fontSize: 12,
                           fontFamily: 'monospace',
                           letterSpacing: '0.1em',
                           textTransform: 'uppercase',
@@ -946,7 +946,7 @@ export function InvestigationCaseDetail() {
                         to={`/vendors/${v.vendor_id}`}
                         className="inline-flex items-center gap-1 transition-colors hover:opacity-80"
                         style={{
-                          fontSize: 10,
+                          fontSize: 12,
                           fontFamily: 'monospace',
                           letterSpacing: '0.1em',
                           textTransform: 'uppercase',
@@ -971,10 +971,10 @@ export function InvestigationCaseDetail() {
           <section>
             <div className="flex items-baseline gap-2 mb-4">
               <HelpCircle className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
-              <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
+              <h2 style={{ fontSize: 13, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                 {t('caseDetail.investigationQuestions')}
               </h2>
-              <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
+              <span style={{ fontSize: 13, color: INK_DIM, fontFamily: 'monospace' }}>
                 ({detail.questions.length})
               </span>
             </div>
@@ -1003,7 +1003,7 @@ export function InvestigationCaseDetail() {
                         flexShrink: 0,
                       }}
                     >
-                      <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: q.priority <= 2 ? '#ef4444' : INK_DIM }}>
+                      <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 700, color: q.priority <= 2 ? '#ef4444' : INK_DIM }}>
                         Q{q.priority}
                       </span>
                     </div>
@@ -1014,7 +1014,7 @@ export function InvestigationCaseDetail() {
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         <span
                           style={{
-                            fontSize: 10,
+                            fontSize: 12,
                             fontFamily: 'monospace',
                             letterSpacing: '0.1em',
                             textTransform: 'uppercase',
@@ -1026,7 +1026,7 @@ export function InvestigationCaseDetail() {
                         {q.priority <= 2 && (
                           <span
                             style={{
-                              fontSize: 10,
+                              fontSize: 12,
                               fontFamily: 'monospace',
                               letterSpacing: '0.1em',
                               textTransform: 'uppercase',
@@ -1044,7 +1044,7 @@ export function InvestigationCaseDetail() {
                         {q.supporting_evidence && q.supporting_evidence.length > 0 && (
                           <span
                             style={{
-                              fontSize: 10,
+                              fontSize: 12,
                               fontFamily: 'monospace',
                               color: INK_DIM,
                             }}
@@ -1069,11 +1069,11 @@ export function InvestigationCaseDetail() {
           <div className="flex items-baseline justify-between mb-4">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
-              <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
+              <h2 style={{ fontSize: 13, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                 {t('caseDetail.evidenceLog')}
               </h2>
               {parsedEvidence.length > 0 && (
-                <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
+                <span style={{ fontSize: 13, color: INK_DIM, fontFamily: 'monospace' }}>
                   ({parsedEvidence.length})
                 </span>
               )}
@@ -1082,7 +1082,7 @@ export function InvestigationCaseDetail() {
               onClick={() => setShowEvidenceForm(!showEvidenceForm)}
               className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 fontFamily: 'monospace',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -1112,7 +1112,7 @@ export function InvestigationCaseDetail() {
               <p style={{ fontSize: 12, color: INK_DIM, fontFamily: 'monospace', letterSpacing: '0.08em' }}>
                 {t('caseDetail.noEvidenceLogged')}
               </p>
-              <p style={{ fontSize: 11, color: INK_FAINT, marginTop: 6 }}>
+              <p style={{ fontSize: 13, color: INK_FAINT, marginTop: 6 }}>
                 {t('caseDetail.attachEvidenceHint')}
               </p>
             </div>
@@ -1159,7 +1159,7 @@ export function InvestigationCaseDetail() {
                       {/* Date + source type */}
                       <div className="flex items-center gap-2 mb-1">
                         {ev.date_published && (
-                          <span style={{ fontSize: 10, fontFamily: 'monospace', color: INK_DIM, letterSpacing: '0.05em' }}>
+                          <span style={{ fontSize: 12, fontFamily: 'monospace', color: INK_DIM, letterSpacing: '0.05em' }}>
                             {(() => {
                               try {
                                 return formatDate(ev.date_published)
@@ -1170,11 +1170,11 @@ export function InvestigationCaseDetail() {
                           </span>
                         )}
                         {ev.date_published && (
-                          <span style={{ fontSize: 10, color: INK_FAINT }}>·</span>
+                          <span style={{ fontSize: 12, color: INK_FAINT }}>·</span>
                         )}
                         <span
                           style={{
-                            fontSize: 9,
+                            fontSize: 13,
                             fontFamily: 'monospace',
                             letterSpacing: '0.14em',
                             textTransform: 'uppercase',
@@ -1183,10 +1183,10 @@ export function InvestigationCaseDetail() {
                         >
                           {ev.source_type.replace(/_/g, ' ')}
                         </span>
-                        <span style={{ fontSize: 10, color: INK_FAINT }}>·</span>
+                        <span style={{ fontSize: 12, color: INK_FAINT }}>·</span>
                         <span
                           style={{
-                            fontSize: 9,
+                            fontSize: 13,
                             fontFamily: 'monospace',
                             letterSpacing: '0.14em',
                             textTransform: 'uppercase',
@@ -1257,7 +1257,7 @@ export function InvestigationCaseDetail() {
             >
               <p
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   fontFamily: 'monospace',
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
@@ -1414,7 +1414,7 @@ export function InvestigationCaseDetail() {
         >
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700, marginBottom: 4 }}>
+              <p style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700, marginBottom: 4 }}>
                 Review decision
               </p>
               <p style={{ fontSize: 13, color: INK_MUTED }}>
@@ -1427,7 +1427,7 @@ export function InvestigationCaseDetail() {
                 onClick={() => reviewMutation.mutate({ status: 'corroborated' })}
                 className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontFamily: 'monospace',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
@@ -1447,7 +1447,7 @@ export function InvestigationCaseDetail() {
                 onClick={() => reviewMutation.mutate({ status: 'refuted' })}
                 className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontFamily: 'monospace',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
@@ -1467,7 +1467,7 @@ export function InvestigationCaseDetail() {
                 onClick={() => reviewMutation.mutate({ status: 'inconclusive' })}
                 className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontFamily: 'monospace',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
@@ -1488,7 +1488,7 @@ export function InvestigationCaseDetail() {
                   onClick={() => setShowPromoteConfirm(true)}
                   className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    fontSize: 11,
+                    fontSize: 13,
                     fontFamily: 'monospace',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
@@ -1512,13 +1512,13 @@ export function InvestigationCaseDetail() {
             </div>
           </div>
           {reviewMutation.isPending && (
-            <p style={{ fontSize: 11, color: INK_DIM, marginTop: 10, fontFamily: 'monospace' }}>
+            <p style={{ fontSize: 13, color: INK_DIM, marginTop: 10, fontFamily: 'monospace' }}>
               <Loader2 className="h-3 w-3 animate-spin inline mr-1.5" />
               Saving…
             </p>
           )}
           {promoteMutation.isSuccess && (
-            <p style={{ fontSize: 11, color: '#22c55e', marginTop: 10, fontFamily: 'monospace' }}>
+            <p style={{ fontSize: 13, color: '#22c55e', marginTop: 10, fontFamily: 'monospace' }}>
               Promoted to ground truth.
             </p>
           )}
@@ -1546,7 +1546,7 @@ export function InvestigationCaseDetail() {
             >
               <p
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   fontFamily: 'monospace',
                   letterSpacing: '0.2em',
                   textTransform: 'uppercase',
@@ -1659,7 +1659,7 @@ export function InvestigationCaseDetail() {
             >
               <p
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   fontFamily: 'monospace',
                   letterSpacing: '0.2em',
                   textTransform: 'uppercase',
@@ -1715,7 +1715,7 @@ export function InvestigationCaseDetail() {
                 </Button>
               </div>
               {promoteMutation.isSuccess && (
-                <p style={{ fontSize: 11, color: '#22c55e', marginTop: 10, fontFamily: 'monospace' }}>
+                <p style={{ fontSize: 13, color: '#22c55e', marginTop: 10, fontFamily: 'monospace' }}>
                   Promoted successfully.
                 </p>
               )}

@@ -71,7 +71,7 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             <Badge
-              className="text-[10px] px-1.5 py-0 h-4 font-medium border-0"
+              className="text-[12px] px-1.5 py-0 h-4 font-medium border-0"
               style={{ backgroundColor: `${statusColor}20`, color: statusColor }}
             >
               {dossier.status}
@@ -107,13 +107,13 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
         {hasRisk && dossier.highest_risk_name && (
           <div className={`flex items-center gap-1.5 mt-2 px-2 py-1 rounded border ${getRiskBannerClass(dossier.highest_risk_score)}`}>
             <AlertTriangle className={`h-3 w-3 shrink-0 ${getRiskColor(dossier.highest_risk_score)}`} aria-hidden="true" />
-            <span className={`text-[10px] font-bold uppercase tracking-wide shrink-0 ${getRiskColor(dossier.highest_risk_score)}`}>
+            <span className={`text-[12px] font-bold uppercase tracking-wide shrink-0 ${getRiskColor(dossier.highest_risk_score)}`}>
               {getRiskLabel(dossier.highest_risk_score)}
             </span>
-            <span className="text-[10px] text-text-muted truncate">
+            <span className="text-[12px] text-text-muted truncate">
               Máx riesgo: {dossier.highest_risk_name}
             </span>
-            <span className={`ml-auto text-[10px] font-mono font-bold shrink-0 ${getRiskColor(dossier.highest_risk_score)}`}>
+            <span className={`ml-auto text-[12px] font-mono font-bold shrink-0 ${getRiskColor(dossier.highest_risk_score)}`}>
               {((dossier.highest_risk_score ?? 0) * 100).toFixed(0)}%
             </span>
           </div>
@@ -122,7 +122,7 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
         {/* #90 — Item count as colored badge */}
         <div className="flex items-center gap-3 mt-3 text-xs text-text-muted">
           <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-semibold border"
             style={{
               backgroundColor: `${dossier.color}18`,
               color: dossier.color,
@@ -172,11 +172,11 @@ export function DossierItemCard({ item, onRemove }: DossierItemCardProps) {
       )}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{item.item_name}</p>
-        {/* #94 — annotation as italic grey text */}
+        {/* #94 — annotation as grey text */}
         {item.annotation && (
           <p className="text-xs text-text-secondary truncate mt-0.5">{item.annotation}</p>
         )}
-        <p className="text-[10px] text-text-muted/70 mt-0.5 capitalize">{item.item_type}</p>
+        <p className="text-[12px] text-text-muted/70 mt-0.5 capitalize">{item.item_type}</p>
       </div>
 
       <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -185,7 +185,7 @@ export function DossierItemCard({ item, onRemove }: DossierItemCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-[10px] px-2 text-accent hover:bg-accent/10"
+            className="h-6 text-[12px] px-2 text-accent hover:bg-accent/10"
             onClick={(e) => {
               e.stopPropagation()
               navigate(`/vendors/${item.item_id}?tab=contracts`)

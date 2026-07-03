@@ -32,7 +32,7 @@ export function AuthShell({ title, children, overline }: AuthShellProps) {
           >
             RUBLI
           </h1>
-          <p className="mt-1 text-[10px] text-text-muted tracking-[0.14em] uppercase font-mono">
+          <p className="mt-1 text-[12px] text-text-muted tracking-[0.14em] uppercase font-mono">
             {t('tagline')}
           </p>
         </div>
@@ -40,7 +40,7 @@ export function AuthShell({ title, children, overline }: AuthShellProps) {
         {/* Card */}
         <div className="rounded-sm border border-border bg-background-elevated p-6 shadow-sm">
           {overline && (
-            <p className="text-[10px] font-mono font-semibold tracking-[0.15em] uppercase text-text-muted mb-2">
+            <p className="text-[12px] font-mono font-semibold tracking-[0.15em] uppercase text-text-muted mb-2">
               {overline}
             </p>
           )}

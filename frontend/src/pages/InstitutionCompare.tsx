@@ -187,7 +187,7 @@ function SectorTag({ sectorId }: { sectorId?: number }) {
   const color = SECTOR_COLORS[s.code] ?? '#64748b'
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+      className="inline-flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
       style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
@@ -219,7 +219,7 @@ function InstitutionPreviewCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <span
-            className="text-[10px] font-bold tracking-widest uppercase font-mono mb-1 block"
+            className="text-[12px] font-bold tracking-widest uppercase font-mono mb-1 block"
             style={{ color: accentColor }}
           >
             {side}
@@ -242,19 +242,19 @@ function InstitutionPreviewCard({
       </div>
       <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/30">
         <div>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Contratos' : 'Contracts'}</p>
+          <p className="text-[12px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Contratos' : 'Contracts'}</p>
           <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {formatNumber(institution.total_contracts ?? 0)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Valor' : 'Value'}</p>
+          <p className="text-[12px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Valor' : 'Value'}</p>
           <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {formatCompactMXN(institution.total_amount_mxn ?? 0)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Adj. Directa' : 'Direct Award'}</p>
+          <p className="text-[12px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Adj. Directa' : 'Direct Award'}</p>
           <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {institution.direct_award_pct != null ? formatPercentSafe(institution.direct_award_pct, false) : '--'}
           </p>
@@ -337,7 +337,7 @@ function VeredictoHeader({
             className="min-w-[140px] text-text-primary"
           />
           <span
-            className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+            className="inline-flex items-center text-[12px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
             style={{
               color: infoA.color,
               backgroundColor: `${infoA.color}15`,
@@ -359,7 +359,7 @@ function VeredictoHeader({
             className="min-w-[140px] text-text-primary"
           />
           <span
-            className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+            className="inline-flex items-center text-[12px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
             style={{
               color: infoB.color,
               backgroundColor: `${infoB.color}15`,
@@ -374,7 +374,7 @@ function VeredictoHeader({
       {/* Narrative */}
       {narrative && (
         <p
-          className="text-sm text-text-secondary italic leading-relaxed"
+          className="text-sm text-text-secondary leading-relaxed"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {narrative}
@@ -542,7 +542,7 @@ function TopVendorsComparison({
             ))}
           </div>
         ) : vendors.length === 0 ? (
-          <p className="text-xs text-text-muted italic">{t('profile.noVendorData')}</p>
+          <p className="text-xs text-text-muted">{t('profile.noVendorData')}</p>
         ) : (
           <div className="space-y-2">
             {vendors.map((v, idx) => {
@@ -558,7 +558,7 @@ function TopVendorsComparison({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-text-muted font-mono">#{idx + 1}</span>
+                        <span className="text-[12px] text-text-muted font-mono">#{idx + 1}</span>
                         <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" />
                       </div>
                       <div className="flex items-center gap-3 mt-1">
@@ -896,7 +896,7 @@ function InstitutionSearchInput({
 
   return (
     <div className="flex-1 relative">
-      <label htmlFor={id} className="block text-[10px] font-bold text-text-muted mb-1.5 uppercase tracking-wider">
+      <label htmlFor={id} className="block text-[12px] font-bold text-text-muted mb-1.5 uppercase tracking-wider">
         {label}
       </label>
       <div
@@ -957,7 +957,7 @@ function InstitutionSearchInput({
                     )}
                   </div>
                   {inst.total_contracts != null && (
-                    <span className="text-[10px] text-text-muted flex-shrink-0">
+                    <span className="text-[12px] text-text-muted flex-shrink-0">
                       {formatNumber(inst.total_contracts)} contr.
                     </span>
                   )}

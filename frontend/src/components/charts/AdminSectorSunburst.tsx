@@ -182,8 +182,8 @@ export function AdminSectorSunburst() {
         })}
 
         {/* Center label */}
-        <text x={CX} y={CY - 6} textAnchor="middle" dominantBaseline="middle" fontSize={10} fontFamily="var(--font-family-mono)" fill="#71717a">Total</text>
-        <text x={CX} y={CY + 8} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight="700" fontFamily="var(--font-family-mono)" fill="#f4f4f5">
+        <text x={CX} y={CY - 6} textAnchor="middle" dominantBaseline="middle" fontSize={12} fontFamily="var(--font-family-mono)" fill="#71717a">Total</text>
+        <text x={CX} y={CY + 8} textAnchor="middle" dominantBaseline="middle" fontSize={13} fontWeight="700" fontFamily="var(--font-family-mono)" fill="#f4f4f5">
           {formatCompactMXN(grandTotal)}
         </text>
       </svg>
@@ -209,7 +209,7 @@ export function AdminSectorSunburst() {
         {ADMINS.map(a => (
           <div key={a.name} className="flex items-center gap-1">
             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
-            <span className="text-[10px] font-mono text-text-muted">{a.name}</span>
+            <span className="text-[12px] font-mono text-text-muted">{a.name}</span>
           </div>
         ))}
       </div>

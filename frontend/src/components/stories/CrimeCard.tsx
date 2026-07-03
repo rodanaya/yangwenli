@@ -97,14 +97,14 @@ export default function CrimeCard({
         <div className="flex items-center gap-2 mb-0.5">
           <h4 className="text-sm font-semibold text-text-primary truncate">{caseName}</h4>
           {era && (
-            <span className="text-[9px] uppercase tracking-wider text-text-muted font-medium shrink-0">
+            <span className="text-[13px] uppercase tracking-wider text-text-muted font-medium shrink-0">
               {era}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 text-xs text-text-muted">
           <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium"
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-medium"
             style={{ backgroundColor: `${config.color}15`, color: config.color }}
           >
             {config.label}
@@ -122,7 +122,7 @@ export default function CrimeCard({
           <p className="text-lg font-black text-risk-critical font-mono tabular-nums leading-tight">
             {estimatedFraudBn.toLocaleString('es-MX', { maximumFractionDigits: 1 })}B
           </p>
-          <p className="text-[10px] text-text-muted uppercase tracking-wider">MXN</p>
+          <p className="text-[12px] text-text-muted uppercase tracking-wider">MXN</p>
         </div>
       )}
 

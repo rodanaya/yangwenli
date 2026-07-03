@@ -250,7 +250,7 @@ export function RelationRibbon({
           fontWeight: 400,
         }}
       >
-        <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>
+        <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>
           {isEs ? 'LÁMINA · LA RELACIÓN' : 'PLATE · THE RELATIONSHIP'}
         </span>
       </div>
@@ -344,7 +344,7 @@ export function RelationRibbon({
               y={BASELINE_Y - layout.subjectStroke.h - 26}
               textAnchor={layout.overflowRight ? 'end' : 'middle'}
               fontFamily={MONO}
-              fontSize={10}
+              fontSize={12}
               fill="var(--color-text-secondary)"
               paintOrder="stroke"
               stroke="var(--color-background-elevated)"
@@ -358,7 +358,7 @@ export function RelationRibbon({
                 y={BASELINE_Y - layout.subjectStroke.h - 14}
                 textAnchor={layout.overflowRight ? 'end' : 'middle'}
                 fontFamily={MONO}
-                fontSize={10}
+                fontSize={12}
                 fontWeight={700}
                 fill={RISK_COLORS.critical}
                 paintOrder="stroke"
@@ -378,7 +378,7 @@ export function RelationRibbon({
               y={BASELINE_Y + 18}
               textAnchor="middle"
               fontFamily={MONO}
-              fontSize={9}
+              fontSize={13}
               fill="var(--color-text-muted)"
             >
               {y}
@@ -389,7 +389,7 @@ export function RelationRibbon({
         {/* Pointer tooltip */}
         {nearest && (
           <div
-            className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background px-2.5 py-2 text-[11px] shadow-lg"
+            className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background px-2.5 py-2 text-[13px] shadow-lg"
             style={{
               left: Math.min(Math.max(nearest.x, 90), width - 90),
               top: 4,
@@ -419,7 +419,7 @@ export function RelationRibbon({
         style={{
           borderTop: '1px solid rgba(160, 104, 32, 0.18)',
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: '12.5px',
           lineHeight: 1.5,
           color: 'var(--color-text-secondary, var(--color-text-muted))',

@@ -63,7 +63,7 @@ function TierBadge({ tier }: { tier: number }) {
     4: 'bg-text-muted/15 text-text-muted border-border',
   }
   return (
-    <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider border', colors[tier] ?? colors[4])}>
+    <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-bold font-mono uppercase tracking-wider border', colors[tier] ?? colors[4])}>
       T{tier}
     </span>
   )
@@ -124,7 +124,7 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
           Análisis narrativo no disponible para{' '}
           <span className="font-semibold text-text-secondary">{vendorName}</span>
         </p>
-        <p className="text-[11px] text-text-muted/70 max-w-xs leading-relaxed">
+        <p className="text-[13px] text-text-muted/70 max-w-xs leading-relaxed">
           Este proveedor no ha sido analizado aún por el pipeline de investigación.
         </p>
       </div>
@@ -155,10 +155,10 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
             {(riskScore * 100).toFixed(0)}
           </span>
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted">
+            <p className="text-[12px] font-mono uppercase tracking-wider text-text-muted">
               Indicador de riesgo · escala 0–100
             </p>
-            <p className="text-[10px] text-text-muted/60">
+            <p className="text-[12px] text-text-muted/60">
               {shap.n_contracts?.toLocaleString('es-MX') ?? '—'} contratos analizados
             </p>
           </div>
@@ -168,7 +168,7 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
       {/* Top risk factors */}
       {topFactors.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted">
+          <p className="text-[12px] font-mono uppercase tracking-wider text-text-muted">
             Factores de riesgo principales
           </p>
           {topFactors.map((factor, i) => {
@@ -178,10 +178,10 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
               <div key={factor.factor} className="space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-text-secondary">
-                    <span className="font-mono text-[10px] text-text-muted mr-2">{i + 1}.</span>
+                    <span className="font-mono text-[12px] text-text-muted mr-2">{i + 1}.</span>
                     {label}
                   </span>
-                  <span className="text-[10px] font-mono text-risk-high">
+                  <span className="text-[12px] font-mono text-risk-high">
                     +{factor.shap.toFixed(3)}
                   </span>
                 </div>
@@ -197,7 +197,7 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
         </div>
       )}
 
-      <p className="text-[10px] text-text-secondary border-t border-border/30 pt-3">
+      <p className="text-[12px] text-text-secondary border-t border-border/30 pt-3">
         Análisis generado por modelo — no sustituye investigación periodística
       </p>
     </div>
@@ -258,7 +258,7 @@ function FormattedMemo({ text }: { text: string }) {
         >
           {kvs.map(([kk, vv], i) => (
             <div key={i} className="contents">
-              <dt className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>{kk}</dt>
+              <dt className="font-mono uppercase" style={{ fontSize: 13, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>{kk}</dt>
               <dd style={{ fontFamily: MEMO_SERIF, fontSize: 12.5, color: 'var(--color-text-primary)' }}>{vv}</dd>
             </div>
           ))}
@@ -293,7 +293,7 @@ function FormattedMemo({ text }: { text: string }) {
     if (looksHeader) {
       flushAll()
       out.push(
-        <p key={`h${k++}`} className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.14em', fontWeight: 700, color: MEMO_OCHRE, marginTop: 4 }}>
+        <p key={`h${k++}`} className="font-mono uppercase" style={{ fontSize: 12, letterSpacing: '0.14em', fontWeight: 700, color: MEMO_OCHRE, marginTop: 4 }}>
           {line.replace(/[=_~–—-]+$/, '').trim()}
         </p>,
       )
@@ -375,27 +375,27 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
           <span className="text-sm font-semibold text-text-primary">
             Análisis de Investigación
           </span>
-          <span className="text-[10px] text-text-muted">Generado por IA</span>
+          <span className="text-[12px] text-text-muted">Generado por IA</span>
           {effectiveTier != null && <TierBadge tier={effectiveTier} />}
           {/* S.3 provenance badge */}
           {memoType === 'llm_narrative' && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20">
               LLM
             </span>
           )}
           {(memoType === 'template' || memoType === 'duplicate') && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-risk-medium/10 text-risk-medium border border-risk-medium/20">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-mono font-bold uppercase tracking-wider bg-risk-medium/10 text-risk-medium border border-risk-medium/20">
               PLANTILLA
             </span>
           )}
           {memoType === 'stub' && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-border/40 text-text-muted border border-border">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-mono font-bold uppercase tracking-wider bg-border/40 text-text-muted border border-border">
               STUB
             </span>
           )}
         </div>
         {(memo?.generated_at ?? memo?.created_at) && (
-          <span className="text-[10px] text-text-muted font-mono">
+          <span className="text-[12px] text-text-muted font-mono">
             {new Date((memo.generated_at ?? memo.created_at)!).toLocaleDateString('es-MX', {
               year: 'numeric',
               month: 'short',
@@ -425,7 +425,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Este vendor es un proveedor multinacional o estructural. La concentración refleja su posición de mercado,
                   <strong className="text-text-primary"> no evidencia de fraude.</strong> El perfil se mantiene únicamente para transparencia metodológica.
-                  {fpReason && <span className="block mt-1 text-text-muted font-mono text-[10px]">Motivo: {fpReason}</span>}
+                  {fpReason && <span className="block mt-1 text-text-muted font-mono text-[12px]">Motivo: {fpReason}</span>}
                 </p>
               </div>
             )}
@@ -442,7 +442,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
             )}
             {hasStaleScore && (
               <div className="mb-4 px-4 py-2 border-l-2 border-risk-medium/50 bg-risk-medium/5 rounded-sm">
-                <p className="text-[11px] text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   ⓘ Memo escrito antes del modelo activo v0.8.5 (mayo 2026). Las puntuaciones citadas pueden no coincidir con los valores actuales.
                 </p>
               </div>
@@ -467,7 +467,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
                   </>
                 )}
               </button>
-              <span className="text-[10px] text-text-secondary">
+              <span className="text-[12px] text-text-secondary">
                 Generado automáticamente — requiere verificación periodística
               </span>
             </div>

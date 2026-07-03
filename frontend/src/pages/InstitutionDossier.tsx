@@ -63,15 +63,15 @@ function DossierSectionHeader({
   return (
     <div className="flex items-baseline justify-between gap-4 pb-2 mb-5" style={{ borderBottom: `1px solid ${accent}33` }}>
       <div className="flex items-baseline gap-3 min-w-0">
-        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
+        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
           § {eyebrow}
         </span>
-        <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
+        <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
           {title}
         </h2>
       </div>
       {meta && (
-        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
           {meta}
         </span>
       )}
@@ -83,10 +83,10 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
   const navigate = useNavigate()
   return (
     <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <p className="font-mono mb-2" style={{ fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+      <p className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
       </p>
-      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
+      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5. Las señales agregadas a nivel institucional son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. v0.8.5 risk model. Institution-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
@@ -95,7 +95,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         type="button"
         onClick={() => navigate('/methodology')}
         className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-        style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
       >
         {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
       </button>
@@ -299,27 +299,27 @@ export default function InstitutionDossier() {
                     <div className="flex items-baseline gap-1.5">
                       <span
                         className="tabular-nums leading-none"
-                        style={{ fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: '56px', color: boletaColor }}
+                        style={{ fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: '56px', color: boletaColor }}
                       >
                         {scorecard.total_score.toFixed(1)}
                       </span>
                       <span className="font-mono text-text-muted text-sm">/100</span>
                     </div>
                     <span
-                      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] self-start"
+                      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] self-start"
                       style={{ backgroundColor: `color-mix(in srgb, ${boletaColor} 12%, transparent)`, border: `1px solid color-mix(in srgb, ${boletaColor} 35%, transparent)`, color: boletaColor }}
                     >
                       {tierLabel}
                     </span>
                     {scorecard.national_percentile != null && (
-                      <p className="text-[11px] font-mono text-text-muted tabular-nums">
+                      <p className="text-[13px] font-mono text-text-muted tabular-nums">
                         {lang === 'es'
                           ? `Percentil nacional ${Math.round(scorecard.national_percentile * 100)}`
                           : `National percentile ${Math.round(scorecard.national_percentile * 100)}`}
                       </p>
                     )}
                     {scorecard.peer_percentile_sector != null && (
-                      <p className="text-[11px] font-mono text-text-muted tabular-nums">
+                      <p className="text-[13px] font-mono text-text-muted tabular-nums">
                         {lang === 'es'
                           ? `Peor que el ${Math.round((1 - scorecard.peer_percentile_sector) * 100)}% de su sector`
                           : `Worse than ${Math.round((1 - scorecard.peer_percentile_sector) * 100)}% of its sector`}
@@ -408,7 +408,7 @@ export default function InstitutionDossier() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">
+                  <tr className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">
                     <th className="text-left font-medium py-2 pr-3">{lang === 'es' ? 'Funcionario' : 'Officer'}</th>
                     <th className="text-right font-medium py-2 px-3">{lang === 'es' ? 'Contratos' : 'Contracts'}</th>
                     <th className="text-right font-medium py-2 px-3">{lang === 'es' ? 'Adj. directa' : 'Direct award'}</th>
@@ -426,7 +426,7 @@ export default function InstitutionDossier() {
                         <td className="py-2 pr-3 text-text-primary font-medium max-w-[22rem] whitespace-normal break-words leading-tight" title={toTitleCase(o.official_name)}>
                           {toTitleCase(o.official_name)}
                           {(o.first_contract_year || o.last_contract_year) && (
-                            <span className="ml-2 text-[10px] font-mono text-text-muted">{o.first_contract_year}–{o.last_contract_year}</span>
+                            <span className="ml-2 text-[12px] font-mono text-text-muted">{o.first_contract_year}–{o.last_contract_year}</span>
                           )}
                         </td>
                         <td className="py-2 px-3 text-right tabular-nums text-text-secondary">{o.total_contracts.toLocaleString(locale)}</td>
@@ -446,7 +446,7 @@ export default function InstitutionDossier() {
               </table>
             </div>
             {officialsData?.note && (
-              <p className="mt-3 text-[11px] leading-relaxed text-text-muted">{officialsData.note}</p>
+              <p className="mt-3 text-[13px] leading-relaxed text-text-muted">{officialsData.note}</p>
             )}
           </section>
         </div>

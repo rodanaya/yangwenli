@@ -90,7 +90,7 @@ interface StatBoxProps {
 function StatBox({ label, value }: StatBoxProps) {
   return (
     <div className="bg-background-tertiary rounded p-2 flex flex-col items-center min-w-0">
-      <span className="text-[10px] uppercase tracking-wider text-text-muted truncate w-full text-center">
+      <span className="text-[12px] uppercase tracking-wider text-text-muted truncate w-full text-center">
         {label}
       </span>
       <span className="text-sm font-mono font-semibold text-text-primary mt-0.5 truncate w-full text-center">
@@ -197,7 +197,7 @@ export function VendorContractBreakdown({
         <div className="flex flex-col sm:flex-row gap-6">
           {/* Left: Procedure Type donut */}
           <div className="flex-1 flex flex-col items-center">
-            <span className="text-[11px] uppercase tracking-wider text-text-muted mb-1">
+            <span className="text-[13px] uppercase tracking-wider text-text-muted mb-1">
               Procedure Type
             </span>
             {procedureData.length === 0 ? (
@@ -205,7 +205,7 @@ export function VendorContractBreakdown({
                 <p className="text-xs text-text-muted">
                   {lang === 'en' ? 'No procedure type records.' : 'Sin registros de tipo de procedimiento.'}
                 </p>
-                <p className="text-[10px] text-text-muted mt-1">
+                <p className="text-[12px] text-text-muted mt-1">
                   {lang === 'en'
                     ? 'Field missing in COMPRANET for this vendor.'
                     : 'Dato faltante en COMPRANET para este proveedor.'}
@@ -230,7 +230,7 @@ export function VendorContractBreakdown({
 
           {/* Right: Risk Distribution */}
           <div className="flex-1 flex flex-col items-center">
-            <span className="text-[11px] uppercase tracking-wider text-text-muted mb-1">
+            <span className="text-[13px] uppercase tracking-wider text-text-muted mb-1">
               Risk Distribution
             </span>
             {riskData.length === 0 ? (
@@ -238,7 +238,7 @@ export function VendorContractBreakdown({
                 <p className="text-xs text-text-muted">
                   {lang === 'en' ? 'No v0.8.5 risk scores.' : 'Sin puntuaciones de riesgo v0.8.5.'}
                 </p>
-                <p className="text-[10px] text-text-muted mt-1">
+                <p className="text-[12px] text-text-muted mt-1">
                   {lang === 'en'
                     ? 'Contracts missing z-score features in the current model.'
                     : 'Contratos sin features z-score en el modelo actual.'}

@@ -44,7 +44,7 @@ import { staggerContainer, staggerItem } from '@/lib/animations'
 function ChapterLabel({ children, accent }: { children: React.ReactNode; accent?: string }) {
   return (
     <div
-      className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] mb-2"
+      className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] mb-2"
       style={{ color: accent ?? 'var(--color-accent)' }}
     >
       {children}
@@ -64,7 +64,7 @@ function ChapterDivider() {
   return (
     <div className="my-12 flex items-center justify-center" aria-hidden="true">
       <div className="h-px bg-border w-24" />
-      <span className="mx-3 text-[10px] font-mono uppercase tracking-[0.3em] text-text-muted">§</span>
+      <span className="mx-3 text-[12px] font-mono uppercase tracking-[0.3em] text-text-muted">§</span>
       <div className="h-px bg-border w-24" />
     </div>
   )
@@ -86,7 +86,7 @@ function ChapterHeading({
         className="text-text-primary"
         style={{
           fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 500,
           fontSize: 'clamp(28px, 4vw, 38px)',
           lineHeight: 1.05,
@@ -204,7 +204,7 @@ export function InstitutionThread() {
       <div className="max-w-3xl mx-auto p-6">
         <h1
           className="text-text-primary mb-6"
-          style={{ fontFamily: '"EB Garamond", serif', fontStyle: 'italic', fontSize: 'clamp(36px, 6vw, 60px)', lineHeight: 1.0, letterSpacing: '-0.018em' }}
+          style={{ fontFamily: '"EB Garamond", serif', fontStyle: 'normal', fontSize: 'clamp(36px, 6vw, 60px)', lineHeight: 1.0, letterSpacing: '-0.018em' }}
         >
           {seedName ?? '...'}
         </h1>
@@ -243,7 +243,7 @@ export function InstitutionThread() {
       {/* ─── HERO ─────────────────────────────────────────────────────── */}
       <header className="max-w-[68rem] mx-auto px-4 sm:px-6 mb-12">
         <motion.div variants={staggerItem}>
-          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3">
+          <div className="flex items-center gap-2 text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3">
             <Link to="/institutions" className="hover:text-text-primary transition-colors">
               {isEs ? 'Instituciones' : 'Institutions'}
             </Link>
@@ -256,7 +256,7 @@ export function InstitutionThread() {
               className="text-text-primary"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(36px, 6vw, 60px)',
                 lineHeight: 1.0,
@@ -311,7 +311,7 @@ export function InstitutionThread() {
             { label: isEs ? 'Proveedores' : 'Vendors', value: vendorCount != null ? formatNumber(vendorCount) : '—' },
           ].map((s) => (
             <div key={s.label} className="min-w-0">
-              <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
+              <div className="text-[12px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
                 {s.label}
               </div>
               <div className="font-mono text-xl tabular-nums font-semibold text-text-primary leading-tight mt-1">
@@ -323,7 +323,7 @@ export function InstitutionThread() {
 
         {/* Risk indicator strip */}
         <div className="mt-8 flex items-center gap-3 flex-wrap">
-          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
+          <span className="text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted">
             {isEs ? 'Indicador de riesgo' : 'Risk indicator'}
           </span>
           <span
@@ -333,7 +333,7 @@ export function InstitutionThread() {
             {(avgRisk * 100).toFixed(1)}%
           </span>
           <span
-            className="text-[10px] font-mono uppercase tracking-[0.16em] px-2 py-0.5 rounded-sm"
+            className="text-[12px] font-mono uppercase tracking-[0.16em] px-2 py-0.5 rounded-sm"
             style={{ color: riskColor, backgroundColor: `${riskColor}1a`, border: `1px solid ${riskColor}40` }}
           >
             {isEs
@@ -373,7 +373,7 @@ export function InstitutionThread() {
                     key={key}
                     onClick={() => setVendorFilter(key)}
                     aria-pressed={active}
-                    className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
+                    className="font-mono text-[12px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
                     style={active
                       ? { background: color, borderColor: color, color: '#fff' }
                       : { background: 'transparent', borderColor: color, color }}
@@ -386,7 +386,7 @@ export function InstitutionThread() {
             <TopVendorsList vendors={filteredVendors} totalSpend={totalSpend} lang={lang} />
             {riskProfile?.effective_risk != null && (
               <div className="mt-8 flex items-baseline gap-3 flex-wrap">
-                <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
+                <span className="text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted">
                   {isEs ? 'Riesgo institucional efectivo' : 'Effective institutional risk'}
                 </span>
                 <span className="text-xl font-bold font-mono tabular-nums text-text-primary">
@@ -406,7 +406,7 @@ export function InstitutionThread() {
             )}
           </>
         ) : (
-          <p className="text-text-muted italic">{isEs ? 'Sin datos de proveedores disponibles.' : 'No vendor data available.'}</p>
+          <p className="text-text-muted">{isEs ? 'Sin datos de proveedores disponibles.' : 'No vendor data available.'}</p>
         )}
       </ChapterShell>
 
@@ -429,7 +429,7 @@ export function InstitutionThread() {
             <RiskYearStrip timeline={timelineArray} lang={lang} />
           </>
         ) : (
-          <p className="text-text-muted italic">{isEs ? 'Sin datos de línea de tiempo.' : 'No timeline data available.'}</p>
+          <p className="text-text-muted">{isEs ? 'Sin datos de línea de tiempo.' : 'No timeline data available.'}</p>
         )}
 
         {/* Verdict footer */}
@@ -446,7 +446,7 @@ export function InstitutionThread() {
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
               fontSize: '20px',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               lineHeight: 1.4,
             }}
           >
@@ -485,7 +485,7 @@ function TopVendorsList({
             className="grid items-center gap-3 py-1.5 px-2 rounded-sm hover:bg-background-elevated/40 transition-colors"
             style={{ gridTemplateColumns: '24px 200px 1fr 70px 50px' }}
           >
-            <span className="text-[10px] font-mono tabular-nums text-text-muted text-right">
+            <span className="text-[12px] font-mono tabular-nums text-text-muted text-right">
               {String(i + 1).padStart(2, '0')}
             </span>
             <div className="min-w-0">
@@ -508,16 +508,16 @@ function TopVendorsList({
                 }}
               />
             </div>
-            <span className="text-[11px] font-mono tabular-nums text-text-primary text-right">
+            <span className="text-[13px] font-mono tabular-nums text-text-primary text-right">
               {formatCompactMXN(v.total_value_mxn ?? 0)}
             </span>
-            <span className="text-[10px] font-mono tabular-nums text-text-muted text-right">
+            <span className="text-[12px] font-mono tabular-nums text-text-muted text-right">
               {pct.toFixed(1)}%
             </span>
           </div>
         )
       })}
-      <div className="mt-3 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+      <div className="mt-3 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
         {lang === 'en'
           ? 'rank · vendor · relative value (top 10) · MXN · % of total'
           : 'orden · proveedor · valor relativo (top 10) · MXN · % del total'}
@@ -538,7 +538,7 @@ function RiskYearStrip({
   const maxValue = Math.max(...sorted.map((t) => t.total_value || 0), 1)
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-[60px_1fr_60px_60px] gap-3 items-center text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted opacity-70 mb-1">
+      <div className="grid grid-cols-[60px_1fr_60px_60px] gap-3 items-center text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted opacity-70 mb-1">
         <span>{lang === 'en' ? 'Year' : 'Año'}</span>
         <span>{lang === 'en' ? 'Spend' : 'Gasto'}</span>
         <span className="text-right">{lang === 'en' ? 'Risk' : 'Riesgo'}</span>
@@ -554,7 +554,7 @@ function RiskYearStrip({
             key={t.year}
             className="grid grid-cols-[60px_1fr_60px_60px] gap-3 items-center py-1 px-2 rounded-sm hover:bg-background-elevated/40 transition-colors"
           >
-            <span className="text-[11px] font-mono tabular-nums text-text-secondary">{t.year}</span>
+            <span className="text-[13px] font-mono tabular-nums text-text-secondary">{t.year}</span>
             <div className="flex items-center gap-2">
               <DotBar
                 value={t.total_value}
@@ -562,17 +562,17 @@ function RiskYearStrip({
                 color={riskColor}
                 dots={28}
               />
-              <span className="text-[10px] font-mono tabular-nums text-text-muted">
+              <span className="text-[12px] font-mono tabular-nums text-text-muted">
                 {formatCompactMXN(t.total_value || 0)}
               </span>
             </div>
             <span
-              className="text-[11px] font-mono tabular-nums font-semibold text-right"
+              className="text-[13px] font-mono tabular-nums font-semibold text-right"
               style={{ color: riskColor }}
             >
               {riskPct.toFixed(0)}%
             </span>
-            <span className="text-[10px] font-mono tabular-nums text-text-muted text-right">
+            <span className="text-[12px] font-mono tabular-nums text-text-muted text-right">
               {formatNumber(t.contract_count)}
             </span>
           </div>

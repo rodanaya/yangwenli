@@ -91,7 +91,7 @@ export function StoryCard(props: StoryCardProps) {
     >
       {/* Top badges */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-semibold tracking-widest uppercase text-text-muted">
+        <span className="text-[12px] font-semibold tracking-widest uppercase text-text-muted">
           {TYPE_LABELS[type]}
         </span>
       </div>
@@ -111,7 +111,7 @@ export function StoryCard(props: StoryCardProps) {
 
       {/* Lead stat */}
       <div className="mt-auto pt-2">
-        <div className="text-2xl tabular-nums tracking-tight" style={{ color: accent, fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800, fontStyle: 'italic' }}>
+        <div className="text-2xl tabular-nums tracking-tight" style={{ color: accent, fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800, fontStyle: 'normal' }}>
           {parsed ? (
             <AnimatedNumber
               value={parsed.numeric}
@@ -133,7 +133,7 @@ export function StoryCard(props: StoryCardProps) {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-3 pt-1 text-[11px] text-text-muted">
+      <div className="flex items-center gap-3 pt-1 text-[13px] text-text-muted">
         <span className="inline-flex items-center gap-1">
           <Clock className="h-3 w-3" aria-hidden="true" />
           {estimatedMinutes} min

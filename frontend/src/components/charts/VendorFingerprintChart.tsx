@@ -441,7 +441,7 @@ export default function VendorFingerprintChart({
 
       {/* Caption */}
       {vendorName && (
-        <p className="text-[9px] text-text-primary/30 font-mono mt-1 text-center max-w-[280px] truncate">
+        <p className="text-[13px] text-text-primary/30 font-mono mt-1 text-center max-w-[280px] truncate">
           {vendorName}
         </p>
       )}

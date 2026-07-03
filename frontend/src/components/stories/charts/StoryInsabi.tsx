@@ -98,10 +98,10 @@ export function StoryInsabi() {
           aria-label={t('insabi.ariaLabel')}
         >
           {/* Headers */}
-          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={26} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={11} fontFamily="var(--font-family-serif)" fontWeight={700}>
+          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={26} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-serif)" fontWeight={700}>
             {t('insabi.spName')}
           </text>
-          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={42} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
+          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={42} textAnchor="middle" fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
             {t('insabi.spYears')}
           </text>
 
@@ -110,7 +110,7 @@ export function StoryInsabi() {
             y={26}
             textAnchor="middle"
             fill={RISK_COLORS.critical}
-            fontSize={11}
+            fontSize={13}
             fontFamily="var(--font-family-serif)"
             fontWeight={700}
           >
@@ -121,7 +121,7 @@ export function StoryInsabi() {
             y={42}
             textAnchor="middle"
             fill="var(--color-risk-critical)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.08em"
           >
@@ -143,7 +143,7 @@ export function StoryInsabi() {
             y={(H - 36 + 54) / 2}
             textAnchor="middle"
             fill="var(--color-text-secondary)"
-            fontSize={10}
+            fontSize={12}
             fontFamily="var(--font-family-mono)"
             fontWeight={700}
           >
@@ -173,7 +173,7 @@ export function StoryInsabi() {
                   y={cy + 3}
                   textAnchor="end"
                   fill="var(--color-border)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -200,7 +200,7 @@ export function StoryInsabi() {
                   y={cy + 3}
                   textAnchor="end"
                   fill={spColor}
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={700}
                 >
@@ -230,7 +230,7 @@ export function StoryInsabi() {
                   y={cy + 3}
                   textAnchor="end"
                   fill={insabiColor}
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={700}
                 >
@@ -246,7 +246,7 @@ export function StoryInsabi() {
             y={H - 10}
             textAnchor="middle"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {t('insabi.legendBottom')}

@@ -105,7 +105,7 @@ export function FeaturedFinding({
           className="max-w-3xl text-text-secondary mb-5"
           style={{
             fontFamily: 'var(--font-family-serif)',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 'clamp(1rem, 1.4vw, 1.125rem)',
             lineHeight: 1.55,
             borderLeft: `2px solid ${accent}`,
@@ -120,7 +120,7 @@ export function FeaturedFinding({
           <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 mb-5">
             {meta.map((m, i) => (
               <div key={i} className="flex items-baseline gap-2">
-                <span className="text-[10px] font-mono text-text-muted uppercase tracking-[0.15em]">
+                <span className="text-[12px] font-mono text-text-muted uppercase tracking-[0.15em]">
                   {m.label}
                 </span>
                 <span
@@ -142,7 +142,7 @@ export function FeaturedFinding({
           <button
             type="button"
             onClick={action.onClick}
-            className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] transition-colors"
+            className="inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.15em] transition-colors"
             style={{ color: resolvedTextAccent }}
           >
             {action.label}

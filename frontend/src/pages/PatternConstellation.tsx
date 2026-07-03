@@ -86,7 +86,7 @@ function PatternConstellationInner({ code, lang }: { code: string; lang: 'en' | 
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[11px] font-mono uppercase tracking-[0.1em]"
+          className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[13px] font-mono uppercase tracking-[0.1em]"
           style={{
             background: 'var(--color-background-card)',
             border: '1px solid var(--color-border)',
@@ -106,7 +106,7 @@ function PatternConstellationInner({ code, lang }: { code: string; lang: 'en' | 
         {/* Header */}
         <div className="p-5 border-b border-border">
           <div
-            className="text-[9px] font-mono uppercase tracking-[0.16em] mb-1"
+            className="text-[13px] font-mono uppercase tracking-[0.16em] mb-1"
             style={{ color: meta.color }}
           >
             {code} · {lang === 'en' ? 'PATTERN' : 'PATRÓN'}
@@ -127,7 +127,7 @@ function PatternConstellationInner({ code, lang }: { code: string; lang: 'en' | 
           <p>{meta.desc}</p>
 
           <div className="mt-4 space-y-2">
-            <div className="flex justify-between text-[11px]">
+            <div className="flex justify-between text-[13px]">
               <span
                 className="font-mono uppercase tracking-wider"
                 style={{ color: 'var(--color-text-muted)' }}
@@ -141,7 +141,7 @@ function PatternConstellationInner({ code, lang }: { code: string; lang: 'en' | 
                 {meta.t1}
               </span>
             </div>
-            <div className="flex justify-between text-[11px]">
+            <div className="flex justify-between text-[13px]">
               <span
                 className="font-mono uppercase tracking-wider"
                 style={{ color: 'var(--color-text-muted)' }}
@@ -150,7 +150,7 @@ function PatternConstellationInner({ code, lang }: { code: string; lang: 'en' | 
               </span>
               <span className="font-mono tabular-nums">{meta.vendors.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between text-[11px]">
+            <div className="flex justify-between text-[13px]">
               <span
                 className="font-mono uppercase tracking-wider"
                 style={{ color: 'var(--color-text-muted)' }}
@@ -168,7 +168,7 @@ function PatternConstellationInner({ code, lang }: { code: string; lang: 'en' | 
         <div className="p-4 border-t border-border">
           <a
             href={`/patterns/${code}`}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[11px] font-bold"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[13px] font-bold"
             style={{
               background: meta.color,
               color: 'var(--color-background)',

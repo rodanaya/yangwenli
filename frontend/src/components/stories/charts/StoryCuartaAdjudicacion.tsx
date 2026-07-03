@@ -66,7 +66,7 @@ export function StoryCuartaAdjudicacion() {
               y={CHART_H - 2}
               textAnchor="middle"
               fill="var(--color-oecd)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
               letterSpacing="0.08em"
             >
@@ -85,7 +85,7 @@ export function StoryCuartaAdjudicacion() {
                     y={y + BAR_H / 2 + 4}
                     textAnchor="end"
                     fill="var(--color-text-secondary)"
-                    fontSize={11}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono)"
                     fontWeight={600}
                   >
@@ -96,7 +96,7 @@ export function StoryCuartaAdjudicacion() {
                     y={y + BAR_H / 2 + 18}
                     textAnchor="end"
                     fill="var(--color-text-muted)"
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono)"
                   >
                     {ring.years}
@@ -132,7 +132,7 @@ export function StoryCuartaAdjudicacion() {
                     fill={ring.color}
                     fontSize={20}
                     fontFamily="'Playfair Display', serif"
-                    fontStyle="italic"
+                    fontStyle="normal"
                     fontWeight={800}
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
@@ -157,17 +157,17 @@ export function StoryCuartaAdjudicacion() {
             >
               <div className="flex items-baseline gap-2">
                 <span
-                  className="font-playfair-display italic font-extrabold tabular-nums text-2xl"
+                  className="font-playfair-display font-extrabold tabular-nums text-2xl"
                   style={{ color: ring.color }}
                 >
                   {ring.rate}%
                 </span>
-                <span className="text-[10px] font-mono text-text-muted">
+                <span className="text-[12px] font-mono text-text-muted">
                   {`${(ring.rate / 25).toFixed(1)}${t('cuartaAdjudicacion.ringMultiplierSuffix')}`}
                 </span>
               </div>
               <div className="text-xs text-text-secondary font-semibold">{ring.era}</div>
-              <div className="text-[10px] text-text-muted font-mono">{ring.years}</div>
+              <div className="text-[12px] text-text-muted font-mono">{ring.years}</div>
             </motion.div>
           ))}
         </div>

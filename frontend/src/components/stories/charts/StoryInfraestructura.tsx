@@ -87,15 +87,15 @@ export function StoryInfraestructura() {
         {/* Column headers */}
         <g transform={`translate(${PADDING_L}, ${PADDING_T - 20})`}>
           <circle cx={3} cy={2} r={3} fill={COLORS.direct} />
-          <text x={12} y={6} fill="var(--color-risk-critical)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={12} y={6} fill="var(--color-risk-critical)" fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
             {t('infraestructura.directLabel')}
           </text>
           <circle cx={90} cy={2} r={3} fill={COLORS.single} />
-          <text x={99} y={6} fill="var(--color-risk-high)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={99} y={6} fill="var(--color-risk-high)" fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
             {t('infraestructura.singleLabel')}
           </text>
           <circle cx={200} cy={2} r={3} fill={COLORS.open} />
-          <text x={209} y={6} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={209} y={6} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
             {t('infraestructura.openLabel')}
           </text>
         </g>
@@ -115,7 +115,7 @@ export function StoryInfraestructura() {
                 y={y0 + BAR_H / 2 + 3}
                 textAnchor="end"
                 fill={annotation ? 'var(--color-risk-medium)' : 'var(--color-text-muted)'}
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={annotation ? 700 : 500}
               >
@@ -161,7 +161,7 @@ export function StoryInfraestructura() {
                 x={PADDING_L + BAR_W + 8}
                 y={y0 + BAR_H / 2 + 3}
                 fill="var(--color-text-muted)"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
               >
                 ${row.total}B
@@ -174,7 +174,7 @@ export function StoryInfraestructura() {
                   y={y0 + BAR_H / 2 + 3}
                   textAnchor="middle"
                   fill="var(--color-risk-critical)"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -187,7 +187,7 @@ export function StoryInfraestructura() {
                   y={y0 + BAR_H / 2 + 3}
                   textAnchor="middle"
                   fill="var(--color-text-secondary)"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={700}
                 >
@@ -212,7 +212,7 @@ export function StoryInfraestructura() {
                     x={PADDING_L + BAR_W + 60}
                     y={y0 + BAR_H / 2 + 3}
                     fill="var(--color-risk-medium)"
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono)"
                     fontWeight={600}
                   >
@@ -240,7 +240,7 @@ export function StoryInfraestructura() {
           y={PADDING_T - 26}
           textAnchor="middle"
           fill="var(--color-oecd)"
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono)"
           fontWeight={600}
         >

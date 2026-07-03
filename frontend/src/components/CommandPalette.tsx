@@ -84,7 +84,7 @@ function RiskPill({ level }: { level: string }) {
   const color = RISK_COLORS[level as keyof typeof RISK_COLORS] ?? RISK_COLORS.low
   return (
     <span
-      className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+      className="ml-auto text-[12px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
       style={{ backgroundColor: `${color}20`, color }}
     >
       {level}
@@ -199,7 +199,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           {savedSearches.map((s, i) => (
             <span
               key={`${s.value}-${i}`}
-              className="flex items-center gap-1 text-[11px] bg-accent/10 text-accent border border-accent/20 rounded-full px-2 py-0.5 max-w-[120px]"
+              className="flex items-center gap-1 text-[13px] bg-accent/10 text-accent border border-accent/20 rounded-full px-2 py-0.5 max-w-[120px]"
             >
               <button
                 type="button"
@@ -239,7 +239,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           <button
             type="button"
             onClick={handleSaveSearch}
-            className="flex items-center gap-1 text-[10px] text-text-muted hover:text-accent transition-colors"
+            className="flex items-center gap-1 text-[12px] text-text-muted hover:text-accent transition-colors"
             aria-label={`Save search "${query}"`}
           >
             <Bookmark className="h-3 w-3" aria-hidden="true" />
@@ -442,7 +442,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       </CommandList>
 
       {/* Footer hint — hidden on mobile to avoid overflow */}
-      <div className="hidden md:flex border-t border-border/40 px-3 py-2 items-center gap-3 text-[10px] text-text-muted">
+      <div className="hidden md:flex border-t border-border/40 px-3 py-2 items-center gap-3 text-[12px] text-text-muted">
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↑↓</kbd> {t('cmdPalette.hintNavigate')}</span>
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↵</kbd> {t('cmdPalette.hintSelect')}</span>
         <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">Esc</kbd> {t('cmdPalette.hintClose')}</span>

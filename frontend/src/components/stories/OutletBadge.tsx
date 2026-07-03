@@ -34,7 +34,7 @@ export function OutletBadge({ outlet, className }: OutletBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase leading-none',
+        'inline-flex items-center px-2 py-0.5 rounded text-[12px] font-bold tracking-wider uppercase leading-none',
         config.bg,
         config.text,
         className

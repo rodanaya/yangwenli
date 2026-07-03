@@ -76,7 +76,7 @@ export function VendorNetworkTab({
               <span
                 className="font-mono font-bold tabular-nums"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   letterSpacing: '0.1em',
                   color: tierColor,
                   border: `1px solid ${tierColor}`,
@@ -89,7 +89,7 @@ export function VendorNetworkTab({
               <span
                 className="font-mono"
                 style={{
-                  fontSize: 9,
+                  fontSize: 13,
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
                   color: 'var(--color-text-muted)',
@@ -104,7 +104,7 @@ export function VendorNetworkTab({
                 className="tabular-nums"
                 style={{
                   fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 32,
                   lineHeight: 1,
@@ -116,7 +116,7 @@ export function VendorNetworkTab({
               <div
                 className="font-mono mt-1.5"
                 style={{
-                  fontSize: 9,
+                  fontSize: 13,
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
                   color: 'var(--color-text-muted)',
@@ -126,7 +126,7 @@ export function VendorNetworkTab({
               </div>
             </div>
 
-            <div className="mt-3 space-y-1 text-[11px] font-mono tabular-nums">
+            <div className="mt-3 space-y-1 text-[13px] font-mono tabular-nums">
               <div>
                 <span className="text-text-muted">{isEs ? 'Estado: ' : 'Status: '}</span>
                 <span className="text-text-secondary uppercase tracking-wider">
@@ -182,7 +182,7 @@ export function VendorNetworkTab({
                   size="sm"
                 />
                 {s.fraud_type && (
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-text-muted">
+                  <span className="text-[13px] font-mono uppercase tracking-wider text-text-muted">
                     {s.fraud_type}
                   </span>
                 )}
@@ -205,7 +205,7 @@ export function VendorNetworkTab({
               <button
                 type="button"
                 onClick={onOpenNetworkGraph}
-                className="inline-flex items-center gap-1.5 text-[11px] text-accent hover:underline"
+                className="inline-flex items-center gap-1.5 text-[13px] text-accent hover:underline"
               >
                 <Network className="h-3 w-3" aria-hidden="true" />
                 {isEs ? 'Ver grafo completo' : 'View full graph'}
@@ -229,7 +229,7 @@ export function VendorNetworkTab({
                   max={maxCoBid}
                   color="var(--color-risk-high)"
                 />
-                <span className="text-[11px] font-mono tabular-nums text-text-muted flex-shrink-0 w-14 text-right">
+                <span className="text-[13px] font-mono tabular-nums text-text-muted flex-shrink-0 w-14 text-right">
                   {cb.co_bid_count ?? 0} {isEs ? 'comp.' : 'shared'}
                 </span>
               </div>
@@ -279,7 +279,7 @@ export function VendorNetworkTab({
 function ExtCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between px-3 py-2 rounded-sm border border-border bg-background-card">
-      <span className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+      <span className="text-[12px] font-semibold text-text-muted uppercase tracking-widest">
         {label}
       </span>
       <span className="text-sm font-medium text-text-primary">{value}</span>

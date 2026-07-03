@@ -104,7 +104,7 @@ export function RegisterRow({ item, isEs, rank, expanded, onToggle }: RegisterRo
     >
       {/* Nº + provenance eyebrow */}
       <span className="order-1 sm:order-none w-9 sm:w-auto shrink-0 leading-tight">
-        <span className="block font-mono text-[11px] tabular-nums text-text-primary">
+        <span className="block font-mono text-[13px] tabular-nums text-text-primary">
           {String(rank).padStart(3, '0')}
         </span>
         <span
@@ -138,7 +138,7 @@ export function RegisterRow({ item, isEs, rank, expanded, onToggle }: RegisterRo
 
       {/* ·IPS mills — single ink, no ladder (W9) */}
       <span
-        className="order-4 sm:order-none font-mono text-[11px] tabular-nums text-text-primary text-right"
+        className="order-4 sm:order-none font-mono text-[13px] tabular-nums text-text-primary text-right"
         title={isEs ? `IPS ${item.ips_final?.toFixed(3) ?? '—'} · indicador de prioridad` : `IPS ${item.ips_final?.toFixed(3) ?? '—'} · priority indicator`}
       >
         {ipsMills(item.ips_final)}
@@ -157,7 +157,7 @@ export function RegisterRow({ item, isEs, rank, expanded, onToggle }: RegisterRo
         {item.primary_pattern && (
           <span
             className={cn(
-              'inline-block font-mono text-[9px] font-bold px-1 py-0.5 rounded-sm leading-none border',
+              'inline-block font-mono text-[13px] font-bold px-1 py-0.5 rounded-sm leading-none border',
               PATTERN_CHIP[item.primary_pattern] ?? PATTERN_CHIP.P5
             )}
           >
@@ -186,12 +186,12 @@ export function RegisterRow({ item, isEs, rank, expanded, onToggle }: RegisterRo
       </span>
 
       {/* Valor */}
-      <span className="order-3 sm:order-none font-mono text-[11px] tabular-nums text-text-primary text-right whitespace-nowrap">
+      <span className="order-3 sm:order-none font-mono text-[13px] tabular-nums text-text-primary text-right whitespace-nowrap">
         {item.total_value_mxn ? formatCompactMXN(item.total_value_mxn) : '—'}
       </span>
 
       {/* Vigencia */}
-      <span className="order-9 sm:order-none font-mono text-[9.5px] tabular-nums text-right whitespace-nowrap">
+      <span className="order-9 sm:order-none font-mono text-[13px] tabular-nums text-right whitespace-nowrap">
         <span className={cn(isActive ? 'text-risk-high' : isDormant ? 'text-text-muted/60' : 'text-text-muted')}>
           {vigencia}
         </span>
@@ -216,7 +216,7 @@ export function RegisterRow({ item, isEs, rank, expanded, onToggle }: RegisterRo
 
       {/* Caret */}
       <span
-        className={cn('order-11 sm:order-none text-text-muted text-[10px] transition-transform', expanded && 'rotate-180')}
+        className={cn('order-11 sm:order-none text-text-muted text-[12px] transition-transform', expanded && 'rotate-180')}
         aria-hidden="true"
       >
         ▾

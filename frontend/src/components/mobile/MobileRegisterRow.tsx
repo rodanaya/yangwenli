@@ -56,7 +56,7 @@ export function MobileRegisterRow({
         className="w-full text-left flex items-start gap-2.5 px-2 py-2.5 rounded-sm transition-colors active:bg-background-elevated/60 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
       >
         {rank != null ? (
-          <span className="shrink-0 w-5 pt-1 text-right font-mono tabular-nums text-[10px] text-text-muted">
+          <span className="shrink-0 w-5 pt-1 text-right font-mono tabular-nums text-[12px] text-text-muted">
             {rank}
           </span>
         ) : null}
@@ -64,13 +64,13 @@ export function MobileRegisterRow({
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-1.5 min-w-0">
             {code ? (
-              <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.04em] text-text-primary">
+              <span className="shrink-0 font-mono text-[12px] font-bold uppercase tracking-[0.04em] text-text-primary">
                 {code}
               </span>
             ) : null}
             <span className="truncate text-[13px] leading-snug text-text-secondary">{title}</span>
           </span>
-          <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[10.5px] tabular-nums text-text-muted">
+          <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[12px] tabular-nums text-text-muted">
             {chips.map((c, i) => (
               <span key={i} className="inline-flex items-center gap-1">
                 {c.dot ? (

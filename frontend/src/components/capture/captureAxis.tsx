@@ -26,7 +26,7 @@ export const BAND_COLOR: Record<ShareBand, string> = {
 export function AxisTicks({ className = '' }: { className?: string }) {
   return (
     <div
-      className={`relative h-4 font-mono text-[9px] text-text-muted tabular-nums ${className}`}
+      className={`relative h-4 font-mono text-[13px] text-text-muted tabular-nums ${className}`}
       aria-hidden="true"
     >
       {[0, 25, 50, 75, 100].map((v) => (

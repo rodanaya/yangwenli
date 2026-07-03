@@ -85,7 +85,7 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
           >
             <div
               className="font-mono"
-              style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
               {c.label}
             </div>
@@ -102,7 +102,7 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
                 className="tabular-nums"
                 style={{
                   fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: c.anchor ? 700 : 600,
                   // Anchors run bigger and scale harder with viewport width so the
                   // decisive numbers fill the page instead of sitting small.
@@ -118,7 +118,7 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
             {c.sub && (
               <div
                 className="font-mono tabular-nums"
-                style={{ fontSize: 9, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, opacity: c.color ? 0.85 : 1, whiteSpace: 'nowrap' }}
+                style={{ fontSize: 13, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, opacity: c.color ? 0.85 : 1, whiteSpace: 'nowrap' }}
               >
                 {c.sub}
               </div>
@@ -137,7 +137,7 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
 function DensePanel({ label, accent, children }: { label: string; accent: string; children: React.ReactNode }) {
   return (
     <section style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)', borderRadius: 3, padding: '12px 14px 13px', background: 'transparent' }}>
-      <div className="font-mono flex items-center gap-2" style={{ fontSize: 9.5, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: 10 }}>
+      <div className="font-mono flex items-center gap-2" style={{ fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: 10 }}>
         <span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: 999, background: accent }} />
         {label}
       </div>
@@ -155,8 +155,8 @@ function FullBarRow({ label, readout, pct, color, readoutColor }: { label: strin
   return (
     <div>
       <div className="flex items-baseline justify-between" style={{ marginBottom: 4, gap: 8 }}>
-        <span className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.04em', color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 11, fontWeight: 600, color: readoutColor ?? 'var(--color-text-primary)' }}>{readout}</span>
+        <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, fontWeight: 600, color: readoutColor ?? 'var(--color-text-primary)' }}>{readout}</span>
       </div>
       <div style={{ position: 'relative', height: 6, background: 'var(--color-background-elevated)', borderRadius: 2, overflow: 'hidden' }} aria-hidden="true">
         <div style={{ position: 'absolute', inset: 0, width: `max(3px, ${Math.max(0, Math.min(100, pct)).toFixed(2)}%)`, background: color, borderRadius: 2 }} />
@@ -347,7 +347,7 @@ export function SectorDiagnosticGrid({
                     <div className="min-w-0">
                       <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.name} size="sm" fullName />
                     </div>
-                    <div className="flex items-baseline gap-2 flex-shrink-0 font-mono tabular-nums" style={{ fontSize: 11 }}>
+                    <div className="flex items-baseline gap-2 flex-shrink-0 font-mono tabular-nums" style={{ fontSize: 13 }}>
                       <span style={{ color: share >= 10 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: 600 }}>{Math.round(share)}%</span>
                       <span style={{ color: 'var(--color-text-muted)' }}>{formatCompactMXN(value)}</span>
                     </div>
@@ -370,7 +370,7 @@ export function SectorDiagnosticGrid({
           <>
             <EditorialAreaChart data={trend} xKey="year" yKey="avg" colorToken="risk-critical" yFormat="pct" yDomain={[0, 1]} height={108} />
             {peak && (
-              <p className="font-mono mt-2" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+              <p className="font-mono mt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
                 {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg * 100)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}
               </p>
             )}
@@ -404,14 +404,14 @@ export function SectorInstitutionTable({
 
   return (
     <div>
-      <p className="font-mono mb-2.5" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+      <p className="font-mono mb-2.5" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {isEs
           ? `Las 10 mayores concentran el ${Math.round(top10Share)}% del gasto sectorial.`
           : `The top 10 concentrate ${Math.round(top10Share)}% of sector spend.`}
       </p>
       <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm" aria-label={isEs ? 'Instituciones del sector' : 'Sector institutions'}>
-          <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
+          <thead className="bg-background-elevated text-[12px] uppercase tracking-widest text-text-muted">
             <tr>
               <th scope="col" className="text-left px-3 py-1.5 font-semibold" style={{ width: 28 }}>#</th>
               <th scope="col" className="text-left px-3 py-1.5 font-semibold">{isEs ? 'Institución' : 'Institution'}</th>
@@ -442,7 +442,7 @@ export function SectorInstitutionTable({
                       <div className="relative flex-1 min-w-0" style={{ height: 5, background: 'var(--color-background-elevated)', borderRadius: 2, overflow: 'hidden' }} aria-hidden="true">
                         <div style={{ position: 'absolute', inset: 0, width: `max(2px, ${Math.max(0, Math.min(100, barPct)).toFixed(2)}%)`, background: shareColor, opacity: 0.8, borderRadius: 2 }} />
                       </div>
-                      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 11, color: shareColor, fontWeight: share >= 10 ? 600 : 400, minWidth: 38, textAlign: 'right' }}>{share.toFixed(1)}%</span>
+                      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, color: shareColor, fontWeight: share >= 10 ? 600 : 400, minWidth: 38, textAlign: 'right' }}>{share.toFixed(1)}%</span>
                     </div>
                   </td>
                   <td className="px-3 py-1.5 text-right font-mono tabular-nums" style={{ color: riskColor, fontWeight: 600 }}>{riskPct ?? '—'}</td>

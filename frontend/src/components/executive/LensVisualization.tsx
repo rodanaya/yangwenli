@@ -215,7 +215,7 @@ export function LensVisualization({ tiers, lang }: LensVisualizationProps) {
         textAnchor="middle"
         fontSize={8}
         fontFamily="'Playfair Display', Georgia, serif"
-        fontStyle="italic"
+        fontStyle="normal"
         fill="var(--color-text-muted)"
         fillOpacity={0.65}
         initial={{ opacity: 0 }}

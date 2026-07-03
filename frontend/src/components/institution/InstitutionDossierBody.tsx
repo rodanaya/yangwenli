@@ -123,7 +123,7 @@ export function InstitutionReading({
         {hasWf ? (
           <>
             <WaterfallRiskChart features={wfItems} />
-            <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-muted)', marginTop: 12, maxWidth: '72ch' }}>
+            <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-muted)', marginTop: 12, maxWidth: '72ch' }}>
               {caption}
             </p>
           </>
@@ -160,8 +160,8 @@ function WhereRiskFallback({ institution, isEs }: { institution: InstitutionDeta
       {avgRisk100 != null && (
         <div>
           <div className="flex items-baseline justify-between mb-1">
-            <span className="font-mono" style={{ fontSize: 11, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}>{isEs ? 'Riesgo promedio' : 'Avg risk'}</span>
-            <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: RISK_TEXT_COLORS[lvl] }}>
+            <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}>{isEs ? 'Riesgo promedio' : 'Avg risk'}</span>
+            <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color: RISK_TEXT_COLORS[lvl] }}>
               {avgRisk100}
               {baseline100 != null && <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> / {baseline100} {isEs ? 'sector' : 'sector'}</span>}
             </span>
@@ -175,8 +175,8 @@ function WhereRiskFallback({ institution, isEs }: { institution: InstitutionDeta
       {hrCount != null && total > 0 && (
         <div>
           <div className="flex items-baseline justify-between mb-1">
-            <span className="font-mono" style={{ fontSize: 11, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}>{isEs ? 'Contratos de alto riesgo' : 'High-risk contracts'}</span>
-            <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+            <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}>{isEs ? 'Contratos de alto riesgo' : 'High-risk contracts'}</span>
+            <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
               {formatNumber(hrCount)}<span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> / {formatNumber(total)}</span>
             </span>
           </div>
@@ -235,13 +235,13 @@ export function InstitutionConcentration({
           <div className="space-y-1.5">
             {history.map((h) => (
               <div key={h.year} className="flex items-center gap-3">
-                <span className="font-mono tabular-nums flex-shrink-0" style={{ width: 32, fontSize: 11, color: 'var(--color-text-muted)' }}>{h.year}</span>
+                <span className="font-mono tabular-nums flex-shrink-0" style={{ width: 32, fontSize: 13, color: 'var(--color-text-muted)' }}>{h.year}</span>
                 <DotBar value={h.hhi} max={10000} color={hhiColor(h.hhi)} thresholds={[{ value: 4000 }]} dots={32} ariaLabel={`HHI ${h.year}: ${Math.round(h.hhi)}`} className="flex-shrink-0" />
-                <span className="font-mono tabular-nums flex-shrink-0 text-right ml-auto" style={{ width: 52, fontSize: 11, fontWeight: 600, color: hhiColor(h.hhi) }}>{formatNumber(Math.round(h.hhi))}</span>
+                <span className="font-mono tabular-nums flex-shrink-0 text-right ml-auto" style={{ width: 52, fontSize: 13, fontWeight: 600, color: hhiColor(h.hhi) }}>{formatNumber(Math.round(h.hhi))}</span>
               </div>
             ))}
           </div>
-          <p className="font-mono" style={{ fontSize: 10.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', marginTop: 10 }}>
+          <p className="font-mono" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-muted)', marginTop: 10 }}>
             {isEs
               ? `Prozorro marca como concentrada toda compra con HHI > 4,000 (línea punteada). ${sd.hhi_5yr_avg >= 4000 ? 'El promedio a 5 años de esta institución la supera.' : ''}`
               : `Prozorro flags any purchasing with HHI > 4,000 (dotted line). ${sd.hhi_5yr_avg >= 4000 ? "This institution's 5-year average is above it." : ''}`}
@@ -257,7 +257,7 @@ function HhiStat({ label, value, color }: { label: string; value: string; color:
   return (
     <div>
       <span className="font-mono tabular-nums" style={{ fontSize: 15, fontWeight: 600, color }}>{value}</span>
-      <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginLeft: 6 }}>{label}</span>
+      <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginLeft: 6 }}>{label}</span>
     </div>
   )
 }
@@ -306,7 +306,7 @@ function ConcentrationRegister({
     <div>
       {/* Header: concentration readout + controls */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <p className="font-mono" style={{ fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>
+        <p className="font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>
           {top1 != null && top10 != null
             ? isEs
               ? `El mayor proveedor concentra ${Math.round(top1)}%; los 10 mayores, ${Math.round(top10)}% del gasto.`
@@ -340,22 +340,22 @@ function ConcentrationRegister({
             const fmtPct = (n: number | null) => (n == null ? '—' : `${Math.round(n)}%`)
             return (
               <li key={v.vendor_id} className="flex items-center gap-3 px-3 py-2 border-t border-border/30 first:border-t-0">
-                <span className="font-mono tabular-nums flex-shrink-0 text-text-muted" style={{ width: 22, fontSize: 11 }}>{v.rank}</span>
+                <span className="font-mono tabular-nums flex-shrink-0 text-text-muted" style={{ width: 22, fontSize: 13 }}>{v.rank}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" fullName />
                     {v.in_ground_truth ? <Badge text="GT" color={RISK_TEXT_COLORS.critical} /> : null}
                     {v.ips_tier != null && v.ips_tier <= 2 ? <Badge text={`T${v.ips_tier}`} color={RISK_TEXT_COLORS.high} /> : null}
                   </div>
-                  <div className="font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                  <div className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
                     {formatNumber(v.contract_count ?? 0)} {isEs ? 'contratos' : 'contracts'}
                     {' · '}{isEs ? 'AD' : 'DA'} {fmtPct(v.direct_award_pct)}
                     {' · '}{isEs ? 'ÚP' : 'SB'} {fmtPct(v.single_bid_pct)}
                   </div>
                 </div>
                 <DotBar value={share} max={Math.max(20, share)} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} dots={18} ariaLabel={`${Math.round(share)}% share`} className="hidden sm:block flex-shrink-0" />
-                <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 78, fontSize: 11, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</span>
-                <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 30, fontSize: 11, fontWeight: 600, color: riskPct == null ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[lvl] }}>{riskPct ?? '—'}</span>
+                <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 78, fontSize: 13, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</span>
+                <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 30, fontSize: 13, fontWeight: 600, color: riskPct == null ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[lvl] }}>{riskPct ?? '—'}</span>
               </li>
             )
           })}
@@ -378,7 +378,7 @@ function ControlGroup({
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="font-mono" style={{ fontSize: 9.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{label}</span>
+      <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{label}</span>
       <div className="flex items-center">
         {options.map((o) => (
           <button
@@ -388,7 +388,7 @@ function ControlGroup({
             aria-pressed={active === o.k}
             className="font-mono cursor-pointer transition-colors"
             style={{
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: '0.08em',
               padding: '2px 6px',
               color: active === o.k ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
@@ -413,7 +413,7 @@ function Badge({ text, color }: { text: string; color: string }) {
   return (
     <span
       className="font-mono"
-      style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color, border: `1px solid ${color}`, borderRadius: 2, padding: '0px 4px', lineHeight: 1.5 }}
+      style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', color, border: `1px solid ${color}`, borderRadius: 2, padding: '0px 4px', lineHeight: 1.5 }}
     >
       {text}
     </span>
@@ -468,11 +468,11 @@ export function InstitutionRecord({
                   <li key={v.vendor_id} className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" fullName />
-                      <div className="font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 1 }}>
+                      <div className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 1 }}>
                         {v.first_contract_year}–{v.last_contract_year} · {v.tenure_years}{isEs ? ' años' : 'y'} · {formatNumber(v.total_contracts)} {isEs ? 'contratos' : 'contracts'}
                       </div>
                     </div>
-                    <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 11, fontWeight: 600, color: v.avg_risk_score != null ? RISK_TEXT_COLORS[lvl] : 'var(--color-text-muted)' }}>
+                    <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, fontWeight: 600, color: v.avg_risk_score != null ? RISK_TEXT_COLORS[lvl] : 'var(--color-text-muted)' }}>
                       {v.avg_risk_score != null ? Math.round(v.avg_risk_score * 100) : '—'}
                     </span>
                   </li>
@@ -495,7 +495,7 @@ export function InstitutionRecord({
                 <div key={c.category_id ?? `cat-${i}`} className="flex items-center gap-3">
                   <span className="min-w-0 flex-1 whitespace-normal break-words leading-tight" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }} title={name}>{name}</span>
                   <DotBar value={c.total_value_mxn || 0} max={catMax} color={sectorAccent} dots={24} ariaLabel={name} className="flex-shrink-0" />
-                  <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 76, fontSize: 11, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(c.total_value_mxn || 0)}</span>
+                  <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 76, fontSize: 13, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(c.total_value_mxn || 0)}</span>
                 </div>
               )
             })}
@@ -511,7 +511,7 @@ export function InstitutionRecord({
           <div className="overflow-x-auto">
             <table className="w-full" style={{ fontSize: 12 }}>
               <thead>
-                <tr className="text-left font-mono" style={{ fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                <tr className="text-left font-mono" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                   <th className="font-medium py-1.5 pr-3">{isEs ? 'Contrato' : 'Contract'}</th>
                   <th className="font-medium py-1.5 pr-3">{isEs ? 'Proveedor' : 'Supplier'}</th>
                   <th className="font-medium py-1.5 pr-3 text-right">{isEs ? 'Año' : 'Year'}</th>

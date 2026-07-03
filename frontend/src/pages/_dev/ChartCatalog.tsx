@@ -66,7 +66,7 @@ function Example({ caption, children }: { caption: string; children: React.React
   return (
     <div className="rounded border border-border-subtle p-4 bg-background-elevated">
       <div className="mb-3">{children}</div>
-      <p className="text-[11px] font-mono text-text-muted">{caption}</p>
+      <p className="text-[13px] font-mono text-text-muted">{caption}</p>
     </div>
   )
 }
@@ -75,7 +75,7 @@ export default function ChartCatalog() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
       <header className="mb-8">
-        <p className="text-[11px] uppercase tracking-widest font-mono text-text-muted">
+        <p className="text-[13px] uppercase tracking-widest font-mono text-text-muted">
           Internal · Visual canon · Not in main nav
         </p>
         <h1 className="text-3xl font-serif mt-2">Chart Catalog</h1>
@@ -229,7 +229,7 @@ export default function ChartCatalog() {
         </Example>
       </Section>
 
-      <footer className="mt-12 pt-6 border-t border-border text-[11px] font-mono text-text-muted">
+      <footer className="mt-12 pt-6 border-t border-border text-[13px] font-mono text-text-muted">
         Last updated 2026-04-27. Add new primitives to this catalog before merging them.
       </footer>
     </div>

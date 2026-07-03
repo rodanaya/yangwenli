@@ -101,7 +101,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
           >
             Caso destacado · {label}
           </span>
-          <span className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] tabular-nums">
+          <span className="text-[12px] font-mono text-text-muted uppercase tracking-[0.12em] tabular-nums">
             Asimetría {metrics.asymmetry.toFixed(0)}% ·{' '}
             {formatNumber(pair.shared_procedures)}{' '}
             {t('dossier.sharedSuffix', { defaultValue: 'procs compartidos' })}
@@ -128,7 +128,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
             >
               {nameA}
             </div>
-            <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
+            <div className="text-[12px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
               {formatNumber(pair.vendor_a_procedures)}{' '}
               {t('dossier.procsSuffix', { defaultValue: 'procedimientos' })} ·{' '}
               {metrics.shareA.toFixed(0)}%{' '}
@@ -164,7 +164,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
             >
               {nameB}
             </div>
-            <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
+            <div className="text-[12px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
               {formatNumber(pair.vendor_b_procedures)}{' '}
               {t('dossier.procsSuffix', { defaultValue: 'procedimientos' })} ·{' '}
               {metrics.shareB.toFixed(0)}%{' '}
@@ -178,7 +178,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
           className="max-w-3xl text-text-secondary mb-5"
           style={{
             fontFamily: 'var(--font-family-serif)',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 'clamp(1rem, 1.4vw, 1.125rem)',
             lineHeight: 1.55,
             borderLeft: `2px solid ${accent}`,
@@ -189,7 +189,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
         </blockquote>
 
         {/* Action row */}
-        <div className="flex flex-wrap items-center gap-5 text-[10px] font-mono uppercase tracking-[0.15em]">
+        <div className="flex flex-wrap items-center gap-5 text-[12px] font-mono uppercase tracking-[0.15em]">
           <button
             type="button"
             onClick={() =>

@@ -147,18 +147,18 @@ export function FlowParticle({
         />
       ))}
 
-      {/* Source labels — Playfair italic for community/entity names */}
+      {/* Source labels — Playfair for community/entity names */}
       {sources.map((n) => (
         <text
           key={`sl-${n.id}`}
           x={srcX - 6}
           y={srcY[n.id]}
           fill="var(--color-text-secondary)"
-          fontSize={11}
+          fontSize={13}
           textAnchor="end"
           dominantBaseline="middle"
           fontFamily="'Playfair Display', Georgia, serif"
-          fontStyle="italic"
+          fontStyle="normal"
           fontWeight="600"
         >
           {n.label.slice(0, 20)}
@@ -189,7 +189,7 @@ export function FlowParticle({
           x={tgtX + 6}
           y={tgtY[n.id]}
           fill="var(--color-text-muted)"
-          fontSize={10}
+          fontSize={12}
           textAnchor="start"
           dominantBaseline="middle"
           fontFamily={FONT_MONO}

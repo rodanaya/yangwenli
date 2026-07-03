@@ -71,14 +71,14 @@ export function CaptureNowLedger({
 
   return (
     <section className="mt-12">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+      <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
         {lang === 'en' ? `§ THE LEDGER · ${total}` : `§ EL REGISTRO · ${total}`}
       </p>
       <p
         className="mb-4"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13,
           lineHeight: 1.55,
           color: 'var(--color-text-secondary)',
@@ -103,7 +103,7 @@ export function CaptureNowLedger({
           style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
         />
         {fieldHint && (
-          <p className="mt-1.5 text-[11px] text-text-secondary leading-snug">
+          <p className="mt-1.5 text-[13px] text-text-secondary leading-snug">
             {lang === 'en'
               ? `${fieldHint.name} is not in the captured majority — one vendor holds ${fieldHint.share}% of its record.`
               : `${fieldHint.name} no está en la mayoría capturada — un proveedor tiene el ${fieldHint.share}% de su registro.`}
@@ -112,9 +112,9 @@ export function CaptureNowLedger({
       </div>
 
       <div className="overflow-x-auto rounded-sm border border-border bg-background-card">
-        <table className="w-full text-[11px]" style={{ minWidth: 640 }}>
+        <table className="w-full text-[13px]" style={{ minWidth: 640 }}>
           <thead>
-            <tr className="border-b border-border font-mono text-[9px] uppercase tracking-[0.12em] text-text-muted">
+            <tr className="border-b border-border font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
               <th className="px-3 py-2 text-left w-8">#</th>
               <th className="px-3 py-2 text-left">{lang === 'en' ? 'Institution' : 'Institución'}</th>
               <th className="px-3 py-2 text-left">{lang === 'en' ? '№1 vendor' : 'Proveedor №1'}</th>
@@ -128,7 +128,7 @@ export function CaptureNowLedger({
               const sector = SECTORS.find((s) => s.id === r.sector_id)
               return (
                 <tr key={r.institution_id} className="border-b border-border last:border-b-0 hover:bg-background-elevated">
-                  <td className="px-3 py-2 font-mono text-[10px] text-text-muted tabular-nums">
+                  <td className="px-3 py-2 font-mono text-[12px] text-text-muted tabular-nums">
                     {String(i + 1).padStart(3, '0')}
                   </td>
                   <td className="px-3 py-2">
@@ -145,13 +145,13 @@ export function CaptureNowLedger({
                   <td className="px-3 py-2 whitespace-nowrap">
                     <span className="inline-flex items-center gap-2">
                       <DotBar value={r.share_pct} max={100} color="var(--color-risk-critical)" />
-                      <span className="font-mono text-[10px] tabular-nums">{r.share_pct}%</span>
+                      <span className="font-mono text-[12px] tabular-nums">{r.share_pct}%</span>
                     </span>
                   </td>
-                  <td className="px-3 py-2 font-mono text-[10px] tabular-nums whitespace-nowrap">
+                  <td className="px-3 py-2 font-mono text-[12px] tabular-nums whitespace-nowrap">
                     {formatCompactMXN(r.window_total_mxn)}
                   </td>
-                  <td className="px-3 py-2 font-mono text-[10px] tabular-nums hidden md:table-cell whitespace-nowrap">
+                  <td className="px-3 py-2 font-mono text-[12px] tabular-nums hidden md:table-cell whitespace-nowrap">
                     {r.latest_hhi != null ? (
                       <>
                         {Math.round(r.latest_hhi).toLocaleString()}
@@ -170,7 +170,7 @@ export function CaptureNowLedger({
             })}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-[11px] text-text-muted">
+                <td colSpan={6} className="px-3 py-4 text-center text-[13px] text-text-muted">
                   {lang === 'en' ? 'No match in the 119.' : 'Sin coincidencias en las 119.'}
                 </td>
               </tr>
@@ -182,7 +182,7 @@ export function CaptureNowLedger({
         <button
           type="button"
           onClick={() => setShowAll(true)}
-          className="mt-3 font-mono text-[10px] font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
+          className="mt-3 font-mono text-[12px] font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
           style={{ color: 'var(--color-accent)' }}
         >
           {lang === 'en' ? `See all ${total} →` : `Ver las ${total} →`}

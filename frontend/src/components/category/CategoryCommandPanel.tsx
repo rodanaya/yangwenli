@@ -206,8 +206,8 @@ export function CategoryDiagnosticGrid({
             {hhi > 0 && (
             <div>
               <div className="flex items-baseline justify-between mb-1">
-                <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>HHI</span>
-                <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: hhiColor }}>
+                <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>HHI</span>
+                <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color: hhiColor }}>
                   {formatNumber(hhi)}
                   <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> · {concentrationLabel(concentration.concentration_label, isEs)}</span>
                 </span>
@@ -222,10 +222,10 @@ export function CategoryDiagnosticGrid({
             )}
             <div>
               <div className="flex items-baseline justify-between mb-1">
-                <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>
+                <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>
                   {isEs ? 'Los 3 mayores capturan' : 'Top 3 capture'}
                 </span>
-                <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: top3 >= 50 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)' }}>{Math.round(top3)}%</span>
+                <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color: top3 >= 50 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)' }}>{Math.round(top3)}%</span>
               </div>
               <div style={{ position: 'relative', height: 4, background: 'var(--color-border)', borderRadius: 999 }}>
                 <div style={{ position: 'absolute', inset: 0, width: `${Math.min(100, top3)}%`, background: top3 >= 50 ? RISK_COLORS.high : accent, borderRadius: 999 }} />
@@ -280,14 +280,14 @@ export function CategoryVendorTable({
 
   return (
     <div>
-      <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+      <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {isEs
           ? `Los 10 mayores capturan el ${Math.round(top10Share)}% del mercado de la categoría.`
           : `The top 10 capture ${Math.round(top10Share)}% of the category market.`}
       </p>
       <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm" aria-label={isEs ? 'Proveedores de la categoría' : 'Category vendors'}>
-          <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
+          <thead className="bg-background-elevated text-[12px] uppercase tracking-widest text-text-muted">
             <tr>
               <th scope="col" className="text-left px-3 py-2 font-semibold" style={{ width: 28 }}>#</th>
               <th scope="col" className="text-left px-3 py-2 font-semibold">{isEs ? 'Proveedor' : 'Vendor'}</th>

@@ -103,8 +103,8 @@ export function GradeBadge10({
     ?? (GRADE_LABELS[grade] ?? grade)
   const c = GRADE10_COLORS[grade] ?? GRADE10_COLORS['F']
   const sizePill = {
-    sm:  'px-2 py-0.5 text-[10px]',
-    md:  'px-2.5 py-1 text-[11px]',
+    sm:  'px-2 py-0.5 text-[12px]',
+    md:  'px-2.5 py-1 text-[13px]',
     lg:  'px-3 py-1.5 text-xs',
     xl:  'px-4 py-2 text-sm',
   }[size]
@@ -141,7 +141,7 @@ export function PillarBar({
 }) {
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
+      <div className="flex items-center justify-between text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>
         <span>{label}</span>
         <span className="font-medium font-mono tabular-nums">{score.toFixed(0)}/{maxScore}</span>
       </div>
@@ -189,7 +189,7 @@ export function VendorScorecardCard({ sc }: { sc: VendorScorecardData }) {
           <div className="text-lg font-bold font-mono tabular-nums" style={{ color: c.text }}>
             {sc.total_score.toFixed(0)}<span className="text-xs font-normal opacity-70">/100</span>
           </div>
-          <div className="text-[11px] opacity-60">
+          <div className="text-[13px] opacity-60">
             Pct. nacional: <strong>{(sc.national_percentile * 100).toFixed(0)}°</strong>
           </div>
         </div>
@@ -200,7 +200,7 @@ export function VendorScorecardCard({ sc }: { sc: VendorScorecardData }) {
         ))}
       </div>
       {sc.top_risk_driver && (
-        <div className="text-[11px] pt-1 border-t" style={{ borderColor: c.border, color: 'var(--color-text-muted)' }}>
+        <div className="text-[13px] pt-1 border-t" style={{ borderColor: c.border, color: 'var(--color-text-muted)' }}>
           ↓ Gap: <span className="font-medium" style={{ color: c.text }}>{formatRiskDriver(sc.top_risk_driver)}</span>
         </div>
       )}
@@ -247,7 +247,7 @@ export function InstitutionScorecardCard({ sc }: { sc: InstitutionScorecardData 
           <div className="text-lg font-bold font-mono tabular-nums" style={{ color: c.text }}>
             {sc.total_score.toFixed(0)}<span className="text-xs font-normal opacity-70">/100</span>
           </div>
-          <div className="text-[11px] opacity-60">
+          <div className="text-[13px] opacity-60">
             Pct. nacional: <strong>{(sc.national_percentile * 100).toFixed(0)}°</strong>
           </div>
         </div>
@@ -258,7 +258,7 @@ export function InstitutionScorecardCard({ sc }: { sc: InstitutionScorecardData 
         ))}
       </div>
       {sc.top_risk_driver && (
-        <div className="text-[11px] pt-1 border-t" style={{ borderColor: c.border, color: 'var(--color-text-muted)' }}>
+        <div className="text-[13px] pt-1 border-t" style={{ borderColor: c.border, color: 'var(--color-text-muted)' }}>
           ↓ Gap: <span className="font-medium" style={{ color: c.text }}>{formatRiskDriver(sc.top_risk_driver)}</span>
         </div>
       )}

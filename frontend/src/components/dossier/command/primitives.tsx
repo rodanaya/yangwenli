@@ -69,18 +69,18 @@ export function StatStrip({ cells }: { cells: Array<StatCell | null> }) {
         <div key={c.label} className="px-3 py-3 sm:px-4 sm:py-4" style={{ borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)' }}>
           <div
             className="font-mono"
-            style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+            style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
             {c.label}
           </div>
           <div
             className="tabular-nums"
-            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 600, fontSize: 'clamp(18px, 2vw, 24px)', lineHeight: 1, color: c.color ?? 'var(--color-text-primary)', letterSpacing: '-0.01em' }}
+            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 600, fontSize: 'clamp(18px, 2vw, 24px)', lineHeight: 1, color: c.color ?? 'var(--color-text-primary)', letterSpacing: '-0.01em' }}
           >
             {c.value}
           </div>
           {c.sub && (
-            <div className="font-mono tabular-nums" style={{ fontSize: 9, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, opacity: c.color ? 0.85 : 1, whiteSpace: 'nowrap' }}>
+            <div className="font-mono tabular-nums" style={{ fontSize: 13, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, opacity: c.color ? 0.85 : 1, whiteSpace: 'nowrap' }}>
               {c.sub}
             </div>
           )}
@@ -100,7 +100,7 @@ export function StatStrip({ cells }: { cells: Array<StatCell | null> }) {
 export function Panel({ label, accent, children }: { label: string; accent: string; children: React.ReactNode }) {
   return (
     <section style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)', borderRadius: 3, padding: '14px 16px 16px', background: 'transparent' }}>
-      <div className="font-mono flex items-center gap-2" style={{ fontSize: 9.5, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: 12 }}>
+      <div className="font-mono flex items-center gap-2" style={{ fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: 12 }}>
         <span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: 999, background: accent }} />
         {label}
       </div>
@@ -110,7 +110,7 @@ export function Panel({ label, accent, children }: { label: string; accent: stri
 }
 
 export function EmptyNote({ text }: { text: string }) {
-  return <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-muted)' }}>{text}</p>
+  return <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13, color: 'var(--color-text-muted)' }}>{text}</p>
 }
 
 // ─── OECD deviation panel ─────────────────────────────────────────────────────
@@ -136,8 +136,8 @@ export function OecdDeviationPanel({ rows, isEs }: { rows: BenchRow[]; isEs: boo
             return (
               <div key={r.label}>
                 <div className="flex items-baseline justify-between mb-1">
-                  <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>{r.label}</span>
-                  <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color }}>
+                  <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>{r.label}</span>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color }}>
                     {Math.round(r.pct)}%<span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> / {r.limit}%</span>
                   </span>
                 </div>
@@ -181,7 +181,7 @@ export function RiskOverTimePanel({ trend, isEs }: { trend: TrendPoint[]; isEs: 
         <>
           <EditorialAreaChart data={scaled} xKey="year" yKey="avg" colorToken="risk-critical" yFormat="pct" yDomain={[0, 100]} height={96} />
           {peak && (
-            <p className="font-mono mt-2" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+            <p className="font-mono mt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
               {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg * 100)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}
             </p>
           )}
@@ -252,7 +252,7 @@ export function TopEntitiesList({ items, shareThreshold = 10 }: { items: TopEnti
           <div className="min-w-0">
             <EntityIdentityChip type={it.type} id={it.id} name={it.name} size="sm" fullName />
           </div>
-          <div className="flex items-baseline gap-2.5 flex-shrink-0 font-mono tabular-nums" style={{ fontSize: 11 }}>
+          <div className="flex items-baseline gap-2.5 flex-shrink-0 font-mono tabular-nums" style={{ fontSize: 13 }}>
             <span style={{ color: it.share >= shareThreshold ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: 600 }}>{Math.round(it.share)}%</span>
             <span style={{ color: 'var(--color-text-muted)' }}>{formatCompactMXN(it.value)}</span>
           </div>

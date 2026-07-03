@@ -77,7 +77,7 @@ export function DuetArrow({
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
       >
         <span
-          className="font-mono text-[10px] font-bold tracking-[0.08em] uppercase px-1.5 py-0.5 rounded-sm"
+          className="font-mono text-[12px] font-bold tracking-[0.08em] uppercase px-1.5 py-0.5 rounded-sm"
           style={{
             background: 'rgb(9 9 11)', // zinc-950
             color: accent,

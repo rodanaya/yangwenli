@@ -107,7 +107,7 @@ interface TrendYear {
 
 // ---------------------------------------------------------------------------
 // National hero — Playfair Display Italic 800 numeral + EB Garamond
-// italic headline with a single ochre tier fragment. One ladder only:
+// headline with a single ochre tier fragment. One ladder only:
 // TIER_STYLES via gradeToTierKey (Steel & Ember — no green anywhere).
 // ---------------------------------------------------------------------------
 
@@ -149,7 +149,7 @@ function NationalHero({
     >
       <div className="px-6 py-8 md:px-10 md:py-10">
         <p
-          className="font-mono text-[10px] uppercase tracking-[0.2em] mb-3"
+          className="font-mono text-[12px] uppercase tracking-[0.2em] mb-3"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {t('heroKicker')}
@@ -157,7 +157,7 @@ function NationalHero({
 
         <div className="flex flex-col sm:flex-row sm:items-baseline gap-3 sm:gap-6 mb-4">
           <span
-            className="leading-none tabular-nums font-extrabold italic"
+            className="leading-none tabular-nums font-extrabold"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
               fontSize: 'clamp(72px, 12vw, 128px)',
@@ -174,7 +174,7 @@ function NationalHero({
 
           <h1
             className="text-xl md:text-2xl leading-snug max-w-[36ch]"
-            style={{ fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic', color: 'var(--color-text-secondary)' }}
+            style={{ fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'normal', color: 'var(--color-text-secondary)' }}
           >
             {t('corteHeadlinePrefix')}
             {' '}
@@ -184,7 +184,7 @@ function NationalHero({
         </div>
 
         {(valueLabel || contractsLabel) && (
-          <p className="font-mono text-[11px] tracking-[0.02em] text-text-muted">
+          <p className="font-mono text-[13px] tracking-[0.02em] text-text-muted">
             {t('corteCaption', {
               value: valueLabel ?? '—',
               contracts: contractsLabel ?? '—',
@@ -253,7 +253,7 @@ function VerdictBlock({
 
   return (
     <section className="mb-10">
-      <p className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--color-oecd)' }}>
+      <p className="font-mono text-[12px] uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--color-oecd)' }}>
         {t('oecdContextTitle')}
       </p>
       <h2 className="text-lg font-serif font-bold mb-3 text-text-primary">
@@ -326,16 +326,16 @@ function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 
         )}
       </div>
 
-      <span className="text-[10px] font-mono shrink-0 text-right tabular-nums leading-tight w-16" style={{ color: isAbove ? '#c41e3a' : '#52525b' }}>
+      <span className="text-[12px] font-mono shrink-0 text-right tabular-nums leading-tight w-16" style={{ color: isAbove ? '#c41e3a' : '#52525b' }}>
         {arrow} {absPp}pp
       </span>
 
-      <span className="text-[10px] font-mono tabular-nums shrink-0 text-right w-12" style={{ color: 'var(--color-text-muted)' }}>
+      <span className="text-[12px] font-mono tabular-nums shrink-0 text-right w-12" style={{ color: 'var(--color-text-muted)' }}>
         {daPct.toFixed(1)}%
       </span>
 
       <span
-        className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold shrink-0"
+        className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-semibold shrink-0"
         style={{ color: tierStyle.color, backgroundColor: tierStyle.bg, border: `1px solid ${tierStyle.border}` }}
       >
         {Math.round(sector.phi_composite_score ?? 0)}
@@ -436,7 +436,7 @@ function TrendLine({ years, lang }: { years: TrendYear[]; lang: 'en' | 'es' }) {
         <h2 className="text-lg font-serif font-bold text-text-primary">
           {t('trendTitle')}
         </h2>
-        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em]" style={{ color: trendConfig.color }}>
+        <span className="text-[12px] font-mono font-bold uppercase tracking-[0.15em]" style={{ color: trendConfig.color }}>
           {t(trendConfig.labelKey)}
         </span>
       </div>
@@ -448,7 +448,7 @@ function TrendLine({ years, lang }: { years: TrendYear[]; lang: 'en' | 'es' }) {
           <path d={pathD} fill="none" stroke={trendConfig.color} strokeWidth={2} />
           {/* First point + label */}
           <circle cx={xFor(0)} cy={yFor(first.phi_composite_score ?? 0)} r={2.5} fill={trendConfig.color} />
-          <text x={xFor(0)} y={yFor(first.phi_composite_score ?? 0) - 8} fontSize={9} fontFamily="var(--font-family-mono)" textAnchor="start" fill="var(--color-text-muted)">
+          <text x={xFor(0)} y={yFor(first.phi_composite_score ?? 0) - 8} fontSize={13} fontFamily="var(--font-family-mono)" textAnchor="start" fill="var(--color-text-muted)">
             {first.year}
           </text>
           {/* Last point + direct-labeled endpoint */}
@@ -456,7 +456,7 @@ function TrendLine({ years, lang }: { years: TrendYear[]; lang: 'en' | 'es' }) {
           <text
             x={xFor(points.length - 1) + 6}
             y={yFor(last.phi_composite_score ?? 0) + 3}
-            fontSize={11}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             fontWeight={700}
             textAnchor="start"
@@ -510,12 +510,12 @@ function MethodologyFooter() {
           {t('methodologyNote')}
         </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[10px] font-mono text-text-muted">
+          <p className="text-[12px] font-mono text-text-muted">
             {t('sourcesLabel')}
           </p>
           <button
             onClick={() => navigate('/methodology')}
-            className="text-[10px] font-mono font-bold uppercase tracking-wide transition-colors text-risk-high hover:text-accent"
+            className="text-[12px] font-mono font-bold uppercase tracking-wide transition-colors text-risk-high hover:text-accent"
           >
             {t('viewFullMethodology')}
           </button>
@@ -647,7 +647,7 @@ function ReportCard() {
         <header className="mb-8 pb-5 border-b border-border">
           <div className="flex items-center gap-2 mb-2">
             <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
-            <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-risk-high">
+            <p className="text-[12px] font-mono font-bold tracking-[0.2em] uppercase text-risk-high">
               {t('heroKicker')}
             </p>
           </div>
@@ -681,7 +681,7 @@ function ReportCard() {
         <MethodologyFooter />
 
         {/* Source footnote */}
-        <p className="text-[10px] text-text-primary font-mono text-center pb-4">
+        <p className="text-[12px] text-text-primary font-mono text-center pb-4">
           RUBLI v0.8.5 · COMPRANET 2002-2025 · 3.06M contracts · MX$9.88T validated
         </p>
       </div>

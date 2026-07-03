@@ -83,13 +83,13 @@ export function FunnelBand({
   return (
     <div className="mb-3">
       <div className="flex items-baseline justify-between mb-1">
-        <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+        <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
           {isEs ? '§ EL EMBUDO · COMPRESIÓN DEL TRIAJE' : '§ THE FUNNEL · TRIAGE COMPRESSION'}
         </p>
         <button
           onClick={() => onSelect(null, false)}
           className={cn(
-            'text-[10px] font-mono uppercase tracking-[0.12em] transition-colors',
+            'text-[12px] font-mono uppercase tracking-[0.12em] transition-colors',
             activeTier == null ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'
           )}
           aria-pressed={activeTier == null}
@@ -132,7 +132,7 @@ export function FunnelBand({
               <span className="relative block font-mono font-bold text-[13px] tabular-nums text-text-primary leading-none">
                 {formatNumber(n)}
               </span>
-              <span className="relative block mt-1 font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted leading-none">
+              <span className="relative block mt-1 font-mono text-[13px] uppercase tracking-[0.14em] text-text-muted leading-none">
                 {tierLabel(t)}
               </span>
               {t === 2 && novelLeadsT2 != null && (
@@ -149,7 +149,7 @@ export function FunnelBand({
         <div className="shrink-0 w-[92px] flex flex-col items-end justify-center pl-1">
           <span
             className="tabular-nums text-[22px] leading-none text-text-primary"
-            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500 }}
+            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 500 }}
           >
             ÷{ratio > 0 ? formatNumber(ratio) : '—'}
           </span>
@@ -173,7 +173,7 @@ export function FunnelBand({
               aria-label={segAria(t, n)}
               className="w-full flex items-center gap-2 min-h-[32px]"
             >
-              <span className="w-16 shrink-0 text-right font-mono text-[11px] tabular-nums text-text-primary">
+              <span className="w-16 shrink-0 text-right font-mono text-[13px] tabular-nums text-text-primary">
                 {formatNumber(n)}
               </span>
               <span className="flex-1 h-3 rounded-sm overflow-hidden bg-background-card border border-border relative">
@@ -189,7 +189,7 @@ export function FunnelBand({
             </button>
           )
         })}
-        <p className="font-mono text-[9px] text-text-muted text-right">
+        <p className="font-mono text-[13px] text-text-muted text-right">
           ÷{ratio > 0 ? formatNumber(ratio) : '—'} · {isEs ? 'compresión' : 'compression'}
         </p>
       </div>

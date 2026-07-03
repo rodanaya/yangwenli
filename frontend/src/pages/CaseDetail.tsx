@@ -241,7 +241,7 @@ function formatDateShort(raw: string | null | undefined, lang: string): string {
 // Shared typography
 // ─────────────────────────────────────────────────────────────────────────────
 const OVERLINE: React.CSSProperties = {
-  fontSize: 10,
+  fontSize: 12,
   fontFamily: 'ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
@@ -280,7 +280,7 @@ function Pill({
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
-        fontSize: 10,
+        fontSize: 12,
         fontFamily: 'ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace',
         fontWeight: 700,
         letterSpacing: '0.12em',
@@ -459,7 +459,7 @@ function YearRangeBar({
           x={bandX + bandW / 2}
           y={baselineY - 34}
           fill={AMBER}
-          fontSize={10}
+          fontSize={12}
           fontFamily='ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace'
           fontWeight={700}
           letterSpacing="0.12em"
@@ -501,7 +501,7 @@ function YearRangeBar({
               x={x}
               y={baselineY + tickH + 14}
               fill={TEXT_MUTED}
-              fontSize={10}
+              fontSize={12}
               fontFamily='ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace'
               textAnchor="middle"
             >
@@ -516,7 +516,7 @@ function YearRangeBar({
             x={paddingX + (discoveryYear - axisStart) * yearWidth + yearWidth / 2}
             y={baselineY + tickH + 26}
             fill={CYAN}
-            fontSize={9}
+            fontSize={13}
             fontFamily='ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace'
             fontWeight={700}
             letterSpacing="0.12em"
@@ -531,7 +531,7 @@ function YearRangeBar({
           display: 'flex',
           justifyContent: 'space-between',
           marginTop: 12,
-          fontSize: 10,
+          fontSize: 12,
           ...MONO,
           color: TEXT_MUTED,
           letterSpacing: '0.08em',
@@ -649,7 +649,7 @@ function RiskDistribution({ dist }: { dist: RiskDist }) {
         <div style={{ ...OVERLINE, color: TEXT_MUTED }}>
           Risk level · {dist.totalVendors} scored {dist.totalVendors === 1 ? 'vendor' : 'vendors'}
         </div>
-        <div style={{ fontSize: 10, color: TEXT_FAINT, ...MONO, letterSpacing: '0.12em' }}>
+        <div style={{ fontSize: 12, color: TEXT_FAINT, ...MONO, letterSpacing: '0.12em' }}>
           EACH DOT = 5 % OF MATCHED VENDORS
         </div>
       </div>
@@ -668,10 +668,10 @@ function RiskDistribution({ dist }: { dist: RiskDist }) {
               }}
             >
               <div>
-                <div style={{ fontSize: 11, color: TEXT_PRIMARY, fontWeight: 600, letterSpacing: '0.02em' }}>
+                <div style={{ fontSize: 13, color: TEXT_PRIMARY, fontWeight: 600, letterSpacing: '0.02em' }}>
                   {r.label}
                 </div>
-                <div style={{ fontSize: 9, ...MONO, color: TEXT_FAINT, letterSpacing: '0.1em' }}>
+                <div style={{ fontSize: 13, ...MONO, color: TEXT_FAINT, letterSpacing: '0.1em' }}>
                   {r.sev}
                 </div>
               </div>
@@ -786,7 +786,7 @@ function ModelProvenancePanel({
           <div style={{ ...MONO, fontSize: 22, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '-0.02em' }}>
             {docCount}
           </div>
-          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 5, ...MONO }}>
+          <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 5, ...MONO }}>
             {lang === 'es' ? 'en fuentes públicas' : 'in source materials'}
           </div>
         </div>
@@ -798,7 +798,7 @@ function ModelProvenancePanel({
           <div style={{ ...MONO, fontSize: 22, fontWeight: 700, color: matchedCount > 0 ? TEXT_PRIMARY : TEXT_MUTED, letterSpacing: '-0.02em' }}>
             {totalContracts > 0 ? formatCompact(totalContracts) : '0'}
           </div>
-          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 5, ...MONO }}>
+          <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 5, ...MONO }}>
             {matchedCount > 0
               ? `${matchedCount}/${docCount} ${lang === 'es' ? 'proveedores' : 'vendors'} · ${matchRate.toFixed(0)}%`
               : (lang === 'es' ? 'pendiente vinculación' : 'pending match')}
@@ -812,7 +812,7 @@ function ModelProvenancePanel({
           <div style={{ ...MONO, fontSize: 22, fontWeight: 700, color: 'var(--color-risk-critical)', letterSpacing: '-0.02em' }}>
             {ariaPattern.code}
           </div>
-          <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 5, ...MONO, letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: 13, color: TEXT_SECONDARY, marginTop: 5, ...MONO, letterSpacing: '0.04em' }}>
             {lang === 'es' ? ariaPattern.labelEs : ariaPattern.label}
           </div>
         </div>
@@ -824,7 +824,7 @@ function ModelProvenancePanel({
           <div style={{ ...MONO, fontSize: 22, fontWeight: 700, color: severity >= 3 ? 'var(--color-risk-critical)' : TEXT_PRIMARY, letterSpacing: '-0.02em' }}>
             {severity}/4
           </div>
-          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 5, ...MONO, letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 5, ...MONO, letterSpacing: '0.04em' }}>
             {lang === 'es' ? severityLabelEs : severityLabel}
           </div>
         </div>
@@ -926,7 +926,7 @@ function SimilarPatternsTeaser({
       {isLoading ? (
         <div style={{ height: 60, background: 'var(--color-background-elevated)', borderRadius: 2, opacity: 0.4 }} />
       ) : items.length === 0 ? (
-        <p style={{ fontSize: 12, color: TEXT_MUTED, fontStyle: 'italic', margin: 0 }}>
+        <p style={{ fontSize: 12, color: TEXT_MUTED, fontStyle: 'normal', margin: 0 }}>
           {lang === 'es' ? 'Sin proveedores T1 con este patrón actualmente.' : 'No Tier-1 vendors with this pattern currently.'}
         </p>
       ) : (
@@ -970,7 +970,7 @@ function SimilarPatternsTeaser({
                     flags={flags.length > 0 ? flags : undefined}
                     size="sm"
                   />
-                  <div style={{ fontSize: 10, ...MONO, color: TEXT_MUTED, marginTop: 2, letterSpacing: '0.04em' }}>
+                  <div style={{ fontSize: 12, ...MONO, color: TEXT_MUTED, marginTop: 2, letterSpacing: '0.04em' }}>
                     {v.primary_sector_name ? titleCase(v.primary_sector_name) + ' · ' : ''}
                     {v.total_contracts.toLocaleString()} {lang === 'es' ? 'contratos' : 'contracts'}
                     {lastYear ? ` · ${lang === 'es' ? 'última' : 'last'} ${lastYear}` : ''}
@@ -979,14 +979,14 @@ function SimilarPatternsTeaser({
                 <div style={{ ...MONO, fontSize: 13, fontWeight: 700, color: 'var(--color-risk-critical)', fontVariantNumeric: 'tabular-nums' }}>
                   {ips}
                 </div>
-                <span style={{ fontSize: 10, ...MONO, color: TEXT_FAINT, letterSpacing: '0.12em' }}>→</span>
+                <span style={{ fontSize: 12, ...MONO, color: TEXT_FAINT, letterSpacing: '0.12em' }}>→</span>
               </article>
             )
           })}
           <Link
             to={`/aria?pattern=${ariaPatternCode}&tier=1`}
             style={{
-              fontSize: 10,
+              fontSize: 12,
               ...MONO,
               color: TEXT_MUTED,
               textDecoration: 'none',
@@ -1101,7 +1101,7 @@ function PatternFingerprint({
           <div style={{ ...MONO, fontSize: 26, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '-0.02em', lineHeight: 1 }}>
             {total.toLocaleString()}
           </div>
-          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 6, ...MONO }}>
+          <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 6, ...MONO }}>
             {ariaPatternCode} · {ariaPatternLabel}
           </div>
         </div>
@@ -1122,7 +1122,7 @@ function PatternFingerprint({
             {Math.round(avgIps * 100)}
             <span style={{ fontSize: 14, color: TEXT_MUTED, fontWeight: 400 }}>/100</span>
           </div>
-          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 6, ...MONO }}>
+          <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 6, ...MONO }}>
             {lang === 'es' ? `de ${items.length} muestreados` : `across ${items.length} sampled`}
           </div>
         </div>
@@ -1133,7 +1133,7 @@ function PatternFingerprint({
           <div style={{ ...MONO, fontSize: 26, fontWeight: 700, color: 'var(--color-risk-critical)', letterSpacing: '-0.02em', lineHeight: 1 }}>
             {tierCounts.critical + tierCounts.high}
           </div>
-          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 6, ...MONO }}>
+          <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 6, ...MONO }}>
             {lang === 'es' ? 'crítico + alto riesgo' : 'critical + high risk'}
           </div>
         </div>
@@ -1182,7 +1182,7 @@ function PatternFingerprint({
                   display: 'inline-flex',
                   alignItems: 'baseline',
                   gap: 6,
-                  fontSize: 10,
+                  fontSize: 12,
                   ...MONO,
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
@@ -1218,7 +1218,7 @@ function PatternFingerprint({
                     background: 'var(--color-background-card)',
                     border: `1px solid ${BORDER}`,
                     borderRadius: 2,
-                    fontSize: 11,
+                    fontSize: 13,
                     ...MONO,
                   }}
                 >
@@ -1321,7 +1321,7 @@ function RoleMixBar({ vendors, lang }: { vendors: Array<{ role: string }>; lang:
                 display: 'inline-flex',
                 alignItems: 'baseline',
                 gap: 6,
-                fontSize: 10,
+                fontSize: 12,
                 ...MONO,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
@@ -1403,13 +1403,13 @@ function HeroStat({
       >
         <span>{value}</span>
         {unit && (
-          <span style={{ fontSize: 11, color: TEXT_MUTED, fontWeight: 400, letterSpacing: 0 }}>
+          <span style={{ fontSize: 13, color: TEXT_MUTED, fontWeight: 400, letterSpacing: 0 }}>
             {unit}
           </span>
         )}
       </div>
       {foot && (
-        <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 5, ...MONO, letterSpacing: '0.04em' }}>
+        <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 5, ...MONO, letterSpacing: '0.04em' }}>
           {foot}
         </div>
       )}
@@ -1491,7 +1491,7 @@ export default function CaseDetail() {
           <button
             onClick={() => navigate('/cases')}
             style={{
-              fontSize: 11,
+              fontSize: 13,
               ...MONO,
               color: CRIMSON_HI,
               border: `1px solid ${CRIMSON_HI}4d`,
@@ -1590,7 +1590,7 @@ function CaseBody({
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            fontSize: 10,
+            fontSize: 12,
             ...MONO,
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
@@ -1639,7 +1639,7 @@ function CaseBody({
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        fontSize: 11,
+                        fontSize: 13,
                         ...MONO,
                         color: TEXT_PRIMARY,
                         fontWeight: 700,
@@ -1653,7 +1653,7 @@ function CaseBody({
                       {src.outlet}
                     <span className="sr-only"> (opens in new tab)</span></a>
                   ) : (
-                    <span style={{ fontSize: 11, ...MONO, color: TEXT_PRIMARY, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span style={{ fontSize: 13, ...MONO, color: TEXT_PRIMARY, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       {src.outlet}
                     </span>
                   )}
@@ -1661,7 +1661,7 @@ function CaseBody({
                 </span>
               ))}
               {(data.sources ?? []).length > 4 && (
-                <span style={{ fontSize: 10, ...MONO, color: TEXT_MUTED }}>
+                <span style={{ fontSize: 12, ...MONO, color: TEXT_MUTED }}>
                   + {(data.sources ?? []).length - 4} {lang === 'es' ? 'más' : 'more'}
                 </span>
               )}
@@ -1889,7 +1889,7 @@ function CaseBody({
                   vendor concentration, institution diversity — calibrated against{' '}
                   {gtCount.cases.toLocaleString()} confirmed corruption cases.
                   {avgRiskScore < 0.3 && (
-                    <span style={{ color: AMBER, display: 'block', marginTop: 6, fontSize: 11 }}>
+                    <span style={{ color: AMBER, display: 'block', marginTop: 6, fontSize: 13 }}>
                       Low score flag: this pattern is structurally different from the training set.
                       See methodology.
                     </span>
@@ -1998,7 +1998,7 @@ function CaseBody({
                           display: 'flex',
                           gap: 20,
                           flexWrap: 'wrap',
-                          fontSize: 11,
+                          fontSize: 13,
                           ...MONO,
                           color: TEXT_MUTED,
                           marginBottom: 10,
@@ -2011,7 +2011,7 @@ function CaseBody({
                             {vendor.contract_count.toLocaleString()}
                           </span>
                           {vendor.contract_count === 0 && (
-                            <span style={{ color: TEXT_FAINT, marginLeft: 6, textTransform: 'none', letterSpacing: '0.01em', fontStyle: 'italic' }}>
+                            <span style={{ color: TEXT_FAINT, marginLeft: 6, textTransform: 'none', letterSpacing: '0.01em', fontStyle: 'normal' }}>
                               {lang === 'es' ? '(no hay registros en COMPRANET)' : '(none in COMPRANET)'}
                             </span>
                           )}
@@ -2048,7 +2048,7 @@ function CaseBody({
                           <Link
                             to={`/contracts?vendor_id=${vendor.vendor_id}&sort_by=risk_score&sort_order=desc`}
                             style={{
-                              fontSize: 10,
+                              fontSize: 12,
                               ...MONO,
                               letterSpacing: '0.15em',
                               textTransform: 'uppercase',
@@ -2066,7 +2066,7 @@ function CaseBody({
                           <Link
                             to={`/vendors/${vendor.vendor_id}`}
                             style={{
-                              fontSize: 10,
+                              fontSize: 12,
                               ...MONO,
                               letterSpacing: '0.15em',
                               textTransform: 'uppercase',
@@ -2086,7 +2086,7 @@ function CaseBody({
                     {/* Score on the right */}
                     {score != null && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ ...OVERLINE, fontSize: 9, marginBottom: 4 }}>RUBLI</div>
+                        <div style={{ ...OVERLINE, fontSize: 13, marginBottom: 4 }}>RUBLI</div>
                         <div
                           style={{
                             ...MONO,
@@ -2100,7 +2100,7 @@ function CaseBody({
                           {Math.round(score * 100)}
                           <span style={{ fontSize: 13, color: TEXT_MUTED, fontWeight: 400 }}>%</span>
                         </div>
-                        <div style={{ fontSize: 9, ...MONO, color: TEXT_FAINT, marginTop: 4, letterSpacing: '0.1em' }}>
+                        <div style={{ fontSize: 13, ...MONO, color: TEXT_FAINT, marginTop: 4, letterSpacing: '0.1em' }}>
                           {scoreLevel?.toUpperCase()}
                         </div>
                       </div>
@@ -2196,7 +2196,7 @@ function CaseBody({
                       <div style={{ fontSize: 12, color: TEXT_PRIMARY, fontWeight: 600 }}>
                         {actor.name}
                       </div>
-                      {actor.title && <div style={{ fontSize: 10, color: TEXT_MUTED }}>{actor.title}</div>}
+                      {actor.title && <div style={{ fontSize: 12, color: TEXT_MUTED }}>{actor.title}</div>}
                     </div>
                   </div>
                 ))}
@@ -2227,7 +2227,7 @@ function CaseBody({
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 13, color: TEXT_PRIMARY, fontWeight: 600 }}>{actor.name}</div>
                       {actor.title && (
-                        <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>{actor.title}</div>
+                        <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 2 }}>{actor.title}</div>
                       )}
                       {actor.note && (
                         <div
@@ -2354,7 +2354,7 @@ function CaseBody({
                         src.title
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 3, ...MONO, letterSpacing: '0.03em' }}>
+                    <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 3, ...MONO, letterSpacing: '0.03em' }}>
                       {src.outlet}
                       {src.date ? ` · ${formatDateShort(src.date, lang)}` : ''}
                     </div>
@@ -2410,7 +2410,7 @@ function CaseBody({
               borderLeft: `2px solid ${TEXT_FAINT}`,
               borderRadius: 2,
               background: PANEL_2,
-              fontSize: 11,
+              fontSize: 13,
               color: TEXT_MUTED,
               lineHeight: 1.6,
               ...MONO,
@@ -2476,7 +2476,7 @@ function CaseBody({
                   maxWidth: 720,
                 }}
               >
-                <span style={{ ...OVERLINE, fontSize: 9, marginRight: 6 }}>Note</span>
+                <span style={{ ...OVERLINE, fontSize: 13, marginRight: 6 }}>Note</span>
                 {data.legal_status_note}
               </p>
             )}
@@ -2526,7 +2526,7 @@ function CaseBody({
                       ;(e.currentTarget as HTMLButtonElement).style.background = PANEL
                     }}
                   >
-                    <div style={{ ...OVERLINE, fontSize: 9, color: sAccent, marginBottom: 8 }}>
+                    <div style={{ ...OVERLINE, fontSize: 13, color: sAccent, marginBottom: 8 }}>
                       Severity {cas.severity}/4
                     </div>
                     <div
@@ -2545,7 +2545,7 @@ function CaseBody({
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        fontSize: 10,
+                        fontSize: 12,
                         ...MONO,
                         color: TEXT_MUTED,
                       }}
@@ -2561,7 +2561,7 @@ function CaseBody({
               <button
                 onClick={() => navigate(`/cases?fraud_type=${data.fraud_type}`)}
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   ...MONO,
                   letterSpacing: '0.2em',
                   textTransform: 'uppercase',

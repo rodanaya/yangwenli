@@ -100,7 +100,7 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
   return (
     <div className={bare ? '' : 'card mt-6'}>
       <div className={cn('py-3', bare ? '' : 'px-4 border-b border-border/60 bg-background-card')}>
-        <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
+        <div className="text-[13px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
           {isEs ? 'TRAYECTORIA DE RIESGO POR AÑO DE MANDATO' : 'RISK TRAJECTORY BY TERM YEAR'}
         </div>
         <h3 className="text-sm font-mono text-text-primary">
@@ -151,12 +151,12 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
                     className="h-2 w-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: admin.color }}
                   />
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
+                  <span className="font-mono text-[12px] uppercase tracking-wider text-text-muted">
                     {admin.displayName}
                   </span>
                   {hasData && (
                     <span
-                      className="font-mono text-[9px] tabular-nums ml-auto flex-shrink-0"
+                      className="font-mono text-[13px] tabular-nums ml-auto flex-shrink-0"
                       style={{ color: delta >= 0 ? 'var(--color-risk-high)' : 'var(--color-text-muted)' }}
                     >
                       {delta >= 0 ? '+' : ''}{delta.toFixed(1)} pp
@@ -335,7 +335,7 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
                         x={PANEL_W / 2}
                         y={PANEL_H / 2}
                         fill="var(--color-text-muted)"
-                        fontSize={9}
+                        fontSize={13}
                         textAnchor="middle"
                         dominantBaseline="middle"
                         fontFamily="monospace"
@@ -351,12 +351,12 @@ export function AdminCycleSmallMultiples({ administrations, isEs, referencePct, 
         </div>
 
         {/* Year-6 band caption */}
-        <p className="mt-2 text-[9px] text-text-muted font-mono">
+        <p className="mt-2 text-[13px] text-text-muted font-mono">
           {isEs ? 'Año 6 = año electoral / salida' : 'Year 6 = election / exit year'}
         </p>
 
         {/* Footer note */}
-        <p className="mt-1 text-[10px] text-text-muted font-mono leading-relaxed">
+        <p className="mt-1 text-[12px] text-text-muted font-mono leading-relaxed">
           {isFocus
             ? (isEs
               ? 'Riesgo promedio por año relativo de mandato. La línea discontinua marca el promedio nacional.'

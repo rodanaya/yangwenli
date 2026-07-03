@@ -32,7 +32,7 @@ export function StoryAdminSunburst() {
 
       {/* Reading guide */}
       <div className="rounded-sm border border-border bg-background-card p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mb-1">
+        <p className="text-[12px] font-mono uppercase tracking-wide text-text-muted mb-1">
           {t('adminSunburst.readGuideLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">

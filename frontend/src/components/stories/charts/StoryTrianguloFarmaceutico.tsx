@@ -140,7 +140,7 @@ export function StoryTrianguloFarmaceutico() {
               y={my}
               textAnchor="middle"
               fill="var(--color-risk-critical)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -165,7 +165,7 @@ export function StoryTrianguloFarmaceutico() {
               y={inst.y + 4}
               textAnchor="middle"
               fill="var(--color-sector-educacion)"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
             >
@@ -176,7 +176,7 @@ export function StoryTrianguloFarmaceutico() {
               y={inst.y + (i === 0 ? -38 : 46)}
               textAnchor="middle"
               fill="var(--color-text-secondary)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
             >
               {`${formatCompactMXN(inst.spend * 1_000_000_000)} ${t('trianguloFarmaceutico.spendSuffix')}`}
@@ -206,7 +206,7 @@ export function StoryTrianguloFarmaceutico() {
               y={v.y + 3}
               textAnchor="middle"
               fill="var(--color-risk-critical)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
             >
@@ -217,7 +217,7 @@ export function StoryTrianguloFarmaceutico() {
               y={v.y + (v.id === 'farmacos' ? -36 : 44)}
               textAnchor="middle"
               fill="var(--color-text-muted)"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono)"
             >
               {v.label}
@@ -228,11 +228,11 @@ export function StoryTrianguloFarmaceutico() {
         {/* Legend */}
         <g transform="translate(20, 400)">
           <circle cx={6} cy={6} r={6} fill="#18181b" stroke="var(--color-sector-educacion)" strokeWidth={1.5} />
-          <text x={18} y={10} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+          <text x={18} y={10} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
             {t('trianguloFarmaceutico.legendInstitutions')}
           </text>
           <circle cx={180} cy={6} r={6} fill="var(--color-sector-salud)" />
-          <text x={192} y={10} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+          <text x={192} y={10} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
             {t('trianguloFarmaceutico.legendVendor')}
           </text>
         </g>
@@ -240,7 +240,7 @@ export function StoryTrianguloFarmaceutico() {
 
       {/* DA rate dot strips — canonical DotStrip primitive (bible §4) */}
       <div className="space-y-2 pt-2 border-t border-border">
-        <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+        <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
           {t('trianguloFarmaceutico.daStripsLabel')}
         </p>
         <DotStrip

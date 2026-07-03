@@ -103,7 +103,7 @@ export function EditorialRadarChart({
             borderRadius: 2,
             padding: '8px 10px',
             color: '#faf9f6',
-            fontSize: 11,
+            fontSize: 13,
             fontFamily: 'var(--font-family-mono)',
           }}
         />

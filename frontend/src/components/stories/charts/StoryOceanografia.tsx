@@ -90,7 +90,7 @@ export function StoryOceanografia() {
                   y={y + 3}
                   textAnchor="end"
                   fill="var(--color-text-secondary)"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                 >
                   {v}B
@@ -105,7 +105,7 @@ export function StoryOceanografia() {
             y={PAD_T + CHART_H / 2}
             textAnchor="middle"
             fill="var(--color-text-muted)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
             transform={`rotate(-90 14 ${PAD_T + CHART_H / 2})`}
@@ -150,7 +150,7 @@ export function StoryOceanografia() {
                   y={H - PAD_B + 14}
                   textAnchor="middle"
                   fill="var(--color-text-muted)"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                 >
                   '{String(row.year).slice(2)}
@@ -176,7 +176,7 @@ export function StoryOceanografia() {
               y={PAD_T - 10}
               textAnchor="end"
               fill="var(--color-risk-critical)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
               letterSpacing="0.08em"
@@ -188,7 +188,7 @@ export function StoryOceanografia() {
           {/* Legend */}
           <g transform={`translate(${PAD_L}, ${H - 14})`}>
             <rect width={10} height={8} fill="var(--color-risk-medium)" fillOpacity={0.75} />
-            <text x={14} y={7} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={14} y={7} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
               {t('oceanografia.legendNote')}
             </text>
           </g>

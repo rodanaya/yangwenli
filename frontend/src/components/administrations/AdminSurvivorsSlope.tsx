@@ -50,9 +50,9 @@ export interface SurvivorBridge {
 // ── Geometry (verbatim per approved spec §A) ──────────────────────────────
 const VIEW_W = 1040
 const VIEW_H = 280
-const COL_W = 176
-const GUTTER = 40
-const COL_STEP = COL_W + GUTTER // 216
+const COL_W = 140
+const GUTTER = 85
+const COL_STEP = COL_W + GUTTER // 225
 const HEADER_H = 34
 const ROW_H = 38
 const N_ROWS = 6
@@ -213,7 +213,7 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
       <p
         style={{
           fontFamily: SERIF,
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 500,
           fontSize: 22,
           lineHeight: 1.25,
@@ -237,7 +237,7 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
         )}
       </p>
       {topBridge && (
-        <p className="mt-1 text-sm text-text-muted" style={{ fontFamily: SERIF, fontStyle: 'italic' }}>
+        <p className="mt-1 text-sm text-text-muted" style={{ fontFamily: SERIF, fontStyle: 'normal' }}>
           {isEs
             ? `El mayor: ${formatVendorName(topBridge.displayName, 48)}, ${formatDualCurrency(topBridge.totalMxn)} entre ${topBridgeEraA} y ${topBridgeEraB}.`
             : `The largest: ${formatVendorName(topBridge.displayName, 48)}, ${formatDualCurrency(topBridge.totalMxn)} across ${topBridgeEraA} and ${topBridgeEraB}.`}
@@ -299,12 +299,12 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
                           />
                           <span
                             className="truncate"
-                            style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.1 }}
+                            style={{ fontFamily: SERIF, fontStyle: 'normal', fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.1 }}
                           >
                             {col.displayName}
                           </span>
                         </span>
-                        <span style={{ fontFamily: MONO_ARCHIVAL, fontSize: 9, color: 'var(--color-text-muted)' }}>
+                        <span style={{ fontFamily: MONO_ARCHIVAL, fontSize: 13, color: 'var(--color-text-muted)' }}>
                           {col.yearsLabel}
                         </span>
                       </button>
@@ -342,7 +342,7 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
                           x={colX + 6}
                           y={rowY - 3}
                           fontFamily={MONO_DATA}
-                          fontSize={10.5}
+                          fontSize={12}
                           style={{
                             fontWeight: isBridged ? 600 : 400,
                             fill: isBridged ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
@@ -357,7 +357,7 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
                           x={colX + 6}
                           y={rowY + 10}
                           fontFamily={MONO_DATA}
-                          fontSize={9.5}
+                          fontSize={13}
                           style={{ fill: 'var(--color-text-muted)' }}
                         >
                           {formatCompactMXN(seat.totalMxn)}
@@ -432,7 +432,7 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
                   {formatVendorName(b.displayName, 40)}
                   {isSheinbaumBridge && <span style={{ color: OCHRE }}>†</span>}
                 </div>
-                <div className="text-[11px] font-mono text-text-muted mt-0.5">
+                <div className="text-[13px] font-mono text-text-muted mt-0.5">
                   {eraA} → {eraB} · {formatCompactMXN(b.totalMxn)}
                 </div>
               </div>
@@ -441,7 +441,7 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
       </div>
 
       {hasSheinbaumBridge && (
-        <p className="mt-2 text-[10px] text-text-muted" style={{ fontFamily: MONO_ARCHIVAL }}>
+        <p className="mt-2 text-[12px] text-text-muted" style={{ fontFamily: MONO_ARCHIVAL }}>
           {isEs ? '† Sexenio en curso — padrón parcial.' : '† Term in progress — partial roster.'}
         </p>
       )}

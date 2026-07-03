@@ -265,11 +265,11 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
         <div className="flex items-center gap-2">
           {/* Data source badge */}
           {!isError && liveData ? (
-            <span className="text-[10px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
+            <span className="text-[12px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
               {t('temporal.liveData', 'Live data')}
             </span>
           ) : (
-            <span className="text-[10px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
+            <span className="text-[12px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
               {t('temporal.estimated', 'Estimated')}
             </span>
           )}
@@ -290,7 +290,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
               onClick={handleRetry}
               title={t('temporal.retryLive', 'Retry live data')}
               aria-label={t('temporal.retryLive', 'Retry live data')}
-              className="text-[10px] font-mono text-text-muted border border-border/30 px-2 py-0.5 rounded hover:text-accent hover:border-accent/40 transition-colors"
+              className="text-[12px] font-mono text-text-muted border border-border/30 px-2 py-0.5 rounded hover:text-accent hover:border-accent/40 transition-colors"
             >
               {t('temporal.retry', 'Retry')}
             </button>
@@ -343,7 +343,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
               className="flex items-start gap-2 px-2 py-1.5 rounded border border-border/30 bg-background-elevated/20"
             >
               <span
-                className="text-[11px] font-mono font-bold leading-none mt-0.5 shrink-0 px-1 py-0.5 rounded"
+                className="text-[13px] font-mono font-bold leading-none mt-0.5 shrink-0 px-1 py-0.5 rounded"
                 style={{
                   color: scandal.color,
                   background: `${scandal.color}18`,
@@ -352,7 +352,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
               >
                 {scandal.year}
               </span>
-              <span className="text-[10px] font-mono text-text-muted leading-tight">
+              <span className="text-[12px] font-mono text-text-muted leading-tight">
                 {scandal.label}
               </span>
             </div>

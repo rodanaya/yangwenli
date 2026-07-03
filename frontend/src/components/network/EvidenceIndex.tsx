@@ -23,7 +23,7 @@ export function EvidenceIndex({ entries, onFocusVendor, lang }: EvidenceIndexPro
     <div className="mt-3 pt-3" style={{ borderTop: '0.5px solid var(--color-border)' }}>
       <div
         className="font-mono uppercase mb-2"
-        style={{ fontSize: 9.5, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}
+        style={{ fontSize: 13, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}
       >
         {lang === 'es' ? '§ Marcas de evidencia' : '§ Evidence marks'}
       </div>

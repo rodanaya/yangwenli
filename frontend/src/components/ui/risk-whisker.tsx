@@ -135,7 +135,7 @@ export function RiskWhisker({
       </svg>
 
       {showLabels && hasCi && (
-        <div className="flex items-center gap-1 text-[9px] font-mono text-text-muted tabular-nums">
+        <div className="flex items-center gap-1 text-[13px] font-mono text-text-muted tabular-nums">
           <span>{((lower ?? 0) * 100).toFixed(0)}%</span>
           <span className="text-text-muted/40">–</span>
           <span>{((upper ?? 0) * 100).toFixed(0)}%</span>

@@ -123,20 +123,20 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
               aria-expanded={isOpen}
               aria-label={`${getSectorName(sectorCode, isEs ? 'es' : 'en')} — ${isEs ? (isOpen ? 'contraer' : 'expandir') : (isOpen ? 'collapse' : 'expand')}`}
             >
-              <span className="text-[11px] font-mono text-text-muted w-4 flex-shrink-0">
+              <span className="text-[13px] font-mono text-text-muted w-4 flex-shrink-0">
                 {isOpen ? '▼' : '▶'}
               </span>
               <span
-                className="text-[11px] font-mono font-bold uppercase tracking-[0.12em] flex-1"
+                className="text-[13px] font-mono font-bold uppercase tracking-[0.12em] flex-1"
                 style={{ color }}
               >
                 {getSectorName(sectorCode, isEs ? 'es' : 'en')}
               </span>
-              <span className="text-[10px] font-mono text-text-muted">
+              <span className="text-[12px] font-mono text-text-muted">
                 {cats.length} {isEs ? 'cat.' : 'cat.'}
               </span>
               {sectorData && (
-                <span className="text-[11px] font-mono tabular-nums text-text-secondary">
+                <span className="text-[13px] font-mono tabular-nums text-text-secondary">
                   {formatSpend(sectorData.total_value_mxn)}
                 </span>
               )}
@@ -157,7 +157,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
                   className="flex items-center gap-3 pl-10 pr-4 py-2 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
                   style={{ borderLeft: `3px solid ${color}33` }}
                 >
-                  <span className="flex-shrink-0 w-5 font-mono text-[10px] text-text-muted tabular-nums">
+                  <span className="flex-shrink-0 w-5 font-mono text-[12px] text-text-muted tabular-nums">
                     {String(idx + 1).padStart(2, '0')}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -190,7 +190,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-1 w-10 justify-end">
                     <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`} aria-hidden="true" />
-                    <span className="font-mono text-[10px] tabular-nums text-text-secondary">
+                    <span className="font-mono text-[12px] tabular-nums text-text-secondary">
                       {cat.direct_award_pct.toFixed(0)}%
                     </span>
                   </div>
@@ -460,16 +460,16 @@ export function Sectors() {
             className="mb-3 flex items-center gap-3"
             style={{
               fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-              fontSize: '10px',
+              fontSize: '12px',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
               fontWeight: 400,
             }}
           >
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·II</span>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>Folio·II</span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               {lang === 'es' ? 'Arqueo de caja federal' : 'Federal cash count'}
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               COMPRANET 2002–2025
@@ -485,7 +485,7 @@ export function Sectors() {
                 className="text-text-primary"
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 500,
                   fontSize: 'clamp(28px, 4vw, 40px)',
                   lineHeight: 0.98,
@@ -512,7 +512,7 @@ export function Sectors() {
                   }
                   style={{
                     fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 800,
                     fontVariantNumeric: 'tabular-nums',
                     fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
@@ -525,7 +525,7 @@ export function Sectors() {
                 <div
                   style={{
                     fontFamily: '"IBM Plex Mono", monospace',
-                    fontSize: '9px',
+                    fontSize: '13px',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     color: 'var(--color-text-muted)',
@@ -578,9 +578,9 @@ export function Sectors() {
             )}
             aria-pressed={view === 'sectors'}
           >
-            <span className="font-mono text-[10px] font-bold tracking-[0.18em] uppercase mr-2">WHO</span>
+            <span className="font-mono text-[12px] font-bold tracking-[0.18em] uppercase mr-2">WHO</span>
             <span>{lang === 'es' ? 'Sectores' : 'Sectors'}</span>
-            <span className="ml-2 font-mono text-[11px] text-text-muted">12</span>
+            <span className="ml-2 font-mono text-[13px] text-text-muted">12</span>
           </button>
           <button
             type="button"
@@ -593,9 +593,9 @@ export function Sectors() {
             )}
             aria-pressed={view === 'categories'}
           >
-            <span className="font-mono text-[10px] font-bold tracking-[0.18em] uppercase mr-2">WHAT</span>
+            <span className="font-mono text-[12px] font-bold tracking-[0.18em] uppercase mr-2">WHAT</span>
             <span>{lang === 'es' ? 'Categorías' : 'Categories'}</span>
-            <span className="ml-2 font-mono text-[11px] text-text-muted">
+            <span className="ml-2 font-mono text-[13px] text-text-muted">
               {categoryData?.total ?? '—'}
             </span>
           </button>
@@ -620,7 +620,7 @@ export function Sectors() {
                 <>
                   {/* Editorial lede */}
                   <div className="mb-3 pb-3 border-b border-border">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+                    <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
                       {lang === 'es' ? 'Hallazgo · El Catálogo' : 'Finding · The Catalog'}
                     </p>
                     <h2
@@ -673,12 +673,12 @@ export function Sectors() {
                   {/* ── § 2 — CAPTURE DUMBBELL HERO ─────────────────────── */}
                   <div className="mb-3 pb-3 border-b border-border">
                     <div className="flex items-baseline gap-3 mb-2">
-                      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+                      <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                         {lang === 'es'
                           ? '§ La captura · cuánto controla el líder de cada categoría'
                           : '§ The capture · how much the leader of each category holds'}
                       </p>
-                      <span className="text-[9px] text-text-muted/50 font-mono hidden sm:block">
+                      <span className="text-[13px] text-text-muted/50 font-mono hidden sm:block">
                         {lang === 'es'
                           ? 'las 12 categorías de mayor gasto'
                           : 'the 12 largest categories by spend'}
@@ -689,7 +689,7 @@ export function Sectors() {
 
                   {/* ── § 3 — CATALOG (List or Tree) ────────────────────── */}
                   <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+                    <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                       {lang === 'es'
                         ? `§ El Catálogo · ${categoryData.total} categorías, asiento por asiento`
                         : `§ The Catalog · ${categoryData.total} categories, entry by entry`}
@@ -714,7 +714,7 @@ export function Sectors() {
                                 setSearchParams(next, { replace: true })
                               }}
                               className={cn(
-                                'px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
+                                'px-2 py-1 text-[13px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
                                 catSortKey === key
                                   ? 'bg-text-primary text-background border-transparent'
                                   : 'text-text-muted border-border hover:text-text-secondary',
@@ -734,7 +734,7 @@ export function Sectors() {
                             type="button"
                             onClick={() => setCview(v)}
                             className={cn(
-                              'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                              'px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
                               cview === v
                                 ? 'bg-text-primary text-background'
                                 : 'text-text-muted hover:text-text-secondary',
@@ -798,7 +798,7 @@ export function Sectors() {
                     return (
                       <div className="rounded-sm border border-border overflow-hidden">
                         {/* Column headers */}
-                        <div className="flex items-center gap-4 px-5 py-1.5 bg-background-elevated border-b border-border text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50">
+                        <div className="flex items-center gap-4 px-5 py-1.5 bg-background-elevated border-b border-border text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/50">
                           <span className="w-8 flex-shrink-0">#</span>
                           <span className="flex-1">{lang === 'es' ? 'Categoría' : 'Category'}</span>
                           <span className="flex-shrink-0 min-w-[90px] text-right">{lang === 'es' ? 'Gasto' : 'Spend'}</span>
@@ -836,7 +836,7 @@ export function Sectors() {
                                 className="flex items-center gap-4 px-5 py-1.5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
                                 style={{ borderLeft: `3px solid ${sectorColor}` }}
                               >
-                                <span className="flex-shrink-0 w-8 font-mono text-[11px] font-bold text-text-muted tabular-nums">
+                                <span className="flex-shrink-0 w-8 font-mono text-[13px] font-bold text-text-muted tabular-nums">
                                   {String(idx + 1).padStart(2, '0')}
                                 </span>
                                 <div className="flex-1 min-w-0">
@@ -851,7 +851,7 @@ export function Sectors() {
                                     />
                                     {/* Top vendor + institution — inline single row */}
                                     {(cat.top_vendor || cat.top_institution) && (
-                                      <span className="flex items-center gap-1.5 text-[10px] text-text-muted/70 font-mono">
+                                      <span className="flex items-center gap-1.5 text-[12px] text-text-muted/70 font-mono">
                                         {cat.top_vendor && (
                                           <EntityIdentityChip
                                             type="vendor"
@@ -886,7 +886,7 @@ export function Sectors() {
                                   <div className="font-mono text-sm tabular-nums text-text-primary">
                                     {formatSpend(cat.total_value)}
                                   </div>
-                                  <div className="text-[10px] font-mono text-text-muted mt-0.5">
+                                  <div className="text-[12px] font-mono text-text-muted mt-0.5">
                                     {formatNumber(cat.total_contracts)}{' '}
                                     {lang === 'es' ? 'cont.' : 'contracts'}
                                   </div>
@@ -904,7 +904,7 @@ export function Sectors() {
                                       />
                                     </div>
                                     <div
-                                      className="font-mono text-[11px] font-bold tabular-nums text-right"
+                                      className="font-mono text-[13px] font-bold tabular-nums text-right"
                                       style={{ color: RISK_COLORS[riskLevel] }}
                                     >
                                       {(cat.avg_risk * 100).toFixed(1)}%
@@ -990,7 +990,7 @@ export function Sectors() {
                   aria-live="polite"
                   style={{
                     fontFamily: '"IBM Plex Mono", monospace',
-                    fontSize: '11px',
+                    fontSize: '13px',
                     letterSpacing: '0.08em',
                     color: 'var(--color-text-muted)',
                   }}
@@ -1019,7 +1019,7 @@ export function Sectors() {
                     className="mb-2"
                     style={{
                       fontFamily: '"IBM Plex Mono", monospace',
-                      fontSize: '10px',
+                      fontSize: '12px',
                       letterSpacing: '0.18em',
                       textTransform: 'uppercase',
                       color: 'var(--color-text-muted)',
@@ -1111,7 +1111,7 @@ export function Sectors() {
                   {/* The concentration finding survives as one mono line */}
                   <p
                     className="mt-2.5 font-mono tabular-nums"
-                    style={{ fontSize: '10px', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+                    style={{ fontSize: '12px', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
                   >
                     {lang === 'es'
                       ? `top 3 = ${ledeStats.varPct}% del monto observado · ${ledeStats.minSat.name}: ${ledeStats.minSatMoneyRank}.º en dinero, la saturación más baja (${ledeStats.minSatSatPct}%) y ${ledeStats.minSatSbPct}% a licitación de un solo postor · indicador de riesgo, no estimación de fraude`
@@ -1130,7 +1130,7 @@ export function Sectors() {
                     <p
                       style={{
                         fontFamily: '"IBM Plex Mono", monospace',
-                        fontSize: 10,
+                        fontSize: 12,
                         letterSpacing: '0.18em',
                         textTransform: 'uppercase',
                         color: 'var(--color-text-muted)',
@@ -1154,7 +1154,7 @@ export function Sectors() {
                           type="button"
                           onClick={() => setRegView(key)}
                           className={cn(
-                            'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                            'px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
                             regView === key
                               ? 'bg-text-primary text-background'
                               : 'text-text-muted hover:text-text-secondary',

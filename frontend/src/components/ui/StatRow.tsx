@@ -60,7 +60,7 @@ export function StatRow({
     >
       {stats.map((s, i) => (
         <div key={s.label + i} role="listitem" className="min-w-0">
-          <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
+          <div className="text-[12px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
             {s.label}
           </div>
           <div
@@ -79,7 +79,7 @@ export function StatRow({
             )}
           </div>
           {s.hint && (
-            <div className="text-[11px] text-text-muted mt-0.5 leading-[1.4] truncate">
+            <div className="text-[13px] text-text-muted mt-0.5 leading-[1.4] truncate">
               {s.hint}
             </div>
           )}

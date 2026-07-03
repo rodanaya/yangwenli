@@ -77,7 +77,7 @@ export function VendorEquivalences({
   lang: 'en' | 'es'
   accent: string
   /** Hero-coda mode: share the lede's sector left-rule, drop the loud
-   *  mono "HUMAN SCALE" eyebrow, lead in with an italic prose bridge so
+   *  mono "HUMAN SCALE" eyebrow, lead in with an prose bridge so
    *  the synthesized lede flows straight into its human translation. */
   flush?: boolean
 }) {
@@ -99,7 +99,7 @@ export function VendorEquivalences({
         <p
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 13,
             lineHeight: 1.5,
             color: 'var(--color-text-muted)',
@@ -114,7 +114,7 @@ export function VendorEquivalences({
               className="flex items-baseline gap-2.5"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontSize: 15,
                 lineHeight: 1.5,
                 color: 'var(--color-text-secondary)',
@@ -132,7 +132,7 @@ export function VendorEquivalences({
         </ul>
         <p
           className="mt-2 font-mono"
-          style={{ fontSize: 9, letterSpacing: '0.04em', color: 'var(--color-text-muted)', opacity: 0.8 }}
+          style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)', opacity: 0.8 }}
         >
           {lang === 'es'
             ? 'Lo que esta suma habría financiado · cifras aproximadas, promedios nacionales'
@@ -147,7 +147,7 @@ export function VendorEquivalences({
       <p
         className="font-mono mb-2"
         style={{
-          fontSize: 9.5,
+          fontSize: 13,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -163,7 +163,7 @@ export function VendorEquivalences({
             className="flex items-baseline gap-2.5"
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontSize: 15,
               lineHeight: 1.5,
               color: 'var(--color-text-secondary)',
@@ -181,7 +181,7 @@ export function VendorEquivalences({
       </ul>
       <p
         className="mt-2 font-mono"
-        style={{ fontSize: 9, letterSpacing: '0.04em', color: 'var(--color-text-muted)', opacity: 0.8 }}
+        style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)', opacity: 0.8 }}
       >
         {lang === 'es'
           ? 'Lo que esta suma habría financiado · cifras aproximadas, promedios nacionales'

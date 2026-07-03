@@ -49,7 +49,7 @@ export function DispositionBand({
       {/* Label row */}
       <div
         className="flex items-baseline justify-between gap-3 mb-2 font-mono uppercase"
-        style={{ fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
+        style={{ fontSize: 13, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
       >
         <span>
           {lang === 'es'
@@ -97,7 +97,7 @@ export function DispositionBand({
       {/* Legend line — only statuses present, counts inline */}
       <figcaption
         className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono uppercase"
-        style={{ fontSize: 9.5, letterSpacing: '0.14em' }}
+        style={{ fontSize: 13, letterSpacing: '0.14em' }}
       >
         {ordered.map((status) => {
           const meta = dispositionFor(status)
@@ -125,7 +125,7 @@ export function DispositionBand({
         {convictedCount === 1 && (
           <span
             className="inline-flex items-center gap-1"
-            style={{ color: 'var(--color-accent)', fontWeight: 600, fontStyle: 'italic', textTransform: 'none', letterSpacing: '0.02em', fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12 }}
+            style={{ color: 'var(--color-accent)', fontWeight: 600, fontStyle: 'normal', textTransform: 'none', letterSpacing: '0.02em', fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12 }}
           >
             ← {lang === 'es' ? 'la única condena' : 'the lone conviction'}
           </span>

@@ -250,7 +250,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
           <span
             style={{
               fontFamily: 'var(--font-family-mono, monospace)',
-              fontSize: 9.5,
+              fontSize: 13,
               letterSpacing: '0.08em',
               color: 'var(--color-text-muted)',
               textTransform: 'uppercase',
@@ -268,7 +268,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
             style={{
               height: READOUT_H,
               fontFamily: 'var(--font-family-mono, monospace)',
-              fontSize: 10,
+              fontSize: 12,
               color: 'var(--color-text-secondary, var(--color-text-muted))',
               display: 'flex',
               alignItems: 'center',
@@ -444,7 +444,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                       <text
                         x={x + 3}
                         y={12}
-                        fontSize={10}
+                        fontSize={12}
                         fontFamily="var(--font-family-mono, monospace)"
                         fill="var(--color-text-muted)"
                       >
@@ -516,7 +516,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                       y={Math.max(9, ty - 16)}
                       textAnchor="middle"
                       fontSize={8.5}
-                      fontStyle="italic"
+                      fontStyle="normal"
                       fontFamily="var(--font-family-mono, monospace)"
                       fill="var(--color-text-secondary, var(--color-text-muted))"
                     >
@@ -539,7 +539,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                       y={Math.max(24, ty + 14)}
                       textAnchor="start"
                       fontSize={8.5}
-                      fontStyle="italic"
+                      fontStyle="normal"
                       fontFamily="var(--font-family-mono, monospace)"
                       fill="var(--color-text-secondary, var(--color-text-muted))"
                     >
@@ -588,7 +588,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
             className="mt-1"
             style={{
               fontFamily: 'var(--font-family-mono, monospace)',
-              fontSize: 9,
+              fontSize: 13,
               color: 'var(--color-text-muted)',
             }}
           >
@@ -696,13 +696,13 @@ function MobileMesa({
               className="flex items-center justify-between h-full px-2"
               style={{
                 fontFamily: '"Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 800,
-                fontSize: 11,
+                fontSize: 13,
                 color: 'var(--color-text-primary)',
               }}
             >
-              <span style={{ fontFamily: 'var(--font-family-mono, monospace)', fontStyle: 'normal', fontWeight: 600, fontSize: 9.5 }}>
+              <span style={{ fontFamily: 'var(--font-family-mono, monospace)', fontStyle: 'normal', fontWeight: 600, fontSize: 13 }}>
                 {truncate(name, 22)}
               </span>
               <span>{(col.avg_risk * 100).toFixed(1)}%</span>

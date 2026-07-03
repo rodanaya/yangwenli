@@ -43,7 +43,7 @@ const t = (lang: 'en' | 'es', es: string, en: string) => (lang === 'es' ? es : e
 
 const BIGNUM_STYLE = {
   fontFamily: '"EB Garamond", Georgia, serif',
-  fontStyle: 'italic',
+  fontStyle: 'normal',
   fontWeight: 700,
 } as const
 
@@ -151,7 +151,7 @@ export function SectorVendorTable({
 
   return (
     <div>
-      <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+      <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {t(
           lang,
           `Los 10 mayores capturan el ${Math.round(top10Share)}% del gasto sectorial · el mayor, ${leadShare.toFixed(1)}%.`,
@@ -160,7 +160,7 @@ export function SectorVendorTable({
       </p>
       <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm" aria-label={t(lang, 'Proveedores del sector', 'Sector vendors')}>
-          <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
+          <thead className="bg-background-elevated text-[12px] uppercase tracking-widest text-text-muted">
             <tr>
               <th scope="col" className="text-left px-3 py-2 font-semibold" style={{ width: 28 }}>#</th>
               <th scope="col" className="text-left px-3 py-2 font-semibold">{t(lang, 'Proveedor', 'Vendor')}</th>
@@ -233,7 +233,7 @@ export function SectorCategoryComposition({
 
   return (
     <div>
-      <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+      <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {t(
           lang,
           `${rows.length} canasta${rows.length === 1 ? '' : 's'} de gasto componen el sector · barra = cuota del gasto sectorial.`,
@@ -266,7 +266,7 @@ export function SectorCategoryComposition({
                 <FullBar pct={barPct} color={accent} ariaLabel={lang === 'es' ? c.name_es : c.name_en} />
               </div>
               {/* Line 3 — sublabel: share · contracts · risk */}
-              <div className="flex items-center gap-2.5 mt-1 font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+              <div className="flex items-center gap-2.5 mt-1 font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                 <span style={{ color: share >= 20 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: share >= 20 ? 600 : 400 }}>
                   {share.toFixed(1)}% {t(lang, 'del sector', 'of sector')}
                 </span>
@@ -357,11 +357,11 @@ export function SectorSexenioStrip({
         return (
           <div key={r.key} className="flex items-center gap-3">
             <div className="shrink-0 w-28 sm:w-36 min-w-0">
-              <div className="font-mono truncate" style={{ fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-primary)', fontWeight: isPeak ? 600 : 400 }}>
+              <div className="font-mono truncate" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-primary)', fontWeight: isPeak ? 600 : 400 }}>
                 {ADMIN_DISPLAY_ACCENTED[r.key]}
-                {isPeak && <span className="ml-1" style={{ color: RISK_TEXT_COLORS.high, fontSize: 9 }}>▲</span>}
+                {isPeak && <span className="ml-1" style={{ color: RISK_TEXT_COLORS.high, fontSize: 13 }}>▲</span>}
               </div>
-              <div className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{ADMIN_YEARS[r.key]} · {formatNumber(r.contracts)}</div>
+              <div className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{ADMIN_YEARS[r.key]} · {formatNumber(r.contracts)}</div>
             </div>
             <FullBar pct={barPct} color={isPeak ? RISK_COLORS.high : accent} height={7} ariaLabel={ADMIN_DISPLAY_ACCENTED[r.key]} />
             <span
@@ -372,7 +372,7 @@ export function SectorSexenioStrip({
             </span>
             <span
               className="shrink-0 w-7 text-right font-mono tabular-nums"
-              style={{ fontSize: 11, fontWeight: 600, color: r.risk > 0 ? RISK_TEXT_COLORS[lvl] : 'var(--color-text-muted)' }}
+              style={{ fontSize: 13, fontWeight: 600, color: r.risk > 0 ? RISK_TEXT_COLORS[lvl] : 'var(--color-text-muted)' }}
               title={t(lang, 'indicador de riesgo', 'risk indicator')}
             >
               {r.risk > 0 ? Math.round(r.risk * 100) : '—'}
@@ -380,7 +380,7 @@ export function SectorSexenioStrip({
           </div>
         )
       })}
-      <p className="font-mono pt-0.5" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+      <p className="font-mono pt-0.5" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {t(
           lang,
           `Pico de gasto · ${ADMIN_DISPLAY_ACCENTED[peak.key]} (${ADMIN_YEARS[peak.key]}). Última columna = indicador de riesgo medio.`,
@@ -416,7 +416,7 @@ export function SectorConcentrationPanel({
       {series.length > 1 ? (
         <>
           <EditorialAreaChart data={series} xKey="year" yKey="share" colorToken="risk-high" yFormat="pct" height={96} />
-          <p className="font-mono mt-2" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+          <p className="font-mono mt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
             {(() => {
               const last = series[series.length - 1]
               const lo = Math.min(...series.map((s) => s.share))
@@ -487,13 +487,13 @@ export function SectorModelLadder({
             const barPct = (Math.abs(c.coefficient) / maxAbs) * 100
             return (
               <div key={c.feature} className="flex items-center gap-3">
-                <span className="font-mono truncate shrink-0 w-28 sm:w-40" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>{featureLabel(c.feature, lang)}</span>
+                <span className="font-mono truncate shrink-0 w-28 sm:w-40" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>{featureLabel(c.feature, lang)}</span>
                 <SignedBar pct={barPct} positive={positive} color={color} />
-                <span className="font-mono tabular-nums shrink-0 w-12 text-right" style={{ fontSize: 11, fontWeight: 600, color }}>{sign}{c.coefficient.toFixed(2)}</span>
+                <span className="font-mono tabular-nums shrink-0 w-12 text-right" style={{ fontSize: 13, fontWeight: 600, color }}>{sign}{c.coefficient.toFixed(2)}</span>
               </div>
             )
           })}
-          <p className="font-mono pt-1.5" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+          <p className="font-mono pt-1.5" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
             {t(lang, 'Modelo v0.8.5 · ', 'v0.8.5 model · ')}
             {usesGlobal
               ? t(lang, 'global (sin modelo sectorial)', 'global (no sector model)')
@@ -545,15 +545,15 @@ export function SectorAnomalyStrip({
                 const barPct = (r.overall_anomaly_score / maxScore) * 100
                 return (
                   <div key={r.year} className="flex items-center gap-3">
-                    <span className="font-mono tabular-nums shrink-0 w-10" style={{ fontSize: 11, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)', fontWeight: isWorst ? 600 : 400 }}>{r.year}</span>
+                    <span className="font-mono tabular-nums shrink-0 w-10" style={{ fontSize: 13, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)', fontWeight: isWorst ? 600 : 400 }}>{r.year}</span>
                     <FullBar pct={barPct} color={color} height={isWorst ? 8 : 6} ariaLabel={`${r.year}`} />
-                    <span className="font-mono tabular-nums text-right shrink-0 w-12" style={{ fontSize: 11, fontWeight: isWorst ? 600 : 400, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)' }}>{r.overall_anomaly_score.toFixed(2)}</span>
+                    <span className="font-mono tabular-nums text-right shrink-0 w-12" style={{ fontSize: 13, fontWeight: isWorst ? 600 : 400, color: isWorst ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)' }}>{r.overall_anomaly_score.toFixed(2)}</span>
                   </div>
                 )
               })
             })()}
           </div>
-          <p className="font-mono pt-2" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+          <p className="font-mono pt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
             {t(lang, 'Desviación |z| media de factores vs. la línea base del sector.', 'Mean |z| deviation of factors vs the sector baseline.')}
           </p>
         </>
@@ -651,12 +651,12 @@ export function SectorCaseRoll({
               </div>
             )}
             {/* Line 3 — fraud type · administration · years · status */}
-            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-1.5 font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-1.5 font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
               {fraud && <span style={{ color: 'var(--color-text-secondary)' }}>{fraud}</span>}
               {admin && (<><span style={{ opacity: 0.5 }}>·</span><span>{admin}</span></>)}
               {years && (<><span style={{ opacity: 0.5 }}>·</span><span>{years}</span></>)}
               <span style={{ opacity: 0.5 }}>·</span>
-              <span className="uppercase tracking-wider" style={{ fontSize: 9, color: statusColor, fontWeight: statusColor === 'var(--color-text-muted)' ? 400 : 600 }}>
+              <span className="uppercase tracking-wider" style={{ fontSize: 13, color: statusColor, fontWeight: statusColor === 'var(--color-text-muted)' ? 400 : 600 }}>
                 {legalLabel(c.legal_status, lang)}
               </span>
             </div>
@@ -695,14 +695,14 @@ export function SectorQueueRibbon({
   return (
     <div className="border border-border rounded-sm p-4">
       <div className="flex items-baseline justify-between gap-4 mb-3">
-        <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+        <p className="font-mono" style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
           <span className="tabular-nums" style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{formatNumber(total)}</span>
           {' '}{t(lang, 'proveedores en la cola ARIA', 'vendors in the ARIA queue')}
         </p>
         <Link
           to={`/aria?sector_id=${sectorId}`}
           className="font-mono uppercase tracking-widest hover:opacity-70 transition-opacity"
-          style={{ fontSize: 10, color: 'var(--color-accent)' }}
+          style={{ fontSize: 12, color: 'var(--color-accent)' }}
         >
           {t(lang, 'Ver la Lista de Vigilancia', 'Open the Watchlist')} →
         </Link>
@@ -725,12 +725,12 @@ export function SectorQueueRibbon({
                   {formatNumber(count)}
                 </span>
               </div>
-              <span className="font-mono uppercase tracking-wider" style={{ fontSize: 9, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
+              <span className="font-mono uppercase tracking-wider" style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
                 T{tier} · {lang === 'es' ? TIER_LABEL[tier][0] : TIER_LABEL[tier][1]}
               </span>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <FullBar pct={barPct} color={TIER_COLOR[tier]} height={5} ariaLabel={`T${tier}`} />
-                <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{Math.round(sharePct)}%</span>
+                <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{Math.round(sharePct)}%</span>
               </div>
             </div>
           )
@@ -777,7 +777,7 @@ export function SectorLargestContracts({
           <li key={c.contract_id} className="px-3 py-2 hover:bg-background-elevated transition-colors" style={{ borderLeft: `2px solid ${RISK_COLORS[lvl]}` }}>
             {/* Line 1 — rank · full-width amount bar · big amount */}
             <div className="flex items-center gap-3">
-              <span className="font-mono tabular-nums shrink-0 w-5 text-right" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span className="font-mono tabular-nums shrink-0 w-5 text-right" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{String(i + 1).padStart(2, '0')}</span>
               <FullBar pct={barPct} color={RISK_COLORS[lvl]} height={7} ariaLabel={formatCompactMXN(c.amount_mxn ?? 0)} />
               <span
                 className="tabular-nums shrink-0 text-right"
@@ -791,13 +791,13 @@ export function SectorLargestContracts({
               {c.vendor_id != null && c.vendor_name ? (
                 <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" fullName />
               ) : (
-                <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{t(lang, 'proveedor no identificado', 'unidentified vendor')}</span>
+                <span className="font-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{t(lang, 'proveedor no identificado', 'unidentified vendor')}</span>
               )}
             </div>
             {/* Line 3 — buyer institution (full name) */}
             {c.institution_id != null && c.institution_name && (
               <div className="flex items-center gap-1.5 min-w-0 mt-0.5 pl-8">
-                <span className="font-mono shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.6 }} aria-hidden="true">→</span>
+                <span className="font-mono shrink-0" style={{ fontSize: 13, color: 'var(--color-text-muted)', opacity: 0.6 }} aria-hidden="true">→</span>
                 <div className="min-w-0">
                   <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="xs" fullName />
                 </div>
@@ -805,10 +805,10 @@ export function SectorLargestContracts({
             )}
             {/* Line 4 — year · title (title may truncate; it's a description, not a name) */}
             {(c.year != null || c.title) && (
-              <div className="flex items-baseline gap-2 mt-0.5 pl-8 font-mono" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+              <div className="flex items-baseline gap-2 mt-0.5 pl-8 font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                 {c.year != null && <span className="tabular-nums shrink-0">{c.year}</span>}
                 {c.title && (
-                  <span className="truncate min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11.5 }}>· {c.title}</span>
+                  <span className="truncate min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5 }}>· {c.title}</span>
                 )}
               </div>
             )}

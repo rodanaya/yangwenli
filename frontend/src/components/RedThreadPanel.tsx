@@ -85,7 +85,7 @@ export function RedThreadPanel({
               <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span className="flex-1 truncate">{item.label}</span>
               {item.count != null && (
-                <span className="shrink-0 rounded-full bg-background-elevated/40 px-1.5 py-0.5 text-[10px] font-medium">
+                <span className="shrink-0 rounded-full bg-background-elevated/40 px-1.5 py-0.5 text-[12px] font-medium">
                   {item.count}
                 </span>
               )}
@@ -94,7 +94,7 @@ export function RedThreadPanel({
         })}
       </div>
 
-      <p className="text-[10px] text-text-muted pt-1">
+      <p className="text-[12px] text-text-muted pt-1">
         Based on {items.length} data connection{items.length !== 1 ? 's' : ''}
       </p>
     </div>

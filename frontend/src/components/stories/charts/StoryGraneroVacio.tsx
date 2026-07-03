@@ -74,7 +74,7 @@ export function StoryGraneroVacio() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -85,7 +85,7 @@ export function StoryGraneroVacio() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -106,7 +106,7 @@ export function StoryGraneroVacio() {
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                 >
                   {row.shortName}
@@ -137,7 +137,7 @@ export function StoryGraneroVacio() {
                   x={LABEL_W + COL_W + 8}
                   y={y0 + STRIP_H / 2 + 3}
                   fill={color}
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -150,7 +150,7 @@ export function StoryGraneroVacio() {
         </svg>
       </div>
 
-      <div className="mt-3 flex gap-4 text-[10px] text-text-muted">
+      <div className="mt-3 flex gap-4 text-[12px] text-text-muted">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-sm" style={{ background: RISK_COLORS.critical }} />
           {t('emptyGranary.legend100')}

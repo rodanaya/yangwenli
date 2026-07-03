@@ -167,14 +167,14 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
       }}
     >
       {/* Category */}
-      <div className="font-mono text-[10px] uppercase tracking-wide text-text-muted mb-2">
+      <div className="font-mono text-[12px] uppercase tracking-wide text-text-muted mb-2">
         {isEs ? row.name_es : row.name_en}
       </div>
 
       {/* #1 vendor */}
       <div className="flex items-center gap-2 mb-1.5">
         <span
-          className="font-bold text-[10px] font-mono uppercase tracking-wide"
+          className="font-bold text-[12px] font-mono uppercase tracking-wide"
           style={{ color: row.color }}
         >
           #1
@@ -190,7 +190,7 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
           {row.top1.market_share_pct.toFixed(1)}%
         </span>
       </div>
-      <div className="text-text-muted font-mono tabular-nums text-[10px] mb-2 pl-6">
+      <div className="text-text-muted font-mono tabular-nums text-[12px] mb-2 pl-6">
         {row.top1.contract_count} {isEs ? 'contratos' : 'contracts'} · {formatCompactMXN(row.top1.vendor_value)}
       </div>
 
@@ -198,7 +198,7 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
       {row.top2 && (
         <>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="font-bold text-[10px] font-mono uppercase tracking-wide text-text-muted">
+            <span className="font-bold text-[12px] font-mono uppercase tracking-wide text-text-muted">
               #2
             </span>
             <EntityIdentityChip
@@ -212,21 +212,21 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
               {row.top2.market_share_pct.toFixed(1)}%
             </span>
           </div>
-          <div className="text-text-muted font-mono tabular-nums text-[10px] pl-6">
+          <div className="text-text-muted font-mono tabular-nums text-[12px] pl-6">
             {row.top2.contract_count} {isEs ? 'contratos' : 'contracts'} · {formatCompactMXN(row.top2.vendor_value)}
           </div>
         </>
       )}
 
       {/* Total */}
-      <div className="mt-2 pt-2 border-t border-border font-mono tabular-nums text-[10px] text-text-muted">
+      <div className="mt-2 pt-2 border-t border-border font-mono tabular-nums text-[12px] text-text-muted">
         {isEs ? 'Mercado total:' : 'Total market:'} {formatCompactMXN(row.total_value)}
         {' · '}{row.total_contracts} {isEs ? 'contratos' : 'contracts'}
       </div>
 
       {/* Top-3 combined + HHI — the fragmentation reading on inspection */}
       {row.top3_share_pct > 0 && (
-        <div className="mt-1 font-mono tabular-nums text-[10px] text-text-muted">
+        <div className="mt-1 font-mono tabular-nums text-[12px] text-text-muted">
           {isEs ? 'Top-3 combinado:' : 'Top-3 combined:'} {row.top3_share_pct.toFixed(0)}%
           {row.hhi > 0 && <>{' · HHI '}{Math.round(row.hhi)}</>}
         </div>
@@ -234,7 +234,7 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
 
       {/* Top-1 full name caption */}
       {top1Name.length > 28 && (
-        <div className="mt-1 text-[10px] text-text-secondary">{top1Name}</div>
+        <div className="mt-1 text-[12px] text-text-secondary">{top1Name}</div>
       )}
     </div>
   )
@@ -402,7 +402,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
           className="tabular-nums shrink-0"
           style={{
             fontFamily: '"Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 800,
             fontSize: 38,
             lineHeight: 1,
@@ -412,7 +412,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
         >
           {maxTop1.toFixed(0)}%
         </span>
-        <span className="text-[11px] leading-snug text-text-secondary" style={{ maxWidth: '46ch' }}>
+        <span className="text-[13px] leading-snug text-text-secondary" style={{ maxWidth: '46ch' }}>
           {isEs
             ? `el proveedor más dominante de cualquier categoría federal controla apenas 1 peso de cada ${fragDenom} — el resto se reparte entre miles`
             : `the most dominant vendor in any federal category controls barely 1 peso in ${fragDenom} — the rest splits across thousands`}
@@ -450,7 +450,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                 y={HEADER_H - 14}
                 textAnchor="middle"
                 className="fill-current text-text-muted"
-                style={{ fontSize: 10, fontFamily: 'var(--font-family-mono)', letterSpacing: '0.05em' }}
+                style={{ fontSize: 12, fontFamily: 'var(--font-family-mono)', letterSpacing: '0.05em' }}
               >
                 {pct}%
               </text>
@@ -477,7 +477,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
             y={CHART_H - FOOTER_H + 16}
             textAnchor="end"
             className="fill-current text-text-muted"
-            style={{ fontSize: 9.5, fontFamily: 'var(--font-family-mono)' }}
+            style={{ fontSize: 13, fontFamily: 'var(--font-family-mono)' }}
           >
             {isEs ? `techo de concentración · ${maxTop1.toFixed(0)}%` : `concentration ceiling · ${maxTop1.toFixed(0)}%`}
           </text>
@@ -489,7 +489,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
               x={8}
               y={4}
               className="fill-current text-text-muted"
-              style={{ fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+              style={{ fontSize: 13, fontFamily: 'var(--font-family-mono)' }}
             >
               {isEs ? '#1 proveedor' : '#1 vendor'}
             </text>
@@ -498,7 +498,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
               x={98}
               y={4}
               className="fill-current text-text-muted"
-              style={{ fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+              style={{ fontSize: 13, fontFamily: 'var(--font-family-mono)' }}
             >
               {isEs ? '#2 proveedor' : '#2 vendor'}
             </text>
@@ -623,7 +623,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                       textAnchor={flip ? 'end' : 'start'}
                       className="fill-current text-text-primary"
                       style={{
-                        fontSize: 9.5,
+                        fontSize: 13,
                         fontFamily: 'var(--font-family-mono)',
                         pointerEvents: 'none',
                       }}
@@ -639,7 +639,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                   y={cy + 4}
                   className="fill-current text-text-secondary"
                   style={{
-                    fontSize: 10,
+                    fontSize: 12,
                     fontFamily: 'var(--font-family-mono)',
                     letterSpacing: '0.03em',
                     pointerEvents: 'none',
@@ -661,9 +661,9 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                     x={LEFT_W + 4}
                     y={rowY + ROW_H_DESKTOP - 4}
                     style={{
-                      fontSize: 9,
+                      fontSize: 13,
                       fontFamily: 'var(--font-family-serif)',
-                      fontStyle: 'italic',
+                      fontStyle: 'normal',
                       pointerEvents: 'none',
                     }}
                     className="fill-current text-text-muted"
@@ -681,7 +681,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
       </div>
 
       {/* Honesty guard — fragmentation is not a clean bill of health. */}
-      <p className="mt-2 font-mono leading-relaxed text-text-muted" style={{ fontSize: 9.5 }}>
+      <p className="mt-2 font-mono leading-relaxed text-text-muted" style={{ fontSize: 13 }}>
         {isEs
           ? 'Concentración baja no certifica integridad — un cártel puede operar repartiendo lotes entre varias firmas; esto mide dispersión, no riesgo.'
           : 'Low concentration does not certify integrity — a cartel can operate by splitting lots across firms; this measures dispersion, not risk.'}

@@ -221,7 +221,7 @@ export function MeshPlano({ communities, totalCommunities, selectedId, onSelect,
           className="mt-1"
           style={{
             fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-            fontSize: '11px',
+            fontSize: '13px',
             letterSpacing: '0.03em',
             color: 'var(--color-text-muted)',
           }}
@@ -338,7 +338,7 @@ export function MeshPlano({ communities, totalCommunities, selectedId, onSelect,
             y={PAD_TOP + 12}
             textAnchor="start"
             fontFamily='"EB Garamond", Georgia, serif'
-            fontStyle="italic"
+            fontStyle="normal"
             fontSize={isMobile ? 10.5 : 12.5}
             fill="var(--color-text-muted)"
           >
@@ -349,7 +349,7 @@ export function MeshPlano({ communities, totalCommunities, selectedId, onSelect,
             y={baselineY - 6}
             textAnchor="end"
             fontFamily='"EB Garamond", Georgia, serif'
-            fontStyle="italic"
+            fontStyle="normal"
             fontSize={isMobile ? 10.5 : 12.5}
             fill="var(--color-text-muted)"
           >
@@ -420,7 +420,7 @@ export function MeshPlano({ communities, totalCommunities, selectedId, onSelect,
         {/* Pointer tooltip */}
         {hovered && (
           <div
-            className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background px-2.5 py-2 text-[11px] shadow-lg"
+            className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background px-2.5 py-2 text-[13px] shadow-lg"
             style={{
               left: Math.min(Math.max(hovered.cx, 90), width - 90),
               top: 4,

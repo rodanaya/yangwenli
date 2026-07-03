@@ -14,7 +14,7 @@
  *     flat 6px otherwise.
  *   - Dot fill = RISK_COLORS[riskLevel] → SECTOR_COLORS[sectorCode] → muted.
  *   - Sexenio bands: faint horizontal stripes labeled at left of band.
- *   - Dates in text-[11px] font-mono.
+ *   - Dates in text-[13px] font-mono.
  *   - Click on card navigates to href if provided.
  *
  * Critical rule: this primitive renders strings only. Consumers must
@@ -203,7 +203,7 @@ export function EditorialTimeline({
             <text
               x={BAND_LABEL_X}
               y={band.yStart + 10}
-              fontSize={10}
+              fontSize={12}
               fontFamily={CHART_TOKENS.axis.tickFontFamily}
               fill="var(--color-text-muted)"
               opacity={0.85}
@@ -272,7 +272,7 @@ export function EditorialTimeline({
                 y={cy}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={11}
+                fontSize={13}
                 fontFamily={CHART_TOKENS.axis.tickFontFamily}
                 fill="var(--color-text-muted)"
               >
@@ -338,7 +338,7 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
         x={cardLeft + 8}
         y={cy - (evt.subtitle || evt.amount ? 8 : 0)}
         dominantBaseline="middle"
-        fontSize={11}
+        fontSize={13}
         fontFamily="ui-sans-serif, system-ui, sans-serif"
         fontWeight={500}
         fill="var(--color-text-primary)"
@@ -352,7 +352,7 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
           x={cardLeft + 8}
           y={cy + 8}
           dominantBaseline="middle"
-          fontSize={11}
+          fontSize={13}
           fontFamily={CHART_TOKENS.axis.tickFontFamily}
           fill="var(--color-text-muted)"
         >
@@ -367,7 +367,7 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
           y={cy - (evt.subtitle ? 8 : 0)}
           textAnchor="end"
           dominantBaseline="middle"
-          fontSize={11}
+          fontSize={13}
           fontFamily={CHART_TOKENS.axis.tickFontFamily}
           fill="var(--color-text-primary)"
         >
@@ -392,7 +392,7 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
             x={cardLeft + 12}
             y={cy + 22}
             dominantBaseline="middle"
-            fontSize={10}
+            fontSize={12}
             fontFamily={CHART_TOKENS.axis.tickFontFamily}
             fontWeight={600}
             fill="var(--color-text-muted)"
@@ -411,7 +411,7 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
           y={cy + (evt.subtitle ? 8 : 0)}
           textAnchor="end"
           dominantBaseline="middle"
-          fontSize={11}
+          fontSize={13}
           fill="var(--color-text-muted)"
         >
           →

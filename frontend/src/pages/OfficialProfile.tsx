@@ -85,13 +85,13 @@ export default function OfficialProfile() {
 
       {/* HERO */}
       <header className="pb-5 border-b border-border">
-        <div className="font-mono mb-2" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+        <div className="font-mono mb-2" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
           {isEs ? 'Responsable de la Unidad Compradora' : 'Procurement officer of record'}
         </div>
         <h1
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 500,
             fontSize: 34,
             lineHeight: 1.1,
@@ -121,13 +121,13 @@ export default function OfficialProfile() {
 
       {/* PER-INSTITUTION BREAKDOWN */}
       <section className="mt-8">
-        <div className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+        <div className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
           § {isEs ? `Por institución · ${summary.institution_count}` : `By institution · ${summary.institution_count}`}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs border-collapse">
             <thead>
-              <tr className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">
+              <tr className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">
                 <th className="text-left font-medium py-2 pr-3">{isEs ? 'Institución' : 'Institution'}</th>
                 <th className="text-right font-medium py-2 px-3">{isEs ? 'Contratos' : 'Contracts'}</th>
                 <th className="text-right font-medium py-2 px-3">{isEs ? 'Adj. directa' : 'Direct award'}</th>
@@ -169,7 +169,7 @@ export default function OfficialProfile() {
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-text-muted">{data.note}</p>
+        <p className="mt-3 text-[13px] leading-relaxed text-text-muted">{data.note}</p>
       </section>
     </div>
   )
@@ -181,7 +181,7 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
       <div className="text-xl font-bold tabular-nums leading-none" style={color ? { color } : { color: 'var(--color-text-primary)' }}>
         {value}
       </div>
-      <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">{label}</div>
+      <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">{label}</div>
     </div>
   )
 }

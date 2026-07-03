@@ -62,16 +62,16 @@ export function QueueRegisterHeader({
     <div className="mb-3 pb-2 border-b border-border space-y-2">
       {/* Lede line: kicker + thesis + count + export */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold">
+        <span className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold">
           {isEs ? '§ EL REGISTRO · ORDEN: IPS — INDICADOR DE PRIORIDAD' : '§ THE REGISTER · ORDER: IPS — PRIORITY INDICATOR'}
         </span>
         <span
-          className="hidden md:inline text-[11px] text-text-muted"
-          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic' }}
+          className="hidden md:inline text-[13px] text-text-muted"
+          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal' }}
         >
           {isEs ? 'la máquina propone, el analista dispone' : 'the machine proposes, the analyst disposes'}
         </span>
-        <span className="ml-auto text-[11px] text-text-muted font-mono tabular-nums">
+        <span className="ml-auto text-[13px] text-text-muted font-mono tabular-nums">
           {totalLeads > 0 ? `${formatNumber(totalLeads)} ${isEs ? 'proveedores' : 'vendors'}` : ''}
         </span>
         <TableExportButton
@@ -80,7 +80,7 @@ export function QueueRegisterHeader({
           showXlsx={true}
           disabled={exportData.length === 0}
         />
-        <span className="text-[9px] font-mono text-text-muted -ml-1">
+        <span className="text-[13px] font-mono text-text-muted -ml-1">
           {isEs ? '· esta página' : '· this page'}
         </span>
       </div>
@@ -105,7 +105,7 @@ export function QueueRegisterHeader({
               />
             ))}
           </div>
-          <p className="mt-1 text-[9.5px] font-mono text-text-muted flex items-center gap-1.5 flex-wrap">
+          <p className="mt-1 text-[13px] font-mono text-text-muted flex items-center gap-1.5 flex-wrap">
             <span className="uppercase tracking-[0.12em] font-bold">{isEs ? 'DISPOSICIÓN T1' : 'T1 DISPOSITION'}</span>
             <span>
               {buckets.confirmada} {isEs ? 'confirmadas' : 'confirmed'} · {openWork}{' '}
@@ -133,7 +133,7 @@ export function QueueRegisterHeader({
       {/* Variant line + rug */}
       <div className="flex items-center gap-3 flex-wrap">
         {tierFilter === 1 && (
-          <p className="text-[11px] text-text-secondary leading-snug min-w-0">
+          <p className="text-[13px] text-text-secondary leading-snug min-w-0">
             {isEs ? (
               <>
                 Las {formatNumber(tier1Count)} del Nivel 1 están ancladas a casos documentados — los
@@ -156,7 +156,7 @@ export function QueueRegisterHeader({
           </p>
         )}
         {tierFilter === 2 && novelLeadsT2 != null && (
-          <p className="text-[11px] text-text-secondary leading-snug">
+          <p className="text-[13px] text-text-secondary leading-snug">
             {novelOnly
               ? isEs
                 ? `${formatNumber(novelLeadsT2)} descubrimientos del modelo — sin caso documentado · en calibración`
@@ -169,7 +169,7 @@ export function QueueRegisterHeader({
         {tierFilter === 4 && (
           <p
             className="text-[12px] text-text-secondary leading-snug"
-            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic' }}
+            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal' }}
           >
             {isEs
               ? `El fondo del embudo: ${formatNumber(tier4Count)} proveedores bajo el umbral de triaje — aparecen por transparencia del método.`

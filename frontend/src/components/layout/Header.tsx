@@ -238,7 +238,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         </Button>
         {/* Editorial dateline — Economist/NYT masthead feel */}
         <span
-          className="hidden lg:inline-block text-[9.5px] tracking-[0.18em] text-text-muted font-mono select-none"
+          className="hidden lg:inline-block text-[13px] tracking-[0.18em] text-text-muted font-mono select-none"
           aria-hidden="true"
         >
           {editorialDate}
@@ -249,7 +249,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <>
               <Link
                 to={parent.route}
-                className="text-text-muted hover:text-text-primary hidden sm:inline text-[10px] font-mono tracking-[0.1em] uppercase transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                className="text-text-muted hover:text-text-primary hidden sm:inline text-[12px] font-mono tracking-[0.1em] uppercase transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
               >
                 {parent.label}
               </Link>
@@ -271,7 +271,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         >
           <Search className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
           <span className="flex-1 text-left truncate">{tc('header.searchPlaceholder')}</span>
-          <kbd className="flex-shrink-0 text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-background border border-border/60 text-text-muted leading-none tracking-tight">⌘K</kbd>
+          <kbd className="flex-shrink-0 text-[12px] font-mono font-medium px-1.5 py-0.5 rounded bg-background border border-border/60 text-text-muted leading-none tracking-tight">⌘K</kbd>
         </button>
         {/* Mobile: icon-only button */}
         <Tooltip>
@@ -323,7 +323,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="hidden sm:flex items-center gap-1.5 h-6 px-2 rounded-sm text-[10px] font-mono tracking-[0.1em] text-text-secondary bg-background-elevated border border-border hover:border-border-hover hover:text-text-primary transition-colors"
+                className="hidden sm:flex items-center gap-1.5 h-6 px-2 rounded-sm text-[12px] font-mono tracking-[0.1em] text-text-secondary bg-background-elevated border border-border hover:border-border-hover hover:text-text-primary transition-colors"
                 onClick={() => navigate('/settings?tab=quality')}
               >
                 <Database className="h-3 w-3 text-text-muted" aria-hidden="true" />
@@ -340,7 +340,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* Live signal */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="hidden sm:flex items-center gap-1.5 h-7 px-1.5 text-[10px] text-text-muted tracking-[0.1em] uppercase">
+            <div className="hidden sm:flex items-center gap-1.5 h-7 px-1.5 text-[12px] text-text-muted tracking-[0.1em] uppercase">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 animate-ping" aria-hidden="true" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
@@ -362,12 +362,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <>
               <button
                 onClick={() => setUserMenuOpen(v => !v)}
-                className="flex items-center gap-1.5 h-7 px-2 rounded-sm text-[10px] font-mono tracking-[0.08em] uppercase text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
+                className="flex items-center gap-1.5 h-7 px-2 rounded-sm text-[12px] font-mono tracking-[0.08em] uppercase text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
                 aria-label={tc('header.userMenu')}
                 aria-expanded={userMenuOpen}
                 aria-haspopup="menu"
               >
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-glow text-accent text-[9px] font-bold">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-glow text-accent text-[13px] font-bold">
                   {user.name.charAt(0).toUpperCase()}
                 </span>
                 <span className="hidden sm:inline max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
@@ -376,7 +376,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 <div role="menu" aria-label={tc('header.userMenu')} className="absolute right-0 top-full mt-1 w-44 rounded-sm border border-border bg-background-card shadow-xl z-50 py-1">
                   <div className="px-3 py-2 border-b border-border">
                     <p className="text-xs font-semibold text-text-primary truncate">{user.name}</p>
-                    <p className="text-[10px] text-text-muted truncate font-mono">{user.email}</p>
+                    <p className="text-[12px] text-text-muted truncate font-mono">{user.email}</p>
                   </div>
                   <button
                     role="menuitem"
@@ -400,7 +400,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           ) : (
             <button
               onClick={() => navigate('/login')}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-sm text-[10px] font-mono tracking-[0.08em] uppercase text-text-muted hover:text-text-primary hover:bg-background-elevated border border-border hover:border-border-hover transition-colors"
+              className="flex items-center gap-1.5 h-9 px-3 rounded-sm text-[12px] font-mono tracking-[0.08em] uppercase text-text-muted hover:text-text-primary hover:bg-background-elevated border border-border hover:border-border-hover transition-colors"
             >
               {tc('header.signIn')}
             </button>

@@ -129,7 +129,7 @@ export function InstitutionStarGraph({
             textAnchor="middle"
             style={{
               fontFamily: '"JetBrains Mono", monospace',
-              fontSize: '10px',
+              fontSize: '12px',
               fontWeight: 700,
               letterSpacing: '0.06em',
               fill: 'var(--color-text-primary)',
@@ -227,7 +227,7 @@ export function InstitutionStarGraph({
           >
             {formatEntityName('vendor', hoverNode.v.vendor_name, 'sm')}
           </p>
-          <div className="space-y-0.5 text-[10px] font-mono text-text-muted">
+          <div className="space-y-0.5 text-[12px] font-mono text-text-muted">
             <p>
               {formatCompactMXN(hoverNode.v.total_value_mxn)} ·{' '}
               {Math.round(hoverNode.share * 1000) / 10}% {isEs ? 'del gasto del comprador' : 'of buyer spend'}
@@ -249,7 +249,7 @@ export function InstitutionStarGraph({
       )}
 
       {/* Legend */}
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full border" style={{ borderColor: 'var(--color-accent)' }} />
           {isEs ? 'Comprador (centro)' : 'Buyer (center)'}

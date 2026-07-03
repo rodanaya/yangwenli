@@ -89,7 +89,7 @@ export function StoryAvalanchaDiciembre() {
                 y={y + 3}
                 textAnchor="end"
                 fill="var(--color-text-secondary)"
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono)"
               >
                 ${v}B
@@ -115,7 +115,7 @@ export function StoryAvalanchaDiciembre() {
           x={W - PADDING_R + 4}
           y={PADDING_T + CHART_H - (AVG / MAX_VAL) * CHART_H + 3}
           fill="var(--color-oecd)"
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono)"
           fontWeight={600}
         >
@@ -155,7 +155,7 @@ export function StoryAvalanchaDiciembre() {
                 y={baseY - 8 - dotCount * DOT_SPACING_Y - 6}
                 textAnchor="middle"
                 fill={month.color === 'var(--color-risk-critical)' ? 'var(--color-risk-critical)' : month.color === 'var(--color-risk-high)' ? 'var(--color-risk-high)' : 'var(--color-text-muted)'}
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
               >
@@ -168,7 +168,7 @@ export function StoryAvalanchaDiciembre() {
                 y={H - PADDING_B + 18}
                 textAnchor="middle"
                 fill={mi === 11 ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={mi === 11 ? 700 : 500}
               >
@@ -195,7 +195,7 @@ export function StoryAvalanchaDiciembre() {
             x={PADDING_L + 11 * COL_W + COL_W / 2 - 100}
             y={PADDING_T + 24}
             fill="var(--color-risk-medium)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             fontWeight={600}
             initial={{ opacity: 0 }}

@@ -29,7 +29,7 @@ export function RiskDistributionStrip({ activeRiskLevels, onToggleRisk }: RiskDi
           {t('riskStrip.filterByRisk')}
         </div>
         {!allActive && (
-          <span className="text-[10px] text-text-muted/60">{t('riskStrip.clickToToggle')}</span>
+          <span className="text-[12px] text-text-muted/60">{t('riskStrip.clickToToggle')}</span>
         )}
       </div>
       <div className="flex gap-2 flex-wrap">

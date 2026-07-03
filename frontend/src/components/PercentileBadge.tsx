@@ -36,7 +36,7 @@ export function PercentileBadge({
       className={cn(
         'inline-flex items-center rounded-full border font-medium',
         colorClass,
-        size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs'
+        size === 'sm' ? 'px-1.5 py-0.5 text-[12px]' : 'px-2 py-0.5 text-xs'
       )}
       title={tooltip}
     >

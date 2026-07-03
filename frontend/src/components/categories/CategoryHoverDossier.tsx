@@ -5,7 +5,7 @@
  * register (the parent keys it by hovered category_id), pointer-events-none,
  * edge-flips above/below the register midline, focus-triggered too.
  *
- * Content: rank · EntityIdentityChip · spend sledge (Garamond italic 800) ·
+ * Content: rank · EntityIdentityChip · spend sledge (Garamond 800) ·
  * share-of-total running bar · top_vendor chip · atom line (avg_risk via
  * intensityColor, DA% vs OCDE, single-bid %, contracts) · "Abrir dossier →".
  *
@@ -42,10 +42,10 @@ export function CategoryHoverDossier({
     <div>
       {/* header: rank · sector */}
       <div className="flex items-center gap-2 mb-1.5">
-        <span className="font-mono" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color }}>
+        <span className="font-mono" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color }}>
           #{String(rank).padStart(2, '0')}
         </span>
-        <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
           {getSectorName(item.sector_code, lang)}
         </span>
         <span className="h-px flex-1" style={{ background: `${color}55` }} />
@@ -65,11 +65,11 @@ export function CategoryHoverDossier({
       <div className="flex items-baseline gap-2">
         <span
           className="tabular-nums"
-          style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 30, lineHeight: 1, color: 'var(--color-text-primary)' }}
+          style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 30, lineHeight: 1, color: 'var(--color-text-primary)' }}
         >
           {formatCompactMXN(item.total_value)}
         </span>
-        <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
           {isEs ? 'gasto' : 'spend'}
         </span>
       </div>
@@ -77,7 +77,7 @@ export function CategoryHoverDossier({
         <div className="relative h-[10px] rounded-[1px] overflow-hidden" style={{ background: 'var(--color-background-elevated)' }}>
           <div className="absolute inset-y-0 left-0" style={{ width: `${Math.min(100, sharePct)}%`, background: color, opacity: 0.85 }} />
         </div>
-        <div className="mt-1 font-mono tabular-nums flex items-center justify-between" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+        <div className="mt-1 font-mono tabular-nums flex items-center justify-between" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
           <span style={{ color: 'var(--color-text-secondary)' }}>{sharePct.toFixed(1)}% {isEs ? 'del gasto total' : 'of total spend'}</span>
           <span>{formatNumber(item.total_contracts)} {isEs ? 'cont.' : 'contracts'}</span>
         </div>
@@ -91,7 +91,7 @@ export function CategoryHoverDossier({
       )}
 
       {/* atom line */}
-      <div className="mt-2 font-mono tabular-nums flex items-center gap-x-2.5 gap-y-1 flex-wrap" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+      <div className="mt-2 font-mono tabular-nums flex items-center gap-x-2.5 gap-y-1 flex-wrap" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
         <span className="inline-flex items-center gap-1 whitespace-nowrap">
           <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 9999, background: riskCol, flexShrink: 0 }} />
           <span style={{ color: riskCol, fontWeight: 700 }}>{item.avg_risk.toFixed(2)}</span>
@@ -106,7 +106,7 @@ export function CategoryHoverDossier({
       </div>
 
       <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--color-border)' }}>
-        <span className="font-mono" style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}>
+        <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}>
           {isEs ? 'Abrir dossier →' : 'Open dossier →'}
         </span>
       </div>

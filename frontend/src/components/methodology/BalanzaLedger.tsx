@@ -192,7 +192,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
             className="text-text-primary"
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: 'clamp(19px, 2.6vw, 24px)',
               lineHeight: 1.25,
@@ -204,7 +204,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
             className="mt-1.5 text-text-muted"
             style={{
               fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-              fontSize: '11px',
+              fontSize: '13px',
               letterSpacing: '0.02em',
             }}
           >
@@ -247,7 +247,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
               x={GUTTER_W}
               y={20}
               fill={INK_SECONDARY}
-              fontSize={9.5}
+              fontSize={13}
               fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
               fontWeight={600}
               letterSpacing="0.14em"
@@ -258,7 +258,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
               x={FIELD_W}
               y={20}
               fill={CHARGE_COLOR}
-              fontSize={9.5}
+              fontSize={13}
               fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
               fontWeight={600}
               letterSpacing="0.14em"
@@ -306,7 +306,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
                     x={0}
                     y={rowMidY + 3.5}
                     fill="var(--color-text-primary)"
-                    fontSize={10.5}
+                    fontSize={12}
                     fontFamily='"JetBrains Mono", "IBM Plex Mono", monospace'
                   >
                     {label}
@@ -336,7 +336,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
                     x={isPositive ? x + 6 : x - 6}
                     y={rowMidY + 3.5}
                     fill={strokeColor}
-                    fontSize={10}
+                    fontSize={12}
                     fontWeight={600}
                     fontFamily='"JetBrains Mono", "IBM Plex Mono", monospace'
                     textAnchor={isPositive ? 'start' : 'end'}
@@ -360,7 +360,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
                         y={rowY - 12}
                         fill="var(--color-text-secondary)"
                         fontSize={12.5}
-                        fontStyle="italic"
+                        fontStyle="normal"
                         fontFamily='"EB Garamond", Georgia, serif'
                         textAnchor={isPositive ? 'end' : 'start'}
                       >
@@ -389,7 +389,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
                     x={x}
                     y={AXIS_Y}
                     fill="var(--color-text-muted)"
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily='"JetBrains Mono", "IBM Plex Mono", monospace'
                     textAnchor="middle"
                     className="tabular-nums"
@@ -403,7 +403,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
               x={FIELD_W / 2}
               y={AXIS_Y + 14}
               fill="var(--color-text-muted)"
-              fontSize={9}
+              fontSize={13}
               fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
               textAnchor="middle"
             >
@@ -416,7 +416,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
               x={0}
               y={MORGUE_TOP - 2}
               fill="var(--color-text-muted)"
-              fontSize={9.5}
+              fontSize={13}
               fontWeight={600}
               letterSpacing="0.1em"
               fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
@@ -433,7 +433,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
                     x={0}
                     y={rowY + 4}
                     fill="var(--color-text-muted)"
-                    fontSize={10}
+                    fontSize={12}
                     fontFamily='"JetBrains Mono", "IBM Plex Mono", monospace'
                   >
                     {label}
@@ -443,7 +443,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
                     x={FIELD_W}
                     y={rowY + 4}
                     fill="var(--color-text-muted)"
-                    fontSize={10}
+                    fontSize={12}
                     fontFamily='"JetBrains Mono", "IBM Plex Mono", monospace'
                     textAnchor="end"
                     className="tabular-nums"
@@ -465,7 +465,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
                         y={rowY - 14}
                         fill="var(--color-text-secondary)"
                         fontSize={12.5}
-                        fontStyle="italic"
+                        fontStyle="normal"
                         fontFamily='"EB Garamond", Georgia, serif'
                         textAnchor="end"
                       >
@@ -484,7 +484,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
           className="mt-3 text-text-muted"
           style={{
             fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-            fontSize: '10px',
+            fontSize: '12px',
             lineHeight: 1.6,
           }}
         >

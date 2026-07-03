@@ -71,10 +71,10 @@ function GapRow({ label, note }: { label: string; note: string }) {
   return (
     <div className="py-2.5 border-b border-border last:border-b-0">
       <div className="flex items-baseline justify-between">
-        <span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono uppercase" style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
           {label}
         </span>
-        <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+        <span className="font-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
           {note}
         </span>
       </div>
@@ -102,12 +102,12 @@ function Row({ cfg, category, accent, isEs }: { cfg: RowConfig; category: Catego
   return (
     <div className="py-2.5 border-b border-border last:border-b-0">
       <div className="flex items-baseline justify-between mb-1.5 gap-3">
-        <span className="font-mono uppercase flex-shrink-0" style={{ fontSize: 9.5, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono uppercase flex-shrink-0" style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
           {cfg.label}
         </span>
         <span
           className="font-mono tabular-nums whitespace-nowrap"
-          style={{ fontSize: 10.5, color: top5 ? 'var(--color-accent)' : 'var(--color-text-secondary)', fontWeight: top5 ? 700 : 500 }}
+          style={{ fontSize: 12, color: top5 ? 'var(--color-accent)' : 'var(--color-text-secondary)', fontWeight: top5 ? 700 : 500 }}
         >
           {cfg.formatReadout(subjectValue)} · {isEs ? `№ ${rank} de ${cfg.pool.length}` : `no. ${rank} of ${cfg.pool.length}`}
         </span>

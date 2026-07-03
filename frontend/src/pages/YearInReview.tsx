@@ -152,7 +152,7 @@ function SectorDistributionFull({
   }, [data, year])
 
   if (!rows.length) {
-    return <p className="py-8 text-sm text-text-muted italic text-center">{t('noData')}</p>
+    return <p className="py-8 text-sm text-text-muted text-center">{t('noData')}</p>
   }
 
   const maxVal = rows[0].value
@@ -193,11 +193,11 @@ function SectorDistributionFull({
                   color={s.color}
                   className="flex-1 h-5"
                 />
-                <span className="text-[10px] font-mono text-text-primary/90 font-semibold w-16 text-right tabular-nums flex-shrink-0">
+                <span className="text-[12px] font-mono text-text-primary/90 font-semibold w-16 text-right tabular-nums flex-shrink-0">
                   {formatCompactMXN(s.value)}
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-text-muted w-16 text-right flex-shrink-0 tabular-nums">
+              <span className="text-[12px] font-mono text-text-muted w-16 text-right flex-shrink-0 tabular-nums">
                 {formatNumber(s.contracts)}
               </span>
               <span className="text-xs font-mono text-text-muted w-12 text-right flex-shrink-0 tabular-nums">
@@ -210,7 +210,7 @@ function SectorDistributionFull({
           )
         })}
       </div>
-      <p className="mt-3 text-[10px] text-text-muted italic">
+      <p className="mt-3 text-[12px] text-text-muted">
         {t('sectorAll.footerHint')}
       </p>
     </div>
@@ -258,8 +258,8 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
         aria-label="Sector year-over-year growth diverging dot chart"
       >
         {/* Header */}
-        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="var(--color-text-muted)" fontSize={10} textAnchor="middle" fontFamily="monospace">← decline</text>
-        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="var(--color-text-secondary)" fontSize={10} textAnchor="middle" fontFamily="monospace">growth →</text>
+        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="var(--color-text-muted)" fontSize={12} textAnchor="middle" fontFamily="monospace">← decline</text>
+        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="var(--color-text-secondary)" fontSize={12} textAnchor="middle" fontFamily="monospace">growth →</text>
 
         {/* Zero axis */}
         <line x1={centerX} y1={12} x2={centerX} y2={svgH - 4} stroke="var(--color-border)" strokeWidth={0.75} />
@@ -284,7 +284,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                 x={LABEL_W - 6}
                 y={rowCenterY + 1}
                 fill="var(--color-text-muted)"
-                fontSize={10}
+                fontSize={12}
                 textAnchor="end"
                 dominantBaseline="middle"
                 fontFamily="monospace"
@@ -345,7 +345,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                 x={svgW - 2}
                 y={rowCenterY + 1}
                 fill={color}
-                fontSize={10}
+                fontSize={12}
                 textAnchor="end"
                 dominantBaseline="middle"
                 fontFamily="monospace"
@@ -357,7 +357,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
           )
         })}
       </svg>
-      <p className="mt-2 text-[9px] font-mono text-text-muted/70">
+      <p className="mt-2 text-[13px] font-mono text-text-muted/70">
         1 ● = {(maxAbs / DOTS_PER_SIDE).toFixed(0)}% growth
       </p>
     </div>
@@ -440,7 +440,7 @@ function RiskEvolution({
             <>
               {/* This year */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted w-28 flex-shrink-0">
+                <span className="text-[12px] uppercase tracking-[0.15em] text-text-muted w-28 flex-shrink-0">
                   {t('riskEvolution.thisYear')}
                 </span>
                 <div className="flex-1">{renderStrip(yearPct, isAboveOECD ? '#dc2626' : '#f59e0b')}</div>
@@ -451,7 +451,7 @@ function RiskEvolution({
 
               {/* Historical avg */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted w-28 flex-shrink-0">
+                <span className="text-[12px] uppercase tracking-[0.15em] text-text-muted w-28 flex-shrink-0">
                   {t('riskEvolution.historicalAvg')}
                 </span>
                 <div className="flex-1">{renderStrip(avgPct, 'var(--color-text-muted)')}</div>
@@ -462,7 +462,7 @@ function RiskEvolution({
 
               {/* OECD threshold */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-[0.15em] text-oecd w-28 flex-shrink-0">
+                <span className="text-[12px] uppercase tracking-[0.15em] text-oecd w-28 flex-shrink-0">
                   {t('riskEvolution.oecdTarget')}
                 </span>
                 <div className="flex-1">{renderStrip(oecdPct, '#22d3ee')}</div>
@@ -470,7 +470,7 @@ function RiskEvolution({
                   {OECD_HIGH_RISK_THRESHOLD}%
                 </span>
               </div>
-              <p className="text-[9px] font-mono text-text-muted/70 pt-1 border-t border-border/20">
+              <p className="text-[13px] font-mono text-text-muted/70 pt-1 border-t border-border/20">
                 1 ● = 2% · cyan line = OECD target ({OECD_HIGH_RISK_THRESHOLD}%)
               </p>
             </>
@@ -494,7 +494,7 @@ function RiskEvolution({
         <div>
           <p
             className={cn(
-              'text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-0.5',
+              'text-[12px] font-mono font-bold uppercase tracking-[0.15em] mb-0.5',
               isAboveOECD ? 'text-risk-critical' : 'text-text-muted',
             )}
           >
@@ -554,7 +554,7 @@ function ProcedureTypeSection({
           const competitiveColor = '#64748b' // slate — §3.10: competitive share isn't green-for-good
           return (
             <>
-              <div className="flex items-center justify-between mb-2 text-[10px] font-mono uppercase tracking-[0.15em]">
+              <div className="flex items-center justify-between mb-2 text-[12px] font-mono uppercase tracking-[0.15em]">
                 <span className="font-bold" style={{ color: directColor }}>
                   {directPct.toFixed(1)}% {t('procedureType.direct')}
                 </span>
@@ -582,7 +582,7 @@ function ProcedureTypeSection({
                   />
                 ))}
               </svg>
-              <p className="text-[10px] font-mono text-text-muted mb-2">
+              <p className="text-[12px] font-mono text-text-muted mb-2">
                 {t('procedureType.direct')} / {t('procedureType.competitive')} · 1 punto = 2%
               </p>
             </>
@@ -597,7 +597,7 @@ function ProcedureTypeSection({
             style={{ left: `${historicalAvg}%`, transform: 'translateX(-50%)' }}
           >
             <div className="h-2 w-px bg-background-elevated" />
-            <span className="text-[9px] font-mono text-text-muted whitespace-nowrap">
+            <span className="text-[13px] font-mono text-text-muted whitespace-nowrap">
               {historicalAvg.toFixed(0)}% avg
             </span>
           </div>
@@ -607,7 +607,7 @@ function ProcedureTypeSection({
             style={{ left: `${OECD_DIRECT_AWARD_LIMIT}%`, transform: 'translateX(-50%)' }}
           >
             <div className="h-2 w-px bg-oecd" />
-            <span className="text-[9px] font-mono text-oecd whitespace-nowrap">
+            <span className="text-[13px] font-mono text-oecd whitespace-nowrap">
               {t('procedureType.oecdLimit')}
             </span>
           </div>
@@ -620,7 +620,7 @@ function ProcedureTypeSection({
         {isAboveOECD && (
           <div className="mt-3 flex items-start gap-2 rounded border border-risk-critical/30 bg-risk-critical/5 px-3 py-2">
             <AlertTriangle className="h-3.5 w-3.5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-[11px] text-risk-critical/90 leading-relaxed">
+            <p className="text-[13px] text-risk-critical/90 leading-relaxed">
               {t('findings.highDirectAward', { pct: directPct.toFixed(1) })}
               {isAboveAvg && ` · ${(directPct - historicalAvg).toFixed(1)} pp vs avg`}
             </p>
@@ -647,26 +647,26 @@ function TopVendorsTable({
   const shown = expanded ? vendors : vendors.slice(0, 5)
 
   if (!vendors.length) {
-    return <p className="py-8 text-sm text-text-muted italic text-center">{t('noData')}</p>
+    return <p className="py-8 text-sm text-text-muted text-center">{t('noData')}</p>
   }
 
   return (
     <div>
       {/* Column headers */}
       <div className="grid grid-cols-[40px_1fr_120px_90px_70px] gap-3 px-3 py-2 border-b border-border/30 mb-1">
-        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold">
+        <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold">
           {t('topVendorsFull.rankColumn')}
         </span>
-        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold">
+        <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold">
           {t('topVendorsFull.vendorColumn')}
         </span>
-        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
+        <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
           {t('topVendorsFull.valueColumn')}
         </span>
-        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
+        <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
           {t('topVendorsFull.contractsColumn')}
         </span>
-        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
+        <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
           {t('topVendorsFull.riskColumn')}
         </span>
       </div>
@@ -716,7 +716,7 @@ function TopVendorsTable({
               <span className="text-right">
                 {score > 0 ? (
                   <span
-                    className="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border tabular-nums"
+                    className="inline-flex items-center gap-1 text-[12px] font-mono font-bold px-1.5 py-0.5 rounded border tabular-nums"
                     style={{
                       color: riskColor,
                       backgroundColor: `${riskColor}15`,
@@ -726,7 +726,7 @@ function TopVendorsTable({
                     {score.toFixed(2)}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono text-text-muted/50">—</span>
+                  <span className="text-[12px] font-mono text-text-muted/50">—</span>
                 )}
               </span>
             </motion.div>
@@ -767,7 +767,7 @@ function NotableRiskContracts({
 
   if (!contracts.length) {
     return (
-      <p className="py-8 text-sm text-text-muted italic text-center">
+      <p className="py-8 text-sm text-text-muted text-center">
         {t('notableRisks.noRiskContracts')}
       </p>
     )
@@ -792,13 +792,13 @@ function NotableRiskContracts({
             <div className="flex items-start gap-3">
               <div className="flex flex-col items-center justify-center w-10 flex-shrink-0 gap-0.5">
                 <span
-                  className="text-[10px] font-mono font-black tabular-nums"
+                  className="text-[12px] font-mono font-black tabular-nums"
                   style={{ color: color }}
                 >
                   #{i + 1}
                 </span>
                 <span
-                  className="text-[9px] font-mono tabular-nums px-1 py-px rounded"
+                  className="text-[13px] font-mono tabular-nums px-1 py-px rounded"
                   style={{
                     backgroundColor: `${color}18`,
                     color: color,
@@ -812,7 +812,7 @@ function NotableRiskContracts({
                 <p className="text-sm text-text-primary font-medium line-clamp-2 leading-snug mb-1">
                   {c.title ?? `Contrato ${c.id}`}
                 </p>
-                <div className="flex items-center gap-3 flex-wrap text-[11px] font-mono text-text-muted">
+                <div className="flex items-center gap-3 flex-wrap text-[13px] font-mono text-text-muted">
                   {c.vendor_name && (
                     <span className="truncate max-w-[240px] inline-flex items-center gap-1">
                       <span className="text-text-muted/60">{t('notableRisks.vendor')}:</span>{' '}
@@ -866,7 +866,7 @@ function MonthlySpending({
   const { t } = useTranslation('yearinreview')
 
   if (!data || !data.months?.length) {
-    return <p className="py-8 text-sm text-text-muted italic text-center">{t('noData')}</p>
+    return <p className="py-8 text-sm text-text-muted text-center">{t('noData')}</p>
   }
 
   // Compute monthly average for % vs avg context
@@ -926,7 +926,7 @@ function MonthlySpending({
         >
           <Calendar className="h-4 w-4 flex-shrink-0" style={{ color: decColor }} aria-hidden="true" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] font-bold" style={{ color: decColor }}>
+            <p className="text-[12px] font-mono uppercase tracking-[0.15em] font-bold" style={{ color: decColor }}>
               {t('monthly.decemberSpike')} · {year}
             </p>
             <p className="text-sm text-text-secondary mt-0.5">
@@ -1106,22 +1106,22 @@ export default function YearInReview() {
             <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
               {t('title') || 'Year in Review'} · {validYear}
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
               MEXICO FEDERAL PROCUREMENT · COMPRANET
             </p>
           </div>
           <div className="flex items-baseline gap-5">
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{yearRow ? formatNumber(yearRow.contracts) : '—'}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Contracts</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Contracts</div>
             </div>
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{yearRow ? formatCompactMXN(yearRow.total_value) : '—'}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Total spend</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Total spend</div>
             </div>
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-accent)' }}>{yearRow ? `${yearRow.direct_award_pct.toFixed(0)}%` : '—'}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Direct award</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Direct award</div>
             </div>
           </div>
         </div>
@@ -1139,7 +1139,7 @@ export default function YearInReview() {
           <div className="relative overflow-hidden rounded-sm border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
             <div className="flex items-center gap-2 flex-wrap">
               <Calendar className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
-              <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted mr-1">
+              <span className="text-[12px] uppercase tracking-[0.15em] text-text-muted mr-1">
                 {t('yearSelector')}:
               </span>
               {FEATURED_YEARS.map((y) => (
@@ -1254,7 +1254,7 @@ export default function YearInReview() {
               </motion.div>
             </motion.div>
           ) : (
-            <div className="py-8 text-center text-text-muted text-sm italic">{t('noData')}</div>
+            <div className="py-8 text-center text-text-muted text-sm">{t('noData')}</div>
           )}
 
           {/* YoY Deltas strip */}
@@ -1308,7 +1308,7 @@ export default function YearInReview() {
                     className="rounded-sm border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{item.label}</p>
+                      <p className="text-[12px] text-text-muted uppercase tracking-wide truncate">{item.label}</p>
                       <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{item.val}</p>
                     </div>
                     {item.delta != null && (
@@ -1341,7 +1341,7 @@ export default function YearInReview() {
           >
             <div className="flex items-center gap-3 mb-3">
               <span
-                className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                className="text-[12px] font-bold uppercase tracking-[0.2em]"
                 style={{ color: sexenio.color }}
               >
                 {t('administrationBanner.title')}
@@ -1366,7 +1366,7 @@ export default function YearInReview() {
                   />
                 ))}
               </div>
-              <span className="text-[10px] font-mono text-text-muted flex-shrink-0">
+              <span className="text-[12px] font-mono text-text-muted flex-shrink-0">
                 {t('sexenioYear', { current: sexenio.yearInSexenio, total: sexenio.totalYears })}
               </span>
             </div>
@@ -1380,7 +1380,7 @@ export default function YearInReview() {
 
             {/* Full sector distribution (ALL 12) */}
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('sectorAll.sectionLabel')}
               </p>
               <p
@@ -1410,7 +1410,7 @@ export default function YearInReview() {
 
             {/* Sector growth — diverging chart */}
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('sectorGrowthFull.sectionLabel')}
               </p>
               <p
@@ -1428,7 +1428,7 @@ export default function YearInReview() {
               ) : sectorGrowthRows.some((r) => r.growthPct != null) ? (
                 <SectorGrowthDiverging rows={sectorGrowthRows} />
               ) : (
-                <p className="py-8 text-sm text-text-muted italic text-center">
+                <p className="py-8 text-sm text-text-muted text-center">
                   {t('sectorGrowthFull.noComparison', { prior: validYear - 1 })}
                 </p>
               )}
@@ -1443,7 +1443,7 @@ export default function YearInReview() {
           {/* Risk Evolution */}
           {yearRow && yoyData.length > 0 && (
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('riskEvolution.sectionLabel')}
               </p>
               <p
@@ -1463,7 +1463,7 @@ export default function YearInReview() {
           {/* Procedure Type */}
           {yearRow && yoyData.length > 0 && (
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('procedureType.sectionLabel')}
               </p>
               <p
@@ -1484,7 +1484,7 @@ export default function YearInReview() {
 
           {/* Monthly spending */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
+            <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-1">
               {t('monthly.sectionLabel')}
             </p>
             <p
@@ -1513,7 +1513,7 @@ export default function YearInReview() {
           {/* Spotlight — top vendor */}
           {topVendor && !vendorsLoading && (
             <motion.div variants={fadeIn} initial="initial" animate="animate">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-3">
+              <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-3">
                 {t('spotlight.label')}
               </p>
               <div
@@ -1525,7 +1525,7 @@ export default function YearInReview() {
                   if (e.key === 'Enter') navigate(`/vendors/${topVendor.vendor_id}`)
                 }}
               >
-                <p className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
+                <p className="text-[12px] uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('spotlight.topVendorLabel', { year: validYear })}
                 </p>
                 <div className="mt-1" onClick={(e) => e.stopPropagation()}>
@@ -1549,7 +1549,7 @@ export default function YearInReview() {
                     const riskColor = getRiskLevelColor(getRiskLevel(score))
                     return (
                       <span
-                        className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border"
+                        className="text-[12px] font-bold font-mono px-2 py-0.5 rounded-full border"
                         style={{
                           color: riskColor,
                           backgroundColor: `${riskColor}15`,
@@ -1568,7 +1568,7 @@ export default function YearInReview() {
 
           {/* Top 20 Vendors */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
+            <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-1">
               {t('topVendorsFull.sectionLabel')}
             </p>
             <p
@@ -1599,7 +1599,7 @@ export default function YearInReview() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" aria-hidden="true" />
-              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted">
                 {t('notableRisks.sectionLabel')}
               </p>
             </div>
@@ -1630,7 +1630,7 @@ export default function YearInReview() {
           {/* Full year navigation at bottom */}
           <div className="mt-4">
             <div className="h-px bg-border mb-4" />
-            <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted mb-3">
+            <p className="text-[12px] uppercase tracking-[0.2em] text-text-muted mb-3">
               {t('allYears')}
             </p>
             <div className="flex flex-wrap gap-1.5" role="navigation" aria-label={t('allYears')}>

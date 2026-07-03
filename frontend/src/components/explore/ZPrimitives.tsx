@@ -126,7 +126,7 @@ export function ZBreadcrumb({
           <span key={i} className="flex items-center gap-1.5 min-w-0">
             {i > 0 && (
               <span
-                className="font-mono text-[10px]"
+                className="font-mono text-[12px]"
                 style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}
                 aria-hidden="true"
               >
@@ -142,7 +142,7 @@ export function ZBreadcrumb({
                 isLast ? 'cursor-default' : 'hover:opacity-70 cursor-pointer'
               )}
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: isLast ? 700 : 500,
                 color: 'var(--color-text-primary)',
                 borderBottom: accent ? `2px solid ${accent}` : undefined,
@@ -159,7 +159,7 @@ export function ZBreadcrumb({
         )
       })}
       <span
-        className="ml-auto font-mono text-[9px] tracking-[0.14em]"
+        className="ml-auto font-mono text-[13px] tracking-[0.14em]"
         style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}
       >
         {lang === 'en' ? 'ESC ↩' : 'ESC ↩'}
@@ -198,7 +198,7 @@ export function ZKickerBand({
       className="px-4 sm:px-6 pt-4 pb-3"
     >
       <div
-        className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1.5"
+        className="font-mono text-[12px] uppercase tracking-[0.18em] mb-1.5"
         style={{ color: 'var(--color-accent)' }}
       >
         {kicker}
@@ -215,7 +215,7 @@ export function ZKickerBand({
       </h1>
       {stat && (
         <div
-          className="font-mono text-[10px] uppercase tracking-[0.12em] mt-1.5"
+          className="font-mono text-[12px] uppercase tracking-[0.12em] mt-1.5"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {stat}
@@ -228,7 +228,7 @@ export function ZKickerBand({
 // ─── ZPullLine — single-sentence editorial finding ──────────────────────────
 
 /**
- * The pull-line under main content — one sentence in Playfair italic that
+ * The pull-line under main content — one sentence in Playfair that
  * names the finding the content surface reveals. e.g. "IMSS alone manages
  * 38% — more than the next six institutions combined."
  *
@@ -275,7 +275,7 @@ export function ZPullLine({
           style={{
             fontSize,
             fontFamily: "'EB Garamond', Georgia, serif",
-            fontStyle: 'italic',
+            fontStyle: 'normal',
           }}
         >
           {children}
@@ -314,7 +314,7 @@ export function ZFooterLink({
     <button
       type="button"
       onClick={() => navigate(href)}
-      className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+      className="inline-flex items-center gap-1.5 font-mono text-[13px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
       style={{ color: 'var(--color-text-primary)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
     >
       <span>{text}</span>
@@ -358,7 +358,7 @@ export function ZSortToggle<TMode extends string>({
   return (
     <div className="flex flex-col items-end gap-1">
       {label && (
-        <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
+        <span className="font-mono text-[13px] uppercase tracking-[0.14em] text-text-muted">
           {label}
         </span>
       )}
@@ -371,7 +371,7 @@ export function ZSortToggle<TMode extends string>({
               key={m}
               type="button"
               onClick={() => onChange(m)}
-              className="font-mono text-[10px] uppercase tracking-[0.12em] px-2.5 py-1 transition-colors"
+              className="font-mono text-[12px] uppercase tracking-[0.12em] px-2.5 py-1 transition-colors"
               style={{
                 background: isActive ? (isRisk ? 'var(--color-risk-critical)' : 'var(--color-accent)') : 'transparent',
                 color: isActive ? '#fff' : 'var(--color-text-secondary)',

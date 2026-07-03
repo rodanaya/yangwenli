@@ -90,7 +90,7 @@ export function FolderSidebar({
             />
             <span className="flex-1 text-left truncate">{folder.name}</span>
             {folder.item_count != null && (
-              <span className="shrink-0 text-[10px] text-text-muted">
+              <span className="shrink-0 text-[12px] text-text-muted">
                 {folder.item_count}
               </span>
             )}
@@ -144,7 +144,7 @@ export function FolderSidebar({
           <div className="flex items-center gap-1">
             <button
               onClick={handleCreate}
-              className="flex-1 rounded bg-accent px-2 py-1 text-[11px] text-text-primary hover:bg-accent-hover"
+              className="flex-1 rounded bg-accent px-2 py-1 text-[13px] text-text-primary hover:bg-accent-hover"
             >
               {t('folderSidebar.create')}
             </button>

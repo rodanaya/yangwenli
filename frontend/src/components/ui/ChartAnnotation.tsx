@@ -76,7 +76,7 @@ export function ChartAnnotation({
         textAnchor={textAnchor}
         style={{
           fill: color,
-          fontSize: 10,
+          fontSize: 12,
           fontFamily: 'var(--font-family-mono)',
           fontVariant: 'all-small-caps',
           letterSpacing: '0.04em',

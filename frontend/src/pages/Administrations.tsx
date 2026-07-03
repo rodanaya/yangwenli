@@ -159,7 +159,7 @@ function ChapterKicker({
   numeral: string; es: string; en: string; isEs: boolean; adminTag?: string; tagColor?: string
 }) {
   return (
-    <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
+    <div className="text-[13px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
       § {numeral} · {isEs ? es : en}
       {adminTag && (
         <span className="font-semibold" style={{ color: tagColor ?? 'var(--color-text-muted)' }}>
@@ -362,7 +362,7 @@ export default function Administrations() {
           <p className="text-sm text-text-secondary leading-relaxed">
             {t('loadErrorDetail', 'The server may be temporarily unavailable. Administration data will appear once the connection is restored.')}
           </p>
-          <p className="text-[10px] tracking-[0.2em] uppercase text-text-muted">
+          <p className="text-[12px] tracking-[0.2em] uppercase text-text-muted">
             RUBLI — {t('classifiedHeader.eyebrow', 'Political cycle analysis')}
           </p>
         </div>
@@ -453,14 +453,14 @@ export default function Administrations() {
             className="flex items-center gap-3 mb-3"
             style={{
               fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-              fontSize: '10px',
+              fontSize: '12px',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
               fontWeight: 400,
             }}
           >
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XI</span>
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               <span>
@@ -475,7 +475,7 @@ export default function Administrations() {
               <h1
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 500,
                   fontSize: 'clamp(28px, 4.5vw, 44px)',
                   lineHeight: 1.02,
@@ -521,7 +521,7 @@ export default function Administrations() {
           {/* ==== ACTO I - EL PATRON: the thesis proven above the fold, no tab
               needed. Sec.A named survivors across party turnover; Sec.B the risk
               line across four handovers. Both computed from payloads in memory. ==== */}
-          <div className="mb-2 text-[10px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="mb-2 text-[12px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
             <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{isEs ? 'Acto I' : 'Act I'}</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'El patrón' : 'The pattern'}
@@ -539,7 +539,7 @@ export default function Administrations() {
             </div>
           </section>
           {/* ==== ACTO II - EL EXPEDIENTE: the selected administration's file ==== */}
-          <div className="mb-2 text-[10px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="mb-2 text-[12px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
             <span style={{ color: folderColor, fontWeight: 600 }}>{isEs ? 'Acto II' : 'Act II'}</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'El expediente' : 'The file'}
@@ -606,7 +606,7 @@ export default function Administrations() {
                   ? tokenColor('risk-critical')
                   : tokenColor('text-muted')
                 return (
-                  <span className="text-[10px] font-mono tabular-nums whitespace-nowrap" style={{ color }}>
+                  <span className="text-[12px] font-mono tabular-nums whitespace-nowrap" style={{ color }}>
                     {up ? '▲ +' : '▼ −'}{Math.abs(delta).toFixed(1)}
                   </span>
                 )
@@ -633,16 +633,16 @@ export default function Administrations() {
                       {/* DA — lead structural fact */}
                       <div className="bg-background-card p-3 space-y-1.5" style={{ borderLeft: `2px solid ${tokenColor('risk-critical')}` }}>
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted">
+                          <span className="text-[12px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted">
                             {isEs ? 'ADJ. DIRECTA · RECTORA' : 'DIRECT AWARD · LEAD'}
                           </span>
-                          <span className="text-[10px] font-mono text-text-muted/70 tabular-nums whitespace-nowrap">{yrSpan}</span>
+                          <span className="text-[12px] font-mono text-text-muted/70 tabular-nums whitespace-nowrap">{yrSpan}</span>
                         </div>
                         <div className="flex items-baseline gap-2">
-                          <span className="font-serif italic font-extrabold tabular-nums leading-none text-[24px]" style={{ color: tokenColor('risk-critical') }}>
+                          <span className="font-serif font-extrabold tabular-nums leading-none text-[24px]" style={{ color: tokenColor('risk-critical') }}>
                             {formatValue(daAvg, 'pct')}
                           </span>
-                          <span className="text-[10px] font-mono text-text-muted">{isEs ? 'prom. sexenio' : 'term avg'}</span>
+                          <span className="text-[12px] font-mono text-text-muted">{isEs ? 'prom. sexenio' : 'term avg'}</span>
                           {renderDelta(daDelta, true)}
                         </div>
                         {multiYear && (
@@ -655,23 +655,23 @@ export default function Administrations() {
                             lastValue={`${formatValue(first.direct_award_pct, 'pct')}→${formatValue(last.direct_award_pct, 'pct')}`}
                           />
                         )}
-                        <p className="text-[10px] font-mono text-text-muted">
+                        <p className="text-[12px] font-mono text-text-muted">
                           {isEs ? 'vs. nacional ' : 'vs. national '}{allTimeAvg.da.toFixed(1)}%
                         </p>
                       </div>
                       {/* HR — the headline metric, co-equal not demoted */}
                       <div className="bg-background-card p-3 space-y-1.5" style={{ borderLeft: `2px solid ${tokenColor('risk-medium')}` }}>
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted">
+                          <span className="text-[12px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted">
                             {isEs ? 'ALTO RIESGO · TITULAR' : 'HIGH RISK · HEADLINE'}
                           </span>
-                          <span className="text-[10px] font-mono text-text-muted/70 tabular-nums whitespace-nowrap">{yrSpan}</span>
+                          <span className="text-[12px] font-mono text-text-muted/70 tabular-nums whitespace-nowrap">{yrSpan}</span>
                         </div>
                         <div className="flex items-baseline gap-2">
-                          <span className="font-serif italic font-extrabold tabular-nums leading-none text-[24px]" style={{ color: tokenColor('risk-medium') }}>
+                          <span className="font-serif font-extrabold tabular-nums leading-none text-[24px]" style={{ color: tokenColor('risk-medium') }}>
                             {formatValue(hrAvg, 'pct')}
                           </span>
-                          <span className="text-[10px] font-mono text-text-muted">{isEs ? 'prom. sexenio' : 'term avg'}</span>
+                          <span className="text-[12px] font-mono text-text-muted">{isEs ? 'prom. sexenio' : 'term avg'}</span>
                           {renderDelta(hrDelta, true)}
                         </div>
                         {multiYear && (
@@ -684,7 +684,7 @@ export default function Administrations() {
                             lastValue={`${formatValue(first.high_risk_pct, 'pct')}→${formatValue(last.high_risk_pct, 'pct')}`}
                           />
                         )}
-                        <p className="text-[10px] font-mono text-text-muted">
+                        <p className="text-[12px] font-mono text-text-muted">
                           {isEs ? 'máx ' : 'peak '}{worstYear} · <span style={{ color: tokenColor('risk-medium'), fontWeight: 700 }}>{formatValue(maxHR, 'pct')}</span>
                         </p>
                       </div>
@@ -692,7 +692,7 @@ export default function Administrations() {
 
                     {/* ── SUPPORT · Single Bid ── */}
                     <div className="flex items-center gap-3 pt-2 border-t border-border/20">
-                      <span className="w-28 shrink-0 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+                      <span className="w-28 shrink-0 text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
                         {isEs ? 'LICITACIÓN ÚNICA' : 'SINGLE BID'}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -706,17 +706,17 @@ export default function Administrations() {
                             lastValue={`${formatValue(first.single_bid_pct, 'pct')}→${formatValue(last.single_bid_pct, 'pct')}`}
                           />
                         ) : (
-                          <span className="text-[11px] font-mono text-text-muted tabular-nums">{formatValue(last.single_bid_pct, 'pct')}</span>
+                          <span className="text-[13px] font-mono text-text-muted tabular-nums">{formatValue(last.single_bid_pct, 'pct')}</span>
                         )}
                       </div>
-                      <span className="shrink-0 text-[10px] font-mono text-text-muted whitespace-nowrap">
+                      <span className="shrink-0 text-[12px] font-mono text-text-muted whitespace-nowrap">
                         {isEs ? 'prom. ' : 'avg '}{sbAvg.toFixed(1)}%
                       </span>
                       {renderDelta(sbDelta, false)}
                     </div>
 
                     {/* auto-scale honesty disclosure (each panel owns its y-domain) */}
-                    <p className="text-[9px] font-mono text-text-secondary">
+                    <p className="text-[13px] font-mono text-text-secondary">
                       {isEs
                         ? 'cada panel se autoescala — compare la forma dentro de cada métrica, no entre ellas'
                         : 'each panel auto-scales — compare the shape within a metric, not across them'}
@@ -737,10 +737,10 @@ export default function Administrations() {
                 <div className="mt-3 pt-3 border-t border-border/20">
                   <div className="flex items-center gap-1.5 mb-2">
                     <AlertTriangle className="h-3 w-3 text-risk-medium" aria-hidden="true" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted font-mono">
+                    <span className="text-[12px] font-bold uppercase tracking-[0.15em] text-text-muted font-mono">
                       {t('aiDetectedAnomalies')}
                     </span>
-                    <span className="text-[10px] text-text-muted">— {t('anomaliesNote')}</span>
+                    <span className="text-[12px] text-text-muted">— {t('anomaliesNote')}</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {yearAnomalies.map((a) => {
@@ -750,7 +750,7 @@ export default function Administrations() {
                       <span
                         key={`${a.year}-${a.metric}`}
                         className={cn(
-                          'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium',
+                          'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[12px] font-mono font-medium',
                           Math.abs(a.z) >= 2.5
                             ? 'bg-risk-critical/10 text-risk-critical border border-risk-critical/20'
                             : 'bg-risk-medium/10 text-risk-medium border border-risk-medium/20'
@@ -766,7 +766,7 @@ export default function Administrations() {
                   </div>
                 </div>
               )}
-              <p className="mt-3 pt-3 border-t border-border/20 text-[10px] text-text-muted leading-relaxed">
+              <p className="mt-3 pt-3 border-t border-border/20 text-[12px] text-text-muted leading-relaxed">
                 {t('evidenceSection.inflationNote')}
               </p>
 
@@ -782,10 +782,10 @@ export default function Administrations() {
                 return (
                   <div className="mt-4 pt-3 border-t border-border/20">
                     <div className="flex items-baseline justify-between gap-2 mb-2.5">
-                      <span className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent">
+                      <span className="text-[13px] tracking-[0.25em] uppercase font-bold text-accent">
                         {isEs ? '§ VOLUMEN · CONTRATOS POR AÑO' : '§ VOLUME · CONTRACTS PER YEAR'}
                       </span>
-                      <span className="text-[10px] font-mono text-text-muted tabular-nums">
+                      <span className="text-[12px] font-mono text-text-muted tabular-nums">
                         {formatNumber(total)} {isEs ? 'total' : 'total'}
                       </span>
                     </div>
@@ -818,12 +818,12 @@ export default function Administrations() {
                     {/* Year axis — aligned 1:1 under the bars */}
                     <div className="flex gap-1.5 sm:gap-2 mt-1 pt-1 border-t border-border/30">
                       {years.map((yr) => (
-                        <span key={yr.year} className="flex-1 min-w-0 text-center text-[9px] font-mono text-text-muted tabular-nums">
+                        <span key={yr.year} className="flex-1 min-w-0 text-center text-[13px] font-mono text-text-muted tabular-nums">
                           {yr.year}
                         </span>
                       ))}
                     </div>
-                    <p className="text-[10px] text-text-muted mt-2 leading-relaxed">
+                    <p className="text-[12px] text-text-muted mt-2 leading-relaxed">
                       {isEs
                         ? `Volumen anual de contratos · escala lineal desde cero. Pico en ${peak.year} (${formatNumber(peak.contracts)}).`
                         : `Annual contract volume · linear scale from zero. Peak in ${peak.year} (${formatNumber(peak.contracts)}).`}
@@ -884,7 +884,7 @@ export default function Administrations() {
                   <p className="text-xs text-text-muted mt-1">{t('keyEventsSubtitle')}</p>
                 </div>
                 {selectedEraExtras.gtCaseCount != null && (
-                  <span className="text-[10px] font-mono text-text-muted shrink-0 text-right">
+                  <span className="text-[12px] font-mono text-text-muted shrink-0 text-right">
                     {selectedEraExtras.gtCaseCount} {isEs ? 'casos documentados (GT)' : 'documented cases (GT)'}
                   </span>
                 )}
@@ -922,7 +922,7 @@ export default function Administrations() {
                         const pct = Math.min(100, (sector.contracts / maxContracts) * 100)
                         return (
                           <div key={sector.sectorId} className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono text-text-muted w-4 text-right flex-shrink-0">
+                            <span className="text-[12px] font-mono text-text-muted w-4 text-right flex-shrink-0">
                               {idx + 1}
                             </span>
                             <span
@@ -930,7 +930,7 @@ export default function Administrations() {
                               style={{ backgroundColor: sector.color }}
                             />
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between text-[10px] mb-0.5">
+                              <div className="flex items-center justify-between text-[12px] mb-0.5">
                                 <span className="text-text-secondary whitespace-normal break-words leading-tight">{sector.name}</span>
                                 <span className="font-mono text-text-muted ml-1 flex-shrink-0">
                                   {formatNumber(sector.contracts)}
@@ -951,7 +951,7 @@ export default function Administrations() {
                         )
                       })}
                     </div>
-                    <p className="text-[10px] font-mono text-text-muted/60 mt-1.5">
+                    <p className="text-[12px] font-mono text-text-muted/60 mt-1.5">
                       {isEs ? '1 ● ≈ 5% del sector líder' : '1 ● ≈ 5% of the leading sector'}
                     </p>
                   </div>
@@ -969,7 +969,7 @@ export default function Administrations() {
                 aria-expanded={vendorsDeepOpen}
                 aria-controls="beneficiarios-100"
               >
-                <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-text-muted">
+                <span className="text-[12px] tracking-[0.2em] uppercase font-mono text-text-muted">
                   {isEs ? '§ LOS 100 MAYORES BENEFICIARIOS' : '§ THE TOP 100 BENEFICIARIES'}
                 </span>
                 <span className="text-text-muted text-xs font-mono">{vendorsDeepOpen ? '−' : '+'}</span>
@@ -1014,8 +1014,8 @@ export default function Administrations() {
           {/* ── Folder colophon — explicit module end ── */}
           <div className="border-t border-border/40 px-5 py-2 text-center">
             <span
-              className="text-[9px] font-mono uppercase tracking-[0.3em] text-text-muted"
-              style={{ fontStyle: 'italic' }}
+              className="text-[13px] font-mono uppercase tracking-[0.3em] text-text-muted"
+              style={{ fontStyle: 'normal' }}
             >
               — {isEs ? 'fin del expediente' : 'end of file'} · <span style={{ color: folderColor, fontWeight: 700 }}>{selectedDisplay}</span> —
             </span>
@@ -1023,7 +1023,7 @@ export default function Administrations() {
           </section>
           {/* ==== ACTO III - LOS QUE PERMANECEN: officials who kept signing across
               a change of government, + the on-demand two-period compare. ==== */}
-          <div className="mt-8 mb-2 text-[10px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="mt-8 mb-2 text-[12px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
             <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{isEs ? 'Acto III' : 'Act III'}</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'Los que permanecen' : 'The ones who remain'}
@@ -1039,7 +1039,7 @@ export default function Administrations() {
               onClick={() => setCompareOpen((v) => !v)}
               aria-expanded={compareOpen}
             >
-              <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-text-muted">
+              <span className="text-[12px] tracking-[0.2em] uppercase font-mono text-text-muted">
                 {isEs ? '§ COMPARAR DOS PERIODOS' : '§ COMPARE TWO PERIODS'}
               </span>
               <span className="text-text-muted text-xs font-mono">{compareOpen ? '−' : '+'}</span>

@@ -173,11 +173,11 @@ export function EntityIdentityChip({
   // fullName mode lets the chip grow vertically (2-line wrap) rather than
   // forcing a fixed single-line height that triggers ellipsis.
   const heightCls = fullName
-    ? (size === 'xs' ? 'min-h-5 text-[11px]' : size === 'sm' ? 'min-h-6 text-xs' : 'min-h-8 text-sm')
-    : size === 'xs' ? 'h-5 text-[11px]' : size === 'sm' ? 'h-6 text-xs' : 'h-8 text-sm'
+    ? (size === 'xs' ? 'min-h-5 text-[13px]' : size === 'sm' ? 'min-h-6 text-xs' : 'min-h-8 text-sm')
+    : size === 'xs' ? 'h-5 text-[13px]' : size === 'sm' ? 'h-6 text-xs' : 'h-8 text-sm'
   const iconSize = size === 'xs' ? 'h-3 w-3' : size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'
   const dotSize = size === 'xs' ? 'h-1.5 w-1.5' : 'h-2 w-2'
-  const tierSize = size === 'xs' ? 'text-[9px] px-1 py-px' : 'text-[10px] px-1 py-0.5'
+  const tierSize = size === 'xs' ? 'text-[13px] px-1 py-px' : 'text-[12px] px-1 py-0.5'
 
   const riskLevel = typeof riskScore === 'number' ? getRiskLevelFromScore(riskScore) : null
   const flagsToShow = (flags ?? []).slice(0, 2)

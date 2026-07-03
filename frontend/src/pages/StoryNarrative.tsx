@@ -237,7 +237,7 @@ function ChapterSources({ sources }: { sources: string[] }) {
       {open && (
         <ol className="mt-3 space-y-1.5 border-l-2 border-border pl-4">
           {sources.map((s, i) => (
-            <li key={i} className="text-[11px] text-text-muted font-mono leading-relaxed">
+            <li key={i} className="text-[13px] text-text-muted font-mono leading-relaxed">
               <span className="text-text-primary mr-2 select-none">[{i + 1}]</span>
               {s}
             </li>
@@ -563,11 +563,11 @@ export function KeyFactsStrip({ accentColor, facts }: {
               >
                 {f.value}
               </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mb-0.5">
+              <div className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mb-0.5">
                 {f.label}
               </div>
               {f.sublabel && (
-                <div className="text-[11px] text-text-secondary leading-[1.45]">
+                <div className="text-[13px] text-text-secondary leading-[1.45]">
                   {f.sublabel}
                 </div>
               )}
@@ -616,7 +616,7 @@ function AtlasLink({
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div
-              className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] mb-1.5"
+              className="text-[12px] font-mono font-bold uppercase tracking-[0.16em] mb-1.5"
               style={{ color: accentColor }}
             >
               ◆ {lang === 'en' ? 'OPEN THE OBSERVATORY' : 'ABRIR EL OBSERVATORIO'}
@@ -660,7 +660,7 @@ function ObservatoryTrailerCTA({ longformSlug, lang }: { longformSlug: string; l
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div
-              className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] mb-1.5"
+              className="text-[12px] font-mono font-bold uppercase tracking-[0.16em] mb-1.5"
               style={{ color: tour.accent }}
             >
               ◆ {lang === 'en' ? 'OBSERVATORY TOUR' : 'TOUR DEL OBSERVATORIO'}
@@ -727,12 +727,12 @@ function ChapterDivider({
       <div className="my-12 max-w-3xl mx-auto px-4" aria-hidden="true">
         <div className="flex items-center justify-between mb-1.5">
           <span
-            className="text-[9px] font-mono uppercase tracking-[0.18em]"
+            className="text-[13px] font-mono uppercase tracking-[0.18em]"
             style={{ color: accentColor }}
           >
             {isEs ? '◆ Trayectoria sexenal · tasa alto riesgo v0.8.5' : '◆ Sexenio trajectory · high-risk rate v0.8.5'}
           </span>
-          <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
+          <span className="text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
             {isEs ? 'aquí ▼' : 'you are here ▼'}
           </span>
         </div>
@@ -772,7 +772,7 @@ function ChapterDivider({
                 style={{ flexBasis: `${(e.span / totalSpan) * 100}%` }}
               >
                 <span
-                  className="text-[10px] font-mono uppercase tracking-[0.12em]"
+                  className="text-[12px] font-mono uppercase tracking-[0.12em]"
                   style={{
                     color: isHere ? accentColor : 'var(--color-text-muted)',
                     fontWeight: isHere ? 700 : 400,
@@ -781,12 +781,12 @@ function ChapterDivider({
                   {e.label}
                 </span>
                 <span
-                  className="font-mono tabular-nums text-[10px]"
+                  className="font-mono tabular-nums text-[12px]"
                   style={{ color: isHere ? 'var(--color-text-primary)' : 'var(--color-text-muted)' }}
                 >
                   {e.rate.toFixed(1)}%
                 </span>
-                <span className="text-[9px] font-mono text-text-muted/70">
+                <span className="text-[13px] font-mono text-text-muted/70">
                   {e.years}
                 </span>
               </div>
@@ -859,7 +859,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 
           {/* Top eyebrow */}
           <p
-            className="text-[11px] uppercase tracking-[0.22em] font-bold mb-4"
+            className="text-[13px] uppercase tracking-[0.22em] font-bold mb-4"
             style={{ color: accentColor }}
           >
             {t('storyType.chapter', 'Chapter')} {paddedNumber}
@@ -967,7 +967,7 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
                 >
                   {paragraph}
                   {sourceRef > 0 && (
-                    <sup className="font-mono text-text-muted text-[10px] ml-0.5 align-super tabular-nums">
+                    <sup className="font-mono text-text-muted text-[12px] ml-0.5 align-super tabular-nums">
                       [{sourceRef}]
                     </sup>
                   )}
@@ -1109,7 +1109,7 @@ function QuoteSpotlightChapter({ chapter, story, accentColor }: ChapterRenderPro
         ))}
       </div>
 
-      {/* Massive Playfair italic quote — wider breakout */}
+      {/* Massive Playfair quote — wider breakout */}
       {chapter.pullquote && (
         <ScrollReveal>
           <figure
@@ -1133,7 +1133,7 @@ function QuoteSpotlightChapter({ chapter, story, accentColor }: ChapterRenderPro
                 aria-hidden="true"
               >“</span>
               <blockquote
-                className="text-[26px] sm:text-[34px] md:text-[40px] leading-[1.18] tracking-[-0.01em] font-medium italic text-text-primary text-balance"
+                className="text-[26px] sm:text-[34px] md:text-[40px] leading-[1.18] tracking-[-0.01em] font-medium text-text-primary text-balance"
                 style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
               >
                 {chapter.pullquote.quote}
@@ -1187,13 +1187,13 @@ function ConnectiveChapter({ chapter, story, accentColor }: ChapterRenderProps) 
         <ScrollReveal>
           <div className="flex items-baseline gap-3 mb-2">
             <span
-              className="text-[10px] uppercase tracking-[0.22em] font-bold"
+              className="text-[12px] uppercase tracking-[0.22em] font-bold"
               style={{ color: accentColor }}
             >
               {t('storyType.chapter', 'Chapter')} {String(chapter.number).padStart(2, '0')}
             </span>
             {story.era && (
-              <span className="text-[10px] text-text-muted">
+              <span className="text-[12px] text-text-muted">
                 · {getEraLabel(story.era, t)}
               </span>
             )}
@@ -1211,7 +1211,7 @@ function ConnectiveChapter({ chapter, story, accentColor }: ChapterRenderProps) 
       <div className="max-w-[55ch] mx-auto px-4 sm:px-0">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
-            <p className="text-text-secondary leading-[1.75] mb-5 text-[17px] italic">
+            <p className="text-text-secondary leading-[1.75] mb-5 text-[17px]">
               {paragraph}
             </p>
           </ScrollReveal>
@@ -1320,7 +1320,7 @@ function ClosingCoda({ story, accentColor, lang }: {
   return (
     <div className="max-w-prose mx-auto px-4 sm:px-0">
       {/* § · ADÓNDE IR kicker */}
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-4 mt-6">
+      <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-4 mt-6">
         § · {lang === 'es' ? 'ADÓNDE IR' : 'WHERE TO GO NEXT'}
       </p>
 
@@ -1339,7 +1339,7 @@ function ClosingCoda({ story, accentColor, lang }: {
       {/* Related-entity chips — the dossiers this story names. */}
       {chips.length > 0 && (
         <ScrollReveal className="mt-6">
-          <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-3">
+          <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mb-3">
             {lang === 'es' ? 'Investigar los expedientes' : 'Investigate the dossiers'}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -1380,7 +1380,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       <ScrollReveal>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-6">
           <p
-            className="text-[10px] uppercase tracking-[0.22em] font-bold mb-4"
+            className="text-[12px] uppercase tracking-[0.22em] font-bold mb-4"
             style={{ color: accentColor }}
           >
             ◆ {t('storyType.closing', 'Closing')} · {t('storyType.chapter', 'Chapter')} {String(chapter.number).padStart(2, '0')}
@@ -1589,12 +1589,12 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           className="flex items-center gap-3 mb-6 flex-wrap"
         >
           <OutletBadge outlet={story.outlet} />
-          <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-text-muted">
+          <span className="text-[12px] font-semibold tracking-[0.2em] uppercase text-text-muted">
             {getTypeLabel(story.type, t)}
           </span>
           {story.era && (
             <span
-              className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full border"
+              className="text-[12px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full border"
               style={{ borderColor: accentColor, color: accentColor }}
             >
               {getEraLabel(story.era, t)}
@@ -1622,7 +1622,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           variants={fadeIn}
           initial="initial"
           animate="animate"
-          className="italic text-text-secondary leading-[1.55] max-w-2xl mb-8"
+          className="text-text-secondary leading-[1.55] max-w-2xl mb-8"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontSize: 'clamp(1.05rem, 1.5vw, 1.25rem)',
@@ -1648,14 +1648,14 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
             const sc = STATUS_CONFIG[story.status]
             return (
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${sc.bg} ${sc.border} ${sc.color}`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[13px] font-semibold ${sc.bg} ${sc.border} ${sc.color}`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" aria-hidden="true" />
                 {t(sc.labelKey, story.status)}
               </span>
             )
           })()}
-          <span className="text-[11px] text-text-primary font-mono">
+          <span className="text-[13px] text-text-primary font-mono">
             {story.chapters.length}{' '}
             {lang === 'es'
               ? story.chapters.length === 1 ? 'capítulo' : 'capítulos'
@@ -1668,7 +1668,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
               ARIA pipeline run (March 25 2026). */}
           <span className="w-px h-4 bg-background-elevated" aria-hidden="true" />
           <span
-            className="text-[11px] text-text-muted font-mono"
+            className="text-[13px] text-text-muted font-mono"
             title={lang === 'en'
               ? 'Stories are static analyses of a COMPRANET snapshot dated through this period. Live data updates in the Atlas and ARIA queue, not in the story body.'
               : 'Las historias son análisis estáticos de un corte de CompraNet hasta esta fecha. Los datos en vivo se actualizan en el Atlas y la cola ARIA, no en el cuerpo del artículo.'}
@@ -1706,7 +1706,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                 >
                   {prefix && (
                     <span
-                      className="text-text-secondary italic"
+                      className="text-text-secondary"
                       style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1.1rem)' }}
                     >
                       {prefix}
@@ -1716,7 +1716,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                     className="tabular-nums leading-none"
                     style={{
                       fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
-                      fontStyle: 'italic',
+                      fontStyle: 'normal',
                       fontWeight: 800,
                       letterSpacing: '-0.035em',
                       color: valueColor,
@@ -1726,7 +1726,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                   </span>
                   {suffix && (
                     <span
-                      className="text-text-secondary italic"
+                      className="text-text-secondary"
                       style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1.1rem)' }}
                     >
                       {suffix}
@@ -1756,7 +1756,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
             className="tabular-nums"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 800,
               fontSize: 'clamp(2rem, 4vw, 3rem)',
               letterSpacing: '-0.02em',
@@ -1875,13 +1875,13 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
         >
           {/* Kicker */}
           <p
-            className="text-[9px] font-mono uppercase tracking-[0.22em] mb-1"
+            className="text-[13px] font-mono uppercase tracking-[0.22em] mb-1"
             style={{ color: accentColor }}
           >
             {isEs ? 'Sujetos de esta investigación' : 'Subjects of this investigation'}
           </p>
           <p
-            className="text-[11px] font-mono text-text-muted mb-5"
+            className="text-[13px] font-mono text-text-muted mb-5"
           >
             {isEs
               ? `${story.entities.length} entidades nombradas · ordenadas por nivel de riesgo`
@@ -1907,7 +1907,7 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
                     className="tabular-nums select-none"
                     style={{
                       fontFamily: "'Playfair Display', Georgia, serif",
-                      fontStyle: 'italic',
+                      fontStyle: 'normal',
                       fontWeight: 800,
                       fontSize: 28,
                       lineHeight: 0.95,
@@ -1931,7 +1931,7 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
                       size="sm"
                     />
                     {role && (
-                      <p className="text-[10px] font-mono text-text-muted pl-1 mt-1 leading-relaxed">
+                      <p className="text-[12px] font-mono text-text-muted pl-1 mt-1 leading-relaxed">
                         {role}
                       </p>
                     )}
@@ -1951,7 +1951,7 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
                           ariaLabel={`Risk ${entity.riskScore.toFixed(2)}`}
                         />
                         <span
-                          className="font-mono tabular-nums text-[11px] tracking-wide"
+                          className="font-mono tabular-nums text-[13px] tracking-wide"
                           style={{ color: riskColor }}
                         >
                           {entity.riskScore.toFixed(2)}
@@ -1971,7 +1971,7 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
                             ? `/cases/${entity.id}`
                             : `/${entity.type}/${entity.id}`
                     }
-                    className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors col-span-3 sm:col-span-1 justify-self-end"
+                    className="inline-flex items-center gap-1 text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors col-span-3 sm:col-span-1 justify-self-end"
                   >
                     <span>{isEs ? 'Abrir dossier' : 'Open dossier'}</span>
                     <ArrowRight
@@ -2319,7 +2319,7 @@ export default function StoryNarrative() {
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             {t('story.allStories')}
           </Link>
-          <span className="text-[10px] text-text-muted font-mono tabular-nums">
+          <span className="text-[12px] text-text-muted font-mono tabular-nums">
             {Math.round(scrollPct)}%
           </span>
         </div>

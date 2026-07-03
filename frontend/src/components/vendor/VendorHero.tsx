@@ -133,7 +133,7 @@ export function VendorHero({
           <div
             className="font-mono tabular-nums"
             style={{
-              fontSize: 11,
+              fontSize: 13,
               letterSpacing: '0.20em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
@@ -153,8 +153,8 @@ export function VendorHero({
         <div
           className="font-mono mb-4"
           style={{
-            fontSize: 10,
-            fontStyle: 'italic',
+            fontSize: 12,
+            fontStyle: 'normal',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: sectorAccent,
@@ -172,7 +172,7 @@ export function VendorHero({
               className="text-balance mb-1.5"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(32px, 4.4vw, 48px)',
                 lineHeight: 1.04,
@@ -248,8 +248,8 @@ export function VendorHero({
               id="vendor-marginal-note"
               className="font-mono"
               style={{
-                fontSize: 9.5,
-                fontStyle: 'italic',
+                fontSize: 13,
+                fontStyle: 'normal',
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
                 color: 'var(--color-accent)',
@@ -363,7 +363,7 @@ function VerdictCard({
           className="tabular-nums"
           style={{
             fontFamily: '"Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 800,
             fontSize: 46,
             lineHeight: 1,
@@ -376,7 +376,7 @@ function VerdictCard({
         <div
           className="font-mono tabular-nums mt-1"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             color: 'var(--color-text-muted)',
             opacity: 0.55,
             letterSpacing: '0.06em',
@@ -401,7 +401,7 @@ function VerdictCard({
       <div
         className="font-mono text-center"
         style={{
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: riskColor,
@@ -421,7 +421,7 @@ function VerdictCard({
               key={i}
               className="font-mono"
               style={{
-                fontSize: 9,
+                fontSize: 13,
                 letterSpacing: '0.10em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
@@ -528,7 +528,7 @@ function VendorMetaRule({
             <span
               className="font-mono ml-1"
               style={{
-                fontSize: 9,
+                fontSize: 13,
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
                 color: 'var(--color-accent)',
@@ -566,7 +566,7 @@ function VendorMetaRule({
 }
 
 /**
- * The lede — single paragraph in EB Garamond italic with a Playfair
+ * The lede — single paragraph in EB Garamond with a Playfair
  * drop cap on the first letter. Sector-accent left rule. The signature
  * editorial gesture of the hero.
  */
@@ -585,7 +585,7 @@ function Lede({ text, sectorAccent }: { text: string; sectorAccent: string }) {
       <p
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 17,
           lineHeight: 1.55,
           color: 'var(--color-text-secondary)',
@@ -598,7 +598,7 @@ function Lede({ text, sectorAccent }: { text: string; sectorAccent: string }) {
           aria-hidden="true"
           style={{
             fontFamily: '"Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 800,
             fontSize: '3.5em',
             float: 'left',
@@ -637,7 +637,7 @@ function OnThePageStrip({ sectorAccent, lang }: { sectorAccent: string; lang: 'e
         <span
           className="font-mono"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: 'var(--color-text-muted)',
@@ -660,7 +660,7 @@ function OnThePageStrip({ sectorAccent, lang }: { sectorAccent: string; lang: 'e
             href={`#${a.id}`}
             className="group font-mono inline-flex items-baseline gap-1.5 transition-colors"
             style={{
-              fontSize: 11,
+              fontSize: 13,
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
               color: 'var(--color-text-secondary)',

@@ -81,12 +81,12 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
           {selectedSectorId && (
             <button
               onClick={() => onSectorClick(undefined)}
-              className="text-[10px] text-accent hover:underline"
+              className="text-[12px] text-accent hover:underline"
             >
               {t('filters.clearFilter')}
             </button>
           )}
-          <div className="flex items-center rounded border border-border/30 overflow-hidden text-[10px] font-medium">
+          <div className="flex items-center rounded border border-border/30 overflow-hidden text-[12px] font-medium">
             <button
               onClick={() => setViewMode('value')}
               className={cn(
@@ -148,7 +148,7 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
               aria-label={`${cell.name} sector, ${metricLabel}`}
             >
               {/* Rank */}
-              <span className="text-[9px] font-mono text-text-muted/50 w-3 flex-shrink-0 text-right">
+              <span className="text-[13px] font-mono text-text-muted/50 w-3 flex-shrink-0 text-right">
                 {idx + 1}
               </span>
 
@@ -160,7 +160,7 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
 
               {/* Sector name */}
               <span className={cn(
-                'text-[11px] font-medium truncate flex-shrink-0 w-24',
+                'text-[13px] font-medium truncate flex-shrink-0 w-24',
                 isSelected ? 'text-text-primary' : 'text-text-secondary group-hover:text-text-primary'
               )}>
                 {cell.name}
@@ -176,13 +176,13 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
               />
 
               {/* Metric label */}
-              <span className="text-[10px] font-mono text-text-muted flex-shrink-0 w-16 text-right">
+              <span className="text-[12px] font-mono text-text-muted flex-shrink-0 w-16 text-right">
                 {metricLabel}
               </span>
 
               {/* Contract count (secondary, only in value mode) */}
               {viewMode === 'value' && (
-                <span className="text-[9px] text-text-muted/50 flex-shrink-0 w-14 text-right hidden lg:block">
+                <span className="text-[13px] text-text-muted/50 flex-shrink-0 w-14 text-right hidden lg:block">
                   {formatNumber(cell.contracts)}
                 </span>
               )}

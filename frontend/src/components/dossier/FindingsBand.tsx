@@ -62,7 +62,7 @@ export function FindingCard({ finding, lang }: { finding: Finding; lang: 'en' | 
     >
       <p
         className="font-mono"
-        style={{ fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+        style={{ fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
       >
         {lang === 'es' ? finding.eyebrowEs : finding.eyebrowEn}
       </p>
@@ -78,7 +78,7 @@ export function FindingCard({ finding, lang }: { finding: Finding; lang: 'en' | 
       </div>
       <div
         className="tabular-nums"
-        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 34, lineHeight: 1, color: finding.anchorColor }}
+        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 34, lineHeight: 1, color: finding.anchorColor }}
       >
         {finding.anchor}
       </div>
@@ -97,7 +97,7 @@ export function FindingCard({ finding, lang }: { finding: Finding; lang: 'en' | 
           }}
         />
       </div>
-      <p className="font-mono" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+      <p className="font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
         {lang === 'es' ? finding.deckEs : finding.deckEn}
       </p>
     </article>
@@ -124,7 +124,7 @@ export function FindingsBand({
     >
       <p
         className="font-mono mb-3"
-        style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
       >
         § {lang === 'es' ? kickerEs : kickerEn}
       </p>

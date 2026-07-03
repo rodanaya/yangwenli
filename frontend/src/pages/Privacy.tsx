@@ -27,7 +27,7 @@ function Section({ id, title, children }: SectionProps) {
 
 function Tag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded bg-background-elevated border border-border text-text-primary text-[11px] font-mono px-1.5 py-0.5 mx-0.5">
+    <span className="inline-flex items-center rounded bg-background-elevated border border-border text-text-primary text-[13px] font-mono px-1.5 py-0.5 mx-0.5">
       {children}
     </span>
   )
@@ -46,7 +46,7 @@ export default function Privacy() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <Shield className="h-5 w-5 text-risk-high/80" aria-hidden="true" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-text-primary">
+              <span className="text-[13px] font-mono uppercase tracking-[0.1em] text-text-primary">
                 {isEs ? 'Aviso de Privacidad' : 'Privacy Policy'}
               </span>
             </div>
@@ -54,13 +54,13 @@ export default function Privacy() {
             <div className="flex items-center gap-1 rounded border border-border bg-background-elevated p-0.5">
               <button
                 onClick={() => setLang('es')}
-                className={`px-2.5 py-1 text-[11px] font-mono rounded-sm transition-colors ${lang === 'es' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
+                className={`px-2.5 py-1 text-[13px] font-mono rounded-sm transition-colors ${lang === 'es' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
               >
                 ES
               </button>
               <button
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-1 text-[11px] font-mono rounded-sm transition-colors ${lang === 'en' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
+                className={`px-2.5 py-1 text-[13px] font-mono rounded-sm transition-colors ${lang === 'en' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
               >
                 EN
               </button>

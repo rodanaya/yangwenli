@@ -95,7 +95,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
       <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1.3fr_1fr] gap-x-5 gap-y-3">
         {/* Band A — ¿POR QUÉ ESTE RANGO? */}
         <div className="min-w-0">
-          <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted font-bold mb-1.5">
+          <p className="font-mono text-[13px] uppercase tracking-[0.15em] text-text-muted font-bold mb-1.5">
             {isEs ? '¿POR QUÉ ESTE RANGO?' : 'WHY THIS RANK?'}
             {driver && (
               <span className="ml-1.5" style={{ color: OCHRE }}>
@@ -106,7 +106,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
           <div className="space-y-1">
             {components.map((c) => (
               <div key={c.key} className="flex items-center gap-2">
-                <span className="w-[124px] shrink-0 font-mono text-[9px] text-text-muted truncate">{c.label}</span>
+                <span className="w-[124px] shrink-0 font-mono text-[13px] text-text-muted truncate">{c.label}</span>
                 {c.value == null && c.key === 'mahalanobis' && detailLoading ? (
                   <span className="h-2 w-24 rounded bg-background-elevated animate-pulse" aria-hidden="true" />
                 ) : (
@@ -117,7 +117,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
                     ariaLabel={`${c.label}: ${(c.value ?? 0).toFixed(2)}`}
                   />
                 )}
-                <span className="font-mono text-[9px] tabular-nums text-text-secondary w-8 text-right">
+                <span className="font-mono text-[13px] tabular-nums text-text-secondary w-8 text-right">
                   {c.value != null ? c.value.toFixed(2) : '—'}
                 </span>
               </div>
@@ -155,18 +155,18 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
 
         {/* Band C — CORROBORACIÓN */}
         <div className="min-w-0">
-          <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted font-bold mb-1.5">
+          <p className="font-mono text-[13px] uppercase tracking-[0.15em] text-text-muted font-bold mb-1.5">
             {isEs ? 'CORROBORACIÓN' : 'CORROBORATION'}
           </p>
-          <div className="space-y-1.5 text-[11px] leading-snug">
+          <div className="space-y-1.5 text-[13px] leading-snug">
             {/* GT anchor — the named case (tier-2 backend join on the lazy detail) */}
             {item.in_ground_truth ? (
               <p className="text-text-secondary">
-                <span className="font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: 'var(--color-accent)' }}>
+                <span className="font-mono text-[13px] uppercase tracking-[0.1em]" style={{ color: 'var(--color-accent)' }}>
                   {isEs ? 'ANCLADO · ' : 'ANCHORED · '}
                 </span>
                 {gtCaseName ? (
-                  <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic' }}>
+                  <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal' }}>
                     {gtCaseName}
                     {gtCaseType ? <span className="text-text-muted"> · {gtCaseType}</span> : null}
                   </span>
@@ -180,14 +180,14 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
               </p>
             )}
             {item.is_efos_definitivo ? (
-              <p className="text-risk-critical font-mono text-[10px]">SAT EFOS {isEs ? 'definitivo' : 'definitive'}</p>
+              <p className="text-risk-critical font-mono text-[12px]">SAT EFOS {isEs ? 'definitivo' : 'definitive'}</p>
             ) : null}
             {item.is_sfp_sanctioned ? (
-              <p className="text-risk-high font-mono text-[10px]">{isEs ? 'Sancionado por la SFP' : 'SFP sanctioned'}</p>
+              <p className="text-risk-high font-mono text-[12px]">{isEs ? 'Sancionado por la SFP' : 'SFP sanctioned'}</p>
             ) : null}
             {item.top_institution && (
               <p className="text-text-secondary">
-                <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-text-muted">
+                <span className="font-mono text-[13px] uppercase tracking-[0.1em] text-text-muted">
                   {isEs ? 'COMPRADOR · ' : 'BUYER · '}
                 </span>
                 {item.top_institution}
@@ -204,7 +204,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
                     {a.source_name ? ` · ${a.source_name}` : ''}
                     {a.published_date ? ` · ${String(a.published_date).slice(0, 10)}` : ''}
                   </p>
-                  <p className="text-text-secondary text-[10.5px] line-clamp-2">{a.snippet}</p>
+                  <p className="text-text-secondary text-[12px] line-clamp-2">{a.snippet}</p>
                   {a.source_url && (
                     <a
                       href={a.source_url}
@@ -219,7 +219,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
                 </div>
               ))
             ) : (
-              <p className="text-text-muted text-[10px]">
+              <p className="text-text-muted text-[12px]">
                 {isEs ? 'Sin corroboración externa registrada' : 'No external corroboration on record'}
               </p>
             )}
@@ -229,7 +229,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
 
       {/* Band D — EL VEREDICTO */}
       <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center gap-2 flex-wrap">
-        <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted font-bold">
+        <span className="font-mono text-[13px] uppercase tracking-[0.15em] text-text-muted font-bold">
           {isEs ? 'VEREDICTO' : 'VERDICT'}
         </span>
         {CANONICAL_STATUSES.map((s) => {
@@ -241,7 +241,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
               onClick={() => setStatus(s)}
               aria-pressed={active}
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-1 rounded-sm border font-mono text-[9.5px] uppercase tracking-[0.06em] transition-colors disabled:opacity-50',
+                'inline-flex items-center gap-1 px-2 py-1 rounded-sm border font-mono text-[13px] uppercase tracking-[0.06em] transition-colors disabled:opacity-50',
                 active
                   ? s === 'confirmed'
                     ? 'border-risk-critical/40 bg-risk-critical/10 text-risk-critical'
@@ -266,7 +266,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
               id={`gt-conf-${vendorId}`}
               defaultValue="medium"
               aria-label={isEs ? 'Confianza para promover a GT' : 'Confidence for GT promotion'}
-              className="bg-background-card border border-border rounded-sm font-mono text-[9px] px-1 py-1 text-text-secondary"
+              className="bg-background-card border border-border rounded-sm font-mono text-[13px] px-1 py-1 text-text-secondary"
             >
               <option value="low">{isEs ? 'baja' : 'low'}</option>
               <option value="medium">{isEs ? 'media' : 'medium'}</option>
@@ -278,14 +278,14 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
                 const sel = document.getElementById(`gt-conf-${vendorId}`) as HTMLSelectElement | null
                 promote((sel?.value as 'low' | 'medium' | 'high') ?? 'medium')
               }}
-              className="px-2 py-1 rounded-sm border border-risk-high/40 text-risk-high font-mono text-[9.5px] uppercase tracking-[0.06em] hover:bg-risk-high/10 transition-colors disabled:opacity-50"
+              className="px-2 py-1 rounded-sm border border-risk-high/40 text-risk-high font-mono text-[13px] uppercase tracking-[0.06em] hover:bg-risk-high/10 transition-colors disabled:opacity-50"
             >
               {promoted ? (isEs ? 'Promovido ✓' : 'Promoted ✓') : isEs ? 'Promover a GT' : 'Promote to GT'}
             </button>
           </span>
         )}
         {isError && (
-          <span className="font-mono text-[9px] text-risk-critical">{isEs ? 'error al guardar' : 'save failed'}</span>
+          <span className="font-mono text-[13px] text-risk-critical">{isEs ? 'error al guardar' : 'save failed'}</span>
         )}
         {detail?.reviewer_name && (
           <span className="font-mono text-[8.5px] text-text-muted">
@@ -297,7 +297,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
           {onNext && (
             <button
               onClick={onNext}
-              className="font-mono text-[9.5px] uppercase tracking-[0.08em] font-bold transition-colors hover:opacity-80"
+              className="font-mono text-[13px] uppercase tracking-[0.08em] font-bold transition-colors hover:opacity-80"
               style={{ color: OCHRE }}
             >
               {isEs ? 'Siguiente por revisar ↓' : 'Next to review ↓'}
@@ -306,13 +306,13 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
           <Link
             to={`/vendors/${vendorId}`}
             onClick={(e) => e.stopPropagation()}
-            className="font-mono text-[9.5px] uppercase tracking-[0.08em] text-text-secondary hover:text-text-primary transition-colors"
+            className="font-mono text-[13px] uppercase tracking-[0.08em] text-text-secondary hover:text-text-primary transition-colors"
           >
             {isEs ? 'Abrir expediente →' : 'Open dossier →'}
           </Link>
           <button
             onClick={onClose}
-            className="font-mono text-[9.5px] uppercase tracking-[0.08em] text-text-muted hover:text-text-primary transition-colors"
+            className="font-mono text-[13px] uppercase tracking-[0.08em] text-text-muted hover:text-text-primary transition-colors"
             aria-label={isEs ? 'Cerrar desglose' : 'Close breakdown'}
           >
             {isEs ? 'Cerrar' : 'Close'}

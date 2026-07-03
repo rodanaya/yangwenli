@@ -300,7 +300,7 @@ export function RiskRingField({
           x={cx}
           y={cy - 5}
           fill="var(--color-text-primary)"
-          fontSize={11}
+          fontSize={13}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight="bold"
           textAnchor="middle"

@@ -98,7 +98,7 @@ function Kicker({ isEs }: { isEs: boolean }) {
   return (
     <p
       className="font-mono mb-3.5"
-      style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+      style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
     >
       § {isEs ? 'El descuadre · lo que el libro esconde' : 'The discrepancy · what the books hide'}
     </p>
@@ -109,7 +109,7 @@ function Callout({ isEs }: { isEs: boolean }) {
   return (
     <p
       className="mt-3"
-      style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}
+      style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}
     >
       {isEs
         ? 'Estas categorías pesan poco en el libro pero queman caliente en el indicador. El orden por valor las entierra; el descuadre las expone.'
@@ -147,7 +147,7 @@ function MobileRow({ row, isEs }: { row: RankRow; isEs: boolean }) {
       <div className="text-right">
         <div
           className="tabular-nums"
-          style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 18, lineHeight: 1, color: riskCol }}
+          style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 18, lineHeight: 1, color: riskCol }}
         >
           {item.avg_risk.toFixed(2)}
         </div>
@@ -223,7 +223,7 @@ export function DescuadreSlope({ items, lang }: DescuadreSlopeProps) {
           ))}
         </div>
         {counter && (
-          <p className="mt-3 font-mono" style={{ fontSize: 10, color: 'var(--color-accent)' }}>
+          <p className="mt-3 font-mono" style={{ fontSize: 12, color: 'var(--color-accent)' }}>
             {counterText(counter, isEs)}
           </p>
         )}
@@ -240,23 +240,23 @@ export function DescuadreSlope({ items, lang }: DescuadreSlopeProps) {
         {/* axis headers, positioned above each rank scale */}
         <span
           className="absolute font-mono uppercase"
-          style={{ top: 0, left: LEFT_X, fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
+          style={{ top: 0, left: LEFT_X, fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
         >
           {isEs ? 'en libros · por gasto' : 'in the books · by spend'}
         </span>
         <span
           className="absolute font-mono uppercase"
-          style={{ top: 0, left: rightX, fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
+          style={{ top: 0, left: rightX, fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
         >
           {isEs ? 'en el anaquel · por riesgo' : 'on the shelf · by risk'}
         </span>
 
         <svg width={width} height={PLATE_H} className="absolute" style={{ top: HEADER_H, left: 0 }} aria-hidden="true">
           {/* rank scale endpoints */}
-          <text x={LEFT_X} y={TOP_PAD - 8} fontFamily="var(--font-family-mono, monospace)" fontSize={9} fill="var(--color-text-muted)">№1</text>
-          <text x={LEFT_X} y={PLATE_H - BOTTOM_PAD + 12} fontFamily="var(--font-family-mono, monospace)" fontSize={9} fill="var(--color-text-muted)">№{n}</text>
-          <text x={rightX} y={TOP_PAD - 8} fontFamily="var(--font-family-mono, monospace)" fontSize={9} fill="var(--color-text-muted)">№1</text>
-          <text x={rightX} y={PLATE_H - BOTTOM_PAD + 12} fontFamily="var(--font-family-mono, monospace)" fontSize={9} fill="var(--color-text-muted)">№{n}</text>
+          <text x={LEFT_X} y={TOP_PAD - 8} fontFamily="var(--font-family-mono, monospace)" fontSize={13} fill="var(--color-text-muted)">№1</text>
+          <text x={LEFT_X} y={PLATE_H - BOTTOM_PAD + 12} fontFamily="var(--font-family-mono, monospace)" fontSize={13} fill="var(--color-text-muted)">№{n}</text>
+          <text x={rightX} y={TOP_PAD - 8} fontFamily="var(--font-family-mono, monospace)" fontSize={13} fill="var(--color-text-muted)">№1</text>
+          <text x={rightX} y={PLATE_H - BOTTOM_PAD + 12} fontFamily="var(--font-family-mono, monospace)" fontSize={13} fill="var(--color-text-muted)">№{n}</text>
 
           {/* quiet context — every qualified category except the ink + counter */}
           {rows.map((r) => {
@@ -309,7 +309,7 @@ export function DescuadreSlope({ items, lang }: DescuadreSlopeProps) {
                 size="xs"
                 sectorCode={p.item.sector_code}
               />
-              <span className="font-mono tabular-nums whitespace-nowrap" style={{ fontSize: 9.5, color: sectorFill(p.item.sector_code) }}>
+              <span className="font-mono tabular-nums whitespace-nowrap" style={{ fontSize: 13, color: sectorFill(p.item.sector_code) }}>
                 {isEs ? `▲${p.delta} puestos` : `▲${p.delta} places`}
               </span>
             </div>
@@ -321,7 +321,7 @@ export function DescuadreSlope({ items, lang }: DescuadreSlopeProps) {
             style={{
               left: rightX + 10,
               top: HEADER_H + (labelYById.get(`counter-${counter.item.category_id}`) ?? rankY(counter.riskRank, n)) - 6,
-              fontSize: 9.5,
+              fontSize: 13,
               color: 'var(--color-accent)',
               maxWidth: LABEL_COL_W - 18,
               lineHeight: 1.3,

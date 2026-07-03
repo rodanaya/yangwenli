@@ -28,7 +28,7 @@ export function PageHeader({ title, subtitle, icon: Icon, actions, breadcrumb, l
     >
       {/* Breadcrumb */}
       {breadcrumb && breadcrumb.length > 0 && (
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1 mb-3 text-[11px] text-text-muted/60 font-mono">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1 mb-3 text-[13px] text-text-muted/60 font-mono">
           {breadcrumb.map((item, index) => (
             <React.Fragment key={index}>
               {index > 0 && <ChevronRight className="h-3 w-3" />}
@@ -47,7 +47,7 @@ export function PageHeader({ title, subtitle, icon: Icon, actions, breadcrumb, l
       {/* Mono kicker / editorial label */}
       {label && (
         <p
-          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] mb-2"
+          className="text-[12px] font-mono font-bold uppercase tracking-[0.2em] mb-2"
           style={{ color: 'var(--color-accent)' }}
         >
           {label}

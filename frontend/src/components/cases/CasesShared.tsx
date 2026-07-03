@@ -88,7 +88,7 @@ export function FeatureSection({
         <p
           className="font-mono"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
             color: 'var(--color-text-muted)',
@@ -102,7 +102,7 @@ export function FeatureSection({
         {meta && (
           <p
             className="font-mono tabular-nums"
-            style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+            style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
           >
             {meta}
           </p>
@@ -134,7 +134,7 @@ export function MarginNote({
       <p
         className="font-mono mb-1"
         style={{
-          fontSize: 9,
+          fontSize: 13,
           letterSpacing: '0.2em',
           textTransform: 'uppercase',
           color: 'var(--color-accent)',
@@ -146,7 +146,7 @@ export function MarginNote({
       <p
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13.5,
           lineHeight: 1.5,
           color: 'var(--color-text-secondary)',
@@ -227,7 +227,7 @@ export function SeverityScale({
         className="mt-2"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13,
           color: 'var(--color-text-secondary)',
         }}

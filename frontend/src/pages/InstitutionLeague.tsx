@@ -193,7 +193,7 @@ function WeakPillarCell({ item }: { item: InstitutionScorecardItem }) {
   const color = pillarDeficitColor(weakest.frac)
   return (
     <span
-      className="font-mono text-[11px] tabular-nums whitespace-nowrap"
+      className="font-mono text-[13px] tabular-nums whitespace-nowrap"
       style={{ color }}
       title={weakest.label}
     >
@@ -229,7 +229,7 @@ function ChampionCard({
     >
       {/* Rank — quiet mono caption */}
       <span
-        className="text-[11px] font-mono font-bold tabular-nums w-6 flex-shrink-0 text-text-muted"
+        className="text-[13px] font-mono font-bold tabular-nums w-6 flex-shrink-0 text-text-muted"
       >
         {rank}
       </span>
@@ -250,13 +250,13 @@ function ChampionCard({
       )}
 
       {/* Score — tabular mono */}
-      <span className="font-mono tabular-nums text-[11px] text-text-muted flex-shrink-0 w-12 text-right">
+      <span className="font-mono tabular-nums text-[13px] text-text-muted flex-shrink-0 w-12 text-right">
         {item.total_score.toFixed(1)}
       </span>
 
       {/* Tier — caption mono in tier color (no big italic) */}
       <span
-        className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0 w-24 text-right"
+        className="text-[13px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0 w-24 text-right"
         style={{ color: tier.color }}
       >
         {tier.label}
@@ -267,7 +267,7 @@ function ChampionCard({
 
 // ---------------------------------------------------------------------------
 // ActaCard — «Las Actas»: the verdict card for bottom performers.
-// Keeps the 60px EB Garamond italic rank numeral (the best thing on the
+// Keeps the 60px EB Garamond rank numeral (the best thing on the
 // page); replaces PillarSparkBars + RiskDriverPill with a single computed
 // worst-pillar deficit line, merged with the prosecutorial fields the API
 // returns but no surface previously rendered (peer_percentile_sector,
@@ -328,7 +328,7 @@ function ActaCard({
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontWeight: 700,
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontSize: '60px',
               color: 'var(--color-risk-critical)',
               letterSpacing: '-0.04em',
@@ -344,7 +344,7 @@ function ActaCard({
             className="text-text-primary leading-snug line-clamp-2"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: '18px',
               letterSpacing: '-0.005em',
@@ -355,7 +355,7 @@ function ActaCard({
           <div className="flex items-center gap-2 flex-wrap">
             {/* Tier verdict pill — inline */}
             <span
-              className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-[0.12em]"
+              className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[13px] font-mono font-bold uppercase tracking-[0.12em]"
               style={{
                 backgroundColor: `color-mix(in srgb, ${tier.color} 12%, transparent)`,
                 border: `1px solid color-mix(in srgb, ${tier.color} 35%, transparent)`,
@@ -369,12 +369,12 @@ function ActaCard({
               />
               {tier.label}
             </span>
-            <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide">
+            <span className="text-text-muted text-[12px] font-mono tabular-nums tracking-wide">
               {item.total_score.toFixed(1)}<span className="opacity-50"> / 100</span>
             </span>
             {item.sector_name && (
               <span
-                className="text-[9px] font-mono uppercase tracking-[0.12em] truncate flex items-center gap-1.5"
+                className="text-[13px] font-mono uppercase tracking-[0.12em] truncate flex items-center gap-1.5"
                 style={{ color: 'var(--color-text-muted)' }}
               >
                 <span
@@ -390,7 +390,7 @@ function ActaCard({
               and the five-cell PillarSparkBars into one computed, legible fact,
               plus the peer-percentile / money-at-risk / red-signal agate. */}
           <p
-            className="text-[9px] font-mono tracking-wide leading-relaxed"
+            className="text-[13px] font-mono tracking-wide leading-relaxed"
             style={{ color: weakestColor }}
           >
             {agateParts.join(' · ')}
@@ -435,7 +435,7 @@ function SortHeader({
       className={`flex items-center gap-1 hover:text-text-primary transition-colors ${active ? 'text-accent-data' : 'text-text-muted'} ${className}`}
       aria-label={t('sortAriaLabel', { label })}
     >
-      <span className="text-[10px] font-mono font-bold tracking-[0.1em] uppercase">{label}</span>
+      <span className="text-[12px] font-mono font-bold tracking-[0.1em] uppercase">{label}</span>
       {active ? (
         currentDir === 'desc' ? (
           <ArrowDown className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
@@ -682,22 +682,22 @@ export default function InstitutionLeague() {
             className="mb-3 flex items-center gap-3"
             style={{
               fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-              fontSize: '10px',
+              fontSize: '12px',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
               fontWeight: 400,
             }}
           >
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>
               Folio·VII
             </span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               {t('kicker')}
             </span>
             <span aria-hidden style={{ opacity: 0.5 }}>·</span>
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>{t('meta')}</span>
+            <span style={{ fontStyle: 'normal', fontWeight: 300 }}>{t('meta')}</span>
           </div>
           {/* Asymmetric editorial hero — narrative measure on the left, a
               bordered scorecard rail on the right. Replaces the old layout
@@ -713,7 +713,7 @@ export default function InstitutionLeague() {
                 className="text-text-primary"
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 500,
                   fontSize: 'clamp(28px, 4vw, 40px)',
                   lineHeight: 1.02,
@@ -756,7 +756,7 @@ export default function InstitutionLeague() {
           <div className="mt-4 pt-3 border-t border-border/60">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+                <span className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
                   {t('scope.label')}
                 </span>
                 <div
@@ -771,7 +771,7 @@ export default function InstitutionLeague() {
                       role="radio"
                       aria-checked={scope === sc}
                       onClick={() => updateParams({ scope: sc === 'federal' ? undefined : sc, all: undefined, page: '1' })}
-                      className={`px-3 py-1 text-[10px] font-mono uppercase tracking-[0.12em] transition-colors ${
+                      className={`px-3 py-1 text-[12px] font-mono uppercase tracking-[0.12em] transition-colors ${
                         i < 2 ? 'border-r border-border' : ''
                       } ${
                         scope === sc
@@ -785,7 +785,7 @@ export default function InstitutionLeague() {
                 </div>
               </div>
             </div>
-            <p className="text-[10px] font-mono leading-relaxed text-text-muted mt-2">
+            <p className="text-[12px] font-mono leading-relaxed text-text-muted mt-2">
               {t(scope === 'federal'
                 ? 'scope.disclaimerFederal'
                 : scope === 'subnational'
@@ -809,7 +809,7 @@ export default function InstitutionLeague() {
           }}
         >
           <p
-            className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] mb-1.5"
+            className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] mb-1.5"
             style={{
               color: failingCount > 0
                 ? 'var(--color-risk-critical)'
@@ -822,7 +822,7 @@ export default function InstitutionLeague() {
             className="text-text-primary leading-snug"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: 'clamp(17px, 1.6vw, 21px)',
               letterSpacing: '-0.005em',
@@ -864,18 +864,18 @@ export default function InstitutionLeague() {
         {!hasFilters && redFlagItems.length >= 3 && (
           <section aria-labelledby="redflags-heading" className="space-y-4">
             <div className="border-l-2 border-risk-critical pl-4">
-              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-risk-critical mb-1 flex items-center gap-2">
+              <p className="text-[12px] font-mono font-bold tracking-[0.15em] uppercase text-risk-critical mb-1 flex items-center gap-2">
                 <Flag className="h-3 w-3" aria-hidden="true" />
                 {t('redFlags.kicker')}
               </p>
               <h2
                 id="redflags-heading"
                 className="text-2xl sm:text-3xl font-serif font-bold text-text-primary leading-tight"
-                style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500 }}
+                style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 500 }}
               >
                 {t('redFlags.headline')}
               </h2>
-              <p className="text-text-secondary text-sm mt-2 italic">
+              <p className="text-text-secondary text-sm mt-2">
                 {t('redFlags.sub')}
               </p>
             </div>
@@ -900,7 +900,7 @@ export default function InstitutionLeague() {
         {!hasFilters && championItems.length >= 3 && (
           <section aria-labelledby="champions-heading" className="space-y-3 pt-2">
             <div className="border-l border-border pl-4">
-              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1 flex items-center gap-2">
+              <p className="text-[12px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1 flex items-center gap-2">
                 <Trophy className="h-3 w-3" aria-hidden="true" />
                 {t('champions.kicker')}
               </p>
@@ -952,21 +952,21 @@ export default function InstitutionLeague() {
               className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent-data/50 font-mono"
             />
           </div>
-          <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide flex-shrink-0">
+          <span className="text-text-muted text-[12px] font-mono tabular-nums tracking-wide flex-shrink-0">
             {t('filters.results', { num: formatNumber(total) })}
           </span>
         </div>
 
         {/* Tier filter pills — horizontal scroll on narrow widths */}
         <div className="space-y-1.5">
-          <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+          <p className="text-[13px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
             {t('filters.tier')}
           </p>
           <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
             <button
               type="button"
               onClick={() => updateParams({ grade: undefined, page: '1' })}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
                 !activeTierName
                   ? 'bg-accent-data/15 border-accent-data/40 text-accent-data'
                   : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
@@ -986,7 +986,7 @@ export default function InstitutionLeague() {
                     const gradeVal = grades ? grades[0] : undefined
                     updateParams({ grade: gradeVal || undefined, page: '1' })
                   }}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-all whitespace-nowrap flex items-center gap-1.5"
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-all whitespace-nowrap flex items-center gap-1.5"
                   style={{
                     borderColor: isActive ? tier.color : 'var(--color-border)',
                     backgroundColor: isActive ? `${tier.color}1f` : 'transparent',
@@ -1007,14 +1007,14 @@ export default function InstitutionLeague() {
 
         {/* Sector filter pills — all 12 sectors with their canonical colors */}
         <div className="space-y-1.5">
-          <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+          <p className="text-[13px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
             {t('filters.sectorLabel')}
           </p>
           <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
             <button
               type="button"
               onClick={() => updateParams({ sector: undefined, page: '1' })}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
                 !sectorFilter
                   ? 'bg-accent-data/15 border-accent-data/40 text-accent-data'
                   : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
@@ -1030,7 +1030,7 @@ export default function InstitutionLeague() {
                   key={s.value}
                   type="button"
                   onClick={() => updateParams({ sector: isActive ? undefined : s.value, page: '1' })}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-all whitespace-nowrap flex items-center gap-1.5"
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-all whitespace-nowrap flex items-center gap-1.5"
                   style={{
                     borderColor: isActive ? color : 'var(--color-border)',
                     backgroundColor: isActive ? `${color}1f` : 'transparent',
@@ -1052,7 +1052,7 @@ export default function InstitutionLeague() {
         {/* Table */}
         <section aria-labelledby="league-table-heading" className="space-y-3 pt-2">
           <div>
-            <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
+            <p className="text-[12px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
               {t('tableKicker')}
             </p>
             <h2 id="league-table-heading" className="text-lg font-serif font-bold text-text-primary leading-tight">
@@ -1094,7 +1094,7 @@ export default function InstitutionLeague() {
                 <thead>
                   <tr className="border-b border-border bg-background/80">
                     <th scope="col" className="px-2 py-2 text-left w-12">
-                      <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
+                      <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         #
                       </span>
                     </th>
@@ -1117,17 +1117,17 @@ export default function InstitutionLeague() {
                       />
                     </th>
                     <th scope="col" className="px-2 py-2 text-center w-24">
-                      <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
+                      <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.grade')}
                       </span>
                     </th>
                     <th scope="col" className="px-2 py-2 text-left hidden sm:table-cell w-28" title={pillarLegendTitle}>
-                      <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
+                      <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.weakPillar')}
                       </span>
                     </th>
                     <th scope="col" className="px-2 py-2 text-center w-12 hidden sm:table-cell">
-                      <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
+                      <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.trend')}
                       </span>
                     </th>
@@ -1252,7 +1252,7 @@ export default function InstitutionLeague() {
                               {formatEntityName('institution', item.institution_name, 'full')}
                             </span>
                             {item.sector_name && (
-                              <span className="text-text-muted text-[9px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">
+                              <span className="text-text-muted text-[13px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">
                                 · {localizedSectorName(item.sector_name, lang)}
                               </span>
                             )}
@@ -1271,7 +1271,7 @@ export default function InstitutionLeague() {
                             >
                               {item.total_score.toFixed(1)}
                             </span>
-                            <span className="text-text-muted text-[9px] font-mono">/100</span>
+                            <span className="text-text-muted text-[13px] font-mono">/100</span>
                           </div>
                         </td>
 
@@ -1314,7 +1314,7 @@ export default function InstitutionLeague() {
 
                         {/* National percentile */}
                         <td className="px-2 py-0 hidden md:table-cell align-middle">
-                          <span className="text-text-secondary text-[11px] font-mono tabular-nums">
+                          <span className="text-text-secondary text-[13px] font-mono tabular-nums">
                             {item.national_percentile !== null
                               ? t('percentileLabel', { n: Math.round(item.national_percentile * 100) })
                               : '--'}
@@ -1323,7 +1323,7 @@ export default function InstitutionLeague() {
 
                         {/* Money at risk — the exposure the integrity score can't see */}
                         <td className="px-2 py-0 text-right hidden lg:table-cell align-middle">
-                          <span className="text-text-secondary text-[11px] font-mono tabular-nums">
+                          <span className="text-text-secondary text-[13px] font-mono tabular-nums">
                             {item.money_at_risk_mxn != null && item.money_at_risk_mxn > 0
                               ? formatCompactMXN(item.money_at_risk_mxn)
                               : '—'}
@@ -1409,7 +1409,7 @@ export default function InstitutionLeague() {
           className="w-full flex items-center justify-between gap-3 text-left group"
         >
           <div>
-            <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
+            <p className="text-[12px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
               ACT III
             </p>
             <h2
@@ -1429,7 +1429,7 @@ export default function InstitutionLeague() {
           <div className="space-y-6 mt-5">
 
             {/* Source footnote */}
-            <p className="text-[10px] text-text-muted font-mono pt-4 border-t border-border">
+            <p className="text-[12px] text-text-muted font-mono pt-4 border-t border-border">
               {t('methodologyFootnote')}
             </p>
           </div>

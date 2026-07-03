@@ -31,7 +31,7 @@ export function USDTooltip({ amountMXN, year = 2024 }: USDTooltipProps) {
     <Tooltip>
       <TooltipTrigger asChild>
         <span
-          className="text-[10px] font-mono text-text-muted cursor-help ml-1 opacity-60 hover:opacity-100 transition-opacity"
+          className="text-[12px] font-mono text-text-muted cursor-help ml-1 opacity-60 hover:opacity-100 transition-opacity"
           aria-label={label}
         >
           ≈$

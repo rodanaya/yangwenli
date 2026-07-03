@@ -44,7 +44,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
         className="mb-3"
         style={{
           fontFamily: '"IBM Plex Mono", monospace',
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -96,7 +96,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                     className="truncate"
                     style={{
                       fontFamily: '"EB Garamond", Georgia, serif',
-                      fontStyle: 'italic',
+                      fontStyle: 'normal',
                       fontWeight: 500,
                       fontSize: 16,
                       color: 'var(--color-text-primary)',
@@ -113,7 +113,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                         size="xs"
                         hideIcon
                       />
-                      <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+                      <span className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                         {cap.sharePct.toFixed(0)}% {isEs ? 'del sector' : 'of sector'}
                       </span>
                     </span>
@@ -121,7 +121,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                   <Link
                     to={`/sectors/${row.sectorId}`}
                     className="font-mono underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity whitespace-nowrap"
-                    style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
+                    style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
                   >
                     {isEs ? 'ver sector ↗' : 'view sector ↗'}
                   </Link>
@@ -135,7 +135,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                   className="tabular-nums"
                   style={{
                     fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 800,
                     fontSize: 22,
                     lineHeight: 1,
@@ -161,7 +161,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
         className="mt-3"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13,
           lineHeight: 1.5,
           color: 'var(--color-text-secondary)',

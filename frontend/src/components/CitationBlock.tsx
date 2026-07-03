@@ -43,7 +43,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1 text-[10px] font-mono text-text-muted hover:text-text-secondary transition-colors px-2 py-1 rounded border border-border hover:border-border"
+      className="flex items-center gap-1 text-[12px] font-mono text-text-muted hover:text-text-secondary transition-colors px-2 py-1 rounded border border-border hover:border-border"
       aria-label="Copy to clipboard"
     >
       {copied ? (
@@ -87,7 +87,7 @@ export function CitationBlock({ context, className = '' }: CitationBlockProps) {
               <button
                 key={fmt}
                 onClick={() => setActiveFormat(fmt)}
-                className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wide transition-colors ${
+                className={`px-2.5 py-1 rounded text-[12px] font-mono uppercase tracking-wide transition-colors ${
                   activeFormat === fmt
                     ? 'bg-background-elevated text-text-secondary border border-border'
                     : 'text-text-muted hover:text-text-secondary border border-transparent'
@@ -100,7 +100,7 @@ export function CitationBlock({ context, className = '' }: CitationBlockProps) {
 
           {/* Citation text */}
           <div className="relative">
-            <pre className="text-[11px] text-text-secondary font-mono bg-background-elevated rounded p-3 whitespace-pre-wrap leading-relaxed border border-border">
+            <pre className="text-[13px] text-text-secondary font-mono bg-background-elevated rounded p-3 whitespace-pre-wrap leading-relaxed border border-border">
               {citationText}
             </pre>
             <div className="absolute top-2 right-2">
@@ -108,7 +108,7 @@ export function CitationBlock({ context, className = '' }: CitationBlockProps) {
             </div>
           </div>
 
-          <p className="text-[10px] text-text-muted leading-relaxed">
+          <p className="text-[12px] text-text-muted leading-relaxed">
             Risk scores are statistical similarity indicators — not legal determinations or proof of wrongdoing.
             Source data: COMPRANET (Secretaría de Hacienda y Crédito Público, México).
           </p>

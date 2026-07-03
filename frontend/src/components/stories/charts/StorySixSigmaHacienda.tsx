@@ -55,15 +55,15 @@ export function StorySixSigmaHacienda() {
       <div className="grid md:grid-cols-[280px_1fr] gap-5">
         {/* Two columns comparison */}
         <div className="rounded-lg bg-background-card border border-border p-4">
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+          <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
             {t('sixSigma.winRateHeader')}
           </p>
           <svg viewBox="0 0 280 310" className="w-full h-auto" role="img" aria-label={t('sixSigma.winRateHeader')}>
             {/* Titles */}
-            <text x={65} y={20} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700}>
+            <text x={65} y={20} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={700}>
               {t('sixSigma.ssLabel')}
             </text>
-            <text x={215} y={20} textAnchor="middle" fill="var(--color-oecd)" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700}>
+            <text x={215} y={20} textAnchor="middle" fill="var(--color-oecd)" fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={700}>
               {t('sixSigma.baselineLabel')}
             </text>
 
@@ -114,17 +114,17 @@ export function StorySixSigmaHacienda() {
             })}
 
             {/* Result labels */}
-            <text x={65} y={185} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={28} fontFamily="var(--font-family-serif)" fontStyle="italic" fontWeight={800} style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <text x={65} y={185} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={28} fontFamily="var(--font-family-serif)" fontStyle="normal" fontWeight={800} style={{ fontVariantNumeric: 'tabular-nums' }}>
               92%
             </text>
-            <text x={65} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={65} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
               {t('sixSigma.wonSuffix')}
             </text>
 
-            <text x={215} y={185} textAnchor="middle" fill="var(--color-oecd)" fontSize={28} fontFamily="var(--font-family-serif)" fontStyle="italic" fontWeight={800} style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <text x={215} y={185} textAnchor="middle" fill="var(--color-oecd)" fontSize={28} fontFamily="var(--font-family-serif)" fontStyle="normal" fontWeight={800} style={{ fontVariantNumeric: 'tabular-nums' }}>
               16%
             </text>
-            <text x={215} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={215} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
               {t('sixSigma.wonSuffix')}
             </text>
 
@@ -132,16 +132,16 @@ export function StorySixSigmaHacienda() {
             <line x1={140} y1={35} x2={140} y2={175} stroke="var(--color-border-hover)" strokeWidth={1} strokeDasharray="3 3" />
 
             {/* Callout */}
-            <text x={140} y={230} textAnchor="middle" fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={140} y={230} textAnchor="middle" fill="var(--color-risk-medium)" fontSize={12} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('sixSigma.calloutMain')}
             </text>
-            <text x={140} y={248} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={140} y={248} textAnchor="middle" fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
               {t('sixSigma.calloutLine1')}
             </text>
-            <text x={140} y={262} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={140} y={262} textAnchor="middle" fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
               {t('sixSigma.calloutLine2')}
             </text>
-            <text x={140} y={276} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={140} y={276} textAnchor="middle" fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
               {t('sixSigma.calloutLine3')}
             </text>
           </svg>
@@ -149,7 +149,7 @@ export function StorySixSigmaHacienda() {
 
         {/* 147 contracts strip */}
         <div className="rounded-lg bg-background-card border border-border p-4">
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+          <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
             {t('sixSigma.contractsHeader')}
           </p>
           <svg viewBox="0 0 420 260" className="w-full h-auto" role="img" aria-label={t('sixSigma.contractsAria')}>
@@ -176,7 +176,7 @@ export function StorySixSigmaHacienda() {
             })}
           </svg>
 
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-text-muted mt-3 pt-2 border-t border-border">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-mono text-text-muted mt-3 pt-2 border-t border-border">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-risk-critical"></div>
               <span>{t('sixSigma.legendCritical')}</span>

@@ -34,13 +34,13 @@ const RISK_BADGE_LABELS: Record<string, { es: string; en: string }> = {
 }
 
 function RiskBadge({ level, lang }: { level: string | null; lang: 'es' | 'en' }) {
-  if (!level) return <span className="text-text-muted text-[10px] font-mono">—</span>
+  if (!level) return <span className="text-text-muted text-[12px] font-mono">—</span>
   const key = level.toLowerCase()
   const style = RISK_BADGE_STYLE[key] ?? RISK_BADGE_STYLE.low
   const labels = RISK_BADGE_LABELS[key] ?? RISK_BADGE_LABELS.low
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-mono font-bold uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}
     >
       {labels[lang]}
     </span>
@@ -198,38 +198,38 @@ export function SharedContractsModal({
                   <tr className="border-b border-border bg-background-card">
                     <th
                       scope="col"
-                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
+                      className="text-left text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
                     >
                       {lang === 'en' ? 'Tender' : 'Licitación'}
                     </th>
                     <th
                       scope="col"
-                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
+                      className="text-left text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
                     >
                       {lang === 'en' ? 'Vendor' : 'Proveedor'}
                     </th>
                     <th
                       scope="col"
-                      className="text-right text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
+                      className="text-right text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
                     >
                       {lang === 'en' ? 'Amount' : 'Monto'}
                     </th>
                     <th
                       scope="col"
-                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
+                      className="text-left text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
                     >
                       <Calendar className="h-3 w-3 inline mr-1" aria-hidden="true" />
                       {lang === 'en' ? 'Date' : 'Fecha'}
                     </th>
                     <th
                       scope="col"
-                      className="text-center text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
+                      className="text-center text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
                     >
                       {lang === 'en' ? 'Risk' : 'Riesgo'}
                     </th>
                     <th
                       scope="col"
-                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
+                      className="text-left text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
                     >
                       <Building2 className="h-3 w-3 inline mr-1" aria-hidden="true" />
                       {lang === 'en' ? 'Institution' : 'Institución'}
@@ -243,7 +243,7 @@ export function SharedContractsModal({
                       className="hover:bg-background-elevated transition-colors"
                     >
                       {/* Licitación */}
-                      <td className="px-4 py-2.5 font-mono text-[11px] text-text-secondary whitespace-nowrap">
+                      <td className="px-4 py-2.5 font-mono text-[13px] text-text-secondary whitespace-nowrap">
                         {c.procedure_number
                           ? <span title={c.procedure_number}>{truncateName(c.procedure_number, 22)}</span>
                           : <span className="text-text-muted">—</span>
@@ -251,12 +251,12 @@ export function SharedContractsModal({
                         {(c.is_single_bid || c.is_direct_award) && (
                           <div className="flex gap-1 mt-0.5">
                             {c.is_direct_award && (
-                              <span className="text-[9px] font-mono uppercase bg-risk-high/10 border border-risk-high/20 text-risk-high px-1 rounded">
+                              <span className="text-[13px] font-mono uppercase bg-risk-high/10 border border-risk-high/20 text-risk-high px-1 rounded">
                                 AD
                               </span>
                             )}
                             {c.is_single_bid && (
-                              <span className="text-[9px] font-mono uppercase bg-risk-critical/10 border border-risk-critical/20 text-risk-critical px-1 rounded">
+                              <span className="text-[13px] font-mono uppercase bg-risk-critical/10 border border-risk-critical/20 text-risk-critical px-1 rounded">
                                 {lang === 'en' ? '1 bid' : '1 oferta'}
                               </span>
                             )}
@@ -275,7 +275,7 @@ export function SharedContractsModal({
                           hideIcon
                         />
                         {c.sector_name && (
-                          <span className="text-[10px] font-mono text-text-muted">{c.sector_name}</span>
+                          <span className="text-[12px] font-mono text-text-muted">{c.sector_name}</span>
                         )}
                       </td>
 
@@ -331,7 +331,7 @@ export function SharedContractsModal({
               {lang === 'en' ? 'Previous' : 'Anterior'}
             </button>
 
-            <span className="text-[10px] font-mono text-text-muted" aria-live="polite">
+            <span className="text-[12px] font-mono text-text-muted" aria-live="polite">
               {lang === 'en' ? 'Page' : 'Página'} {page} {lang === 'en' ? 'of' : 'de'} {totalPages}
               {pagination && (
                 <> &middot; {formatNumber(pagination.total)} {lang === 'en' ? 'contracts' : 'contratos'}</>

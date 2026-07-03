@@ -150,7 +150,7 @@ export function StoryRacingBar() {
                   y={pos.y + 10}
                   textAnchor="middle"
                   fill="var(--color-border)"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                 >
                   {`${v.valueB.toFixed(1)}B · ${v.daPct.toFixed(0)}% ${t('racingBar.valueDaSep')}`}
@@ -161,7 +161,7 @@ export function StoryRacingBar() {
                     y={pos.y + r + 14}
                     textAnchor="middle"
                     fill="var(--color-risk-medium)"
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono)"
                   >
                     {v.avgMxn}
@@ -173,7 +173,7 @@ export function StoryRacingBar() {
         </svg>
 
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
+        <div className="mt-4 flex flex-wrap gap-4 text-[12px] font-mono text-text-muted">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-salud)', opacity: 0.5 }} aria-hidden="true" />
             {t('racingBar.legend100')}

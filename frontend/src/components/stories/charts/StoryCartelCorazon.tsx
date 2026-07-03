@@ -81,7 +81,7 @@ export function StoryCartelCorazon() {
           y={24}
           textAnchor="end"
           fill="var(--color-text-secondary)"
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
         >
@@ -89,11 +89,11 @@ export function StoryCartelCorazon() {
         </text>
         <g transform={`translate(${LABEL_W}, 20)`}>
           <circle cx={3} cy={2} r={3} fill="var(--color-text-secondary)" />
-          <text x={12} y={6} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={12} y={6} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
             {t('cartelCorazon.marketLegend')}
           </text>
           <circle cx={140} cy={2} r={3} fill="var(--color-risk-critical)" />
-          <text x={149} y={6} fill="var(--color-risk-critical)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={149} y={6} fill="var(--color-risk-critical)" fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
             {t('cartelCorazon.imssLegend')}
           </text>
         </g>
@@ -115,7 +115,7 @@ export function StoryCartelCorazon() {
                 y={y0 + STRIP_H + 6}
                 textAnchor="end"
                 fill="var(--color-text-muted)"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
               >
                 {deviceName}
@@ -153,7 +153,7 @@ export function StoryCartelCorazon() {
                 x={LABEL_W + MAX_DOTS * DOT_GAP + 10}
                 y={y0 + STRIP_H / 2 + 3}
                 fill="var(--color-text-muted)"
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
               >
@@ -183,7 +183,7 @@ export function StoryCartelCorazon() {
                 x={LABEL_W + MAX_DOTS * DOT_GAP + 10}
                 y={y0 + STRIP_H + 6 + STRIP_H / 2 + 3}
                 fill="var(--color-risk-critical)"
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
               >

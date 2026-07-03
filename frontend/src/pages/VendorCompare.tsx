@@ -163,7 +163,7 @@ function VendorSearchInput({
     return (
       <div className="flex-1">
         <span
-          className="text-[10px] font-bold tracking-[0.15em] uppercase font-mono mb-2 block"
+          className="text-[12px] font-bold tracking-[0.15em] uppercase font-mono mb-2 block"
           style={{ color }}
         >
           {label}
@@ -205,7 +205,7 @@ function VendorSearchInput({
   return (
     <div className="flex-1" ref={containerRef}>
       <span
-        className="text-[10px] font-bold tracking-[0.15em] uppercase font-mono mb-2 block"
+        className="text-[12px] font-bold tracking-[0.15em] uppercase font-mono mb-2 block"
         style={{ color }}
       >
         {label}
@@ -334,7 +334,7 @@ function VerdictHeader({
     <div className="mb-10">
       {/* Section label */}
       <div className="h-px bg-border mb-4" />
-      <span className="text-[10px] font-medium uppercase tracking-widest text-text-muted">
+      <span className="text-[12px] font-medium uppercase tracking-widest text-text-muted">
         {t('verdict.section')}
       </span>
 
@@ -356,7 +356,7 @@ function VerdictHeader({
               {(scoreA * 100).toFixed(1)}%
             </span>
             {riskier === 'A' && !isTied && (
-              <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: riskierColor }}>
+              <span className="text-[12px] uppercase tracking-wider font-bold" style={{ color: riskierColor }}>
                 {t('verdict.higherRisk')}
               </span>
             )}
@@ -386,7 +386,7 @@ function VerdictHeader({
               {(scoreB * 100).toFixed(1)}%
             </span>
             {riskier === 'B' && !isTied && (
-              <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: riskierColor }}>
+              <span className="text-[12px] uppercase tracking-wider font-bold" style={{ color: riskierColor }}>
                 {t('verdict.higherRisk')}
               </span>
             )}
@@ -396,7 +396,7 @@ function VerdictHeader({
 
       {/* Narrative line */}
       <div className="mt-4 border-l-[3px] pl-4 py-1" style={{ borderColor: isTied ? '#64748b' : riskierColor }}>
-        <p className="text-sm text-text-secondary leading-relaxed italic">
+        <p className="text-sm text-text-secondary leading-relaxed">
           {isTied
             ? t('verdict.tiedMessage')
             : t('verdict.narrative', {
@@ -591,7 +591,7 @@ function VerdictCallout({
       className="mt-10 border rounded-lg p-6 bg-background/60"
       style={{ borderColor: `${borderColor}40`, borderTopWidth: '3px', borderTopColor: borderColor }}
     >
-      <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
+      <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-2">
         {t('verdict.title')}
       </p>
       <h3

@@ -117,8 +117,8 @@ export function VendorEvidenceTab({
         ) : waterfall && waterfall.length > 0 ? (
           <>
             <WaterfallRiskChart features={waterfall} />
-            {/* ── V5: italic plate caption beneath the risk figure ───────────
-                EB Garamond italic 13.5px / 1.45 / 64ch. Wording per CLAUDE.md
+            {/* ── V5: plate caption beneath the risk figure ───────────
+                EB Garamond 13.5px / 1.45 / 64ch. Wording per CLAUDE.md
                 hard rule: "indicador de riesgo" / "risk indicator" only —
                 never "X% probability of corruption". */}
             {(() => {
@@ -131,7 +131,7 @@ export function VendorEvidenceTab({
                   style={{
                     borderTop: '1px solid rgba(160, 104, 32, 0.18)',
                     fontFamily: '"EB Garamond", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontSize: '13.5px',
                     lineHeight: 1.45,
                     color: 'var(--color-text-secondary, var(--color-text-muted))',
@@ -157,7 +157,7 @@ export function VendorEvidenceTab({
             <p
               className="font-mono mb-2"
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 letterSpacing: '0.16em',
                 textTransform: 'uppercase',
                 color: 'var(--color-text-muted)',
@@ -247,7 +247,7 @@ export function VendorEvidenceTab({
             {/* EFOS flag */}
             {aria?.is_efos_definitivo && (
               <div className="flex items-start gap-3 p-3 rounded-sm bg-risk-critical/5 border border-risk-critical/20">
-                <span className="shrink-0 text-[9px] font-mono font-bold uppercase tracking-wider text-risk-critical bg-risk-critical/10 border border-risk-critical/30 px-1.5 py-0.5 rounded-sm">
+                <span className="shrink-0 text-[13px] font-mono font-bold uppercase tracking-wider text-risk-critical bg-risk-critical/10 border border-risk-critical/30 px-1.5 py-0.5 rounded-sm">
                   EFOS
                 </span>
                 <p className="text-sm text-text-secondary leading-snug">
@@ -261,7 +261,7 @@ export function VendorEvidenceTab({
             {/* SFP sanction */}
             {aria?.is_sfp_sanctioned && (
               <div className="flex items-start gap-3 p-3 rounded-sm bg-risk-high/5 border border-risk-high/20">
-                <span className="shrink-0 text-[9px] font-mono font-bold uppercase tracking-wider text-risk-high bg-risk-high/10 border border-risk-high/30 px-1.5 py-0.5 rounded-sm">
+                <span className="shrink-0 text-[13px] font-mono font-bold uppercase tracking-wider text-risk-high bg-risk-high/10 border border-risk-high/30 px-1.5 py-0.5 rounded-sm">
                   SFP
                 </span>
                 <p className="text-sm text-text-secondary leading-snug">
@@ -278,7 +278,7 @@ export function VendorEvidenceTab({
                 key={c.case_id}
                 className="flex items-start gap-3 p-3 rounded-sm bg-background-elevated border border-border hover:border-border-hover transition-colors"
               >
-                <span className="shrink-0 text-[9px] font-mono font-bold uppercase tracking-wider text-risk-critical bg-risk-critical/10 border border-risk-critical/30 px-1.5 py-0.5 rounded-sm mt-0.5">
+                <span className="shrink-0 text-[13px] font-mono font-bold uppercase tracking-wider text-risk-critical bg-risk-critical/10 border border-risk-critical/30 px-1.5 py-0.5 rounded-sm mt-0.5">
                   GT
                 </span>
                 <div className="flex-1 min-w-0">
@@ -296,12 +296,12 @@ export function VendorEvidenceTab({
                   )}
                   <div className="flex flex-wrap gap-2 mt-1">
                     {c.role && (
-                      <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
+                      <span className="text-[12px] font-mono text-text-muted uppercase tracking-wider">
                         {isEs ? 'Rol' : 'Role'}: {localizeGtEnum(c.role, isEs, GT_ROLE_ES)}
                       </span>
                     )}
                     {c.evidence_strength && (
-                      <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
+                      <span className="text-[12px] font-mono text-text-muted uppercase tracking-wider">
                         {isEs ? 'Evidencia' : 'Evidence'}: {localizeGtEnum(c.evidence_strength, isEs, GT_EVIDENCE_ES)}
                       </span>
                     )}
@@ -309,7 +309,7 @@ export function VendorEvidenceTab({
                   {c.scandal_slug && (
                     <Link
                       to={`/cases/${c.scandal_slug}`}
-                      className="text-[10px] font-mono text-accent hover:underline mt-1 inline-block"
+                      className="text-[12px] font-mono text-accent hover:underline mt-1 inline-block"
                     >
                       {isEs ? 'Ver expediente →' : 'View case dossier →'}
                     </Link>
@@ -351,7 +351,7 @@ export function VendorEvidenceTab({
             </SubSectionTitle>
             <div className="flex items-start gap-3">
               <span
-                className="inline-flex items-center px-2.5 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] shrink-0"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm text-[12px] font-mono font-bold uppercase tracking-[0.12em] shrink-0"
                 style={{ color: bucketColor, backgroundColor: `${bucketColor}15`, border: `1px solid ${bucketColor}30` }}
               >
                 {isEs ? verdict.label_es : verdict.label_en}
@@ -460,7 +460,7 @@ function VendorBenchmarkBars({
       <SubSectionTitle id="benchmark-title">
         {isEs ? 'Desviación de benchmarks · OCDE / sector' : 'Deviation from benchmarks · OECD / sector'}
       </SubSectionTitle>
-      <p className="text-[10px] font-mono text-text-muted mb-3 leading-relaxed">
+      <p className="text-[12px] font-mono text-text-muted mb-3 leading-relaxed">
         {isEs
           ? 'Barras a la derecha del centro = por encima del límite (peor). Izquierda = por debajo (mejor).'
           : 'Bars right of center = above the limit (worse). Left = below (better).'}
@@ -470,7 +470,7 @@ function VendorBenchmarkBars({
           <BenchmarkRow key={key} {...rowProps} />
         ))}
       </div>
-      <p className="text-[9px] font-mono text-text-muted mt-2 opacity-60">
+      <p className="text-[13px] font-mono text-text-muted mt-2 opacity-60">
         {isEs
           ? 'OCDE: adjudicación directa ≤30%, licitación sin competencia ≤10%'
           : 'OECD: direct award ≤30%, single-bid ≤10%'}

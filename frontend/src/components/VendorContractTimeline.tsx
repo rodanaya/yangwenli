@@ -248,7 +248,7 @@ export default function VendorContractTimeline({
                   value: label,
                   position: 'top',
                   fill: color,
-                  fontSize: 9,
+                  fontSize: 13,
                   fontWeight: 500,
                 }}
               />
@@ -261,7 +261,7 @@ export default function VendorContractTimeline({
               ticks={years}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)', fontFamily: 'var(--font-family-mono)' }}
+              tick={{ fontSize: 13, fill: 'var(--color-text-muted)', fontFamily: 'var(--font-family-mono)' }}
               tickFormatter={v => String(v)}
             />
 
@@ -311,7 +311,7 @@ export default function VendorContractTimeline({
       </div>
 
       {/* Divider + label */}
-      <p className="text-[10px] uppercase tracking-widest text-text-muted px-1">
+      <p className="text-[12px] uppercase tracking-widest text-text-muted px-1">
         Contracts per year
       </p>
 

@@ -72,7 +72,7 @@ export function RiskBySectorChart() {
             y={20}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -83,7 +83,7 @@ export function RiskBySectorChart() {
             y={20}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -105,7 +105,7 @@ export function RiskBySectorChart() {
             x={LABEL_W + oecdDot * DOT_GAP + DOT_R + 4}
             y={36}
             fill={OECD_COLOR}
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {`${t('riskBySector.avgPrefix')} ${OECD_AVG}%`}
@@ -126,7 +126,7 @@ export function RiskBySectorChart() {
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                 >
                   {row.sector}
@@ -157,7 +157,7 @@ export function RiskBySectorChart() {
                   x={LABEL_W + COL_W + 8}
                   y={y0 + STRIP_H / 2 + 3}
                   fill={color}
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -171,7 +171,7 @@ export function RiskBySectorChart() {
 
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
         <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: OECD_COLOR }} />
-        <span className="text-[10px] font-mono text-text-muted">
+        <span className="text-[12px] font-mono text-text-muted">
           {t('riskBySector.legend')}
         </span>
       </div>

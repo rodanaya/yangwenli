@@ -96,7 +96,7 @@ export function StorySexenioASexenio() {
                   y={y + 3}
                   textAnchor="end"
                   fill={isOECD ? 'var(--color-oecd)' : 'var(--color-text-secondary)'}
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={isOECD ? 700 : 400}
                 >
@@ -144,7 +144,7 @@ export function StorySexenioASexenio() {
                   y={44}
                   textAnchor="middle"
                   fill="var(--color-text-muted)"
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                 >
                   {sex.years}
@@ -204,7 +204,7 @@ export function StorySexenioASexenio() {
                   y={H - 48}
                   textAnchor="middle"
                   fill="var(--color-text-muted)"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -254,7 +254,7 @@ export function StorySexenioASexenio() {
             y={H - 10}
             textAnchor="middle"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {t('sexenioASexenio.bottomLegend')}

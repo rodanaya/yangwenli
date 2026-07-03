@@ -1,7 +1,7 @@
 /**
  * SubSectionTitle — tier-2 editorial header inside a dossier tab.
  *
- * Sits below DossierSectionHeader (tier-1, EB Garamond italic title) but above
+ * Sits below DossierSectionHeader (tier-1, EB Garamond title) but above
  * data rows. A subtle top hairline rule + mono § eyebrow with an amber accent
  * dot + an optional right-aligned mono meta string (counts like "10 contratos").
  *
@@ -36,7 +36,7 @@ export function SubSectionTitle({
           <span
             className="font-mono"
             style={{
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
@@ -49,7 +49,7 @@ export function SubSectionTitle({
         {meta && (
           <span
             className="font-mono tabular-nums flex-shrink-0"
-            style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)', opacity: 0.7 }}
+            style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)', opacity: 0.7 }}
           >
             {meta}
           </span>

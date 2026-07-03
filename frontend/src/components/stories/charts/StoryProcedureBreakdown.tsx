@@ -83,20 +83,20 @@ export function StoryProcedureBreakdown() {
           aria-label={t('procedureBreakdown.ariaLabel')}
         >
           {/* Header */}
-          <text x={LABEL_W - 8} y={24} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W - 8} y={24} textAnchor="end" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('procedureBreakdown.sectorHeader')}
           </text>
           <g transform={`translate(${LABEL_W}, 20)`}>
             <circle cx={3} cy={2} r={3} fill={COLORS.direct} />
-            <text x={11} y={6} fill={COLORS.direct} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={11} y={6} fill={COLORS.direct} fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('procedureBreakdown.directLabel')}
             </text>
             <circle cx={80} cy={2} r={3} fill={COLORS.single} />
-            <text x={88} y={6} fill={COLORS.single} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={88} y={6} fill={COLORS.single} fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('procedureBreakdown.singleLabel')}
             </text>
             <circle cx={205} cy={2} r={3} fill={COLORS.open} />
-            <text x={213} y={6} fill={COLORS.open} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={213} y={6} fill={COLORS.open} fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('procedureBreakdown.openLabel')}
             </text>
           </g>
@@ -113,7 +113,7 @@ export function StoryProcedureBreakdown() {
                   y={y0 + TRIO_H / 2}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                 >
                   {row.name}
@@ -151,7 +151,7 @@ export function StoryProcedureBreakdown() {
                         x={LABEL_W + COL_W + 8}
                         y={yStrip + STRIP_H / 2 + 3}
                         fill={strip.color}
-                        fontSize={9}
+                        fontSize={13}
                         fontFamily="var(--font-family-mono)"
                         fontWeight={600}
                       >

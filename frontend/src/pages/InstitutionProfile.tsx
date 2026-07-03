@@ -515,7 +515,7 @@ export function InstitutionProfile() {
       {/* ---- EDITORIAL HERO ---- */}
       <header>
         {/* Dateline strip — newspaper masthead grammar */}
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center gap-3 text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
             <span className="text-text-secondary">RUBLI</span>
@@ -541,7 +541,7 @@ export function InstitutionProfile() {
         <div className="flex items-center gap-2 mb-3">
           {institution.institution_type && (
             <span
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold uppercase tracking-wider border"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[13px] font-semibold uppercase tracking-wider border"
               style={{
                 color: riskColor,
                 borderColor: `${riskColor}40`,
@@ -657,16 +657,16 @@ export function InstitutionProfile() {
           className="mb-3 flex items-center gap-3"
           style={{
             fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-            fontSize: '10px',
+            fontSize: '12px',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: 'var(--color-text-muted)',
             fontWeight: 400,
           }}
         >
-          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·INST</span>
+          <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>Folio·INST</span>
           <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+          <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
             {getInstitutionTypeLabel(institution.institution_type)}
             {sectorName ? <><span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>{sectorName}</> : null}
           </span>
@@ -677,7 +677,7 @@ export function InstitutionProfile() {
               className="text-text-primary"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(26px, 3.6vw, 38px)',
                 lineHeight: 0.98,
@@ -698,17 +698,17 @@ export function InstitutionProfile() {
             </a>
             <div className="text-right">
               <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{formatNumber(totalContracts)}</div>
-              <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Contracts</div>
+              <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">Contracts</div>
             </div>
             <div className="text-right">
               <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>{formatDualCurrency(totalValue)}</div>
-              <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
+              <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
             </div>
             <div className="text-right">
               <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: riskLevel === 'critical' ? 'var(--color-risk-critical)' : riskLevel === 'high' ? 'var(--color-risk-high)' : riskLevel === 'medium' ? 'var(--color-risk-medium)' : 'var(--color-risk-low)' }}>
                 {(riskScore * 100).toFixed(1)}%
               </div>
-              <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Avg risk</div>
+              <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">Avg risk</div>
             </div>
           </div>
         </div>
@@ -966,7 +966,7 @@ export function InstitutionProfile() {
                           {topContract.is_direct_award && <span className="text-risk-high">{t('profile.overview.directAward')}</span>}
                           {topContract.is_single_bid && <span className="text-risk-critical">{t('profile.overview.singleBidder')}</span>}
                         </div>
-                        <p className="text-[10px] text-text-muted/60 italic">{t('profile.overview.clickForDetails')}</p>
+                        <p className="text-[12px] text-text-muted/60">{t('profile.overview.clickForDetails')}</p>
                       </div>
                     </div>
                   )
@@ -1065,7 +1065,7 @@ export function InstitutionProfile() {
                   <Users className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Peer comparison' : 'Comparacion con pares'}
                   {peerComparison && (
-                    <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
+                    <span className="ml-auto text-[12px] font-normal text-text-muted normal-case">
                       vs {peerComparison.peer_count} {lang === 'en' ? 'similar institutions' : 'instituciones similares'}
                     </span>
                   )}
@@ -1123,7 +1123,7 @@ export function InstitutionProfile() {
                               </svg>
                             )
                           })()}
-                          <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60 font-mono">
+                          <div className="flex justify-between mt-0.5 text-[12px] text-text-muted/60 font-mono">
                             <span>min</span><span>{lang === 'en' ? 'median' : 'mediana'}</span><span>max</span>
                           </div>
                         </div>
@@ -1161,7 +1161,7 @@ export function InstitutionProfile() {
                     {singleBidPct != null && (
                       <BenchmarkBar label={t('benchmarks.singleBidLabel')} value={singleBidPct} benchmark={NATIONAL_SB_BENCHMARK} diff={sbDiff} highThreshold={5} />
                     )}
-                    <p className="text-[10px] text-text-muted/60 pt-1 border-t border-border/20">
+                    <p className="text-[12px] text-text-muted/60 pt-1 border-t border-border/20">
                       {t('benchmarks.benchmarkNote')}
                     </p>
                   </div>
@@ -1209,7 +1209,7 @@ export function InstitutionProfile() {
                       formatVal={(v) => formatCompactMXN(v)}
                       dots={40}
                     />
-                    <p className="text-[10px] text-text-muted font-mono mt-2">
+                    <p className="text-[12px] text-text-muted font-mono mt-2">
                       {lang === 'en' ? 'Bar length = spend share · color = risk level (v0.8.5)' : 'Longitud = participación · color = nivel de riesgo (v0.8.5)'}
                     </p>
                   </>
@@ -1237,7 +1237,7 @@ export function InstitutionProfile() {
                   <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
                     <ChartDownloadButton targetRef={vendorLoyaltyChartRef} filename={`institution-${institutionId}-vendor-loyalty`} className="absolute top-0 right-0 z-10" aria-hidden="true" />
                     <VendorLoyaltyHeatmap vendorLoyalty={vendorLoyalty} />
-                    <p className="mt-2 text-[10px] text-text-muted/50 italic">{lang === 'en' ? 'Cells = number of contracts; color = avg risk' : 'Celdas = numero de contratos; color = riesgo promedio'}</p>
+                    <p className="mt-2 text-[12px] text-text-muted/50">{lang === 'en' ? 'Cells = number of contracts; color = avg risk' : 'Celdas = numero de contratos; color = riesgo promedio'}</p>
                   </div>
                 ) : null}
               </div>
@@ -1266,11 +1266,11 @@ export function InstitutionProfile() {
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <BarChart3 className="h-3.5 w-3.5 text-accent" />
                   {t('profile.supplierDiversity', 'Supplier Diversity (HHI)')}
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 ml-2">
+                  <Badge variant="secondary" className="text-[12px] px-1.5 py-0 h-4 ml-2">
                     {institution.supplier_diversity.concentration_level.toUpperCase()}
                   </Badge>
                   {hhiTrendBadge && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1" style={{ color: hhiTrendBadge.color, backgroundColor: `${hhiTrendBadge.color}15` }}>
+                    <span className="text-[12px] font-bold px-1.5 py-0.5 rounded-full ml-1" style={{ color: hhiTrendBadge.color, backgroundColor: `${hhiTrendBadge.color}15` }}>
                       {hhiTrendBadge.label}
                     </span>
                   )}
@@ -1284,7 +1284,7 @@ export function InstitutionProfile() {
 
             {/* EFOS/SFP cross-ref note */}
             <div className="px-3 py-2 rounded border border-border/30 bg-background-elevated/30">
-              <p className="text-[10px] text-text-muted leading-relaxed">
+              <p className="text-[12px] text-text-muted leading-relaxed">
                 {lang === 'en'
                   ? 'Cross-reference with EFOS (SAT Art. 69-B) and SFP sanctions available in vendor profiles. Click any vendor to verify their status in external registries.'
                   : 'Cruce con EFOS (SAT Art. 69-B) y sanciones SFP disponible en perfiles de proveedores. Haga clic en cualquier proveedor para verificar su estatus en registros externos.'}
@@ -1342,11 +1342,11 @@ export function InstitutionProfile() {
 
           {/* ── Officials section ───────────────────────────── */}
           <section aria-labelledby="officials-heading" className="pt-6 border-t border-border/40">
-            <h3 id="officials-heading" className="text-[11px] font-mono font-semibold text-text-muted uppercase tracking-[0.15em] mb-3">
+            <h3 id="officials-heading" className="text-[13px] font-mono font-semibold text-text-muted uppercase tracking-[0.15em] mb-3">
               {lang === 'en' ? 'Officials & Tenure' : 'Funcionarios y Permanencia'}
             </h3>
           <div className="space-y-4">
-            <p className="text-[11px] text-text-muted italic leading-relaxed">
+            <p className="text-[13px] text-text-muted leading-relaxed">
               {lang === 'en'
                 ? 'Based on Coviello & Gagliarducci (2017) — official tenure correlates with single-bidder rates. Data available for contracts 2018+ (COMPRANET Structure C/D).'
                 : 'Basado en Coviello & Gagliarducci (2017) — la permanencia de funcionarios correlaciona con tasas de licitante unico. Datos disponibles para contratos 2018+ (COMPRANET Estructura C/D).'}
@@ -1365,7 +1365,7 @@ export function InstitutionProfile() {
                 <UserCheck className="h-8 w-8 text-text-muted mx-auto mb-3" aria-hidden="true" />
                 <p className="text-sm text-text-muted">{t('profile.noOfficialsData')}</p>
                 {officialsData?.note && (
-                  <p className="text-[10px] text-text-muted/60 mt-2 max-w-md mx-auto">{officialsData.note}</p>
+                  <p className="text-[12px] text-text-muted/60 mt-2 max-w-md mx-auto">{officialsData.note}</p>
                 )}
               </div>
             ) : (
@@ -1434,7 +1434,7 @@ export function InstitutionProfile() {
                             </td>
                             <td className="px-3 py-2 text-right font-mono">{off.vendor_diversity}</td>
                             <td className="px-3 py-2 text-right">
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono" style={{ color: rClr, backgroundColor: `${rClr}15` }}>
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[12px] font-bold font-mono" style={{ color: rClr, backgroundColor: `${rClr}15` }}>
                                 {(off.avg_risk_score * 100).toFixed(0)}%
                               </span>
                             </td>
@@ -1445,7 +1445,7 @@ export function InstitutionProfile() {
                   </table>
                 </div>
                 {officialsData.note && (
-                  <p className="px-3 py-2 text-[10px] text-text-muted/60 border-t border-border/20">{officialsData.note}</p>
+                  <p className="px-3 py-2 text-[12px] text-text-muted/60 border-t border-border/20">{officialsData.note}</p>
                 )}
               </div>
             )}
@@ -1461,7 +1461,7 @@ export function InstitutionProfile() {
                   <DollarSign className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Spending evolution' : 'Evolucion del gasto'}
                   {riskTimeline?.timeline?.length && riskTimeline.timeline.length > 1 && (
-                    <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
+                    <span className="ml-auto text-[12px] font-normal text-text-muted normal-case">
                       {riskTimeline.timeline[0].year}--{riskTimeline.timeline[riskTimeline.timeline.length - 1].year}
                     </span>
                   )}
@@ -1614,7 +1614,7 @@ export function InstitutionProfile() {
                         formatVal={(v) => formatCompactMXN(v)}
                         dots={40}
                       />
-                      <p className="text-[10px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Observed amount by year' : 'Monto observado por año'}</p>
+                      <p className="text-[12px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Observed amount by year' : 'Monto observado por año'}</p>
                     </div>
                   </div>
                 )}
@@ -1697,7 +1697,7 @@ export function InstitutionProfile() {
 
             {/* Cross-registry note */}
             <div className="px-3 py-2 rounded border border-border/30 bg-background-elevated/30">
-              <p className="text-[10px] text-text-muted leading-relaxed">
+              <p className="text-[12px] text-text-muted leading-relaxed">
                 {lang === 'en'
                   ? 'External registries: SAT EFOS (Art. 69-B), SFP sanctions, RUPC registry, ASF findings. Consult individual vendor profiles for EFOS/SFP status.'
                   : 'Registros externos: SAT EFOS (Art. 69-B), sanciones SFP, registro RUPC, hallazgos ASF. Consulte perfiles de proveedores individuales para estatus EFOS/SFP.'}
@@ -1752,7 +1752,7 @@ export function InstitutionProfile() {
               >
                 {lang === 'es' ? 'Ver en el Atlas' : 'View in Atlas'}
               </Link>
-              <span className="text-[10px] font-mono text-text-muted/50 uppercase tracking-wider">
+              <span className="text-[12px] font-mono text-text-muted/50 uppercase tracking-wider">
                 {lang === 'es' ? 'Indicador estadístico · no prueba de irregularidades' : 'Statistical indicator · not evidence of wrongdoing'}
               </span>
             </div>
@@ -1800,7 +1800,7 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-bold font-mono" style={{ color: barColor }}>{value.toFixed(1)}%</span>
           {diff != null && (
-            <span className={cn('text-[10px] font-mono', diff > 0 ? 'text-risk-high' : 'text-risk-low')}>
+            <span className={cn('text-[12px] font-mono', diff > 0 ? 'text-risk-high' : 'text-risk-low')}>
               {diff > 0 ? '+' : ''}{diff.toFixed(1)}pp {lang === 'en' ? 'vs avg.' : 'vs prom.'}
             </span>
           )}
@@ -1817,7 +1817,7 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
         dotGap={6}
         thresholds={[{ value: benchmark, color: 'var(--color-text-muted)' }]}
       />
-      <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
+      <div className="flex justify-between mt-0.5 text-[12px] text-text-muted/60">
         <span>0%</span><span>{lang === 'en' ? 'Avg.' : 'Prom.'} {benchmark}%</span><span>100%</span>
       </div>
     </div>
@@ -1912,7 +1912,7 @@ function SpendingOverTimeChart({ data }: {
           formatVal={(v) => `${v.toFixed(1)}B`}
           dots={40}
         />
-        <p className="text-[10px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Spend (B MXN) by year' : 'Gasto (B MXN) por año'}</p>
+        <p className="text-[12px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Spend (B MXN) by year' : 'Gasto (B MXN) por año'}</p>
       </div>
     </div>
   )
@@ -1985,9 +1985,9 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
     <table className="w-full border-separate" style={{ borderSpacing: 2 }} aria-label="Vendor loyalty over time">
       <thead>
         <tr>
-          <th scope="col" className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">{lang === 'en' ? 'Vendor' : 'Proveedor'}</th>
+          <th scope="col" className="text-left text-[12px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">{lang === 'en' ? 'Vendor' : 'Proveedor'}</th>
           {displayYears.map((yr) => (
-            <th scope="col" key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
+            <th scope="col" key={yr} className="text-center text-[12px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
           ))}
         </tr>
       </thead>
@@ -2011,7 +2011,7 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
                 return (
                   <td key={yr} className="p-0">
                     <div
-                      className="h-6 w-full rounded flex items-center justify-center text-[9px] font-mono"
+                      className="h-6 w-full rounded flex items-center justify-center text-[13px] font-mono"
                       style={{
                         backgroundColor: count > 0 ? `${color}30` : 'transparent',
                         border: count > 0 ? `1px solid ${color}50` : '1px solid transparent',
@@ -2060,7 +2060,7 @@ function LongestTenuredGantt({ vendors }: {
     <div className="space-y-1.5">
       {/* Year axis */}
       <div className="flex items-center pl-[140px]">
-        <div className="flex-1 flex justify-between text-[9px] text-text-muted/60 font-mono">
+        <div className="flex-1 flex justify-between text-[13px] text-text-muted/60 font-mono">
           <span>{minYear}</span>
           <span>{Math.round((minYear + maxYear) / 2)}</span>
           <span>{maxYear}</span>
@@ -2122,7 +2122,7 @@ function LongestTenuredGantt({ vendors }: {
           </div>
         )
       })}
-      <p className="text-[10px] text-text-muted/50 italic mt-2">
+      <p className="text-[12px] text-text-muted/50 mt-2">
         {lang === 'en'
           ? `Bar color = avg risk (green to red). Alert icon = tenure >10 years AND risk >30%.`
           : `Color de barra = riesgo promedio (verde a rojo). Icono de alerta = permanencia >10 anos Y riesgo >30%.`}
@@ -2224,7 +2224,7 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
           formatVal={(v) => Number(v).toLocaleString()}
           dots={40}
         />
-        <p className="text-[10px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Contracts per year' : 'Contratos por año'}</p>
+        <p className="text-[12px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Contracts per year' : 'Contratos por año'}</p>
       </div>
     </div>
   )
@@ -2296,11 +2296,11 @@ function InstChapterHeader({
       <div
         style={{
           fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-          fontSize: '10px',
+          fontSize: '12px',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: '#a06820',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 500,
           marginBottom: '0.6rem',
         }}

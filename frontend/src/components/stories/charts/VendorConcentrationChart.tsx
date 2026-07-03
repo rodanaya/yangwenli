@@ -75,7 +75,7 @@ export function VendorConcentrationChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -86,7 +86,7 @@ export function VendorConcentrationChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -108,7 +108,7 @@ export function VendorConcentrationChart() {
             x={LABEL_W + oecdDot * DOT_GAP + DOT_R + 4}
             y={38}
             fill={OECD_COLOR}
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {t('vendorConcentration.oecdLabel')}
@@ -128,7 +128,7 @@ export function VendorConcentrationChart() {
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                 >
                   {row.vendor}
@@ -159,7 +159,7 @@ export function VendorConcentrationChart() {
                   x={LABEL_W + COL_W + 8}
                   y={y0 + STRIP_H / 2 + 3}
                   fill={color}
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -182,12 +182,12 @@ export function VendorConcentrationChart() {
               className="w-2 h-2 rounded-sm"
               style={{ backgroundColor: CHART_RISK_COLORS[entry.key] }}
             />
-            <span className="text-[10px] font-mono text-text-muted">{entry.label}</span>
+            <span className="text-[12px] font-mono text-text-muted">{entry.label}</span>
           </div>
         ))}
         <div className="flex items-center gap-1.5 ml-auto">
           <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: OECD_COLOR }} />
-          <span className="text-[10px] font-mono text-text-muted">{t('vendorConcentration.legendOecd')}</span>
+          <span className="text-[12px] font-mono text-text-muted">{t('vendorConcentration.legendOecd')}</span>
         </div>
       </div>
 

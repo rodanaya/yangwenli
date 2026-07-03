@@ -271,7 +271,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
                 y={y + laneH / 2}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight={600}
                 letterSpacing="0.1em"
@@ -304,7 +304,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
                 x={tx}
                 y={TOP_PAD - 14}
                 textAnchor="middle"
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="currentColor"
                 fillOpacity={0.4}
@@ -412,7 +412,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
                 x={labelX}
                 y={labelY}
                 textAnchor={anchorEnd ? 'end' : 'start'}
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={SECTOR_TEXT_COLORS[node.sector_code ?? 'otros'] ?? color}
                 fontWeight={700}
@@ -507,7 +507,7 @@ function TooltipPanel({ cat, svgX, svgY, svgWidth, lang, onNavigate }: TooltipPa
     >
       <div className="px-3 py-2.5 space-y-2">
         {/* Category name */}
-        <div className="text-[11px] font-medium text-text-primary leading-tight">
+        <div className="text-[13px] font-medium text-text-primary leading-tight">
           {lang === 'es' ? cat.name_es : cat.name_en}
         </div>
 
@@ -550,7 +550,7 @@ function TooltipPanel({ cat, svgX, svgY, svgWidth, lang, onNavigate }: TooltipPa
         {/* Top vendor */}
         {topVendorName && cat.top_vendor && (
           <div className="pt-0.5 border-t border-border">
-            <div className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">
+            <div className="text-[13px] font-mono uppercase tracking-wider text-text-muted mb-0.5">
               {lang === 'es' ? 'Top proveedor' : 'Top vendor'}
             </div>
             <EntityIdentityChip
@@ -565,7 +565,7 @@ function TooltipPanel({ cat, svgX, svgY, svgWidth, lang, onNavigate }: TooltipPa
         {/* CTA */}
         <button
           type="button"
-          className="pointer-events-auto text-[10px] font-mono font-bold uppercase tracking-wider text-accent hover:underline"
+          className="pointer-events-auto text-[12px] font-mono font-bold uppercase tracking-wider text-accent hover:underline"
           onClick={onNavigate}
         >
           {lang === 'es' ? 'Investigar →' : 'Investigate →'}
@@ -578,8 +578,8 @@ function TooltipPanel({ cat, svgX, svgY, svgWidth, lang, onNavigate }: TooltipPa
 function StatLine({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-[9px] font-mono uppercase tracking-wider text-text-muted">{label}</div>
-      <div className="text-[11px] font-mono tabular-nums text-text-primary">{value}</div>
+      <div className="text-[13px] font-mono uppercase tracking-wider text-text-muted">{label}</div>
+      <div className="text-[13px] font-mono tabular-nums text-text-primary">{value}</div>
     </div>
   )
 }

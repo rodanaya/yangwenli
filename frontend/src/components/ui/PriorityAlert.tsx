@@ -128,7 +128,7 @@ function SecondaryPill({ flag }: { flag: PriorityFlag }) {
   const s = SEVERITY_STYLE[flag.severity]
   const pill = (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[11px] font-medium ${s.bg} ${s.border} ${s.text}`}
+      className={`inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[13px] font-medium ${s.bg} ${s.border} ${s.text}`}
     >
       <span
         className="h-1.5 w-1.5 rounded-full flex-shrink-0"

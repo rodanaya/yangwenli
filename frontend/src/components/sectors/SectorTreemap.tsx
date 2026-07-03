@@ -123,7 +123,7 @@ function Tooltip({
       <div className="h-1 w-full rounded-t" style={{ backgroundColor: color }} />
       <div className="px-3 py-2.5">
         <p
-          className="text-[11px] font-mono font-bold uppercase tracking-[0.15em] mb-2"
+          className="text-[13px] font-mono font-bold uppercase tracking-[0.15em] mb-2"
           style={{ color }}
         >
           {/* F088 fix: sector label must localize via getSectorName.
@@ -133,9 +133,9 @@ function Tooltip({
         <div className="space-y-1">
           {rows.map((row) => (
             <div key={row.label} className="flex items-center justify-between gap-2">
-              <span className="text-[11px] text-text-muted">{row.label}</span>
+              <span className="text-[13px] text-text-muted">{row.label}</span>
               <span
-                className="text-[11px] font-mono tabular-nums font-bold"
+                className="text-[13px] font-mono tabular-nums font-bold"
                 style={{ color: row.color ?? 'var(--color-text-primary)' }}
               >
                 {row.value}
@@ -145,7 +145,7 @@ function Tooltip({
         </div>
         <button
           onPointerDown={onLink}
-          className="pointer-events-auto mt-2.5 w-full text-left text-[11px] font-mono font-bold uppercase tracking-[0.12em] underline"
+          className="pointer-events-auto mt-2.5 w-full text-left text-[13px] font-mono font-bold uppercase tracking-[0.12em] underline"
           style={{ color }}
         >
           {lang === 'es' ? 'Ver perfil →' : 'View profile →'}

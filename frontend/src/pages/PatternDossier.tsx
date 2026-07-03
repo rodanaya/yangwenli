@@ -341,7 +341,7 @@ const CASE_TYPE_BY_PATTERN: Record<string, string> = {
 // ---------------------------------------------------------------------------
 function SectionKicker({ label }: { label: string }) {
   return (
-    <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+    <div className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
       {label}
     </div>
   )
@@ -390,7 +390,7 @@ export default function PatternDossier() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <Link
           to="/atlas"
-          className="text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors"
+          className="text-[13px] font-mono text-text-muted hover:text-text-secondary transition-colors"
         >
           {isEs ? '← El Atlas · lente Patrones' : '← The Atlas · Patterns lens'}
         </Link>
@@ -458,7 +458,7 @@ export default function PatternDossier() {
         {/* Up-link to El Atlas, patterns lens pinned to this cluster */}
         <Link
           to={`/atlas?lens=patterns&pin=${codeUpper}`}
-          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors"
+          className="inline-flex items-center gap-1.5 text-[13px] font-mono text-text-muted hover:text-text-secondary transition-colors"
         >
           <span aria-hidden="true">←</span>
           {isEs ? 'El Atlas · lente Patrones' : 'The Atlas · Patterns lens'}
@@ -466,7 +466,7 @@ export default function PatternDossier() {
 
         {/* Prev / position / next sibling stepper */}
         {siblingIndex >= 0 && prevMeta && nextMeta && (
-          <div className="inline-flex items-center gap-1.5 font-mono text-[11px]">
+          <div className="inline-flex items-center gap-1.5 font-mono text-[13px]">
             <Link
               to={`/patterns/${prevMeta.code}`}
               title={isEs
@@ -523,7 +523,7 @@ export default function PatternDossier() {
             {/* Investigate CTA */}
             <Link
               to={`/aria?pattern=${codeUpper}`}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
               style={{
                 backgroundColor: `${patternColor}1f`,
                 color: patternColor,
@@ -547,13 +547,13 @@ export default function PatternDossier() {
                   ...(spotlight.avg_sb_rate != null ? [{ label: isEs ? 'Prop. Única' : 'Single Bid', value: `${Math.round(spotlight.avg_sb_rate * 100)}%`, color: spotlight.avg_sb_rate > 0.3 ? '#f59e0b' : undefined }] : []),
                 ].map(({ label, value, color }) => (
                   <div key={label} className="rounded-sm border border-border/60 bg-background-card px-2 py-1.5">
-                    <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted/60">{label}</div>
+                    <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted/60">{label}</div>
                     <div className="text-sm font-mono font-bold tabular-nums mt-0.5" style={{ color: color ?? 'var(--color-text-primary)' }}>{value}</div>
                   </div>
                 ))}
                 {spotlight.total_value_mxn != null && spotlight.total_value_mxn > 0 && (
                   <div className="rounded-sm border border-border/60 bg-background-card px-2 py-1.5 col-span-2 sm:col-span-1">
-                    <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted/60">{isEs ? 'Gasto total' : 'Total spend'}</div>
+                    <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted/60">{isEs ? 'Gasto total' : 'Total spend'}</div>
                     <div className="text-sm font-mono font-bold tabular-nums mt-0.5" style={{ color: 'var(--color-risk-critical)' }}>{formatDualCurrency(spotlight.total_value_mxn)}</div>
                   </div>
                 )}
@@ -597,7 +597,7 @@ export default function PatternDossier() {
             ].map(({ k, t }) => (
               <div key={k}>
                 <div
-                  className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] mb-1"
+                  className="text-[13px] font-mono font-bold uppercase tracking-[0.15em] mb-1"
                   style={{ color: patternColor }}
                 >
                   {k}
@@ -605,7 +605,7 @@ export default function PatternDossier() {
                 <p className="text-sm text-text-secondary leading-relaxed">{t}</p>
               </div>
             ))}
-            <p className="text-[10px] font-mono text-text-muted/70 leading-relaxed pt-1">
+            <p className="text-[12px] font-mono text-text-muted/70 leading-relaxed pt-1">
               {isEs
                 ? 'La marca ARIA es un indicador de riesgo del modelo, no una corrupción probada. Estas rutas acotan dónde mirar; la evidencia documentada la aporta el reportaje.'
                 : 'An ARIA flag is a model risk indicator, not proven corruption. These routes narrow where to look; documented evidence comes from the reporting.'}
@@ -653,7 +653,7 @@ export default function PatternDossier() {
                       dots={14}
                       ariaLabel={`IPS ${(v.ips_final * 100).toFixed(0)}%`}
                     />
-                    <span className="text-[10px] font-mono tabular-nums text-text-muted">
+                    <span className="text-[12px] font-mono tabular-nums text-text-muted">
                       {(v.ips_final).toFixed(3)}
                     </span>
                   </div>
@@ -670,7 +670,7 @@ export default function PatternDossier() {
                       ariaTier={v.ips_tier}
                     />
                     {v.total_value_mxn > 0 && (
-                      <div className="text-[10px] font-mono text-text-muted tabular-nums mt-0.5">
+                      <div className="text-[12px] font-mono text-text-muted tabular-nums mt-0.5">
                         {formatCompactMXN(v.total_value_mxn)} · {v.total_contracts} {isEs ? 'contratos' : 'contracts'}
                       </div>
                     )}
@@ -678,7 +678,7 @@ export default function PatternDossier() {
 
                   {/* Risk level badge */}
                   <span
-                    className={`flex-shrink-0 text-[10px] font-mono font-bold uppercase tracking-wide ${
+                    className={`flex-shrink-0 text-[12px] font-mono font-bold uppercase tracking-wide ${
                       riskLevel === 'critical'
                         ? 'text-risk-critical'
                         : riskLevel === 'high'
@@ -706,13 +706,13 @@ export default function PatternDossier() {
           {/* Rates — shown when spotlight has real data */}
           {spotlight && (spotlight.avg_da_rate != null || spotlight.avg_sb_rate != null) && (
             <div className="rounded-sm border border-border/60 bg-background-card p-4">
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-3">
+              <div className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-3">
                 {isEs ? 'Tasas promedio · vendedores en este patrón' : 'Average rates · vendors in this pattern'}
               </div>
               <div className="space-y-2">
                 {spotlight.avg_da_rate != null && (
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-mono text-text-muted/70 w-36 flex-shrink-0">
+                    <span className="text-[13px] font-mono text-text-muted/70 w-36 flex-shrink-0">
                       {isEs ? 'Adjudicación Directa' : 'Direct Award'}
                     </span>
                     <div className="flex-1 relative">
@@ -724,7 +724,7 @@ export default function PatternDossier() {
                         ariaLabel={`DA rate ${Math.round(spotlight.avg_da_rate * 100)}%`}
                       />
                     </div>
-                    <span className="text-[11px] font-mono font-bold tabular-nums w-10 text-right"
+                    <span className="text-[13px] font-mono font-bold tabular-nums w-10 text-right"
                       style={{ color: spotlight.avg_da_rate > 0.5 ? '#ef4444' : 'var(--color-text-primary)' }}>
                       {Math.round(spotlight.avg_da_rate * 100)}%
                     </span>
@@ -732,7 +732,7 @@ export default function PatternDossier() {
                 )}
                 {spotlight.avg_sb_rate != null && (
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-mono text-text-muted/70 w-36 flex-shrink-0">
+                    <span className="text-[13px] font-mono text-text-muted/70 w-36 flex-shrink-0">
                       {isEs ? 'Propuesta Única' : 'Single Bid'}
                     </span>
                     <div className="flex-1 relative">
@@ -744,7 +744,7 @@ export default function PatternDossier() {
                         ariaLabel={`Single bid rate ${Math.round(spotlight.avg_sb_rate * 100)}%`}
                       />
                     </div>
-                    <span className="text-[11px] font-mono font-bold tabular-nums w-10 text-right"
+                    <span className="text-[13px] font-mono font-bold tabular-nums w-10 text-right"
                       style={{ color: spotlight.avg_sb_rate > 0.3 ? '#f59e0b' : 'var(--color-text-primary)' }}>
                       {Math.round(spotlight.avg_sb_rate * 100)}%
                     </span>
@@ -756,7 +756,7 @@ export default function PatternDossier() {
           {/* Sector breakdown */}
           {sectorBreakdown.length > 0 && (
             <div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
+              <div className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
                 {isEs
                   ? `Sectores · ${spotlight?.top_vendors.length ?? 0} proveedores destacados`
                   : `Sectors · ${spotlight?.top_vendors.length ?? 0} highlighted vendors`}
@@ -764,7 +764,7 @@ export default function PatternDossier() {
               <div className="space-y-1.5">
                 {sectorBreakdown.map(({ name: sectorName, count, color }) => (
                   <div key={sectorName} className="flex items-center gap-3">
-                    <span className="text-[11px] font-mono text-text-secondary w-40 flex-shrink-0 whitespace-normal break-words leading-tight">
+                    <span className="text-[13px] font-mono text-text-secondary w-40 flex-shrink-0 whitespace-normal break-words leading-tight">
                       {sectorName}
                     </span>
                     <DotBar
@@ -774,7 +774,7 @@ export default function PatternDossier() {
                       dots={18}
                       ariaLabel={`${sectorName}: ${count} vendors`}
                     />
-                    <span className="text-[10px] font-mono tabular-nums text-text-muted flex-shrink-0">
+                    <span className="text-[12px] font-mono tabular-nums text-text-muted flex-shrink-0">
                       {count}
                     </span>
                   </div>
@@ -803,7 +803,7 @@ export default function PatternDossier() {
             }}
           >
             <p
-              className="text-sm italic text-text-secondary leading-relaxed"
+              className="text-sm text-text-secondary leading-relaxed"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {hook}
@@ -822,7 +822,7 @@ export default function PatternDossier() {
             backgroundColor: 'rgba(220,38,38,0.04)',
           }}
         >
-          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
+          <div className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
             {isEs ? 'CORPUS RUBLI' : 'RUBLI CORPUS'}
           </div>
           <p className="text-sm text-text-secondary leading-relaxed mb-2">
@@ -852,7 +852,7 @@ export default function PatternDossier() {
           </p>
           <Link
             to={`/cases?type=${caseType}`}
-            className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
+            className="inline-flex items-center gap-1.5 text-[13px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
             style={{ color: 'var(--color-risk-critical)' }}
           >
             <span aria-hidden="true">→</span>
@@ -874,7 +874,7 @@ export default function PatternDossier() {
           {/* Investigate CTA — amber, mono, uppercase */}
           <Link
             to={`/aria?pattern=${codeUpper}`}
-            className="mt-1 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
+            className="mt-1 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
             style={{
               backgroundColor: 'rgba(245,158,11,0.10)',
               color: '#f59e0b',
@@ -893,7 +893,7 @@ export default function PatternDossier() {
           {/* Top T1 vendors flagged for this pattern */}
           {codaVendors.length > 0 && (
             <div className="mt-4">
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
+              <div className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
                 {isEs ? 'Proveedores marcados' : 'Flagged vendors'}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -916,7 +916,7 @@ export default function PatternDossier() {
           {/* Dominant sector for this pattern */}
           {dominantSector && (
             <div className="mt-4">
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
+              <div className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
                 {isEs ? 'Sector dominante' : 'Dominant sector'}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -955,7 +955,7 @@ export default function PatternDossier() {
                   className="tabular-nums leading-none"
                   style={{
                     fontFamily: 'var(--font-family-serif)',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 700,
                     fontSize: '20px',
                     color: c ?? 'var(--color-text-primary)',
@@ -963,7 +963,7 @@ export default function PatternDossier() {
                 >
                   {v}
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+                <span className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
                   {l}
                 </span>
               </div>
@@ -972,7 +972,7 @@ export default function PatternDossier() {
 
           <CrossPatternComparison patterns={allPatterns} currentCode={codeUpper} isEs={isEs} />
 
-          <p className="mt-4 text-[11px] text-text-muted leading-relaxed">
+          <p className="mt-4 text-[13px] text-text-muted leading-relaxed">
             {isEs
               ? 'Un proveedor puede coincidir con varios patrones a la vez. Esos cruces son donde suelen empezar las investigaciones.'
               : 'A vendor can match several patterns at once. Those intersections are where investigations usually begin.'}

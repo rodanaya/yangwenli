@@ -110,7 +110,7 @@ export function InstitutionHero({
           <div
             className="font-mono tabular-nums"
             style={{
-              fontSize: 11,
+              fontSize: 13,
               letterSpacing: '0.20em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
@@ -128,8 +128,8 @@ export function InstitutionHero({
         <div
           className="font-mono mb-4"
           style={{
-            fontSize: 10,
-            fontStyle: 'italic',
+            fontSize: 12,
+            fontStyle: 'normal',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: sectorAccent,
@@ -148,7 +148,7 @@ export function InstitutionHero({
               className="text-balance mb-1.5"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(32px, 4.4vw, 48px)',
                 lineHeight: 1.04,
@@ -190,7 +190,7 @@ export function InstitutionHero({
         {/* Hairline */}
         <div aria-hidden="true" className="mt-6" style={{ height: 1, background: 'var(--color-border)' }} />
 
-        {/* Lede — roman serif at 18px for legibility (was italic 17px with a
+        {/* Lede — roman serif at 18px for legibility (was 17px with a
             name-splice drop-cap that read as a typo). Drop-cap now lands on the
             lede's own first letter (the institution name). */}
         <div className="mt-6" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '66ch' }}>
@@ -207,7 +207,7 @@ export function InstitutionHero({
               aria-hidden="true"
               style={{
                 fontFamily: '"Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 800,
                 fontSize: '3.2em',
                 float: 'left',
@@ -353,7 +353,7 @@ function SealCard({
       <div className="text-center">
         <div
           className="tabular-nums"
-          style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 38, lineHeight: 1, color: textColor, letterSpacing: '-0.02em' }}
+          style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 38, lineHeight: 1, color: textColor, letterSpacing: '-0.02em' }}
         >
           {big}
           {bigUnit && (
@@ -364,7 +364,7 @@ function SealCard({
         </div>
         <div
           className="font-mono"
-          style={{ fontSize: 10, color: 'var(--color-text-muted)', letterSpacing: '0.10em', textTransform: 'uppercase', marginTop: 5 }}
+          style={{ fontSize: 12, color: 'var(--color-text-muted)', letterSpacing: '0.10em', textTransform: 'uppercase', marginTop: 5 }}
         >
           {label}
         </div>
@@ -372,14 +372,14 @@ function SealCard({
       <div aria-hidden="true" className="my-2 mx-auto" style={{ height: 1, width: '55%', background: 'var(--color-border)' }} />
       <div
         className="font-mono text-center"
-        style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: textColor, fontWeight: 700 }}
+        style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: textColor, fontWeight: 700 }}
       >
         {grade}
       </div>
       {sub && (
         <div
           className="font-mono text-center"
-          style={{ fontSize: 10, color: 'var(--color-text-secondary)', letterSpacing: '0.04em', marginTop: 3 }}
+          style={{ fontSize: 12, color: 'var(--color-text-secondary)', letterSpacing: '0.04em', marginTop: 3 }}
         >
           {sub}
         </div>
@@ -448,7 +448,7 @@ function InstitutionMetaRule({
           {siglasCopied && (
             <span
               className="font-mono ml-1"
-              style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-accent)', opacity: 0.8 }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-accent)', opacity: 0.8 }}
               role="status"
             >
               {lang === 'es' ? 'Copiado' : 'Copied'}
@@ -486,7 +486,7 @@ function OnThePageStrip({ sectorAccent, lang }: { sectorAccent: string; lang: 'e
         <span
           className="font-mono"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: 'var(--color-text-muted)',
@@ -504,7 +504,7 @@ function OnThePageStrip({ sectorAccent, lang }: { sectorAccent: string; lang: 'e
             href={`#${a.id}`}
             className="group font-mono inline-flex items-baseline gap-1.5 transition-colors"
             style={{
-              fontSize: 11,
+              fontSize: 13,
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
               color: 'var(--color-text-secondary)',

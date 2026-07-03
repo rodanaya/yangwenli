@@ -38,7 +38,7 @@ export function BenchmarkRow({ label, value, benchmark, benchmarkLabel, maxDelta
 
   return (
     <div className="flex items-center gap-3 py-1">
-      <span className="text-[11px] font-mono text-text-secondary w-40 shrink-0 leading-tight">{label}</span>
+      <span className="text-[13px] font-mono text-text-secondary w-40 shrink-0 leading-tight">{label}</span>
       {/* Diverging track — fills remaining width */}
       <div className="flex-1 relative min-w-0" style={{ height: 22 }} aria-hidden="true">
         {/* Track */}
@@ -63,10 +63,10 @@ export function BenchmarkRow({ label, value, benchmark, benchmarkLabel, maxDelta
           />
         )}
       </div>
-      <span className="text-[10px] font-mono shrink-0 text-right tabular-nums leading-tight" style={{ width: 52, color: fill }}>
+      <span className="text-[12px] font-mono shrink-0 text-right tabular-nums leading-tight" style={{ width: 52, color: fill }}>
         {arrow} {absPp}pp
       </span>
-      <span className="text-[9px] font-mono text-text-muted shrink-0 leading-tight w-32 text-right">
+      <span className="text-[13px] font-mono text-text-muted shrink-0 leading-tight w-32 text-right">
         {valuePct}% · {benchmarkLabel} {benchmarkPct}%
       </span>
     </div>

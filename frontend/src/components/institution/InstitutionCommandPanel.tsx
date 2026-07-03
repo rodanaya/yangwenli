@@ -194,10 +194,10 @@ export function InstitutionDiagnosticGrid({
             {avgRisk100 != null && (
               <div>
                 <div className="flex items-baseline justify-between mb-1">
-                  <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>
+                  <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>
                     {isEs ? 'Riesgo promedio' : 'Avg risk'}
                   </span>
-                  <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: RISK_TEXT_COLORS[avgRiskLvl] }}>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color: RISK_TEXT_COLORS[avgRiskLvl] }}>
                     {avgRisk100}
                     {baseline100 != null && (
                       <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> / {baseline100} {isEs ? 'sector' : 'sector'}</span>
@@ -215,10 +215,10 @@ export function InstitutionDiagnosticGrid({
             {hrCount != null && totalContracts > 0 && (
               <div>
                 <div className="flex items-baseline justify-between mb-1">
-                  <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>
+                  <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>
                     {isEs ? 'Contratos de alto riesgo' : 'High-risk contracts'}
                   </span>
-                  <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
                     {formatNumber(hrCount)}<span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> / {formatNumber(totalContracts)}</span>
                   </span>
                 </div>
@@ -227,7 +227,7 @@ export function InstitutionDiagnosticGrid({
                 </div>
               </div>
             )}
-            <p className="font-mono" style={{ fontSize: 9, letterSpacing: '0.04em', color: 'var(--color-text-muted)', opacity: 0.8 }}>
+            <p className="font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)', opacity: 0.8 }}>
               {isEs ? 'Distribución por contrato en cálculo.' : 'Per-contract distribution computing.'}
             </p>
           </div>
@@ -281,14 +281,14 @@ export function InstitutionSupplierTable({
 
   return (
     <div>
-      <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+      <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {isEs
           ? `Los 10 mayores concentran el ${top10Share.toFixed(0)}% del gasto institucional.`
           : `The top 10 concentrate ${top10Share.toFixed(0)}% of institutional spend.`}
       </p>
       <div className="border border-border rounded-sm overflow-x-auto">
         <table className="w-full text-sm" aria-label={isEs ? 'Proveedores de la institución' : 'Institution suppliers'}>
-          <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
+          <thead className="bg-background-elevated text-[12px] uppercase tracking-widest text-text-muted">
             <tr>
               <th scope="col" className="text-left px-3 py-2 font-semibold" style={{ width: 28 }}>#</th>
               <th scope="col" className="text-left px-3 py-2 font-semibold">{isEs ? 'Proveedor' : 'Supplier'}</th>

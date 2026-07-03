@@ -112,7 +112,7 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
   })
 
   const groundTruthNote = (
-    <p className="mt-3 text-[10px] text-text-muted leading-relaxed">{t('groundTruthNote')}</p>
+    <p className="mt-3 text-[12px] text-text-muted leading-relaxed">{t('groundTruthNote')}</p>
   )
 
   // Empty state
@@ -175,7 +175,7 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
 
               {/* Year */}
               <span
-                className="shrink-0 w-10 pt-px font-mono text-[10px] font-bold tabular-nums"
+                className="shrink-0 w-10 pt-px font-mono text-[12px] font-bold tabular-nums"
                 style={{ color: markerColor }}
               >
                 {yearLabel}
@@ -207,7 +207,7 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
                     {' '}
                     <Link
                       to={`/cases/${entry.caseId}`}
-                      className="inline-flex items-center gap-0.5 align-baseline text-[9px] font-mono text-accent hover:underline"
+                      className="inline-flex items-center gap-0.5 align-baseline text-[13px] font-mono text-accent hover:underline"
                     >
                       <ExternalLink size={9} aria-hidden />
                       {t('dossier.linkToCases')}

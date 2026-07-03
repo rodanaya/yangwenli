@@ -167,12 +167,12 @@ export function RiskPyramid() {
       <div className="grid grid-cols-4 gap-3">
         {PYRAMID_DATA.map(d => (
           <div key={d.level} className="rounded-lg p-3 bg-background-elevated border border-border text-center space-y-1">
-            <div className="text-[10px] font-bold uppercase tracking-wide" style={{ color: d.color }}>
+            <div className="text-[12px] font-bold uppercase tracking-wide" style={{ color: d.color }}>
               {tierLabel(d.level)}
             </div>
             <div className="text-base font-bold text-text-primary">{d.pctValue}%</div>
-            <div className="text-[10px] text-text-muted">{isEs ? 'del valor total' : 'of total value'}</div>
-            <div className="text-[10px] text-text-muted border-t border-border/50 pt-1 mt-1">
+            <div className="text-[12px] text-text-muted">{isEs ? 'del valor total' : 'of total value'}</div>
+            <div className="text-[12px] text-text-muted border-t border-border/50 pt-1 mt-1">
               {d.billions.toLocaleString(isEs ? 'es-MX' : 'en-MX', { maximumFractionDigits: 0 })}{isEs ? ' MM MXN' : 'B MXN'}
             </div>
           </div>

@@ -124,7 +124,7 @@ export function RiskCalendarHeatmap() {
         >
           <div
             className="font-mono leading-tight text-center whitespace-nowrap"
-            style={{ fontSize: 9, color: CHART_TOKENS.decemberAccent }}
+            style={{ fontSize: 13, color: CHART_TOKENS.decemberAccent }}
           >
             {isES ? '↑ 64% más riesgo en diciembre' : '↑ 64% higher risk in December'}
           </div>
@@ -148,7 +148,7 @@ export function RiskCalendarHeatmap() {
           {(isES ? MONTH_ABBR_ES : MONTH_ABBR).map(m => (
             <div
               key={m}
-              className="text-[9px] font-mono text-text-muted text-center"
+              className="text-[13px] font-mono text-text-muted text-center"
               style={{ width: CELL_W + GAP, flexShrink: 0 }}
             >
               {m}
@@ -161,7 +161,7 @@ export function RiskCalendarHeatmap() {
           {yearData.map(({ year, months }) => (
             <div key={year} className="flex items-center gap-0">
               <span
-                className="text-[10px] font-mono text-text-muted text-right shrink-0 tabular-nums"
+                className="text-[12px] font-mono text-text-muted text-right shrink-0 tabular-nums"
                 style={{ width: LABEL_W }}
               >
                 {year}
@@ -240,7 +240,7 @@ export function RiskCalendarHeatmap() {
 
       {/* Legend — dark-mode risk palette */}
       <div className="mt-3 flex items-center gap-2">
-        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">
+        <span className="text-[12px] font-mono text-text-muted uppercase tracking-wide">
           {isES ? 'Riesgo' : 'Risk'}:
         </span>
         {[
@@ -255,10 +255,10 @@ export function RiskCalendarHeatmap() {
               className="w-3 h-3 rounded-[2px]"
               style={{ backgroundColor: color, border: labelEn === 'None' ? `1px solid ${CHART_TOKENS.tooltipBorder}` : 'none' }}
             />
-            <span className="text-[10px] font-mono text-text-muted">{isES ? labelEs : labelEn}</span>
+            <span className="text-[12px] font-mono text-text-muted">{isES ? labelEs : labelEn}</span>
           </div>
         ))}
-        <span className="text-[10px] font-mono text-text-muted ml-2">
+        <span className="text-[12px] font-mono text-text-muted ml-2">
           {isES ? 'contorno = diciembre (cierre de año)' : 'outlined = December (budget year-end)'}
         </span>
       </div>

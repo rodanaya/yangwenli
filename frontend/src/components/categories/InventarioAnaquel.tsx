@@ -346,14 +346,14 @@ export function InventarioAnaquel({ items, lang, highlightSector }: InventarioAn
     <section aria-label={isEs ? 'El anaquel' : 'The shelf'}>
       <p
         className="font-mono mb-3.5"
-        style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
       >
         § {isEs ? 'El anaquel · el tamaño no es el riesgo' : 'The shelf · size is not risk'}
       </p>
 
       <p
         className="mb-4"
-        style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontSize: 14, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}
+        style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'normal', fontSize: 14, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}
       >
         {isEs
           ? `Las ${deck.n5} categorías más caras promedian ${deck.avgIndicatorTop5.toFixed(2)} de indicador; las ${deck.n3} más calientes, juntas, no llegan al ${deck.pctTop3.toFixed(1)}% del gasto.`
@@ -476,7 +476,7 @@ export function InventarioAnaquel({ items, lang, highlightSector }: InventarioAn
                     y={c.labelY}
                     textAnchor={anchor}
                     fontFamily="var(--font-family-mono, monospace)"
-                    fontSize={9.5}
+                    fontSize={13}
                     fill={color}
                     style={{ userSelect: 'none' }}
                   >
@@ -498,7 +498,7 @@ export function InventarioAnaquel({ items, lang, highlightSector }: InventarioAn
                     y={innerH + 16}
                     textAnchor="middle"
                     fontFamily="var(--font-family-mono, monospace)"
-                    fontSize={9}
+                    fontSize={13}
                     fill="var(--color-text-muted)"
                     fillOpacity={0.7}
                   >
@@ -512,7 +512,7 @@ export function InventarioAnaquel({ items, lang, highlightSector }: InventarioAn
               y={innerH + (isMobile ? 26 : 32)}
               textAnchor="middle"
               fontFamily="var(--font-family-mono, monospace)"
-              fontSize={9}
+              fontSize={13}
               fill="var(--color-text-muted)"
               fillOpacity={0.6}
               letterSpacing="0.1em"
@@ -538,7 +538,7 @@ export function InventarioAnaquel({ items, lang, highlightSector }: InventarioAn
         )}
       </div>
 
-      <p className="mt-3 font-mono" style={{ fontSize: 10.5, lineHeight: 1.5, color: 'var(--color-text-muted)' }}>
+      <p className="mt-3 font-mono" style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--color-text-muted)' }}>
         {isEs
           ? 'Cada círculo, un anaquel; su área, el valor en libros; su posición, el indicador de riesgo medio. Los anaqueles huecos no alcanzan muestra clasificable.†'
           : "Each circle, a shelf; its area, the value on the books; its position, the average risk indicator. Hollow shelves don't reach a classifiable sample.†"}
@@ -546,7 +546,7 @@ export function InventarioAnaquel({ items, lang, highlightSector }: InventarioAn
       {subFloor.length > 0 && (
         <p
           className="mt-1"
-          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11, lineHeight: 1.45, color: 'var(--color-text-secondary)' }}
+          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13, lineHeight: 1.45, color: 'var(--color-text-secondary)' }}
         >
           {isEs
             ? '† muestra < 200 contratos — indicador no clasificable'
@@ -554,7 +554,7 @@ export function InventarioAnaquel({ items, lang, highlightSector }: InventarioAn
         </p>
       )}
 
-      <p className="mt-2 text-[10px] font-mono text-text-muted opacity-60" aria-live="polite">
+      <p className="mt-2 text-[12px] font-mono text-text-muted opacity-60" aria-live="polite">
         {focusedItem
           ? (isEs
               ? `${focusedItem.name_es} seleccionado — Enter para investigar`
@@ -586,7 +586,7 @@ function ReferenceRule({ x, innerH, label }: { x: number; innerH: number; label:
         x={x + 4}
         y={12}
         fontFamily="var(--font-family-mono, monospace)"
-        fontSize={9}
+        fontSize={13}
         fill="var(--color-text-muted)"
         fillOpacity={0.75}
         letterSpacing="0.08em"

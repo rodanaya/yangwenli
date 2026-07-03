@@ -99,18 +99,18 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
                     className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap bg-background-elevated border border-border rounded px-2 py-1.5 shadow-lg pointer-events-none"
                     style={{ minWidth: '110px' }}
                   >
-                    <p className="text-[11px] font-bold text-text-primary">{d.year}</p>
-                    <p className="text-[10px] text-text-secondary">
+                    <p className="text-[13px] font-bold text-text-primary">{d.year}</p>
+                    <p className="text-[12px] text-text-secondary">
                       {d.contractCount} {t('cronologia.contracts')}
                     </p>
-                    <p className="text-[10px] text-text-secondary">
+                    <p className="text-[12px] text-text-secondary">
                       ${formatCompact(d.totalValue)} MXN
                     </p>
-                    <p className="text-[10px] text-text-secondary">
+                    <p className="text-[12px] text-text-secondary">
                       {t('cronologia.risk')}: {(d.avgRiskScore * 100).toFixed(0)}%
                     </p>
                     {d.hasAnomaly && d.anomalyNote && (
-                      <p className="text-[10px] text-risk-high mt-0.5">
+                      <p className="text-[12px] text-risk-high mt-0.5">
                         {d.anomalyNote}
                       </p>
                     )}
@@ -128,7 +128,7 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
           <div key={d.year} className="flex-1 text-center">
             <span
               className={cn(
-                'text-[9px] font-mono',
+                'text-[13px] font-mono',
                 hoveredYear === d.year ? 'text-text-secondary' : 'text-text-muted'
               )}
             >

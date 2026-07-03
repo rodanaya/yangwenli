@@ -55,7 +55,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         <p
           className="font-mono mb-3"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: 'var(--color-text-muted)',
@@ -67,7 +67,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         <p
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 14,
             color: 'var(--color-text-secondary)',
             maxWidth: '64ch',
@@ -84,7 +84,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           onClick={() => navigate('/methodology')}
           className="mt-4 font-mono cursor-pointer hover:opacity-70 transition-opacity"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             color: 'var(--color-text-secondary)',
@@ -222,7 +222,7 @@ export default function ContractDossier() {
       {fromAria && (
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
+          className="inline-flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
         >
           <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {lang === 'es' ? 'Volver a ARIA' : 'Back to ARIA'}
@@ -241,7 +241,7 @@ export default function ContractDossier() {
             <div
               className="font-mono tabular-nums"
               style={{
-                fontSize: 11,
+                fontSize: 13,
                 letterSpacing: '0.20em',
                 textTransform: 'uppercase',
                 color: 'var(--color-text-muted)',
@@ -269,8 +269,8 @@ export default function ContractDossier() {
           <div
             className="font-mono mb-4"
             style={{
-              fontSize: 10,
-              fontStyle: 'italic',
+              fontSize: 12,
+              fontStyle: 'normal',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: sectorAccent,
@@ -287,7 +287,7 @@ export default function ContractDossier() {
                 className="tabular-nums"
                 style={{
                   fontFamily: '"Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 'clamp(48px, 6vw, 72px)',
                   lineHeight: 1,
@@ -311,13 +311,13 @@ export default function ContractDossier() {
                 ≈ {formatCompactUSD(Number(contract.amount_mxn ?? 0))} · {contract.contract_year ?? '—'}
               </div>
 
-              {/* Title in italic serif */}
+              {/* Title in serif */}
               {(contract.description ?? contract.title) && (
                 <p
                   className="mt-4"
                   style={{
                     fontFamily: '"EB Garamond", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontSize: 15,
                     lineHeight: 1.5,
                     color: 'var(--color-text-secondary)',
@@ -343,7 +343,7 @@ export default function ContractDossier() {
                   className="tabular-nums"
                   style={{
                     fontFamily: '"Playfair Display", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 800,
                     fontSize: 52,
                     lineHeight: 1,
@@ -355,7 +355,7 @@ export default function ContractDossier() {
                 </div>
                 <div
                   className="font-mono tabular-nums mt-1"
-                  style={{ fontSize: 10, color: 'var(--color-text-muted)', opacity: 0.55, letterSpacing: '0.06em' }}
+                  style={{ fontSize: 12, color: 'var(--color-text-muted)', opacity: 0.55, letterSpacing: '0.06em' }}
                 >
                   / 100
                 </div>
@@ -364,7 +364,7 @@ export default function ContractDossier() {
               <div
                 className="font-mono text-center"
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
                   color: verdictColor,
@@ -385,7 +385,7 @@ export default function ContractDossier() {
             <p
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontSize: 17,
                 lineHeight: 1.55,
                 color: 'var(--color-text-secondary)',
@@ -423,7 +423,7 @@ export default function ContractDossier() {
               className="mb-4"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontSize: 14,
                 lineHeight: 1.6,
                 color: 'var(--color-text-secondary)',
@@ -448,7 +448,7 @@ export default function ContractDossier() {
             />
             <p
               className="mt-3 font-mono"
-              style={{ fontSize: 9, letterSpacing: '0.08em', color: 'var(--color-text-muted)', opacity: 0.75 }}
+              style={{ fontSize: 13, letterSpacing: '0.08em', color: 'var(--color-text-muted)', opacity: 0.75 }}
             >
               {lang === 'es'
                 ? 'Factores ordenados por severidad — indicadores estadísticos, no probabilidades.'
@@ -496,7 +496,7 @@ export default function ContractDossier() {
               to="/aria"
               state={{ from: '/contracts', vendorId: contract.vendor_id }}
               className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
-              style={{ fontSize: 11, color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}
+              style={{ fontSize: 13, color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}
               aria-label={lang === 'es' ? 'Ver al proveedor en la Lista de Vigilancia de ARIA' : 'See this vendor in the ARIA Watchlist'}
             >
               <ExternalLink className="w-3 h-3" aria-hidden="true" />

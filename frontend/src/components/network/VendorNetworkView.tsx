@@ -179,7 +179,7 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
           {/* Breadcrumb ladder: Índice › C-NNN › (rewind hop) › current */}
           <div className="flex items-center justify-between gap-3 mb-3">
             <nav
-              className="flex items-center gap-1.5 min-w-0 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted"
+              className="flex items-center gap-1.5 min-w-0 text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted"
               aria-label={isEs ? 'Ruta de investigación' : 'Investigation trail'}
             >
               <Link
@@ -216,18 +216,18 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
             <button
               type="button"
               onClick={copyTrailLink}
-              className="shrink-0 rounded-sm border border-border px-2.5 py-1 text-[9px] font-mono uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-border/20 transition-colors"
+              className="shrink-0 rounded-sm border border-border px-2.5 py-1 text-[13px] font-mono uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-border/20 transition-colors"
             >
               {linkCopied ? (isEs ? 'Copiado ✓' : 'Copied ✓') : isEs ? 'Copiar enlace' : 'Copy link'}
             </button>
           </div>
 
           <div className="flex items-baseline gap-3 flex-wrap mb-3">
-            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
+            <span className="text-[12px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
               {isEs ? '§ RED DEL PROVEEDOR' : '§ VENDOR NETWORK'}
             </span>
             {sectorName && (
-              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">
+              <span className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted">
                 · {sectorName}
               </span>
             )}
@@ -257,7 +257,7 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
               />
               <Link
                 to={`/vendors/${vendorId}`}
-                className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-text-secondary hover:text-text-primary transition-colors border border-border rounded-sm px-3 py-1.5"
+                className="ml-auto inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.14em] text-text-secondary hover:text-text-primary transition-colors border border-border rounded-sm px-3 py-1.5"
               >
                 <GitBranch className="w-3 h-3" aria-hidden="true" />
                 {isEs ? 'Dossier del proveedor' : 'Vendor dossier'}
@@ -379,7 +379,7 @@ function InstitutionsView({
     <section>
       <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
         <div>
-          <h2 className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
+          <h2 className="text-[12px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
             {isEs ? '§ DÓNDE FLUYÓ EL DINERO' : '§ WHERE THE MONEY FLOWED'}
           </h2>
           <p className="text-xs text-text-secondary mt-1 leading-relaxed">
@@ -388,7 +388,7 @@ function InstitutionsView({
               : 'Each buying institution occupies a band on the shared time axis. The band spans first → last contract; thickness = value, color = risk. Click any row to expand contracts.'}
           </p>
         </div>
-        <div className="flex items-baseline gap-3 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
+        <div className="flex items-baseline gap-3 text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted">
           <span>{isEs ? 'Ordenar por:' : 'Sort by:'}</span>
           <SortPill active={sort === 'value'} onClick={() => onSortChange('value')}>
             {isEs ? 'Valor' : 'Value'}
@@ -407,7 +407,7 @@ function InstitutionsView({
         <div className="px-4 py-2 bg-background-elevated/30">
           <div className="grid grid-cols-[1.6rem_1fr_auto] gap-x-3 items-center">
             <span />
-            <div className="relative h-3.5 text-[9px] font-mono text-text-muted">
+            <div className="relative h-3.5 text-[13px] font-mono text-text-muted">
               {yearAxis.ticks.map((y) => {
                 const pct = yearAxis.span > 0 ? ((y - yearAxis.min) / yearAxis.span) * 100 : 50
                 const align: 'start' | 'middle' | 'end' =
@@ -427,7 +427,7 @@ function InstitutionsView({
                 )
               })}
             </div>
-            <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted whitespace-nowrap">
+            <span className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted whitespace-nowrap">
               {isEs ? 'MXN · riesgo · contratos · %' : 'MXN · risk · contracts · %'}
             </span>
           </div>
@@ -519,7 +519,7 @@ function InstitutionRow({
             <span className="font-mono tabular-nums text-sm font-bold text-text-primary block">
               {formatCompactMXN(value)}
             </span>
-            <span className="text-[10px] font-mono tabular-nums text-text-muted block">
+            <span className="text-[12px] font-mono tabular-nums text-text-muted block">
               ≈ {formatCompactUSDByYear(value)}
             </span>
           </span>
@@ -555,7 +555,7 @@ function InstitutionRow({
             />
           </div>
           {/* Meta — year range removed (timeline ribbon shows tenure now) */}
-          <div className="flex items-center gap-3 text-[10px] font-mono tabular-nums text-text-muted whitespace-nowrap">
+          <div className="flex items-center gap-3 text-[12px] font-mono tabular-nums text-text-muted whitespace-nowrap">
             <span className="inline-flex items-center gap-0.5" aria-label={`${riskLevel} risk`}>
               {Array.from({ length: 3 }).map((_, i) => (
                 <span
@@ -638,12 +638,12 @@ function InstitutionContractsBreakdown({
       style={{ borderLeftColor: accentColor }}
     >
       <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-        <h3 className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
+        <h3 className="text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted">
           {isEs ? '§ DESGLOSE DE CONTRATOS' : '§ CONTRACTS BREAKDOWN'}
         </h3>
         <Link
           to={`/institutions/${institutionId}`}
-          className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
+          className="inline-flex items-center gap-1 text-[12px] font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
         >
           {isEs ? 'Ver institución' : 'View institution'}
           <ExternalLink className="w-3 h-3" aria-hidden="true" />
@@ -691,7 +691,7 @@ function InstitutionContractsBreakdown({
                     <div className="text-xs text-text-primary group-hover:text-accent transition-colors leading-snug">
                       {c.title || c.contract_number || `Contract #${c.id}`}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] font-mono text-text-muted">
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[12px] font-mono text-text-muted">
                       <span>{dateStr}</span>
                       {c.is_direct_award && (
                         <>
@@ -722,10 +722,10 @@ function InstitutionContractsBreakdown({
                     <div className="font-mono tabular-nums text-xs font-bold text-text-primary">
                       {formatCompactMXN(c.amount_mxn)}
                     </div>
-                    <div className="text-[10px] font-mono tabular-nums text-text-muted">
+                    <div className="text-[12px] font-mono tabular-nums text-text-muted">
                       ≈ {formatCompactUSDByYear(c.amount_mxn, c.contract_year)}
                     </div>
-                    <div className="text-[10px] font-mono tabular-nums" style={{ color: cRiskColor }}>
+                    <div className="text-[12px] font-mono tabular-nums" style={{ color: cRiskColor }}>
                       {Math.round(cRisk * 100)}% {isEs ? 'riesgo' : 'risk'}
                     </div>
                   </div>
@@ -737,7 +737,7 @@ function InstitutionContractsBreakdown({
       )}
 
       {total > contracts.length && (
-        <p className="mt-3 text-[10px] font-mono text-text-muted">
+        <p className="mt-3 text-[12px] font-mono text-text-muted">
           {isEs
             ? `+ ${formatNumber(total - contracts.length)} contratos más en el perfil de la institución.`
             : `+ ${formatNumber(total - contracts.length)} more contracts on the institution profile.`}
@@ -788,7 +788,7 @@ function CoBiddersView({
   return (
     <section>
       <div className="mb-4">
-        <h2 className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
+        <h2 className="text-[12px] font-mono uppercase tracking-[0.18em] text-[var(--color-accent)]">
           {isEs ? '§ QUIÉN LICITÓ JUNTO AL PROVEEDOR' : '§ WHO BID ALONGSIDE'}
         </h2>
         <p className="text-xs text-text-secondary mt-1 leading-relaxed">
@@ -821,13 +821,13 @@ function CoBiddersView({
             <div key={tier}>
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                <h3 className="text-[11px] font-mono uppercase tracking-[0.18em] font-bold" style={{ color }}>
+                <h3 className="text-[13px] font-mono uppercase tracking-[0.18em] font-bold" style={{ color }}>
                   {roleLabel(tier, t)}
                 </h3>
-                <span className="text-[10px] font-mono tabular-nums text-text-muted">
+                <span className="text-[12px] font-mono tabular-nums text-text-muted">
                   {items.length}
                 </span>
-                <span className="text-[10px] font-mono text-text-muted">
+                <span className="text-[12px] font-mono text-text-muted">
                   ── {roleHint(tier, isEs)} ──
                 </span>
               </div>
@@ -881,7 +881,7 @@ function CoBidderRow({
           {cb.vendor_name}
         </span>
         <span className="font-mono tabular-nums text-sm font-bold text-text-primary whitespace-nowrap">
-          {formatNumber(cb.co_bid_count)} <span className="text-[10px] font-normal text-text-muted">co-bids</span>
+          {formatNumber(cb.co_bid_count)} <span className="text-[12px] font-normal text-text-muted">co-bids</span>
         </span>
       </div>
       <div className="grid grid-cols-[1fr_auto] gap-x-3 items-center">
@@ -891,7 +891,7 @@ function CoBidderRow({
             style={{ width: `${barPct}%`, backgroundColor: color, opacity: 0.82 }}
           />
         </div>
-        <div className="flex items-center gap-3 text-[10px] font-mono tabular-nums text-text-muted whitespace-nowrap">
+        <div className="flex items-center gap-3 text-[12px] font-mono tabular-nums text-text-muted whitespace-nowrap">
           <span>{cb.win_count}/{cb.co_bid_count} {isEs ? 'ganados' : 'wins'}</span>
           <span className="text-text-muted/60">·</span>
           <span style={{ color }}>{Math.round(winRate * 100)}% {isEs ? 'éxito' : 'win rate'}</span>
@@ -952,9 +952,9 @@ function StatChip({ value, label, secondary }: { value: string; label: string; s
     <div className="flex items-baseline gap-1.5">
       <span className="font-mono font-bold tabular-nums text-text-primary text-base">{value}</span>
       {secondary && (
-        <span className="text-[10px] font-mono tabular-nums text-text-muted">{secondary}</span>
+        <span className="text-[12px] font-mono tabular-nums text-text-muted">{secondary}</span>
       )}
-      <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">{label}</span>
+      <span className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted">{label}</span>
     </div>
   )
 }
@@ -989,14 +989,14 @@ function RoleSummaryCard({
     <div className="rounded-sm border border-border p-3 bg-background-card">
       <div className="flex items-baseline gap-2 mb-1">
         <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-        <span className="text-[10px] font-mono uppercase tracking-[0.12em]" style={{ color }}>
+        <span className="text-[12px] font-mono uppercase tracking-[0.12em]" style={{ color }}>
           {label}
         </span>
       </div>
       <div className="font-mono font-bold tabular-nums text-2xl text-text-primary leading-tight">
         {count}
       </div>
-      <div className="text-[10px] font-mono text-text-muted mt-0.5">
+      <div className="text-[12px] font-mono text-text-muted mt-0.5">
         {hint}
       </div>
     </div>
@@ -1013,7 +1013,7 @@ function SmallStat({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-1 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+      <div className="flex items-center gap-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
         {Icon && <Icon className="w-2.5 h-2.5" aria-hidden="true" />}
         {label}
       </div>
@@ -1021,7 +1021,7 @@ function SmallStat({
         {value}
       </div>
       {secondary && (
-        <div className="font-mono tabular-nums text-[10px] text-text-muted">
+        <div className="font-mono tabular-nums text-[12px] text-text-muted">
           {secondary}
         </div>
       )}

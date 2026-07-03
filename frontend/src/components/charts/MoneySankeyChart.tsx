@@ -219,7 +219,7 @@ export function MoneySankeyChart({ flows, height = 350 }: Props) {
                     dy="0.35em"
                     textAnchor={isLeft ? 'end' : 'start'}
                     fill="var(--color-text-secondary)"
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono)"
                   >
                     {truncName}

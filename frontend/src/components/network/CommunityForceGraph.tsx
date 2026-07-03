@@ -359,7 +359,7 @@ export function CommunityForceGraph({
           >
             {formatEntityName('vendor', hoverNode.node.name, 'sm')}
           </p>
-          <div className="space-y-0.5 text-[10px] font-mono text-text-muted">
+          <div className="space-y-0.5 text-[12px] font-mono text-text-muted">
             <p>
               {isEs ? 'Indicador de riesgo' : 'Risk indicator'}{' '}
               <span style={{ color: riskText(hoverNode.node.risk_score), fontWeight: 700 }}>
@@ -394,7 +394,7 @@ export function CommunityForceGraph({
       )}
 
       {/* Plate legend — mono micro-labels */}
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: RISK_COLORS.critical }} />
           {isEs ? 'Riesgo crítico' : 'Critical risk'}

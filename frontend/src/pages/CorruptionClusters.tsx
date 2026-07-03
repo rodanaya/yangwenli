@@ -418,7 +418,7 @@ function DotBar({
       {bar}
       <span
         style={{
-          fontSize: 11,
+          fontSize: 13,
           color: 'var(--color-text-muted)',
           fontFamily: 'var(--font-family-mono, monospace)',
           minWidth: 32,
@@ -459,10 +459,10 @@ function ComplementaryTypologyCard({
         >
           {typology.label}
         </h3>
-        <p className="text-[11px] text-text-muted/80 leading-snug mt-1">{typology.tagline}</p>
+        <p className="text-[13px] text-text-muted/80 leading-snug mt-1">{typology.tagline}</p>
       </header>
 
-      <p className="text-[11px] text-text-muted leading-relaxed mb-4">
+      <p className="text-[13px] text-text-muted leading-relaxed mb-4">
         {typology.narrative}
       </p>
 
@@ -473,11 +473,11 @@ function ComplementaryTypologyCard({
           return (
             <div key={stat.label}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-text-secondary leading-tight">
+                <span className="text-[12px] text-text-secondary leading-tight">
                   {stat.label}
                 </span>
                 <span
-                  className="text-[11px] font-mono font-bold tabular-nums leading-none"
+                  className="text-[13px] font-mono font-bold tabular-nums leading-none"
                   style={{ color: accent }}
                 >
                   {stat.value}
@@ -502,7 +502,7 @@ function ComplementaryTypologyCard({
         <footer className="mt-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <Link
             to={typology.linkTo}
-            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.15em] hover:underline"
+            className="inline-flex items-center gap-1 text-[12px] font-mono uppercase tracking-[0.15em] hover:underline"
             style={{ color: typology.color }}
           >
             {typology.linkLabel}
@@ -560,7 +560,7 @@ function EvidenceStrip({ gtTypes, gtTotal }: { gtTypes: ReturnType<typeof buildG
           x={0}
           y={svgH - 2}
           fill="var(--color-text-muted, #9c9490)"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono, monospace)"
         >
           ● 1 punto = {Math.round(gtTotal / DOTS)} casos
@@ -573,8 +573,8 @@ function EvidenceStrip({ gtTypes, gtTotal }: { gtTypes: ReturnType<typeof buildG
               className="h-2 w-2 rounded-sm flex-shrink-0"
               style={{ backgroundColor: t.color }}
             />
-            <span className="text-[11px] text-text-secondary truncate">{t.type}</span>
-            <span className="ml-auto text-[11px] font-mono text-text-muted tabular-nums">
+            <span className="text-[13px] text-text-secondary truncate">{t.type}</span>
+            <span className="ml-auto text-[13px] font-mono text-text-muted tabular-nums">
               {t.count}
             </span>
           </div>
@@ -624,7 +624,7 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
 
       {/* Fingerprint grid */}
       <div className="space-y-2">
-        <p className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em] mb-2">
+        <p className="text-[12px] font-mono text-text-muted/60 uppercase tracking-[0.15em] mb-2">
           {isEs ? 'Huella estadística' : 'Statistical fingerprint'}
         </p>
         {fingerprintDims.map((dim) => (
@@ -634,10 +634,10 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
             style={{ gridTemplateColumns: '128px 1fr' }}
           >
             <div className="min-w-0">
-              <div className="text-[11px] text-text-secondary truncate leading-tight">
+              <div className="text-[13px] text-text-secondary truncate leading-tight">
                 {dim.label}
               </div>
-              <div className="text-[9px] font-mono text-text-muted/50 truncate leading-tight">
+              <div className="text-[13px] font-mono text-text-muted/50 truncate leading-tight">
                 {dim.hint}
               </div>
             </div>
@@ -658,7 +658,7 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
           >
             {pattern.t1}
           </div>
-          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
+          <div className="text-[13px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
             Tier 1
           </div>
         </div>
@@ -666,7 +666,7 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
           <div className="text-lg font-mono font-bold leading-none tabular-nums text-text-primary">
             {pattern.vendors.toLocaleString()}
           </div>
-          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
+          <div className="text-[13px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
             {isEs ? 'Proveedores' : 'Vendors'}
           </div>
         </div>
@@ -674,7 +674,7 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
           <div className="text-lg font-mono font-bold leading-none tabular-nums text-text-primary">
             {pattern.gtCases}
           </div>
-          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
+          <div className="text-[13px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
             {isEs ? 'Casos GT' : 'GT Cases'}
           </div>
         </div>
@@ -742,7 +742,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
         <thead>
           <tr>
             <th scope="col"
-              className="text-left text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
+              className="text-left text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
               style={{ width: '28%' }}
             >
               {isEs ? 'Patrón' : 'Pattern'}
@@ -750,14 +750,14 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
             {MATRIX_SECTORS.map((s) => (
               <th scope="col"
                 key={s}
-                className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
+                className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
                 style={{ fontWeight: 500 }}
               >
                 {s}
               </th>
             ))}
             <th scope="col"
-              className="text-right text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
+              className="text-right text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
               style={{ width: '56px' }}
             >
               Total
@@ -785,7 +785,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
                     >
                       {pat.code}
                     </span>
-                    <span className="text-[11px] text-text-secondary truncate">
+                    <span className="text-[13px] text-text-secondary truncate">
                       {pat.label}
                     </span>
                   </div>
@@ -817,7 +817,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
         </tbody>
       </table>
       {/* Legend: dot density scale */}
-      <div className="mt-4 flex items-center gap-4 text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
+      <div className="mt-4 flex items-center gap-4 text-[12px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
         <span>{isEs ? 'Densidad:' : 'Density:'}</span>
         <div className="flex items-center gap-2">
           <span
@@ -860,7 +860,7 @@ function PatternVendorRow({
   return (
     <div className="flex items-center gap-3 rounded-sm px-3 py-2 hover:bg-background-elevated transition-colors">
       <span
-        className="flex-shrink-0 text-[10px] font-mono font-black w-4 text-right tabular-nums"
+        className="flex-shrink-0 text-[12px] font-mono font-black w-4 text-right tabular-nums"
         style={{ color }}
         aria-hidden
       >
@@ -870,7 +870,7 @@ function PatternVendorRow({
         <div className="leading-tight">
           <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={vendor.vendor_name} size="sm" />
         </div>
-        <div className="text-[10px] text-text-muted/60 truncate mt-0.5">
+        <div className="text-[12px] text-text-muted/60 truncate mt-0.5">
           {vendor.primary_sector_name ?? '—'}
           {vendor.total_contracts != null && (
             <span className="ml-2 font-mono">
@@ -886,11 +886,11 @@ function PatternVendorRow({
         >
           {vendor.ips_final.toFixed(3)}
         </div>
-        <div className="text-[9px] font-mono text-text-muted/50 mt-0.5">IPS</div>
+        <div className="text-[13px] font-mono text-text-muted/50 mt-0.5">IPS</div>
       </div>
       {vendor.total_value_mxn != null && (
         <div className="flex-shrink-0 text-right hidden md:block">
-          <div className="text-[11px] font-mono text-text-secondary tabular-nums">
+          <div className="text-[13px] font-mono text-text-secondary tabular-nums">
             {formatCompactMXN(vendor.total_value_mxn)}
           </div>
         </div>
@@ -939,20 +939,20 @@ function PatternVendorCard({
               {patternMeta.label}
             </div>
             <div className="flex items-center gap-3 mt-0.5">
-              <span className="text-[10px] font-mono text-text-muted/60">
+              <span className="text-[12px] font-mono text-text-muted/60">
                 T1: <span className="font-bold" style={{ color }}>{spotlight.t1_count}</span>
               </span>
-              <span className="text-[10px] font-mono text-text-muted/60">
+              <span className="text-[12px] font-mono text-text-muted/60">
                 T2: <span className="font-bold text-risk-high/80">{spotlight.t2_count}</span>
               </span>
-              <span className="text-[10px] font-mono text-text-muted/60">
+              <span className="text-[12px] font-mono text-text-muted/60">
                 {isEs ? 'Total' : 'Total'}: {spotlight.vendor_count.toLocaleString()}
               </span>
             </div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[11px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
+          <div className="text-[13px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
             {isEs ? 'IPS prom.' : 'Avg IPS'}
           </div>
           <div className="text-[15px] font-mono font-bold tabular-nums" style={{ color }}>
@@ -962,7 +962,7 @@ function PatternVendorCard({
       </header>
       <div className="divide-y divide-[rgba(255,255,255,0.04)]">
         {spotlight.top_vendors.length === 0 ? (
-          <div className="px-4 py-3 text-[11px] text-text-muted/40 italic">
+          <div className="px-4 py-3 text-[13px] text-text-muted/40">
             {isEs ? 'Sin proveedores T1/T2 activos en esta ventana.' : 'No active T1/T2 vendors in this window.'}
           </div>
         ) : (
@@ -975,12 +975,12 @@ function PatternVendorCard({
         className="flex items-center justify-between px-4 py-2"
         style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
       >
-        <span className="text-[10px] font-mono text-text-muted/40">
+        <span className="text-[12px] font-mono text-text-muted/40">
           {spotlight.gt_case_count} {isEs ? 'casos GT documentados' : 'documented GT cases'}
         </span>
         <Link
           to={`/aria?pattern=${spotlight.code}`}
-          className="inline-flex items-center gap-1 text-[10px] font-mono text-accent hover:underline"
+          className="inline-flex items-center gap-1 text-[12px] font-mono text-accent hover:underline"
         >
           {isEs ? 'Ver cola ARIA' : 'View ARIA queue'}
           <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
@@ -1036,7 +1036,7 @@ export default function CorruptionClusters() {
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
                 7 <span style={{ color: 'var(--color-risk-critical)' }}>{isEs ? 'tipologías' : 'typologies'}</span> {isEs ? 'de captura del Estado' : 'of state capture'}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
                 {isEs ? 'ANÁLISIS · ARIA v1.1' : 'ANALYSIS · ARIA v1.1'}
               </p>
             </div>
@@ -1045,7 +1045,7 @@ export default function CorruptionClusters() {
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
                   {formatNumber(totalVendors)}
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">
                   {isEs ? 'Proveedores' : 'Vendors'}
                 </div>
               </div>
@@ -1053,7 +1053,7 @@ export default function CorruptionClusters() {
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                   {formatNumber(totalT1)}
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">
                   {isEs ? 'En Tier 1' : 'In Tier 1'}
                 </div>
               </div>
@@ -1061,7 +1061,7 @@ export default function CorruptionClusters() {
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
                   {AVG_T1_IPS.toFixed(3)}
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">
                   {isEs ? 'IPS T1 promedio' : 'Avg T1 IPS'}
                 </div>
               </div>
@@ -1111,7 +1111,7 @@ export default function CorruptionClusters() {
         </div>
 
         {/* Legend: color = severity class */}
-        <div className="flex flex-wrap items-center gap-4 pt-4 text-[10px] font-mono text-text-muted tracking-[0.15em] uppercase">
+        <div className="flex flex-wrap items-center gap-4 pt-4 text-[12px] font-mono text-text-muted tracking-[0.15em] uppercase">
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: '#dc2626' }} />
             {isEs ? 'Severidad crítica' : 'Critical severity'}
@@ -1145,7 +1145,7 @@ export default function CorruptionClusters() {
             <h3 className="text-sm font-bold text-text-primary">
               {isEs ? 'Proveedores T1 por patrón × sector' : 'T1 vendors by pattern × sector'}
             </h3>
-            <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
+            <span className="text-[12px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
               {isEs ? 'Top 5 sectores · ARIA T1' : 'Top 5 sectors · ARIA T1'}
             </span>
           </div>
@@ -1237,7 +1237,7 @@ export default function CorruptionClusters() {
             <h3 className="text-sm font-bold text-text-primary">
               {isEs ? 'Casos documentados por tipo de corrupción' : 'Documented cases by corruption type'}
             </h3>
-            <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
+            <span className="text-[12px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
               {gtTotal.toLocaleString()} {isEs ? 'casos · GT v1.1' : 'cases · GT v1.1'}
             </span>
           </div>
@@ -1249,7 +1249,7 @@ export default function CorruptionClusters() {
 
           <EvidenceStrip gtTypes={gtTypes} gtTotal={gtTotal} />
 
-          <div className="flex items-start gap-2 pt-3 border-t border-border/20 text-[11px] text-text-muted leading-relaxed">
+          <div className="flex items-start gap-2 pt-3 border-t border-border/20 text-[13px] text-text-muted leading-relaxed">
             <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-risk-high/70" aria-hidden="true" />
             <p>
               {isEs ? (
@@ -1276,7 +1276,7 @@ export default function CorruptionClusters() {
         <div className="flex items-center justify-end pt-4">
           <Link
             to="/aria"
-            className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
+            className="inline-flex items-center gap-1.5 text-[13px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
           >
             {isEs ? 'Explorar cola ARIA completa' : 'Explore full ARIA queue'}
             <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1331,7 +1331,7 @@ export default function CorruptionClusters() {
           <div className="flex items-center justify-end pt-4">
             <Link
               to="/aria"
-              className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
+              className="inline-flex items-center gap-1.5 text-[13px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
             >
               {isEs ? 'Ver todos los investigados en ARIA' : 'View all subjects in ARIA queue'}
               <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />

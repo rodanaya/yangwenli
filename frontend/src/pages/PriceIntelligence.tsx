@@ -180,7 +180,7 @@ function SectorRiskChart({
               y={cy}
               textAnchor="end"
               dominantBaseline="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -214,7 +214,7 @@ function SectorRiskChart({
               x={LABEL_W + barW + 6}
               y={cy}
               dominantBaseline="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={sector.color}
               fillOpacity={0.85}
@@ -251,7 +251,7 @@ function ExtremeCaseCard({
     >
       {/* Top row: sector + year + risk */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-medium uppercase tracking-widest text-text-muted">
+        <span className="text-[12px] font-medium uppercase tracking-widest text-text-muted">
           {sectorName} &middot; {contract.contract_year}
         </span>
         <RiskScoreBadge score={contract.risk_score ?? 0} />
@@ -373,7 +373,7 @@ function ReincidentesSection({
   return (
     <section className="space-y-3">
       <div>
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
           RUBLI &middot; Patron de reincidencia
         </p>
         <h2
@@ -390,22 +390,22 @@ function ReincidentesSection({
         <table className="w-full text-sm" aria-label={lang === 'en' ? 'Repeat-offender vendors' : 'Proveedores reincidentes'}>
           <thead>
             <tr className="border-b border-border">
-              <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-left py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted">
                 Proveedor
               </th>
-              <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-left py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted">
                 Anos
               </th>
-              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-right py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted">
                 Contratos
               </th>
-              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
+              <th scope="col" className="text-right py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                 Valor total
               </th>
-              <th scope="col" className="text-center py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
+              <th scope="col" className="text-center py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                 Sector
               </th>
-              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-right py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted">
                 Z-score prom
               </th>
             </tr>
@@ -434,7 +434,7 @@ function ReincidentesSection({
                         return (
                           <span
                             key={yr}
-                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${cls}`}
+                            className={`text-[13px] font-mono px-1.5 py-0.5 rounded border ${cls}`}
                           >
                             {yr}
                           </span>
@@ -450,7 +450,7 @@ function ReincidentesSection({
                   </td>
                   <td className="py-2 px-3 text-center hidden sm:table-cell">
                     <span
-                      className="inline-block text-[9px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full border"
+                      className="inline-block text-[13px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full border"
                       style={{
                         color: sectorColor,
                         borderColor: `${sectorColor}44`,
@@ -512,7 +512,7 @@ function AnomalyTimelineSection({
   return (
     <section className="space-y-3">
       <div>
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
           RUBLI &middot; Evolucion temporal
         </p>
         <h2
@@ -543,7 +543,7 @@ function AnomalyTimelineSection({
                     fill={fill} fillOpacity={0.80} rx={1} />
                   {(i % 4 === 0 || i === yearData.length - 1) && (
                     <text x={x + colW / 2} y={H - 6} textAnchor="middle"
-                      fontSize={10} fontFamily="var(--font-family-mono, monospace)"
+                      fontSize={12} fontFamily="var(--font-family-mono, monospace)"
                       fill="var(--color-text-muted)">
                       {d.year}
                     </text>
@@ -553,7 +553,7 @@ function AnomalyTimelineSection({
             })}
             <line x1={PAD_L} y1={H - PAD_B} x2={W - 8} y2={H - PAD_B}
               stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
-            <text x={PAD_L - 4} y={PAD_T + fieldH / 2} fontSize={10}
+            <text x={PAD_L - 4} y={PAD_T + fieldH / 2} fontSize={12}
               fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)"
               textAnchor="middle" transform={`rotate(-90,${PAD_L - 4},${PAD_T + fieldH / 2})`}
               opacity={0.6}>√ count</text>
@@ -578,7 +578,7 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
       >
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-text-muted" aria-hidden="true" />
-          <span className="text-[10px] font-medium uppercase tracking-widest text-text-muted group-hover:text-text-secondary transition-colors">
+          <span className="text-[12px] font-medium uppercase tracking-widest text-text-muted group-hover:text-text-secondary transition-colors">
             {t('methodologyLabel')}
           </span>
         </div>
@@ -596,7 +596,7 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
           <p>
             <strong className="text-text-secondary">{t('methodologyPara3Title')}</strong> {t('methodologyPara3')}
           </p>
-          <p className="text-xs text-text-muted italic">{t('methodologyDisclaimer')}</p>
+          <p className="text-xs text-text-muted">{t('methodologyDisclaimer')}</p>
           <Link
             to="/methodology"
             className="inline-flex items-center gap-1 text-accent hover:underline text-xs"
@@ -633,10 +633,10 @@ function MostExtremeCallout({
       <div className="flex items-start gap-3 mb-3">
         <Flame className="w-5 h-5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
         <div>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-risk-critical mb-0.5">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-risk-critical mb-0.5">
             EL CONTRATO MÁS EXTREMO
           </p>
-          <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
+          <p className="text-[12px] font-mono uppercase tracking-wide text-text-muted">
             Primera parada para cualquier investigación
           </p>
         </div>
@@ -664,7 +664,7 @@ function MostExtremeCallout({
             <span className="text-text-secondary">{contract.institution_name}</span>
             <span className="text-text-muted"> ({contract.contract_year}).</span>
           </p>
-          <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <div className="flex flex-wrap items-center gap-2 text-[13px]">
             <span
               className="font-mono uppercase tracking-wide px-2 py-0.5 rounded border"
               style={{
@@ -698,7 +698,7 @@ function MostExtremeCallout({
           >
             {factor}σ
           </div>
-          <div className="text-[10px] font-mono uppercase tracking-widest text-text-muted mt-1">
+          <div className="text-[12px] font-mono uppercase tracking-widest text-text-muted mt-1">
             sobre la media sectorial
           </div>
         </div>
@@ -769,7 +769,7 @@ function SectorDeviationBars({
               x={x3}
               y={svgH - 4}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill="#22d3ee"
               opacity={0.75}
@@ -794,7 +794,7 @@ function SectorDeviationBars({
               y={cy}
               textAnchor="end"
               dominantBaseline="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -830,7 +830,7 @@ function SectorDeviationBars({
               x={LABEL_W + barLen + 6}
               y={cy}
               dominantBaseline="middle"
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={fill}
               fontWeight={600}
@@ -912,9 +912,9 @@ function SectorDistributionCurves({
                   className="inline-block w-2 h-2 rounded-full"
                   style={{ backgroundColor: sector.color }}
                 />
-                <span className="text-[11px] font-medium text-text-secondary">{sector.name}</span>
+                <span className="text-[13px] font-medium text-text-secondary">{sector.name}</span>
               </div>
-              <span className="text-[9px] font-mono text-text-muted tabular-nums">
+              <span className="text-[13px] font-mono text-text-muted tabular-nums">
                 {formatNumber(sector.count)} anomalías
               </span>
             </div>
@@ -988,7 +988,7 @@ function SectorDistributionCurves({
                 x={x3}
                 y={PAD_Y - 6}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="#f87171"
               >
@@ -1009,7 +1009,7 @@ function SectorDistributionCurves({
                 x={xAvg}
                 y={baseline - 34}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={sector.color}
                 fontWeight={600}
@@ -1024,7 +1024,7 @@ function SectorDistributionCurves({
                   x={zToX(z)}
                   y={baseline + 10}
                   textAnchor="middle"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-muted)"
                 >
@@ -1104,7 +1104,7 @@ function OverpricingTimelineSection({
   return (
     <section className="space-y-3" aria-label={lang === 'en' ? 'Overpricing timeline' : 'Cronología de sobreprecios'}>
       <div>
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
           RUBLI · Cronología de sobreprecios
         </p>
         <h2
@@ -1124,7 +1124,7 @@ function OverpricingTimelineSection({
           <div className="text-lg font-mono font-bold text-risk-high tabular-nums">
             {peakYear.year}
           </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
+          <div className="text-[12px] text-text-muted uppercase tracking-wide">
             año con más anomalías · {formatNumber(peakYear.count)}
           </div>
         </div>
@@ -1132,7 +1132,7 @@ function OverpricingTimelineSection({
           <div className="text-lg font-mono font-bold text-risk-critical tabular-nums">
             {peakValueYear.year}
           </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
+          <div className="text-[12px] text-text-muted uppercase tracking-wide">
             pico de valor · {formatCompactMXN(peakValueYear.total_value)}
           </div>
         </div>
@@ -1140,7 +1140,7 @@ function OverpricingTimelineSection({
           <div className="text-lg font-mono font-bold text-risk-high tabular-nums">
             {yearData.length}
           </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
+          <div className="text-[12px] text-text-muted uppercase tracking-wide">
             años con actividad anómala
           </div>
         </div>
@@ -1173,7 +1173,7 @@ function OverpricingTimelineSection({
           x={PAD_L - 8}
           y={PAD_T + 6}
           textAnchor="end"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
         >
@@ -1183,7 +1183,7 @@ function OverpricingTimelineSection({
           x={PAD_L - 8}
           y={PAD_T + fieldH}
           textAnchor="end"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
         >
@@ -1193,7 +1193,7 @@ function OverpricingTimelineSection({
           x={PAD_L - 8}
           y={PAD_T + 14}
           textAnchor="end"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
         >
@@ -1205,7 +1205,7 @@ function OverpricingTimelineSection({
           x={W - PAD_R + 2}
           y={PAD_T + 6}
           textAnchor="start"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono, monospace)"
           fill="#a78bfa"
         >
@@ -1236,7 +1236,7 @@ function OverpricingTimelineSection({
                   x={x + colW / 2}
                   y={H - 10}
                   textAnchor="middle"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-muted)"
                 >
@@ -1283,7 +1283,7 @@ function OverpricingTimelineSection({
           <text
             x={12}
             y={-2}
-            fontSize={10}
+            fontSize={12}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
           >
@@ -1293,7 +1293,7 @@ function OverpricingTimelineSection({
           <text
             x={89}
             y={-2}
-            fontSize={10}
+            fontSize={12}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
           >
@@ -1366,7 +1366,7 @@ function RiskLevelPriceGap({
   return (
     <section className="space-y-3" aria-label={lang === 'en' ? 'Price gap by risk level' : 'Brecha de precio por nivel de riesgo'}>
       <div>
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
           RUBLI · Prima de corrupción
         </p>
         <h2
@@ -1409,7 +1409,7 @@ function RiskLevelPriceGap({
                 <span className="text-xs font-semibold text-text-secondary">
                   {lang === 'en' ? 'Critical + High risk' : 'Crítico + Alto riesgo'}
                 </span>
-                <span className="text-[10px] font-mono text-text-muted">
+                <span className="text-[12px] font-mono text-text-muted">
                   n={formatNumber(stats.flagged.count)}
                 </span>
               </div>
@@ -1429,7 +1429,7 @@ function RiskLevelPriceGap({
                 dotGap={8}
                 ariaLabel={lang === 'en' ? 'Critical and high risk average price share' : 'Cuota de precio promedio en riesgo crítico y alto'}
               />
-              <p className="text-[10px] font-mono text-risk-critical/80 mt-1 tracking-wide">
+              <p className="text-[12px] font-mono text-risk-critical/80 mt-1 tracking-wide">
                 precio promedio · +{stats.flagged.avg_z.toFixed(1)}σ
               </p>
             </div>
@@ -1443,7 +1443,7 @@ function RiskLevelPriceGap({
                 <span className="text-xs font-semibold text-text-secondary">
                   Medio + Bajo riesgo
                 </span>
-                <span className="text-[10px] font-mono text-text-muted">
+                <span className="text-[12px] font-mono text-text-muted">
                   n={formatNumber(stats.standard.count)}
                 </span>
               </div>
@@ -1463,7 +1463,7 @@ function RiskLevelPriceGap({
                 dotGap={8}
                 ariaLabel={lang === 'en' ? 'Medium and low risk average price share' : 'Cuota de precio promedio en riesgo medio y bajo'}
               />
-              <p className="text-[10px] font-mono text-text-secondary mt-1 tracking-wide">
+              <p className="text-[12px] font-mono text-text-secondary mt-1 tracking-wide">
                 precio promedio · +{stats.standard.avg_z.toFixed(1)}σ
               </p>
             </div>
@@ -1473,7 +1473,7 @@ function RiskLevelPriceGap({
         {/* Detail table */}
         <div className="grid grid-cols-2 gap-4 pt-3 border-t border-border">
           <div>
-            <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted mb-1">
+            <p className="text-[13px] font-mono uppercase tracking-widest text-text-muted mb-1">
               Flagged · valor total
             </p>
             <p className="text-sm font-mono text-risk-critical tabular-nums">
@@ -1481,7 +1481,7 @@ function RiskLevelPriceGap({
             </p>
           </div>
           <div>
-            <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted mb-1">
+            <p className="text-[13px] font-mono uppercase tracking-widest text-text-muted mb-1">
               Standard · valor total
             </p>
             <p className="text-sm font-mono text-text-secondary tabular-nums">
@@ -1491,7 +1491,7 @@ function RiskLevelPriceGap({
         </div>
 
         {/* Footnote */}
-        <p className="text-[10px] text-text-muted italic leading-relaxed pt-2 border-t border-border">
+        <p className="text-[12px] text-text-muted leading-relaxed pt-2 border-t border-border">
           Nota: Segmentación basada en <code className="text-text-muted">risk_level</code>{' '}
           del modelo v0.8.5. Los contratos críticos/altos típicamente combinan adjudicación directa,
           baja competencia y concentración de proveedor — señales asociadas con procurement irregular.
@@ -1588,7 +1588,7 @@ export default function PriceIntelligence() {
             <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
               Price Intelligence
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
               MARKET ANOMALY DETECTION · v0.8.5
             </p>
           </div>
@@ -1598,19 +1598,19 @@ export default function PriceIntelligence() {
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fb923c' }}>
                   {formatNumber(summary.total_outliers)}
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Anomalies</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">Anomalies</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#f87171' }}>
                   {formatCompactMXN(summary.total_value_mxn)}
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">At risk</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">At risk</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fbbf24' }}>
                   +{(summary.avg_z_score ?? 0).toFixed(1)}σ
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Avg deviation</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">Avg deviation</div>
               </div>
             </div>
           )}
@@ -1623,7 +1623,7 @@ export default function PriceIntelligence() {
 
       <header>
         {/* Dateline strip — newspaper masthead grammar */}
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center gap-3 text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
             <span className="text-text-secondary">RUBLI</span>
@@ -1658,7 +1658,7 @@ export default function PriceIntelligence() {
           className="mt-3 text-text-secondary mb-4"
           style={{
             fontFamily: 'var(--font-family-serif)',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
             lineHeight: 1.55,
           }}
@@ -1700,7 +1700,7 @@ export default function PriceIntelligence() {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-6 h-6 text-text-muted flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+                <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('healthySystemLabel')}
                 </p>
                 <h2
@@ -1746,7 +1746,7 @@ export default function PriceIntelligence() {
                     <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
                       {formatNumber(summary.total_outliers)}
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wide">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wide">
                       {t('anomalousContracts')}
                     </div>
                   </div>
@@ -1756,7 +1756,7 @@ export default function PriceIntelligence() {
                     <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">
                       {formatCompactMXN(summary.total_value_mxn)}
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wide">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wide">
                       {t('kpiValueAtRisk')}
                     </div>
                   </div>
@@ -1766,7 +1766,7 @@ export default function PriceIntelligence() {
                     <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
                       +{avgZ.toFixed(1)}&sigma;
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wide">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wide">
                       {t('kpiAvgDeviation')}
                     </div>
                   </div>
@@ -1776,7 +1776,7 @@ export default function PriceIntelligence() {
                     <div className="text-xl font-mono font-bold text-accent-data tabular-nums">
                       {formatCompactMXN(estimatedSavings)}
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wide">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wide">
                       {t('kpiOverpricingEst')}{' '}
                       <MetodologiaTooltip
                         title={t('overpricingTooltipTitle')}
@@ -1794,7 +1794,7 @@ export default function PriceIntelligence() {
                     >
                       {topSector ? formatNumber(topSector.count) : '--'}
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wide">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wide">
                       {topSector?.name ?? t('kpiTopSectorFallback')}
                     </div>
                   </div>
@@ -1852,7 +1852,7 @@ export default function PriceIntelligence() {
             aria-valuemax={5}
             aria-valuenow={zThreshold}
           />
-          <div className="flex justify-between text-[10px] text-text-muted mt-0.5 select-none">
+          <div className="flex justify-between text-[12px] text-text-muted mt-0.5 select-none">
             {[1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0].map((v) => (
               <span key={v}>{v}&sigma;</span>
             ))}
@@ -1861,7 +1861,7 @@ export default function PriceIntelligence() {
 
         {/* Sector chips */}
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
+          <p className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-2">
             {t('filterBySector')}
           </p>
           <div className="flex flex-wrap gap-2" role="group" aria-label={t('filterAriaLabel')}>
@@ -1912,7 +1912,7 @@ export default function PriceIntelligence() {
       <Act number="II" label="THE SECTORS">
       <section aria-label="Comparacion por sector">
         <div>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             RUBLI &middot; Distribucion sectorial
           </p>
           <h2
@@ -1928,7 +1928,7 @@ export default function PriceIntelligence() {
           {/* Horizontal deviation bars — worst offenders ranked by avg_z */}
           {!loading && chartData.length > 0 && (
             <div className="mt-6">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+              <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                 RUBLI · Intensidad de desviación
               </p>
               <h3
@@ -1948,7 +1948,7 @@ export default function PriceIntelligence() {
           {/* Density curves — top 4 sectors with normal body + red tail */}
           {!loading && chartData.length > 0 && (
             <div className="mt-6">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+              <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                 RUBLI · Distribución de precios
               </p>
               <h3
@@ -1972,16 +1972,16 @@ export default function PriceIntelligence() {
               <table className="w-full text-sm" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border">
-                    <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-left py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderSector')}
                     </th>
-                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-right py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderContracts')}
                     </th>
-                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
+                    <th scope="col" className="text-right py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                       {t('tableHeaderAmount')}
                     </th>
-                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-right py-2 px-3 text-[12px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderAvgZ')}
                     </th>
                   </tr>
@@ -2023,7 +2023,7 @@ export default function PriceIntelligence() {
       <Act number="III" label="THE EXTREMES">
       <section aria-label={t('extremeCasesAriaLabel')}>
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             RUBLI &middot; Casos extremos
           </p>
           <div className="flex items-start justify-between gap-4">
@@ -2063,7 +2063,7 @@ export default function PriceIntelligence() {
         ) : extremeCases.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2 border border-border rounded-sm bg-background/40 max-w-2xl mx-auto">
             <CheckCircle2 className="w-6 h-6 text-text-muted" aria-hidden="true" />
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+            <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
               {activeSectorId != null ? 'Filtro activo' : 'Sin resultados'}
             </p>
             <p className="text-sm text-text-secondary max-w-md">
@@ -2131,7 +2131,7 @@ export default function PriceIntelligence() {
       {/* See Also links                                                     */}
       {/* ================================================================== */}
       <div className="flex items-center gap-3 py-3 border-t border-border">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
+        <span className="text-[12px] font-mono uppercase tracking-widest text-text-muted">
           {t('seeAlso')}
         </span>
         <Link

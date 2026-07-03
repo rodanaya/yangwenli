@@ -448,11 +448,11 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
                       <p className="font-semibold text-xs">{ex.title}</p>
                       <p className="text-xs text-text-secondary leading-relaxed">{ex.mechanism}</p>
                       {ex.rubli_note && (
-                        <p className="text-xs text-accent italic">{ex.rubli_note}</p>
+                        <p className="text-xs text-accent">{ex.rubli_note}</p>
                       )}
                     </TooltipContent>
                   </Tooltip>
-                  <span className="block text-text-muted font-mono text-[10px] mt-0.5">{key}</span>
+                  <span className="block text-text-muted font-mono text-[12px] mt-0.5">{key}</span>
                 </td>
                 <td className="py-2 pr-4 text-right">
                   <span className={cn(

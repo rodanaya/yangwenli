@@ -79,7 +79,7 @@ const PORTRAIT_METRICS: PortraitMetric[] = [
 
 function DeltaChip({ delta, higherIsWorse }: { delta: number; higherIsWorse: boolean }) {
   if (Math.abs(delta) < 0.0001) {
-    return <span className="text-[10px] font-mono text-text-muted">—</span>
+    return <span className="text-[12px] font-mono text-text-muted">—</span>
   }
   const worse = higherIsWorse ? delta > 0 : delta < 0
   const sign = delta > 0 ? '+' : ''
@@ -87,7 +87,7 @@ function DeltaChip({ delta, higherIsWorse }: { delta: number; higherIsWorse: boo
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-0.5 text-[10px] font-mono font-semibold',
+        'inline-flex items-center gap-0.5 text-[12px] font-mono font-semibold',
         worse ? 'text-risk-critical' : 'text-risk-low',
       )}
     >
@@ -312,7 +312,7 @@ export function ComparePeriodView() {
             {/* Period A portrait */}
             <div className="card">
               <div className="px-4 py-3 border-b border-border/60 bg-background-card">
-                <div className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-muted mb-0.5">
+                <div className="text-[13px] font-mono uppercase tracking-[0.2em] text-text-muted mb-0.5">
                   {isEs ? 'PERIODO A' : 'PERIOD A'}
                 </div>
                 <div
@@ -328,7 +328,7 @@ export function ComparePeriodView() {
                   const raw = (data.period1?.[key] as number) ?? 0
                   return (
                     <div key={m.key} className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
+                      <span className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted">
                         {isEs ? m.label_es : m.label}
                       </span>
                       <span className="text-xs font-mono tabular-nums text-text-primary font-semibold">
@@ -343,7 +343,7 @@ export function ComparePeriodView() {
             {/* Period B portrait */}
             <div className="card">
               <div className="px-4 py-3 border-b border-border/60 bg-background-card">
-                <div className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-muted mb-0.5">
+                <div className="text-[13px] font-mono uppercase tracking-[0.2em] text-text-muted mb-0.5">
                   {isEs ? 'PERIODO B' : 'PERIOD B'}
                 </div>
                 <div
@@ -361,7 +361,7 @@ export function ComparePeriodView() {
                   const delta = raw2 - raw1
                   return (
                     <div key={m.key} className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
+                      <span className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted">
                         {isEs ? m.label_es : m.label}
                       </span>
                       <div className="flex items-center gap-2">
@@ -377,7 +377,7 @@ export function ComparePeriodView() {
             </div>
           </div>
 
-          <p className="text-[10px] font-mono text-text-muted/70">
+          <p className="text-[12px] font-mono text-text-muted/70">
             {isEs
               ? 'COMPRANET 2000–2025 · RUBLI v0.8.5 · Δ = B − A'
               : 'COMPRANET 2000–2025 · RUBLI v0.8.5 · Δ = B − A'}

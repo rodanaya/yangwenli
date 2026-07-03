@@ -73,10 +73,10 @@ export function StoryAnoSinExcusas() {
           aria-label={t('anoSinExcusas.ariaLabel')}
         >
           {/* Header */}
-          <text x={LABEL_W - 8} y={36} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W - 8} y={36} textAnchor="end" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('anoSinExcusas.yearHeader')}
           </text>
-          <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('anoSinExcusas.rateHeader')}
           </text>
 
@@ -97,17 +97,17 @@ export function StoryAnoSinExcusas() {
               y={28}
               textAnchor="middle"
               fill="var(--color-oecd)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
             >
               {t('anoSinExcusas.oecdLabel')}
             </text>
           </g>
-          <text x={LABEL_W + STRIP_W + VALUE_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W + VALUE_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             %
           </text>
-          <text x={LABEL_W + STRIP_W + VALUE_W + COVID_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W + VALUE_W + COVID_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('anoSinExcusas.contextHeader')}
           </text>
 
@@ -215,7 +215,7 @@ export function StoryAnoSinExcusas() {
                     y={(ROW_H - 12) / 2 + 3}
                     textAnchor="middle"
                     fill={row.covid ? 'var(--color-text-primary)' : 'var(--color-text-muted)'}
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono)"
                     fontWeight={600}
                     letterSpacing="0.05em"
@@ -233,7 +233,7 @@ export function StoryAnoSinExcusas() {
             y={H - 6}
             textAnchor="middle"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {t('anoSinExcusas.bottomLegend')}

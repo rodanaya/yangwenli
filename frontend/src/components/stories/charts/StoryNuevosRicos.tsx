@@ -119,7 +119,7 @@ export function StoryNuevosRicos() {
         {[40, 80, 120, 160].map((v) => (
           <g key={`yg-${v}`}>
             <line x1={PAD.left} x2={W - PAD.right} y1={yFor(v)} y2={yFor(v)} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
-            <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)">
               {v}B
             </text>
           </g>
@@ -127,7 +127,7 @@ export function StoryNuevosRicos() {
         {[60, 70, 80].map((v) => (
           <g key={`xg-${v}`}>
             <line x1={xFor(v)} x2={xFor(v)} y1={PAD.top} y2={H - PAD.bottom} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
-            <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)">
               {v}%
             </text>
           </g>
@@ -144,7 +144,7 @@ export function StoryNuevosRicos() {
           strokeDasharray="6 3"
         />
         {/* Label only if 25 is visible; here X_MIN=50 so place label at start */}
-        <text x={PAD.left + 4} y={PAD.top + 12} fill="var(--color-oecd)" fontSize={9} fontFamily="var(--font-family-mono)">
+        <text x={PAD.left + 4} y={PAD.top + 12} fill="var(--color-oecd)" fontSize={13} fontFamily="var(--font-family-mono)">
           {t('nuevosRicos.oecdLabel')}
         </text>
 
@@ -154,7 +154,7 @@ export function StoryNuevosRicos() {
           y={H - 12}
           textAnchor="middle"
           fill="var(--color-text-muted)"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
         >
@@ -165,7 +165,7 @@ export function StoryNuevosRicos() {
           y={PAD.top + PLOT_H / 2}
           textAnchor="middle"
           fill="var(--color-text-muted)"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
           transform={`rotate(-90, 15, ${PAD.top + PLOT_H / 2})`}
@@ -212,7 +212,7 @@ export function StoryNuevosRicos() {
               y={yFor(c.valueB) - 28}
               textAnchor="middle"
               fill={ERA_COLORS[c.era]}
-              fontSize={11}
+              fontSize={13}
               fontWeight={700}
               fontFamily="var(--font-family-mono)"
             >
@@ -223,7 +223,7 @@ export function StoryNuevosRicos() {
               y={yFor(c.valueB) + 3}
               textAnchor="middle"
               fill="var(--color-background-elevated)"
-              fontSize={10}
+              fontSize={12}
               fontWeight={700}
               fontFamily="var(--font-family-mono)"
             >
@@ -234,7 +234,7 @@ export function StoryNuevosRicos() {
       </svg>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
+      <div className="mt-4 flex flex-wrap gap-4 text-[12px] font-mono text-text-muted">
         {[
           { label: t('nuevosRicos.legendCritical'), color: 'var(--color-sector-salud)' },
           { label: t('nuevosRicos.legendHigh'),     color: 'var(--color-sector-infraestructura)' },

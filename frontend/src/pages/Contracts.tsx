@@ -588,22 +588,22 @@ export function Contracts() {
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
                 {t('title')}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
                 {t('header.kicker')}
               </p>
             </div>
             <div className="flex items-baseline gap-5">
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{formatNumber(3_051_294)}</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.indexed')}</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.indexed')}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-risk-high tabular-nums leading-none">{formatNumber(337_693)}</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.highRisk')}</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.highRisk')}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{formatCompactMXN(9_900_000_000_000)}</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.totalSpend')}</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('header.totalSpend')}</div>
               </div>
             </div>
           </div>
@@ -650,7 +650,7 @@ export function Contracts() {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-[10px] px-2 font-mono tracking-wide"
+            className="h-7 text-[12px] px-2 font-mono tracking-wide"
             onClick={handleExportExcel}
             disabled={isExportingExcel || !data || (data?.pagination?.total ?? 0) === 0}
             title="Export to Excel (.xlsx)"
@@ -738,7 +738,7 @@ export function Contracts() {
 
       {/* Filter bar */}
       <div className="bg-background-elevated border border-border rounded-sm p-4 mb-2">
-        <div className="text-[10px] uppercase tracking-wide text-text-muted mb-3 font-semibold">
+        <div className="text-[12px] uppercase tracking-wide text-text-muted mb-3 font-semibold">
           {t('filters.heading')}
         </div>
       <div className="flex items-center gap-2 flex-wrap">
@@ -1066,7 +1066,7 @@ export function Contracts() {
                 }}
                 aria-hidden="true"
               />
-              <p className="absolute bottom-0 right-2 z-20 text-[10px] text-text-muted pb-1 select-none" aria-hidden="true">
+              <p className="absolute bottom-0 right-2 z-20 text-[12px] text-text-muted pb-1 select-none" aria-hidden="true">
                 scroll →
               </p>
             </div>
@@ -1095,7 +1095,7 @@ export function Contracts() {
                       <th scope="col"
                         key={col.key}
                         className={cn(
-                          'px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] select-none',
+                          'px-3 py-2 text-[12px] font-medium uppercase tracking-[0.08em] select-none',
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',
                           col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                           col.hideBelow === 'lg' && 'hidden lg:table-cell',
@@ -1235,7 +1235,7 @@ export function Contracts() {
           frozen-Sep-2025 horizon and the export semantics explicit, and
           glosses the load-bearing fields for a first-time reader. */}
       <details className="mt-8 border-t border-border pt-4 group">
-        <summary className="flex items-center gap-2 cursor-pointer list-none text-[11px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-secondary transition-colors">
+        <summary className="flex items-center gap-2 cursor-pointer list-none text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-secondary transition-colors">
           <FileText className="h-3.5 w-3.5" aria-hidden="true" />
           {t('dictionary.title')}
           <ChevronDown className="h-3.5 w-3.5 ml-auto transition-transform group-open:rotate-180" aria-hidden="true" />
@@ -1244,7 +1244,7 @@ export function Contracts() {
           <p>{t('dictionary.frozen')}</p>
           <p>{t('dictionary.export')}</p>
           <div>
-            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1.5">
+            <div className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1.5">
               {t('dictionary.fieldsTitle')}
             </div>
             <ul className="space-y-1 list-none">
@@ -1384,7 +1384,7 @@ function ContractRow({
               <div className="flex min-w-0 items-center gap-1" onClick={stop}>
                 {contract.vendor_is_individual && (
                   <span
-                    className="shrink-0 rounded border border-risk-high/40 bg-risk-high/10 px-1 py-0.5 text-[9px] font-bold leading-none text-risk-high"
+                    className="shrink-0 rounded border border-risk-high/40 bg-risk-high/10 px-1 py-0.5 text-[13px] font-bold leading-none text-risk-high"
                     title={lang === 'es' ? 'Persona física — no es una empresa' : 'Natural person (individual) — not a company'}
                   >
                     {lang === 'es' ? 'P. FÍSICA' : 'PERSON'}

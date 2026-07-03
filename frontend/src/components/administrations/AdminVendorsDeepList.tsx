@@ -211,7 +211,7 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
     <div>
       {/* Header row — provenance + sort control + export */}
       <div className="flex items-center justify-between gap-3 py-2 flex-wrap">
-        <span className="text-[10px] font-mono text-text-muted tabular-nums">
+        <span className="text-[12px] font-mono text-text-muted tabular-nums">
           {vendorCount.toLocaleString()}{' '}
           {isEs ? 'proveedores activos' : 'active vendors'} ·{' '}
           {vendors.length}{' '}
@@ -231,7 +231,7 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
                 onClick={() => setSortKey(tab.key)}
                 aria-pressed={sortKey === tab.key}
                 className={[
-                  'px-2 py-1 text-[10px] font-mono uppercase tracking-[0.12em] transition-colors',
+                  'px-2 py-1 text-[12px] font-mono uppercase tracking-[0.12em] transition-colors',
                   idx > 0 ? 'border-l border-border/40' : '',
                   sortKey === tab.key
                     ? 'bg-background-elevated font-semibold'
@@ -267,7 +267,7 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
                 {/* 1. Rank */}
                 <span
                   className={[
-                    'w-[1.6rem] text-right text-[10px] font-mono tabular-nums',
+                    'w-[1.6rem] text-right text-[12px] font-mono tabular-nums',
                     isTopThree ? 'font-semibold' : 'text-text-muted/70',
                   ].join(' ')}
                   style={isTopThree ? { color: eraColorResolved } : undefined}
@@ -287,7 +287,7 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
                     hideIcon={false}
                     className="min-w-0"
                   />
-                  <div className="text-[10px] text-text-muted mt-0.5 font-mono tabular-nums">
+                  <div className="text-[12px] text-text-muted mt-0.5 font-mono tabular-nums">
                     {v.contracts.toLocaleString()}{' '}
                     {isEs ? 'contratos' : 'contracts'}
                     {' · '}
@@ -306,12 +306,12 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
                 <div className="w-[92px] text-right shrink-0">
                   <div
                     className="text-[13px] tabular-nums text-text-primary"
-                    style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700 }}
+                    style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'normal', fontWeight: 700 }}
                   >
                     {formatCompactMXN(v.total_mxn)}
                   </div>
                   <div
-                    className="text-[10px] font-mono tabular-nums text-text-muted"
+                    className="text-[12px] font-mono tabular-nums text-text-muted"
                     title={isEs ? 'del periodo' : 'of term'}
                   >
                     {v.share_pct.toFixed(1)}%
@@ -339,14 +339,14 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
       </div>
 
       {/* Footer legend */}
-      <p className="text-[9px] font-mono text-text-muted/70 mt-2 leading-relaxed">
+      <p className="text-[13px] font-mono text-text-muted/70 mt-2 leading-relaxed">
         {isEs
           ? `Participación = % del gasto del sexenio (${formatCompactMXN(termTotalMxn)} total, atípicos excluidos). La trayectoria autoescala por proveedor — compare la forma, no la altura entre filas.`
           : `Share = % of term spend (${formatCompactMXN(termTotalMxn)} total, outliers excluded). The trajectory auto-scales per vendor — compare the shape, not height across rows.`}
       </p>
 
       {/* Total / shown footer */}
-      <p className="text-[9px] font-mono text-text-muted mt-1">
+      <p className="text-[13px] font-mono text-text-muted mt-1">
         {isEs
           ? `${vendors.length} de ${vendorCount.toLocaleString()} proveedores · ${selectedDisplay}`
           : `${vendors.length} of ${vendorCount.toLocaleString()} vendors · ${selectedDisplay}`}

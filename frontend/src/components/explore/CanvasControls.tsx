@@ -36,7 +36,7 @@ export function ShareViewButton({ lang }: { lang: 'en' | 'es' }) {
         padding: 0,
         color: copied ? 'var(--color-accent)' : 'var(--color-text-secondary)',
         cursor: 'pointer',
-        fontSize: 10,
+        fontSize: 12,
         fontFamily: 'var(--font-family-mono, monospace)',
         letterSpacing: '0.12em',
         textTransform: 'uppercase',

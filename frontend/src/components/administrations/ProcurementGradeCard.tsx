@@ -73,7 +73,7 @@ export function ProcurementGradeCard({ agg }: Props) {
             const ts = tk ? TIER_STYLES[tk] : null
             return ts ? (
               <span
-                className="inline-flex items-center px-2.5 py-1 rounded text-[11px] font-bold font-mono uppercase tracking-wider border"
+                className="inline-flex items-center px-2.5 py-1 rounded text-[13px] font-bold font-mono uppercase tracking-wider border"
                 style={{ color: ts.color, backgroundColor: `${ts.color}18`, borderColor: `${ts.color}40` }}
               >
                 {tTier(`tiers.${tk}`, tk)}
@@ -84,7 +84,7 @@ export function ProcurementGradeCard({ agg }: Props) {
               </div>
             )
           })()}
-          <div className="text-[9px] font-mono text-text-muted mt-1">
+          <div className="text-[13px] font-mono text-text-muted mt-1">
             {result.score}/100
           </div>
         </div>
@@ -102,7 +102,7 @@ export function ProcurementGradeCard({ agg }: Props) {
                 <div className="text-xs font-bold font-mono" style={{ color: detailColor }}>
                   {d.grade}
                 </div>
-                <div className="text-[9px] text-text-muted font-mono">
+                <div className="text-[13px] text-text-muted font-mono">
                   {d.value}
                 </div>
               </div>
@@ -110,7 +110,7 @@ export function ProcurementGradeCard({ agg }: Props) {
           })}
         </div>
       </div>
-      <div className="text-[9px] text-text-muted font-mono mt-2 leading-relaxed">
+      <div className="text-[13px] text-text-muted font-mono mt-2 leading-relaxed">
         {t('grade.procurement', { defaultValue: 'Based on OECD benchmarks: direct award rate, high-risk rate, and single-bid rate.' })}
       </div>
     </div>

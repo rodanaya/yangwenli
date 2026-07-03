@@ -100,7 +100,7 @@ export function CaseTimeline({
               x={x(y)}
               y={AXIS_Y + 18}
               textAnchor="middle"
-              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fill: ink }}
+              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fill: ink }}
               className="tabular-nums"
             >
               {y}
@@ -207,7 +207,7 @@ export function CaseTimeline({
               textAnchor="middle"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontSize: 14,
                 fill: 'var(--color-text-primary)',
               }}
@@ -223,7 +223,7 @@ export function CaseTimeline({
             textAnchor="middle"
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontSize: 13,
               fill: ink,
             }}
@@ -236,7 +236,7 @@ export function CaseTimeline({
         className="mt-1"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 12,
           color: 'var(--color-text-muted)',
           maxWidth: '64ch',

@@ -141,7 +141,7 @@ export function NetworkGraphModal({
         label: {
           show: showLabel,
           formatter: truncate(node.name),
-          fontSize: 10,
+          fontSize: 12,
           position: 'bottom' as const,
           // Explicit light text so labels are readable on the dark canvas
           color: '#cbd5e1',
@@ -323,7 +323,7 @@ export function NetworkGraphModal({
               />
 
               {/* Floating zoom hint */}
-              <div className="absolute bottom-6 right-8 text-[10px] text-text-muted/40 pointer-events-none select-none">
+              <div className="absolute bottom-6 right-8 text-[12px] text-text-muted/40 pointer-events-none select-none">
                 Scroll or pinch to zoom · Drag to pan · Click node to navigate
               </div>
             </>
@@ -336,7 +336,7 @@ export function NetworkGraphModal({
             <div className="flex items-start justify-between flex-wrap gap-3">
               {/* Left: node color legend */}
               <div className="space-y-2">
-                <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted/50 mb-1">
+                <p className="text-[12px] font-mono uppercase tracking-widest text-text-muted/50 mb-1">
                   {lang === 'en' ? 'Legend' : 'Leyenda'}
                 </p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
@@ -359,7 +359,7 @@ export function NetworkGraphModal({
                 </div>
 
                 {/* Edge / size legend */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-text-muted/60 mt-1">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-text-muted/60 mt-1">
                   <span className="flex items-center gap-1.5">
                     <span className="inline-block h-px w-6 bg-risk-critical/60 border-t-2 border-risk-critical/60" aria-hidden="true" />
                     {lang === 'en' ? 'High-risk connection' : 'Conexión de alto riesgo'}
@@ -379,7 +379,7 @@ export function NetworkGraphModal({
                 <span className="font-mono">{data.total_nodes}</span> {lang === 'en' ? 'nodes' : 'nodos'} ·{' '}
                 <span className="font-mono">{data.total_links}</span> {lang === 'en' ? 'connections' : 'conexiones'}
                 {data.total_nodes >= 60 && (
-                  <span className="block text-[10px] text-risk-high/60 mt-0.5">
+                  <span className="block text-[12px] text-risk-high/60 mt-0.5">
                     {lang === 'en' ? 'Showing top 60 nodes by value' : 'Mostrando top 60 nodos por valor'}
                   </span>
                 )}

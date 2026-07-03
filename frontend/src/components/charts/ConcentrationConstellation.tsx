@@ -851,7 +851,7 @@ export function ConcentrationConstellation({
                     y={a.y + ringR + 8}
                     fill={meta.color}
                     fillOpacity={isHovered ? 1 : 0.80}
-                    fontSize={10}
+                    fontSize={12}
                     fontFamily="var(--font-family-mono, monospace)"
                     fontWeight="bold"
                     textAnchor="middle"
@@ -936,7 +936,7 @@ export function ConcentrationConstellation({
                   y={ny + 1}
                   fill={meta.color}
                   fillOpacity={dotOpacity}
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fontWeight="600"
                   textAnchor={labelAnchor}
@@ -989,7 +989,7 @@ export function ConcentrationConstellation({
                 x={annoX}
                 y={a.y + 12}
                 fill="var(--color-text-muted)"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 dominantBaseline="middle"
               >
@@ -1004,7 +1004,7 @@ export function ConcentrationConstellation({
           x={PAD_L}
           y={SVG_H - 10}
           fill="var(--color-text-muted)"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono, monospace)"
           className="atlas-anno"
           style={{ animationDelay: '2000ms' }}
@@ -1046,7 +1046,7 @@ export function ConcentrationConstellation({
           >
             <div className="flex items-center gap-2 mb-1">
               <span
-                className="text-[10px] font-mono font-bold tracking-[0.15em]"
+                className="text-[12px] font-mono font-bold tracking-[0.15em]"
                 style={{ color: meta.color }}
               >
                 {mode === 'patterns' ? `${meta.code} · ${kickerLabel.short}` : kickerLabel.short}
@@ -1056,31 +1056,31 @@ export function ConcentrationConstellation({
             <div className="text-sm font-bold text-text-primary mb-0.5">
               {meta.label}
               {meta.kicker && (
-                <span className="ml-1.5 text-[10px] font-mono text-text-muted">{meta.kicker}</span>
+                <span className="ml-1.5 text-[12px] font-mono text-text-muted">{meta.kicker}</span>
               )}
             </div>
-            <div className="text-[11px] text-text-secondary leading-snug mb-1.5">
+            <div className="text-[13px] text-text-secondary leading-snug mb-1.5">
               {meta.desc}
             </div>
             {/* DotBar — highRiskPct visualized as filled dots */}
             <div className="mb-1.5">
               <div className="flex items-center justify-between mb-0.5">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">
+                <span className="text-[12px] font-mono uppercase tracking-wider text-text-muted">
                   {isEs ? 'Alto + crítico' : 'High + critical'}
                 </span>
-                <span className="text-[10px] font-mono font-bold" style={{ color: meta.color }}>
+                <span className="text-[12px] font-mono font-bold" style={{ color: meta.color }}>
                   {(meta.highRiskPct * 100).toFixed(1)}%
                 </span>
               </div>
               <DotBar value={meta.highRiskPct} max={1} color={meta.color} />
             </div>
-            <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted mb-1">
+            <div className="flex items-center gap-3 text-[12px] font-mono text-text-muted mb-1">
               <span>{meta.vendors.toLocaleString()} {isEs ? 'proveedores' : 'vendors'}</span>
               <span className="text-text-muted">·</span>
               <span style={{ color: meta.color }}>{meta.t1} T1</span>
             </div>
             {onClusterClick && (
-              <div className="text-[10px] font-mono text-risk-high tracking-wider uppercase">
+              <div className="text-[12px] font-mono text-risk-high tracking-wider uppercase">
                 {isEs ? '→ Ver detalle' : '→ View detail'}
               </div>
             )}

@@ -78,7 +78,7 @@ export function ThresholdSplittingChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -89,7 +89,7 @@ export function ThresholdSplittingChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -111,7 +111,7 @@ export function ThresholdSplittingChart() {
             y={38}
             textAnchor="end"
             fill={RISK_COLORS.critical}
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             fontWeight={600}
           >
@@ -132,7 +132,7 @@ export function ThresholdSplittingChart() {
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                 >
                   {row.contrato}
@@ -164,7 +164,7 @@ export function ThresholdSplittingChart() {
                   x={LABEL_W + COL_W + 8}
                   y={y0 + STRIP_H / 2 + 3}
                   fill={color}
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >

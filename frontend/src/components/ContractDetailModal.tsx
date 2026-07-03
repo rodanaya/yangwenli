@@ -167,7 +167,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                 {(contract.risk_level === 'high' || contract.risk_level === 'critical') && (
                   <div className="flex items-start gap-1.5 px-3 py-2 rounded-lg bg-risk-high/5 border border-risk-high/20">
                     <span className="text-risk-high/80 mt-0.5 flex-shrink-0 text-sm">⚠️</span>
-                    <p className="text-[10px] text-text-muted leading-relaxed">
+                    <p className="text-[12px] text-text-muted leading-relaxed">
                       {t('riskScoreTooltipBody')}
                     </p>
                   </div>
@@ -221,7 +221,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   return (
                     <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-background-elevated/40 border border-border/30">
                       <div className="flex-1">
-                        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">
+                        <p className="text-[12px] text-text-muted uppercase tracking-wider mb-0.5">
                           {tCommon('contractDetail.anomalyScore')} <span className="normal-case font-normal">· {tCommon('contractDetail.anomalyScoreSubtitle')}</span>
                         </p>
                         <div className="flex items-center gap-2">
@@ -229,7 +229,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                             {(contract.ensemble_anomaly_score * 100).toFixed(0)}%
                           </span>
                           {isAiConfirmed && (
-                            <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
+                            <Badge className="inline-flex items-center gap-1 text-[12px] font-medium px-1.5 py-0.5 bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
                               <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
@@ -246,7 +246,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                           dots={20}
                         />
                       </div>
-                      <div className="text-right text-[10px] text-text-muted">
+                      <div className="text-right text-[12px] text-text-muted">
                         <p>{tCommon('contractDetail.ensemble')}</p>
                         <p>{tCommon('contractDetail.ensembleDetail')}</p>
                       </div>
@@ -341,7 +341,7 @@ function PoliticalContextRow({ contract }: { contract: import('@/api/types').Con
     <div className="mt-3 flex flex-wrap items-center gap-2 py-2 px-3 rounded-lg bg-background-elevated/30 border border-border/20">
       <div className="flex items-center gap-1 text-text-muted">
         <Clock className="h-3 w-3" aria-hidden="true" />
-        <span className="text-[10px] uppercase tracking-wider">{tCommon('contractDetail.context')}</span>
+        <span className="text-[12px] uppercase tracking-wider">{tCommon('contractDetail.context')}</span>
       </div>
       {delay != null && (
         <span className={`text-xs font-mono tabular-nums ${delayColor}`} title="Days between publication and award">
@@ -355,7 +355,7 @@ function PoliticalContextRow({ contract }: { contract: import('@/api/types').Con
       )}
       {isElection && (
         <span
-          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10 text-risk-high border border-risk-high/30"
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[12px] font-medium bg-risk-high/10 text-risk-high border border-risk-high/30"
           title="Contract awarded during a federal election year"
         >
           <Zap className="h-2.5 w-2.5" aria-hidden="true" />

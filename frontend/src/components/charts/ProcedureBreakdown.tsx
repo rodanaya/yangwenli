@@ -76,7 +76,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
             {/* sector label */}
             <button
               className={[
-                'text-right w-[88px] shrink-0 text-[10px] font-mono truncate',
+                'text-right w-[88px] shrink-0 text-[12px] font-mono truncate',
                 'text-text-muted group-hover:text-text-secondary transition-colors',
                 onSectorClick ? 'cursor-pointer' : 'cursor-default',
               ].join(' ')}
@@ -123,7 +123,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
             </div>
 
             {/* direct award % label */}
-            <span className="text-[10px] text-text-muted font-mono w-8 text-right shrink-0">
+            <span className="text-[12px] text-text-muted font-mono w-8 text-right shrink-0">
               {sector.direct_award_pct.toFixed(0)}%
             </span>
           </div>

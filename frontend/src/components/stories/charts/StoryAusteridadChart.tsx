@@ -69,11 +69,11 @@ export function StoryAusteridadChart() {
           {/* Legend row */}
           <g>
             <circle cx={LABEL_W + 4} cy={20} r={3} fill={SPEND_COLOR} />
-            <text x={LABEL_W + 14} y={24} fill={SPEND_COLOR} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={LABEL_W + 14} y={24} fill={SPEND_COLOR} fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('austeridad.spendLegend')}
             </text>
             <circle cx={LABEL_W + 288} cy={20} r={3} fill={DA_COLOR} />
-            <text x={LABEL_W + 298} y={24} fill={DA_COLOR} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={LABEL_W + 298} y={24} fill={DA_COLOR} fontSize={13} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('austeridad.daLegend')}
             </text>
           </g>
@@ -92,7 +92,7 @@ export function StoryAusteridadChart() {
                   y={blockY + 4}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -146,7 +146,7 @@ export function StoryAusteridadChart() {
                         x={LABEL_W + MAX_COL_W + 8}
                         y={yStrip + STRIP_H / 2 + 3}
                         fill={SPEND_COLOR}
-                        fontSize={10}
+                        fontSize={12}
                         fontFamily="var(--font-family-mono)"
                         fontWeight={600}
                       >
@@ -183,7 +183,7 @@ export function StoryAusteridadChart() {
                         x={LABEL_W + MAX_COL_W + 8}
                         y={yStrip + STRIP_H / 2 + 3}
                         fill={DA_COLOR}
-                        fontSize={10}
+                        fontSize={12}
                         fontFamily="var(--font-family-mono)"
                         fontWeight={600}
                       >

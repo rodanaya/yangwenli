@@ -82,7 +82,7 @@ export function SectorDossierCard({
       <div className="flex items-baseline justify-between gap-3 mb-2">
         <span
           className="font-mono truncate"
-          style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-primary)' }}
+          style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-primary)' }}
         >
           {String(rankVar).padStart(2, '0')} · {row.name}
         </span>
@@ -100,7 +100,7 @@ export function SectorDossierCard({
           className="tabular-nums"
           style={{
             fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 800,
             fontSize: 30,
             lineHeight: 1,
@@ -109,7 +109,7 @@ export function SectorDossierCard({
         >
           {(share * 100).toFixed(0)}%
         </span>
-        <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
           {isEs ? 'del gasto propio señalado' : 'of own spend model-flagged'}
         </span>
       </div>
@@ -122,7 +122,7 @@ export function SectorDossierCard({
             <span className="flex-1" style={{ background: RISK_COLORS.high, opacity: 0.65 }} />
           </div>
         </div>
-        <div className="mt-1 font-mono tabular-nums flex items-center justify-between" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+        <div className="mt-1 font-mono tabular-nums flex items-center justify-between" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
           <span style={{ color: 'var(--color-text-secondary)' }}>{formatCompactMXN(row.varMxn)}</span>
           <span>{isEs ? 'de' : 'of'} {formatCompactMXN(row.totalMxn)}</span>
         </div>
@@ -138,7 +138,7 @@ export function SectorDossierCard({
           DA · {isEs ? 'OCDE' : 'OECD'} ≤{OECD_DA_CEILING.toFixed(0)}%
         </span>
         <DABullet daPct={row.daPct} />
-        <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+        <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
           {row.daPct.toFixed(0)}%
         </span>
       </div>
@@ -157,7 +157,7 @@ export function SectorDossierCard({
           </span>
           <span
             className="font-mono shrink-0"
-            style={{ fontSize: 11, color: dir.rising ? RISK_COLORS.high : 'var(--color-text-muted)' }}
+            style={{ fontSize: 13, color: dir.rising ? RISK_COLORS.high : 'var(--color-text-muted)' }}
             aria-hidden="true"
           >
             {dir.glyph}
@@ -175,14 +175,14 @@ export function SectorDossierCard({
             size="xs"
             hideIcon
           />
-          <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+          <span className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             · {row.topInstitution.sharePct.toFixed(0)}% {isEs ? 'del sector' : 'of sector'}
           </span>
         </div>
       )}
 
       {/* the old line-2 atoms, separated */}
-      <div className="mt-2 font-mono tabular-nums flex items-center gap-x-2.5 gap-y-1 flex-wrap" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+      <div className="mt-2 font-mono tabular-nums flex items-center gap-x-2.5 gap-y-1 flex-wrap" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
         <span className="inline-flex items-center gap-1 whitespace-nowrap">
           <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 1, background: RISK_COLORS.critical, flexShrink: 0 }} />
           {isEs ? 'crít' : 'crit'} {critPct.toFixed(1)}%
@@ -206,10 +206,10 @@ export function SectorDossierCard({
           <>
             {top && (
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-mono whitespace-nowrap" style={{ fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                <span className="font-mono whitespace-nowrap" style={{ fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                   {isEs ? 'Mayor contrato' : 'Largest contract'}
                 </span>
-                <span className="font-mono tabular-nums whitespace-nowrap" style={{ fontSize: 10.5, color: 'var(--color-text-primary)' }}>
+                <span className="font-mono tabular-nums whitespace-nowrap" style={{ fontSize: 12, color: 'var(--color-text-primary)' }}>
                   {formatCompactMXN(top.amount_mxn)}
                 </span>
                 {top.vendor_id != null && top.vendor_name && (

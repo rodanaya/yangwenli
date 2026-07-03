@@ -288,7 +288,7 @@ export function CompetitionSlopeChart() {
         <button
           type="button"
           onClick={() => setShowAll((v) => !v)}
-          className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-secondary transition-colors border border-border px-2.5 py-1 rounded-sm"
+          className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-secondary transition-colors border border-border px-2.5 py-1 rounded-sm"
         >
           {showAll
             ? isEs ? 'Solo los que cruzan OCDE' : 'Only OECD crossers'
@@ -319,7 +319,7 @@ export function CompetitionSlopeChart() {
           y={MARGIN.top + 12}
           fill="#f59e0b"
           fillOpacity={0.65}
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono)"
           textAnchor="middle"
         >
@@ -347,7 +347,7 @@ export function CompetitionSlopeChart() {
                 y={y}
                 dy={4}
                 fill={isOECD ? OECD_CYAN : 'var(--color-text-muted)'}
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
                 textAnchor="end"
               >
@@ -363,7 +363,7 @@ export function CompetitionSlopeChart() {
           y={oecdY}
           dy={4}
           fill={OECD_CYAN}
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono)"
           textAnchor="start"
         >
@@ -377,7 +377,7 @@ export function CompetitionSlopeChart() {
             x={scaleX(year)}
             y={MARGIN.top + innerH + 18}
             fill="var(--color-text-muted)"
-            fontSize={10}
+            fontSize={12}
             fontFamily="var(--font-family-mono)"
             textAnchor="middle"
           >
@@ -462,7 +462,7 @@ export function CompetitionSlopeChart() {
               y={y}
               dy={4}
               fill={SECTOR_TEXT_COLORS[line.sectorCode] ?? line.color}
-              fontSize={10}
+              fontSize={12}
               fontFamily="var(--font-family-mono)"
               fontWeight={600}
               opacity={hoveredId !== null && hoveredId !== line.sectorId ? 0.3 : 1}
@@ -480,7 +480,7 @@ export function CompetitionSlopeChart() {
             x={MARGIN.left + innerW + 10}
             y={scaleY(OECD_THRESHOLD) + 28}
             fill={MUTED_GRAY}
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             opacity={0.7}
           >
@@ -494,7 +494,7 @@ export function CompetitionSlopeChart() {
             x={MARGIN.left + innerW + 10}
             y={MARGIN.top + innerH - 10}
             fill={MUTED_GRAY}
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             opacity={0.6}
           >
@@ -521,7 +521,7 @@ export function CompetitionSlopeChart() {
               borderRadius: 2,
               padding: '8px 10px',
               color: '#faf9f6',
-              fontSize: 11,
+              fontSize: 13,
               fontFamily: 'var(--font-family-mono)',
               whiteSpace: 'nowrap',
               minWidth: 160,
@@ -551,7 +551,7 @@ export function CompetitionSlopeChart() {
           density read as Excel-export, not editorial. The "+N below ceiling"
           cluster annotation lives inside the SVG. */}
       {belowCount > 0 && (
-        <p className="mt-2 text-[10px] font-mono text-text-muted">
+        <p className="mt-2 text-[12px] font-mono text-text-muted">
           {isEs
             ? `${belowCount} sectores bajo el techo OCDE (mostrados en gris)`
             : `${belowCount} sectors below OECD ceiling (shown in gray)`}

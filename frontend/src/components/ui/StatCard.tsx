@@ -38,7 +38,7 @@ export function StatCard({
       whileTap={{ scale: 0.98 }}
     >
       <div className="flex items-start justify-between mb-3">
-        <span className="text-[10px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
+        <span className="text-[12px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
           {title}
         </span>
         {Icon && <Icon className="h-4 w-4 text-text-muted/50" />}

@@ -73,7 +73,7 @@ export function DaBySectorChart() {
           y={15}
           textAnchor="middle"
           fill="var(--color-oecd)"
-          fontSize={10}
+          fontSize={12}
           fontFamily="var(--font-family-mono)"
           fontWeight={600}
         >
@@ -93,7 +93,7 @@ export function DaBySectorChart() {
                 y={y + 4}
                 textAnchor="end"
                 fill="var(--color-text-muted)"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono)"
               >
                 {s.name}
@@ -125,7 +125,7 @@ export function DaBySectorChart() {
                 x={LEFT_PAD + LABEL_W + DOTS_TOTAL * DOT_GAP + 10}
                 y={y + 4}
                 fill={color}
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={700}
               >
@@ -136,7 +136,7 @@ export function DaBySectorChart() {
         })}
       </svg>
 
-      <div className="mt-3 flex items-center gap-4 text-[10px] text-text-muted font-mono">
+      <div className="mt-3 flex items-center gap-4 text-[12px] text-text-muted font-mono">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full opacity-50" style={{ background: 'var(--color-sector-otros)' }} aria-hidden="true" />
           {t('daBySector.legendBelow')}

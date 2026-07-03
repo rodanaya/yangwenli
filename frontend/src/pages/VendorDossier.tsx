@@ -125,7 +125,7 @@ function VendorCoda({
       <p
         className="font-mono mb-3"
         style={{
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: accent,
@@ -141,7 +141,7 @@ function VendorCoda({
         type="button"
         onClick={onOpenNetworkGraph}
         className="inline-flex items-center gap-1.5 mb-4 font-mono uppercase tracking-[0.08em] text-accent hover:opacity-80 transition-opacity cursor-pointer"
-        style={{ fontSize: 11, background: 'none', border: 'none', padding: 0 }}
+        style={{ fontSize: 13, background: 'none', border: 'none', padding: 0 }}
         title={isEs ? 'Abrir el grafo de la red de co-licitación' : 'Open the co-bidding network graph'}
       >
         {isEs ? 'Ver la red de co-licitación' : 'View the co-bidding network'}
@@ -166,7 +166,7 @@ function VendorCoda({
             <Link
               to={`/patterns/${patternCode}`}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-risk-high/30 bg-risk-high/10 text-risk-high font-mono uppercase tracking-[0.08em] hover:bg-risk-high/20 transition-colors"
-              style={{ fontSize: 11 }}
+              style={{ fontSize: 13 }}
               title={isEs ? `Patrón ${patternCode} de ARIA` : `ARIA pattern ${patternCode}`}
             >
               {patternCode}
@@ -204,7 +204,7 @@ function ChipRow({ label, children }: { label: string; children: ReactNode }) {
       <span
         className="font-mono flex-shrink-0"
         style={{
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -228,7 +228,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <p
         className="font-mono mb-2"
         style={{
-          fontSize: 9.5,
+          fontSize: 13,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -240,7 +240,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <p
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13.5,
           color: 'var(--color-text-secondary)',
           maxWidth: '72ch',
@@ -254,7 +254,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <p
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13.5,
           color: 'var(--color-text-secondary)',
           maxWidth: '72ch',
@@ -271,7 +271,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         <p
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 13.5,
             color: 'var(--color-text-secondary)',
             maxWidth: '72ch',
@@ -287,7 +287,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           onClick={() => navigate('/methodology')}
           className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             color: 'var(--color-text-secondary)',
@@ -461,7 +461,7 @@ export default function VendorDossier() {
         <p
           className="font-mono mb-2"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: sectorAccent,

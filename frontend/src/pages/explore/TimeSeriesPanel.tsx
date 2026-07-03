@@ -70,7 +70,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
         <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
           {t('timeSeries.title')}
         </div>
-        <div className="h-32 w-full flex items-center justify-center text-[11px] text-text-muted/60 border border-border/20 rounded bg-background-elevated/10">
+        <div className="h-32 w-full flex items-center justify-center text-[13px] text-text-muted/60 border border-border/20 rounded bg-background-elevated/10">
           {t('timeSeries.noData')}
         </div>
       </div>
@@ -123,7 +123,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
         {(yearStart || yearEnd) && (
           <button
             onClick={() => onYearRangeChange(undefined, undefined)}
-            className="text-[10px] text-accent hover:underline"
+            className="text-[12px] text-accent hover:underline"
           >
             {t('timeSeries.clear')}
           </button>
@@ -149,7 +149,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.35} vertical={false} />
             <XAxis
               dataKey="year"
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)', fontFamily: 'var(--font-family-mono)' }}
+              tick={{ fontSize: 13, fill: 'var(--color-text-muted)', fontFamily: 'var(--font-family-mono)' }}
               tickLine={false}
               axisLine={false}
               interval={4}
@@ -163,7 +163,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
                 borderRadius: 2,
                 padding: '8px 10px',
                 color: '#faf9f6',
-                fontSize: 11,
+                fontSize: 13,
                 fontFamily: 'var(--font-family-mono)',
               }}
               formatter={(value, name) => {
@@ -171,7 +171,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
                 if (name === 'avgRisk') return [`${Number(value).toFixed(1)}%`, t('timeSeries.avgRiskLegend')]
                 return [String(value ?? ''), String(name ?? '')]
               }}
-              labelStyle={{ color: '#faf9f6', fontSize: 11, fontWeight: 600 }}
+              labelStyle={{ color: '#faf9f6', fontSize: 13, fontWeight: 600 }}
             />
             {hasSelection && (
               <ReferenceArea
@@ -207,7 +207,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
           formatVal={(v) => Number(v).toLocaleString()}
         />
       </div>
-      <div className="flex items-center gap-4 mt-1.5 text-[10px] text-text-muted/60">
+      <div className="flex items-center gap-4 mt-1.5 text-[12px] text-text-muted/60">
         <div className="flex items-center gap-1">
           <div className="w-3 h-2 rounded-sm" style={{ backgroundColor: 'rgba(99,102,241,0.6)' }} />
           <span>{t('timeSeries.contractsLegend')}</span>

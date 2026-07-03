@@ -87,10 +87,10 @@ export function SingleBidWall({ count, valueBn }: SingleBidWallProps) {
           {/* Progress bar */}
           <div ref={barRef}>
             <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[9px] font-mono text-risk-critical/50 uppercase tracking-widest font-bold">
+              <p className="text-[13px] font-mono text-risk-critical/50 uppercase tracking-widest font-bold">
                 Proporcion del total
               </p>
-              <p className="text-[10px] font-mono text-risk-critical/80 font-bold tabular-nums">
+              <p className="text-[12px] font-mono text-risk-critical/80 font-bold tabular-nums">
                 {pct.toFixed(1)}%
               </p>
             </div>
@@ -104,7 +104,7 @@ export function SingleBidWall({ count, valueBn }: SingleBidWallProps) {
               dotR={3}
               dotGap={8}
             />
-            <p className="text-[10px] text-risk-critical/40 font-mono mt-1.5 text-center">
+            <p className="text-[12px] text-risk-critical/40 font-mono mt-1.5 text-center">
               {pct.toFixed(1)}% de todos los contratos — con competencia ficticia
             </p>
           </div>

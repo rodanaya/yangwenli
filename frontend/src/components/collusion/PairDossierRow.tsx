@@ -87,7 +87,7 @@ export function PairDossierRow({
         {/* Kicker row: rank + pattern + shared count */}
         <div className="flex items-center gap-3 mb-2">
           <span
-            className="font-mono text-[11px] font-bold tracking-[0.08em] tabular-nums"
+            className="font-mono text-[13px] font-bold tracking-[0.08em] tabular-nums"
             style={{
               color: flagged ? accent : '#52525b',
               fontFamily: 'var(--font-family-serif)',
@@ -101,7 +101,7 @@ export function PairDossierRow({
           <span className={kickerClass} style={{ color: flagged ? accent : undefined }}>
             {label}
           </span>
-          <span className="text-[10px] font-mono text-text-primary uppercase tracking-[0.15em] ml-auto tabular-nums">
+          <span className="text-[12px] font-mono text-text-primary uppercase tracking-[0.15em] ml-auto tabular-nums">
             {formatNumber(pair.shared_procedures)} {t('dossier.sharedSuffix', { defaultValue: 'procs compartidos' })}
           </span>
         </div>
@@ -125,7 +125,7 @@ export function PairDossierRow({
             >
               {nameA}
             </div>
-            <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-0.5 tabular-nums">
+            <div className="text-[12px] font-mono text-text-muted uppercase tracking-[0.12em] mt-0.5 tabular-nums">
               {formatNumber(pair.vendor_a_procedures)} {t('dossier.procsSuffix', { defaultValue: 'procedimientos' })} · {metrics.shareA.toFixed(0)}% {t('dossier.overlapWith', { defaultValue: 'con pareja' })}
             </div>
           </button>
@@ -157,7 +157,7 @@ export function PairDossierRow({
             >
               {nameB}
             </div>
-            <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-0.5 tabular-nums">
+            <div className="text-[12px] font-mono text-text-muted uppercase tracking-[0.12em] mt-0.5 tabular-nums">
               {formatNumber(pair.vendor_b_procedures)} {t('dossier.procsSuffix', { defaultValue: 'procedimientos' })} · {metrics.shareB.toFixed(0)}% {t('dossier.overlapWith', { defaultValue: 'con pareja' })}
             </div>
           </button>
@@ -178,17 +178,17 @@ export function PairDossierRow({
                 dotR={1.5}
                 dotGap={4}
               />
-              <span className="text-[9px] font-mono text-text-muted uppercase tracking-[0.15em] tabular-nums">
+              <span className="text-[13px] font-mono text-text-muted uppercase tracking-[0.15em] tabular-nums">
                 {sharesBarPct.toFixed(0)}% {t('dossier.ofLarger', { defaultValue: 'del mayor' })}
               </span>
             </div>
 
-            {/* Deck quote — italic serif, like a lede */}
+            {/* Deck quote — serif, like a lede */}
             <p
               className="mt-3 text-text-secondary"
               style={{
                 fontFamily: 'var(--font-family-serif)',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontSize: '0.95rem',
                 lineHeight: 1.5,
                 color: 'rgb(212 212 216)',
@@ -198,7 +198,7 @@ export function PairDossierRow({
             </p>
 
             {/* Action row */}
-            <div className="mt-3 flex items-center gap-4 text-[10px] font-mono uppercase tracking-[0.15em]">
+            <div className="mt-3 flex items-center gap-4 text-[12px] font-mono uppercase tracking-[0.15em]">
               <button
                 type="button"
                 onClick={() =>
@@ -231,7 +231,7 @@ export function PairDossierRow({
 
         {/* Compact variant: single-line action cluster on the right */}
         {variant === 'compact' && (
-          <div className="mt-2 flex items-center justify-end gap-3 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
+          <div className="mt-2 flex items-center justify-end gap-3 text-[12px] font-mono text-text-muted uppercase tracking-[0.12em]">
             <button
               type="button"
               onClick={() =>

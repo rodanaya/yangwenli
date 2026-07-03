@@ -30,7 +30,7 @@ const RISK_WORD: Record<string, { es: string; en: string }> = {
 }
 
 const bandTitle =
-  'text-[9.5px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted mb-2'
+  'text-[13px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted mb-2'
 
 export function CaptureExpand({
   c,
@@ -105,7 +105,7 @@ export function CaptureExpand({
               )
             })}
         </div>
-        <p className="mt-2 font-mono text-[9.5px] text-text-muted tabular-nums">
+        <p className="mt-2 font-mono text-[13px] text-text-muted tabular-nums">
           {lang === 'en' ? 'bars = MXN awarded per year · red ≥ 50%' : 'barras = MXN adjudicados por año · rojo ≥ 50%'}
         </p>
       </div>
@@ -119,7 +119,7 @@ export function CaptureExpand({
           className="mb-2.5"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 12.5,
             lineHeight: 1.5,
             color: 'var(--color-text-secondary)',
@@ -152,7 +152,7 @@ export function CaptureExpand({
               className="max-w-full"
             />
             {riskLevel && (
-              <p className="font-mono text-[10.5px] uppercase tracking-wider text-text-secondary">
+              <p className="font-mono text-[12px] uppercase tracking-wider text-text-secondary">
                 {lang === 'en' ? 'risk indicator' : 'indicador de riesgo'}:{' '}
                 <span
                   style={{
@@ -169,7 +169,7 @@ export function CaptureExpand({
             )}
           </div>
         ) : (
-          <p className="font-mono text-[10.5px] text-text-muted">
+          <p className="font-mono text-[12px] text-text-muted">
             {lang === 'en'
               ? 'No ARIA file — the arithmetic stands alone.'
               : 'Sin expediente ARIA — la aritmética habla sola.'}
@@ -182,7 +182,7 @@ export function CaptureExpand({
         <p className={bandTitle}>
           {lang === 'en' ? '§ The institution on record' : '§ La institución en el registro'}
         </p>
-        <div className="space-y-1.5 font-mono text-[10.5px] text-text-secondary tabular-nums">
+        <div className="space-y-1.5 font-mono text-[12px] text-text-secondary tabular-nums">
           {fieldFacts && (
             <p>
               {lang === 'en'

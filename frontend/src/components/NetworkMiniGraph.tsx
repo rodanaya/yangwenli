@@ -91,7 +91,7 @@ export function NetworkMiniGraph({ entityId, entityType }: NetworkMiniGraphProps
         trigger: 'item',
         backgroundColor: '#1a1714',
         borderColor: 'rgba(255,255,255,0.08)',
-        textStyle: { color: '#faf9f6', fontSize: 11 },
+        textStyle: { color: '#faf9f6', fontSize: 13 },
         formatter: (params: {
           dataType: string
           data: { name?: string; contracts?: number }

@@ -138,7 +138,7 @@ export function AdminBuyersSection({
         <div className="min-w-0">
           {/* Concentration lede — only when we have meaningful data */}
           {topNSharePct > 0 && (
-            <p className="text-[11px] font-mono leading-relaxed text-text-secondary">
+            <p className="text-[13px] font-mono leading-relaxed text-text-secondary">
               {isEs ? (
                 <>
                   Las {institutions.length} principales dependencias concentran el{' '}
@@ -180,7 +180,7 @@ export function AdminBuyersSection({
                 {/* 1. Rank */}
                 <span
                   className={[
-                    'text-[10px] font-mono tabular-nums text-right',
+                    'text-[12px] font-mono tabular-nums text-right',
                     isTopThree ? 'font-semibold' : 'text-text-muted/70',
                   ].join(' ')}
                   style={isTopThree ? { color: eraColorResolved } : undefined}
@@ -200,7 +200,7 @@ export function AdminBuyersSection({
                   />
                   {inst.is_federal === 1 && (
                     <span
-                      className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70 border border-border/50 rounded-sm px-1 leading-tight shrink-0"
+                      className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/70 border border-border/50 rounded-sm px-1 leading-tight shrink-0"
                       title={isEs ? 'Dependencia federal' : 'Federal entity'}
                     >
                       FED
@@ -210,7 +210,7 @@ export function AdminBuyersSection({
 
                 {/* 3. Meta — inline, desktop only (full text in title) */}
                 <span
-                  className="hidden md:block text-[9.5px] font-mono tabular-nums text-text-muted whitespace-nowrap"
+                  className="hidden md:block text-[13px] font-mono tabular-nums text-text-muted whitespace-nowrap"
                   title={metaFull}
                 >
                   {inst.contracts.toLocaleString()}{' '}
@@ -239,12 +239,12 @@ export function AdminBuyersSection({
                 <div className="flex items-baseline justify-end gap-1.5">
                   <span
                     className="text-[12.5px] tabular-nums text-text-primary"
-                    style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700 }}
+                    style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'normal', fontWeight: 700 }}
                   >
                     {formatCompactMXN(inst.total_mxn)}
                   </span>
                   <span
-                    className="text-[9.5px] font-mono tabular-nums text-text-muted w-[2.9rem] text-right"
+                    className="text-[13px] font-mono tabular-nums text-text-muted w-[2.9rem] text-right"
                     title={isEs ? 'del gasto del periodo' : 'of term spending'}
                   >
                     {inst.share_pct.toFixed(1)}%
@@ -258,7 +258,7 @@ export function AdminBuyersSection({
 
       {/* Concentration footer */}
       <div className="mt-2 pt-1.5 border-t border-border/30 flex items-baseline justify-between">
-        <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-text-muted">
+        <span className="text-[12px] font-mono uppercase tracking-[0.16em] text-text-muted">
           {isEs
             ? `Concentración · top ${institutions.length}`
             : `Concentration · top ${institutions.length}`}
@@ -268,32 +268,32 @@ export function AdminBuyersSection({
             className="text-base tabular-nums"
             style={{
               fontFamily: 'var(--font-family-serif)',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 700,
               color: folderColorResolved,
             }}
           >
             {topNSharePct.toFixed(0)}%
           </span>
-          <span className="text-[10px] font-mono text-text-muted">
+          <span className="text-[12px] font-mono text-text-muted">
             {isEs ? 'del gasto' : 'of spend'}
           </span>
         </div>
       </div>
-      <p className="text-[9px] font-mono text-text-muted/70">
+      <p className="text-[13px] font-mono text-text-muted/70">
         {institutionCount.toLocaleString()}{' '}
         {isEs ? 'dependencias compradoras en el periodo' : 'buying agencies in the term'}
       </p>
 
       {/* Footer legend */}
-      <p className="text-[9px] font-mono text-text-muted/70 mt-2">
+      <p className="text-[13px] font-mono text-text-muted/70 mt-2">
         {isEs
           ? '● = sector dominante · FED = dependencia federal · barra = % del gasto (escala: líder)'
           : '● = agency top sector · FED = federal agency · bar = % of spend (scaled to leader)'}
       </p>
 
       {/* Source attribution */}
-      <p className="text-[9px] font-mono text-text-muted/70 mt-1">
+      <p className="text-[13px] font-mono text-text-muted/70 mt-1">
         {selectedDisplay}
       </p>
     </div>

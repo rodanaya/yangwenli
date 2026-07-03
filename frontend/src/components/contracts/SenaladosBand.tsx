@@ -44,7 +44,7 @@ export function CaseSeal({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-sm border border-risk-critical/40 bg-risk-critical/10 px-1.5 py-0.5 text-[10px] font-medium text-risk-critical',
+        'inline-flex items-center gap-1 rounded-sm border border-risk-critical/40 bg-risk-critical/10 px-1.5 py-0.5 text-[12px] font-medium text-risk-critical',
         className,
       )}
       onClick={(e) => e.stopPropagation()}
@@ -111,7 +111,7 @@ export function WhyFlags({
         return (
           <span
             key={raw}
-            className="rounded-sm border px-1 py-0.5 text-[10px] font-medium"
+            className="rounded-sm border px-1 py-0.5 text-[12px] font-medium"
             style={{ backgroundColor: `${color}14`, color, borderColor: `${color}30` }}
             title={raw}
           >
@@ -122,14 +122,14 @@ export function WhyFlags({
       {seals.map((s) => (
         <span
           key={s.key}
-          className={cn('rounded-sm border px-1 py-0.5 text-[10px] font-medium', s.tone)}
+          className={cn('rounded-sm border px-1 py-0.5 text-[12px] font-medium', s.tone)}
         >
           {s.label}
         </span>
       ))}
       {anomalous && (
         <span
-          className="rounded-sm border border-risk-high/40 bg-risk-high/10 px-1 py-0.5 text-[10px] font-medium text-risk-high tabular-nums"
+          className="rounded-sm border border-risk-high/40 bg-risk-high/10 px-1 py-0.5 text-[12px] font-medium text-risk-high tabular-nums"
           title={
             lang === 'es'
               ? `Anomalía multivariada (D²=${contract.mahalanobis_distance?.toFixed(1)})`
@@ -140,7 +140,7 @@ export function WhyFlags({
         </span>
       )}
       {extra > 0 && (
-        <span className="text-[10px] text-text-muted">
+        <span className="text-[12px] text-text-muted">
           {lang === 'es' ? `+${extra} más` : `+${extra} more`}
         </span>
       )}
@@ -181,7 +181,7 @@ function SenaladoEntry({
       aria-label={lang === 'es' ? `Abrir expediente: ${title}` : `Open dossier: ${title}`}
       className="group grid cursor-pointer grid-cols-[auto_1fr_auto] items-start gap-x-4 gap-y-1.5 border-b border-border/60 px-1 py-3 transition-colors last:border-b-0 hover:bg-background-elevated/40"
     >
-      <span className="pt-0.5 font-mono text-[11px] tabular-nums text-text-muted">
+      <span className="pt-0.5 font-mono text-[13px] tabular-nums text-text-muted">
         {String(rank).padStart(2, '0')}
       </span>
 
@@ -263,11 +263,11 @@ export function SenaladosBand({
       <header className="flex items-baseline justify-between gap-3 border-b border-border/60 px-4 py-2.5">
         <div className="flex items-baseline gap-2">
           <ScrollText className="h-3.5 w-3.5 self-center text-risk-high" aria-hidden="true" />
-          <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-text-primary">
+          <h2 className="font-mono text-[13px] font-semibold uppercase tracking-[0.16em] text-text-primary">
             {t('senalados.kicker', 'THE FLAGGED')}
           </h2>
         </div>
-        <p className="hidden text-[10px] leading-tight text-text-muted sm:block">
+        <p className="hidden text-[12px] leading-tight text-text-muted sm:block">
           {t('senalados.honesty', 'Flagged by the model and documented cases — not an accusation.')}
         </p>
       </header>

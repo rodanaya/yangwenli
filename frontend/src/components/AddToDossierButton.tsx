@@ -169,7 +169,7 @@ export function AddToDossierButton({
                     <span className="truncate text-text-secondary">
                       {dossier.name}
                     </span>
-                    <span className="ml-auto text-[10px] text-text-muted shrink-0">
+                    <span className="ml-auto text-[12px] text-text-muted shrink-0">
                       {dossier.item_count}
                     </span>
                   </button>

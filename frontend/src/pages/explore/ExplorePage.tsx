@@ -199,7 +199,7 @@ export function ExplorePage() {
               <span className="text-sm font-semibold" style={{ color: activeSectorMeta.color }}>
                 {ts(activeSectorMeta.code)}
               </span>
-              <span className="text-[10px] text-text-muted uppercase tracking-wider">{t('page.sectorIntel.label')}</span>
+              <span className="text-[12px] text-text-muted uppercase tracking-wider">{t('page.sectorIntel.label')}</span>
             </div>
             <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
               <div>

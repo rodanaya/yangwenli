@@ -118,7 +118,7 @@ export function Settings() {
       {/* Editorial Page Header */}
       <header className="pb-5 border-b border-border">
         <p
-          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] mb-2"
+          className="text-[12px] font-mono font-bold uppercase tracking-[0.2em] mb-2"
           style={{ color: 'var(--color-accent)' }}
         >
           RUBLI · {t('pageTitle', 'Platform Settings')}
@@ -1052,7 +1052,7 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
                 y={yCenter - 2}
                 textAnchor="end"
                 fill="var(--color-text-muted)"
-                fontSize={11}
+                fontSize={13}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
               >
@@ -1063,7 +1063,7 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
                 y={yCenter + 10}
                 textAnchor="end"
                 fill="var(--color-text-muted)"
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
               >
                 {item.years}
@@ -1090,7 +1090,7 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
                 x={LABEL_W + DOTS * DOT_GAP + 6}
                 y={yCenter + 3}
                 fill={item.color}
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={700}
               >

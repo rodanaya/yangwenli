@@ -85,7 +85,7 @@ export function DashboardSledgehammer({
 
       {/* Eyebrow */}
       <div
-        className="font-mono text-[11px] uppercase tracking-[0.18em] mb-4"
+        className="font-mono text-[13px] uppercase tracking-[0.18em] mb-4"
         style={{ color: 'var(--color-text-muted)' }}
       >
         {eyebrowText}
@@ -93,7 +93,7 @@ export function DashboardSledgehammer({
 
       {/* The sledgehammer number */}
       <div
-        className="leading-[0.9] font-extrabold italic tabular-nums mb-6"
+        className="leading-[0.9] font-extrabold tabular-nums mb-6"
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: 'clamp(96px, 14vw, 180px)',
@@ -125,7 +125,7 @@ export function DashboardSledgehammer({
 
       {/* OECD reference line */}
       <div
-        className="font-mono text-[11px] leading-[1.8] uppercase tracking-[0.1em]"
+        className="font-mono text-[13px] leading-[1.8] uppercase tracking-[0.1em]"
         style={{ color: 'var(--color-oecd)' }}
       >
         {oecdText}
@@ -140,7 +140,7 @@ export function DashboardSledgehammer({
                 className="tabular-nums font-semibold"
                 style={{
                   fontFamily: 'var(--font-family-serif)',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontSize: 17,
                   color: 'var(--color-text-primary)',
                 }}
@@ -150,7 +150,7 @@ export function DashboardSledgehammer({
               <span
                 className="font-mono uppercase"
                 style={{
-                  fontSize: 9.5,
+                  fontSize: 13,
                   letterSpacing: '0.12em',
                   color: 'var(--color-text-muted)',
                 }}

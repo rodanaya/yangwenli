@@ -153,7 +153,7 @@ export function FactorBaselineTooltip({
                   <span className={cn('font-mono font-semibold', getZScoreColor(zScore))}>
                     {zScore >= 0 ? '+' : ''}{zScore.toFixed(2)} &sigma;
                   </span>
-                  <span className={cn('ml-1 text-[10px] px-1 py-0.5 rounded', getZScoreColor(zScore))}>
+                  <span className={cn('ml-1 text-[12px] px-1 py-0.5 rounded', getZScoreColor(zScore))}>
                     {t(`zScoreLabels.${getZScoreLabelKey(zScore)}`)}
                   </span>
                 </div>

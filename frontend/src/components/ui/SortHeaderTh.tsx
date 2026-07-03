@@ -43,7 +43,7 @@ export function SortHeaderTh<F extends string = string>({
       <button
         type="button"
         onClick={() => onSort(field)}
-        className="inline-flex items-center gap-0.5 hover:text-text-primary transition-colors uppercase tracking-wider text-[11px]"
+        className="inline-flex items-center gap-0.5 hover:text-text-primary transition-colors uppercase tracking-wider text-[13px]"
       >
         {label}
         <Icon className={iconCls} />

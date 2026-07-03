@@ -619,7 +619,7 @@ export default function TrendsTab() {
                 <p className="text-sm text-text-muted">
                   {lang === 'en' ? 'No sector data for this slice.' : 'Sin datos de sector para este corte.'}
                 </p>
-                <p className="text-[11px] text-text-muted mt-1">
+                <p className="text-[13px] text-text-muted mt-1">
                   {lang === 'en'
                     ? 'Adjust the year range or metric type.'
                     : 'Ajusta el rango de años o el tipo de métrica.'}
@@ -676,7 +676,7 @@ export default function TrendsTab() {
                 <p className="text-sm text-text-muted">
                   {lang === 'en' ? 'No sector data for this slice.' : 'Sin datos de sector para este corte.'}
                 </p>
-                <p className="text-[11px] text-text-muted mt-1">
+                <p className="text-[13px] text-text-muted mt-1">
                   {lang === 'en'
                     ? 'Adjust the year range or metric type.'
                     : 'Ajusta el rango de años o el tipo de métrica.'}

@@ -44,7 +44,7 @@ export default function ChapterBanner({
         <div className="relative z-10 flex items-center justify-between px-6 md:px-10 py-8 md:py-12">
           <div className="space-y-2">
             <p
-              className="text-[11px] uppercase tracking-[0.2em] font-semibold"
+              className="text-[13px] uppercase tracking-[0.2em] font-semibold"
               style={{ color }}
             >
               {t('storyType.chapter', 'Chapter')} {paddedNumber}

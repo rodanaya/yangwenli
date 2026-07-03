@@ -32,11 +32,11 @@ function StatBlock({ value, label }: { value: string; label: string }) {
     <div className="min-w-0">
       <div
         className="text-[18px] leading-none tabular-nums text-text-primary"
-        style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700 }}
+        style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'normal', fontWeight: 700 }}
       >
         {value}
       </div>
-      <div className="text-[10px] text-text-muted font-mono mt-1 tracking-wide leading-tight">{label}</div>
+      <div className="text-[12px] text-text-muted font-mono mt-1 tracking-wide leading-tight">{label}</div>
     </div>
   )
 }
@@ -78,7 +78,7 @@ export function GapRecoveryPanel({ isEs, variant = 'full', className }: GapRecov
         )}
       >
         <div className="mb-2.5 flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-text-muted">
+          <span className="flex items-center gap-1.5 font-mono text-[13px] font-bold uppercase tracking-[0.18em] text-text-muted">
             <FileSearch className="h-3 w-3" />
             {isEs ? 'EL APAGÓN · POST-COMPRANET' : 'THE BLACKOUT · POST-COMPRANET'}
           </span>
@@ -96,7 +96,7 @@ export function GapRecoveryPanel({ isEs, variant = 'full', className }: GapRecov
 
   return (
     <div className={cn('border-t border-border/40 px-4 py-4 sm:px-5', className)}>
-      <div className="flex items-center gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-text-muted">
+      <div className="flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-[0.22em] text-text-muted">
         <FileSearch className="h-3 w-3" />
         {isEs ? '§ EL APAGÓN — DATOS RECUPERADOS' : '§ THE BLACKOUT — RECOVERED DATA'}
       </div>
@@ -109,7 +109,7 @@ export function GapRecoveryPanel({ isEs, variant = 'full', className }: GapRecov
 
       <div className="mt-4 grid max-w-lg grid-cols-3 gap-4">{stats}</div>
 
-      <p className="mt-3 max-w-2xl font-mono text-[9px] leading-relaxed tracking-[0.12em] text-text-muted/70">
+      <p className="mt-3 max-w-2xl font-mono text-[13px] leading-relaxed tracking-[0.12em] text-text-muted/70">
         {tierTag}
         {' · '}
         {isEs
@@ -119,7 +119,7 @@ export function GapRecoveryPanel({ isEs, variant = 'full', className }: GapRecov
 
       {topSectors.length > 0 && (
         <div className="mt-4">
-          <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-text-muted/80">
+          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.18em] text-text-muted/80">
             {isEs ? 'POR SECTOR · CONTEO RECUPERADO' : 'BY SECTOR · RECOVERED COUNT'}
           </div>
           <div className="max-w-md space-y-1.5">
@@ -127,7 +127,7 @@ export function GapRecoveryPanel({ isEs, variant = 'full', className }: GapRecov
               const color = SECTOR_COLORS[s.sector] ?? 'var(--color-text-muted)'
               return (
                 <div key={s.sector_id} className="flex items-center gap-2">
-                  <span className="w-28 shrink-0 truncate text-[11px] text-text-secondary">
+                  <span className="w-28 shrink-0 truncate text-[13px] text-text-secondary">
                     {getSectorName(s.sector, isEs ? 'es' : 'en')}
                   </span>
                   <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
@@ -136,7 +136,7 @@ export function GapRecoveryPanel({ isEs, variant = 'full', className }: GapRecov
                       style={{ width: `${(s.count / sectorMax) * 100}%`, backgroundColor: color }}
                     />
                   </span>
-                  <span className="w-12 shrink-0 text-right font-mono text-[10px] tabular-nums text-text-muted">
+                  <span className="w-12 shrink-0 text-right font-mono text-[12px] tabular-nums text-text-muted">
                     {s.count.toLocaleString(locale)}
                   </span>
                 </div>

@@ -39,7 +39,7 @@ export function MobileBottomNav({ onMenuClick }: Props) {
             key={href}
             to={href}
             className={cn(
-              'flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[10px] font-medium transition-colors',
+              'flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[12px] font-medium transition-colors',
               isActive
                 ? 'text-accent'
                 : 'text-text-muted active:text-text-primary'
@@ -58,7 +58,7 @@ export function MobileBottomNav({ onMenuClick }: Props) {
       {/* More — opens full sidebar overlay */}
       <button
         onClick={onMenuClick}
-        className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[10px] font-medium text-text-muted active:text-text-primary transition-colors"
+        className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[12px] font-medium text-text-muted active:text-text-primary transition-colors"
         aria-label={t('openMenu')}
       >
         <Menu className="h-5 w-5 text-text-muted" aria-hidden="true" />

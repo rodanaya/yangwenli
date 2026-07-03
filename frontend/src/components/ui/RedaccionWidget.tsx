@@ -115,7 +115,7 @@ export default function RedaccionWidget() {
 
               {/* Tier badge + IPS bar */}
               <div className="flex items-center gap-2 mt-2">
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${TIER_COLORS[story.tier] ?? TIER_COLORS[4]}`}>
+                <span className={`text-[12px] font-bold px-1.5 py-0.5 rounded border ${TIER_COLORS[story.tier] ?? TIER_COLORS[4]}`}>
                   T{story.tier}
                 </span>
                 <DotBar
@@ -126,7 +126,7 @@ export default function RedaccionWidget() {
                   emptyStroke="var(--color-border)"
                   dots={20}
                 />
-                <span className="text-[10px] font-mono text-text-muted">
+                <span className="text-[12px] font-mono text-text-muted">
                   {(story.ipsScore * 100).toFixed(0)}
                 </span>
               </div>
@@ -134,7 +134,7 @@ export default function RedaccionWidget() {
               {/* Investigate link */}
               <Link
                 to={`/vendors/${story.vendorId}`}
-                className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-primary mt-1.5 transition-colors"
+                className="inline-flex items-center gap-1 text-[13px] text-text-muted hover:text-text-primary mt-1.5 transition-colors"
               >
                 Red Thread <ArrowRight className="h-3 w-3" />
               </Link>

@@ -163,7 +163,7 @@ export function CommunityBubbles() {
       )}
 
       {/* Legend */}
-      <div className="mt-2 flex items-center gap-3 flex-wrap text-[10px]">
+      <div className="mt-2 flex items-center gap-3 flex-wrap text-[12px]">
         <span className="text-text-muted">
           {lang === 'es' ? 'Tamaño = valor del contrato' : 'Size = contract value'}
         </span>

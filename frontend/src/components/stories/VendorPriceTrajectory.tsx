@@ -163,7 +163,7 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
       annotation={annotation}
     >
       <div
-        className="text-[9px] font-mono uppercase tracking-[0.06em] mb-1 pl-2"
+        className="text-[13px] font-mono uppercase tracking-[0.06em] mb-1 pl-2"
         style={{ color: textMuted }}
       >
         {yKicker}
@@ -186,7 +186,7 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
         <text
           x={xMin + 8}
           y={bandTop + 13}
-          fontSize={9}
+          fontSize={13}
           fontFamily="monospace"
           fill="var(--color-text-muted)"
         >
@@ -200,7 +200,7 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
             <g key={p}>
               <line x1={xMin - 4} y1={y} x2={xMin + xWidth} y2={y}
                 stroke={gridStroke} strokeWidth={0.5} strokeDasharray="3 4" />
-              <text x={xMin - 8} y={y + 4} fontSize={10} fontFamily="monospace"
+              <text x={xMin - 8} y={y + 4} fontSize={12} fontFamily="monospace"
                 fill={textMuted} textAnchor="end">
                 {fmtPrice(p)}
               </text>
@@ -213,7 +213,7 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
           <g key={yr}>
             <line x1={x} y1={yMin} x2={x} y2={yMin + yHeight}
               stroke={gridStroke} strokeWidth={0.5} strokeDasharray="3 4" />
-            <text x={x} y={yMin + yHeight + 18} fontSize={11} fontFamily="monospace"
+            <text x={x} y={yMin + yHeight + 18} fontSize={13} fontFamily="monospace"
               fill={textMuted} textAnchor="middle">
               {yr}
             </text>
@@ -283,7 +283,7 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
             <text
               x={calloutX + 10}
               y={calloutY + 17}
-              fontSize={10}
+              fontSize={12}
               fontFamily="monospace"
               fontWeight="700"
               fill={accent}
@@ -293,7 +293,7 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
             <text
               x={calloutX + 10}
               y={calloutY + 33}
-              fontSize={9}
+              fontSize={13}
               fontFamily="monospace"
               fill={textMuted}
             >

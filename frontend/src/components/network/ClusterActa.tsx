@@ -51,8 +51,8 @@ function DeviationRow({
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <span className="text-[10px] font-mono text-text-secondary">{label}</span>
-        <span className="text-[9.5px] font-mono text-text-muted">
+        <span className="text-[12px] font-mono text-text-secondary">{label}</span>
+        <span className="text-[13px] font-mono text-text-muted">
           <span style={{ color: textFill, fontWeight: 700 }}>{Math.round(value * 100)}%</span>
           {' · '}{benchmarkLabel} {Math.round(benchmark * 100)}%{' '}
           <span style={{ color: textFill }}>{isAbove ? '↑' : '↓'}{Math.abs(Math.round(delta * 100))}pp</span>
@@ -83,7 +83,7 @@ function ChargeRow({
 }) {
   return (
     <div className="flex items-baseline gap-2 py-1 pl-2.5" style={{ borderLeft: `2px solid ${color}` }}>
-      <span aria-hidden="true" style={{ fontSize: 10, color, fontWeight: 700, minWidth: 12, textAlign: 'center' }}>
+      <span aria-hidden="true" style={{ fontSize: 12, color, fontWeight: 700, minWidth: 12, textAlign: 'center' }}>
         {glyph}
       </span>
       <span className="min-w-0">
@@ -187,11 +187,11 @@ export function ClusterActa({
         />
         <span
           className="font-mono font-bold uppercase tracking-[0.18em]"
-          style={{ fontSize: 10.5, color: verdict.color }}
+          style={{ fontSize: 12, color: verdict.color }}
         >
           {isEs ? verdict.label_es : verdict.label_en}
         </span>
-        <span className="ml-auto font-mono text-[9.5px] text-text-muted/60">C-{community.community_id}</span>
+        <span className="ml-auto font-mono text-[13px] text-text-muted/60">C-{community.community_id}</span>
       </div>
       <p
         className="mb-1.5"
@@ -199,14 +199,14 @@ export function ClusterActa({
       >
         «{lede}»
       </p>
-      <p className="mb-4 font-mono" style={{ fontSize: 10, color: verdict.color, lineHeight: 1.5 }}>
+      <p className="mb-4 font-mono" style={{ fontSize: 12, color: verdict.color, lineHeight: 1.5 }}>
         {isEs ? verdict.rationale_es : verdict.rationale_en}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 border-t border-border/50 pt-4">
         {/* ── LOS CARGOS ─────────────────────────────────────────────── */}
         <div>
-          <p className="mb-2.5 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+          <p className="mb-2.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
             {isEs ? '§ Los cargos' : '§ The charges'}
           </p>
           <div className="space-y-2">
@@ -263,7 +263,7 @@ export function ClusterActa({
             )}
             {showNullFindings && (
               <ChargeRow glyph="·" color="var(--color-text-muted)">
-                <span style={{ fontStyle: 'italic', color: 'var(--color-text-muted)' }}>
+                <span style={{ fontStyle: 'normal', color: 'var(--color-text-muted)' }}>
                   {isEs
                     ? 'Sin sanciones SFP ni casos documentados entre sus miembros.'
                     : 'No SFP sanctions or documented cases among its members.'}
@@ -275,7 +275,7 @@ export function ClusterActa({
           {/* Pattern mix — visible suppression below 30% coverage */}
           {patternMixVisible ? (
             <div className="mt-3 border-t border-border/50 pt-2.5">
-              <p className="mb-1 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
+              <p className="mb-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
                 {isEs ? 'Mezcla de patrones ARIA' : 'ARIA pattern mix'}
               </p>
               <div className="flex h-[5px] w-full overflow-hidden rounded-full bg-border/40" aria-hidden="true">
@@ -297,7 +297,7 @@ export function ClusterActa({
               </p>
             </div>
           ) : (
-            <p className="mt-3 border-t border-border/50 pt-2.5 text-[9.5px] font-mono italic text-text-muted/60">
+            <p className="mt-3 border-t border-border/50 pt-2.5 text-[13px] font-mono text-text-muted/60">
               {isEs
                 ? `Clasificación ARIA en ${graph.stats.labeled_count} de ${community.size} miembros — mezcla omitida por cobertura <30%.`
                 : `ARIA classification on ${graph.stats.labeled_count} of ${community.size} members — mix withheld below 30% coverage.`}
@@ -307,7 +307,7 @@ export function ClusterActa({
 
         {/* ── LOS SEÑALADOS + COMPRADORES ASEDIADOS ────────────────────── */}
         <div>
-          <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+          <p className="text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
             {isEs ? '§ Los señalados · por influencia (pagerank)' : '§ The named · by influence (pagerank)'}
           </p>
           <p className="mb-2.5 text-[8.5px] font-mono text-text-muted/45">
@@ -327,7 +327,7 @@ export function ClusterActa({
                     fullName
                   />
                   <span
-                    className="ml-6 text-[9px] font-mono text-text-muted/55"
+                    className="ml-6 text-[13px] font-mono text-text-muted/55"
                     title={isEs ? 'conteo bruto de co-licitaciones' : 'raw co-bidding tie count'}
                   >
                     {n.degree} {isEs ? 'conexiones' : 'ties'} · {percentile}º
@@ -340,13 +340,13 @@ export function ClusterActa({
 
           {selectedVendorId != null && (
             <div className="mt-3 border-t border-border/50 pt-2.5 flex items-center justify-between gap-2">
-              <span className="text-[10px] font-mono text-text-muted/70">
+              <span className="text-[12px] font-mono text-text-muted/70">
                 {isEs ? 'Actor seleccionado en la trama' : 'Actor selected in the mesh'}
               </span>
               <button
                 type="button"
                 onClick={() => onViewVendorRing(selectedVendorId)}
-                className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[9.5px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
+                className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
               >
                 {isEs ? 'Ver su red →' : 'View its ring →'}
               </button>
@@ -355,7 +355,7 @@ export function ClusterActa({
 
           {besiegedBuyers.length > 0 && (
             <div className="mt-4 border-t border-border/50 pt-3">
-              <p className="mb-2 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+              <p className="mb-2 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
                 {isEs ? '§ Compradores asediados por este nudo' : '§ Buyers besieged by this knot'}
               </p>
               <ul className="space-y-1.5">
@@ -365,14 +365,14 @@ export function ClusterActa({
                     <button
                       type="button"
                       onClick={() => onOpenBuyerSiege(b.institutionId)}
-                      className="flex-shrink-0 font-mono text-[9.5px] font-bold uppercase tracking-wider text-accent hover:opacity-70 transition-opacity"
+                      className="flex-shrink-0 font-mono text-[13px] font-bold uppercase tracking-wider text-accent hover:opacity-70 transition-opacity"
                     >
                       {isEs ? 'sitio →' : 'siege →'}
                     </button>
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-[8.5px] font-mono italic text-text-muted/50">
+              <p className="mt-2 text-[8.5px] font-mono text-text-muted/50">
                 {isEs ? 'entre los 120 mayores compradores federales' : 'among the 120 largest federal buyers'}
               </p>
             </div>

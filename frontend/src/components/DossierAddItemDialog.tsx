@@ -169,7 +169,7 @@ export function DossierAddItemDialog({
                       {vendor.name}
                     </span>
                     {vendor.avg_risk_score != null && (
-                      <span className="text-[10px] font-mono text-text-muted shrink-0">
+                      <span className="text-[12px] font-mono text-text-muted shrink-0">
                         {(vendor.avg_risk_score * 100).toFixed(0)}%
                       </span>
                     )}

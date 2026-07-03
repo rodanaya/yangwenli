@@ -66,7 +66,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
       {/* Panel header */}
       <div className="px-4 py-3 border-b border-risk-high/15 flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high">
             {isEs ? 'ANÁLISIS DE CONFIANZA · EMPRESAS FANTASMA' : 'GHOST CONFIDENCE ANALYSIS'}
           </p>
           <p className="text-xs text-text-muted mt-0.5">
@@ -75,7 +75,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
               : '11 independent signals — convergence builds a defensible investigation referral'}
           </p>
         </div>
-        <div className="shrink-0 flex items-center gap-1 text-[10px] font-mono text-text-muted">
+        <div className="shrink-0 flex items-center gap-1 text-[12px] font-mono text-text-muted">
           <span>{isEs ? 'puntuado' : 'scored'}</span>
           <span className="text-risk-high">{(tierSummary.confirmed + tierSummary.multi_signal + tierSummary.behavioral).toLocaleString()}</span>
           <span>{isEs ? 'proveedores P2' : 'P2 vendors'}</span>
@@ -106,7 +106,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
             </button>
           )
         })}
-        <div className="ml-auto self-center text-[10px] text-text-muted font-mono hidden sm:block">
+        <div className="ml-auto self-center text-[12px] text-text-muted font-mono hidden sm:block">
           {tierTab === 'confirmed' && (isEs ? 'Verificación externa (EFOS SAT / SFP)' : 'External verification (EFOS SAT / SFP)')}
           {tierTab === 'multi_signal' && (isEs ? '3+ señales independientes convergentes' : '3+ independent signals converging')}
           {tierTab === 'behavioral' && (isEs ? 'Solo patrón P2 — evidencia adicional necesaria' : 'P2 pattern only — additional evidence needed')}
@@ -163,7 +163,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                         />
                       </span>
                       {s.total_contracts != null && (
-                        <span className="text-[10px] font-mono text-text-muted shrink-0">
+                        <span className="text-[12px] font-mono text-text-muted shrink-0">
                           {s.total_contracts} {isEs ? 'contratos' : 'contracts'}
                         </span>
                       )}
@@ -177,7 +177,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                           <span
                             key={keyStr}
                             className={cn(
-                              'text-[10px] font-mono px-1.5 py-0.5 rounded-sm border',
+                              'text-[12px] font-mono px-1.5 py-0.5 rounded-sm border',
                               isExternal
                                 ? 'bg-risk-critical/10 border-risk-critical/30 text-risk-critical'
                                 : 'bg-background-elevated border-border text-text-secondary'
@@ -192,7 +192,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
 
                   {/* Signals count */}
                   <div className="shrink-0 self-center">
-                    <span className="text-[10px] font-mono tabular-nums text-text-muted">
+                    <span className="text-[12px] font-mono tabular-nums text-text-muted">
                       {s.ghost_signal_count} {isEs ? 'señ' : 'sig'}
                     </span>
                   </div>

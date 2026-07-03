@@ -119,11 +119,11 @@ export function MainLayout() {
 
         {/* Footer — editorial colophon */}
         <footer className="border-t border-border px-5 py-3 pb-20 md:pb-3 mt-4">
-          <div className="hidden md:flex items-center justify-between text-[10px] text-text-muted font-mono tracking-[0.14em] uppercase mb-2">
+          <div className="hidden md:flex items-center justify-between text-[12px] text-text-muted font-mono tracking-[0.14em] uppercase mb-2">
             <span>{t('footerBrand')} <span className="text-text-muted mx-1 opacity-60">·</span> {t('footerTagline')}</span>
             <span className="text-text-muted">{t('footerStats')}</span>
           </div>
-          <p className="text-[10px] text-text-muted leading-relaxed tracking-wide">
+          <p className="text-[12px] text-text-muted leading-relaxed tracking-wide">
             {t('aboutData')}
           </p>
         </footer>

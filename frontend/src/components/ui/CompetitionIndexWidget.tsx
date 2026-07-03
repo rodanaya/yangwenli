@@ -117,7 +117,7 @@ function AnimatedGauge({
           {sublabel.toUpperCase()}
         </text>
       </svg>
-      <p className="text-[11px] font-medium text-text-secondary mt-1">{label}</p>
+      <p className="text-[13px] font-medium text-text-secondary mt-1">{label}</p>
     </div>
   )
 }
@@ -141,7 +141,7 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
           <h3 className="text-sm font-bold text-text-primary tracking-tight">
             Indice de Competencia
           </h3>
-          <p className="text-[10px] text-text-muted font-mono mt-0.5">
+          <p className="text-[12px] text-text-muted font-mono mt-0.5">
             menor = mas contratos sin licitacion ({year})
           </p>
         </div>

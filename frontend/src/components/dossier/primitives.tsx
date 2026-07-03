@@ -7,7 +7,7 @@
  * Five visual primitives + one motion wrapper:
  *
  *   ChapterHeading    — big Playfair Italic roman numeral + serif
- *                       uppercase title + italic subtitle, centered
+ *                       uppercase title + subtitle, centered
  *                       magazine-cover composition
  *   SubheadRule       — hairline-flanked uppercase label (matches the
  *                       hero "ON THIS PAGE" pattern for cohesion)
@@ -73,7 +73,7 @@ export function ChapterHeading({
         className="tabular-nums"
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 800,
           fontSize: 'clamp(72px, 9vw, 120px)',
           lineHeight: 0.85,
@@ -100,7 +100,7 @@ export function ChapterHeading({
       <p
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 400,
           fontSize: 15,
           color: 'var(--color-text-muted)',
@@ -132,7 +132,7 @@ export function SubheadRule({ label }: { label: string }) {
       <span
         className="font-mono"
         style={{
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -152,7 +152,7 @@ export function SubheadRule({ label }: { label: string }) {
 // ─── LedeParagraph ──────────────────────────────────────────────────────────
 
 /**
- * Lede paragraph — Source Serif italic 18px with sector-accent left rule.
+ * Lede paragraph — Source Serif 18px with sector-accent left rule.
  * The opening editorial sentence of a chapter. No drop cap — that's
  * reserved for the hero. Pass the children as a string; numbers and
  * named entities can be wrapped in <strong> by the caller for emphasis.
@@ -170,7 +170,7 @@ export function LedeParagraph({
     <p
       style={{
         fontFamily: '"EB Garamond", Georgia, serif',
-        fontStyle: 'italic',
+        fontStyle: 'normal',
         fontSize: 18,
         lineHeight: 1.55,
         color: 'var(--color-text-secondary)',
@@ -220,7 +220,7 @@ export function ScaleBlock({
         className="tabular-nums"
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 800,
           fontSize: 'clamp(56px, 8vw, 88px)',
           lineHeight: 1,
@@ -238,7 +238,7 @@ export function ScaleBlock({
       <div
         className="font-mono"
         style={{
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -286,7 +286,7 @@ export function EquivalenceList({
           className="flex items-baseline gap-3"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 16,
             lineHeight: 1.55,
             color: 'var(--color-text-secondary)',
@@ -358,7 +358,7 @@ export function SignatureBar({
         <span
           className="font-mono"
           style={{
-            fontSize: 11,
+            fontSize: 13,
             letterSpacing: '0.16em',
             textTransform: 'uppercase',
             color: 'var(--color-text-secondary)',
@@ -371,7 +371,7 @@ export function SignatureBar({
           className="tabular-nums"
           style={{
             fontFamily: '"Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 800,
             fontSize: 22,
             color: fillColor,
@@ -383,7 +383,7 @@ export function SignatureBar({
           <span
             className="font-mono"
             style={{
-              fontSize: 11,
+              fontSize: 13,
               fontStyle: 'normal',
               fontWeight: 400,
               color: 'var(--color-text-muted)',
@@ -460,7 +460,7 @@ export function SignatureBar({
           className="mt-1.5 flex items-baseline gap-1.5"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 12,
             color: 'var(--color-text-muted)',
           }}

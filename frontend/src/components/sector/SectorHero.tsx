@@ -68,7 +68,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
           <div
             className="font-mono tabular-nums"
             style={{
-              fontSize: 11,
+              fontSize: 13,
               letterSpacing: '0.20em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
@@ -86,8 +86,8 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
         <div
           className="font-mono mb-4"
           style={{
-            fontSize: 10,
-            fontStyle: 'italic',
+            fontSize: 12,
+            fontStyle: 'normal',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: sectorAccent,
@@ -104,7 +104,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
               className="text-balance mb-1.5"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(32px, 4.4vw, 46px)',
                 lineHeight: 1.04,
@@ -165,7 +165,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 className="tabular-nums"
                 style={{
                   fontFamily: '"Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 46,
                   lineHeight: 1,
@@ -179,7 +179,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
               <div
                 className="font-mono mt-1"
                 style={{
-                  fontSize: 9,
+                  fontSize: 13,
                   color: 'var(--color-text-muted)',
                   opacity: 0.6,
                   letterSpacing: '0.10em',
@@ -193,7 +193,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
             <div
               className="font-mono text-center"
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
                 color: verdictColor,
@@ -205,7 +205,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
             {avgRisk > 0 && (
               <div
                 className="font-mono text-center mt-1"
-                style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}
+                style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}
               >
                 {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {Math.round(avgRisk * 100)} ({lang === 'es' ? localizeLevel(riskLevel, 'es').toLowerCase() : riskLevel})
               </div>
@@ -228,7 +228,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
             <p
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontSize: 17,
                 lineHeight: 1.55,
                 color: 'var(--color-text-secondary)',
@@ -239,7 +239,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 aria-hidden="true"
                 style={{
                   fontFamily: '"Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: '3.5em',
                   float: 'left',
@@ -271,7 +271,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
               <span
                 className="font-mono"
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
                   color: 'var(--color-text-muted)',
@@ -289,7 +289,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                   href={`#${a.id}`}
                   className="group font-mono inline-flex items-baseline gap-1.5 transition-colors"
                   style={{
-                    fontSize: 11,
+                    fontSize: 13,
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
                     color: 'var(--color-text-secondary)',
@@ -377,8 +377,8 @@ function ExposureLedger({
       <div
         className="font-mono"
         style={{
-          fontSize: 10,
-          fontStyle: 'italic',
+          fontSize: 12,
+          fontStyle: 'normal',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: sectorAccent,
@@ -394,7 +394,7 @@ function ExposureLedger({
         className="tabular-nums"
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 800,
           fontSize: 'clamp(30px, 3.6vw, 40px)',
           lineHeight: 1,
@@ -407,7 +407,7 @@ function ExposureLedger({
       <div
         className="font-mono"
         style={{
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -452,7 +452,7 @@ function ExposureLedger({
           <div
             className="font-mono"
             style={{
-              fontSize: 9.5,
+              fontSize: 13,
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
               color: 'var(--color-text-muted)',
@@ -490,7 +490,7 @@ function ExposureLedger({
                 <span
                   key={b.key}
                   className="font-mono inline-flex items-center gap-1.5 tabular-nums"
-                  style={{ fontSize: 10, color: 'var(--color-text-secondary)', letterSpacing: '0.02em' }}
+                  style={{ fontSize: 12, color: 'var(--color-text-secondary)', letterSpacing: '0.02em' }}
                 >
                   <span
                     aria-hidden="true"
@@ -537,7 +537,7 @@ function ExposureStat({
         className="tabular-nums"
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 800,
           fontSize: 22,
           lineHeight: 1.05,
@@ -550,7 +550,7 @@ function ExposureStat({
       <div
         className="font-mono"
         style={{
-          fontSize: 9.5,
+          fontSize: 13,
           letterSpacing: '0.10em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',

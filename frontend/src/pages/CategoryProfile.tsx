@@ -342,18 +342,18 @@ export default function CategoryProfile() {
           className="mb-4 flex items-center gap-3"
           style={{
             fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-            fontSize: '10px',
+            fontSize: '12px',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: 'var(--color-text-muted)',
             fontWeight: 400,
           }}
         >
-          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>
+          <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>
             Folio · {missingFolio}
           </span>
           <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+          <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
             {i18n.language.startsWith('es') ? 'Archivado · sin registro' : 'Archived · no record'}
           </span>
         </div>
@@ -367,7 +367,7 @@ export default function CategoryProfile() {
               className="text-text-primary leading-tight mb-3"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(24px, 3vw, 32px)',
                 letterSpacing: '-0.012em',
@@ -381,7 +381,7 @@ export default function CategoryProfile() {
             </p>
             <Link
               to="/sectors?view=categories"
-              className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.15em] text-accent hover:text-accent/80 transition-colors border border-accent/30 hover:border-accent/60 px-2.5 py-1.5 rounded-sm"
+              className="inline-flex items-center gap-1.5 text-[13px] font-mono uppercase tracking-[0.15em] text-accent hover:text-accent/80 transition-colors border border-accent/30 hover:border-accent/60 px-2.5 py-1.5 rounded-sm"
             >
               <ArrowLeft className="h-3 w-3" aria-hidden="true" />
               {t('profile.notFound.backLink')}
@@ -431,7 +431,7 @@ export default function CategoryProfile() {
       {/* HEADER — Folio identity · Playfair Italic headline · hero triptych */}
       {/* ================================================================= */}
       <header className="border-b border-border pb-4">
-        <nav aria-label="breadcrumb" className="flex items-center gap-1 mb-3 text-[11px] font-mono text-text-muted/60">
+        <nav aria-label="breadcrumb" className="flex items-center gap-1 mb-3 text-[13px] font-mono text-text-muted/60">
           <Link to="/categories" className="hover:text-text-muted transition-colors flex items-center gap-1">
             <ArrowLeft className="h-3 w-3" aria-hidden="true" />
             {t('profile.breadcrumb')}
@@ -455,14 +455,14 @@ export default function CategoryProfile() {
               className="mb-3 flex items-center gap-3 flex-wrap"
               style={{
                 fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-                fontSize: '10px',
+                fontSize: '12px',
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
                 color: 'var(--color-text-muted)',
                 fontWeight: 400,
               }}
             >
-              <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>
+              <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>
                 {isEs ? 'Categoría' : 'Category'}·{folioNumber}
               </span>
               <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
@@ -472,11 +472,11 @@ export default function CategoryProfile() {
                   style={{ color: sectorColor }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: sectorColor }} aria-hidden="true" />
-                  <span style={{ fontStyle: 'italic', fontWeight: 500 }}>{sectorLabel}</span>
+                  <span style={{ fontStyle: 'normal', fontWeight: 500 }}>{sectorLabel}</span>
                 </span>
               )}
               <span style={{ width: 18, height: 1, background: 'rgba(160, 104, 32, 0.25)' }} />
-              <span style={{ fontStyle: 'italic', fontWeight: 300 }}>COMPRANET 2002–2025</span>
+              <span style={{ fontStyle: 'normal', fontWeight: 300 }}>COMPRANET 2002–2025</span>
             </div>
 
             {/* Editorial headline — Playfair Italic, sector-spine accent */}
@@ -491,7 +491,7 @@ export default function CategoryProfile() {
                   className="text-text-primary"
                   style={{
                     fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 500,
                     fontSize: 'clamp(26px, 3.6vw, 36px)',
                     lineHeight: 1.0,
@@ -534,14 +534,14 @@ export default function CategoryProfile() {
             className="bg-background-card px-4 py-3 border-l-[3px]"
             style={{ borderLeftColor: sectorColor }}
           >
-            <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+            <p className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
               §1 · {t('profile.kpi.totalAmount')}
             </p>
             <p
               className="tabular-nums text-text-primary leading-none"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 800,
                 fontSize: 'clamp(28px, 3.4vw, 36px)',
                 color: sectorColor,
@@ -549,7 +549,7 @@ export default function CategoryProfile() {
             >
               {formatDualCurrency(category.total_value)}
             </p>
-            <p className="text-[11px] font-mono text-text-muted mt-1.5">
+            <p className="text-[13px] font-mono text-text-muted mt-1.5">
               {formatNumber(category.total_contracts)} {t('profile.kpi.contracts').toLowerCase()}
               <span className="text-text-muted/50"> · </span>
               {formatCompactMXN(avgContractValue)} {isEs ? 'promedio' : 'avg'}
@@ -561,7 +561,7 @@ export default function CategoryProfile() {
             className="bg-background-card px-4 py-3 border-l-[3px]"
             style={{ borderLeftColor: riskColor }}
           >
-            <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+            <p className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
               §2 · {t('profile.kpi.avgRisk')}
             </p>
             <div className="flex items-baseline gap-2">
@@ -569,7 +569,7 @@ export default function CategoryProfile() {
                 className="tabular-nums leading-none"
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 'clamp(28px, 3.4vw, 36px)',
                   color: riskColor,
@@ -579,7 +579,7 @@ export default function CategoryProfile() {
               </p>
               <span className="text-base font-mono text-text-muted">/100</span>
             </div>
-            <p className="text-[11px] font-mono mt-1.5" style={{ color: riskColor }}>
+            <p className="text-[13px] font-mono mt-1.5" style={{ color: riskColor }}>
               <span className="uppercase tracking-[0.1em]">{riskLevel}</span>
               <span className="text-text-muted/50"> · </span>
               <span className="text-text-muted">
@@ -593,7 +593,7 @@ export default function CategoryProfile() {
             className="bg-background-card px-4 py-3 border-l-[3px]"
             style={{ borderLeftColor: daColor }}
           >
-            <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+            <p className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
               §3 · {t('profile.kpi.directAward')}
             </p>
             <div className="flex items-baseline gap-2">
@@ -601,7 +601,7 @@ export default function CategoryProfile() {
                 className="tabular-nums leading-none"
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 'clamp(28px, 3.4vw, 36px)',
                   color: daColor,
@@ -611,7 +611,7 @@ export default function CategoryProfile() {
               </p>
               <span className="text-base font-mono text-text-muted">%</span>
             </div>
-            <p className="text-[11px] font-mono text-text-muted mt-1.5">
+            <p className="text-[13px] font-mono text-text-muted mt-1.5">
               {daPct > 25 ? (
                 <>
                   <span style={{ color: 'var(--color-oecd)' }}>
@@ -680,14 +680,14 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
             §5 · {t('profile.sections.byAdmin')}
           </p>
           <h2
             className="text-text-primary leading-tight"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: '17px',
               letterSpacing: '-0.005em',
@@ -701,7 +701,7 @@ export default function CategoryProfile() {
             <ChartSkeleton height={120} />
           ) : (
             <section className="mb-6">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted mb-3">
+              <p className="font-mono text-[12px] uppercase tracking-wider text-text-muted mb-3">
                 {isEs ? 'COMPARATIVO POR ADMINISTRACIÓN' : 'BY ADMINISTRATION'}
               </p>
               <div className="divide-y divide-border/20">
@@ -731,7 +731,7 @@ export default function CategoryProfile() {
                       </span>
                       <span
                         className="font-mono text-xs tabular-nums text-text-primary"
-                        style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 800 }}
+                        style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'normal', fontWeight: 800 }}
                       >
                         {formatCompactMXN(row.value)}
                       </span>
@@ -741,7 +741,7 @@ export default function CategoryProfile() {
                   <p className="text-xs text-text-muted py-2">{isEs ? 'Sin datos por administración' : 'No administration data'}</p>
                 )}
               </div>
-              <p className="text-[10px] text-text-muted/70 font-mono mt-2">
+              <p className="text-[12px] text-text-muted/70 font-mono mt-2">
                 {isEs ? 'Fuente: COMPRANET · valores nominales en MXN' : 'Source: COMPRANET · nominal values in MXN'}
               </p>
             </section>
@@ -754,14 +754,14 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
             §6 · {t('profile.sections.concentration')}
           </p>
           <h2
             className="text-text-primary leading-tight"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: '17px',
               letterSpacing: '-0.005em',
@@ -788,7 +788,7 @@ export default function CategoryProfile() {
                     const badge = getConcentrationBadge(topVendorsData.concentration_label, t)
                     return (
                       <span
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-[0.15em]"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[12px] font-mono uppercase tracking-[0.15em]"
                         style={{ color: badge.color, backgroundColor: badge.bg, border: `1px solid ${badge.color}30` }}
                       >
                         {badge.text}
@@ -805,7 +805,7 @@ export default function CategoryProfile() {
               </div>
               <div>
                 {/* Header row */}
-                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
+                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-6 flex-shrink-0">#</span>
                   <span className="flex-1 min-w-0">{t('profile.table.vendor')}</span>
                   <span className="w-28 text-right flex-shrink-0">{t('profile.table.share')}</span>
@@ -825,7 +825,7 @@ export default function CategoryProfile() {
                           idx === 0 && v.market_share_pct > 20 && 'border-l-2 border-l-amber-500/60',
                         )}
                       >
-                        <span className="text-[11px] text-text-muted/40 font-mono w-6 flex-shrink-0 tabular-nums">
+                        <span className="text-[13px] text-text-muted/40 font-mono w-6 flex-shrink-0 tabular-nums">
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -882,14 +882,14 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
             §7 · {t('profile.sections.relations')}
           </p>
           <h2
             className="text-text-primary leading-tight"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: '17px',
               letterSpacing: '-0.005em',
@@ -906,7 +906,7 @@ export default function CategoryProfile() {
               </div>
             ) : (vendorInstData?.data?.length ?? 0) > 0 ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
+                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-4 flex-shrink-0">#</span>
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     <User className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
@@ -927,7 +927,7 @@ export default function CategoryProfile() {
                         key={`${pair.vendor_id}-${pair.institution_id}`}
                         className="flex items-center gap-3 px-4 py-1.5 hover:bg-background-elevated/40 transition-colors group"
                       >
-                        <span className="text-[11px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">
+                        <span className="text-[13px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -978,14 +978,14 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
             §8 · {t('profile.sections.contracts')}
           </p>
           <h2
             className="text-text-primary leading-tight"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: '17px',
               letterSpacing: '-0.005em',
@@ -1002,7 +1002,7 @@ export default function CategoryProfile() {
               </div>
             ) : topContracts.length > 0 ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
+                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-4 flex-shrink-0">#</span>
                   <span className="flex-1 min-w-0">{t('profile.table.description')}</span>
                   <span className="w-20 text-right flex-shrink-0">{t('profile.table.amount')}</span>
@@ -1018,13 +1018,13 @@ export default function CategoryProfile() {
                         key={c.id}
                         className="flex items-center gap-3 px-4 py-1.5 hover:bg-background-elevated/30 transition-colors"
                       >
-                        <span className="text-[10px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">{idx + 1}</span>
+                        <span className="text-[12px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">{idx + 1}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-text-secondary whitespace-normal break-words leading-tight" title={c.title ?? ''}>
                             {c.title ? shortenContractName(c.title, 72) : t('profile.actions.noTitle')}
                           </p>
                           {c.institution_name && (
-                            <p className="text-[10px] text-text-muted/50 font-mono mt-0.5 whitespace-normal break-words leading-tight" title={c.institution_name ?? ''}>
+                            <p className="text-[12px] text-text-muted/50 font-mono mt-0.5 whitespace-normal break-words leading-tight" title={c.institution_name ?? ''}>
                               {c.institution_name}
                             </p>
                           )}
@@ -1037,11 +1037,11 @@ export default function CategoryProfile() {
                             <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" hideIcon sectorCode={category?.sector_code ?? null} />
                           ) : <span className="text-xs text-text-muted">---</span>}
                         </div>
-                        <span className="w-10 text-right text-[10px] text-text-muted font-mono flex-shrink-0 hidden md:block">
+                        <span className="w-10 text-right text-[12px] text-text-muted font-mono flex-shrink-0 hidden md:block">
                           {c.contract_year ?? '---'}
                         </span>
                         <span
-                          className="w-14 text-right text-[10px] font-mono uppercase flex-shrink-0"
+                          className="w-14 text-right text-[12px] font-mono uppercase flex-shrink-0"
                           style={{ color: contractRiskColor }}
                         >
                           {c.risk_level ?? '---'}
@@ -1075,14 +1075,14 @@ export default function CategoryProfile() {
       {(subcategoryLoading || (subcatBarData.length > 0)) && (
         <section>
           <div className="mb-2">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
+            <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
               §9 · {t('profile.sections.subcategories')}
             </p>
             <h2
               className="text-text-primary leading-tight"
               style={{
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: '17px',
                 letterSpacing: '-0.005em',
@@ -1133,13 +1133,13 @@ export default function CategoryProfile() {
             <div className="rounded-sm border border-border/60 overflow-hidden">
               <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <h3 id="price-section-title" className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-[0.15em]">
+                  <h3 id="price-section-title" className="text-[12px] font-mono font-bold text-text-muted uppercase tracking-[0.15em]">
                     {isEs ? '§10 · El Precio' : '§10 · Pricing'}
                   </h3>
                   <div className="flex items-center gap-2">
                     {heavySkew && (
                       <span
-                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                        className="text-[12px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
                         style={{ color: 'var(--color-risk-high)', backgroundColor: '#f59e0b18', border: '1px solid #f59e0b40' }}
                       >
                         {isEs ? 'Distribución asimétrica' : 'Heavy skew'}
@@ -1153,16 +1153,16 @@ export default function CategoryProfile() {
                 {/* KPI row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="rounded-sm border border-border p-3 bg-background-card">
-                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                    <div className="text-[12px] font-semibold text-text-muted uppercase tracking-widest">
                       {isEs ? 'Mediana' : 'Median'}
                     </div>
                     <div className="text-lg font-bold font-mono tabular-nums text-text-primary mt-0.5">
                       {formatCompactMXN(p50 ?? 0)}
                     </div>
-                    <div className="text-[10px] text-text-muted mt-0.5">P50</div>
+                    <div className="text-[12px] text-text-muted mt-0.5">P50</div>
                   </div>
                   <div className="rounded-sm border border-border p-3 bg-background-card">
-                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                    <div className="text-[12px] font-semibold text-text-muted uppercase tracking-widest">
                       {isEs ? 'Rango IQR' : 'IQR Range'}
                     </div>
                     <div className="text-base font-bold font-mono tabular-nums text-text-primary mt-0.5 leading-tight">
@@ -1171,11 +1171,11 @@ export default function CategoryProfile() {
                       <span className="text-text-muted text-xs">P75 </span>{formatCompactMXN(p75 ?? 0)}
                     </div>
                     {iqr !== null && (
-                      <div className="text-[10px] text-text-muted mt-0.5">IQR {formatCompactMXN(iqr)}</div>
+                      <div className="text-[12px] text-text-muted mt-0.5">IQR {formatCompactMXN(iqr)}</div>
                     )}
                   </div>
                   <div className="rounded-sm border border-border p-3 bg-background-card">
-                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                    <div className="text-[12px] font-semibold text-text-muted uppercase tracking-widest">
                       {isEs ? 'Media' : 'Mean'}
                     </div>
                     <div
@@ -1185,19 +1185,19 @@ export default function CategoryProfile() {
                       {formatCompactMXN(mean ?? 0)}
                     </div>
                     {mean_median_ratio !== null && (
-                      <div className="text-[10px] text-text-muted mt-0.5">
+                      <div className="text-[12px] text-text-muted mt-0.5">
                         {mean_median_ratio.toFixed(1)}× {isEs ? 'mediana' : 'median'}
                       </div>
                     )}
                   </div>
                   <div className="rounded-sm border border-border p-3 bg-background-card">
-                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                    <div className="text-[12px] font-semibold text-text-muted uppercase tracking-widest">
                       {isEs ? 'Valores atípicos' : 'Outliers'}
                     </div>
                     <div className="text-lg font-bold font-mono tabular-nums text-text-primary mt-0.5">
                       {formatNumber(outlier_count)}
                     </div>
-                    <div className="text-[10px] text-text-muted mt-0.5">
+                    <div className="text-[12px] text-text-muted mt-0.5">
                       {isEs ? 'sobre 1.5×IQR' : 'above 1.5×IQR'}
                     </div>
                   </div>
@@ -1206,7 +1206,7 @@ export default function CategoryProfile() {
                 {/* IQR band visualization */}
                 {p25 !== null && p50 !== null && p75 !== null && mean !== null && (
                   <div className="space-y-1.5">
-                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                    <div className="text-[12px] font-semibold text-text-muted uppercase tracking-widest">
                       {isEs ? 'Banda de precios (escala logarítmica)' : 'Price band (log scale)'}
                     </div>
                     {(() => {
@@ -1241,20 +1241,20 @@ export default function CategoryProfile() {
                           )}
                           {/* Labels */}
                           <div className="absolute inset-0 flex items-center">
-                            <div className="absolute text-[9px] font-mono text-text-muted" style={{ left: `${Math.max(x25, 1)}%`, transform: 'translateX(-50%)' }}>
+                            <div className="absolute text-[13px] font-mono text-text-muted" style={{ left: `${Math.max(x25, 1)}%`, transform: 'translateX(-50%)' }}>
                               P25
                             </div>
-                            <div className="absolute text-[9px] font-mono text-accent font-bold" style={{ left: `${x50}%`, transform: 'translateX(-50%)', top: '2px' }}>
+                            <div className="absolute text-[13px] font-mono text-accent font-bold" style={{ left: `${x50}%`, transform: 'translateX(-50%)', top: '2px' }}>
                               P50
                             </div>
-                            <div className="absolute text-[9px] font-mono text-text-muted" style={{ left: `${Math.min(x75, 99)}%`, transform: 'translateX(-50%)' }}>
+                            <div className="absolute text-[13px] font-mono text-text-muted" style={{ left: `${Math.min(x75, 99)}%`, transform: 'translateX(-50%)' }}>
                               P75
                             </div>
                           </div>
                         </div>
                       )
                     })()}
-                    <div className="flex items-center gap-4 text-[10px] text-text-muted">
+                    <div className="flex items-center gap-4 text-[12px] text-text-muted">
                       <span className="flex items-center gap-1">
                         <span className="inline-block w-3 h-2 bg-accent/20 border border-accent/40 rounded-[1px]" />
                         {isEs ? 'Banda IQR (P25–P75)' : 'IQR band (P25–P75)'}
@@ -1292,7 +1292,7 @@ export default function CategoryProfile() {
                 {/* Yearly avg value sparkline */}
                 {yearly_trend.length > 2 && (
                   <div className="space-y-1.5">
-                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                    <div className="text-[12px] font-semibold text-text-muted uppercase tracking-widest">
                       {isEs ? 'Valor medio por año (2015–)' : 'Avg. contract value by year (2015–)'}
                     </div>
                     <svg
@@ -1375,12 +1375,12 @@ export default function CategoryProfile() {
             <div className="rounded-sm border border-border/60 overflow-hidden">
               <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
+                  <span className="text-[13px] font-bold uppercase tracking-[0.15em] text-text-muted">
                     {isEs ? '§11 · COMPETENCIA' : '§11 · COMPETITION'}
                   </span>
                   {daAboveSector && (
                     <span
-                      className="text-[9px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+                      className="text-[13px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
                       style={{ color: '#f87171', backgroundColor: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)' }}
                     >
                       {isEs ? 'Alta adjudicación directa' : 'High direct award'}
@@ -1407,11 +1407,11 @@ export default function CategoryProfile() {
                     >
                       {daPct.toFixed(0)}%
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wider mt-0.5">
                       {isEs ? 'Directa' : 'Direct award'}
                     </div>
                     {sector_da_avg != null && (
-                      <div className="text-[10px] text-text-muted mt-0.5">
+                      <div className="text-[12px] text-text-muted mt-0.5">
                         {isEs ? 'sector' : 'sector'} {sectorDa.toFixed(0)}%
                         <span className={daPct > sectorDa ? ' text-risk-high' : ' text-text-muted'}> {daPct > sectorDa ? '▲' : '▼'}</span>
                       </div>
@@ -1424,7 +1424,7 @@ export default function CategoryProfile() {
                     >
                       {(tendRow?.pct_contracts ?? 0).toFixed(0)}%
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wider mt-0.5">
                       {isEs ? 'Licitación' : 'Public tender'}
                     </div>
                   </div>
@@ -1435,11 +1435,11 @@ export default function CategoryProfile() {
                     >
                       {catSbPct.toFixed(0)}%
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wider mt-0.5">
                       {isEs ? 'Oferta única' : 'Single bid'}
                     </div>
                     {sector_sb_avg != null && (
-                      <div className="text-[10px] text-text-muted mt-0.5">
+                      <div className="text-[12px] text-text-muted mt-0.5">
                         {isEs ? 'sector' : 'sector'} {sector_sb_avg.toFixed(0)}%
                       </div>
                     )}
@@ -1448,7 +1448,7 @@ export default function CategoryProfile() {
 
                 {/* Procedure breakdown bar */}
                 <div>
-                  <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
+                  <div className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-2">
                     {isEs ? 'Desglose por procedimiento' : 'Procedure breakdown'}
                   </div>
                   <div className="h-5 rounded-sm overflow-hidden flex w-full">
@@ -1474,10 +1474,10 @@ export default function CategoryProfile() {
                         return (
                           <div key={p.type} className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
-                            <span className="text-[11px] text-text-secondary">
+                            <span className="text-[13px] text-text-secondary">
                               {isEs ? meta.es : meta.en}
                             </span>
-                            <span className="text-[11px] font-mono tabular-nums text-text-muted">
+                            <span className="text-[13px] font-mono tabular-nums text-text-muted">
                               {p.pct_contracts.toFixed(0)}%
                             </span>
                           </div>
@@ -1498,7 +1498,7 @@ export default function CategoryProfile() {
                   const lastYear = yearly_trend[yearly_trend.length - 1].year
                   return (
                     <div>
-                      <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
+                      <div className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-1">
                         {isEs ? 'Tendencia adjudicación directa %' : 'Direct award % trend'}
                       </div>
                       <div className="relative">
@@ -1521,7 +1521,7 @@ export default function CategoryProfile() {
                             strokeLinejoin="round"
                           />
                         </svg>
-                        <div className="flex justify-between text-[9px] text-text-muted font-mono mt-0.5">
+                        <div className="flex justify-between text-[13px] text-text-muted font-mono mt-0.5">
                           <span>{firstYear}</span>
                           {sector_da_avg != null && (
                             <span className="text-text-muted/60">
@@ -1559,12 +1559,12 @@ export default function CategoryProfile() {
             <div className="rounded-sm border border-border/60 overflow-hidden">
               <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
+                  <span className="text-[13px] font-bold uppercase tracking-[0.15em] text-text-muted">
                     {isEs ? '§12 · ESTACIONALIDAD' : '§12 · SEASONALITY'}
                   </span>
                   {decemberRush && (
                     <span
-                      className="text-[9px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+                      className="text-[13px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
                       style={{ color: '#fb923c', backgroundColor: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.3)' }}
                     >
                       {isEs ? 'Avalancha diciembre' : 'December rush'}
@@ -1594,7 +1594,7 @@ export default function CategoryProfile() {
                     >
                       {december_pct_value.toFixed(1)}%
                     </div>
-                    <div className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">
+                    <div className="text-[12px] text-text-muted uppercase tracking-wider mt-0.5">
                       {isEs ? 'del gasto en diciembre' : 'of spend in December'}
                     </div>
                   </div>
@@ -1616,7 +1616,7 @@ export default function CategoryProfile() {
 
                 {/* Monthly bar chart */}
                 <div>
-                  <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
+                  <div className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-2">
                     {isEs ? 'Gasto por mes (% del total)' : 'Spend by month (% of total)'}
                   </div>
                   <div className="flex items-end gap-1 h-16">
@@ -1648,7 +1648,7 @@ export default function CategoryProfile() {
                     })}
                   </div>
                   {/* uniform reference label */}
-                  <div className="text-[9px] text-text-muted/60 mt-1 text-right font-mono">
+                  <div className="text-[13px] text-text-muted/60 mt-1 text-right font-mono">
                     — {isEs ? 'cuota uniforme 8.3%' : 'uniform 8.3%'}
                   </div>
                 </div>
@@ -1663,7 +1663,7 @@ export default function CategoryProfile() {
                   }).join(' ')
                   return (
                     <div>
-                      <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
+                      <div className="text-[12px] font-medium uppercase tracking-widest text-text-muted mb-1">
                         {isEs ? 'Diciembre % año a año' : 'December % year-over-year'}
                       </div>
                       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 40 }}
@@ -1674,7 +1674,7 @@ export default function CategoryProfile() {
                           stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,3" />
                         <polyline points={pts} fill="none" stroke="#fb923c" strokeWidth="1.5" strokeLinejoin="round" />
                       </svg>
-                      <div className="flex justify-between text-[9px] text-text-muted font-mono mt-0.5">
+                      <div className="flex justify-between text-[13px] text-text-muted font-mono mt-0.5">
                         <span>{yearly_december[0].year}</span>
                         <span className="text-text-muted/60">— {isEs ? 'cuota uniform' : 'uniform'} 8.3%</span>
                         <span>{yearly_december[yearly_december.length - 1].year}</span>
@@ -1707,12 +1707,12 @@ export default function CategoryProfile() {
             <div className="rounded-sm border border-border/60 overflow-hidden">
               <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
+                  <span className="text-[13px] font-bold uppercase tracking-[0.15em] text-text-muted">
                     {isEs ? '§13 · PATRONES' : '§13 · PATTERNS'}
                   </span>
                   {dominant_pattern && (
                     <span
-                      className="text-[9px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+                      className="text-[13px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
                       style={{
                         color: patterns[0]?.color ?? '#94a3b8',
                         backgroundColor: `${patterns[0]?.color ?? '#94a3b8'}18`,
@@ -1760,16 +1760,16 @@ export default function CategoryProfile() {
                         <div className="flex items-center justify-between mb-0.5">
                           <div className="flex items-center gap-2">
                             <span
-                              className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-sm"
+                              className="text-[12px] font-bold font-mono px-1.5 py-0.5 rounded-sm"
                               style={{ color: p.color, backgroundColor: `${p.color}18`, border: `1px solid ${p.color}40` }}
                             >
                               {p.pattern}
                             </span>
-                            <span className="text-[11px] text-text-secondary">
+                            <span className="text-[13px] text-text-secondary">
                               {isEs ? p.label_es : p.label_en}
                             </span>
                           </div>
-                          <span className="text-[11px] font-mono tabular-nums text-text-muted">
+                          <span className="text-[13px] font-mono tabular-nums text-text-muted">
                             {p.vendor_count.toLocaleString(isEs ? 'es-MX' : 'en-US')}
                           </span>
                         </div>
@@ -1784,7 +1784,7 @@ export default function CategoryProfile() {
                   })}
                 </div>
 
-                <div className="text-[10px] text-text-muted border-t border-border/30 pt-2">
+                <div className="text-[12px] text-text-muted border-t border-border/30 pt-2">
                   {isEs
                     ? `${vendors_in_aria.toLocaleString('es-MX')} de ${total_vendors.toLocaleString('es-MX')} proveedores (${((vendors_in_aria / total_vendors) * 100).toFixed(0)}%) en la cola ARIA`
                     : `${vendors_in_aria.toLocaleString('en-US')} of ${total_vendors.toLocaleString('en-US')} vendors (${((vendors_in_aria / total_vendors) * 100).toFixed(0)}%) in the ARIA queue`}
@@ -1842,14 +1842,14 @@ export default function CategoryProfile() {
         return (
           <section>
             <div className="mb-2">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
+              <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
                 {isEs ? '§14 · DIAGNÓSTICO' : '§14 · VERDICT'}
               </p>
               <h2
                 className="text-text-primary leading-tight"
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 500,
                   fontSize: '17px',
                   letterSpacing: '-0.005em',
@@ -1865,7 +1865,7 @@ export default function CategoryProfile() {
               <div className="flex items-start gap-4 flex-wrap md:flex-nowrap">
                 <div className="shrink-0">
                   <span
-                    className="inline-flex items-center px-3 py-1.5 rounded-sm text-[11px] font-mono font-bold uppercase tracking-[0.15em]"
+                    className="inline-flex items-center px-3 py-1.5 rounded-sm text-[13px] font-mono font-bold uppercase tracking-[0.15em]"
                     style={{ color: verdictColor, backgroundColor: `${verdictColor}15`, border: `1px solid ${verdictColor}30` }}
                   >
                     {isEs ? verdictEs : verdictEn}
@@ -1875,7 +1875,7 @@ export default function CategoryProfile() {
                   <p className="text-sm text-text-secondary leading-[1.65]" style={{ fontFamily: 'var(--font-family-serif)' }}>
                     {isEs ? descEs : descEn}
                   </p>
-                  <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-mono text-text-muted/80 pt-2 border-t border-border/40">
+                  <div className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] font-mono text-text-muted/80 pt-2 border-t border-border/40">
                     <span>HHI <span className="font-bold tabular-nums" style={{ color: verdictColor }}>{hhi.toFixed(0)}</span></span>
                     <span>Top 3 <span className="font-bold tabular-nums" style={{ color: verdictColor }}>{top3.toFixed(0)}%</span></span>
                     <span>{isEs ? 'AD' : 'DA'} <span className="font-bold tabular-nums" style={{ color: daColor }}>{da.toFixed(0)}%</span></span>
@@ -1906,14 +1906,14 @@ export default function CategoryProfile() {
         return (
           <section>
             <div className="mb-2">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
+              <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
                 {isEs ? '§15 · COMPARACIÓN' : '§15 · COMPARISON'}
               </p>
               <h2
                 className="text-text-primary leading-tight"
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 500,
                   fontSize: '17px',
                   letterSpacing: '-0.005em',
@@ -2022,7 +2022,7 @@ export default function CategoryProfile() {
               >
                 {isEs ? 'Ver en el Atlas' : 'View in Atlas'}
               </Link>
-              <span className="text-[10px] font-mono text-text-muted/50 uppercase tracking-wider">
+              <span className="text-[12px] font-mono text-text-muted/50 uppercase tracking-wider">
                 {isEs ? 'Indicador estadístico · no prueba de irregularidades' : 'Statistical indicator · not evidence of wrongdoing'}
               </span>
             </div>

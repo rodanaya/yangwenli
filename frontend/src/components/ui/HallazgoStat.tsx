@@ -34,7 +34,7 @@ export function HallazgoStat({
         {label}
       </div>
       {annotation && (
-        <div className="text-[11px] text-text-muted/70 mt-1 leading-[1.35]">
+        <div className="text-[13px] text-text-muted/70 mt-1 leading-[1.35]">
           {annotation}
         </div>
       )}

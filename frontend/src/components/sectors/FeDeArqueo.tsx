@@ -28,7 +28,7 @@ export interface FeDeArqueoProps {
 
 // Kicker — mono 10px, wide tracking, uppercase, muted.
 const KICKER_STYLE: CSSProperties = {
-  fontSize: 10,
+  fontSize: 12,
   letterSpacing: '0.18em',
   textTransform: 'uppercase',
   fontWeight: 600,
@@ -38,15 +38,15 @@ const KICKER_STYLE: CSSProperties = {
 // Clause numerals — mono 9.5px, muted, tabular.
 const NUM_STYLE: CSSProperties = {
   fontFamily: 'ui-monospace, "IBM Plex Mono", monospace',
-  fontSize: 9.5,
+  fontSize: 13,
   color: 'var(--color-text-muted)',
   fontVariantNumeric: 'tabular-nums',
 }
 
-// Clause body — EB Garamond italic 12.5px (the ExposureLedger marginalia pattern).
+// Clause body — EB Garamond 12.5px (the ExposureLedger marginalia pattern).
 const CLAUSE_STYLE: CSSProperties = {
   fontFamily: '"EB Garamond", Georgia, serif',
-  fontStyle: 'italic',
+  fontStyle: 'normal',
   fontSize: 12.5,
   lineHeight: 1.5,
   color: 'var(--color-text-secondary)',
@@ -151,7 +151,7 @@ export function FeDeArqueo({ view, lang, totals }: FeDeArqueoProps) {
           <Link
             to="/methodology"
             className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"
-            style={{ fontSize: 10, letterSpacing: '0.02em', color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 12, letterSpacing: '0.02em', color: 'var(--color-text-secondary)' }}
           >
             {lang === 'es' ? 'modelo v0.8.5 · AUC 0.785 · metodología ↗' : 'model v0.8.5 · AUC 0.785 · methodology ↗'}
           </Link>

@@ -44,7 +44,7 @@ export function TwoWorldsExhibit() {
   return (
     <section id="two-worlds" className="scroll-mt-20 rounded-sm border border-border bg-background-card overflow-hidden">
       <header className="px-5 sm:px-6 py-5 border-b border-border">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]" style={{ color: C_OVERLAP }}>
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em]" style={{ color: C_OVERLAP }}>
           {lang === 'es' ? 'Exhibit · por qué el modelo no es redundante' : "Exhibit · why the model isn't redundant"}
         </p>
         <h3 className="mt-2 text-text-primary leading-[1.1]" style={{ fontFamily: SERIF, fontWeight: 800, fontSize: 'clamp(22px, 3vw, 34px)', letterSpacing: '-0.02em', maxWidth: '20ch' }}>
@@ -70,23 +70,23 @@ export function TwoWorldsExhibit() {
           <circle cx={462} cy={190} r={70} clipPath="url(#exhibit-lens-clip)" fill={C_OVERLAP} fillOpacity={0.45} stroke={C_OVERLAP} strokeOpacity={0.75} strokeWidth={1.5} />
           {/* labels */}
           <g pointerEvents="none" style={{ fontFamily: 'var(--font-family-mono, "IBM Plex Mono", monospace)' }}>
-            <text x={118} y={96} fill={C_MODEL} fontSize={11} fontWeight={700} letterSpacing="1.6">{lang === 'es' ? 'MODELO RUBLI' : 'RUBLI MODEL'}</text>
-            <text x={117} y={138} fill={C_MODEL} fontSize={40} fontWeight={800} fontStyle="italic" style={{ fontFamily: SERIF }}>{formatNumber(w.model_flags)}</text>
-            <text x={119} y={157} fill="var(--color-text-muted)" fontSize={11}>{lang === 'es' ? 'marcados · riesgo ≥40' : 'flagged · risk ≥40'}</text>
-            <text x={205} y={246} fill={C_MODEL} fontSize={22} fontWeight={800} fontStyle="italic" textAnchor="middle" style={{ fontFamily: SERIF }}>{formatNumber(w.ghost_signature)}</text>
-            <text x={205} y={263} fill="var(--color-text-secondary)" fontSize={9} fontWeight={700} letterSpacing="0.5" textAnchor="middle">{lang === 'es' ? 'HUELLA FANTASMA' : 'GHOST SIGNATURE'}</text>
+            <text x={118} y={96} fill={C_MODEL} fontSize={13} fontWeight={700} letterSpacing="1.6">{lang === 'es' ? 'MODELO RUBLI' : 'RUBLI MODEL'}</text>
+            <text x={117} y={138} fill={C_MODEL} fontSize={40} fontWeight={800} fontStyle="normal" style={{ fontFamily: SERIF }}>{formatNumber(w.model_flags)}</text>
+            <text x={119} y={157} fill="var(--color-text-muted)" fontSize={13}>{lang === 'es' ? 'marcados · riesgo ≥40' : 'flagged · risk ≥40'}</text>
+            <text x={205} y={246} fill={C_MODEL} fontSize={22} fontWeight={800} fontStyle="normal" textAnchor="middle" style={{ fontFamily: SERIF }}>{formatNumber(w.ghost_signature)}</text>
+            <text x={205} y={263} fill="var(--color-text-secondary)" fontSize={13} fontWeight={700} letterSpacing="0.5" textAnchor="middle">{lang === 'es' ? 'HUELLA FANTASMA' : 'GHOST SIGNATURE'}</text>
             <line x1={540} y1={138} x2={512} y2={166} stroke="var(--color-border)" strokeWidth={1} />
-            <text x={548} y={128} fill={C_RECORD} fontSize={11} fontWeight={700} letterSpacing="1.4">{lang === 'es' ? 'REGISTRO OFICIAL' : 'OFFICIAL RECORD'}</text>
-            <text x={548} y={144} fill="var(--color-text-muted)" fontSize={10}>SAT EFOS + SFP</text>
-            <text x={548} y={180} fill={C_RECORD} fontSize={29} fontWeight={800} fontStyle="italic" style={{ fontFamily: SERIF }}>{formatNumber(w.official_record)}</text>
+            <text x={548} y={128} fill={C_RECORD} fontSize={13} fontWeight={700} letterSpacing="1.4">{lang === 'es' ? 'REGISTRO OFICIAL' : 'OFFICIAL RECORD'}</text>
+            <text x={548} y={144} fill="var(--color-text-muted)" fontSize={12}>SAT EFOS + SFP</text>
+            <text x={548} y={180} fill={C_RECORD} fontSize={29} fontWeight={800} fontStyle="normal" style={{ fontFamily: SERIF }}>{formatNumber(w.official_record)}</text>
             <line x1={503} y1={235} x2={492} y2={218} stroke="var(--color-border)" strokeWidth={1} />
-            <text x={508} y={247} fill="var(--color-text-secondary)" fontSize={11}>
-              <tspan fontStyle="italic" fontSize={15} style={{ fontFamily: SERIF }}>{formatNumber(w.blind_spots)}</tspan>
+            <text x={508} y={247} fill="var(--color-text-secondary)" fontSize={13}>
+              <tspan fontStyle="normal" fontSize={15} style={{ fontFamily: SERIF }}>{formatNumber(w.blind_spots)}</tspan>
               <tspan dx="6" fill="var(--color-text-muted)">{lang === 'es' ? 'puntos ciegos' : 'blind spots'}</tspan>
             </text>
             <line x1={410} y1={78} x2={410} y2={138} stroke={C_OVERLAP} strokeOpacity={0.6} strokeWidth={1} />
-            <text x={410} y={56} fill={C_OVERLAP} fontSize={29} fontWeight={800} fontStyle="italic" textAnchor="middle" style={{ fontFamily: SERIF }}>{formatNumber(w.overlap)}</text>
-            <text x={410} y={73} fill="var(--color-text-secondary)" fontSize={10} fontWeight={700} letterSpacing="0.5" textAnchor="middle">{lang === 'es' ? 'AMBOS COINCIDEN' : 'BOTH AGREE'}</text>
+            <text x={410} y={56} fill={C_OVERLAP} fontSize={29} fontWeight={800} fontStyle="normal" textAnchor="middle" style={{ fontFamily: SERIF }}>{formatNumber(w.overlap)}</text>
+            <text x={410} y={73} fill="var(--color-text-secondary)" fontSize={12} fontWeight={700} letterSpacing="0.5" textAnchor="middle">{lang === 'es' ? 'AMBOS COINCIDEN' : 'BOTH AGREE'}</text>
           </g>
         </svg>
       </div>
@@ -97,16 +97,16 @@ export function TwoWorldsExhibit() {
           <div key={l.k} className="bg-background-card px-4 py-3">
             <div className="flex items-baseline gap-2">
               <span className="inline-block w-2 h-2 rounded-full" style={{ background: l.color }} aria-hidden="true" />
-              <span className="text-[10px] font-mono uppercase tracking-[0.12em]" style={{ color: l.color }}>{l.k}</span>
+              <span className="text-[12px] font-mono uppercase tracking-[0.12em]" style={{ color: l.color }}>{l.k}</span>
             </div>
-            <div className="mt-1 font-mono text-lg font-bold tabular-nums" style={{ color: l.color, fontFamily: SERIF, fontStyle: 'italic' }}>{formatNumber(l.n)}</div>
-            <p className="text-[10px] font-mono text-text-muted leading-[1.4] mt-0.5">{lang === 'es' ? l.gloss[0] : l.gloss[1]}</p>
+            <div className="mt-1 font-mono text-lg font-bold tabular-nums" style={{ color: l.color, fontFamily: SERIF, fontStyle: 'normal' }}>{formatNumber(l.n)}</div>
+            <p className="text-[12px] font-mono text-text-muted leading-[1.4] mt-0.5">{lang === 'es' ? l.gloss[0] : l.gloss[1]}</p>
           </div>
         ))}
       </div>
 
       <div className="px-5 sm:px-6 py-4">
-        <p className="text-[11px] leading-[1.6] text-text-secondary">
+        <p className="text-[13px] leading-[1.6] text-text-secondary">
           {lang === 'es'
             ? <>El «registro oficial» son solo SAT EFOS (Art. 69-B) + SFP — <strong className="text-text-primary">no</strong> incluye el corpus de casos de RUBLI, que sería circular (el modelo se entrenó con él). Los <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.ghost_signature)}</strong> proveedores que solo el modelo ve son las pistas de investigación — viven en <Link to="/aria" className="underline underline-offset-2 hover:text-text-primary">la Lista de Vigilancia (ARIA)</Link>.</>
             : <>"Official record" is SAT EFOS (Art. 69-B) + SFP only — it does <strong className="text-text-primary">not</strong> include RUBLI's own case corpus, which would be circular (the model trained on it). The <strong className="tabular-nums" style={{ color: C_MODEL }}>{formatNumber(w.ghost_signature)}</strong> suppliers only the model sees are the investigation leads — they live in <Link to="/aria" className="underline underline-offset-2 hover:text-text-primary">the Queue (ARIA)</Link>.</>}

@@ -87,7 +87,7 @@ export function LeadCase({
     >
       <div
         className="flex items-baseline justify-between gap-4 mb-4 font-mono uppercase"
-        style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--color-text-muted)' }}
+        style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)' }}
       >
         <span style={{ color: 'var(--color-accent)', fontWeight: 700 }}>
           {lang === 'es' ? 'Caso líder · mayor daño documentado' : 'Lead case · largest documented loss'}
@@ -103,7 +103,7 @@ export function LeadCase({
               className="group-hover:opacity-80 transition-opacity"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 500,
                 fontSize: 'clamp(24px, 3.2vw, 38px)',
                 lineHeight: 1.08,
@@ -133,13 +133,13 @@ export function LeadCase({
             <DispositionSeal status={cas.legal_status} lang={lang} size="md" />
             <span
               className="font-mono uppercase"
-              style={{ fontSize: 10, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
+              style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
             >
               {fraudLabel(cas.fraud_type, lang)}
             </span>
             <span
               className="font-mono uppercase"
-              style={{ fontSize: 10, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
             >
               {sexenioLabel(cas, lang)}
             </span>
@@ -147,7 +147,7 @@ export function LeadCase({
             {cas.ground_truth_case_id != null && (
               <span
                 className="font-mono"
-                style={{ fontSize: 9, letterSpacing: '0.16em', color: 'var(--color-accent)', fontWeight: 700 }}
+                style={{ fontSize: 13, letterSpacing: '0.16em', color: 'var(--color-accent)', fontWeight: 700 }}
               >
                 ▪ GT
               </span>
@@ -155,7 +155,7 @@ export function LeadCase({
           </div>
           <p
             className="mt-2 font-mono tabular-nums"
-            style={{ fontSize: 10.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+            style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
           >
             {arcMicro(cas, lang)}
           </p>
@@ -176,7 +176,7 @@ export function LeadCase({
                 className="tabular-nums"
                 style={{
                   fontFamily: '"Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 'clamp(34px, 4.4vw, 52px)',
                   lineHeight: 1,
@@ -188,7 +188,7 @@ export function LeadCase({
               </div>
               <div
                 className="font-mono mt-2 uppercase"
-                style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
+                style={{ fontSize: 13, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
               >
                 {lang === 'es' ? 'Pérdida documentada' : 'Documented loss'}
                 {cas.amount_mxn_high && cas.amount_mxn_high !== cas.amount_mxn_low && (
@@ -200,14 +200,14 @@ export function LeadCase({
           <div className="mt-3" style={{ borderLeft: '2px solid rgba(160,104,32,0.45)', paddingLeft: 12 }}>
             <p
               className="font-mono uppercase mb-1"
-              style={{ fontSize: 9, letterSpacing: '0.2em', color: 'var(--color-accent)', fontWeight: 600 }}
+              style={{ fontSize: 13, letterSpacing: '0.2em', color: 'var(--color-accent)', fontWeight: 600 }}
             >
               {lang === 'es' ? 'El hallazgo' : 'The finding'}
             </p>
             <p
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontSize: 15,
                 lineHeight: 1.45,
                 color: 'var(--color-text-primary)',
@@ -220,7 +220,7 @@ export function LeadCase({
             to={caseTo(cas).pathname}
             state={caseTo(cas).state}
             className="mt-4 inline-flex items-center gap-1.5 font-mono uppercase hover:opacity-70 transition-opacity"
-            style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-primary)', fontWeight: 600 }}
+            style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-primary)', fontWeight: 600 }}
           >
             {lang === 'es' ? 'Leer el expediente' : 'Read the file'}
             <ChevronRight className="h-3 w-3" aria-hidden="true" />
@@ -252,13 +252,13 @@ export function SecondaryCaseCard({
         <div className="flex items-baseline justify-between gap-3 mb-1.5">
           <span
             className="font-mono uppercase"
-            style={{ fontSize: 9, letterSpacing: '0.16em', color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 13, letterSpacing: '0.16em', color: 'var(--color-text-secondary)' }}
           >
             {fraudLabel(cas.fraud_type, lang)}
           </span>
           <span
             className="font-mono tabular-nums"
-            style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
+            style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
           >
             {folio(cas.id)}
           </span>
@@ -267,7 +267,7 @@ export function SecondaryCaseCard({
           className="group-hover:opacity-80 transition-opacity"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 500,
             fontSize: 'clamp(17px, 1.8vw, 21px)',
             lineHeight: 1.2,
@@ -298,7 +298,7 @@ export function SecondaryCaseCard({
         </div>
         <p
           className="mt-1.5 font-mono tabular-nums"
-          style={{ fontSize: 9.5, letterSpacing: '0.05em', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 13, letterSpacing: '0.05em', color: 'var(--color-text-muted)' }}
         >
           {arcMicro(cas, lang)}
         </p>
@@ -328,7 +328,7 @@ export function AgateLedger({
       {header && (
         <div
           className="flex items-center gap-3 mt-8 mb-2 font-mono uppercase"
-          style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
+          style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
         >
           <span>{header}</span>
           <span aria-hidden="true" className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
@@ -393,7 +393,7 @@ function AgateRow({
         {/* Folio */}
         <span
           className="hidden sm:block font-mono tabular-nums"
-          style={{ fontSize: 9.5, letterSpacing: '0.08em', color: 'var(--color-accent)' }}
+          style={{ fontSize: 13, letterSpacing: '0.08em', color: 'var(--color-accent)' }}
         >
           {folio(cas.id)}
         </span>
@@ -422,14 +422,14 @@ function AgateRow({
         {/* Sexenio */}
         <span
           className="hidden md:block font-mono uppercase truncate"
-          style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
         >
           {sexenioLabel(cas, lang)}
         </span>
         {/* Years */}
         <span
           className="hidden md:block font-mono tabular-nums"
-          style={{ fontSize: 10.5, color: 'var(--color-text-secondary)' }}
+          style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
         >
           {yearSpan(cas)}
         </span>
@@ -440,7 +440,7 @@ function AgateRow({
         {/* Status */}
         <span
           className="hidden sm:flex items-center gap-1 font-mono uppercase truncate"
-          style={{ fontSize: 9, letterSpacing: '0.1em', color: meta.ink, fontWeight: 600 }}
+          style={{ fontSize: 13, letterSpacing: '0.1em', color: meta.ink, fontWeight: 600 }}
         >
           {meta.ring && (
             <span
@@ -461,7 +461,7 @@ function AgateRow({
           className="text-right tabular-nums"
           style={{
             fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 11.5,
+            fontSize: 13.5,
             color: 'var(--color-text-primary)',
           }}
         >

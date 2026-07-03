@@ -1,7 +1,7 @@
 /**
  * DossierSectionHeader — tight, left-aligned § section header shared across the
  * canonical entity dossiers (vendor + contract). Mono § eyebrow + EB Garamond
- * italic title + sector-tinted hairline rule, with an optional right-aligned
+ * title + sector-tinted hairline rule, with an optional right-aligned
  * mono meta readout.
  *
  * Lifted 2026-06-13 (DESIGNUS "El Cotejo", Day-6) from a local function in
@@ -33,7 +33,7 @@ export function DossierSectionHeader({
           id={`${id}-eyebrow`}
           className="font-mono flex-shrink-0"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: accent,
@@ -46,7 +46,7 @@ export function DossierSectionHeader({
           className="truncate"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 500,
             fontSize: 18,
             color: 'var(--color-text-primary)',
@@ -59,7 +59,7 @@ export function DossierSectionHeader({
       {meta && (
         <span
           className="font-mono tabular-nums flex-shrink-0"
-          style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
         >
           {meta}
         </span>

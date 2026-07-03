@@ -112,53 +112,53 @@ export function VennConvergence({ lang = 'es' }: Props) {
         />
 
         {/* LEFT-only stats */}
-        <text x={CX_LEFT - RX * 0.55} y={CY - 24} fontSize={11} fontFamily="monospace"
+        <text x={CX_LEFT - RX * 0.55} y={CY - 24} fontSize={13} fontFamily="monospace"
           fontWeight="700" fill={blueHex} textAnchor="middle">31,800</text>
-        <text x={CX_LEFT - RX * 0.55} y={CY - 10} fontSize={9} fontFamily="monospace"
+        <text x={CX_LEFT - RX * 0.55} y={CY - 10} fontSize={13} fontFamily="monospace"
           fill={textMuted} textAnchor="middle">
           {lang === 'es' ? 'solo modelo' : 'model-only'}
         </text>
 
         {/* RIGHT-only stats */}
-        <text x={CX_RIGHT + RX * 0.55} y={CY - 24} fontSize={11} fontFamily="monospace"
+        <text x={CX_RIGHT + RX * 0.55} y={CY - 24} fontSize={13} fontFamily="monospace"
           fontWeight="700" fill={grayHex} textAnchor="middle">18,600</text>
-        <text x={CX_RIGHT + RX * 0.55} y={CY - 10} fontSize={9} fontFamily="monospace"
+        <text x={CX_RIGHT + RX * 0.55} y={CY - 10} fontSize={13} fontFamily="monospace"
           fill={textMuted} textAnchor="middle">
           {lang === 'es' ? 'solo IForest' : 'IForest-only'}
         </text>
 
         {/* Overlap center — big number + caption */}
         <text x={W / 2} y={CY - 12} fontSize={28}
-          fontFamily="Playfair Display, Georgia, serif" fontStyle="italic" fontWeight="800"
+          fontFamily="Playfair Display, Georgia, serif" fontStyle="normal" fontWeight="800"
           fill={accent} textAnchor="middle">
           {OVERLAP_CONTRACTS}
         </text>
-        <text x={W / 2} y={CY + 8} fontSize={9} fontFamily="monospace"
+        <text x={W / 2} y={CY + 8} fontSize={13} fontFamily="monospace"
           fill={overlapInk} textAnchor="middle">
           {lang === 'es' ? 'contratos señalados' : 'contracts flagged'}
         </text>
-        <text x={W / 2} y={CY + 22} fontSize={9} fontFamily="monospace"
+        <text x={W / 2} y={CY + 22} fontSize={13} fontFamily="monospace"
           fill={overlapInk} textAnchor="middle">
           {lang === 'es' ? 'por ambos algoritmos' : 'by both algorithms'}
         </text>
 
         {/* Circle labels at top */}
-        <text x={CX_LEFT} y={CY - RY - 14} fontSize={11} fontFamily="monospace"
+        <text x={CX_LEFT} y={CY - RY - 14} fontSize={13} fontFamily="monospace"
           fontWeight="600" fill={blueHex} textAnchor="middle">{leftLabel}</text>
-        <text x={CX_LEFT} y={CY - RY - 2} fontSize={9} fontFamily="monospace"
+        <text x={CX_LEFT} y={CY - RY - 2} fontSize={13} fontFamily="monospace"
           fill={textMuted} textAnchor="middle">
           {lang === 'es' ? 'RUBLI v0.8.5 · regresión logística' : 'RUBLI v0.8.5 · logistic regression'}
         </text>
 
-        <text x={CX_RIGHT} y={CY - RY - 14} fontSize={11} fontFamily="monospace"
+        <text x={CX_RIGHT} y={CY - RY - 14} fontSize={13} fontFamily="monospace"
           fontWeight="600" fill={grayHex} textAnchor="middle">{rightLabel}</text>
-        <text x={CX_RIGHT} y={CY - RY - 2} fontSize={9} fontFamily="monospace"
+        <text x={CX_RIGHT} y={CY - RY - 2} fontSize={13} fontFamily="monospace"
           fill={textMuted} textAnchor="middle">
           {lang === 'es' ? 'PyOD IForest · no supervisado' : 'PyOD IForest · unsupervised'}
         </text>
 
         {/* Bottom annotation */}
-        <text x={W / 2} y={H - 8} fontSize={9} fontFamily="monospace"
+        <text x={W / 2} y={H - 8} fontSize={13} fontFamily="monospace"
           fill={textMuted} textAnchor="middle">
           {lang === 'es'
             ? 'Métodos independientes · sin etiquetas compartidas · misma señal'

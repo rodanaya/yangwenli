@@ -141,7 +141,7 @@ export function DotBarRow({
 }: DotBarRowProps) {
   return (
     <div className={`space-y-1 ${className ?? ''}`}>
-      <div className="flex items-center justify-between text-[11px] text-text-secondary">
+      <div className="flex items-center justify-between text-[13px] text-text-secondary">
         <span className="flex items-center gap-1.5">
           <span>{label}</span>
           {hint && <span className="text-text-muted">{hint}</span>}

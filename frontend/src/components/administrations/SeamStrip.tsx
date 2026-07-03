@@ -152,7 +152,7 @@ function SeamChipBody({ sc, isEs }: { sc: SeamCalc; isEs: boolean }) {
   const windowTitle = isEs ? `Ventana de relevo: ${windowLabel}` : `Handover window: ${windowLabel}`
   return (
     <div
-      className="font-mono text-[9px] leading-tight text-center px-1.5 py-1 rounded-sm border"
+      className="font-mono text-[13px] leading-tight text-center px-1.5 py-1 rounded-sm border"
       style={{
         borderColor: 'var(--color-border)',
         backgroundColor: 'var(--color-background-card)',
@@ -239,11 +239,11 @@ export function SeamStrip({ series, nationalAvgPct, admins, seams, isEs, onSelec
                     >
                       <span
                         className="hidden md:inline"
-                        style={{ fontFamily: MONO_ARCHIVAL, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+                        style={{ fontFamily: MONO_ARCHIVAL, fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
                       >
                         {a.abbr}
                       </span>
-                      <span className="md:hidden" style={{ fontFamily: MONO_ARCHIVAL, fontSize: 9, color: 'var(--color-text-muted)' }}>
+                      <span className="md:hidden" style={{ fontFamily: MONO_ARCHIVAL, fontSize: 13, color: 'var(--color-text-muted)' }}>
                         {mobileAbbr}
                       </span>
                     </button>
@@ -298,14 +298,14 @@ export function SeamStrip({ series, nationalAvgPct, admins, seams, isEs, onSelec
         ))}
       </div>
 
-      {/* Computed headline — one ochre normal-weight fragment inside an italic serif line. */}
-      <p className="mt-4" style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 500, fontSize: 19, color: 'var(--color-text-primary)' }}>
+      {/* Computed headline — one ochre normal-weight fragment inside an serif line. */}
+      <p className="mt-4" style={{ fontFamily: SERIF, fontStyle: 'normal', fontWeight: 500, fontSize: 19, color: 'var(--color-text-primary)' }}>
         <span style={{ fontStyle: 'normal', fontWeight: 700, color: OCHRE }}>{n}</span>{' '}
         {isEs ? `de ${seams.length} relevos sin caída del riesgo` : `of ${seams.length} handovers with no risk drop`}
       </p>
 
       {/* Footnote — Structure-A caveat, handover-window definition, Sheinbaum partial term. */}
-      <p className="mt-2 text-[9px] font-mono leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+      <p className="mt-2 text-[13px] font-mono leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
         {isEs
           ? '† Estructura A (2002–2010): cobertura de RFC 0.1% — el indicador subestima el riesgo temprano. Ventanas de relevo: promedio simple de 2 años a cada lado del traspaso; tolerancia ±0.25 pp. Sheinbaum: mandato parcial (2024–2025) — ventana de entrada limitada a los años disponibles.'
           : '† Structure A (2002–2010): 0.1% RFC coverage — the indicator understates early risk. Handover windows: 2-year simple average on each side of the transfer; ±0.25 pp tolerance. Sheinbaum: partial term (2024–2025) — entry window limited to the years available.'}

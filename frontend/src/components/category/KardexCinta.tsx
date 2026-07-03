@@ -171,12 +171,12 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
               <div className="flex items-center gap-2 pt-3 pb-1" aria-hidden="true">
                 <span
                   className="uppercase"
-                  style={{ fontSize: 9.5, letterSpacing: '0.14em', color: 'var(--color-text-muted)', fontWeight: 700, whiteSpace: 'nowrap' }}
+                  style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-muted)', fontWeight: 700, whiteSpace: 'nowrap' }}
                 >
                   {r.adminSeparator.long}
                 </span>
                 <span className="flex-1" style={{ height: 1, background: 'var(--color-border)' }} />
-                <span className="tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+                <span className="tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                   {Math.max(r.adminSeparator.yearStart, YEAR_START)}–{Math.min(r.adminSeparator.yearEnd, YEAR_END)}
                 </span>
               </div>
@@ -193,7 +193,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
               <span aria-hidden="true" style={{ color: 'var(--color-border)' }}>│</span>
 
               {r.isZero ? (
-                <span className="italic flex-1" style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                <span className="flex-1" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                   {isEs ? 'sin movimientos' : 'no movements'}
                 </span>
               ) : (
@@ -201,21 +201,21 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
                   <ValorBar ratio={ratio} color={accent} />
                   <span
                     className="tabular-nums shrink-0 text-right"
-                    style={{ fontSize: 11, minWidth: 68, color: 'var(--color-text-secondary)' }}
+                    style={{ fontSize: 13, minWidth: 68, color: 'var(--color-text-secondary)' }}
                   >
                     {formatCompactMXN(r.totalValue)}
                   </span>
                   <span aria-hidden="true" className="hidden md:inline" style={{ color: 'var(--color-border)' }}>│</span>
                   <span
                     className="tabular-nums shrink-0 hidden md:inline text-right"
-                    style={{ fontSize: 10.5, minWidth: 88, color: 'var(--color-text-muted)' }}
+                    style={{ fontSize: 12, minWidth: 88, color: 'var(--color-text-muted)' }}
                   >
                     {formatNumber(r.totalContracts)} {isEs ? 'entradas' : 'entries'}
                   </span>
                   <span aria-hidden="true" className="hidden md:inline" style={{ color: 'var(--color-border)' }}>│</span>
                   <span
                     className="tabular-nums shrink-0 hidden md:inline text-right"
-                    style={{ fontSize: 10.5, minWidth: 104, color: r.flagged ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
+                    style={{ fontSize: 12, minWidth: 104, color: r.flagged ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
                   >
                     {/* "ticket" is an accepted loanword in Mexican procurement Spanish — same word both languages */}
                     ticket {formatCompactMXN(r.ticket ?? 0)}{r.flagged ? ' †' : ''}
@@ -228,12 +228,12 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
 
             {!r.isZero && (
               <div className="md:hidden flex items-center gap-3 pb-1.5 pl-11">
-                <span className="tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                <span className="tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                   {formatNumber(r.totalContracts)} {isEs ? 'entradas' : 'entries'}
                 </span>
                 <span
                   className="tabular-nums"
-                  style={{ fontSize: 10, color: r.flagged ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
+                  style={{ fontSize: 12, color: r.flagged ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
                 >
                   ticket {formatCompactMXN(r.ticket ?? 0)}{r.flagged ? ' †' : ''}
                 </span>
@@ -244,7 +244,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
       })}
 
       {hasFlag && (
-        <p className="mt-2" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+        <p className="mt-2" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
           {isEs
             ? '† reprecio: ticket implícito ≥ 2× la mediana anual de esta categoría — el ticket es valor ÷ entradas, no una observación de precio.'
             : '† repricing: implied ticket ≥ 2× this category’s median yearly ticket — the ticket is value ÷ entries, not a price observation.'}
@@ -270,7 +270,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
             </div>
           ))}
         </div>
-        <p className="mt-1.5" style={{ fontSize: 9.5, lineHeight: 1.4, color: 'var(--color-text-muted)' }}>
+        <p className="mt-1.5" style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-text-muted)' }}>
           {isEs
             ? 'La clasificación por Partida es completa solo desde 2023 (Estructura D); los años previos pueden subcontar este anaquel.'
             : 'Partida-code classification is complete only from 2023 onward (Structure D); earlier years may undercount this shelf.'}

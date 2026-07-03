@@ -165,7 +165,7 @@ export function ReportIssueDialog({
 
             {/* Category selector */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/80 mb-2">{t('reportIssue.categoryLabel')}</p>
+              <p className="text-[12px] font-bold uppercase tracking-widest text-text-muted/80 mb-2">{t('reportIssue.categoryLabel')}</p>
               <div className="grid grid-cols-2 gap-2">
                 {CATEGORIES.map(({ value, label, description, Icon, color }) => (
                   <button
@@ -182,7 +182,7 @@ export function ReportIssueDialog({
                       <Icon className="h-3.5 w-3.5 shrink-0" />
                       <span className="font-semibold">{label}</span>
                     </div>
-                    <span className="text-[10px] text-text-muted leading-tight block">{description}</span>
+                    <span className="text-[12px] text-text-muted leading-tight block">{description}</span>
                   </button>
                 ))}
               </div>
@@ -233,7 +233,7 @@ export function ReportIssueDialog({
             </div>
 
             {/* Auto-captured URL */}
-            <p className="text-[10px] text-text-muted/80">
+            <p className="text-[12px] text-text-muted/80">
               {t('reportIssue.pageCapture')} <span className="font-mono">{location.pathname}</span>
             </p>
 

@@ -97,7 +97,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
       {/* ── §B′ Exhibit A — the documented climber, shown intimately ── */}
       {lead && (
         <div className="mb-10">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
             {lang === 'en' ? '§ Exhibit A' : '§ Prueba A'}
           </p>
           <LeadExhibit
@@ -117,7 +117,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
       {/* ── §C — the film: 13 threshold-crossing trajectories ── */}
       <p
         id="pelicula-heading"
-        className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2"
+        className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2"
       >
         {lang === 'en'
           ? '§ THE FILM · PLATE XIV·a — THIRTEEN LINES CROSSING ONE LINE'
@@ -128,7 +128,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
         className="mb-3"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13.5,
           lineHeight: 1.55,
           color: 'var(--color-text-secondary)',
@@ -138,7 +138,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
           ? 'Institutional capture is not proof of wrongdoing. Some legitimate concentrations emerge from technical certification, regional exclusivity, or single-source regulatory dependency. Each line warrants investigation — not accusation.'
           : 'La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada línea merece investigación — no acusación.'}
       </p>
-      <p className="mb-4 font-mono text-[9.5px] uppercase tracking-[0.12em] text-text-muted">
+      <p className="mb-4 font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
         {lang === 'en'
           ? `dashed line = the ${ceil}% capture ceiling · zinc below · red above`
           : `línea punteada = el techo de captura del ${ceil}% · zinc abajo · rojo arriba`}
@@ -146,7 +146,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
 
       {/* Sort control */}
       <div className="flex items-center gap-3 mb-4 overflow-x-auto">
-        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted flex-shrink-0">
+        <span className="text-[12px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted flex-shrink-0">
           {lang === 'en' ? 'Order' : 'Ordenar'}
         </span>
         {SORT_KEYS.map((k) => (
@@ -155,7 +155,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
             type="button"
             onClick={() => setParam('sort', k === 'cruce' ? null : k)}
             aria-pressed={sort === k}
-            className={`flex-shrink-0 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+            className={`flex-shrink-0 font-mono text-[12px] uppercase tracking-wider transition-colors ${
               sort === k ? 'underline underline-offset-4' : 'text-text-muted hover:text-text-secondary'
             }`}
             style={sort === k ? { color: 'var(--color-accent)' } : undefined}
@@ -244,10 +244,10 @@ function FacetRow({
   return (
     <div className="mb-8">
       <div className="flex items-baseline gap-2 mb-3">
-        <h3 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-text-secondary">
+        <h3 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-text-secondary">
           {title}
         </h3>
-        <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-text-muted">· {sub}</span>
+        <span className="font-mono text-[13px] uppercase tracking-[0.1em] text-text-muted">· {sub}</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
         {rows.map((c) => {
@@ -289,12 +289,12 @@ function FacetRow({
                   <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" className="max-w-full" />
                 </div>
                 <div className="flex items-center gap-1 flex-wrap mt-0.5">
-                  <span className="text-[9px] text-text-muted font-mono uppercase tracking-wide">
+                  <span className="text-[13px] text-text-muted font-mono uppercase tracking-wide">
                     {lang === 'en' ? 'captured' : 'capturó'}
                   </span>
                   <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="xs" className="min-w-0" />
                 </div>
-                <p className="mt-1 font-mono text-[9px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
+                <p className="mt-1 font-mono text-[13px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
                   <span>+{delta.toFixed(0)}pp</span>
                   <span>·</span>
                   <span>{formatCompactMXN(c.cumulative_value_mxn)}</span>
@@ -355,12 +355,12 @@ function LeadExhibit({
             <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="md" className="max-w-full" />
           </div>
           <div className="flex items-center gap-1.5 flex-wrap mt-1">
-            <span className="text-[10px] text-text-muted font-mono uppercase tracking-wide">
+            <span className="text-[12px] text-text-muted font-mono uppercase tracking-wide">
               {lang === 'en' ? 'captured' : 'capturó'}
             </span>
             <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="md" />
           </div>
-          <p className="mt-3 font-mono text-[11px] text-text-secondary tabular-nums leading-relaxed">
+          <p className="mt-3 font-mono text-[13px] text-text-secondary tabular-nums leading-relaxed">
             {lang === 'en'
               ? `peaked ${c.peak_share_pct}% in ${c.peak_year} · ${holds ? `holds ${c.latest_share_pct}% today` : `fell to ${c.latest_share_pct}%`} · ${formatCompactMXN(c.cumulative_value_mxn)} captured`
               : `llegó a ${c.peak_share_pct}% en ${c.peak_year} · ${holds ? `sostiene ${c.latest_share_pct}% hoy` : `cayó a ${c.latest_share_pct}%`} · ${formatCompactMXN(c.cumulative_value_mxn)} capturados`}
@@ -380,7 +380,7 @@ function LeadExhibit({
               />
             )}
           </div>
-          <p className="mt-3 text-[12px] text-text-secondary leading-snug" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic' }}>
+          <p className="mt-3 text-[12px] text-text-secondary leading-snug" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal' }}>
             {lang === 'en'
               ? `Two methods, one conclusion: the model independently flags ${agreeCount} of these ${total}.`
               : `Dos métodos, una conclusión: el modelo señala de forma independiente ${agreeCount} de estas ${total}.`}
@@ -389,7 +389,7 @@ function LeadExhibit({
             type="button"
             onClick={onToggle}
             aria-expanded={expanded}
-            className="mt-3 font-mono text-[10px] font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
+            className="mt-3 font-mono text-[12px] font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
             style={{ color: 'var(--color-accent)' }}
           >
             {expanded

@@ -135,7 +135,7 @@ function StatCard({ value, label, sub }: { value: string; label: string; sub?: s
       >
         {value}
       </div>
-      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-secondary mt-2">
+      <div className="text-[12px] font-mono uppercase tracking-[0.18em] text-text-secondary mt-2">
         {label}
       </div>
       {sub && <div className="text-xs text-text-muted mt-1.5 leading-relaxed">{sub}</div>}
@@ -150,7 +150,7 @@ function SectionKicker({ children, accent = false }: { children: React.ReactNode
         className="h-1.5 w-1.5 rounded-full"
         style={{ backgroundColor: accent ? ACCENT : '#52525b' }}
       />
-      <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-text-secondary">
+      <span className="text-[12px] font-mono uppercase tracking-[0.2em] text-text-secondary">
         {children}
       </span>
     </div>
@@ -177,7 +177,7 @@ function SectionHeadline({ eyebrow, headline, deck }: { eyebrow: string; headlin
           className="text-text-secondary"
           style={{
             fontFamily: 'var(--font-family-serif)',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: '0.95rem',
             lineHeight: 1.55,
           }}
@@ -279,7 +279,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
           style={{ borderLeft: `3px solid ${ACCENT}` }}
         >
           <p
-            className="text-[10px] font-mono uppercase tracking-[0.2em] mb-2"
+            className="text-[12px] font-mono uppercase tracking-[0.2em] mb-2"
             style={{ color: ACCENT }}
           >
             What the score means
@@ -289,7 +289,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
             style={{
               fontFamily: 'var(--font-family-serif)',
               fontSize: '1.05rem',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
             }}
           >
             A score of 0.60 does <span className="not-italic font-semibold">not</span> mean a 60% chance of corruption.
@@ -340,7 +340,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
               }}
             >
               <p
-                className="text-[10px] font-mono uppercase tracking-[0.2em] mb-2"
+                className="text-[12px] font-mono uppercase tracking-[0.2em] mb-2"
                 style={{ color: sig.color }}
               >
                 {sig.eyebrow}
@@ -393,7 +393,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
         {/* Divergent-bar chart, hairline rows */}
         <div className="border-y border-border overflow-x-auto">
           {/* Header row */}
-          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border min-w-[480px]">
+          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border min-w-[480px]">
             <span>Feature</span>
             <span className="text-center">Protective ← 0 → Risk-increasing</span>
             <span className="text-right font-mono tabular-nums w-20">β</span>
@@ -418,7 +418,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                     {c.label}
                   </div>
                   {c.note && (
-                    <div className="text-[11px] text-text-muted mt-1 leading-snug max-w-xs">
+                    <div className="text-[13px] text-text-muted mt-1 leading-snug max-w-xs">
                       {c.note}
                     </div>
                   )}
@@ -474,7 +474,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
           })}
         </div>
 
-        <div className="mt-3 flex gap-6 text-[10px] text-text-muted font-mono uppercase tracking-[0.18em]">
+        <div className="mt-3 flex gap-6 text-[12px] text-text-muted font-mono uppercase tracking-[0.18em]">
           <div className="flex items-center gap-2">
             <span className="h-2 w-4" style={{ backgroundColor: POSITIVE }} />
             Risk-increasing
@@ -521,7 +521,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
             </svg>
           )
         })()}
-        <div className="flex justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-6">
+        <div className="flex justify-between text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted mb-6">
           <span>Low</span>
           <span className="text-text-secondary">High-risk threshold →</span>
           <span>Critical</span>
@@ -529,7 +529,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
 
         {/* Editorial hairline table */}
         <div className="border-y border-border overflow-x-auto">
-          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border min-w-[520px]">
+          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border min-w-[520px]">
             <span>Level</span>
             <span>Threshold</span>
             <span className="text-right">Contracts</span>
@@ -620,7 +620,7 @@ function AuditTrailTab() {
                 </span>
 
                 {/* Dateline + status chip */}
-                <div className="flex items-center gap-3 mb-3 text-[10px] font-mono uppercase tracking-[0.18em]">
+                <div className="flex items-center gap-3 mb-3 text-[12px] font-mono uppercase tracking-[0.18em]">
                   <span className="text-text-muted font-mono tabular-nums">{entry.date}</span>
                   {isActive && (
                     <span
@@ -664,7 +664,7 @@ function AuditTrailTab() {
                 {/* Metric pair — bylines */}
                 <div className="flex gap-10 mb-4">
                   <div>
-                    <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-text-muted">Test AUC</div>
+                    <div className="text-[13px] font-mono uppercase tracking-[0.22em] text-text-muted">Test AUC</div>
                     <div
                       className="font-mono tabular-nums mt-1"
                       style={{
@@ -679,7 +679,7 @@ function AuditTrailTab() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-text-muted">High-risk rate</div>
+                    <div className="text-[13px] font-mono uppercase tracking-[0.22em] text-text-muted">High-risk rate</div>
                     <div
                       className="font-mono tabular-nums mt-1"
                       style={{
@@ -718,7 +718,7 @@ function AuditTrailTab() {
         style={{ borderLeft: `2px solid ${ACCENT}` }}
       >
         <p
-          className="text-[10px] font-mono uppercase tracking-[0.2em] mb-3"
+          className="text-[12px] font-mono uppercase tracking-[0.2em] mb-3"
           style={{ color: ACCENT }}
         >
           Reproducibility · run ID CAL-v8-202605020212
@@ -851,22 +851,22 @@ export default function ModelTransparency() {
             <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
               {t('hero.headline')}
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
               MODEL TRANSPARENCY · {(modelMeta?.version ?? CURRENT_MODEL_VERSION).toUpperCase()} · TRAINED {modelMeta?.trained_at ?? '2026-03-25'}
             </p>
           </div>
           <div className="flex items-baseline gap-5">
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{gtCount.cases.toLocaleString()}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">GT cases</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">GT cases</div>
             </div>
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatNumber(nContracts)}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Contracts scored</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Contracts scored</div>
             </div>
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold" style={{ color: ACCENT }}>AUC {auc.toFixed(3)}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Test (vendor-stratified)</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Test (vendor-stratified)</div>
             </div>
           </div>
         </div>

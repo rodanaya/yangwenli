@@ -60,11 +60,11 @@ export function DictamenMasthead({ className }: { className?: string }) {
     <header className={cn('relative', className)}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <p
-          className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted"
+          className="font-mono text-[12px] uppercase tracking-[0.18em] text-text-muted"
           style={{ letterSpacing: '0.18em' }}
         >
           {lang === 'es' ? 'RUBLI · ' : 'RUBLI · '}
-          <em style={{ color: OCHRE, fontStyle: 'italic' }}>EL DICTAMEN</em>
+          <em style={{ color: OCHRE, fontStyle: 'normal' }}>EL DICTAMEN</em>
           {lang === 'es'
             ? ' · MODELO v0.8.5 · CORRIDA CAL-v8-202605020212'
             : ' · MODEL v0.8.5 · RUN CAL-v8-202605020212'}
@@ -72,7 +72,7 @@ export function DictamenMasthead({ className }: { className?: string }) {
         <button
           type="button"
           onClick={() => window.print()}
-          className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors flex items-center gap-1.5 print:hidden"
+          className="font-mono text-[12px] uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors flex items-center gap-1.5 print:hidden"
         >
           <Printer className="h-3 w-3" aria-hidden="true" />
           {lang === 'es' ? 'Imprimir / PDF' : 'Print / PDF'}
@@ -83,7 +83,7 @@ export function DictamenMasthead({ className }: { className?: string }) {
         className="mt-4 text-text-primary"
         style={{
           fontFamily: SERIF,
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 500,
           fontSize: 'clamp(36px, 5.5vw, 62px)',
           lineHeight: 0.98,
@@ -118,7 +118,7 @@ export function DictamenMasthead({ className }: { className?: string }) {
               className="tabular-nums"
               style={{
                 fontFamily: SERIF_DISPLAY,
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: 800,
                 fontSize: 'clamp(26px, 3vw, 34px)',
                 color: 'var(--color-text-primary)',
@@ -127,10 +127,10 @@ export function DictamenMasthead({ className }: { className?: string }) {
             >
               {stat.value}
             </div>
-            <div className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.1em] text-text-primary">
+            <div className="mt-1.5 font-mono text-[12px] uppercase tracking-[0.1em] text-text-primary">
               {lang === 'es' ? stat.label.es : stat.label.en}
             </div>
-            <div className="mt-0.5 font-mono text-[10px] text-text-muted leading-[1.4]">
+            <div className="mt-0.5 font-mono text-[12px] text-text-muted leading-[1.4]">
               {lang === 'es' ? stat.sub.es : stat.sub.en}
             </div>
           </div>
@@ -171,13 +171,13 @@ export function ClauseSection({ id, numeral, title, dek, kicker, children }: Cla
         </span>
         <div className="min-w-0">
           {kicker && (
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+            <p className="font-mono text-[12px] uppercase tracking-[0.14em] text-text-muted">
               {lang === 'es' ? kicker.es : kicker.en}
             </p>
           )}
           <h2
             className="text-text-primary"
-            style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 500, fontSize: 26, lineHeight: 1.15 }}
+            style={{ fontFamily: SERIF, fontStyle: 'normal', fontWeight: 500, fontSize: 26, lineHeight: 1.15 }}
           >
             {lang === 'es' ? title.es : title.en}
           </h2>
@@ -233,7 +233,7 @@ export function AnnexFold({ id, marker, title, defaultOpen = false, children }: 
         aria-controls={contentId}
         className="w-full flex items-center justify-between gap-3 py-3 text-left cursor-pointer select-none group"
       >
-        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-primary group-hover:text-accent transition-colors">
+        <span className="font-mono text-[13px] uppercase tracking-[0.12em] text-text-primary group-hover:text-accent transition-colors">
           {marker !== '§' && <span style={{ color: OCHRE }}>{marker}</span>}
           {marker !== '§' && ' — '}
           {marker === '§' ? headerLabel : titleText}
@@ -274,7 +274,7 @@ export function IndiceRail({ clauses }: IndiceRailProps) {
 
   return (
     <nav className="hidden lg:block sticky top-6 self-start" aria-label={lang === 'es' ? 'Índice' : 'Index'}>
-      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted mb-3">
+      <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-text-muted mb-3">
         {lang === 'es' ? 'ÍNDICE' : 'INDEX'}
       </p>
       <ul className="space-y-2">
@@ -286,12 +286,12 @@ export function IndiceRail({ clauses }: IndiceRailProps) {
             >
               <span
                 className="font-mono text-right shrink-0"
-                style={{ width: 24, color: OCHRE, fontSize: 11 }}
+                style={{ width: 24, color: OCHRE, fontSize: 13 }}
                 aria-hidden="true"
               >
                 {clause.numeral}
               </span>
-              <span style={{ fontSize: 11.5, lineHeight: 1.4 }}>
+              <span style={{ fontSize: 13.5, lineHeight: 1.4 }}>
                 {lang === 'es' ? clause.label.es : clause.label.en}
               </span>
             </a>

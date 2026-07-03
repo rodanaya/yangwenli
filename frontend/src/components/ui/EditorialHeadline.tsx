@@ -12,7 +12,7 @@ export function EditorialHeadline({ section, headline, subtitle, className }: Ed
     <div className={cn('w-full', className)}>
       <div className="h-px bg-border" />
       <div className="py-4">
-        <span className="text-[10px] font-medium uppercase tracking-widest text-text-muted">
+        <span className="text-[12px] font-medium uppercase tracking-widest text-text-muted">
           {section}
         </span>
         <h1

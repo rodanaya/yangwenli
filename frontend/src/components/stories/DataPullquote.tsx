@@ -12,7 +12,7 @@ import { cn, localizeAmount } from '@/lib/utils'
 //
 //   ┌────────────────────────────────────────┐
 //   ▎ DATELINE · OUTLET · MICRO MONO         │
-//   │ "soft italic Playfair quote ..."       │
+//   │ "soft Playfair quote ..."       │
 //   │ — attribution                          │
 //   │ ────────────────                       │
 //   │  6,034                  ← Playfair It. │
@@ -332,7 +332,7 @@ function SliverViz({ value, color, revealed, lang }: VizProps) {
           style={{
             left: `calc(${visualPct}% + 6px)`,
             color,
-            fontSize: 11,
+            fontSize: 13,
             opacity: revealed ? 1 : 0,
             transition: 'opacity 500ms ease-out 700ms',
             whiteSpace: 'nowrap',
@@ -342,7 +342,7 @@ function SliverViz({ value, color, revealed, lang }: VizProps) {
         </div>
       </div>
       <p
-        className="mt-2 italic"
+        className="mt-2"
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: 12,
@@ -382,7 +382,7 @@ function EraViz({ value, color, revealed, label }: VizProps) {
               className="font-mono uppercase tabular-nums"
               style={{
                 width: 64,
-                fontSize: 9,
+                fontSize: 13,
                 letterSpacing: '0.08em',
                 color: 'var(--color-text-muted)',
               }}
@@ -414,7 +414,7 @@ function EraViz({ value, color, revealed, label }: VizProps) {
               className="text-right font-mono tabular-nums"
               style={{
                 width: 36,
-                fontSize: 9,
+                fontSize: 13,
                 color: 'var(--color-text-muted)',
               }}
             >
@@ -447,7 +447,7 @@ function NullViz({ revealed, lang }: VizProps) {
         style={{ width: 6, height: 6, background: 'var(--color-text-muted)', opacity: revealed ? 1 : 0, transition: 'opacity 500ms' }}
       />
       <div
-        className="w-full text-center italic"
+        className="w-full text-center"
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: 16,
@@ -597,7 +597,7 @@ export default function DataPullquote({
         <div
           className="dpq-chrome dpq-pad dpq-pad-top flex items-center justify-between px-5 pt-4 pb-3 font-mono uppercase"
           style={{
-            fontSize: 9,
+            fontSize: 13,
             letterSpacing: '0.18em',
             color: 'var(--color-text-muted)',
           }}
@@ -624,7 +624,7 @@ export default function DataPullquote({
                   className="tabular-nums"
                   style={{
                     fontFamily: "'Playfair Display', Georgia, serif",
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 800,
                     // 2026-05-07: shrunk from clamp(4.5rem, 12vw, 7rem) — multi-character
                     // strings like "1,200-2,400" overflowed at narrow side-column widths.
@@ -650,7 +650,7 @@ export default function DataPullquote({
               </div>
               <p
                 className="font-mono uppercase mb-4"
-                style={{ fontSize: 11, letterSpacing: '0.12em', color: accent, opacity: 0.85 }}
+                style={{ fontSize: 13, letterSpacing: '0.12em', color: accent, opacity: 0.85 }}
               >
                 {statLabel}
               </p>
@@ -661,7 +661,7 @@ export default function DataPullquote({
                 className="text-text-muted mb-2"
                 style={{
                   fontFamily: "'Playfair Display', Georgia, serif",
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 400,
                   fontSize: 'clamp(0.85rem, 1.4vw, 0.95rem)',
                   lineHeight: 1.5,
@@ -673,7 +673,7 @@ export default function DataPullquote({
               {attribution && (
                 <figcaption
                   className="font-mono uppercase text-text-muted mb-4"
-                  style={{ fontSize: 9, letterSpacing: '0.16em' }}
+                  style={{ fontSize: 13, letterSpacing: '0.16em' }}
                 >
                   — {attribution}
                 </figcaption>
@@ -686,7 +686,7 @@ export default function DataPullquote({
                 className="dpq-quote text-text-secondary mb-2"
                 style={{
                   fontFamily: "'Playfair Display', Georgia, serif",
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 400,
                   fontSize: 'clamp(0.95rem, 1.6vw, 1.05rem)',
                   lineHeight: 1.55,
@@ -699,7 +699,7 @@ export default function DataPullquote({
               {attribution && (
                 <figcaption
                   className="font-mono uppercase text-text-muted mb-5"
-                  style={{ fontSize: 9.5, letterSpacing: '0.16em' }}
+                  style={{ fontSize: 13, letterSpacing: '0.16em' }}
                 >
                   — {attribution}
                 </figcaption>
@@ -715,7 +715,7 @@ export default function DataPullquote({
                   className="dpq-stat tabular-nums"
                   style={{
                     fontFamily: "'Playfair Display', Georgia, serif",
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 800,
                     // 2026-05-07: trimmed from clamp(2.4rem, 5.6vw, 3.6rem) so
                     // multi-character ranges sit on one line at narrow columns.
@@ -747,7 +747,7 @@ export default function DataPullquote({
               <div
                 className="font-mono uppercase mb-2.5"
                 style={{
-                  fontSize: 9,
+                  fontSize: 13,
                   letterSpacing: '0.18em',
                   color: 'var(--color-text-muted)',
                 }}
@@ -761,7 +761,7 @@ export default function DataPullquote({
                 <p
                   className="font-mono leading-[1.45]"
                   style={{
-                    fontSize: 9.5,
+                    fontSize: 13,
                     color: 'var(--color-text-muted)',
                     marginTop: family === 'threshold' ? 18 : 10,
                   }}

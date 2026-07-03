@@ -155,7 +155,7 @@ export function StoryCasaContratos() {
                   y={vy + 4}
                   textAnchor="middle"
                   fill="var(--color-background)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={700}
                 >
@@ -168,7 +168,7 @@ export function StoryCasaContratos() {
                   y={ly - 2}
                   textAnchor={textAnchor}
                   fill="var(--color-border)"
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
@@ -179,7 +179,7 @@ export function StoryCasaContratos() {
                   y={ly + 10}
                   textAnchor={textAnchor}
                   fill={color}
-                  fontSize={9}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                 >
                   {`${v.valueB.toFixed(1)}B · ${t('casaContratos.riskWord')} ${v.riskScore.toFixed(2)}`}
@@ -222,18 +222,18 @@ export function StoryCasaContratos() {
 
           {/* Legend */}
           <g transform={`translate(20, ${H - 28})`}>
-            <text fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
+            <text fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
               {t('casaContratos.legendHeader')}
             </text>
             <g transform="translate(0, 14)">
               <circle cx={5} cy={0} r={4} fill="var(--color-text-muted)" />
-              <text x={14} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendLow')}</text>
+              <text x={14} y={3} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">{t('casaContratos.legendLow')}</text>
               <circle cx={56} cy={0} r={4} fill="var(--color-risk-high)" />
-              <text x={65} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendMedium')}</text>
+              <text x={65} y={3} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">{t('casaContratos.legendMedium')}</text>
               <circle cx={116} cy={0} r={4} fill="var(--color-sector-infraestructura)" />
-              <text x={125} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendHigh')}</text>
+              <text x={125} y={3} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">{t('casaContratos.legendHigh')}</text>
               <circle cx={160} cy={0} r={4} fill="var(--color-sector-salud)" />
-              <text x={169} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendCritical')}</text>
+              <text x={169} y={3} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">{t('casaContratos.legendCritical')}</text>
             </g>
           </g>
         </svg>

@@ -71,7 +71,7 @@ function TermSparkline({
   const labelsClose = Math.abs(endValY - endYearY) < 9
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-[0.18em] font-mono text-text-muted mb-1">
+      <div className="text-[13px] uppercase tracking-[0.18em] font-mono text-text-muted mb-1">
         {isEs ? 'Alto riesgo % por año' : 'High-risk % by year'}
       </div>
       <svg
@@ -107,7 +107,7 @@ function TermSparkline({
         {years.map((yr, i) => (
           <circle key={yr.year} cx={x(i)} cy={y(yr.high_risk_pct)} r={2.4} fill={color} />
         ))}
-        <text x={PAD} y={H - PAD + 1} dy={-((H - PAD) - y(years[0].high_risk_pct)) - 6} fill="var(--color-text-muted)" fontSize={9} fontFamily="monospace">
+        <text x={PAD} y={H - PAD + 1} dy={-((H - PAD) - y(years[0].high_risk_pct)) - 6} fill="var(--color-text-muted)" fontSize={13} fontFamily="monospace">
           {years[0].year}
         </text>
         {years.length > 1 && (
@@ -115,7 +115,7 @@ function TermSparkline({
             x={W - PAD}
             y={labelsClose ? endYearY + 9 : endYearY}
             fill="var(--color-text-muted)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="monospace"
             textAnchor="end"
           >
@@ -127,7 +127,7 @@ function TermSparkline({
           x={W - PAD}
           y={endValY}
           fill={color}
-          fontSize={9}
+          fontSize={13}
           fontFamily="monospace"
           fontWeight={600}
           textAnchor="end"
@@ -230,12 +230,12 @@ export function AdminSummaryCard({
               >
                 {displayNames[admin.name] ?? admin.name}
               </span>
-              <span className="block text-[8.5px] sm:text-[9px] font-mono text-text-muted mt-0.5 truncate">
+              <span className="block text-[8.5px] sm:text-[13px] font-mono text-text-muted mt-0.5 truncate">
                 {admin.party} · {admin.dataStart}–{String(Math.min(admin.end, 2025)).slice(2)}
               </span>
               {aggs.length > 0 && tabHr != null && (
                 <span
-                  className="hidden sm:block text-[9px] font-mono tabular-nums mt-0.5"
+                  className="hidden sm:block text-[13px] font-mono tabular-nums mt-0.5"
                   style={{ color: tabHrColor }}
                   title={isEs ? 'Alto riesgo' : 'High risk'}
                 >
@@ -273,7 +273,7 @@ export function AdminSummaryCard({
               </h2>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span
-                  className="text-[10px] font-mono font-bold px-2 py-0.5 rounded"
+                  className="text-[12px] font-mono font-bold px-2 py-0.5 rounded"
                   style={{
                     backgroundColor: `${partyColor}20`,
                     color: partyColor,
@@ -316,13 +316,13 @@ export function AdminSummaryCard({
 
         {/* B — Procurement fingerprint */}
         <div className="min-w-0">
-          <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-3">
+          <div className="text-[13px] tracking-[0.25em] uppercase font-bold text-accent mb-3">
             {t('dossier.procurementFingerprint')}
           </div>
           {agg ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-5 gap-y-4">
               <div>
-                <div className="text-[9.5px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
+                <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.contracts')}
                 </div>
                 <div className="font-mono text-xl tabular-nums font-semibold text-text-primary">
@@ -330,7 +330,7 @@ export function AdminSummaryCard({
                 </div>
               </div>
               <div>
-                <div className="text-[9.5px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
+                <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.totalValue')}
                 </div>
                 <div className="font-mono text-lg leading-snug tabular-nums font-semibold text-text-primary">
@@ -338,7 +338,7 @@ export function AdminSummaryCard({
                 </div>
               </div>
               <div>
-                <div className="text-[9.5px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
+                <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {isEs ? 'MXN en riesgo' : 'MXN at risk'}
                 </div>
                 <div className="font-mono text-xl tabular-nums font-semibold text-text-primary">
@@ -346,7 +346,7 @@ export function AdminSummaryCard({
                 </div>
               </div>
               <div>
-                <div className="text-[9.5px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
+                <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.directAward')}
                 </div>
                 <div className="font-mono text-xl tabular-nums font-semibold text-text-primary">
@@ -355,7 +355,7 @@ export function AdminSummaryCard({
                 <DeltaBadge val={agg.directAwardPct - allTimeAvg.da} unit=" pts" />
               </div>
               <div>
-                <div className="text-[9.5px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
+                <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.singleBid')}
                 </div>
                 <div className="font-mono text-xl tabular-nums font-semibold text-text-primary">
@@ -364,7 +364,7 @@ export function AdminSummaryCard({
                 <DeltaBadge val={agg.singleBidPct - allTimeAvg.sb} unit=" pts" />
               </div>
               <div>
-                <div className="text-[9.5px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
+                <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.highRisk')}
                 </div>
                 <div className="font-mono text-xl tabular-nums font-bold" style={{ color: hrColor }}>
@@ -376,7 +376,7 @@ export function AdminSummaryCard({
           ) : (
             <p className="text-xs text-text-muted">{t('noData')}</p>
           )}
-          <p className="mt-3 text-[10px] font-mono text-text-muted/70">
+          <p className="mt-3 text-[12px] font-mono text-text-muted/70">
             {isEs ? 'Deltas vs. promedio 2002–2025' : 'Deltas vs. 2002–2025 average'}
           </p>
         </div>
@@ -395,7 +395,7 @@ export function AdminSummaryCard({
           {dossier.scandals.length > 0 ? (
             <a
               href="#expediente"
-              className="flex items-center gap-2 text-[11px] font-mono text-text-secondary hover:text-accent transition-colors"
+              className="flex items-center gap-2 text-[13px] font-mono text-text-secondary hover:text-accent transition-colors"
             >
               <span className="flex items-center gap-1" aria-hidden="true">
                 {dossier.scandals.slice(0, 5).map((s) => (
@@ -414,7 +414,7 @@ export function AdminSummaryCard({
               </span>
             </a>
           ) : (
-            <p className="text-[11px] font-mono text-text-secondary">
+            <p className="text-[13px] font-mono text-text-secondary">
               {t('dossier.noScandals')}
             </p>
           )}
@@ -425,7 +425,7 @@ export function AdminSummaryCard({
       {(isFoxEra || isPartialTerm) && (
         <div className="px-5 py-2.5 border-t border-border/30 bg-background-elevated/20 flex items-start gap-2">
           <AlertTriangle className="h-3 w-3 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
-          <p className="text-[10px] text-text-muted leading-relaxed">
+          <p className="text-[12px] text-text-muted leading-relaxed">
             {isFoxEra &&
               (isEs
                 ? '* Estructura A (2002–2010): la adjudicación directa se registró de forma incompleta — el riesgo está subestimado.'

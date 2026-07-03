@@ -53,7 +53,7 @@ export function MoneySledgehammer({
 
       {/* Eyebrow */}
       <div
-        className="font-mono text-[11px] uppercase tracking-[0.18em] mb-4 max-w-[40ch]"
+        className="font-mono text-[13px] uppercase tracking-[0.18em] mb-4 max-w-[40ch]"
         style={{ color: 'var(--color-text-muted)' }}
       >
         {eyebrow}
@@ -61,7 +61,7 @@ export function MoneySledgehammer({
 
       {/* The sledgehammer number (string) */}
       <div
-        className="leading-[0.9] font-extrabold italic tabular-nums mb-2"
+        className="leading-[0.9] font-extrabold tabular-nums mb-2"
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: 'clamp(48px, 8vw, 104px)',
@@ -108,7 +108,7 @@ export function MoneySledgehammer({
                   className="tabular-nums font-semibold"
                   style={{
                     fontFamily: 'var(--font-family-serif)',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontSize: 17,
                     color: 'var(--color-text-primary)',
                   }}
@@ -118,7 +118,7 @@ export function MoneySledgehammer({
                 <span
                   className="font-mono uppercase"
                   style={{
-                    fontSize: 9.5,
+                    fontSize: 13,
                     letterSpacing: '0.12em',
                     color: 'var(--color-text-muted)',
                   }}

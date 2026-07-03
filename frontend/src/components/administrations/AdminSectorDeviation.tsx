@@ -82,7 +82,7 @@ export function AdminSectorDeviation({ rows, termBenchmarkFraction, isEs, onExpo
         {top && topMultiple !== null && (
           <p
             className="text-[15px] leading-snug"
-            style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic' }}
+            style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'normal' }}
           >
             {isEs ? (
               <>
@@ -131,7 +131,7 @@ export function AdminSectorDeviation({ rows, termBenchmarkFraction, isEs, onExpo
 
       {/* Footnote — sectors dropped for insufficient sample */}
       {omitted.length > 0 && (
-        <p className="text-[10px] font-mono text-text-muted/70 mt-2">
+        <p className="text-[12px] font-mono text-text-muted/70 mt-2">
           {isEs
             ? `${omitted.length} sectores con <30 contratos omitidos.`
             : `${omitted.length} sectors with <30 contracts omitted.`}

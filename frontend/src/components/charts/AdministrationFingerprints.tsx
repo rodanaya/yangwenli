@@ -101,7 +101,7 @@ function AdminRadarPanel({
     <div className="flex flex-col items-center rounded-sm border border-border bg-background-card/60 p-4 gap-2">
       <div className="text-center">
         <p className="text-sm font-bold text-text-primary leading-tight">{DISPLAY_NAMES[agg.name] ?? agg.name}</p>
-        <p className="text-[10px] text-text-muted font-mono">{meta.yearLabel}</p>
+        <p className="text-[12px] text-text-muted font-mono">{meta.yearLabel}</p>
       </div>
       <div className="w-full" style={{ minWidth: 120 }}>
         <EditorialRadarChart
@@ -115,13 +115,13 @@ function AdminRadarPanel({
       </div>
       <div className="w-full grid grid-cols-2 gap-1 mt-1">
         <div className="text-center bg-background-elevated/50 rounded-md py-1">
-          <p className="text-[10px] text-text-muted font-mono">{t('radar.miniHighRisk')}</p>
+          <p className="text-[12px] text-text-muted font-mono">{t('radar.miniHighRisk')}</p>
           <p className="text-xs font-mono font-semibold" style={{ color: meta.accentColorVar }}>
             {agg.highRiskPct.toFixed(1)}%
           </p>
         </div>
         <div className="text-center bg-background-elevated/50 rounded-md py-1">
-          <p className="text-[10px] text-text-muted font-mono">{t('radar.miniDirectAward')}</p>
+          <p className="text-[12px] text-text-muted font-mono">{t('radar.miniDirectAward')}</p>
           <p className="text-xs font-mono font-semibold" style={{ color: meta.accentColorVar }}>
             {agg.directAwardPct.toFixed(0)}%
           </p>
@@ -140,14 +140,14 @@ function InsightCard({ label, value, note, color }: {
 }) {
   return (
     <div className="flex flex-col gap-1 rounded-sm border border-border bg-background-card/60 p-4">
-      <p className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-[0.15em]">{label}</p>
+      <p className="text-[12px] font-mono font-bold text-text-muted uppercase tracking-[0.15em]">{label}</p>
       <p
-        className="font-playfair-display italic font-extrabold tabular-nums text-xl leading-tight"
+        className="font-playfair-display font-extrabold tabular-nums text-xl leading-tight"
         style={{ color }}
       >
         {value}
       </p>
-      <p className="text-[11px] text-text-secondary">{note}</p>
+      <p className="text-[13px] text-text-secondary">{note}</p>
     </div>
   )
 }
@@ -191,7 +191,7 @@ export default function AdministrationFingerprints({ adminAggs }: Administration
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
           {t('fingerprints.kicker', { defaultValue: 'RUBLI v0.8.5 · Procurement Governance' })}
         </p>
         <h2 className="text-base font-bold text-text-primary font-mono tracking-tight">

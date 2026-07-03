@@ -86,19 +86,19 @@ export function ModelTimeline() {
           {MONTH_TICKS.map((m) => (
             <g key={m.label}>
               <line x1={x(m.day)} y1={AXIS_Y - 3} x2={x(m.day)} y2={AXIS_Y + 3} stroke="var(--color-border)" strokeWidth={1} />
-              <text x={x(m.day)} y={AXIS_Y + 16} textAnchor="middle" fontSize={10} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">{m.label}</text>
+              <text x={x(m.day)} y={AXIS_Y + 16} textAnchor="middle" fontSize={12} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">{m.label}</text>
             </g>
           ))}
           {/* NOW gridline + label at the terminus */}
           <line x1={x(90)} y1={28} x2={x(90)} y2={AXIS_Y} stroke={OCHRE} strokeWidth={1} strokeDasharray="2 3" opacity={0.5} />
-          <text x={x(90)} y={AXIS_Y + 16} textAnchor="middle" fontSize={9} fontWeight={700} letterSpacing="0.12em" fontFamily="var(--font-family-mono, monospace)" fill={OCHRE}>{t('evolution.axisNow')}</text>
+          <text x={x(90)} y={AXIS_Y + 16} textAnchor="middle" fontSize={13} fontWeight={700} letterSpacing="0.12em" fontFamily="var(--font-family-mono, monospace)" fill={OCHRE}>{t('evolution.axisNow')}</text>
 
           {/* February flurry cluster — 3 superseded iterations, no real day */}
           <g>
             {cluster.map((s, i) => (
               <circle key={s.version} cx={PAD_L + i * 5} cy={AXIS_Y} r={3} fill={ZINC} opacity={0.55} />
             ))}
-            <text x={PAD_L} y={AXIS_Y - 14} fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
+            <text x={PAD_L} y={AXIS_Y - 14} fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
               Feb · v3.3 / v4.0 / v5.0
             </text>
           </g>
@@ -131,7 +131,7 @@ export function ModelTimeline() {
                 {/* version chip above */}
                 <text
                   x={cx} y={AXIS_Y - 16} textAnchor={isActive ? 'end' : 'middle'}
-                  fontSize={10} fontWeight={isActive ? 700 : 500}
+                  fontSize={12} fontWeight={isActive ? 700 : 500}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={isActive ? OCHRE : (hovered === s.version ? 'var(--color-text-primary)' : 'var(--color-text-secondary)')}
                 >
@@ -143,7 +143,7 @@ export function ModelTimeline() {
                     <text x={cx} y={AXIS_Y - 30} textAnchor="end" fontSize={8} fontWeight={700} letterSpacing="0.12em" fontFamily="var(--font-family-mono, monospace)" fill={OCHRE}>
                       {t('evolution.active')}
                     </text>
-                    <text x={cx} y={AXIS_Y + 30} textAnchor="end" fontSize={10} fontWeight={700} fontFamily="var(--font-family-mono, monospace)" fill={OCHRE}>
+                    <text x={cx} y={AXIS_Y + 30} textAnchor="end" fontSize={12} fontWeight={700} fontFamily="var(--font-family-mono, monospace)" fill={OCHRE}>
                       {s.metric}
                     </text>
                   </>
@@ -156,11 +156,11 @@ export function ModelTimeline() {
         {/* hover/focus detail strip (reserved band — no layout shift) */}
         <div className="mt-1 min-h-[3.25rem] border-t border-border/30 pt-2">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-mono text-[11px] font-bold" style={{ color: shown.kind === 'active' ? OCHRE : 'var(--color-text-secondary)' }}>
+            <span className="font-mono text-[13px] font-bold" style={{ color: shown.kind === 'active' ? OCHRE : 'var(--color-text-secondary)' }}>
               {shown.version}
             </span>
-            <span className="font-mono text-[10px] text-text-muted">{shown.dateLabel}</span>
-            <span className="font-mono text-[10px] text-text-muted">· {shown.metric}</span>
+            <span className="font-mono text-[12px] text-text-muted">{shown.dateLabel}</span>
+            <span className="font-mono text-[12px] text-text-muted">· {shown.metric}</span>
           </div>
           <p className="text-xs text-text-primary font-medium mt-0.5">{t(`evolution.steps.${shown.titleKey}`)}</p>
           <p className="text-xs text-text-muted leading-relaxed">{t(`evolution.steps.${shown.descKey}`)}</p>
@@ -170,8 +170,8 @@ export function ModelTimeline() {
       {/* ── Mobile (<sm): vertical stack — decided up front (no scaled axis) ── */}
       <div className="sm:hidden px-5 pb-5 space-y-2">
         <div className="rounded-sm border border-border/40 bg-background-elevated/20 p-2.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">Feb 2026</p>
-          <p className="text-[11px] text-text-secondary mt-0.5">v3.3 · v4.0 · v5.0 — {t('evolution.subtitle')}</p>
+          <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-text-muted">Feb 2026</p>
+          <p className="text-[13px] text-text-secondary mt-0.5">v3.3 · v4.0 · v5.0 — {t('evolution.subtitle')}</p>
         </div>
         {dayResolved.map((s) => {
           const isActive = s.kind === 'active'
@@ -185,12 +185,12 @@ export function ModelTimeline() {
               }}
             >
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-mono text-[11px] font-bold" style={{ color: isActive ? OCHRE : 'var(--color-text-secondary)' }}>{s.version}</span>
-                <span className="font-mono text-[10px] text-text-muted">{s.dateLabel}</span>
+                <span className="font-mono text-[13px] font-bold" style={{ color: isActive ? OCHRE : 'var(--color-text-secondary)' }}>{s.version}</span>
+                <span className="font-mono text-[12px] text-text-muted">{s.dateLabel}</span>
               </div>
               <p className="text-xs text-text-primary font-medium mt-1">{t(`evolution.steps.${s.titleKey}`)}</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="font-mono text-[10px]" style={{ color: isActive ? OCHRE : 'var(--color-text-muted)' }}>{s.metric}</span>
+                <span className="font-mono text-[12px]" style={{ color: isActive ? OCHRE : 'var(--color-text-muted)' }}>{s.metric}</span>
                 {isActive && (
                   <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded" style={{ color: OCHRE, background: `${OCHRE}1a` }}>
                     {t('evolution.active')}

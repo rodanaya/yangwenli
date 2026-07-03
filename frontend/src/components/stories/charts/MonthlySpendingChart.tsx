@@ -90,7 +90,7 @@ export function MonthlySpendingChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -101,7 +101,7 @@ export function MonthlySpendingChart() {
             y={22}
             textAnchor="end"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
@@ -123,7 +123,7 @@ export function MonthlySpendingChart() {
             x={LABEL_W + avgDot * DOT_GAP + DOT_R + 4}
             y={38}
             fill="var(--color-text-muted)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {`${t('monthly.avgPrefix')} $${AVG}B`}
@@ -144,7 +144,7 @@ export function MonthlySpendingChart() {
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
                   fill="var(--color-text-muted)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-mono)"
                 >
                   {row.mes}
@@ -175,7 +175,7 @@ export function MonthlySpendingChart() {
                   x={LABEL_W + COL_W + 8}
                   y={y0 + STRIP_H / 2 + 3}
                   fill={color}
-                  fontSize={10}
+                  fontSize={12}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >

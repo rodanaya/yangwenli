@@ -66,7 +66,7 @@ export function CrossPatternComparison({
             {/* Code badge + name */}
             <div className="flex items-center gap-2 min-w-0 w-[180px]">
               <span
-                className="flex-shrink-0 inline-flex items-center justify-center rounded-sm px-1.5 py-0.5 text-[10px] font-bold font-mono tracking-wider"
+                className="flex-shrink-0 inline-flex items-center justify-center rounded-sm px-1.5 py-0.5 text-[12px] font-bold font-mono tracking-wider"
                 style={{ backgroundColor: `${color}1a`, color }}
               >
                 {p.code}
@@ -95,7 +95,7 @@ export function CrossPatternComparison({
                 className="tabular-nums"
                 style={{
                   fontFamily: 'var(--font-family-serif)',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 700,
                   fontSize: '15px',
                   color,
@@ -103,7 +103,7 @@ export function CrossPatternComparison({
               >
                 {formatNumber(count)}
               </span>
-              <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+              <span className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
                 {isEs ? 'prov.' : 'vend.'}
               </span>
             </div>

@@ -116,7 +116,7 @@ export function StoryHemoserSplitting() {
                 y={TOP_PAD + (ROWS - filled) * DOT_GAP - 5}
                 textAnchor="middle"
                 fill={isPeak ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
-                fontSize={9}
+                fontSize={13}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={isPeak ? 700 : 500}
               >
@@ -129,7 +129,7 @@ export function StoryHemoserSplitting() {
                 y={TOP_PAD + ROWS * DOT_GAP + 14}
                 textAnchor="middle"
                 fill={isPeak ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={isPeak ? 700 : 400}
               >
@@ -148,11 +148,11 @@ export function StoryHemoserSplitting() {
 
       {/* Annotation pills */}
       <div className="mt-4 flex flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-risk-critical/10 border border-risk-critical/20 text-[10px] text-risk-critical">
+        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-risk-critical/10 border border-risk-critical/20 text-[12px] text-risk-critical">
           <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
           {t('hemoserSplitting.annotationPeak')}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-background-elevated border border-border text-[10px] text-text-secondary">
+        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-background-elevated border border-border text-[12px] text-text-secondary">
           {t('hemoserSplitting.annotationVendor')}
         </span>
       </div>

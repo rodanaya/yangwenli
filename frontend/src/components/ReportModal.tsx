@@ -279,7 +279,7 @@ export function ReportModal({
               {isVendorReport(reportType, data) && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-md border border-border p-3">
-                    <p className="text-[11px] text-text-muted uppercase">{t('report.riskScore')}</p>
+                    <p className="text-[13px] text-text-muted uppercase">{t('report.riskScore')}</p>
                     <p
                       className="text-lg font-semibold"
                       style={{ color: riskColor((data as VendorReport).risk_score) }}
@@ -288,7 +288,7 @@ export function ReportModal({
                     </p>
                   </div>
                   <div className="rounded-md border border-border p-3">
-                    <p className="text-[11px] text-text-muted uppercase">{t('report.contracts')}</p>
+                    <p className="text-[13px] text-text-muted uppercase">{t('report.contracts')}</p>
                     <p className="text-lg font-semibold text-text-primary">
                       {(((data as VendorReport).contract_count) ?? 0).toLocaleString(getLocale())}
                     </p>

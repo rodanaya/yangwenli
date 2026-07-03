@@ -61,11 +61,11 @@ export function StoryVendorFingerprint() {
           { label: t('vendorFingerprint.factor4Label'), value: '-0.14', color: 'text-text-muted', note: t('vendorFingerprint.factor4Note'), arrow: '↓' },
         ].map((f) => (
           <div key={f.label} className="rounded-lg border border-border bg-background-card p-2.5 text-center">
-            <div className={`text-2xl font-playfair-display italic font-extrabold tabular-nums ${f.color}`}>
+            <div className={`text-2xl font-playfair-display font-extrabold tabular-nums ${f.color}`}>
               <span className="text-sm mr-0.5 not-italic" aria-hidden="true">{f.arrow}</span>{f.value}
             </div>
-            <div className="text-[9px] text-text-muted uppercase tracking-wide mt-0.5">{f.label}</div>
-            <div className="text-[9px] text-text-muted mt-0.5">{f.note}</div>
+            <div className="text-[13px] text-text-muted uppercase tracking-wide mt-0.5">{f.label}</div>
+            <div className="text-[13px] text-text-muted mt-0.5">{f.note}</div>
           </div>
         ))}
       </div>
@@ -84,7 +84,7 @@ export function StoryVendorFingerprint() {
 
       {/* Reading guide */}
       <div className="rounded-sm border border-border bg-background-card p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mb-1">
+        <p className="text-[12px] font-mono uppercase tracking-wide text-text-muted mb-1">
           {t('vendorFingerprint.readGuideLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">

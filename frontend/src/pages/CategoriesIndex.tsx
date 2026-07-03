@@ -255,7 +255,7 @@ function LedgerRow({
       onBlurCapture={onLeave}
     >
       <td className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-2 w-full" style={{ display: 'flex' }}>
-      <span className="flex-shrink-0 w-7 font-mono text-[11px] font-bold text-text-muted tabular-nums">
+      <span className="flex-shrink-0 w-7 font-mono text-[13px] font-bold text-text-muted tabular-nums">
         {String(rank).padStart(2, '0')}
       </span>
 
@@ -282,7 +282,7 @@ function LedgerRow({
             )}
           </span>
           {showVendor && item.top_vendor && (
-            <span className="hidden md:flex items-center gap-1 text-[10px] text-text-muted/70 font-mono min-w-0">
+            <span className="hidden md:flex items-center gap-1 text-[12px] text-text-muted/70 font-mono min-w-0">
               <EntityIdentityChip
                 type="vendor"
                 id={item.top_vendor.id}
@@ -303,7 +303,7 @@ function LedgerRow({
       {/* Spend + contracts */}
       <div className="flex-shrink-0 text-right min-w-[92px]">
         <div className="font-mono text-sm tabular-nums text-text-primary">{formatCompactMXN(item.total_value)}</div>
-        <div className="text-[10px] font-mono text-text-muted mt-0.5">
+        <div className="text-[12px] font-mono text-text-muted mt-0.5">
           {formatNumber(item.total_contracts)} {lang === 'es' ? 'cont.' : 'contracts'}
         </div>
       </div>
@@ -314,7 +314,7 @@ function LedgerRow({
           <div className="w-12 h-1 rounded-full bg-background-elevated overflow-hidden hidden sm:block" aria-hidden="true">
             <div className="h-full rounded-full" style={{ width: `${Math.min(100, (item.avg_risk * 100) / 45 * 100)}%`, background: intensityColor(item.avg_risk), opacity: 0.85 }} />
           </div>
-          <div className="font-mono text-[11px] font-bold tabular-nums text-right" style={{ color: intensityColor(item.avg_risk) }}>
+          <div className="font-mono text-[13px] font-bold tabular-nums text-right" style={{ color: intensityColor(item.avg_risk) }}>
             {(item.avg_risk * 100).toFixed(0)}
           </div>
         </div>
@@ -323,12 +323,12 @@ function LedgerRow({
       {/* Descuadre (δ = spend rank − risk rank over the qualified pool) */}
       <div className="flex-shrink-0 min-w-[44px] text-right">
         {descuadre == null ? (
-          <span className="font-mono text-[11px] tabular-nums" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>—</span>
+          <span className="font-mono text-[13px] tabular-nums" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>—</span>
         ) : descuadre === 0 ? (
-          <span className="font-mono text-[11px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>·</span>
+          <span className="font-mono text-[13px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>·</span>
         ) : (
           <span
-            className="font-mono text-[11px] font-bold tabular-nums"
+            className="font-mono text-[13px] font-bold tabular-nums"
             style={{ color: descuadre >= 10 ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
           >
             {descuadre > 0 ? `+${descuadre}` : `−${Math.abs(descuadre)}`}
@@ -366,12 +366,12 @@ function ProvenanceNote({ lang }: { lang: 'en' | 'es' }) {
     <section className="mt-10 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
       <p
         className="font-mono mb-3"
-        style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
+        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
       >
         § {lang === 'es' ? 'Procedencia' : 'Provenance'}
       </p>
       <p
-        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}
+        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 14, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}
       >
         {lang === 'es'
           ? 'El inventario levanta 72 anaqueles activos que cubren el 99.73% del gasto clasificable (códigos Partida/CUCoP); la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La regla de adjudicación directa marca el techo OCDE del 30%; el punto de único postor colorea >25% crítico / ≥15% alto. Indicador de riesgo, no estimación de fraude. RUBLI v0.8.5.'
@@ -530,10 +530,10 @@ export default function CategoriesIndex() {
       {/* ── B0 · Folio ───────────────────────────────────────────────────────── */}
       <header className="border-b border-border px-4 sm:px-6 lg:px-8 py-7">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-3 flex items-center gap-3 font-mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>{isEs ? 'El Inventario' : 'The Stocktake'}</span>
+          <div className="mb-3 flex items-center gap-3 font-mono" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>{isEs ? 'El Inventario' : 'The Stocktake'}</span>
             <span aria-hidden="true" style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               {isEs ? 'levantamiento físico del gasto' : 'a physical count of federal spend'}
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>COMPRANET 2002–2025
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>v0.8.5
@@ -543,7 +543,7 @@ export default function CategoriesIndex() {
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <h1
               className="text-text-primary"
-              style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.05, letterSpacing: '-0.012em' }}
+              style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.05, letterSpacing: '-0.012em' }}
             >
               {isEs ? 'Setenta y dos anaqueles guardan' : 'Seventy-two shelves hold'}
               {saldo && totalValue > 0 ? (
@@ -558,10 +558,10 @@ export default function CategoriesIndex() {
             </h1>
             {totalContracts > 0 && (
               <div className="text-right">
-                <div className="tabular-nums" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 'clamp(1.25rem, 2vw, 1.5rem)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
+                <div className="tabular-nums" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 'clamp(1.25rem, 2vw, 1.5rem)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
                   {formatNumber(totalContracts)}
                 </div>
-                <div className="font-mono mt-1" style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                <div className="font-mono mt-1" style={{ fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                   {isEs ? 'contratos validados' : 'validated contracts'}
                 </div>
               </div>
@@ -598,13 +598,13 @@ export default function CategoriesIndex() {
             {/* ── B1 · § EL SALDO (sentence lede) ──────────────────────────── */}
             {saldo && (
               <section className="mb-6 pb-6 border-b border-border" aria-label={isEs ? 'El saldo' : 'The balance'}>
-                <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+                <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
                   § {isEs ? 'El saldo' : 'The balance'}
                 </p>
                 <p
                   style={{
                     fontFamily: '"EB Garamond", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontSize: 'clamp(1.25rem, 2.2vw, 1.6rem)',
                     lineHeight: 1.4,
                     color: 'var(--color-text-secondary)',
@@ -634,7 +634,7 @@ export default function CategoriesIndex() {
                     </>
                   )}
                 </p>
-                <p className="font-mono mt-3 tabular-nums" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+                <p className="font-mono mt-3 tabular-nums" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
                   {isEs
                     ? `top ${saldo.k50} = 50% del gasto · ${saldo.k80} categorías = 80% · 72 cubren 99.73% · indicador de riesgo, no estimación de fraude`
                     : `top ${saldo.k50} = 50% of spend · ${saldo.k80} categories = 80% · 72 cover 99.73% · risk indicator, not a fraud estimate`}
@@ -653,7 +653,7 @@ export default function CategoriesIndex() {
             {/* ── B2 · El Filtro ────────────────────────────────────────────── */}
             <div className="mb-5">
               <div className="flex items-center gap-2 flex-wrap mb-3">
-                <span className="font-mono mr-1" style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                <span className="font-mono mr-1" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                   {isEs ? 'Ordenar' : 'Sort'}
                 </span>
                 {sortButtons.map(({ key, labelEs, labelEn }) => (
@@ -663,7 +663,7 @@ export default function CategoriesIndex() {
                     onClick={() => setSortKey(key)}
                     aria-pressed={sortKey === key}
                     className={cn(
-                      'px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
+                      'px-2.5 py-1 text-[12px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
                       sortKey === key ? 'bg-text-primary text-background border-transparent' : 'text-text-muted border-border hover:text-text-secondary',
                     )}
                   >
@@ -676,7 +676,7 @@ export default function CategoriesIndex() {
                   type="button"
                   onClick={() => setActiveSector(null)}
                   aria-pressed={activeSector === null}
-                  className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
+                  className="font-mono text-[12px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
                   style={activeSector === null
                     ? { background: 'var(--color-text-secondary)', borderColor: 'var(--color-text-secondary)', color: 'var(--color-background)' }
                     : { background: 'transparent', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
@@ -692,7 +692,7 @@ export default function CategoriesIndex() {
                       type="button"
                       onClick={() => setActiveSector(sectorActive ? null : code)}
                       aria-pressed={sectorActive}
-                      className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
+                      className="font-mono text-[12px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
                       style={sectorActive ? { background: hex, borderColor: hex, color: '#ffffff' } : { background: 'transparent', borderColor: hex, color: hex }}
                     >
                       {getSectorName(code, lang)}
@@ -709,7 +709,7 @@ export default function CategoriesIndex() {
 
             {/* ── B3 · § EL CONCENTRADO (where the money stacks) ────────────── */}
             <section className="mb-6 pb-6 border-b border-border" aria-label={isEs ? 'El concentrado' : 'The concentrate'}>
-              <p className="font-mono mb-3.5" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+              <p className="font-mono mb-3.5" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
                 § {isEs ? 'El concentrado · dónde se apila el dinero' : 'The concentrate · where the money stacks'}
               </p>
               <CategoryConcentrationPlate items={data.data} lang={lang} lens={lens} onLensChange={setLens} />
@@ -720,14 +720,14 @@ export default function CategoriesIndex() {
 
             {/* ── B4 · § EL REGISTRO ───────────────────────────────────────── */}
             <section aria-label={isEs ? 'El registro' : 'The register'}>
-              <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+              <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
                 § {isEs ? 'La hoja de conteo · los 72 anaqueles' : 'The count sheet · all 72 shelves'}
               </p>
               <div className="rounded-sm border border-border overflow-hidden">
                 <table className="w-full border-collapse" style={{ display: 'block' }}>
                   <thead style={{ display: 'block' }}>
                     <tr
-                      className="px-3 sm:px-5 py-1.5 bg-background-elevated border-b border-border font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted/60"
+                      className="px-3 sm:px-5 py-1.5 bg-background-elevated border-b border-border font-mono text-[13px] uppercase tracking-[0.15em] text-text-muted/60"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
                     >
                       <th className="w-7 flex-shrink-0 text-left font-medium" scope="col">#</th>
@@ -827,7 +827,7 @@ export default function CategoriesIndex() {
               {/* dagger margin note */}
               <p
                 className="mt-3"
-                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 11, lineHeight: 1.45, color: 'var(--color-text-secondary)' }}
+                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13, lineHeight: 1.45, color: 'var(--color-text-secondary)' }}
               >
                 {isEs
                   ? '† Sectores con una sola categoría activa — expansión de taxonomía pendiente (S.10–S.12).'
@@ -837,7 +837,7 @@ export default function CategoriesIndex() {
 
             {/* ── B∞ · § ADÓNDE IR (coda) ──────────────────────────────────── */}
             <section className="mt-8 pt-6" style={{ borderTop: '1px solid var(--color-border)' }} aria-label={isEs ? 'Adónde ir' : 'Where to go next'}>
-              <p className="font-mono mb-3" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+              <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
                 § {isEs ? 'Adónde ir' : 'Where to go next'}
               </p>
               <div className="flex items-center flex-wrap gap-x-5 gap-y-3">
@@ -845,7 +845,7 @@ export default function CategoriesIndex() {
                   type="button"
                   onClick={() => navigate('/aria')}
                   className="font-mono uppercase tracking-wide transition-opacity hover:opacity-70"
-                  style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--color-accent)', background: 'none', border: 0, cursor: 'pointer' }}
+                  style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-accent)', background: 'none', border: 0, cursor: 'pointer' }}
                 >
                   {isEs ? 'Ver la Lista de Vigilancia →' : 'Open the Watchlist →'}
                 </button>
@@ -893,7 +893,7 @@ export default function CategoriesIndex() {
   )
 }
 
-// Anchor number atom for the EL SALDO sentence — Garamond italic 800 tabular,
+// Anchor number atom for the EL SALDO sentence — Garamond 800 tabular,
 // colour inherits (the surrounding span sets it where needed).
 function SaldoNum({ children }: { children: ReactNode }) {
   return (
@@ -901,7 +901,7 @@ function SaldoNum({ children }: { children: ReactNode }) {
       className="tabular-nums"
       style={{
         fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-        fontStyle: 'italic',
+        fontStyle: 'normal',
         fontWeight: 800,
         color: 'var(--color-text-primary)',
       }}

@@ -55,7 +55,7 @@ export function EditorialPageShell({
             <span className="lede-dateline">{kicker}</span>
           )}
           {meta && (
-            <span className="font-mono text-[10px] tracking-widest uppercase text-text-muted hidden sm:block flex-shrink-0">
+            <span className="font-mono text-[12px] tracking-widest uppercase text-text-muted hidden sm:block flex-shrink-0">
               {meta}
             </span>
           )}
@@ -75,7 +75,7 @@ export function EditorialPageShell({
             cold-reading the page needs to know who published this and what
             the data window is before trusting the lede. */}
         {!loading && (
-          <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-text-muted mb-5">
+          <p className="font-mono text-[12px] tracking-[0.14em] uppercase text-text-muted mb-5">
             {dateline ?? DEFAULT_DATELINE}
           </p>
         )}
@@ -114,7 +114,7 @@ export function EditorialPageShell({
                   </span>
                   <span className="stat-strip-label">{stat.label}</span>
                   {stat.sub && (
-                    <span className="font-mono text-[9px] text-text-muted tracking-wide mt-0.5">{stat.sub}</span>
+                    <span className="font-mono text-[13px] text-text-muted tracking-wide mt-0.5">{stat.sub}</span>
                   )}
                 </div>
               ))

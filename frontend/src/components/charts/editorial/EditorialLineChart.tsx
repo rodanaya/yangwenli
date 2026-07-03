@@ -132,7 +132,7 @@ export function EditorialLineChart<T extends object>({
             borderRadius: 2,
             padding: '8px 10px',
             color: '#faf9f6',
-            fontSize: 11,
+            fontSize: 13,
             fontFamily: 'var(--font-family-mono)',
           }}
           labelStyle={{ color: '#faf9f6', fontWeight: 600, marginBottom: 4 }}
@@ -153,7 +153,7 @@ export function EditorialLineChart<T extends object>({
                   value: a.label,
                   position: 'top',
                   fill: annotationStroke(a.tone),
-                  fontSize: 10,
+                  fontSize: 12,
                   fontFamily: 'var(--font-family-mono)',
                 }}
               />
@@ -170,7 +170,7 @@ export function EditorialLineChart<T extends object>({
                   value: a.label,
                   position: 'right',
                   fill: annotationStroke(a.tone),
-                  fontSize: 10,
+                  fontSize: 12,
                   fontFamily: 'var(--font-family-mono)',
                 }}
               />
@@ -196,7 +196,7 @@ export function EditorialLineChart<T extends object>({
             align="right"
             iconType="plainline"
             wrapperStyle={{
-              fontSize: 11,
+              fontSize: 13,
               fontFamily: 'var(--font-family-mono)',
               color: CHART_TOKENS.axis.tickFill,
               paddingBottom: 4,
@@ -240,7 +240,7 @@ export function EditorialLineChart<T extends object>({
                         y={y}
                         dy={3}
                         fill={stroke}
-                        fontSize={10}
+                        fontSize={12}
                         fontFamily="var(--font-family-mono)"
                         textAnchor="start"
                       >

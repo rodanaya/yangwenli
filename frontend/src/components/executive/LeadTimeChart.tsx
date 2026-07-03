@@ -124,7 +124,7 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
             >
               {/* Case label (right-aligned in left margin) */}
               <text x={LEFT_LABEL - 8} y={y + 3} textAnchor="end"
-                fontSize={10} fontWeight="600"
+                fontSize={12} fontWeight="600"
                 fill="var(--color-text-primary)"
                 fontFamily="var(--font-family-sans, sans-serif)">
                 {c.name[lang]}
@@ -162,7 +162,7 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
 
               {/* Lead-time count in right margin */}
               <text x={SVG_W - RIGHT_PAD} y={y + 3} textAnchor="end"
-                fontSize={11} fontWeight="800"
+                fontSize={13} fontWeight="800"
                 fill={sectorColor}
                 fontFamily="var(--font-family-mono, monospace)">
                 {lead}
@@ -176,7 +176,7 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
       </svg>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 px-2 text-[9px] font-mono text-text-muted">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 px-2 text-[13px] font-mono text-text-muted">
         <span className="flex items-center gap-1.5">
           <span className="rounded-full" style={{ width: 7, height: 7, background: '#64748b' }} aria-hidden="true" />
           {lang === 'en' ? 'RUBLI flag year (data crossed critical threshold)' : 'Año señalado por RUBLI (datos cruzaron umbral crítico)'}

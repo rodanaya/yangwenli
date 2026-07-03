@@ -148,7 +148,7 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
     <div ref={containerRef} className="w-full">
       <p
         className="font-mono mb-1"
-        style={{ fontSize: 9.5, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+        style={{ fontSize: 13, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
       >
         {lang === 'es' ? '§ LA MESA DEL ARQUEO · DOCE SECTORES, UN SOLO CORTE' : '§ THE COUNTING TABLE · TWELVE SECTORS, ONE COUNT'}
       </p>
@@ -257,7 +257,7 @@ function DesktopMesa({
       {/* Fixed readout strip — hover data on the left, persistent axis label on the right */}
       <div
         className="font-mono tabular-nums"
-        style={{ height: READOUT_H, fontSize: 10, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+        style={{ height: READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
         <span style={{ flexShrink: 0, fontSize: 8, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
@@ -349,7 +349,7 @@ function DesktopMesa({
                   y={BAND_H + STRIP_H + 12}
                   textAnchor="middle"
                   fontFamily="'IBM Plex Mono', monospace"
-                  fontSize={9}
+                  fontSize={13}
                   letterSpacing="0.04em"
                   fill={text}
                   style={{ textTransform: 'uppercase' }}
@@ -362,7 +362,7 @@ function DesktopMesa({
                   y={BAND_H + STRIP_H + 12}
                   textAnchor="middle"
                   fontFamily="'IBM Plex Mono', monospace"
-                  fontSize={9}
+                  fontSize={13}
                   fill="var(--color-text-muted)"
                 >
                   {CIRCLED[narrowIdx] ?? '·'}
@@ -398,7 +398,7 @@ function DesktopMesa({
 
         {/* Ruled flags */}
         <line x1={GUTTER_W} y1={BAND_H * 0.5} x2={GUTTER_W + bandW} y2={BAND_H * 0.5} stroke={OCHRE_STRONG} strokeWidth={1} />
-        <text x={GUTTER_W + 4} y={BAND_H * 0.5 - 4} fontFamily="'EB Garamond', Georgia, serif" fontStyle="italic" fontSize={12} fill={OCHRE_STRONG}>
+        <text x={GUTTER_W + 4} y={BAND_H * 0.5 - 4} fontFamily="'EB Garamond', Georgia, serif" fontStyle="normal" fontSize={12} fill={OCHRE_STRONG}>
           ½
         </text>
         <text x={GUTTER_W + 16} y={BAND_H * 0.5 - 4} fontFamily="'IBM Plex Mono', monospace" fontSize={8.5} fill={OCHRE_STRONG}>
@@ -419,7 +419,7 @@ function DesktopMesa({
       </svg>
 
       {legendLine && (
-        <p className="mt-2 font-mono" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+        <p className="mt-2 font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
           {legendLine}
         </p>
       )}
@@ -457,7 +457,7 @@ function AnnotationWidest({
         y={y - 2}
         textAnchor="middle"
         fontFamily="'IBM Plex Mono', monospace"
-        fontStyle="italic"
+        fontStyle="normal"
         fontSize={8.5}
         fill="var(--color-text-secondary)"
       >
@@ -499,7 +499,7 @@ function AnnotationTallest({
         y={labelY - 2}
         textAnchor="middle"
         fontFamily="'IBM Plex Mono', monospace"
-        fontStyle="italic"
+        fontStyle="normal"
         fontSize={8.5}
         fill="var(--color-text-secondary)"
       >
@@ -538,7 +538,7 @@ function MobileMesa({
     <div>
       <div
         className="font-mono tabular-nums mb-2"
-        style={{ height: READOUT_H, fontSize: 10, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
+        style={{ height: READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
       >
         {readoutText}
       </div>
@@ -588,7 +588,7 @@ function MobileMesa({
                   top: '50%',
                   transform: 'translateY(-50%)',
                   fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 13,
                   color: 'var(--color-text-primary)',
@@ -607,7 +607,7 @@ function MobileMesa({
         })}
       </div>
       {narrowSet.length > 0 && (
-        <p className="mt-2 font-mono" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+        <p className="mt-2 font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
           {narrowSet
             .map(({ row }, i) => `${CIRCLED[i] ?? '·'} ${row.name} ${(ownSpendShare(row) * 100).toFixed(0)}%`)
             .join(' · ')}

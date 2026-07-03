@@ -164,7 +164,7 @@ function CopyCitationButton() {
   return (
     <button
       onClick={() => void handleCopy()}
-      className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
+      className="flex items-center gap-1.5 px-2.5 py-1 text-[12px] font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
       title={t('copyCitation')}
     >
       {copied ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3" />}
@@ -228,7 +228,7 @@ function MethodologyCoda({ lang }: { lang: 'en' | 'es' }) {
       <p
         className="font-mono mb-1.5 text-accent"
         style={{
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           fontWeight: 700,
@@ -253,14 +253,14 @@ function MethodologyCoda({ lang }: { lang: 'en' | 'es' }) {
             title={r.title}
             className="group flex flex-col gap-1 rounded-sm border border-accent/20 bg-accent/[0.04] px-3 py-2.5 hover:bg-accent/10 hover:border-accent/40 transition-colors"
           >
-            <span className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.1em] text-accent text-[11px] font-bold">
+            <span className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.1em] text-accent text-[13px] font-bold">
               {r.label}
               <ArrowRight
                 className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
               />
             </span>
-            <span className="text-[11px] text-text-muted leading-snug">{r.sub}</span>
+            <span className="text-[13px] text-text-muted leading-snug">{r.sub}</span>
           </Link>
         ))}
       </div>
@@ -289,7 +289,7 @@ function MethodologyProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <p
         className="font-mono mb-2"
         style={{
-          fontSize: 9.5,
+          fontSize: 13,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -301,7 +301,7 @@ function MethodologyProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <p
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13.5,
           color: 'var(--color-text-secondary)',
           lineHeight: 1.55,
@@ -317,7 +317,7 @@ function MethodologyProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         <p
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 13.5,
             color: 'var(--color-text-secondary)',
             lineHeight: 1.55,
@@ -330,7 +330,7 @@ function MethodologyProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         <p
           className="mt-3 font-mono"
           style={{
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             color: 'var(--color-text-muted)',
@@ -382,7 +382,7 @@ export function Methodology() {
         {/* Breadcrumb up-link (Charter C0 spine) */}
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-[13px] font-mono text-text-muted hover:text-text-secondary transition-colors mb-4"
           title={lang === 'es' ? 'Volver a la portada de RUBLI' : 'Back to the RUBLI home'}
         >
           <ArrowLeft className="h-3 w-3" aria-hidden="true" />
@@ -403,7 +403,7 @@ export function Methodology() {
               dek={{ en: 'A similarity score, not a verdict: what the number measures and where the four thresholds fall.', es: 'Una puntuación de similitud, no un veredicto: qué mide el número y dónde caen los cuatro umbrales.' }}
             >
             <div className="space-y-4">
-              <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[10px]">
+              <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[12px]">
                 § Modelo activo v0.8.5 · AUC 0.785 · HR 11.01%
               </p>
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -469,7 +469,7 @@ export function Methodology() {
                       ))}
                     </tbody>
                   </table>
-                  <p className="text-[10px] text-text-muted mt-1 font-mono">
+                  <p className="text-[12px] text-text-muted mt-1 font-mono">
                     {t('body.overview.tableFootnote')}
                   </p>
                 </div>
@@ -588,7 +588,7 @@ export function Methodology() {
             >
               <div className="space-y-6">
             <div className="space-y-4">
-              <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[10px]">
+              <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[12px]">
                 {t('sectionKickers.validationKicker')}
               </p>
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -666,14 +666,14 @@ export function Methodology() {
                 {/* Sub-clause III·b — cross-model checks */}
                 <div id="v52-layer" className="scroll-mt-24 space-y-3 pt-2">
                   <div className="flex items-baseline gap-3">
-                    <span className="font-mono text-[11px] font-bold tracking-[0.18em]" style={{ color: '#a06820' }}>III·b</span>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+                    <span className="font-mono text-[13px] font-bold tracking-[0.18em]" style={{ color: '#a06820' }}>III·b</span>
+                    <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-text-muted">
                       {lang === 'es' ? 'Contraste entre modelos' : 'Cross-model checks'}
                     </span>
                   </div>
                   <h3
                     className="text-text-primary"
-                    style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: '22px', lineHeight: 1.1 }}
+                    style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: '22px', lineHeight: 1.1 }}
                   >
                     {lang === 'es' ? 'Tres segundas opiniones independientes' : 'Three independent second opinions'}
                   </h3>
@@ -721,10 +721,10 @@ export function Methodology() {
                           <Icon className={`h-3.5 w-3.5 ${item.color}`} aria-hidden="true" />
                           <p className={`text-xs font-semibold ${item.color}`}>{t(`body.v52layer.${item.titleKey}`)}</p>
                         </div>
-                        <span className="text-[10px] font-mono text-text-muted">{t(`body.v52layer.${item.badgeKey}`)}</span>
+                        <span className="text-[12px] font-mono text-text-muted">{t(`body.v52layer.${item.badgeKey}`)}</span>
                       </div>
                       <p className="text-xs text-text-secondary leading-relaxed">{t(`body.v52layer.${item.bodyKey}`)}</p>
-                      <p className="text-[10px] text-text-muted font-mono border-t border-border/30 pt-1.5">
+                      <p className="text-[12px] text-text-muted font-mono border-t border-border/30 pt-1.5">
                         {t('body.v52layer.whereToFind')} {t(`body.v52layer.${item.whereKey}`)}
                       </p>
                     </div>
@@ -866,7 +866,7 @@ export function Methodology() {
               <div className="space-y-6">
                 <p
                   className="text-text-secondary"
-                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: '23px', lineHeight: 1.4, borderLeft: '2px solid #a06820', paddingLeft: '16px' }}
+                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: '23px', lineHeight: 1.4, borderLeft: '2px solid #a06820', paddingLeft: '16px' }}
                 >
                   {lang === 'es' ? 'Una puntuación baja no certifica que un contrato esté limpio.' : 'A low score does not certify a contract is clean.'}
                 </p>
@@ -986,7 +986,7 @@ export function Methodology() {
               {/* Tier I */}
               <div className="rounded-sm border border-risk-critical/25 bg-risk-critical/5 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-critical">{t('tiers.tierILabel')}</span>
+                  <span className="text-[12px] font-mono font-bold tracking-[0.2em] text-risk-critical">{t('tiers.tierILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
                     {t('tiers.tierITitle')}
                   </h3>
@@ -995,7 +995,7 @@ export function Methodology() {
                   {t('tiers.tierIBody')}
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.sourcesLabel')}</p>
+                  <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.sourcesLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
                     <li>{t('tiers.tierISource1')}</li>
                     <li>{t('tiers.tierISource2')}</li>
@@ -1003,15 +1003,15 @@ export function Methodology() {
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-risk-critical/15">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
-                  <p className="text-xs text-risk-critical italic">{t('tiers.tierISay')}</p>
+                  <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-risk-critical">{t('tiers.tierISay')}</p>
                 </div>
               </div>
 
               {/* Tier II */}
               <div className="rounded-sm border border-risk-high/25 bg-risk-high/5 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-high">{t('tiers.tierIILabel')}</span>
+                  <span className="text-[12px] font-mono font-bold tracking-[0.2em] text-risk-high">{t('tiers.tierIILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
                     {t('tiers.tierIITitle')}
                   </h3>
@@ -1020,7 +1020,7 @@ export function Methodology() {
                   {t('tiers.tierIIBody')}
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.examplesLabel')}</p>
+                  <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.examplesLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
                     <li>{t('tiers.tierIIEx1')}</li>
                     <li>{t('tiers.tierIIEx2')}</li>
@@ -1028,15 +1028,15 @@ export function Methodology() {
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-risk-high/15">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
-                  <p className="text-xs text-risk-high italic">{t('tiers.tierIISay')}</p>
+                  <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-risk-high">{t('tiers.tierIISay')}</p>
                 </div>
               </div>
 
               {/* Tier III */}
               <div className="rounded-sm border border-border/40 bg-background-elevated/30 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted">{t('tiers.tierIIILabel')}</span>
+                  <span className="text-[12px] font-mono font-bold tracking-[0.2em] text-text-muted">{t('tiers.tierIIILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
                     {t('tiers.tierIIITitle')}
                   </h3>
@@ -1046,7 +1046,7 @@ export function Methodology() {
                   <strong className="text-text-primary">{t('tiers.tierIIIBodyStrong')}</strong>
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.scaleLabel')}</p>
+                  <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.scaleLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
                     <li>{t('tiers.tierIIIEx1')}</li>
                     <li>{t('tiers.tierIIIEx2')}</li>
@@ -1054,8 +1054,8 @@ export function Methodology() {
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-border/30">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
-                  <p className="text-xs text-text-secondary italic">{t('tiers.tierIIISay')}</p>
+                  <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-text-secondary">{t('tiers.tierIIISay')}</p>
                 </div>
               </div>
 
@@ -1154,9 +1154,9 @@ export function Methodology() {
                 <div className="space-y-1.5">
                   {[...V33_WEIGHTS].sort((a, b) => b.weight - a.weight).map((w) => (
                     <div key={w.nameKey} className="flex items-center gap-3">
-                      <span className="font-mono text-[11px] text-text-secondary w-40 shrink-0 truncate">{t(`v33WeightNames.${w.nameKey}`)}</span>
+                      <span className="font-mono text-[13px] text-text-secondary w-40 shrink-0 truncate">{t(`v33WeightNames.${w.nameKey}`)}</span>
                       <div className="flex-1 min-w-0"><HatchBar value={w.weight} max={20} color="#a06820" /></div>
-                      <span className="font-mono text-[11px] tabular-nums text-text-muted w-9 text-right">{w.weight}%</span>
+                      <span className="font-mono text-[13px] tabular-nums text-text-muted w-9 text-right">{w.weight}%</span>
                     </div>
                   ))}
                 </div>

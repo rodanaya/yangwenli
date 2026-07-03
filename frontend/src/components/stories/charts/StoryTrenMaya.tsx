@@ -78,10 +78,10 @@ export function StoryTrenMaya() {
           aria-label={t('trenMaya.ariaLabel')}
         >
           {/* Header */}
-          <text x={LABEL_W - 8} y={32} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W - 8} y={32} textAnchor="end" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('trenMaya.sectionHeader')}
           </text>
-          <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('trenMaya.axisHeader')}
           </text>
           {/* OECD line */}
@@ -101,14 +101,14 @@ export function StoryTrenMaya() {
               y={28}
               textAnchor="middle"
               fill="var(--color-oecd)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
             >
               {t('trenMaya.oecdLabel')}
             </text>
           </g>
-          <text x={LABEL_W + STRIP_W + META_W / 2 + 20} y={32} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W + META_W / 2 + 20} y={32} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('trenMaya.valueExecutorHeader')}
           </text>
 
@@ -160,7 +160,7 @@ export function StoryTrenMaya() {
                   y={cy - 2}
                   textAnchor="end"
                   fill="var(--color-border)"
-                  fontSize={11}
+                  fontSize={13}
                   fontFamily="var(--font-family-serif)"
                   fontWeight={700}
                 >
@@ -207,7 +207,7 @@ export function StoryTrenMaya() {
                       y={cy + 3}
                       textAnchor="middle"
                       fill="var(--color-sector-educacion)"
-                      fontSize={10}
+                      fontSize={12}
                       fontFamily="var(--font-family-mono)"
                       fontWeight={700}
                       letterSpacing="0.1em"
@@ -239,7 +239,7 @@ export function StoryTrenMaya() {
                     fill={color}
                     fontSize={18}
                     fontFamily="var(--font-family-serif)"
-                    fontStyle="italic"
+                    fontStyle="normal"
                     fontWeight={800}
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                     y={-2}
@@ -249,7 +249,7 @@ export function StoryTrenMaya() {
                   <text
                     textAnchor="start"
                     fill="var(--color-text-muted)"
-                    fontSize={9}
+                    fontSize={13}
                     fontFamily="var(--font-family-mono)"
                     y={12}
                   >
@@ -268,7 +268,7 @@ export function StoryTrenMaya() {
             y={H - 10}
             textAnchor="middle"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {t('trenMaya.bottomLegend')}

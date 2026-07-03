@@ -101,15 +101,15 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
 
   return (
     <section className="mt-10 pt-8 border-t border-border" aria-label={isEs ? 'Funcionarios itinerantes' : 'Itinerant officials'}>
-      <div className="font-mono mb-1" style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+      <div className="font-mono mb-1" style={{ fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
         {isEs ? 'Ventana 2018+ · todas las administraciones' : '2018+ window · across administrations'}
       </div>
-      <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 22, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
+      <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 22, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
         {isEs ? 'Los itinerantes' : 'The itinerants'}
       </h2>
 
       {/* Computed headline — the fraction that survived a change of government */}
-      <p className="mt-1.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 15, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+      <p className="mt-1.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
         {isEs ? (
           <>
             <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{crossers} de {total}</span>
@@ -124,7 +124,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
       </p>
 
       {/* 3-way client sort — press again to return to the default (crossers-first) order */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.1em]">
+      <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[12px] uppercase tracking-[0.1em]">
         <span className="text-text-muted">{isEs ? 'Ordenar por' : 'Sort by'}</span>
         {SORT_OPTIONS.map((opt) => {
           const active = sortMode === opt.key
@@ -156,7 +156,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
               style={{
                 left: `${x}%`,
                 transform: i === 0 ? 'translateX(2px)' : 'translateX(calc(-100% - 2px))',
-                fontSize: 9,
+                fontSize: 13,
                 letterSpacing: '0.04em',
                 color: 'var(--color-text-muted)',
               }}
@@ -173,7 +173,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
       </div>
 
       {/* Header row */}
-      <div className={cn(ROW_GRID, 'mt-1 pb-1.5 border-b border-border font-mono text-[9px] uppercase tracking-[0.12em] text-text-muted')}>
+      <div className={cn(ROW_GRID, 'mt-1 pb-1.5 border-b border-border font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted')}>
         <span>{isEs ? 'Funcionario' : 'Officer'}</span>
         <span />
         <span className="hidden sm:block text-right">{isEs ? 'Valor' : 'Value'}</span>
@@ -242,19 +242,19 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
                       style={{ left: `${left}%`, width: `${width}%`, backgroundColor: color, opacity: crosses ? 0.9 : 0.35 }}
                     />
                   ) : (
-                    <span aria-hidden="true" className="absolute top-1/2 -translate-y-1/2 left-0 font-mono text-[11px] text-text-muted">
+                    <span aria-hidden="true" className="absolute top-1/2 -translate-y-1/2 left-0 font-mono text-[13px] text-text-muted">
                       —
                     </span>
                   )}
                 </span>
 
-                <span className="hidden sm:block whitespace-nowrap text-right font-mono text-[11px] tabular-nums text-text-secondary">
+                <span className="hidden sm:block whitespace-nowrap text-right font-mono text-[13px] tabular-nums text-text-secondary">
                   {formatCompactMXN(m.total_value_mxn)}
                 </span>
-                <span className="text-right font-mono text-[11px] tabular-nums text-text-secondary">
+                <span className="text-right font-mono text-[13px] tabular-nums text-text-secondary">
                   {m.direct_award_pct.toFixed(0)}%
                 </span>
-                <span className="text-right font-mono text-[11px] tabular-nums text-text-muted">
+                <span className="text-right font-mono text-[13px] tabular-nums text-text-muted">
                   ×{m.institution_count}
                 </span>
               </div>
@@ -262,15 +262,15 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
               {isExpanded && (
                 <div className="border-b border-border/40 bg-background-elevated/20 px-1 pb-4 pt-3 sm:pl-[158px]">
                   <div className="flex flex-wrap gap-x-8 gap-y-3">
-                    <div className="font-mono text-[10px] text-text-muted">
+                    <div className="font-mono text-[12px] text-text-muted">
                       <div className="mb-0.5 uppercase tracking-[0.1em]">{isEs ? 'Contratos' : 'Contracts'}</div>
                       <div className="text-[13px] tabular-nums text-text-primary">{m.total_contracts.toLocaleString(locale)}</div>
                     </div>
-                    <div className="font-mono text-[10px] text-text-muted">
+                    <div className="font-mono text-[12px] text-text-muted">
                       <div className="mb-0.5 uppercase tracking-[0.1em]">{isEs ? 'Valor total' : 'Total value'}</div>
                       <div className="text-[13px] tabular-nums text-text-primary">{formatCompactMXN(m.total_value_mxn)}</div>
                     </div>
-                    <div className="min-w-[140px] font-mono text-[10px] text-text-muted">
+                    <div className="min-w-[140px] font-mono text-[12px] text-text-muted">
                       <div className="mb-1 flex items-center justify-between gap-3 uppercase tracking-[0.1em]">
                         <span>{isEs ? 'Adj. directa' : 'Direct award'}</span>
                         <span className="tabular-nums text-text-secondary">{m.direct_award_pct.toFixed(0)}%</span>
@@ -282,11 +282,11 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
                         ariaLabel={isEs ? `Adjudicación directa ${m.direct_award_pct.toFixed(0)}%` : `Direct award ${m.direct_award_pct.toFixed(0)}%`}
                       />
                     </div>
-                    <div className="font-mono text-[10px] text-text-muted">
+                    <div className="font-mono text-[12px] text-text-muted">
                       <div className="mb-0.5 uppercase tracking-[0.1em]">{isEs ? 'Oferta única' : 'Single bid'}</div>
                       <div className="text-[13px] tabular-nums text-text-primary">{m.single_bid_pct.toFixed(0)}%</div>
                     </div>
-                    <div className="font-mono text-[10px] text-text-muted">
+                    <div className="font-mono text-[12px] text-text-muted">
                       <div className="mb-0.5 uppercase tracking-[0.1em]">{isEs ? 'Indicador de riesgo' : 'Risk indicator'}</div>
                       <div className="flex items-center gap-1.5 text-[13px] tabular-nums">
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
@@ -297,7 +297,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
                   <Link
                     to={`/officials/${encodeURIComponent(m.official_name)}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="mt-3 inline-flex items-center gap-1 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary"
+                    className="mt-3 inline-flex items-center gap-1 font-mono text-[13px] text-text-secondary transition-colors hover:text-text-primary"
                   >
                     {isEs ? 'ver ficha' : 'see file'} <span aria-hidden="true">→</span>
                   </Link>
@@ -316,7 +316,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
             <span
               key={yr}
               className="absolute font-mono tabular-nums"
-              style={{ left: `${((yr - AXIS_START) / AXIS_SPAN) * 100}%`, transform: 'translateX(-50%)', fontSize: 9, color: 'var(--color-text-muted)' }}
+              style={{ left: `${((yr - AXIS_START) / AXIS_SPAN) * 100}%`, transform: 'translateX(-50%)', fontSize: 13, color: 'var(--color-text-muted)' }}
             >
               {yr}
             </span>
@@ -328,7 +328,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
       </div>
 
       {/* Provenance — kept verbatim from the prior table's caption */}
-      <p className="mt-3 text-[11px] leading-relaxed text-text-muted">
+      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
         {isEs
           ? 'Responsables de la Unidad Compradora que firmaron en más de una institución · 2018+ (COMPRANET Estructura C/D). Indicador de riesgo del modelo — no es una acusación.'
           : 'Procurement officers of record who signed at more than one institution · 2018+ (COMPRANET Structure C/D). Model risk indicator — not an accusation.'}

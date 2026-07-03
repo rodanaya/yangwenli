@@ -82,33 +82,33 @@ const sum = (rows: LedgerRow[], pick: (r: LedgerRow) => number): number =>
 
 // Kicker / column-label typography — mono, micro, uppercase, wide tracking, muted.
 const KICKER_STYLE: CSSProperties = {
-  fontSize: 9.5,
+  fontSize: 13,
   letterSpacing: '0.15em',
   textTransform: 'uppercase',
   fontWeight: 600,
   color: 'var(--color-text-muted)',
 }
 
-// Big-number typography — serif italic 800 tabular.
+// Big-number typography — serif 800 tabular.
 const BIGNUM_STYLE: CSSProperties = {
   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-  fontStyle: 'italic',
+  fontStyle: 'normal',
   fontWeight: 800,
   fontVariantNumeric: 'tabular-nums',
 }
 
-// EB Garamond italic 500 — the sector name (row link surface).
+// EB Garamond 500 — the sector name (row link surface).
 const SERIF_NAME_STYLE: CSSProperties = {
   fontFamily: '"EB Garamond", Georgia, serif',
-  fontStyle: 'italic',
+  fontStyle: 'normal',
   fontWeight: 500,
 }
 
-// EB Garamond italic — marginalia / register notes.
+// EB Garamond — marginalia / register notes.
 const MARGIN_NOTE_STYLE: CSSProperties = {
   fontFamily: '"EB Garamond", Georgia, serif',
-  fontStyle: 'italic',
-  fontSize: 11,
+  fontStyle: 'normal',
+  fontSize: 13,
   lineHeight: 1.45,
   color: 'var(--color-text-secondary)',
 }
@@ -208,7 +208,7 @@ function LedgerRowItem({
       <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2">
         <span
           className="font-mono tabular-nums shrink-0 w-6 text-right"
-          style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 13, color: 'var(--color-text-muted)' }}
         >
           {String(displayRank).padStart(2, '0')}
         </span>
@@ -228,7 +228,7 @@ function LedgerRowItem({
         {/* Process-integrity bullet: DA% vs OECD ceiling */}
         <span className="hidden sm:flex shrink-0 w-[120px] items-center gap-1.5">
           <DABullet daPct={row.daPct} />
-          <span className="font-mono tabular-nums shrink-0 w-8 text-right" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+          <span className="font-mono tabular-nums shrink-0 w-8 text-right" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
             {row.daPct.toFixed(0)}%
           </span>
         </span>
@@ -247,7 +247,7 @@ function LedgerRowItem({
           title={lang === 'es' ? `Intensidad de riesgo ${intensity.toFixed(2)}` : `Risk intensity ${intensity.toFixed(2)}`}
         >
           <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 9999, background: intensityColor(intensity), flexShrink: 0 }} />
-          <span className="font-mono tabular-nums" style={{ fontSize: 11, color: 'var(--color-text-primary)' }}>
+          <span className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-primary)' }}>
             {intensity.toFixed(2)}
           </span>
         </span>
@@ -268,7 +268,7 @@ function LedgerRowItem({
               </span>
             </>
           ) : (
-            <span className="font-mono w-full text-center" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>—</span>
+            <span className="font-mono w-full text-center" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>—</span>
           )}
         </span>
 
@@ -276,7 +276,7 @@ function LedgerRowItem({
         <button
           type="button"
           className="sm:hidden shrink-0 font-mono px-1.5 py-1"
-          style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 13, color: 'var(--color-text-muted)' }}
           aria-expanded={expanded}
           aria-label={
             lang === 'es'
@@ -300,11 +300,11 @@ function LedgerRowItem({
           onKeyDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="font-mono shrink-0" style={{ fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+            <span className="font-mono shrink-0" style={{ fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
               DA · {lang === 'es' ? 'OCDE' : 'OECD'} ≤{OECD_DA_CEILING.toFixed(0)}%
             </span>
             <DABullet daPct={row.daPct} />
-            <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+            <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
               {row.daPct.toFixed(0)}%
             </span>
           </div>
@@ -312,7 +312,7 @@ function LedgerRowItem({
           <Link
             to={`/sectors/${row.sectorId}`}
             className="mt-2 inline-block font-mono underline decoration-1 underline-offset-2"
-            style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {lang === 'es' ? 'ver dossier del sector ↗' : 'view sector dossier ↗'}
@@ -463,7 +463,7 @@ export function ExposureLedger({
         >
           <p
             className="font-mono tabular-nums px-3"
-            style={{ fontSize: 11, letterSpacing: '0.02em', color: 'var(--color-text-primary)', lineHeight: 1.55 }}
+            style={{ fontSize: 13, letterSpacing: '0.02em', color: 'var(--color-text-primary)', lineHeight: 1.55 }}
           >
             {lang === 'es' ? (
               <>
@@ -484,7 +484,7 @@ export function ExposureLedger({
         {/* Model note line. */}
         <p
           className="mt-2.5 px-3 font-mono"
-          style={{ fontSize: 10, letterSpacing: '0.02em', color: 'var(--color-text-muted)', lineHeight: 1.5 }}
+          style={{ fontSize: 12, letterSpacing: '0.02em', color: 'var(--color-text-muted)', lineHeight: 1.5 }}
         >
           {lang === 'es'
             ? 'Modelo v0.8.5 · monto observado = MXN vía contratos alto+crítico · intensidad = riesgo medio del sector · indicador estadístico, no determinación legal · clic en fila → dossier · '
@@ -501,7 +501,7 @@ export function ExposureLedger({
         {/* Legend microline — bullet rule · intensity dot · trajectory line. */}
         <p
           className="mt-1.5 px-3 font-mono"
-          style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
         >
           {lang === 'es'
             ? `regla = adjudicación directa vs techo OCDE ${OECD_DA_CEILING.toFixed(0)}% (excedente en ámbar) · ● = intensidad · línea = trayectoria de riesgo`
@@ -514,7 +514,7 @@ export function ExposureLedger({
             <li key={n.id} className="flex gap-2">
               <span
                 className="font-mono shrink-0 tabular-nums"
-                style={{ fontSize: 9.5, color: 'var(--color-text-muted)', marginTop: 2 }}
+                style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2 }}
               >
                 {String(i + 1).padStart(2, '0')}
               </span>

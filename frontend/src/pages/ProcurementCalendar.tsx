@@ -204,12 +204,12 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
           </span>
         </div>
         {isDecember && (
-          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-risk-high/80 text-[10px]">
+          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-risk-high/80 text-[12px]">
             {t('events.budgetClose')}
           </div>
         )}
         {isElectionYear && month >= 3 && month <= 5 && (
-          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-risk-high/80 text-[10px]">
+          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-risk-high/80 text-[12px]">
             {t('events.preElectoral')}
           </div>
         )}
@@ -247,7 +247,7 @@ function CalendarGrid({ weeks, monthPositions, maxContracts, onTooltip }: Calend
             return (
               <div
                 key={week.weekIndex}
-                className="text-[10px] text-text-muted font-mono"
+                className="text-[12px] text-text-muted font-mono"
                 style={{ width: CELL + GAP, minWidth: CELL + GAP }}
               >
                 {mp ? monthNames[mp.month] : ''}
@@ -263,7 +263,7 @@ function CalendarGrid({ weeks, monthPositions, maxContracts, onTooltip }: Calend
             {dayLabels.map((label, i) => (
               <div
                 key={label}
-                className="text-[9px] text-text-muted font-mono flex items-center justify-end pr-1"
+                className="text-[13px] text-text-muted font-mono flex items-center justify-end pr-1"
                 style={{ height: CELL, lineHeight: `${CELL}px` }}
               >
                 {i % 2 === 0 ? label.slice(0, 1) : ''}
@@ -411,7 +411,7 @@ function Legend() {
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-text-muted">
-      <span className="font-mono uppercase tracking-[0.15em] text-text-muted text-[10px]">{t('legend.riskLevel')}</span>
+      <span className="font-mono uppercase tracking-[0.15em] text-text-muted text-[12px]">{t('legend.riskLevel')}</span>
       {swatches.map((s) => (
         <div key={s.label} className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: s.color }} />
@@ -438,10 +438,10 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
   if (!stats.hasDecemberData) {
     return (
       <div className="rounded-sm border border-border bg-background-card p-5">
-        <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
+        <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
           {t('decemberSection.title')}
         </p>
-        <p className="text-sm text-text-muted italic">
+        <p className="text-sm text-text-muted">
           {t('decemberSection.noData', { year })}
         </p>
       </div>
@@ -459,7 +459,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
 
   return (
     <div className="rounded-sm border border-risk-high/30 bg-risk-high/5 p-5 space-y-4">
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
+      <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
         {t('decemberSection.title')}
       </p>
       <p className="text-sm text-text-secondary leading-relaxed">
@@ -474,7 +474,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Volume comparison */}
         <div className="space-y-2">
-          <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+          <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
             {t('decemberSection.volume')}
           </div>
           <div className="space-y-1.5">
@@ -515,7 +515,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
 
         {/* Risk comparison */}
         <div className="space-y-2">
-          <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+          <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
             {t('decemberSection.riskRate')}
           </div>
           <div className="space-y-1.5">
@@ -604,7 +604,7 @@ export default function ProcurementCalendar() {
             <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
               Procurement Calendar
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
               TEMPORAL PATTERNS · YEAR-END BUDGET-DUMP DETECTION
             </p>
           </div>
@@ -612,15 +612,15 @@ export default function ProcurementCalendar() {
             <div className="flex items-baseline gap-5">
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{stats.totalContracts > 0 ? formatNumber(stats.totalContracts) : '—'}</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{year} contracts</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">{year} contracts</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#f87171' }}>{stats.highRiskContracts > 0 ? formatNumber(stats.highRiskContracts) : '—'}</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fb923c' }}>{stats.hasDecemberData ? formatNumber(stats.decemberContracts) : '—'}</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">December</div>
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">December</div>
               </div>
             </div>
           )}
@@ -644,7 +644,7 @@ export default function ProcurementCalendar() {
 
         {/* Year selector */}
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted mr-2">{t('yearLabel')}</span>
+          <span className="text-[12px] font-mono uppercase tracking-widest text-text-muted mr-2">{t('yearLabel')}</span>
           {AVAILABLE_YEARS.map((y) => (
             <button
               key={y}
@@ -659,10 +659,10 @@ export default function ProcurementCalendar() {
               aria-pressed={y === year}
             >
               {y}
-              {ELECTION_YEARS.has(y) && <span className="ml-1 text-[9px] align-top text-risk-high">*</span>}
+              {ELECTION_YEARS.has(y) && <span className="ml-1 text-[13px] align-top text-risk-high">*</span>}
             </button>
           ))}
-          <span className="text-[9px] text-risk-high/70 font-mono ml-1">{t('electionSuffix')}</span>
+          <span className="text-[13px] text-risk-high/70 font-mono ml-1">{t('electionSuffix')}</span>
         </div>
 
         {/* Stats row */}
@@ -764,13 +764,13 @@ export default function ProcurementCalendar() {
             {/* Most active day */}
             {stats.peakDay && (
               <div className="border border-border bg-background-card rounded-sm p-3">
-                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
+                <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('insights.mostActiveDay')}
                 </div>
                 <div className="text-lg font-bold font-mono text-text-secondary">
                   {new Date(stats.peakDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                 </div>
-                <div className="text-[11px] text-text-muted">
+                <div className="text-[13px] text-text-muted">
                   {t('stats.contractsCount', { num: formatNumber(stats.peakDay.total_contracts) })}
                 </div>
               </div>
@@ -779,13 +779,13 @@ export default function ProcurementCalendar() {
             {/* Highest risk day */}
             {stats.highestRiskDay && (
               <div className="border border-red-900/40 bg-risk-critical/10/10 rounded-sm p-3">
-                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-red-600 mb-1">
+                <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-red-600 mb-1">
                   {t('insights.peakRiskDay')}
                 </div>
                 <div className="text-lg font-bold font-mono text-risk-critical">
                   {(stats.highestRiskDay.risk_rate * 100).toFixed(1)}%
                 </div>
-                <div className="text-[11px] text-text-muted">
+                <div className="text-[13px] text-text-muted">
                   {formatLocalDate(stats.highestRiskDay.date, weekdaysLong, monthsLong).split(',')[0]},{' '}
                   {new Date(stats.highestRiskDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                 </div>
@@ -795,13 +795,13 @@ export default function ProcurementCalendar() {
             {/* December vs rest */}
             {stats.hasDecemberData && (
               <div className="border border-risk-high/30 bg-risk-high/5 rounded-sm p-3">
-                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
+                <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
                   {t('insights.decemberRisk')}
                 </div>
                 <div className="text-lg font-bold font-mono text-risk-high">
                   {(stats.decemberRiskRate * 100).toFixed(1)}%
                 </div>
-                <div className="text-[11px] text-text-muted">
+                <div className="text-[13px] text-text-muted">
                   {t('insights.vsRestOfYear', { pct: (stats.nonDecemberRiskRate * 100).toFixed(1) })}
                 </div>
               </div>
@@ -815,7 +815,7 @@ export default function ProcurementCalendar() {
                 : 'border-border bg-background-card'
             )}>
               <div className={cn(
-                'text-[10px] font-mono uppercase tracking-[0.15em] mb-1',
+                'text-[12px] font-mono uppercase tracking-[0.15em] mb-1',
                 isElectionYear ? 'text-risk-high' : 'text-text-muted'
               )}>
                 {t('insights.yearType')}
@@ -826,7 +826,7 @@ export default function ProcurementCalendar() {
               )}>
                 {isElectionYear ? t('insights.electoral') : t('insights.regular')}
               </div>
-              <div className="text-[11px] text-text-muted">
+              <div className="text-[13px] text-text-muted">
                 {isElectionYear
                   ? t('insights.compareElectoral')
                   : t('insights.noFederalElections')}
@@ -843,7 +843,7 @@ export default function ProcurementCalendar() {
             transition={{ delay: 0.3 }}
             className="space-y-3"
           >
-            <h3 className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
+            <h3 className="text-[12px] font-mono uppercase tracking-widest text-text-muted">
               {t('patterns.title', { year })}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -910,19 +910,19 @@ export default function ProcurementCalendar() {
 
         {/* Editorial findings callout */}
         <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5 mt-6">
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-2">
+          <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-risk-high mb-2">
             {t('finding.label')}
           </p>
           <p className="text-sm text-text-secondary leading-relaxed">
             {t('finding.body')}
           </p>
-          <p className="text-xs text-text-muted mt-2 italic">
+          <p className="text-xs text-text-muted mt-2">
             {t('finding.oecd')}
           </p>
         </div>
 
         {/* Source footnote */}
-        <div className="text-[10px] text-text-muted pt-2 border-t border-border/50">
+        <div className="text-[12px] text-text-muted pt-2 border-t border-border/50">
           <Calendar className="w-3 h3 inline-block mr-1 -mt-0.5" aria-hidden="true" />
           {t('source')}
         </div>

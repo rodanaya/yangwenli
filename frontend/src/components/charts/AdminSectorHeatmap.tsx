@@ -169,7 +169,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
                   style={{ backgroundColor: SECTOR_COLORS[sector.code] }}
                 />
                 <span
-                  className="text-[9px] font-mono font-semibold text-text-muted uppercase leading-tight text-center break-words"
+                  className="text-[13px] font-mono font-semibold text-text-muted uppercase leading-tight text-center break-words"
                   style={{ maxWidth: cellWidth - 4 }}
                 >
                   {sector.nameEN}
@@ -186,7 +186,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
                 className="flex items-center pr-2 flex-shrink-0"
                 style={{ width: rowLabelWidth }}
               >
-                <span className="text-[10px] font-mono font-bold text-text-secondary truncate">
+                <span className="text-[12px] font-mono font-bold text-text-secondary truncate">
                   {admin.name}
                 </span>
                 <span className="ml-1 text-[8px] text-text-muted font-mono">
@@ -220,7 +220,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
                     aria-label={`${admin.name}, ${sector.nameEN}: ${pct.toFixed(1)}%`}
                   >
                     <span
-                      className="text-[10px] font-mono font-semibold tabular-nums"
+                      className="text-[12px] font-mono font-semibold tabular-nums"
                       style={{
                         color: pct > maxPct * 0.4 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)',
                       }}
@@ -233,13 +233,13 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
                       <div
                         className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 bg-background-card border border-border rounded-lg px-3 py-2 shadow-xl pointer-events-none whitespace-nowrap"
                       >
-                        <p className="text-[10px] font-medium text-text-primary mb-0.5">
+                        <p className="text-[12px] font-medium text-text-primary mb-0.5">
                           {admin.fullName} &middot; {sector.nameEN}
                         </p>
-                        <p className="text-[10px] font-mono text-text-muted">
+                        <p className="text-[12px] font-mono text-text-muted">
                           {pct.toFixed(2)}% of total spend
                         </p>
-                        <p className="text-[10px] font-mono text-text-muted">
+                        <p className="text-[12px] font-mono text-text-muted">
                           {cell.totalValue >= 1e12
                             ? `${(cell.totalValue / 1e12).toFixed(2)}T MXN`
                             : cell.totalValue >= 1e9
@@ -257,7 +257,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
 
         {/* Color scale legend */}
         <div className="flex items-center gap-2 mt-3 ml-[100px]">
-          <span className="text-[9px] text-text-muted font-mono">0%</span>
+          <span className="text-[13px] text-text-muted font-mono">0%</span>
           <div
             className="h-3 rounded-sm"
             style={{
@@ -265,8 +265,8 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
               background: `linear-gradient(to right, ${RAMP_LOW}, ${RAMP_MED}, ${RAMP_HIGH}, ${RAMP_CRIT})`,
             }}
           />
-          <span className="text-[9px] text-text-muted font-mono">{maxPct.toFixed(0)}%</span>
-          <span className="text-[9px] text-text-muted font-mono ml-2">
+          <span className="text-[13px] text-text-muted font-mono">{maxPct.toFixed(0)}%</span>
+          <span className="text-[13px] text-text-muted font-mono ml-2">
             {lang === 'en' ? '% of admin total spend' : '% del gasto total de la administración'}
           </span>
         </div>

@@ -86,11 +86,11 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
     <div>
       {/* Axis legend header */}
       <div className="flex items-center gap-4 mb-1 pl-0" style={{ paddingLeft: LABEL_W }}>
-        <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-muted">
+        <div className="flex items-center gap-1.5 text-[13px] font-mono text-text-muted">
           <svg aria-hidden="true" width="18" height="10"><circle cx="4" cy="5" r="4" fill="none" stroke="currentColor" strokeWidth="1.5"/><line x1="8" y1="5" x2="14" y2="5" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.55"/><circle cx="16" cy="5" r="3" fill="currentColor"/></svg>
           <span>{lang === 'es' ? 'base → exposición estimada' : 'baseline → estimated exposure'}</span>
         </div>
-        <div className="text-[9px] font-mono text-text-muted opacity-70">
+        <div className="text-[13px] font-mono text-text-muted opacity-70">
           {lang === 'es' ? 'ordenado por premio sobre línea base' : 'ranked by premium over baseline'}
         </div>
       </div>
@@ -170,7 +170,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
 
               {/* Pattern label (two lines) */}
               <text x={38} y={y - 2}
-                fontSize={10.5} fontWeight="600" fill="var(--color-text-primary)"
+                fontSize={12} fontWeight="600" fill="var(--color-text-primary)"
                 fontFamily="var(--font-family-sans, sans-serif)">
                 {p.label[lang]}
               </text>
@@ -226,7 +226,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
               <motion.text
                 x={xActual} y={y - 10}
                 textAnchor="middle"
-                fontSize={11} fontWeight="800" fill={p.color}
+                fontSize={13} fontWeight="800" fill={p.color}
                 fontFamily="var(--font-family-mono, monospace)"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}

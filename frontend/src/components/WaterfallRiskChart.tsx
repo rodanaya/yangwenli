@@ -71,7 +71,7 @@ export function WaterfallRiskChart({
                 title={entry.label}
                 style={{
                   fontFamily: 'var(--font-family-mono, monospace)',
-                  fontSize: 11,
+                  fontSize: 13,
                   color: 'var(--color-text-secondary)',
                   lineHeight: 1.2,
                 }}
@@ -106,7 +106,7 @@ export function WaterfallRiskChart({
               style={{
                 width: 58,
                 fontFamily: 'var(--font-family-mono, monospace)',
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: 700,
                 color,
               }}

@@ -215,7 +215,7 @@ export function CategoryConcentrationPlate({
         }
         className="px-2.5 py-1 font-mono transition-colors"
         style={{
-          fontSize: 9,
+          fontSize: 13,
           fontWeight: 700,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -237,7 +237,7 @@ export function CategoryConcentrationPlate({
       <div className="hidden md:flex items-center gap-1.5 mb-3" role="group" aria-label={isEs ? 'Lente del concentrado' : 'Concentrate lens'}>
         <span
           className="font-mono mr-1"
-          style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
         >
           {isEs ? 'Lente' : 'Lens'}
         </span>
@@ -255,13 +255,13 @@ export function CategoryConcentrationPlate({
           >
             <div className="flex items-baseline gap-1.5 whitespace-nowrap">
               <span
-                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 15, lineHeight: 1, color: 'var(--color-text-primary)' }}
+                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 700, fontSize: 15, lineHeight: 1, color: 'var(--color-text-primary)' }}
               >
                 {f.big}
               </span>
               <span
                 className="font-mono"
-                style={{ fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+                style={{ fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
               >
                 {f.sub}
               </span>
@@ -316,7 +316,7 @@ export function CategoryConcentrationPlate({
                       left: 5,
                       top: s.topRule ? 7 : 5,
                       right: 5,
-                      fontSize: 9,
+                      fontSize: 13,
                       fontWeight: 600,
                       letterSpacing: '0.01em',
                       color: '#ffffff',
@@ -354,7 +354,7 @@ export function CategoryConcentrationPlate({
                 cursor: 'default',
               }}
             >
-              <span className="font-mono pointer-events-none" style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-background)' }}>
+              <span className="font-mono pointer-events-none" style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-background)' }}>
                 +{tail.count}
               </span>
             </button>
@@ -394,7 +394,7 @@ export function CategoryConcentrationPlate({
               style={{ width: `${tail.sharePct}%`, minWidth: 2, background: 'var(--color-text-muted)', opacity: 0.42 }}
               aria-hidden="true"
             >
-              <span className="font-mono" style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-background)' }}>
+              <span className="font-mono" style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-background)' }}>
                 +{tail.count}
               </span>
             </span>
@@ -418,17 +418,17 @@ export function CategoryConcentrationPlate({
               >
                 <div
                   className="font-mono mb-1.5"
-                  style={{ fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+                  style={{ fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
                 >
                   {isEs ? 'La cola larga' : 'The long tail'}
                 </div>
                 <div
                   className="tabular-nums"
-                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 28, lineHeight: 1, color: 'var(--color-text-secondary)' }}
+                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 28, lineHeight: 1, color: 'var(--color-text-secondary)' }}
                 >
                   {tail.sharePct.toFixed(0)}%
                 </div>
-                <div className="font-mono mt-1" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                <div className="font-mono mt-1" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                   {isEs
                     ? `${tail.count} categorías más · ${formatCompactMXN(tail.value)}`
                     : `${tail.count} smaller categories · ${formatCompactMXN(tail.value)}`}
@@ -447,10 +447,10 @@ export function CategoryConcentrationPlate({
               style={{ left: `${hoverCenter}%`, top: 0, transform, minWidth: 212, maxWidth: 286 }}
             >
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-mono" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color }}>
+                <span className="font-mono" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color }}>
                   #{s.rank}
                 </span>
-                <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                   {getSectorName(s.sector_code, lang)}
                 </span>
                 <span className="h-px flex-1" style={{ background: `${color}55` }} />
@@ -461,21 +461,21 @@ export function CategoryConcentrationPlate({
               <div className="flex items-baseline gap-1.5">
                 <span
                   className="tabular-nums"
-                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 30, lineHeight: 1, color }}
+                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 30, lineHeight: 1, color }}
                 >
                   {s.sharePct.toFixed(1)}%
                 </span>
-                <span className="font-mono" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+                <span className="font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                   {isEs ? 'del gasto total' : 'of total spend'}
                 </span>
               </div>
-              <div className="font-mono mt-1.5 flex items-center gap-2" style={{ fontSize: 10.5, color: 'var(--color-text-secondary)' }}>
+              <div className="font-mono mt-1.5 flex items-center gap-2" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                 <span className="tabular-nums" style={{ color: 'var(--color-text-primary)' }}>{formatCompactMXN(s.value)}</span>
                 <span style={{ opacity: 0.5 }}>·</span>
                 <span className="tabular-nums">{formatNumber(s.contracts)} {isEs ? 'cont.' : 'contracts'}</span>
               </div>
               {/* risk atom */}
-              <div className="font-mono mt-1 flex items-center gap-1.5" style={{ fontSize: 10.5 }}>
+              <div className="font-mono mt-1 flex items-center gap-1.5" style={{ fontSize: 12 }}>
                 <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 9999, background: riskCol, flexShrink: 0 }} />
                 <span className="tabular-nums" style={{ color: riskCol, fontWeight: 700 }}>{s.avg_risk.toFixed(2)}</span>
                 <span style={{ color: 'var(--color-text-muted)' }}>· {isEs ? 'indicador de riesgo' : 'risk indicator'}</span>
@@ -483,10 +483,10 @@ export function CategoryConcentrationPlate({
               {/* cumulative-to-here readout */}
               <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                  <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                     {isEs ? 'Acumulado hasta aquí' : 'Running total to here'}
                   </span>
-                  <span className="font-mono tabular-nums" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)' }}>
                     {s.cumPct.toFixed(0)}%
                   </span>
                 </div>
@@ -496,7 +496,7 @@ export function CategoryConcentrationPlate({
               </div>
               <div
                 className="font-mono mt-2"
-                style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
+                style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
               >
                 {isEs ? 'Abrir dossier →' : 'Open dossier →'}
               </div>
@@ -525,7 +525,7 @@ export function CategoryConcentrationPlate({
       <div className="mt-3 flex items-start justify-between gap-x-6 gap-y-2 flex-wrap">
         <p
           className="font-mono"
-          style={{ fontSize: 10.5, lineHeight: 1.55, letterSpacing: '0.02em', color: 'var(--color-text-muted)', maxWidth: '52ch' }}
+          style={{ fontSize: 12, lineHeight: 1.55, letterSpacing: '0.02em', color: 'var(--color-text-muted)', maxWidth: '52ch' }}
         >
           {lens === 'risk'
             ? isEs
@@ -537,13 +537,13 @@ export function CategoryConcentrationPlate({
         </p>
         <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap">
           {legendSectors.map((code) => (
-            <span key={code} className="flex items-center gap-1.5 font-mono" style={{ fontSize: 9, letterSpacing: '0.03em', color: 'var(--color-text-muted)' }}>
+            <span key={code} className="flex items-center gap-1.5 font-mono" style={{ fontSize: 13, letterSpacing: '0.03em', color: 'var(--color-text-muted)' }}>
               <span style={{ width: 8, height: 8, borderRadius: 2, background: sectorFill(code), flexShrink: 0 }} />
               {getSectorName(code, lang)}
             </span>
           ))}
           {tail && (
-            <span className="flex items-center gap-1.5 font-mono" style={{ fontSize: 9, letterSpacing: '0.03em', color: 'var(--color-text-muted)' }}>
+            <span className="flex items-center gap-1.5 font-mono" style={{ fontSize: 13, letterSpacing: '0.03em', color: 'var(--color-text-muted)' }}>
               <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-text-muted)', opacity: 0.42, flexShrink: 0 }} />
               {isEs ? 'resto' : 'rest'}
             </span>

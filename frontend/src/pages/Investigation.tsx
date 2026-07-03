@@ -84,7 +84,7 @@ function StatusPill({ status }: { status: InvestigationValidationStatus }) {
   const Icon = config.icon
   return (
     <span className={cn(
-      'inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider font-mono',
+      'inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[12px] font-bold uppercase tracking-wider font-mono',
       config.className
     )}>
       <Icon className="h-3 w-3" />
@@ -118,15 +118,15 @@ function VerifyPanel() {
   const { t } = useTranslation('investigation')
   return (
     <details className="mt-3 border border-risk-high/15 rounded bg-risk-high/[0.03] group/verify">
-      <summary className="flex items-center gap-1.5 px-3 py-2 cursor-pointer select-none text-[10px] font-mono font-semibold text-text-muted/70 hover:text-text-muted transition-colors list-none">
+      <summary className="flex items-center gap-1.5 px-3 py-2 cursor-pointer select-none text-[12px] font-mono font-semibold text-text-muted/70 hover:text-text-muted transition-colors list-none">
         <Info className="h-3 w-3 text-risk-high/60 flex-shrink-0" aria-hidden="true" />
         {t('verify.toggle')}
       </summary>
       <div className="px-3 pb-3 pt-1 space-y-2">
-        <p className="text-[10px] font-bold text-text-muted/80 uppercase tracking-wider font-mono">
+        <p className="text-[12px] font-bold text-text-muted/80 uppercase tracking-wider font-mono">
           {t('verify.heading')}
         </p>
-        <ol className="space-y-1.5 text-[10px] text-text-muted/70 leading-relaxed">
+        <ol className="space-y-1.5 text-[12px] text-text-muted/70 leading-relaxed">
           {(['step1', 'step2', 'step3', 'step4'] as const).map((step, i) => (
             <li key={step} className="flex gap-2">
               <span className="font-mono text-text-muted/40 flex-shrink-0">{i + 1}.</span>
@@ -135,11 +135,11 @@ function VerifyPanel() {
           ))}
         </ol>
         <div className="mt-2 p-2 bg-background-elevated/50 rounded border border-border/20">
-          <p className="text-[10px] text-text-muted/60 italic leading-relaxed">
+          <p className="text-[12px] text-text-muted/60 leading-relaxed">
             {t('verify.editorial')}
           </p>
         </div>
-        <p className="text-[10px] text-risk-high/60 italic leading-relaxed">
+        <p className="text-[12px] text-risk-high/60 leading-relaxed">
           {t('verify.disclaimer')}
         </p>
       </div>
@@ -253,14 +253,14 @@ function CaseCard({
         {/* Row 0: CASO label + rank */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/40">
+            <span className="text-[13px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/40">
               {t('table.case')}
             </span>
             <span className="text-lg font-black font-mono text-text-muted/15 tabular-nums leading-none">
               {rankNum}
             </span>
             <span className={cn(
-              'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border font-mono',
+              'inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-bold border font-mono',
               PRIORITY_BADGE[priority.level]
             )}>
               P{priority.n}
@@ -278,7 +278,7 @@ function CaseCard({
               <span className="text-sm font-normal text-text-muted/50">/100</span>
             </div>
             <div className="flex items-center gap-0.5">
-              <span className="text-[9px] text-text-muted/50 font-mono uppercase tracking-wide">
+              <span className="text-[13px] text-text-muted/50 font-mono uppercase tracking-wide">
                 {t('riskScoreLabel')}
               </span>
               <RiskScoreDisclaimer />
@@ -297,7 +297,7 @@ function CaseCard({
         {/* Sector + signal tags */}
         <div className="flex flex-wrap items-center gap-1 mb-3">
           <span
-            className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+            className="text-[12px] font-bold px-1.5 py-0.5 rounded"
             style={{ backgroundColor: sectorColor + '25', color: sectorColor }}
           >
             {getSectorName(caseItem.sector_name, isEs ? 'es' : 'en')}
@@ -306,7 +306,7 @@ function CaseCard({
             const cls = SIGNAL_TAG_CLASS[signal]
             if (!cls) return null
             return (
-              <span key={signal} className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded border', cls)}>
+              <span key={signal} className={cn('text-[12px] font-medium px-1.5 py-0.5 rounded border', cls)}>
                 {t(`signalTags.${signal}`, signal.replace(/_/g, ' '))}
               </span>
             )
@@ -316,7 +316,7 @@ function CaseCard({
         {/* Money stats — highlighted */}
         <div className="grid grid-cols-2 gap-4 mb-3 py-2 px-3 rounded bg-background-elevated/40 border border-border/20">
           <div>
-            <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-0.5">
+            <div className="text-[13px] font-mono uppercase tracking-widest text-text-muted/60 mb-0.5">
               {t('card.atRisk', 'At Risk')}
             </div>
             <div className="text-sm font-black font-mono text-text-primary tabular-nums">
@@ -324,7 +324,7 @@ function CaseCard({
             </div>
           </div>
           <div>
-            <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-0.5">
+            <div className="text-[13px] font-mono uppercase tracking-widest text-text-muted/60 mb-0.5">
               {t('card.estLoss', 'Est. Loss')}
             </div>
             <div className="text-sm font-black font-mono text-risk-high tabular-nums">
@@ -334,7 +334,7 @@ function CaseCard({
         </div>
 
         {/* Meta stats */}
-        <div className="flex items-center gap-2 text-[11px] text-text-muted font-mono">
+        <div className="flex items-center gap-2 text-[13px] text-text-muted font-mono">
           <span>{formatNumber(caseItem.total_contracts)} {t('card.contracts')}</span>
           {caseItem.date_range_start && (
             <>
@@ -402,7 +402,7 @@ function SortHeader({
   return (
     <th
       onClick={() => onSort(field)}
-      className="cursor-pointer px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted hover:text-accent transition-colors select-none whitespace-nowrap font-mono"
+      className="cursor-pointer px-3 py-3 text-left text-[12px] font-bold uppercase tracking-widest text-text-muted hover:text-accent transition-colors select-none whitespace-nowrap font-mono"
     >
       <span className="inline-flex items-center gap-1">
         {label}
@@ -557,26 +557,26 @@ export function Investigation() {
             <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
               {t('title') || 'Investigation Dossier'}
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
               CASE ARCHIVE · RUBLI v0.8.5 · PIPELINE LIVE
             </p>
           </div>
           <div className="flex items-baseline gap-5">
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{casesLoading ? '—' : formatNumber(totalCases)}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Open cases</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Open cases</div>
             </div>
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-high)' }}>{casesLoading ? '—' : formatNumber(pendingCount)}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Awaiting review</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Awaiting review</div>
             </div>
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{casesLoading ? '—' : formatNumber(corroboratedCount)}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Corroborated</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Corroborated</div>
             </div>
             <div className="text-right">
               <div className="font-mono tabular-nums text-base font-semibold text-text-muted">{casesLoading ? '—' : formatNumber(refutedCount)}</div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Refuted</div>
+              <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Refuted</div>
             </div>
           </div>
         </div>
@@ -587,7 +587,7 @@ export function Investigation() {
           FILTROS DE INVESTIGACION
           ================================================================ */}
       <div className="mb-6 space-y-3">
-        <div className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
+        <div className="text-[13px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
           {t('filterHeader')}
         </div>
 
@@ -636,7 +636,7 @@ export function Investigation() {
                 key={pill.key}
                 onClick={() => setStatusFilter(pill.key as InvestigationValidationStatus | 'all')}
                 className={cn(
-                  'flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium font-mono uppercase tracking-wider border transition-all',
+                  'flex items-center gap-1 px-2.5 py-1 rounded text-[12px] font-medium font-mono uppercase tracking-wider border transition-all',
                   statusFilter === pill.key
                     ? 'bg-accent/10 text-accent border-accent/30'
                     : 'text-text-muted border-border/30 hover:border-border/60'
@@ -755,7 +755,7 @@ export function Investigation() {
             <div className="rounded-sm border border-border/50 overflow-hidden">
               {/* Table section header */}
               <div className="px-4 py-2.5 bg-background-elevated/40 border-b border-border/30">
-                <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
+                <span className="text-[13px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
                   {t('tableHeader', 'Investigation records')}
                 </span>
               </div>
@@ -764,14 +764,14 @@ export function Investigation() {
                   <thead className="border-b border-border/40 bg-background-elevated/60">
                     <tr>
                       <SortHeader label={t('queue.priority') || 'Priority'} field="priority" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.case')}</th>
-                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.sector')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[12px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.case')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[12px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.sector')}</th>
                       <SortHeader label={t('tableCol.score')} field="suspicion_score" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <SortHeader label={t('card.contracts')} field="total_contracts" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <SortHeader label={t('tableCol.value')} field="total_value_mxn" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.status')}</th>
-                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('signalTags.title', 'Signal')}</th>
-                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('tableCol.evidence')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[12px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.status')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[12px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('signalTags.title', 'Signal')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[12px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('tableCol.evidence')}</th>
                     </tr>
                   </thead>
               <tbody className="divide-y divide-border/30">
@@ -918,28 +918,28 @@ function CaseTableRow({
       <td className="px-3 py-3">
         <div className="flex flex-wrap gap-1 max-w-[180px]">
           {caseItem.suspicion_score >= 0.6 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-sm bg-risk-critical/10 text-risk-critical border border-risk-critical/30">
+            <span className="text-[13px] font-medium px-1.5 py-0.5 rounded-sm bg-risk-critical/10 text-risk-critical border border-risk-critical/30">
               Riesgo critico
             </span>
           )}
           {caseItem.signals_triggered.includes('high_direct_award_rate') && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-sm bg-risk-high/10 text-risk-high border border-risk-high/30">
+            <span className="text-[13px] font-medium px-1.5 py-0.5 rounded-sm bg-risk-high/10 text-risk-high border border-risk-high/30">
               Adj. directa
             </span>
           )}
           {caseItem.total_contracts > 50 && caseItem.suspicion_score >= 0.4 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border"
+            <span className="text-[13px] font-medium px-1.5 py-0.5 rounded border"
               style={{ backgroundColor: 'var(--color-risk-high)15', color: 'var(--color-risk-high)', borderColor: 'color-mix(in srgb, var(--color-risk-high) 30%, transparent)' }}>
               Alta concentracion
             </span>
           )}
           {caseItem.vendor_count <= 1 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border text-text-secondary bg-border/15 border-border/30">
+            <span className="text-[13px] font-medium px-1.5 py-0.5 rounded border text-text-secondary bg-border/15 border-border/30">
               Inst. unica
             </span>
           )}
           {caseItem.signals_triggered.includes('multiple_price_anomalies') && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border"
+            <span className="text-[13px] font-medium px-1.5 py-0.5 rounded border"
               style={{ backgroundColor: 'var(--color-risk-critical)15', color: 'var(--color-risk-critical)', borderColor: 'color-mix(in srgb, var(--color-risk-critical) 25%, transparent)' }}>
               Precios anomalos
             </span>

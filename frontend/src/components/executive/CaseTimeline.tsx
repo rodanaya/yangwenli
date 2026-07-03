@@ -202,12 +202,12 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
                   {idx + 1}
                 </span>
               </span>
-              <span className="text-[10px] font-mono leading-tight" style={{ color: 'var(--color-text-secondary)' }}>
+              <span className="text-[12px] font-mono leading-tight" style={{ color: 'var(--color-text-secondary)' }}>
                 <span style={{ color, fontWeight: 600 }}>{c.year}</span>
                 {' '}·{' '}
                 {c.label[lang]}
                 {isCrit && (
-                  <span style={{ color, marginLeft: 4, fontSize: 9, opacity: 0.8 }}>●</span>
+                  <span style={{ color, marginLeft: 4, fontSize: 13, opacity: 0.8 }}>●</span>
                 )}
               </span>
             </div>

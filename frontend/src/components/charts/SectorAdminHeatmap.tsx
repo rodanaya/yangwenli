@@ -214,10 +214,10 @@ export const SectorAdminHeatmap = memo(function SectorAdminHeatmap({
                 key={admin.name}
                 className="flex flex-col items-center justify-end border-b border-border px-1 pb-2"
               >
-                <span className="text-[10px] font-medium uppercase tracking-wide text-text-secondary">
+                <span className="text-[12px] font-medium uppercase tracking-wide text-text-secondary">
                   {admin.name}
                 </span>
-                <span className="text-[10px] text-text-muted">{admin.shortYears}</span>
+                <span className="text-[12px] text-text-muted">{admin.shortYears}</span>
               </div>
             ))}
 
@@ -252,7 +252,7 @@ export default SectorAdminHeatmap
 function HeatmapHeader({ lang }: { lang: string }) {
   return (
     <div className="border-l-2 border-border pl-3">
-      <h3 className="font-serif text-[11px] font-bold uppercase tracking-[0.15em] text-text-secondary">
+      <h3 className="font-serif text-[13px] font-bold uppercase tracking-[0.15em] text-text-secondary">
         {lang === 'en'
           ? 'Average Risk — Sector × Administration'
           : 'Riesgo Promedio — Sector × Administración'}
@@ -291,7 +291,7 @@ function RowGroup({ sectorId, sectorName, cells, riskLabel, lang, onHover, onLea
         return (
           <div
             key={admin.name}
-            className="flex h-11 items-center justify-center border-b border-border border-l border-l-zinc-900/60 text-[11px] font-bold text-text-primary transition-colors hover:ring-1 hover:ring-zinc-500"
+            className="flex h-11 items-center justify-center border-b border-border border-l border-l-zinc-900/60 text-[13px] font-bold text-text-primary transition-colors hover:ring-1 hover:ring-zinc-500"
             style={{ backgroundColor: bg }}
             onMouseEnter={(e) => {
               if (score === null || !level) return
@@ -357,7 +357,7 @@ function HeatmapTooltip(props: TooltipState & { riskLabel: Record<RiskLevel, str
           {props.avgRisk.toFixed(3)}
         </span>
         <span
-          className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+          className="rounded px-1.5 py-0.5 text-[12px] font-bold uppercase tracking-wide"
           style={{
             backgroundColor: RISK_CELL_BG[props.riskLevel],
             color: '#fff',
@@ -367,7 +367,7 @@ function HeatmapTooltip(props: TooltipState & { riskLabel: Record<RiskLevel, str
         </span>
       </div>
       {props.contracts > 0 && (
-        <div className="mt-0.5 text-[10px] text-text-muted">
+        <div className="mt-0.5 text-[12px] text-text-muted">
           {props.contracts.toLocaleString('es-MX')}{' '}
           {props.lang === 'en' ? 'contracts' : 'contratos'}
         </div>
@@ -384,7 +384,7 @@ function Legend({ lang, riskLabel }: { lang: string; riskLabel: Record<RiskLevel
     { level: 'critical', range: '≥ 0.60' },
   ]
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 text-[10px] text-text-muted">
+    <div className="mt-4 flex flex-wrap items-center gap-3 text-[12px] text-text-muted">
       <span className="uppercase tracking-wide">
         {lang === 'en' ? 'Risk level:' : 'Nivel de riesgo:'}
       </span>

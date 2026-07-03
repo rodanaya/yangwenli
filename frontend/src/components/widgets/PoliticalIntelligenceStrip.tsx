@@ -68,13 +68,13 @@ function VendorBar({ vendor, maxValue }: { vendor: TopPeriodEntityItem; maxValue
           emptyStroke="var(--color-border-hover)"
           ariaLabel={`Magnitud ${(value * 100).toFixed(0)}%`}
         />
-        <span className="text-[10px] font-mono text-text-muted w-16 text-right shrink-0">
+        <span className="text-[12px] font-mono text-text-muted w-16 text-right shrink-0">
           {formatCompactMXN(vendor.total_value_mxn)}
         </span>
       </div>
       {vendor.avg_risk_score != null && (
         <span
-          className="text-[10px] font-mono font-semibold px-1 py-0.5 rounded"
+          className="text-[12px] font-mono font-semibold px-1 py-0.5 rounded"
           style={{ color: barColor, backgroundColor: `${barColor}22` }}
         >
           {vendor.avg_risk_score.toFixed(2)}
@@ -154,7 +154,7 @@ export function PoliticalIntelligenceStrip({ className }: { className?: string }
               style={isActive ? { backgroundColor: partyColor, borderColor: partyColor } : undefined}
             >
               {a.label}
-              <span className="ml-1 opacity-70 text-[10px]">
+              <span className="ml-1 opacity-70 text-[12px]">
                 {a.start}-{a.end > 2025 ? '' : a.end}
               </span>
             </button>

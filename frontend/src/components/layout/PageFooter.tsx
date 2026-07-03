@@ -32,7 +32,7 @@ export function PageFooter({ note, className }: PageFooterProps) {
 
   return (
     <footer className={className ?? 'mt-16 pt-8 pb-16 border-t border-border'}>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
         <span>
           {isEs ? 'Fuente' : 'Source'}:{' '}
           <span className="text-text-secondary">COMPRANET / SHCP</span>
@@ -55,7 +55,7 @@ export function PageFooter({ note, className }: PageFooterProps) {
       </div>
       {note && (
         <p
-          className="mt-3 text-[11px] leading-relaxed text-text-secondary"
+          className="mt-3 text-[13px] leading-relaxed text-text-secondary"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {note}

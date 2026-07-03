@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/tooltip'
 
 const LINK_CLS =
-  'inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary font-mono uppercase tracking-widest transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent'
+  'inline-flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary font-mono uppercase tracking-widest transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent'
 
 export function WayfindingSpine({
   nav,
@@ -77,7 +77,7 @@ export function WayfindingSpine({
             icon={<ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />}
           />
           <span
-            className="text-[11px] font-mono tabular-nums text-text-muted tracking-wider"
+            className="text-[13px] font-mono tabular-nums text-text-muted tracking-wider"
             aria-label={
               lang === 'es'
                 ? `Posición ${nav.index} de ${nav.total}`
@@ -104,7 +104,7 @@ export function WayfindingSpine({
               aria-disabled="true"
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="text-[11px] font-mono tracking-wider select-none">— / —</span>
+              <span className="text-[13px] font-mono tracking-wider select-none">— / —</span>
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </span>
           </TooltipTrigger>

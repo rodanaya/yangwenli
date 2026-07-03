@@ -188,7 +188,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
           fontWeight: 400,
         }}
       >
-        <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>
+        <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>
           {t('plate.eyebrow')}
         </span>
       </div>
@@ -239,7 +239,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
                     y={12}
                     textAnchor="middle"
                     fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-                    fontSize={9}
+                    fontSize={13}
                     fontWeight={700}
                     letterSpacing="0.1em"
                     fill={style.color}
@@ -254,7 +254,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
                     y={BASELINE_Y / 2 + 6}
                     textAnchor="end"
                     fontFamily='"EB Garamond", Georgia, serif'
-                    fontStyle="italic"
+                    fontStyle="normal"
                     fontSize={isMobile ? 9.5 : 11}
                     fill="var(--color-text-muted)"
                   >
@@ -353,7 +353,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
               y={BASELINE_Y + 28}
               textAnchor="middle"
               fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-              fontSize={9}
+              fontSize={13}
               fill="var(--color-text-muted)"
             >
               {tick}
@@ -364,7 +364,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
         {/* Pointer tooltip */}
         {nearestStroke && (
           <div
-            className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background px-2.5 py-2 text-[11px] shadow-lg"
+            className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background px-2.5 py-2 text-[13px] shadow-lg"
             style={{
               left: Math.min(Math.max(nearestStroke.x, 90), width - 90),
               top: 4,
@@ -387,14 +387,14 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
         )}
       </div>
 
-      {/* Plate caption — italic serif agate line, absorbs the old HeroStatRail
+      {/* Plate caption — serif agate line, absorbs the old HeroStatRail
           numbers + the ScoreHistogram median/total facts. */}
       <figcaption
         className="mt-3 pt-2.5"
         style={{
           borderTop: '1px solid rgba(160, 104, 32, 0.18)',
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: '12.5px',
           lineHeight: 1.5,
           color: 'var(--color-text-secondary, var(--color-text-muted))',
@@ -435,7 +435,7 @@ export function SpectralRegisterUnavailableNote({ scope }: { scope: 'subnational
   const { t } = useTranslation('institutionleague')
   return (
     <div
-      className="rounded-sm border border-border/60 bg-background-elevated/20 px-4 py-3 text-[11px] font-mono leading-relaxed text-text-muted"
+      className="rounded-sm border border-border/60 bg-background-elevated/20 px-4 py-3 text-[13px] font-mono leading-relaxed text-text-muted"
     >
       {t(scope === 'subnational' ? 'plate.unavailableSubnational' : 'plate.unavailableAll')}
     </div>

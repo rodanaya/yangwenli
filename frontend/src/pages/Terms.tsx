@@ -36,20 +36,20 @@ export default function Terms() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <Scale className="h-5 w-5 text-accent" aria-hidden="true" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-text-primary">
+              <span className="text-[13px] font-mono uppercase tracking-[0.1em] text-text-primary">
                 {isEs ? 'Términos de Uso' : 'Terms of Use'}
               </span>
             </div>
             <div className="flex items-center gap-1 rounded border border-border bg-background-elevated p-0.5">
               <button
                 onClick={() => setLang('es')}
-                className={`px-2.5 py-1 text-[11px] font-mono rounded-sm transition-colors ${lang === 'es' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
+                className={`px-2.5 py-1 text-[13px] font-mono rounded-sm transition-colors ${lang === 'es' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
               >
                 ES
               </button>
               <button
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-1 text-[11px] font-mono rounded-sm transition-colors ${lang === 'en' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
+                className={`px-2.5 py-1 text-[13px] font-mono rounded-sm transition-colors ${lang === 'en' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
               >
                 EN
               </button>
@@ -70,7 +70,7 @@ export default function Terms() {
         >
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="h-4 w-4" style={{ color: 'var(--color-risk-high)' }} aria-hidden="true" />
-            <p className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--color-risk-high)' }}>
+            <p className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--color-risk-high)' }}>
               {isEs ? 'Lo más importante' : 'Most important'}
             </p>
           </div>

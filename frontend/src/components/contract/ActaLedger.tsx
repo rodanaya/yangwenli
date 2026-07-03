@@ -46,7 +46,7 @@ const ERA: Record<string, string> = { A: '2002–2010', B: '2010–2017', C: '20
 
 const LABEL_STYLE: CSSProperties = {
   fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-  fontSize: 10,
+  fontSize: 12,
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
   color: 'var(--color-text-muted)',
@@ -70,7 +70,7 @@ const SUBLINE_SERIF: CSSProperties = {
 }
 const SUBLINE_MONO: CSSProperties = {
   fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-  fontSize: 9.5,
+  fontSize: 13,
   color: 'var(--color-text-secondary)',
 }
 
@@ -120,7 +120,7 @@ function MarginNoteRow({ note, mobile }: { note: MarginNote; mobile?: boolean })
       style={{ borderLeft: `2px solid ${note.color}` }}
       title={note.title}
     >
-      <span aria-hidden="true" style={{ fontSize: 10, color: note.color, fontWeight: 700, minWidth: 12, textAlign: 'center' }}>
+      <span aria-hidden="true" style={{ fontSize: 12, color: note.color, fontWeight: 700, minWidth: 12, textAlign: 'center' }}>
         {note.glyph}
       </span>
       <span className="min-w-0">
@@ -138,7 +138,7 @@ function MarginNoteRow({ note, mobile }: { note: MarginNote; mobile?: boolean })
         {note.param && (
           <span
             className="block font-mono tabular-nums"
-            style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
           >
             {note.param}
           </span>
@@ -393,7 +393,7 @@ export function ActaLedger({
           key={p.label}
           className="font-mono"
           style={{
-            fontSize: 9,
+            fontSize: 13,
             letterSpacing: '0.10em',
             textTransform: 'uppercase',
             fontWeight: 700,
@@ -476,7 +476,7 @@ export function ActaLedger({
         {/* Header strip */}
         <div
           className="absolute left-5 right-5 md:left-6 md:right-6 flex items-center justify-between gap-3 flex-wrap"
-          style={{ top: 12, fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace', fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+          style={{ top: 12, fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace', fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
         >
           <span>ACTA · CONT-{contract.id}</span>
           {struct && <span>COMPRANET · {isEs ? 'ESTRUCTURA' : 'STRUCTURE'} {struct}</span>}
@@ -544,7 +544,7 @@ export function ActaLedger({
                     display: 'inline-block',
                     textDecoration: 'none',
                     fontFamily: '"EB Garamond", Georgia, serif',
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 500,
                     fontSize: 18,
                     lineHeight: 1.2,
@@ -555,7 +555,7 @@ export function ActaLedger({
                 </Link>
               }
               sublines={[
-                <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                   {isEs ? 'unidad responsable · autorizó la adjudicación' : 'responsible unit · authorized the award'}
                 </span>,
               ]}
@@ -598,7 +598,7 @@ export function ActaLedger({
         {/* General objections — unroutable factors, same note anatomy */}
         {generalNotes.length > 0 && (
           <div className="mt-2 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <div className="font-mono mb-2" style={{ fontSize: 9.5, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+            <div className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
               {isEs ? 'Objeciones generales' : 'General objections'}
             </div>
             <div className="space-y-0.5 max-w-md">
@@ -619,7 +619,7 @@ export function ActaLedger({
         {/* Null margin state — scored, zero factors, zero booleans */}
         {!hasAnyFactorBasis && fallbackBasis.length === 0 && riskPct != null && (
           <div className="mt-2 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-muted)' }}>
+            <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13, color: 'var(--color-text-muted)' }}>
               {isEs ? `Sin objeciones registradas — indicador ${riskPct}/100.` : `No recorded objections — ${riskPct}/100 indicator.`}
             </p>
           </div>
@@ -633,7 +633,7 @@ export function ActaLedger({
               onClick={() => setShapOpen((v) => !v)}
               aria-expanded={shapOpen}
               className="font-mono uppercase tracking-[0.10em] hover:opacity-70 transition-opacity cursor-pointer"
-              style={{ fontSize: 10, color: 'var(--color-accent)', background: 'none', border: 'none', padding: '4px 0' }}
+              style={{ fontSize: 12, color: 'var(--color-accent)', background: 'none', border: 'none', padding: '4px 0' }}
             >
               {shapOpen
                 ? (isEs ? '⌃ Ocultar descomposición SHAP' : '⌃ Hide SHAP decomposition')
@@ -649,13 +649,13 @@ export function ActaLedger({
                     const c = pos ? RISK_COLORS.critical : 'var(--color-text-muted)'
                     return (
                       <li key={i} className="flex items-baseline gap-3 px-3 py-1.5" style={{ borderLeft: `2px solid ${c}` }}>
-                        <span aria-hidden="true" style={{ fontSize: 11, color: c, fontWeight: 700, minWidth: 14 }}>
+                        <span aria-hidden="true" style={{ fontSize: 13, color: c, fontWeight: 700, minWidth: 14 }}>
                           {pos ? '▲' : '▽'}
                         </span>
                         <span className="flex-1 min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13, color: 'var(--color-text-primary)' }}>
                           {f.label}
                         </span>
-                        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 11, color: c, fontWeight: 700 }}>
+                        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, color: c, fontWeight: 700 }}>
                           {pos ? '+' : ''}{f.contribution.toFixed(3)}
                         </span>
                       </li>
@@ -669,7 +669,7 @@ export function ActaLedger({
         {/* Footer strip */}
         {hasFooterStrip && (
           <div className="mt-6 pt-3 flex items-center justify-between gap-3 flex-wrap" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12.5, color: 'var(--color-text-muted)' }}>
+            <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 12.5, color: 'var(--color-text-muted)' }}>
               {[
                 grade ? (isEs ? `Calidad de datos ${grade}` : `Data quality ${grade}`) : null,
                 struct ? `${isEs ? 'Estructura' : 'Structure'} ${struct}${era ? ` — ${era}` : ''}` : null,
@@ -681,7 +681,7 @@ export function ActaLedger({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
-                style={{ fontSize: 10, color: 'var(--color-text-secondary)', textDecoration: 'none' }}
+                style={{ fontSize: 12, color: 'var(--color-text-secondary)', textDecoration: 'none' }}
               >
                 ⧉ {isEs ? 'Documento' : 'Document'}
               </a>

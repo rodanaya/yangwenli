@@ -71,15 +71,15 @@ function DossierSectionHeader({
   return (
     <div className="flex items-baseline justify-between gap-4 pb-2 mb-5" style={{ borderBottom: `1px solid ${accent}33` }}>
       <div className="flex items-baseline gap-3 min-w-0">
-        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
+        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
           § {eyebrow}
         </span>
-        <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
+        <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
           {title}
         </h2>
       </div>
       {meta && (
-        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
           {meta}
         </span>
       )}
@@ -91,10 +91,10 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
   const navigate = useNavigate()
   return (
     <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <p className="font-mono mb-2" style={{ fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+      <p className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
       </p>
-      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
+      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5. Las señales agregadas a nivel sectorial son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. v0.8.5 risk model. Sector-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
@@ -103,7 +103,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         type="button"
         onClick={() => navigate('/methodology')}
         className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-        style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
       >
         {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
       </button>
@@ -334,7 +334,7 @@ export default function SectorDossier() {
           onClick={() => gtTarget && document.getElementById(gtTarget)?.scrollIntoView({ behavior: 'smooth' })}
           disabled={!gtTarget}
           className="font-mono uppercase tracking-widest hover:opacity-70 transition-opacity -mt-3 mb-1"
-          style={{ fontSize: 10.5, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: 0, cursor: gtTarget ? 'pointer' : 'default' }}
+          style={{ fontSize: 12, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: 0, cursor: gtTarget ? 'pointer' : 'default' }}
         >
           <span style={{ color: 'var(--color-risk-critical)', fontWeight: 700 }}>{gtCases.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}</span>{' '}
           {lang === 'es' ? 'casos GT' : 'GT cases'}

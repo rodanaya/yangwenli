@@ -1026,7 +1026,7 @@ function Z0Panel({
       >
         <div className="min-w-0">
           <div
-            className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1.5"
+            className="font-mono text-[12px] uppercase tracking-[0.18em] mb-1.5"
             style={{ color: 'var(--color-accent)' }}
           >
             {sectionEyebrow}
@@ -1040,7 +1040,7 @@ function Z0Panel({
             }}
           >
             {headline}{' '}
-            <em style={{ fontStyle: 'italic', fontWeight: 800 }}>{headlineSub}</em>
+            <em style={{ fontStyle: 'normal', fontWeight: 800 }}>{headlineSub}</em>
           </h1>
           {/* Compass line (NYT Upshot in-header instruction) — computed from
               the loaded payload, never hardcoded. Orientation rides existing
@@ -1049,7 +1049,7 @@ function Z0Panel({
             <p
               className="font-mono truncate"
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 letterSpacing: '0.04em',
                 color: 'var(--color-text-secondary)',
                 marginTop: 4,
@@ -1082,7 +1082,7 @@ function Z0Panel({
             >
               {formatCompactMXN(totalSpend)}
             </div>
-            <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
+            <div className="font-mono text-[13px] uppercase tracking-[0.14em] text-text-muted">
               {isEs ? 'gasto federal' : 'federal spend'}
             </div>
           </div>
@@ -1099,14 +1099,14 @@ function Z0Panel({
             >
               {formatNumber(totalCritical)}
             </div>
-            <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
+            <div className="font-mono text-[13px] uppercase tracking-[0.14em] text-text-muted">
               {isEs ? 'contratos críticos' : 'critical contracts'}
             </div>
           </div>
 
           {/* Sort toggle */}
           <div className="flex flex-col items-end gap-1">
-            <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
+            <span className="font-mono text-[13px] uppercase tracking-[0.14em] text-text-muted">
               {sortLabel}
             </span>
             <div className="flex rounded-sm overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
@@ -1115,7 +1115,7 @@ function Z0Panel({
                   key={m}
                   type="button"
                   onClick={() => setMode(m)}
-                  className="font-mono text-[10px] uppercase tracking-[0.12em] px-2.5 py-1 transition-colors"
+                  className="font-mono text-[12px] uppercase tracking-[0.12em] px-2.5 py-1 transition-colors"
                   style={{
                     background: mode === m ? (m === 'risk' ? RISK_COLORS.critical : 'var(--color-accent)') : 'transparent',
                     color: mode === m ? '#fff' : 'var(--color-text-secondary)',
@@ -1142,7 +1142,7 @@ function Z0Panel({
       >
         {isLoading && (
           <div
-            className="absolute inset-0 flex items-center justify-center font-mono text-[10px]"
+            className="absolute inset-0 flex items-center justify-center font-mono text-[12px]"
             style={{ color: 'var(--color-text-muted)' }}
           >
             {isEs ? 'cargando...' : 'loading...'}
@@ -1284,7 +1284,7 @@ function Z0Panel({
                         />
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <div className="font-mono text-[9px] uppercase tracking-[0.16em]" style={{ color: fgSub }}>
+                            <div className="font-mono text-[13px] uppercase tracking-[0.16em]" style={{ color: fgSub }}>
                               {s.sector_code} · {spendPct.toFixed(1)}%
                             </div>
                             <div
@@ -1292,7 +1292,7 @@ function Z0Panel({
                               style={{
                                 fontFamily: "'Playfair Display', Georgia, serif",
                                 fontWeight: 700,
-                                fontStyle: 'italic',
+                                fontStyle: 'normal',
                                 fontSize: 17,
                                 color: fg,
                                 lineHeight: 1.1,
@@ -1302,7 +1302,7 @@ function Z0Panel({
                             </div>
                             {editorial && (
                               <div
-                                className="font-mono text-[10px] mt-0.5"
+                                className="font-mono text-[12px] mt-0.5"
                                 style={{ color: fgSub }}
                               >
                                 {editorial}
@@ -1313,7 +1313,7 @@ function Z0Panel({
                             <div className="font-mono tabular-nums text-sm font-bold" style={{ color: fg }}>
                               {formatCompactMXN(s.total_value_mxn)}
                             </div>
-                            <div className="font-mono text-[10px] tabular-nums" style={{ color: fgSub }}>
+                            <div className="font-mono text-[12px] tabular-nums" style={{ color: fgSub }}>
                               {s.critical_share_pct.toFixed(1)}% {isEs ? 'crít' : 'crit'}
                             </div>
                           </div>
@@ -1749,7 +1749,7 @@ function CellKicker({ code, color }: { code: string; color: string }) {
     <span
       className="font-mono"
       style={{
-        fontSize: 9,
+        fontSize: 13,
         fontWeight: 700,
         color,
         textTransform: 'uppercase',
@@ -1784,12 +1784,12 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
           {item.spendPct.toFixed(1)}%
         </span>
       </div>
-      {/* Sector name — Playfair italic */}
+      {/* Sector name — Playfair */}
       <div
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontWeight: 800,
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 'clamp(22px, 3vw, 36px)',
           color: textColor,
           lineHeight: 1.04,
@@ -1805,7 +1805,7 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
         <div
           style={{
             fontFamily: "'Playfair Display', Georgia, serif",
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 500,
             fontSize: 13,
             color: subTextColor,
@@ -1820,7 +1820,7 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
       {/* Top institutions */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div
-          className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1"
+          className="font-mono text-[13px] uppercase tracking-[0.14em] mb-1"
           style={{ color: subTextColor, opacity: 0.85 }}
         >
           {isEs ? 'PRINCIPALES INSTITUCIONES' : 'TOP INSTITUTIONS'}
@@ -1864,13 +1864,13 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
         className="mt-2 pt-2 flex items-center justify-between"
         style={{ borderTop: '1px solid rgba(255,255,255,0.20)' }}
       >
-        <span className="font-mono text-[10px]" style={{ color: subTextColor }}>
+        <span className="font-mono text-[12px]" style={{ color: subTextColor }}>
           {isEs ? 'Críticos' : 'Critical'}{' '}
           <span className="tabular-nums font-bold" style={{ color: textColor }}>
             {item.criticalSharePct.toFixed(1)}%
           </span>
         </span>
-        <span className="font-mono text-[10px] tabular-nums" style={{ color: subTextColor }}>
+        <span className="font-mono text-[12px] tabular-nums" style={{ color: subTextColor }}>
           {formatNumber(item.critical)} {isEs ? 'ctr' : 'contracts'}
         </span>
       </div>
@@ -1895,7 +1895,7 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
         >
           {formatCompactMXN(item.spendValue)}
         </span>
-        <span className="font-mono text-[10px] tabular-nums" style={{ color: subTextColor }}>
+        <span className="font-mono text-[12px] tabular-nums" style={{ color: subTextColor }}>
           {item.spendPct.toFixed(1)}%
         </span>
       </div>
@@ -1903,7 +1903,7 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontWeight: 800,
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 22,
           color: textColor,
           lineHeight: 1.05,
@@ -1917,8 +1917,8 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
         <div
           style={{
             fontFamily: "'Playfair Display', Georgia, serif",
-            fontStyle: 'italic',
-            fontSize: 11,
+            fontStyle: 'normal',
+            fontSize: 13,
             color: subTextColor,
             lineHeight: 1.3,
             marginBottom: 6,
@@ -1932,7 +1932,7 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
           Agricultura/Gobernación text smear (W3b, present on prod). */}
       {topInst && (
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: subTextColor, opacity: 0.85 }}>
+          <div className="font-mono text-[13px] uppercase tracking-[0.14em] mb-1" style={{ color: subTextColor, opacity: 0.85 }}>
             {isEs ? 'PRINCIPAL' : 'TOP'}
           </div>
           <div className="flex items-center gap-2 min-w-0" title={topInst.name}>
@@ -1956,14 +1956,14 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
                 </>
               )
             })()}
-            <span className="font-mono tabular-nums text-[11px] font-bold" style={{ color: textColor }}>
+            <span className="font-mono tabular-nums text-[13px] font-bold" style={{ color: textColor }}>
               {topInst.share_pct.toFixed(1)}%
             </span>
           </div>
         </div>
       )}
       <div className="mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.16)' }}>
-        <span className="font-mono text-[9px]" style={{ color: subTextColor }}>
+        <span className="font-mono text-[13px]" style={{ color: subTextColor }}>
           {isEs ? 'Críticos' : 'Critical'}{' '}
           <span className="tabular-nums font-bold" style={{ color: textColor }}>
             {item.criticalSharePct.toFixed(1)}%
@@ -1982,7 +1982,7 @@ function MCellContent({ item, color, textColor, subTextColor, editorial, isEs: _
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontWeight: 800,
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 15,
           color: textColor,
           lineHeight: 1.1,
@@ -1994,19 +1994,19 @@ function MCellContent({ item, color, textColor, subTextColor, editorial, isEs: _
       </div>
       <div className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 700, color: textColor, lineHeight: 1 }}>
         {formatCompactMXN(item.spendValue)}
-        <span className="ml-1 font-normal" style={{ fontSize: 9, color: subTextColor }}>
+        <span className="ml-1 font-normal" style={{ fontSize: 13, color: subTextColor }}>
           {item.spendPct.toFixed(1)}%
         </span>
       </div>
       {editorial && (
         <div
           className="font-mono mt-1"
-          style={{ fontSize: 9, color: subTextColor, lineHeight: 1.25 }}
+          style={{ fontSize: 13, color: subTextColor, lineHeight: 1.25 }}
         >
           {editorial}
         </div>
       )}
-      <div className="mt-auto font-mono text-[9px] tabular-nums" style={{ color: subTextColor }}>
+      <div className="mt-auto font-mono text-[13px] tabular-nums" style={{ color: subTextColor }}>
         {item.criticalSharePct.toFixed(1)}% crit
       </div>
     </>
@@ -2021,7 +2021,7 @@ function SCellContent({ item, color, textColor, subTextColor, editorial: _editor
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontWeight: 700,
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 13,
           color: textColor,
           lineHeight: 1.1,
@@ -2033,9 +2033,9 @@ function SCellContent({ item, color, textColor, subTextColor, editorial: _editor
       >
         {item.label}
       </div>
-      <div className="mt-auto font-mono tabular-nums" style={{ fontSize: 10, fontWeight: 700, color: textColor, lineHeight: 1 }}>
+      <div className="mt-auto font-mono tabular-nums" style={{ fontSize: 12, fontWeight: 700, color: textColor, lineHeight: 1 }}>
         {formatCompactMXN(item.spendValue)}
-        <span className="ml-1 font-normal" style={{ fontSize: 9, color: subTextColor }}>
+        <span className="ml-1 font-normal" style={{ fontSize: 13, color: subTextColor }}>
           {item.spendPct.toFixed(1)}%
         </span>
       </div>
@@ -2147,8 +2147,8 @@ function Z1Panel({
           kicker={lang === 'en' ? `§ INSIDE ${sectorName.toUpperCase()}` : `§ DENTRO DE ${sectorName.toUpperCase()}`}
           headline={
             lang === 'en'
-              ? <>Who spends the <em style={{ fontStyle: 'italic', fontWeight: 800 }}>{formatCompactMXN(totalSectorSpend)}</em> in {sectorName}</>
-              : <>Quién gasta los <em style={{ fontStyle: 'italic', fontWeight: 800 }}>{formatCompactMXN(totalSectorSpend)}</em> de {sectorName}</>
+              ? <>Who spends the <em style={{ fontStyle: 'normal', fontWeight: 800 }}>{formatCompactMXN(totalSectorSpend)}</em> in {sectorName}</>
+              : <>Quién gasta los <em style={{ fontStyle: 'normal', fontWeight: 800 }}>{formatCompactMXN(totalSectorSpend)}</em> de {sectorName}</>
           }
           stat={
             isLoading
@@ -2189,7 +2189,7 @@ function Z1Panel({
               column to zero (a no-op on desktop where the panel is wider). */}
           <div className={isMobile ? '' : 'min-w-[900px]'}>
           {isLoading && (
-            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="py-12 text-center font-mono text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
             </div>
           )}
@@ -2287,7 +2287,7 @@ function Z1Panel({
         {/* Jumpline bar — count · copy-link · dossier exit (W5) */}
         {!isLoading && institutions.length > 0 && (
           <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <span className="font-mono text-[9px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
+            <span className="font-mono text-[13px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en'
                 ? `${institutions.length} institutions`
                 : `${institutions.length} instituciones`}
@@ -2318,7 +2318,7 @@ function Z1Panel({
 function Z1ColumnHeader({ lang }: { lang: 'en' | 'es' }) {
   const isEs = lang === 'es'
   const headerCell: React.CSSProperties = {
-    fontSize: 9,
+    fontSize: 13,
     fontFamily: 'var(--font-family-mono, monospace)',
     fontWeight: 700,
     letterSpacing: '0.14em',
@@ -2550,7 +2550,7 @@ function Z1Row({
         aria-label={`${inst.name}, ${formatCompactMXN(inst.total_amount_mxn)}, ${inst.total_contracts} contracts, high-risk rate ${hrPct.toFixed(0)} percent, direct-award rate ${daPct.toFixed(0)} percent, average risk ${riskPct} percent`}
       >
         {/* Rank pill */}
-        <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 20 }}>
+        <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 13, color: 'var(--color-text-muted)', width: 20 }}>
           {rank}
         </span>
         {/* Logo + acronym chip */}
@@ -2561,7 +2561,7 @@ function Z1Row({
             fallbackBg={`${sectorAccent}22`}
             fallbackColor={sectorAccent}
           />
-          <span className="font-mono uppercase tracking-[0.06em] truncate" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+          <span className="font-mono uppercase tracking-[0.06em] truncate" style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)' }}>
             {acronym}
           </span>
         </span>
@@ -2591,47 +2591,47 @@ function Z1Row({
               />
             ))}
           </span>
-          <span className="font-mono tabular-nums text-right" style={{ fontSize: 11, fontWeight: 700, color: hrBarColor, width: 36 }}>
+          <span className="font-mono tabular-nums text-right" style={{ fontSize: 13, fontWeight: 700, color: hrBarColor, width: 36 }}>
             {hrPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>HR%</span>
           </span>
         </span>
         {/* Spend column — MXN + USD companion for international audiences,
             + share-of-sector % below. Three lines, all right-aligned, mono. */}
         <span className="flex-shrink-0 text-right" style={{ width: 110 }}>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary)' }}>
             {formatCompactMXN(inst.total_amount_mxn)}
           </span>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             ≈ {formatCompactUSD(inst.total_amount_mxn)}
           </span>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {share.toFixed(1)}% {lang === 'en' ? 'share' : 'aporte'}
           </span>
         </span>
         {/* NEW: # Contracts — magnitude indicator separate from MXN */}
         <span className="flex-shrink-0 text-right" style={{ width: 70 }}>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>
             {formatNumber(inst.total_contracts)}
           </span>
-          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'contracts' : 'contratos'}
           </span>
         </span>
         {/* NEW: DA% (direct-award rate) — non-competitive procurement flag */}
         <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
-          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: daColor }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 13, color: daColor }}>
             {daPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
           </span>
-          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'DA' : 'AD'}
           </span>
         </span>
         {/* Avg risk pill (kept) */}
         <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
-          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: riskColor }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 13, color: riskColor }}>
             {riskPct}
           </span>
-          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'risk' : 'riesgo'}
           </span>
         </span>
@@ -2672,12 +2672,12 @@ function Z1Shelf({
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-2 px-2 py-1.5 rounded-sm font-mono uppercase tracking-[0.14em] cursor-pointer"
-        style={{ fontSize: 9, color, background: `${color}10`, fontWeight: 700 }}
+        style={{ fontSize: 13, color, background: `${color}10`, fontWeight: 700 }}
         aria-expanded={open}
       >
         <span aria-hidden="true">{open ? '▾' : '▸'}</span>
         <span className="flex-1 text-left">{title}</span>
-        <span className="font-mono tabular-nums" style={{ fontSize: 10 }}>{items.length}</span>
+        <span className="font-mono tabular-nums" style={{ fontSize: 12 }}>{items.length}</span>
       </button>
       {open && (
         <ul role="list" className={isMobile ? 'divide-y divide-border/40 mt-0.5' : 'space-y-px mt-0.5'}>
@@ -2884,8 +2884,8 @@ function Z2Panel({
           kicker={lang === 'en' ? '§ LA CAPTURA · INSTITUTION DEEP' : '§ LA CAPTURA · INSTITUCIÓN'}
           headline={
             lang === 'en'
-              ? <>{instTitle} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>who gets the money?</em></>
-              : <>{instTitle} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>¿quién recibe el dinero?</em></>
+              ? <>{instTitle} — <em style={{ fontStyle: 'normal', fontWeight: 800 }}>who gets the money?</em></>
+              : <>{instTitle} — <em style={{ fontStyle: 'normal', fontWeight: 800 }}>¿quién recibe el dinero?</em></>
           }
           stat={
             isLoading
@@ -2944,12 +2944,12 @@ function Z2Panel({
               column to zero (a no-op on desktop where the panel is wider). */}
           <div className={isMobile ? '' : 'min-w-[900px]'}>
           {isLoading && (
-            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="py-12 text-center font-mono text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
             </div>
           )}
           {isError && !isLoading && (
-            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="py-12 text-center font-mono text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'no vendor data available.' : 'sin datos de proveedores.'}
             </div>
           )}
@@ -3030,7 +3030,7 @@ function Z2Panel({
             (The pull-line that used to close the register now opens it.) */}
         {!isLoading && sortedVendors.length > 0 && (
           <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <span className="font-mono text-[9px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
+            <span className="font-mono text-[13px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en'
                 ? `top ${sortedVendors.length} of ${formatNumber(instVendorCount)} vendors`
                 : `top ${sortedVendors.length} de ${formatNumber(instVendorCount)} proveedores`}
@@ -3066,7 +3066,7 @@ function Z2ColumnHeader({
 }) {
   const isEs = lang === 'es'
   const headerCell: React.CSSProperties = {
-    fontSize: 9,
+    fontSize: 13,
     fontFamily: 'var(--font-family-mono, monospace)',
     fontWeight: 700,
     letterSpacing: '0.14em',
@@ -3305,7 +3305,7 @@ function Z2Row({
         aria-label={`${cleanName}, rank ${rank}, ${formatCompactMXN(v.total_value_mxn)}, ${v.contract_count} contracts, high-risk rate ${hrPct.toFixed(0)} percent`}
       >
         {/* Rank */}
-        <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 20 }}>
+        <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 13, color: 'var(--color-text-muted)', width: 20 }}>
           {rank}
         </span>
         {/* Initials chip — 2-letter vendor signature in sector accent */}
@@ -3316,7 +3316,7 @@ function Z2Row({
             height: 32,
             background: `${sectorAccent}1f`,
             color: sectorAccent,
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
             letterSpacing: '0.04em',
           }}
@@ -3331,7 +3331,7 @@ function Z2Row({
             {editorialName}
           </span>
           {tenure && (
-            <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 2 }}>
+            <span className="block font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2 }}>
               {tenure}
             </span>
           )}
@@ -3375,55 +3375,55 @@ function Z2Row({
               />
             ))}
           </span>
-          <span className="font-mono tabular-nums text-right" style={{ fontSize: 11, fontWeight: 700, color: hrBarColor, width: 36 }}>
+          <span className="font-mono tabular-nums text-right" style={{ fontSize: 13, fontWeight: 700, color: hrBarColor, width: 36 }}>
             {flagsKnown ? <>{hrPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span></> : pendingGlyph}
           </span>
         </span>
         {/* Spend trio: MXN / USD / share-of-institution */}
         <span className="flex-shrink-0 text-right" style={{ width: 110 }}>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary)' }}>
             {formatCompactMXN(v.total_value_mxn)}
           </span>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             ≈ {formatCompactUSD(v.total_value_mxn)}
           </span>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {v.share_of_institution_pct.toFixed(1)}% {lang === 'en' ? 'share' : 'aporte'}
           </span>
         </span>
         {/* Contracts */}
         <span className="flex-shrink-0 text-right" style={{ width: 70 }}>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>
             {formatNumber(v.contract_count)}
           </span>
-          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'contracts' : 'contratos'}
           </span>
         </span>
         {/* DA% */}
         <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
-          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: flagsKnown ? daColor : 'var(--color-text-muted)' }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 13, color: flagsKnown ? daColor : 'var(--color-text-muted)' }}>
             {flagsKnown ? <>{daPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span></> : pendingGlyph}
           </span>
-          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'DA' : 'AD'}
           </span>
         </span>
         {/* SB% (single-bid) — new column, the bid-rigging signal */}
         <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
-          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: flagsKnown ? sbColor : 'var(--color-text-muted)' }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 13, color: flagsKnown ? sbColor : 'var(--color-text-muted)' }}>
             {flagsKnown ? <>{sbPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span></> : pendingGlyph}
           </span>
-          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'SB' : 'UP'}
           </span>
         </span>
         {/* Avg risk */}
         <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
-          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: riskColor }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 13, color: riskColor }}>
             {score > 0 ? riskPct : '—'}
           </span>
-          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <span className="block font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'risk' : 'riesgo'}
           </span>
         </span>
@@ -3493,13 +3493,13 @@ function Z2Shelf({
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-2 px-2 py-1.5 rounded-sm font-mono uppercase tracking-[0.14em] cursor-pointer"
-        style={{ fontSize: 9, color, background: `${color}10`, fontWeight: 700 }}
+        style={{ fontSize: 13, color, background: `${color}10`, fontWeight: 700 }}
         aria-expanded={open}
       >
         <span aria-hidden="true">{open ? '▾' : '▸'}</span>
         <span className="flex-1 text-left">{title}</span>
-        <span className="font-mono tabular-nums normal-case" style={{ fontSize: 9, opacity: 0.7 }}>{formatCompactMXN(shelfSpend)}</span>
-        <span className="font-mono tabular-nums" style={{ fontSize: 10 }}>{items.length}</span>
+        <span className="font-mono tabular-nums normal-case" style={{ fontSize: 13, opacity: 0.7 }}>{formatCompactMXN(shelfSpend)}</span>
+        <span className="font-mono tabular-nums" style={{ fontSize: 12 }}>{items.length}</span>
       </button>
       {open && longTailDek && (
         <div
@@ -3509,13 +3509,13 @@ function Z2Shelf({
             borderLeft: `2px solid ${color}`,
           }}
         >
-          <span aria-hidden="true" style={{ fontSize: 11, color, lineHeight: 1.3, fontWeight: 700 }}>▎</span>
+          <span aria-hidden="true" style={{ fontSize: 13, color, lineHeight: 1.3, fontWeight: 700 }}>▎</span>
           <p
             className="text-text-secondary leading-snug"
             style={{
-              fontSize: 11,
+              fontSize: 13,
               fontFamily: "'EB Garamond', Georgia, serif",
-              fontStyle: 'italic',
+              fontStyle: 'normal',
             }}
           >
             {longTailDek}
@@ -3625,7 +3625,7 @@ function Z2RowDense({
         aria-label={`${cleanName}, rank ${rank}, ${formatCompactMXN(v.total_value_mxn)}, ${v.contract_count} contracts, avg risk ${riskPct} percent`}
       >
         {/* Rank — match Z2Row width 20 for column alignment */}
-        <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 20 }}>
+        <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 13, color: 'var(--color-text-muted)', width: 20 }}>
           {rank}
         </span>
         {/* Smaller chip — 22px vs Z2Row's 32 — signals secondary tier */}
@@ -3636,7 +3636,7 @@ function Z2RowDense({
             height: 22,
             background: `${sectorAccent}14`,
             color: sectorAccent,
-            fontSize: 9,
+            fontSize: 13,
             fontWeight: 700,
             letterSpacing: '0.04em',
             opacity: 0.85,
@@ -3656,16 +3656,16 @@ function Z2RowDense({
           {editorialName}
         </span>
         {/* Spend trio collapsed to one line: MXN · share% */}
-        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 140 }}>
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-secondary)', width: 140 }}>
           {formatCompactMXN(v.total_value_mxn)}
           <span style={{ color: 'var(--color-text-muted)', marginLeft: 6 }}>{v.share_of_institution_pct.toFixed(2)}%</span>
         </span>
         {/* Contracts — single number, no label */}
-        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 60 }}>
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)', width: 60 }}>
           {formatNumber(v.contract_count)}
         </span>
         {/* Avg risk — single number, no label */}
-        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 28 }}>
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)', width: 28 }}>
           {score > 0 ? riskPct : '—'}
         </span>
       </button>
@@ -3744,7 +3744,7 @@ function CaptureSpine({
       {/* Tick row — cumulative shares under the segment boundaries */}
       <div
         className="hidden sm:flex w-full font-mono tabular-nums"
-        style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 2, gap: 8 }}
+        style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2, gap: 8 }}
         aria-hidden="true"
       >
         {segs.map((s, i) => (
@@ -3760,7 +3760,7 @@ function CaptureSpine({
         <div className="flex items-center gap-2" style={{ marginTop: 5 }}>
           <span
             className="font-mono uppercase tracking-[0.08em] whitespace-nowrap"
-            style={{ fontSize: 9, fontWeight: 700, color: RISK_COLORS.critical }}
+            style={{ fontSize: 13, fontWeight: 700, color: RISK_COLORS.critical }}
           >
             {isEs
               ? `${spine.gtShare.toFixed(1)}% en casos GT documentados`
@@ -4298,8 +4298,8 @@ function Z3Panel({
           kicker={lang === 'en' ? '§ EL HISTORIAL · VENDOR DEEP' : '§ EL HISTORIAL · PROVEEDOR'}
           headline={
             lang === 'en'
-              ? <>{editorialName} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>how far from the norm</em></>
-              : <>{editorialName} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>qué tan lejos de la norma</em></>
+              ? <>{editorialName} — <em style={{ fontStyle: 'normal', fontWeight: 800 }}>how far from the norm</em></>
+              : <>{editorialName} — <em style={{ fontStyle: 'normal', fontWeight: 800 }}>qué tan lejos de la norma</em></>
           }
         />
 
@@ -4310,12 +4310,12 @@ function Z3Panel({
           className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4"
         >
           {isLoading && (
-            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="py-12 text-center font-mono text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'loading...' : 'cargando...'}
             </div>
           )}
           {isError && !isLoading && (
-            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="py-12 text-center font-mono text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en' ? 'no contracts found.' : 'sin contratos disponibles.'}
             </div>
           )}
@@ -4382,8 +4382,8 @@ function Z3Panel({
               the register is the ≤100-row sample, not the population. */}
           {!isLoading && !isError && contracts.length > 0 && (
             <div className="pt-4 pb-1.5">
-              <div className="font-mono uppercase mb-1" style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
-                <span style={{ color: OCHRE, fontStyle: 'italic', fontWeight: 600 }}>§ {lang === 'en' ? 'The record' : 'El expediente'}</span>
+              <div className="font-mono uppercase mb-1" style={{ fontSize: 13, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+                <span style={{ color: OCHRE, fontStyle: 'normal', fontWeight: 600 }}>§ {lang === 'en' ? 'The record' : 'El expediente'}</span>
                 <span style={{ margin: '0 7px', opacity: 0.45 }}>·</span>
                 <span style={{ fontWeight: 300 }}>{lang === 'en' ? 'the evidence' : 'la evidencia'}</span>
               </div>
@@ -4433,7 +4433,7 @@ function Z3Panel({
                     <button
                       type="button"
                       onClick={() => setYearFilter(null)}
-                      className="font-mono text-[9px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm cursor-pointer"
+                      className="font-mono text-[13px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm cursor-pointer"
                       style={{ background: `${sectorAccent}1f`, color: sectorAccent, border: `1px solid ${sectorAccent}55` }}
                       title={lang === 'en' ? 'Clear year filter' : 'Quitar filtro de año'}
                     >
@@ -4463,25 +4463,25 @@ function Z3Panel({
           {/* Column header — aligns with the table row (desktop only; mobile uses cards) */}
           {!isMobile && !isLoading && !isError && visibleContracts.length > 0 && (
             <div className="flex items-center gap-2.5 pl-2.5 pr-2 pb-1" style={{ borderBottom: '1px solid var(--color-border)' }}>
-              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 96, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 96, fontSize: 13, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Amount' : 'Monto'}
               </span>
-              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 70, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 70, fontSize: 13, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 ≈USD
               </span>
-              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 56, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 56, fontSize: 13, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Flags' : 'Señal'}
               </span>
-              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 60, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 60, fontSize: 13, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Date' : 'Fecha'}
               </span>
-              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 96, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 96, fontSize: 13, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Procedure' : 'Procedim.'}
               </span>
-              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 150, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 150, fontSize: 13, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'File' : 'Expediente'}
               </span>
-              <span className="flex-1 min-w-0 font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              <span className="flex-1 min-w-0 font-mono uppercase" style={{ fontSize: 13, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Object' : 'Objeto'}
               </span>
             </div>
@@ -4526,7 +4526,7 @@ function Z3Panel({
         {/* Jumpline bar — count · copy-link · dossier exit (W5) */}
         {!isLoading && !isError && contracts.length > 0 && (
           <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <span className="font-mono text-[9px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
+            <span className="font-mono text-[13px] hidden min-[480px]:inline" style={{ color: 'var(--color-text-muted)' }}>
               {lang === 'en'
                 ? `${visibleContracts.length} of ${formatNumber(filtered.length)} shown`
                 : `${visibleContracts.length} de ${formatNumber(filtered.length)} mostrados`}
@@ -4594,7 +4594,7 @@ function Z3TimelineStrip({
 
   return (
     <div className="pt-1 pb-1">
-      <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: 'var(--color-text-muted)' }}>
+      <div className="font-mono text-[13px] uppercase tracking-[0.14em] mb-1" style={{ color: 'var(--color-text-muted)' }}>
         {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
       </div>
       <div className="relative" style={{ height: 40 }}>
@@ -4810,7 +4810,7 @@ function Z3ContractRow({
         </span>
 
         {/* USD — converted at the contract's own year rate (MXN_USD_RATES) */}
-        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ width: 70, fontSize: 10, color: 'var(--color-text-muted)' }}>
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ width: 70, fontSize: 12, color: 'var(--color-text-muted)' }}>
           {amount > 0 ? `≈${formatCompactUSDByYear(amount, yr).replace(' USD', '')}` : ''}
         </span>
 
@@ -4820,7 +4820,7 @@ function Z3ContractRow({
             <span
               key={i}
               className="inline-flex items-center justify-center font-mono"
-              style={{ width: 11, height: 11, fontSize: 10, lineHeight: 1, fontWeight: 700, color: s.on ? s.color : 'var(--color-border)', opacity: s.on ? 1 : 0.3 }}
+              style={{ width: 11, height: 11, fontSize: 12, lineHeight: 1, fontWeight: 700, color: s.on ? s.color : 'var(--color-border)', opacity: s.on ? 1 : 0.3 }}
               title={s.on ? s.label : ''}
               aria-label={s.on ? s.label : undefined}
             >
@@ -4830,20 +4830,20 @@ function Z3ContractRow({
         </span>
 
         {/* FECHA */}
-        <span className="flex-shrink-0 font-mono tabular-nums" style={{ width: 60, fontSize: 10, color: 'var(--color-text-muted)' }}>
+        <span className="flex-shrink-0 font-mono tabular-nums" style={{ width: 60, fontSize: 12, color: 'var(--color-text-muted)' }}>
           {fecha}
         </span>
 
         {/* PROCEDIMIENTO — direct-award in ochre (the baseline pathology), else muted */}
         <span
           className="flex-shrink-0 truncate font-mono uppercase"
-          style={{ width: 96, fontSize: 9, letterSpacing: '0.04em', color: c.is_direct_award ? OCHRE : 'var(--color-text-muted)', fontWeight: c.is_direct_award ? 600 : 400 }}
+          style={{ width: 96, fontSize: 13, letterSpacing: '0.04em', color: c.is_direct_award ? OCHRE : 'var(--color-text-muted)', fontWeight: c.is_direct_award ? 600 : 400 }}
         >
           {proc}
         </span>
 
         {/* EXPEDIENTE — the contract reference, always its own column (mono, demoted) */}
-        <span className="flex-shrink-0 truncate font-mono" style={{ width: 150, fontSize: 10, color: 'var(--color-text-muted)', opacity: 0.85 }}>
+        <span className="flex-shrink-0 truncate font-mono" style={{ width: 150, fontSize: 12, color: 'var(--color-text-muted)', opacity: 0.85 }}>
           {expediente ?? '—'}
         </span>
 
@@ -4852,7 +4852,7 @@ function Z3ContractRow({
           className="flex-1 min-w-0 truncate"
           style={{ fontSize: 12.5, fontFamily: "'EB Garamond', Georgia, serif", color: noObject ? 'var(--color-text-muted)' : 'var(--color-text-primary)' }}
         >
-          {objeto ?? <span style={{ fontStyle: 'italic' }}>—</span>}
+          {objeto ?? <span style={{ fontStyle: 'normal' }}>—</span>}
         </span>
       </button>
     </motion.li>
@@ -4946,10 +4946,10 @@ function Z3VerdictLine({
   return (
     <div className="px-4 sm:px-6 pt-1 pb-2 flex items-start gap-3">
       <span className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm" style={{ background: accent }} aria-hidden="true" />
-      <p className="text-text-secondary leading-snug flex-1 min-w-0" style={{ fontSize: 14, fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic' }}>
+      <p className="text-text-secondary leading-snug flex-1 min-w-0" style={{ fontSize: 14, fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'normal' }}>
         {body}
       </p>
-      <span className="hidden min-[480px]:inline-block flex-shrink-0 font-mono tabular-nums text-right whitespace-nowrap" style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 3 }}>
+      <span className="hidden min-[480px]:inline-block flex-shrink-0 font-mono tabular-nums text-right whitespace-nowrap" style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 3 }}>
         {formatNumber(ctxCount)} · {formatCompactMXN(ctxValue)} ≈ {formatCompactUSD(ctxValue)}
       </span>
     </div>
@@ -4992,7 +4992,7 @@ function Z3DeviationCell({ row, isStrongest, smallN }: { row: Z3LedgerRow; isStr
   return (
     <div className="flex flex-col" style={{ borderTop: `2px solid ${accentBorder}`, paddingTop: 4 }}>
       {/* eyebrow */}
-      <span className="font-mono uppercase truncate" style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+      <span className="font-mono uppercase truncate" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
         {row.label}
       </span>
       {/* value */}
@@ -5027,11 +5027,11 @@ function Z3DeviationCell({ row, isStrongest, smallN }: { row: Z3LedgerRow; isStr
       </span>
       {/* readout — ratio (or vs-median when no ratio) · percentile */}
       <span className="flex items-baseline gap-1.5" style={{ marginTop: 4 }}>
-        <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: ratioColor }}>
+        <span className="font-mono tabular-nums" style={{ fontSize: 13, color: ratioColor }}>
           {row.ratio != null ? `${row.ratio.toFixed(1)}×` : hasMedian ? `vs ${fmt(row.medianVal as number)}` : '·'}
         </span>
         {row.percentile != null && (
-          <span className="font-mono tabular-nums" style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-muted)' }}>
+          <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)' }}>
             p{Math.round(row.percentile)}
           </span>
         )}
@@ -5044,8 +5044,8 @@ function Z3DeviationBand({ rows, strongestKey, smallN, multiSector, lang }: { ro
   return (
     <div className="px-4 sm:px-6 pb-1">
       <div className="flex items-baseline justify-between mb-2">
-        <div className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}>
-          <span style={{ color: OCHRE, fontStyle: 'italic', fontWeight: 600 }}>§ {lang === 'en' ? 'The deviation' : 'El desvío'}</span>
+        <div className="font-mono uppercase" style={{ fontSize: 12, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}>
+          <span style={{ color: OCHRE, fontStyle: 'normal', fontWeight: 600 }}>§ {lang === 'en' ? 'The deviation' : 'El desvío'}</span>
           <span style={{ margin: '0 7px', opacity: 0.45 }}>·</span>
           <span style={{ fontWeight: 300 }}>{lang === 'en' ? 'vs the sector norm' : 'frente a la norma del sector'}</span>
         </div>
@@ -5058,7 +5058,7 @@ function Z3DeviationBand({ rows, strongestKey, smallN, multiSector, lang }: { ro
         {rows.map((r) => <Z3DeviationCell key={r.key} row={r} isStrongest={r.key === strongestKey} smallN={smallN} />)}
       </div>
       {(smallN || multiSector) && (
-        <div className="mt-2 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+        <div className="mt-2 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', fontStyle: 'normal' }}>
           {smallN && (lang === 'en' ? 'few contracts — interpret deviations with caution. ' : 'pocos contratos — interpretar los desvíos con cautela. ')}
           {multiSector && (lang === 'en' ? 'multi-sector vendor — sector baseline approximate.' : 'proveedor multi-sector — base sectorial aproximada.')}
         </div>
@@ -5110,13 +5110,13 @@ function Z3ConcentrationStat({
 
   return (
     <div>
-      <div className="font-mono uppercase mb-2" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
+      <div className="font-mono uppercase mb-2" style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
         {lang === 'en' ? 'Activity · concentration' : 'Actividad · concentración'}
       </div>
       <div className="flex items-baseline gap-2 flex-wrap">
         <span
           className="tabular-nums"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontWeight: 800, fontSize: 34, lineHeight: 1, color: accent }}
+          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'normal', fontWeight: 800, fontSize: 34, lineHeight: 1, color: accent }}
         >
           {peak.count}
         </span>
@@ -5124,7 +5124,7 @@ function Z3ConcentrationStat({
           {lang === 'en' ? `of ${total} contracts` : `de ${total} contratos`}
         </span>
       </div>
-      <div className="font-mono mt-1.5" style={{ fontSize: 10.5, color: 'var(--color-text-primary)' }}>
+      <div className="font-mono mt-1.5" style={{ fontSize: 12, color: 'var(--color-text-primary)' }}>
         {subline}
       </div>
       <div className="flex items-center gap-2 mt-2.5">
@@ -5134,7 +5134,7 @@ function Z3ConcentrationStat({
         <span className="font-mono tabular-nums" style={{ fontSize: 12, fontWeight: 700, color: accent }}>{pct}%</span>
       </div>
       {footer && (
-        <div className="font-mono mt-1.5" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+        <div className="font-mono mt-1.5" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
           {footer}
         </div>
       )}
@@ -5169,11 +5169,11 @@ function Z3MonthlyStrip({
   return (
     <div className="pt-3 pb-3">
       <div className="flex items-baseline justify-between mb-2">
-        <div className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
+        <div className="font-mono uppercase" style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
           {lang === 'en' ? 'Activity by month · contracts' : 'Actividad por mes · contratos'}
         </div>
         {peakMonth && peakMonth.count > 0 && (
-          <div className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+          <div className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {lang === 'en'
               ? `peak ${peakMonth.count} · ${activeMonths} active mo.`
               : `pico ${peakMonth.count} · ${activeMonths} meses activos`}
@@ -5208,7 +5208,7 @@ function Z3MonthlyStrip({
                     {showCountLabels && (
                       <span
                         className="font-mono tabular-nums leading-none mb-0.5"
-                        style={{ fontSize: 9, fontWeight: 700, color: highOrWorse ? cap : 'var(--color-text-secondary)' }}
+                        style={{ fontSize: 13, fontWeight: 700, color: highOrWorse ? cap : 'var(--color-text-secondary)' }}
                       >
                         {m.count}
                       </span>
@@ -5415,7 +5415,7 @@ function Z4Drawer({
 
         {/* Close button */}
         <div className="px-4 sm:px-5 pt-3 flex items-center justify-between flex-shrink-0">
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: 'var(--color-accent)' }}>
+          <span className="font-mono text-[12px] uppercase tracking-[0.18em]" style={{ color: 'var(--color-accent)' }}>
             {lang === 'en' ? '§ EL CONTRATO · CONTRACT DEEP' : '§ EL CONTRATO · CONTRATO'}
           </span>
           <button
@@ -5432,7 +5432,7 @@ function Z4Drawer({
 
         {/* Loading state */}
         {isLoading && (
-          <div className="flex-1 flex items-center justify-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="flex-1 flex items-center justify-center font-mono text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'loading contract...' : 'cargando contrato...'}
           </div>
         )}
@@ -5442,7 +5442,7 @@ function Z4Drawer({
           <div className="flex-1 overflow-y-auto px-4 sm:px-5 pb-4">
             {/* Contract number */}
             {contract.contract_number && (
-              <div className="font-mono text-[10px] tabular-nums pt-2 mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+              <div className="font-mono text-[12px] tabular-nums pt-2 mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
                 #{contract.contract_number}
               </div>
             )}
@@ -5452,7 +5452,7 @@ function Z4Drawer({
               className="leading-snug mb-3"
               style={{
                 fontFamily: "'EB Garamond', Georgia, serif",
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontSize: 14,
                 color: 'var(--color-text-secondary)',
                 borderLeft: `2px solid ${sectorAccent}`,
@@ -5471,11 +5471,11 @@ function Z4Drawer({
               <div className="min-w-0">
                 <div
                   className="font-serif tabular-nums leading-none"
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 800, fontStyle: 'italic', color: fill, letterSpacing: '-0.015em' }}
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 800, fontStyle: 'normal', color: fill, letterSpacing: '-0.015em' }}
                 >
                   {formatCompactMXN(Number(contract.amount_mxn ?? 0))}
                 </div>
-                <div className="font-mono text-[10px] tabular-nums mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                <div className="font-mono text-[12px] tabular-nums mt-1" style={{ color: 'var(--color-text-muted)' }}>
                   ≈ {formatCompactUSD(Number(contract.amount_mxn ?? 0))} · {contract.contract_year ?? '—'}
                 </div>
               </div>
@@ -5484,14 +5484,14 @@ function Z4Drawer({
                   {lang === 'en' ? 'Risk' : 'Riesgo'}
                 </div>
                 {riskPct == null ? (
-                  <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                  <span className="font-mono text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                     {lang === 'en' ? 'Not scored' : 'Sin puntuación'}
                   </span>
                 ) : (
                   <>
                     <div className="flex items-baseline gap-1.5">
                       <span className="font-mono tabular-nums" style={{ fontSize: 15, fontWeight: 700, color: fill, lineHeight: 1 }}>{riskPct}</span>
-                      <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>/100</span>
+                      <span className="font-mono text-[13px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>/100</span>
                       <span
                         className="font-mono text-[8px] uppercase tracking-[0.10em] px-1 py-0.5 rounded-sm"
                         style={{ background: `${fill}1f`, color: fill, fontWeight: 700, border: `1px solid ${fill}44` }}
@@ -5614,7 +5614,7 @@ function Z4Drawer({
                     href={contract.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-1.5 font-mono text-[9px] uppercase tracking-[0.12em] hover:opacity-70 transition-opacity"
+                    className="inline-flex items-center gap-1.5 mt-1.5 font-mono text-[13px] uppercase tracking-[0.12em] hover:opacity-70 transition-opacity"
                     style={{ color: 'var(--color-text-secondary)' }}
                   >
                     {lang === 'en' ? 'Source' : 'Fuente'} ↗
@@ -5637,7 +5637,7 @@ function Z4Drawer({
                     return (
                       <span
                         key={i}
-                        className="inline-flex items-baseline gap-1 font-mono text-[9px] px-1.5 py-0.5 rounded-sm"
+                        className="inline-flex items-baseline gap-1 font-mono text-[13px] px-1.5 py-0.5 rounded-sm"
                         style={{ background: `${factorColor}14`, border: `1px solid ${factorColor}33`, color: 'var(--color-text-primary)' }}
                       >
                         <span aria-hidden="true" style={{ color: factorColor, fontWeight: 700 }}>{isPositive ? '▲' : '▽'}</span>
@@ -5663,13 +5663,13 @@ function Z4Drawer({
             className="px-4 sm:px-5 py-3 flex-shrink-0 flex items-center justify-between"
             style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-background)' }}
           >
-            <span className="font-mono text-[9px] tabular-nums truncate" style={{ color: 'var(--color-text-muted)', maxWidth: '45%' }}>
+            <span className="font-mono text-[13px] tabular-nums truncate" style={{ color: 'var(--color-text-muted)', maxWidth: '45%' }}>
               #{contract.id}{contract.sector_name ? ` · ${contract.sector_name}` : ''}
             </span>
             <button
               type="button"
               onClick={() => navigate(`/contracts/${contract.id}`)}
-              className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+              className="inline-flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
               style={{ color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}
             >
               {lang === 'en' ? 'Open full contract page' : 'Ver ficha completa'} ↗
@@ -5694,7 +5694,7 @@ function Z4ProcedureRow({ label, value, mono = false }: { lang: 'en' | 'es'; lab
         {label}
       </dt>
       <dd
-        className="text-[11px] leading-snug break-words"
+        className="text-[13px] leading-snug break-words"
         style={{
           color: 'var(--color-text-primary)',
           fontFamily: mono ? 'var(--font-family-mono, monospace)' : undefined,

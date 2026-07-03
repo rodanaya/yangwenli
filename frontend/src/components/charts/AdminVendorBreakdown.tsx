@@ -81,7 +81,7 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
                   {formattedName}
                 </span>
               )}
-              <div className="text-[11px] text-text-muted mt-0.5">
+              <div className="text-[13px] text-text-muted mt-0.5">
                 <span className="font-mono tabular-nums">{v.contracts.toLocaleString()}</span> {t('vendorSection.contracts')} &middot; <span className="font-mono tabular-nums">{v.risk_pct.toFixed(0)}%</span> {t('vendorSection.riskScore')}
               </div>
             </div>

@@ -98,7 +98,7 @@ export default function CalibrationRecord({ className }: { className?: string })
         <p
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 500,
             fontSize: '24px',
             lineHeight: 1.15,
@@ -157,7 +157,7 @@ export default function CalibrationRecord({ className }: { className?: string })
             x={(xPos(v40.day) + xPos(v51.day)) / 2}
             y={CHART_TOP - 8}
             textAnchor="middle"
-            fontSize={9.5}
+            fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
             letterSpacing="0.02em"
             fill={OCHRE}
@@ -170,7 +170,7 @@ export default function CalibrationRecord({ className }: { className?: string })
           {GRIDLINES.map((g) => (
             <g key={g}>
               <line x1={PAD_L} y1={yPos(g)} x2={xPos(TOTAL_DAYS)} y2={yPos(g)} stroke="var(--color-border)" strokeWidth={1} opacity={0.5} />
-              <text x={PAD_L - 8} y={yPos(g) + 3} textAnchor="end" fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)" className="tabular-nums">
+              <text x={PAD_L - 8} y={yPos(g) + 3} textAnchor="end" fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)" className="tabular-nums">
                 {g.toFixed(1)}
               </text>
             </g>
@@ -178,12 +178,12 @@ export default function CalibrationRecord({ className }: { className?: string })
 
           {/* random-baseline dashed rule at AUC = 0.5 */}
           <line x1={PAD_L} y1={yPos(0.5)} x2={xPos(TOTAL_DAYS)} y2={yPos(0.5)} stroke="var(--color-text-muted)" strokeWidth={1} strokeDasharray="2 3" opacity={0.6} />
-          <text x={xPos(TOTAL_DAYS) + 4} y={yPos(0.5) + 3} fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
+          <text x={xPos(TOTAL_DAYS) + 4} y={yPos(0.5) + 3} fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
             {lang === 'en' ? 'random = 0.5' : 'azar = 0.5'}
           </text>
 
           {/* y-axis caption */}
-          <text x={PAD_L} y={CHART_TOP - 20} fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)" letterSpacing="0.04em">
+          <text x={PAD_L} y={CHART_TOP - 20} fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)" letterSpacing="0.04em">
             {lang === 'en' ? 'AUC (test)' : 'AUC (prueba)'}
           </text>
 
@@ -194,7 +194,7 @@ export default function CalibrationRecord({ className }: { className?: string })
               x={xPos(v52.day)}
               y={CHART_TOP - 8}
               textAnchor="middle"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-secondary)"
             >
@@ -238,7 +238,7 @@ export default function CalibrationRecord({ className }: { className?: string })
                   x={cx}
                   y={CHART_BOTTOM + 18}
                   textAnchor="middle"
-                  fontSize={9.5}
+                  fontSize={13}
                   fontWeight={isActive ? 700 : 500}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={isActive ? OCHRE : 'var(--color-text-secondary)'}
@@ -266,7 +266,7 @@ export default function CalibrationRecord({ className }: { className?: string })
               y={yPos(v33.auc!) + 18}
               textAnchor="start"
               fontSize={8.5}
-              fontStyle="italic"
+              fontStyle="normal"
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
             >
@@ -294,7 +294,7 @@ export default function CalibrationRecord({ className }: { className?: string })
               <p
                 style={{
                   fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontSize: '12.5px',
                   lineHeight: 1.3,
                   color: 'var(--color-text-secondary)',
@@ -326,13 +326,13 @@ export default function CalibrationRecord({ className }: { className?: string })
               >
                 <span
                   className="font-mono tabular-nums shrink-0"
-                  style={{ fontSize: '10px', color: 'var(--color-text-muted)', width: '84px' }}
+                  style={{ fontSize: '12px', color: 'var(--color-text-muted)', width: '84px' }}
                 >
                   {e.dateLabel[lang]}
                 </span>
                 <span
                   className="font-mono shrink-0"
-                  style={{ fontSize: '11px', fontWeight: 700, color: isActive ? OCHRE : 'var(--color-text-primary)', width: '58px' }}
+                  style={{ fontSize: '13px', fontWeight: 700, color: isActive ? OCHRE : 'var(--color-text-primary)', width: '58px' }}
                 >
                   {e.version}
                 </span>

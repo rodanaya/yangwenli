@@ -77,7 +77,7 @@ export function CaseDocketRail({
         className="tabular-nums mt-0.5"
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 800,
           fontSize: 20,
           color: 'var(--color-accent)',
@@ -108,7 +108,7 @@ export function CaseDocketRail({
           className="mt-2"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 13.5,
             lineHeight: 1.4,
             color: 'var(--color-text-primary)',
@@ -131,7 +131,7 @@ export function CaseDocketRail({
             />
             <span
               className="font-mono uppercase"
-              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-secondary)' }}
+              style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-secondary)' }}
             >
               {sectorName}
             </span>
@@ -142,7 +142,7 @@ export function CaseDocketRail({
       <RailLabel>{lang === 'es' ? 'Tipo' : 'Type'}</RailLabel>
       <p
         className="font-mono uppercase mt-1"
-        style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-secondary)' }}
+        style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-secondary)' }}
       >
         {fraudLabel(scandal.fraud_type, lang)}
       </p>
@@ -150,7 +150,7 @@ export function CaseDocketRail({
       <RailLabel>{lang === 'es' ? 'Sexenio' : 'Term'}</RailLabel>
       <p
         className="font-mono uppercase mt-1"
-        style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-secondary)' }}
+        style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-secondary)' }}
       >
         {sexenioLabel(scandal, lang)}
       </p>
@@ -177,7 +177,7 @@ export function CaseDocketRail({
         </span>
         <span
           className="font-mono uppercase"
-          style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-secondary)' }}
+          style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-secondary)' }}
         >
           {vis.label[lang]}
         </span>
@@ -187,7 +187,7 @@ export function CaseDocketRail({
           <div className="mt-3" />
           <p
             className="font-mono"
-            style={{ fontSize: 9, letterSpacing: '0.16em', color: 'var(--color-accent)', fontWeight: 700 }}
+            style={{ fontSize: 13, letterSpacing: '0.16em', color: 'var(--color-accent)', fontWeight: 700 }}
           >
             ▪ {lang === 'es' ? 'ENTRENAMIENTO GT' : 'GT TRAINING'}
           </p>
@@ -208,9 +208,9 @@ export function CaseDocketRail({
                 className="tabular-nums"
                 style={{
                   fontFamily: '"Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontWeight: 800,
-                  fontSize: 11,
+                  fontSize: 13,
                   color: 'var(--color-accent)',
                   minWidth: 18,
                 }}
@@ -219,7 +219,7 @@ export function CaseDocketRail({
               </span>
               <span
                 className="font-mono uppercase"
-                style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
+                style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-secondary)' }}
               >
                 {s.label}
               </span>
@@ -258,7 +258,7 @@ export function MoneyBenchmark({
         <div>
           <div
             className="flex items-baseline justify-between mb-1 font-mono uppercase"
-            style={{ fontSize: 9, letterSpacing: '0.16em', color: 'var(--color-text-secondary)' }}
+            style={{ fontSize: 13, letterSpacing: '0.16em', color: 'var(--color-text-secondary)' }}
           >
             <span>{lang === 'es' ? 'Este caso' : 'This case'}</span>
             <span className="tabular-nums" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
@@ -304,7 +304,7 @@ export function MoneyBenchmark({
           className="mt-3"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 14.5,
             lineHeight: 1.45,
             color: 'var(--color-text-primary)',
@@ -340,14 +340,14 @@ export function CompranetVisibilityBanner({
     >
       <p
         className="font-mono uppercase mb-1"
-        style={{ fontSize: 9, letterSpacing: '0.2em', color: 'var(--color-accent)', fontWeight: 600 }}
+        style={{ fontSize: 13, letterSpacing: '0.2em', color: 'var(--color-accent)', fontWeight: 600 }}
       >
         ▎{lang === 'es' ? 'Visibilidad COMPRANET' : 'COMPRANET visibility'} · {vis.label[lang]}
       </p>
       <p
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: 14.5,
           lineHeight: 1.5,
           color: 'var(--color-text-secondary)',
@@ -412,7 +412,7 @@ export function LinkedVendorList({
               <span
                 style={{
                   fontFamily: '"EB Garamond", Georgia, serif',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   fontSize: 14.5,
                   color: 'var(--color-text-secondary)',
                 }}
@@ -441,7 +441,7 @@ export function LinkedVendorList({
           </span>
           <span
             className="font-mono tabular-nums flex-shrink-0 text-right"
-            style={{ fontSize: 10.5, color: 'var(--color-text-secondary)', minWidth: 96 }}
+            style={{ fontSize: 12, color: 'var(--color-text-secondary)', minWidth: 96 }}
           >
             {v.contract_count > 0
               ? lang === 'es'
@@ -495,7 +495,7 @@ export function KeepReadingFooter({
     <section className="py-10" style={{ borderTop: '1px solid var(--color-border)' }}>
       <div
         className="flex items-center gap-3 mb-4 font-mono uppercase"
-        style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
+        style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
       >
         <span>{heading}</span>
         <span aria-hidden="true" className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
@@ -529,7 +529,7 @@ export function KeepReadingFooter({
               />
               <p
                 className="mt-1.5 font-mono tabular-nums"
-                style={{ fontSize: 9.5, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+                style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
               >
                 {c.contract_year_start ?? '—'}
                 {' · '}
@@ -543,7 +543,7 @@ export function KeepReadingFooter({
         <Link
           to="/cases"
           className="font-mono uppercase hover:opacity-70 transition-opacity"
-          style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-primary)', fontWeight: 600, textDecoration: 'none' }}
+          style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-primary)', fontWeight: 600, textDecoration: 'none' }}
         >
           {lang === 'es'
             ? `Ver los ${allCases?.length ?? 43} expedientes →`
@@ -555,7 +555,7 @@ export function KeepReadingFooter({
           className="mt-6 text-center"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 13.5,
             color: 'var(--color-text-muted)',
           }}

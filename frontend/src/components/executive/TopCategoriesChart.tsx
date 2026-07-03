@@ -131,10 +131,10 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
   if (items.length === 0) {
     return (
       <div className="py-10 text-center">
-        <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-text-muted">
+        <p className="text-[13px] font-mono uppercase tracking-[0.16em] text-text-muted">
           {lang === 'en' ? 'No sector data available' : 'Sin datos sectoriales disponibles'}
         </p>
-        <p className="mt-2 text-[10px] text-text-muted/70 leading-relaxed max-w-md mx-auto">
+        <p className="mt-2 text-[12px] text-text-muted/70 leading-relaxed max-w-md mx-auto">
           {lang === 'en'
             ? 'category_stats precompute pending — try again after the next ETL run.'
             : 'Precómputo de category_stats pendiente — intenta de nuevo tras el siguiente ETL.'}
@@ -147,7 +147,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
     <div>
       {/* Editorial column header — printed rank-order page, not a chart legend. */}
       <div
-        className="grid items-end gap-x-3 sm:gap-x-4 pb-2 text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted grid-cols-[28px_minmax(0,1fr)_auto_18px] sm:grid-cols-[28px_minmax(0,1fr)_176px_110px_18px]"
+        className="grid items-end gap-x-3 sm:gap-x-4 pb-2 text-[13px] font-mono uppercase tracking-[0.16em] text-text-muted grid-cols-[28px_minmax(0,1fr)_auto_18px] sm:grid-cols-[28px_minmax(0,1fr)_176px_110px_18px]"
         style={{ borderBottom: '1px solid rgba(160, 104, 32, 0.22)' }}
       >
         <span>{lang === 'en' ? 'Rk' : 'No'}</span>
@@ -191,7 +191,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
             >
               {/* Rank */}
               <span
-                className="font-mono tabular-nums text-[11px] text-text-muted tracking-[0.05em] self-center"
+                className="font-mono tabular-nums text-[13px] text-text-muted tracking-[0.05em] self-center"
               >
                 {String(idx + 1).padStart(2, '0')}
               </span>
@@ -217,14 +217,14 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                     {name}
                   </span>
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-[9.5px] font-mono uppercase tracking-[0.12em] text-text-muted">
+                <div className="mt-1 flex items-center gap-2 text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted">
                   <span style={{ color: sectorColor, opacity: 0.95, fontWeight: 600 }}>
                     {sectorName}
                   </span>
                   {caption && (
                     <>
                       <span aria-hidden="true" className="opacity-50">·</span>
-                      <span className="normal-case tracking-normal text-[10px] text-text-secondary truncate">
+                      <span className="normal-case tracking-normal text-[12px] text-text-secondary truncate">
                         {caption}
                       </span>
                     </>
@@ -244,7 +244,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                   dotGap={5}
                   ariaLabel={`${sharePct.toFixed(1)}% ${lang === 'en' ? 'of top 8' : 'del top 8'}`}
                 />
-                <span className="font-mono tabular-nums text-[10px] text-text-muted w-[30px] text-right">
+                <span className="font-mono tabular-nums text-[12px] text-text-muted w-[30px] text-right">
                   {sharePct.toFixed(0)}%
                 </span>
               </div>
@@ -254,7 +254,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                 <span
                   style={{
                     fontFamily: "'Playfair Display', Georgia, serif",
-                    fontStyle: 'italic',
+                    fontStyle: 'normal',
                     fontWeight: 800,
                     fontSize: 19,
                     color: 'var(--color-text-primary)',
@@ -265,7 +265,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                 </span>
                 {lang === 'en' && (
                   <span
-                    className="font-mono text-[9.5px] tracking-[0.02em]"
+                    className="font-mono text-[13px] tracking-[0.02em]"
                     style={{ color: 'var(--color-text-muted)', opacity: 0.8 }}
                   >
                     ≈{formatCompactUSD(cat.total_value)}
@@ -292,7 +292,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
 
       {/* Editorial footer — single band: totals, encoding, risk legend. */}
       <div
-        className="mt-4 pt-2 flex items-start justify-between flex-wrap gap-x-4 gap-y-1.5 text-[9px] font-mono text-text-muted leading-[1.4]"
+        className="mt-4 pt-2 flex items-start justify-between flex-wrap gap-x-4 gap-y-1.5 text-[13px] font-mono text-text-muted leading-[1.4]"
         style={{ borderTop: '1px solid rgba(160, 104, 32, 0.22)' }}
       >
         <span>

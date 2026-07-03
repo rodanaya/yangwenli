@@ -154,7 +154,7 @@ export function VendorProfile() {
       {fromAria && (
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
+          className="inline-flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
         >
           <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {isEs ? 'Volver a ARIA' : 'Back to ARIA'}
@@ -339,7 +339,7 @@ function ChapterDivider() {
   )
 }
 
-// ChapterHeader: IBM Plex Mono italic accent kicker + EB Garamond serif h2
+// ChapterHeader: IBM Plex Mono accent kicker + EB Garamond serif h2
 // (matches ChapterLabel + RedThreadChapter pattern in RedThread.tsx:92-115)
 function ChapterHeader({
   folio,
@@ -355,11 +355,11 @@ function ChapterHeader({
       <div
         style={{
           fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-          fontSize: '10px',
+          fontSize: '12px',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: '#a06820',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 500,
           marginBottom: '0.6rem',
         }}
@@ -440,8 +440,8 @@ function ProvenanceFooter({ isEs }: { isEs: boolean }) {
       className="py-8 border-t border-border/30"
     >
       <p
-        className="text-[9px] font-mono uppercase tracking-[0.18em] mb-4"
-        style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}
+        className="text-[13px] font-mono uppercase tracking-[0.18em] mb-4"
+        style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}
       >
         § 10 · {isEs ? 'Procedencia' : 'Provenance'}
       </p>
@@ -453,24 +453,24 @@ function ProvenanceFooter({ isEs }: { isEs: boolean }) {
             key={src.label}
             className="px-3 py-2.5 rounded-sm border border-border/40 bg-background-card"
           >
-            <p className="text-[10px] font-mono font-semibold text-text-primary uppercase tracking-[0.1em] mb-1">
+            <p className="text-[12px] font-mono font-semibold text-text-primary uppercase tracking-[0.1em] mb-1">
               {src.label}
             </p>
-            <p className="text-[10px] text-text-muted leading-snug">{src.note}</p>
+            <p className="text-[12px] text-text-muted leading-snug">{src.note}</p>
           </div>
         ))}
       </div>
 
       {/* Methodology + limitations */}
       <div className="space-y-2.5 max-w-2xl">
-        <p className="text-[11px] text-text-muted leading-relaxed">
+        <p className="text-[13px] text-text-muted leading-relaxed">
           {isEs
             ? `Modelo v0.8.5 · AUC 0.785 · entrenado sobre ${(1427).toLocaleString('es-MX')} casos confirmados. El indicador de riesgo es una señal estadística de similitud de patrones — no es una probabilidad de corrupción ni una conclusión legal.`
             : `Model v0.8.5 · AUC 0.785 · trained on ${(1427).toLocaleString('en-US')} verified cases. The risk indicator is a statistical pattern-similarity signal — not a corruption probability or legal finding.`}
         </p>
         <a
           href="/methodology"
-          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent/80 transition-colors"
+          className="inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent/80 transition-colors"
         >
           <ExternalLink className="h-3 w-3" aria-hidden="true" />
           {isEs ? 'Metodología completa →' : 'Full methodology →'}

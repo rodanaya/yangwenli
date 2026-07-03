@@ -119,7 +119,7 @@ function PatternChip({
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 px-2 py-1 rounded-sm border text-[11px] font-medium transition-colors flex-shrink-0',
+        'inline-flex items-center gap-1.5 px-2 py-1 rounded-sm border text-[13px] font-medium transition-colors flex-shrink-0',
         isActive
           ? cn(meta.bg, meta.text, meta.border)
           : 'bg-background-card text-text-secondary border-border hover:border-border'
@@ -152,7 +152,7 @@ function FilterChip({
   const isEs = i18n.language?.startsWith('es')
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[10px] font-mono font-medium"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[12px] font-mono font-medium"
       style={
         accent
           ? { color: accent, backgroundColor: `${accent}10`, borderColor: `${accent}33` }
@@ -194,7 +194,7 @@ function SaldoAnchor({
       style={{
         color,
         fontFamily: '"Playfair Display", Georgia, serif',
-        fontStyle: 'italic',
+        fontStyle: 'normal',
         fontWeight: 800,
         lineHeight: 1,
       }}
@@ -447,7 +447,7 @@ export default function AriaPage() {
             className="text-text-primary"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 500,
               fontSize: 'clamp(20px, 3vw, 28px)',
               lineHeight: 1,
@@ -461,7 +461,7 @@ export default function AriaPage() {
               ? 'La cola priorizada de ARIA — proveedores ordenados por indicador de riesgo del modelo y señales de patrón, listos para investigar.'
               : 'ARIA’s prioritized queue — vendors ranked by the model’s risk indicator and pattern signals, ready to investigate.'}
           </p>
-          <p className="mt-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5 flex-wrap">
+          <p className="mt-1.5 text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5 flex-wrap">
             <span>ARIA</span>
             <span aria-hidden>·</span>
             <span>{isEs ? 'Modelo v0.8.5' : 'Model v0.8.5'}</span>
@@ -476,7 +476,7 @@ export default function AriaPage() {
         {/* ═══ B1 · EL SALDO — the queue's single most important finding, as a ═══ */}
         {/* sentence with numbers (charter invariant #17: NOT a KPI grid).        */}
         <section aria-label={isEs ? 'El saldo de la cola' : 'The queue’s bottom line'} className="mb-4">
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
+          <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
             {isEs ? '§ EL SALDO' : '§ THE BOTTOM LINE'}
           </p>
           {statsLoading ? (
@@ -595,7 +595,7 @@ export default function AriaPage() {
           {/* ROW 2: Pattern summary — compact clickable chips with counts */}
           {Object.keys(patternCounts).length > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-thin">
-              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+              <span className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
                 {isEs ? 'Patrón' : 'Pattern'}
               </span>
               {Object.entries(patternCounts)
@@ -617,13 +617,13 @@ export default function AriaPage() {
 
           {/* ROW 2.5: server-backed chips — FILTROS · ALCANCE GLOBAL */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+            <span className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
               {isEs ? 'Filtros · alcance global' : 'Filters · global scope'}
             </span>
             <button
               onClick={() => { setReviewStatusFilter(reviewStatusFilter === 'needs_review' ? null : 'needs_review'); setPage(1) }}
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[13px] font-medium transition-colors',
                 reviewStatusFilter === 'needs_review'
                   ? 'border-current'
                   : 'bg-background-card text-text-secondary border-border hover:border-border'
@@ -636,7 +636,7 @@ export default function AriaPage() {
             <button
               onClick={() => { setEfosOnly(!efosOnly); setPage(1) }}
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[13px] font-medium transition-colors',
                 efosOnly
                   ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
                   : 'bg-background-card text-text-secondary border-border hover:border-border'
@@ -648,7 +648,7 @@ export default function AriaPage() {
             <button
               onClick={() => { setNewVendorOnly(!newVendorOnly); setPage(1) }}
               className={cn(
-                'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[13px] font-medium transition-colors',
                 newVendorOnly
                   ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
                   : 'bg-background-card text-text-secondary border-border hover:border-border'
@@ -662,7 +662,7 @@ export default function AriaPage() {
             <button
               onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
               className={cn(
-                'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[13px] font-medium transition-colors',
                 novelOnly
                   ? 'bg-accent-data/10 text-accent-data border-accent-data/30'
                   : 'bg-background-card text-text-secondary border-border hover:border-border'
@@ -674,7 +674,7 @@ export default function AriaPage() {
             <button
               onClick={() => { setMinYears(minYears === 10 ? null : 10); setPage(1) }}
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[13px] font-medium transition-colors',
                 minYears === 10
                   ? 'bg-background-elevated text-text-primary border-border'
                   : 'bg-background-card text-text-secondary border-border hover:border-border'
@@ -686,7 +686,7 @@ export default function AriaPage() {
             <button
               onClick={() => setMoreFiltersOpen((v) => !v)}
               className={cn(
-                'ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
+                'ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[12px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
                 moreFiltersOpen ? 'bg-background-elevated text-text-primary' : 'text-text-muted hover:text-text-primary'
               )}
               aria-expanded={moreFiltersOpen}
@@ -701,7 +701,7 @@ export default function AriaPage() {
             <div className="space-y-2 pt-2 mt-1 border-t border-border/60">
               {/* Sector + New / Novel toggles */}
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                <span className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
                   {isEs ? 'Sector' : 'Sector'}
                 </span>
                 <select
@@ -732,7 +732,7 @@ export default function AriaPage() {
                   unblock single-line header layout. Workflow filter, used
                   by editorial leads tracking what's been triaged. */}
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                <span className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
                   {t('table.review')}
                 </span>
                 {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
@@ -743,7 +743,7 @@ export default function AriaPage() {
                       key={s ?? 'all'}
                       onClick={() => { setReviewStatusFilter(s); setPage(1) }}
                       className={cn(
-                        'px-2 py-0.5 rounded-sm text-[11px] font-medium border transition-colors',
+                        'px-2 py-0.5 rounded-sm text-[13px] font-medium border transition-colors',
                         isActive
                           ? s
                             ? cn(meta!.className, 'ring-1 ring-border')
@@ -777,7 +777,7 @@ export default function AriaPage() {
               makes the *combination* visible. */}
           {activeFilterCount >= 2 && (
             <div className="flex items-center gap-1.5 flex-wrap mb-3 px-3 py-2 rounded-sm border border-border bg-background-card/60">
-              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted shrink-0">
+              <span className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted shrink-0">
                 {isEs ? 'Filtros activos' : 'Active filters'}
               </span>
               {tierFilter != null && (
@@ -832,7 +832,7 @@ export default function AriaPage() {
               )}
               <button
                 onClick={clearAll}
-                className="ml-auto text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high hover:text-accent transition-colors shrink-0"
+                className="ml-auto text-[12px] font-mono uppercase tracking-[0.15em] text-risk-high hover:text-accent transition-colors shrink-0"
               >
                 {t('filterBar.clearAll')}
               </button>
@@ -955,7 +955,7 @@ export default function AriaPage() {
           aria-label={isEs ? 'Adónde ir' : 'Where to go next'}
           className="mt-4 rounded-sm border border-border bg-background-card p-4"
         >
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+          <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
             {isEs ? '§ · ADÓNDE IR' : '§ · WHERE TO GO NEXT'}
           </p>
 
@@ -963,7 +963,7 @@ export default function AriaPage() {
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <Link
               to="/patterns/P2"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-risk-high/30 bg-risk-high/10 text-risk-high text-[11px] font-mono uppercase tracking-[0.08em] hover:bg-risk-high/20 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-risk-high/30 bg-risk-high/10 text-risk-high text-[13px] font-mono uppercase tracking-[0.08em] hover:bg-risk-high/20 transition-colors"
               title={isEs ? 'Patrón P2 · Empresa Fantasma' : 'Pattern P2 · Ghost Company'}
             >
               {isEs ? 'P2 · Empresa Fantasma' : 'P2 · Ghost Company'}
@@ -971,7 +971,7 @@ export default function AriaPage() {
             </Link>
             <Link
               to="/patterns/P6"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-risk-critical/30 bg-risk-critical/10 text-risk-critical text-[11px] font-mono uppercase tracking-[0.08em] hover:bg-risk-critical/20 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-risk-critical/30 bg-risk-critical/10 text-risk-critical text-[13px] font-mono uppercase tracking-[0.08em] hover:bg-risk-critical/20 transition-colors"
               title={isEs ? 'Patrón P6 · Captura Institucional' : 'Pattern P6 · Institutional Capture'}
             >
               {isEs ? 'P6 · Captura Institucional' : 'P6 · Institutional Capture'}
@@ -982,7 +982,7 @@ export default function AriaPage() {
           {/* Top T1 vendor chips — drawn from already-fetched queue data */}
           {codaVendors.length > 0 && (
             <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5">
+              <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5">
                 {isEs ? 'Encabezan la lista' : 'Leading the watchlist'}
               </p>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -1011,7 +1011,7 @@ export default function AriaPage() {
             <div className="flex items-start gap-3">
               <FileText className="h-3.5 w-3.5 text-text-muted shrink-0 mt-0.5" aria-hidden="true" />
               <div className="text-xs text-text-muted space-y-1 leading-relaxed">
-                <p className="font-mono uppercase tracking-[0.15em] text-[10px] font-bold text-text-secondary">
+                <p className="font-mono uppercase tracking-[0.15em] text-[12px] font-bold text-text-secondary">
                   {isEs ? '§ METODOLOGÍA · ' : '§ METHODOLOGY · '}{t('about.title', { defaultValue: 'Sobre ARIA' })}
                 </p>
                 <p>{t('about.description')}</p>

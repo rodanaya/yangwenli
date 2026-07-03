@@ -255,7 +255,7 @@ export function VendorActivityTab({
             {/* Percentile rank callouts */}
             <div className="flex flex-wrap gap-3">
               {valPct != null && (
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-text-muted bg-background-elevated px-2.5 py-1.5 rounded-sm border border-border/40">
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-mono text-text-muted bg-background-elevated px-2.5 py-1.5 rounded-sm border border-border/40">
                   {isEs
                     ? `Top ${100 - valPct}% · valor total en ${vendor.primary_sector_name ?? 'sector'}`
                     : `Top ${100 - valPct}% · total value in ${vendor.primary_sector_name ?? 'sector'}`}
@@ -263,7 +263,7 @@ export function VendorActivityTab({
               )}
               {riskPct != null && (
                 <span
-                  className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-1.5 rounded-sm border"
+                  className="inline-flex items-center gap-1.5 text-[12px] font-mono px-2.5 py-1.5 rounded-sm border"
                   style={{
                     color: riskPct >= 75 ? RISK_COLORS.critical : riskPct >= 50 ? RISK_COLORS.high : 'var(--color-text-muted)',
                     backgroundColor: riskPct >= 75 ? `${RISK_COLORS.critical}10` : riskPct >= 50 ? `${RISK_COLORS.high}10` : 'var(--color-background-elevated)',
@@ -298,7 +298,7 @@ export function VendorActivityTab({
             return (
               <div className="mb-3 flex items-center gap-2 flex-wrap">
                 <span
-                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-sm text-[12px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0"
                   style={{ color: '#fb923c', backgroundColor: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.3)' }}
                 >
                   {isEs ? 'Capturado ·' : 'Captured ·'} {(share * 100).toFixed(0)}%
@@ -328,7 +328,7 @@ export function VendorActivityTab({
                   <div className="min-w-0 flex-1">
                     <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="sm" fullName />
                   </div>
-                  <div className="flex items-center gap-4 flex-shrink-0 text-[11px] font-mono tabular-nums text-text-muted">
+                  <div className="flex items-center gap-4 flex-shrink-0 text-[13px] font-mono tabular-nums text-text-muted">
                     <span className="text-text-secondary">
                       {share > 0 && share < 0.01 ? '<1%' : `${(share * 100).toFixed(0)}%`}
                     </span>
@@ -361,7 +361,7 @@ export function VendorActivityTab({
                 <SubSectionTitle id="contracts-title" className="mb-0">
                   {isEs ? '§ El Expediente' : '§ The Register'}
                 </SubSectionTitle>
-                <div className="flex flex-wrap items-baseline gap-x-2 text-[11px] font-mono tabular-nums text-text-muted">
+                <div className="flex flex-wrap items-baseline gap-x-2 text-[13px] font-mono tabular-nums text-text-muted">
                   <span className="text-text-secondary">
                     {popTotal.toLocaleString(loc)} {isEs ? 'contratos' : 'contracts'}
                   </span>
@@ -380,7 +380,7 @@ export function VendorActivityTab({
                 </div>
               </div>
               {shown > 0 && (
-                <p className="mb-3 text-[10px] font-mono text-text-muted/80 leading-relaxed">
+                <p className="mb-3 text-[12px] font-mono text-text-muted/80 leading-relaxed">
                   {isEs
                     ? `Señales en esta página (${shown} de ${popTotal.toLocaleString(loc)} · ${pageFlagged} marcados): `
                     : `Flags on this page (${shown} of ${popTotal.toLocaleString(loc)} · ${pageFlagged} flagged): `}
@@ -411,7 +411,7 @@ export function VendorActivityTab({
           <>
             <div className="border border-border rounded-sm overflow-x-auto">
               <table className="w-full text-sm" aria-label={isEs ? 'Contratos del proveedor' : 'Vendor contracts'}>
-                <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
+                <thead className="bg-background-elevated text-[12px] uppercase tracking-widest text-text-muted">
                   <tr>
                     <th scope="col" className="w-[72px] text-center px-2 py-2 font-semibold">
                       {isEs ? 'Señal' : 'Flag'}
@@ -473,7 +473,7 @@ export function VendorActivityTab({
                               title), the line above already shows the code — a second
                               code line would just duplicate it (e.g. "D9p0143 D9P0143"). */}
                           {clean.objeto && clean.expediente && (
-                            <div className="mt-0.5 text-[10px] font-mono uppercase tracking-wide text-text-muted/70 truncate">
+                            <div className="mt-0.5 text-[12px] font-mono uppercase tracking-wide text-text-muted/70 truncate">
                               {clean.expediente}
                             </div>
                           )}
@@ -490,7 +490,7 @@ export function VendorActivityTab({
                       >
                         {formatCompactMXN(c.amount_mxn ?? 0)}
                       </td>
-                      <td className="hidden sm:table-cell px-3 py-2 text-right font-mono tabular-nums text-[11px] text-text-muted whitespace-nowrap align-top">
+                      <td className="hidden sm:table-cell px-3 py-2 text-right font-mono tabular-nums text-[13px] text-text-muted whitespace-nowrap align-top">
                         {formatCompactUSDByYear(c.amount_mxn ?? 0, c.contract_year)}
                       </td>
                       <td className="px-3 py-2 text-center font-mono tabular-nums text-text-muted align-top">

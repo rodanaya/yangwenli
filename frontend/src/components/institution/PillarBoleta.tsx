@@ -96,7 +96,7 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
 
   return (
     <div className="flex flex-col gap-3 min-w-[240px]">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+      <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         {t('boleta.title')}
       </p>
       <div className="flex flex-col gap-2.5">
@@ -107,7 +107,7 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
           return (
             <div key={row.pillar.dbField} className="flex items-center gap-3">
               <span
-                className="text-[10px] font-mono uppercase tracking-wide text-text-muted w-32 shrink-0 truncate"
+                className="text-[12px] font-mono uppercase tracking-wide text-text-muted w-32 shrink-0 truncate"
                 title={row.label}
               >
                 {row.pillar.letter} · {row.label}
@@ -131,7 +131,7 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
                 />
               </div>
               <span
-                className="text-[10px] font-mono tabular-nums w-14 text-right shrink-0"
+                className="text-[12px] font-mono tabular-nums w-14 text-right shrink-0"
                 style={{ color }}
               >
                 {row.value.toFixed(0)}/{row.max}
@@ -141,7 +141,7 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
         })}
       </div>
       {agateParts.length > 0 && (
-        <p className="text-[9px] font-mono text-text-muted leading-relaxed border-t border-border/40 pt-2">
+        <p className="text-[13px] font-mono text-text-muted leading-relaxed border-t border-border/40 pt-2">
           {agateParts.join(' · ')}
         </p>
       )}

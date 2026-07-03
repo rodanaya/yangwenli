@@ -68,7 +68,7 @@ function EntitySide({
         {entity.name}
       </div>
       {entity.subtitle && (
-        <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
+        <div className="text-[12px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
           {entity.subtitle}
         </div>
       )}
@@ -148,7 +148,7 @@ export function FeaturedComparison({
           className="max-w-3xl text-text-secondary mb-5"
           style={{
             fontFamily: 'var(--font-family-serif)',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 'clamp(1rem, 1.4vw, 1.125rem)',
             lineHeight: 1.55,
             borderLeft: `2px solid ${accent}`,
@@ -163,7 +163,7 @@ export function FeaturedComparison({
           <button
             type="button"
             onClick={action.onClick}
-            className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] transition-colors"
+            className="inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.15em] transition-colors"
             style={{ color: accent }}
           >
             {action.label}

@@ -383,17 +383,17 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {isLive ? (
-            <span className="flex items-center gap-1 text-[10px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
+            <span className="flex items-center gap-1 text-[12px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
               <span className="w-1.5 h-1.5 rounded-full bg-risk-low inline-block animate-pulse"
                     aria-hidden="true" />
               Live data
             </span>
           ) : usingFallback ? (
-            <span className="text-[10px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
+            <span className="text-[12px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
               Aggregated only
             </span>
           ) : (
-            <span className="text-[10px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
+            <span className="text-[12px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
               Partial
             </span>
           )}
@@ -412,12 +412,12 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
       <div className="flex items-baseline gap-2 mb-3 border-l-2 pl-3 py-0.5"
            style={{ borderColor: leadSector.color }}>
         <span
-          className="text-3xl font-serif italic font-bold tabular-nums leading-none"
+          className="text-3xl font-serif font-bold tabular-nums leading-none"
           style={{ color: leadSector.color }}
         >
           +{leadDelta.toFixed(1)} pp
         </span>
-        <span className="text-[11px] text-text-muted font-mono uppercase tracking-wide">
+        <span className="text-[13px] text-text-muted font-mono uppercase tracking-wide">
           {leadSector.sectorName} · max swing {xMin}–{xMax}
         </span>
       </div>
@@ -484,14 +484,14 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
                     aria-hidden="true"
                   />
                   <span className={cn(
-                    'font-mono text-[10px] uppercase tracking-wide truncate',
+                    'font-mono text-[12px] uppercase tracking-wide truncate',
                     isHighlighted ? 'text-text-primary font-semibold' : 'text-text-muted'
                   )}>
                     {sl.sectorName}
                   </span>
                 </div>
                 <span
-                  className="text-[10px] font-mono tabular-nums flex-shrink-0"
+                  className="text-[12px] font-mono tabular-nums flex-shrink-0"
                   style={{ color: sl.color }}
                 >
                   +{sl.delta.toFixed(1)}
@@ -638,7 +638,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
                 style={{ borderColor: RISK_COLORS.critical, opacity: 0.6 }}
               />
               <span
-                className="text-[10px] font-mono"
+                className="text-[12px] font-mono"
                 style={{ color: RISK_COLORS.critical, opacity: 0.85 }}
               >
                 {scandal.year}: {scandal.label}
@@ -649,7 +649,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
       </div>
 
       {/* Footer methodology note */}
-      <p className="mt-2 text-[10px] text-text-muted font-mono leading-relaxed">
+      <p className="mt-2 text-[12px] text-text-muted font-mono leading-relaxed">
         Shared y-axis ({yMin}%–{yMax}%). Panel borders highlight salud + agricultura — the two sectors with the largest scandal-era spikes.
       </p>
     </div>

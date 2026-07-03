@@ -172,7 +172,7 @@ export function StoryRedFantasma() {
               y={cluster.y}
               textAnchor="middle"
               fill="var(--color-text-muted)"
-              fontSize={11}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
               fontWeight={600}
             >
@@ -183,7 +183,7 @@ export function StoryRedFantasma() {
               y={cluster.y + 13}
               textAnchor="middle"
               fill="var(--color-text-secondary)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
             >
               {cluster.count} {ghostsLabel}
@@ -227,7 +227,7 @@ export function StoryRedFantasma() {
       </svg>
 
       {/* Legend — 4 risk tiers */}
-      <div className="flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-mono text-text-muted pt-2 border-t border-border">
+      <div className="flex flex-wrap gap-x-5 gap-y-2 text-[12px] font-mono text-text-muted pt-2 border-t border-border">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full" style={{ background: RISK_COLORS.critical }} aria-hidden="true" />
           <span>{t('ghostNetwork.legendTop')}</span>

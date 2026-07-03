@@ -121,7 +121,7 @@ export function DaRateTrendChart() {
                 y={PAD.top - 10}
                 textAnchor="middle"
                 fill={ERA_DOT[b.era]}
-                fontSize={10}
+                fontSize={12}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={700}
                 letterSpacing="0.08em"
@@ -149,7 +149,7 @@ export function DaRateTrendChart() {
               y={yFor(v) + 3}
               textAnchor="end"
               fill="var(--color-text-secondary)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
             >
               {v}%
@@ -172,7 +172,7 @@ export function DaRateTrendChart() {
           y={oecdY - 4}
           textAnchor="end"
           fill="var(--color-oecd)"
-          fontSize={9}
+          fontSize={13}
           fontFamily="var(--font-family-mono)"
         >
           {t('daRateTrend.oecdLabel')}
@@ -213,7 +213,7 @@ export function DaRateTrendChart() {
                   y={yFor(d.rate) - 12}
                   textAnchor="middle"
                   fill="var(--color-risk-medium)"
-                  fontSize={11}
+                  fontSize={13}
                   fontWeight={700}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -234,7 +234,7 @@ export function DaRateTrendChart() {
               y={H - PAD.bottom + 16}
               textAnchor="middle"
               fill="var(--color-text-muted)"
-              fontSize={9}
+              fontSize={13}
               fontFamily="var(--font-family-mono)"
             >
               {d.year}
@@ -244,7 +244,7 @@ export function DaRateTrendChart() {
       </svg>
 
       {/* Era legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
+      <div className="mt-4 flex flex-wrap gap-4 text-[12px] font-mono text-text-muted">
         {['calderon', 'pena', 'amlo'].map((era) => {
           const yearsInEra = DATA.filter((d) => d.era === era)
           const avg = yearsInEra.reduce((s, d) => s + d.rate, 0) / yearsInEra.length

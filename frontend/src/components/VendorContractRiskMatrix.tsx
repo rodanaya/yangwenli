@@ -304,7 +304,7 @@ export function VendorContractRiskMatrix({
                 value: 'High Risk',
                 position: 'insideBottomLeft',
                 fill: 'var(--color-risk-high, #ea580c)',
-                fontSize: 10,
+                fontSize: 12,
                 dy: -4,
               }}
             />
@@ -319,7 +319,7 @@ export function VendorContractRiskMatrix({
                 value: 'Median',
                 position: 'insideBottomRight',
                 fill: 'var(--color-text-muted, #64748b)',
-                fontSize: 10,
+                fontSize: 12,
                 dy: -4,
               }}
             />
@@ -333,7 +333,7 @@ export function VendorContractRiskMatrix({
                 value: '⚠ High Value + High Risk',
                 position: 'center',
                 fill: 'var(--color-risk-critical, #dc2626)',
-                fontSize: 9,
+                fontSize: 13,
                 fontWeight: 600,
               }}
             />
@@ -344,7 +344,7 @@ export function VendorContractRiskMatrix({
               domain={xDomain}
               ticks={xTicks}
               tickFormatter={formatLogTick}
-              tick={{ fill: 'var(--color-text-muted, #94a3b8)', fontSize: 10 }}
+              tick={{ fill: 'var(--color-text-muted, #94a3b8)', fontSize: 12 }}
               axisLine={{ stroke: 'var(--color-border, #334155)' }}
               tickLine={{ stroke: 'var(--color-border, #334155)' }}
               label={{
@@ -352,7 +352,7 @@ export function VendorContractRiskMatrix({
                 position: 'insideBottom',
                 offset: -28,
                 fill: 'var(--color-text-muted, #94a3b8)',
-                fontSize: 11,
+                fontSize: 13,
               }}
             />
 
@@ -362,7 +362,7 @@ export function VendorContractRiskMatrix({
               domain={[0, 1]}
               ticks={yTicks}
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-              tick={{ fill: 'var(--color-text-muted, #94a3b8)', fontSize: 10 }}
+              tick={{ fill: 'var(--color-text-muted, #94a3b8)', fontSize: 12 }}
               axisLine={{ stroke: 'var(--color-border, #334155)' }}
               tickLine={{ stroke: 'var(--color-border, #334155)' }}
               width={44}
@@ -372,7 +372,7 @@ export function VendorContractRiskMatrix({
                 position: 'insideLeft',
                 offset: 10,
                 fill: 'var(--color-text-muted, #94a3b8)',
-                fontSize: 11,
+                fontSize: 13,
               }}
             />
 

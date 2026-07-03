@@ -57,13 +57,13 @@ export function StoryRiskPyramid() {
           aria-label={t('riskPyramid.ariaLabel')}
         >
           {/* Column headers */}
-          <text x={LEFT_LABEL_W - 8} y={20} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LEFT_LABEL_W - 8} y={20} textAnchor="end" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('riskPyramid.levelHeader')}
           </text>
-          <text x={LEFT_LABEL_W + (DOTS_PER_ROW * DOT_GAP) / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LEFT_LABEL_W + (DOTS_PER_ROW * DOT_GAP) / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('riskPyramid.contractsHeader')}
           </text>
-          <text x={W - 8} y={20} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={W - 8} y={20} textAnchor="end" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             {t('riskPyramid.valueHeader')}
           </text>
 
@@ -81,7 +81,7 @@ export function StoryRiskPyramid() {
                 <text x={LEFT_LABEL_W - 8} y={y + 3} textAnchor="end" fill={tier.color} fontSize={12} fontFamily="var(--font-family-mono)" fontWeight={700}>
                   {tier.level}
                 </text>
-                <text x={LEFT_LABEL_W - 8} y={y + 16} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
+                <text x={LEFT_LABEL_W - 8} y={y + 16} textAnchor="end" fill="var(--color-text-secondary)" fontSize={13} fontFamily="var(--font-family-mono)">
                   {tier.threshold}
                 </text>
 
@@ -100,7 +100,7 @@ export function StoryRiskPyramid() {
                 ))}
 
                 {/* Count */}
-                <text x={LEFT_LABEL_W + totalWidth + 8} y={y + 3} fill="var(--color-text-muted)" fontSize={10} fontFamily="var(--font-family-mono)">
+                <text x={LEFT_LABEL_W + totalWidth + 8} y={y + 3} fill="var(--color-text-muted)" fontSize={12} fontFamily="var(--font-family-mono)">
                   {tier.pct}% · {tier.count}
                 </text>
 
@@ -118,7 +118,7 @@ export function StoryRiskPyramid() {
                     />
                   ))
                 })()}
-                <text x={LEFT_LABEL_W + totalWidth + 12 + 74} y={y + 13} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
+                <text x={LEFT_LABEL_W + totalWidth + 12 + 74} y={y + 13} fill="var(--color-text-muted)" fontSize={13} fontFamily="var(--font-family-mono)">
                   {tier.valuePct}%
                 </text>
               </g>
@@ -131,7 +131,7 @@ export function StoryRiskPyramid() {
             y={H - 10}
             textAnchor="middle"
             fill="var(--color-text-secondary)"
-            fontSize={9}
+            fontSize={13}
             fontFamily="var(--font-family-mono)"
           >
             {t('riskPyramid.summaryLine')}
