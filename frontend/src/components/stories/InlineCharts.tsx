@@ -19,6 +19,7 @@
  * the anchor.
  */
 
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
   StoryInlineChartData,
@@ -183,6 +184,32 @@ function riskTierColor(point: StoryChartPoint): string | undefined {
 function maxVal(points: StoryChartPoint[], provided?: number): number {
   if (provided != null && provided > 0) return provided
   return Math.max(...points.map((p) => p.value), 1)
+}
+
+// ---------------------------------------------------------------------------
+// useMeasuredWidth — ResizeObserver-backed wrapper width in CSS px. Charts
+// that lock their SVG viewBox width to the actual render width (scale=1 at
+// every breakpoint, instead of scaling a fixed viewBox down via
+// preserveAspectRatio) use this so every SVG text glyph renders at its
+// literal fontSize from a 320px phone to a wide desktop column.
+// SSR / first-paint fallback: 360 (typical phone CSS width).
+// ---------------------------------------------------------------------------
+
+export function useMeasuredWidth<T extends HTMLElement = HTMLDivElement>() {
+  const ref = useRef<T | null>(null)
+  const [width, setWidth] = useState(360)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width
+      if (w && w > 0) setWidth(w)
+    })
+    ro.observe(el)
+    if (el.clientWidth > 0) setWidth(el.clientWidth)
+    return () => ro.disconnect()
+  }, [])
+  return { ref, width } as const
 }
 
 // ---------------------------------------------------------------------------
@@ -1372,38 +1399,55 @@ export function InlineDivergingBar({
   lang?: 'en' | 'es'
 }) {
   const pts = data.points
-  const BAR_HEIGHT = 20
-  // Wider label gutter — was 148, truncating "P6 Capture — institution_diversity"
-  // at 18 chars. The new gutter + ~40-char allowance covers every SHAP feature
-  // label in volatilidad ch3/ch5 without breaking the centered layout.
-  const LABEL_W = 264
-  const ROW_GAP = 6
-  const HALF_W = 180
-  const VALUE_PAD = 36
-  const LABEL_MAX_CHARS = 40
-  const W = LABEL_W + HALF_W * 2 + VALUE_PAD * 2
-  const ANNO_H = 13
-  const centerX = LABEL_W + HALF_W
   const labelFor = (p: StoryChartPoint) =>
     lang === 'es' ? (p.label_es ?? p.label) : p.label
   const annoFor = (p: StoryChartPoint) =>
     lang === 'es' ? (p.annotation_es ?? p.annotation) : p.annotation
 
-  // Per-row layout with cumulative y so annotated rows get a sub-caption line.
-  // (2026-06-14: InlineDivergingBar previously dropped point.annotation entirely —
-  // surfacing it puts the in-place delta callout on the chart, the Five-Administrations
-  // standard, not just in the footer.)
-  let yCursor = 4
-  const rowLayout = pts.map((p) => {
-    const top = yCursor
-    const anno = annoFor(p)
-    yCursor += BAR_HEIGHT + (anno ? ANNO_H : 0) + ROW_GAP
-    return { top, anno }
-  })
-  const H = yCursor + 24
-
   const absMax = Math.max(...pts.map((p) => Math.abs(p.value)), 0.01)
   const maxAbsPt = pts.reduce((a, b) => (Math.abs(a.value) > Math.abs(b.value) ? a : b), pts[0])
+
+  // Pure-HTML "Ledger of Signals" (2026-07-03 mobile remake). No SVG, no
+  // viewBox — every glyph is flow HTML so nothing scale-collapses on a
+  // narrow phone. Consecutive rows that share an identical label prefix
+  // before ' — ' (ch5's P2 Ghost / P6 Capture / Legit SHAP triplets) fold
+  // under one group kicker; any run <2 members or any label missing the
+  // separator falls back to the flat list untouched (ch2/ch3's path).
+  type Row = { pt: StoryChartPoint; displayLabel: string; groupKicker?: string }
+  const rows: Row[] = (() => {
+    const withPrefix = pts.map((p) => {
+      const full = labelFor(p)
+      const sepIdx = full.indexOf(' — ')
+      return sepIdx === -1
+        ? { p, prefix: null as string | null, rest: full }
+        : { p, prefix: full.slice(0, sepIdx), rest: full.slice(sepIdx + 3) }
+    })
+    if (withPrefix.some((w) => w.prefix === null)) {
+      return pts.map((p) => ({ pt: p, displayLabel: labelFor(p) }))
+    }
+    const runs: { prefix: string; start: number; end: number }[] = []
+    let i = 0
+    while (i < withPrefix.length) {
+      let j = i
+      while (j + 1 < withPrefix.length && withPrefix[j + 1].prefix === withPrefix[i].prefix) j++
+      runs.push({ prefix: withPrefix[i].prefix as string, start: i, end: j })
+      i = j + 1
+    }
+    if (runs.some((r) => r.end - r.start + 1 < 2)) {
+      return pts.map((p) => ({ pt: p, displayLabel: labelFor(p) }))
+    }
+    const out: Row[] = []
+    for (const r of runs) {
+      for (let k = r.start; k <= r.end; k++) {
+        out.push({
+          pt: withPrefix[k].p,
+          displayLabel: withPrefix[k].rest,
+          groupKicker: k === r.start ? r.prefix : undefined,
+        })
+      }
+    }
+    return out
+  })()
 
   return (
     <ChartCard
@@ -1420,107 +1464,99 @@ export function InlineDivergingBar({
       }
       annotation={lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation}
     >
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="xMidYMid meet"
-        className="w-full"
-        aria-hidden="true"
-      >
-        <line
-          x1={centerX}
-          y1={0}
-          x2={centerX}
-          y2={H - 16}
-          stroke="var(--color-text-secondary)"
-          strokeWidth={1}
-        />
-        <text
-          x={centerX}
-          y={H - 4}
-          textAnchor="middle"
-          fontSize={12}
-          fontFamily="var(--font-family-mono, monospace)"
-          fill="var(--color-text-muted)"
+      <div className="px-2 pb-2">
+        {/* Axis header rail — states the diverging semantics once instead of
+            an in-SVG center tick, which scale-collapsed below 11px on phone. */}
+        <div
+          className="flex justify-between font-mono uppercase text-text-muted border-b border-border pb-1 mb-2"
+          style={{ fontSize: 11, letterSpacing: '0.08em' }}
         >
-          0
-        </text>
+          <span>{lang === 'es' ? '− PROTEGE' : '− PROTECTS'}</span>
+          <span>0</span>
+          <span>{lang === 'es' ? 'RIESGO +' : 'RISK +'}</span>
+        </div>
 
-        {pts.map((pt, i) => {
-          const y = rowLayout[i].top
-          const barW = (Math.abs(pt.value) / absMax) * HALF_W
-          const isPos = pt.value >= 0
-          // Per-row color override honored only when it resolves against
-          // the canonical SECTOR_COLORS / RISK_COLORS allowlist; otherwise
-          // fall back to the default risk/protective palette.
-          const overrideColor = resolveRowColor(pt.color)
-          const color = overrideColor
-            ?? (isPos
-              ? (pt.highlight ? HIGHLIGHT_COLOR : ANCHOR_COLOR)
-              : 'var(--color-sector-tecnologia)')
-          const opacity = pt.highlight ? 0.95 : 0.7
-          const rowLabel = labelFor(pt)
-          const displayLabel =
-            rowLabel.length > LABEL_MAX_CHARS
-              ? rowLabel.slice(0, LABEL_MAX_CHARS - 1) + '…'
-              : rowLabel
+        <ol className="space-y-3">
+          {rows.map((row, i) => {
+            const p = row.pt
+            const v = p.value
+            const isPos = v >= 0
+            // Per-row color override honored only when it resolves against
+            // the canonical SECTOR_COLORS / RISK_COLORS allowlist; otherwise
+            // fall back to the default risk/protective palette.
+            const overrideColor = resolveRowColor(p.color)
+            const color = overrideColor
+              ?? (isPos
+                ? (p.highlight ? HIGHLIGHT_COLOR : ANCHOR_COLOR)
+                : 'var(--color-sector-tecnologia)')
+            const anno = annoFor(p)
 
-          return (
-            <g key={i}>
-              {/* Label lives in the left gutter (right-anchored at LABEL_W) so
-                  negative bars, which extend left of center, never overlap it. */}
-              <text
-                x={LABEL_W - 10}
-                y={y + BAR_HEIGHT / 2 + 1}
-                textAnchor="end"
-                dominantBaseline="middle"
-                fontSize={13}
-                fontFamily="var(--font-family-mono, monospace)"
-                fill={pt.highlight ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'}
-                fontWeight={pt.highlight ? 700 : 400}
-              >
-                {displayLabel}
-              </text>
+            return (
+              <li key={i}>
+                {row.groupKicker && (
+                  <div
+                    className="font-mono uppercase text-text-muted border-t border-border/60 pt-2 mt-3"
+                    style={{ fontSize: 11, letterSpacing: '0.14em' }}
+                  >
+                    {row.groupKicker}
+                  </div>
+                )}
 
-              <rect
-                x={isPos ? centerX : centerX - barW}
-                y={y}
-                width={barW}
-                height={BAR_HEIGHT}
-                fill={color}
-                opacity={opacity}
-                rx={1}
-              />
+                <div className="flex justify-between items-baseline gap-3">
+                  <span
+                    className={`font-mono min-w-0 ${p.highlight ? 'text-text-primary font-bold' : 'text-text-secondary'}`}
+                    style={{ fontSize: 12, letterSpacing: '0.02em' }}
+                  >
+                    {row.displayLabel}
+                  </span>
+                  <span
+                    className="font-mono tabular-nums whitespace-nowrap shrink-0"
+                    style={{ fontSize: 12, color }}
+                  >
+                    {v > 0 ? '+' : ''}{v}
+                  </span>
+                </div>
 
-              <text
-                x={isPos ? centerX + barW + 4 : centerX - barW - 4}
-                y={y + BAR_HEIGHT / 2 + 1}
-                textAnchor={isPos ? 'start' : 'end'}
-                dominantBaseline="middle"
-                fontSize={12}
-                fontFamily="var(--font-family-mono, monospace)"
-                fill={pt.highlight ? color : 'var(--color-text-muted)'}
-                fontWeight={pt.highlight ? 700 : 400}
-              >
-                {pt.value > 0 ? '+' : ''}{pt.value.toFixed ? pt.value.toFixed(4) : pt.value}
-              </text>
+                <div className="relative h-[14px] mt-1">
+                  <div
+                    className="absolute inset-y-0 left-1/2 w-px"
+                    style={{ background: 'var(--color-text-secondary)', opacity: 0.4 }}
+                  />
+                  <div
+                    className="absolute h-full"
+                    style={
+                      isPos
+                        ? {
+                            left: '50%',
+                            width: `${(Math.abs(v) / absMax) * 50}%`,
+                            background: color,
+                            opacity: p.highlight ? 0.95 : 0.7,
+                            borderRadius: 1,
+                          }
+                        : {
+                            right: '50%',
+                            width: `${(Math.abs(v) / absMax) * 50}%`,
+                            background: color,
+                            opacity: p.highlight ? 0.95 : 0.7,
+                            borderRadius: 1,
+                          }
+                    }
+                  />
+                </div>
 
-              {rowLayout[i].anno && (
-                <text
-                  x={isPos ? centerX + 4 : centerX - 4}
-                  y={y + BAR_HEIGHT + 10}
-                  textAnchor={isPos ? 'start' : 'end'}
-                  fontSize={13}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fill={color}
-                  opacity={0.92}
-                >
-                  {rowLayout[i].anno}
-                </text>
-              )}
-            </g>
-          )
-        })}
-      </svg>
+                {anno && (
+                  <div
+                    className="font-mono normal-case mt-1"
+                    style={{ fontSize: 11, color, opacity: 0.92 }}
+                  >
+                    ▸ {anno}
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ol>
+      </div>
     </ChartCard>
   )
 }
@@ -3327,20 +3363,6 @@ export function InlineRoster({
                     )
                   })}
                 </svg>
-
-                {annotationFor(p) && (
-                  <div
-                    className="font-mono uppercase mt-1 flex items-center gap-1.5"
-                    style={{
-                      fontSize: 13,
-                      letterSpacing: '0.16em',
-                      color: 'var(--color-text-muted)',
-                    }}
-                  >
-                    <span aria-hidden style={{ color: glyphColor, fontSize: 13 }}>{glyph}</span>
-                    <span>{annotationFor(p)}</span>
-                  </div>
-                )}
               </div>
 
               {/* Value — Playfair Italic 800, right-aligned, per-point semantic
@@ -3352,7 +3374,7 @@ export function InlineRoster({
                     fontFamily: "'Playfair Display', Georgia, serif",
                     fontStyle: 'normal',
                     fontWeight: 800,
-                    fontSize: 'clamp(1.6rem, 2.6vw, 1.9rem)',
+                    fontSize: 'clamp(1.35rem, 2.6vw, 1.9rem)',
                     lineHeight: 0.95,
                     letterSpacing: '-0.02em',
                     color: accent ?? 'var(--color-text-primary)',
@@ -3362,7 +3384,7 @@ export function InlineRoster({
                 </span>
                 {unit && (
                   <span
-                    className="font-mono uppercase ml-1.5"
+                    className="font-mono ml-1.5"
                     style={{
                       fontSize: 13,
                       letterSpacing: '0.16em',
@@ -3385,6 +3407,25 @@ export function InlineRoster({
                   </div>
                 )}
               </div>
+
+              {/* Annotation — full-width grid sub-row (2 / -1), spanning the
+                  name + value columns so it never blows the middle column's
+                  ~185px to 3–4 lines on a phone. Demoted tracking (0.06em vs
+                  the 0.16em label rhythm) since it now owns a whole row. */}
+              {annotationFor(p) && (
+                <div
+                  className="font-mono uppercase mt-1 flex items-center gap-1.5"
+                  style={{
+                    gridColumn: '2 / -1',
+                    fontSize: 12,
+                    letterSpacing: '0.06em',
+                    color: 'var(--color-text-muted)',
+                  }}
+                >
+                  <span aria-hidden style={{ color: glyphColor, fontSize: 12 }}>{glyph}</span>
+                  <span>{annotationFor(p)}</span>
+                </div>
+              )}
             </li>
           )
         })}

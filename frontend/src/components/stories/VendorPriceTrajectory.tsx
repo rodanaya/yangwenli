@@ -11,12 +11,24 @@
  * grid/axes/callout for the light background. Was a dark charcoal figure
  * inconsistent with the rest of the story's charts.
  *
+ * 2026-07-03: mobile-first remake. The SVG viewBox width is now locked to
+ * the *measured* CSS render width via `useMeasuredWidth` (shared hook,
+ * InlineCharts.tsx) — scale is always exactly 1, so every 12px SVG label
+ * renders at a true 12px from a 320px phone to a wide desktop column
+ * (the old `preserveAspectRatio="xMidYMid meet"` scale-down was the
+ * mechanism behind the <11px illegible-label failure class). The widest
+ * in-plot string (the ±30% zone label) moved to an HTML legend row below
+ * the y-axis kicker, alongside a new explicit dot-size legend item. The
+ * outlier callout box now deterministically flips below the dot when
+ * there isn't enough headroom above it, and clamps horizontally so it can
+ * never escape the plot at the 300px floor width.
+ *
  * Self-contained: hardcoded illustrative data, no live API call. The
  * "illustrative" caveat is carried honestly in the card annotation.
  */
 import { useMemo } from 'react'
 import { SECTOR_COLORS } from '@/lib/constants'
-import { ChartCard } from './InlineCharts'
+import { ChartCard, useMeasuredWidth } from './InlineCharts'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -80,6 +92,10 @@ function dotRadius(totalValue: number): number {
   return 4 + t * 14
 }
 
+function clamp(v: number, min: number, max: number): number {
+  return Math.min(Math.max(v, min), max)
+}
+
 // ─── Axis helpers ─────────────────────────────────────────────────────────────
 
 const PRICE_TICKS = [2_000_000, 5_000_000, 10_000_000, 20_000_000, 30_000_000]
@@ -91,13 +107,16 @@ function fmtPrice(v: number): string {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function VendorPriceTrajectory({ lang = 'es' }: Props) {
-  // SVG layout constants
-  const W  = 780
-  const H  = 360
-  const ML = 64   // margin left (Y-axis labels)
-  const MR = 24
-  const MT = 30
-  const MB = 44   // margin bottom (X-axis labels)
+  // SVG layout — width is locked to the measured CSS render width (capped
+  // 300–820), so viewBox width === CSS px width === scale 1 at every
+  // breakpoint. No <11px effective text at any width down to 320px phones.
+  const { ref: wrapRef, width: measured } = useMeasuredWidth<HTMLDivElement>()
+  const W  = Math.max(300, Math.min(measured, 820))
+  const H  = 320
+  const ML = 44   // margin left — '$30M' at 12px mono ≈ 29px + pad
+  const MR = 16
+  const MT = 28
+  const MB = 40   // margin bottom (year labels)
 
   const xMin    = ML
   const xWidth  = W - ML - MR
@@ -116,7 +135,7 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
       cx: toX(c.date, xMin, xWidth),
       cy: toLogY(c.unitPrice, yMin, yHeight),
       r:  dotRadius(c.totalValue),
-    })), [xMin, xWidth, yMin, yHeight])
+    })), [xMin, xWidth, yMin, yHeight, W])
 
   // Year tick positions for X-axis
   const yearTicks = [2019, 2020, 2021, 2022].map(yr => ({
@@ -132,20 +151,25 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
   // Outlier dot for callout
   const outlierDot = dots.find(d => d.outlier)
 
-  // Callout box geometry
-  const CALLOUT_W = 196
+  // Callout box geometry — deterministic flip when there isn't enough
+  // headroom above the dot, clamped so it never escapes the plot at the
+  // 300px floor width.
+  const CALLOUT_W = 190
   const CALLOUT_H = 44
   const calloutX = outlierDot
-    ? Math.min(outlierDot.cx - CALLOUT_W / 2, W - MR - CALLOUT_W)
+    ? clamp(outlierDot.cx - CALLOUT_W / 2, ML + 2, W - MR - CALLOUT_W)
     : 0
-  const calloutY = outlierDot
-    ? outlierDot.cy - outlierDot.r - CALLOUT_H - 10
-    : 0
+  const above = outlierDot ? outlierDot.cy - outlierDot.r - CALLOUT_H - 10 : 0
+  const flipped = outlierDot ? above < MT + 2 : false
+  const calloutY = outlierDot ? (flipped ? outlierDot.cy + outlierDot.r + 12 : above) : 0
 
   const title = lang === 'es'
     ? 'Historial de contratos: distribuidor farmacéutico, IMSS 2019–2022'
     : 'Contract history: pharmaceutical distributor, IMSS 2019–2022'
   const zoneLabel = lang === 'es' ? 'Zona de precios esperada (±30%)' : 'Expected price zone (±30%)'
+  const sizeLegend = lang === 'es'
+    ? 'tamaño del punto = valor total del contrato'
+    : 'dot size = total contract value'
   const yKicker = lang === 'es' ? 'PRECIO UNITARIO (MXN) · ESCALA LOG' : 'UNIT PRICE (MXN) · LOG SCALE'
   const annotation = lang === 'es'
     ? 'Patrón ilustrativo de un solo proveedor — las proporciones reproducen las firmas observadas de price_volatility (SHAP). El tamaño del punto = valor total del contrato; la banda sombreada es la zona de precio esperada (±30% de la mediana de categoría). Un contrato salta a 9× la mediana en la misma categoría cuatro meses después.'
@@ -163,145 +187,162 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
       annotation={annotation}
     >
       <div
-        className="text-[13px] font-mono uppercase tracking-[0.06em] mb-1 pl-2"
+        className="text-[11px] font-mono uppercase tracking-[0.06em] mb-1 pl-2"
         style={{ color: textMuted }}
       >
         {yKicker}
       </div>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="xMidYMid meet"
-        className="w-full"
-        aria-hidden="true"
-      >
-        {/* Expected price zone band */}
-        <rect
-          x={xMin}
-          y={bandTop}
-          width={xWidth}
-          height={bandBottom - bandTop}
-          fill="var(--color-text-muted)"
-          fillOpacity={0.12}
-        />
-        <text
-          x={xMin + 8}
-          y={bandTop + 13}
-          fontSize={13}
-          fontFamily="monospace"
-          fill="var(--color-text-muted)"
-        >
-          {zoneLabel}
-        </text>
 
-        {/* Y-axis log ticks */}
-        {PRICE_TICKS.map(p => {
-          const y = toLogY(p, yMin, yHeight)
-          return (
-            <g key={p}>
-              <line x1={xMin - 4} y1={y} x2={xMin + xWidth} y2={y}
+      {/* HTML legend — evicted from the SVG plot: the ±30% zone label was
+          the widest in-plot string (223px), and the dot-size encoding was
+          never stated explicitly before. */}
+      <div
+        className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] mb-2 pl-2"
+        style={{ color: textMuted }}
+      >
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-3 h-2 shrink-0"
+            style={{ background: 'var(--color-text-muted)', opacity: 0.25 }}
+            aria-hidden="true"
+          />
+          {zoneLabel}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true">●∅</span>
+          {sizeLegend}
+        </span>
+      </div>
+
+      <div ref={wrapRef} className="w-full">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width={W}
+          height={H}
+          style={{ maxWidth: '100%', display: 'block' }}
+          aria-hidden="true"
+        >
+          {/* Expected price zone band */}
+          <rect
+            x={xMin}
+            y={bandTop}
+            width={xWidth}
+            height={bandBottom - bandTop}
+            fill="var(--color-text-muted)"
+            fillOpacity={0.12}
+          />
+
+          {/* Y-axis log ticks */}
+          {PRICE_TICKS.map(p => {
+            const y = toLogY(p, yMin, yHeight)
+            return (
+              <g key={p}>
+                <line x1={xMin - 4} y1={y} x2={xMin + xWidth} y2={y}
+                  stroke={gridStroke} strokeWidth={0.5} strokeDasharray="3 4" />
+                <text x={xMin - 8} y={y + 4} fontSize={12} fontFamily="monospace"
+                  fill={textMuted} textAnchor="end">
+                  {fmtPrice(p)}
+                </text>
+              </g>
+            )
+          })}
+
+          {/* X-axis year ticks */}
+          {yearTicks.map(({ yr, x }) => (
+            <g key={yr}>
+              <line x1={x} y1={yMin} x2={x} y2={yMin + yHeight}
                 stroke={gridStroke} strokeWidth={0.5} strokeDasharray="3 4" />
-              <text x={xMin - 8} y={y + 4} fontSize={12} fontFamily="monospace"
-                fill={textMuted} textAnchor="end">
-                {fmtPrice(p)}
+              <text x={x} y={yMin + yHeight + 18} fontSize={12} fontFamily="monospace"
+                fill={textMuted} textAnchor="middle">
+                {yr}
               </text>
             </g>
-          )
-        })}
+          ))}
 
-        {/* X-axis year ticks */}
-        {yearTicks.map(({ yr, x }) => (
-          <g key={yr}>
-            <line x1={x} y1={yMin} x2={x} y2={yMin + yHeight}
-              stroke={gridStroke} strokeWidth={0.5} strokeDasharray="3 4" />
-            <text x={x} y={yMin + yHeight + 18} fontSize={13} fontFamily="monospace"
-              fill={textMuted} textAnchor="middle">
-              {yr}
-            </text>
-          </g>
-        ))}
+          {/* Axis borders */}
+          <line x1={xMin} y1={yMin} x2={xMin} y2={yMin + yHeight}
+            stroke="var(--color-border)" strokeWidth={1} />
+          <line x1={xMin} y1={yMin + yHeight} x2={xMin + xWidth} y2={yMin + yHeight}
+            stroke="var(--color-border)" strokeWidth={1} />
 
-        {/* Axis borders */}
-        <line x1={xMin} y1={yMin} x2={xMin} y2={yMin + yHeight}
-          stroke="var(--color-border)" strokeWidth={1} />
-        <line x1={xMin} y1={yMin + yHeight} x2={xMin + xWidth} y2={yMin + yHeight}
-          stroke="var(--color-border)" strokeWidth={1} />
+          {/* Contract dots */}
+          {dots.map(d => (
+            <circle
+              key={d.id}
+              cx={d.cx}
+              cy={d.cy}
+              r={d.r}
+              fill={d.outlier ? accent : ghostFill}
+              fillOpacity={d.outlier ? 0.92 : 0.5}
+              stroke={d.outlier ? accent : 'transparent'}
+              strokeWidth={d.outlier ? 2 : 0}
+            />
+          ))}
 
-        {/* Contract dots */}
-        {dots.map(d => (
-          <circle
-            key={d.id}
-            cx={d.cx}
-            cy={d.cy}
-            r={d.r}
-            fill={d.outlier ? accent : ghostFill}
-            fillOpacity={d.outlier ? 0.92 : 0.5}
-            stroke={d.outlier ? accent : 'transparent'}
-            strokeWidth={d.outlier ? 2 : 0}
-          />
-        ))}
+          {/* Outlier pulse ring */}
+          {outlierDot && (
+            <circle
+              cx={outlierDot.cx}
+              cy={outlierDot.cy}
+              r={outlierDot.r + 8}
+              fill="none"
+              stroke={accent}
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+              opacity={0.75}
+            />
+          )}
 
-        {/* Outlier pulse ring */}
-        {outlierDot && (
-          <circle
-            cx={outlierDot.cx}
-            cy={outlierDot.cy}
-            r={outlierDot.r + 8}
-            fill="none"
-            stroke={accent}
-            strokeWidth={1.5}
-            strokeDasharray="4 3"
-            opacity={0.75}
-          />
-        )}
-
-        {/* Callout connector line */}
-        {outlierDot && (
-          <line
-            x1={outlierDot.cx}
-            y1={outlierDot.cy - outlierDot.r - 2}
-            x2={outlierDot.cx}
-            y2={calloutY + CALLOUT_H}
-            stroke={accent}
-            strokeWidth={1}
-            strokeDasharray="2 3"
-          />
-        )}
-
-        {/* Callout box */}
-        {outlierDot && (
-          <g>
-            <rect
-              x={calloutX}
-              y={calloutY}
-              width={CALLOUT_W}
-              height={CALLOUT_H}
-              rx={3}
-              fill="var(--color-background-card)"
+          {/* Callout connector line — dot-top→box-bottom normally; flips to
+              dot-bottom→box-top when the callout is placed below the dot. */}
+          {outlierDot && (
+            <line
+              x1={outlierDot.cx}
+              y1={flipped ? outlierDot.cy + outlierDot.r + 2 : outlierDot.cy - outlierDot.r - 2}
+              x2={outlierDot.cx}
+              y2={flipped ? calloutY : calloutY + CALLOUT_H}
               stroke={accent}
               strokeWidth={1}
+              strokeDasharray="2 3"
             />
-            <text
-              x={calloutX + 10}
-              y={calloutY + 17}
-              fontSize={12}
-              fontFamily="monospace"
-              fontWeight="700"
-              fill={accent}
-            >
-              {lang === 'es' ? 'MX$27M · PRECIO 9× SUPERIOR' : 'MX$27M · PRICE 9× HIGHER'}
-            </text>
-            <text
-              x={calloutX + 10}
-              y={calloutY + 33}
-              fontSize={13}
-              fontFamily="monospace"
-              fill={textMuted}
-            >
-              {lang === 'es' ? 'misma categoría · jun 2020' : 'same category · jun 2020'}
-            </text>
-          </g>
-        )}
-      </svg>
+          )}
+
+          {/* Callout box */}
+          {outlierDot && (
+            <g>
+              <rect
+                x={calloutX}
+                y={calloutY}
+                width={CALLOUT_W}
+                height={CALLOUT_H}
+                rx={3}
+                fill="var(--color-background-card)"
+                stroke={accent}
+                strokeWidth={1}
+              />
+              <text
+                x={calloutX + 10}
+                y={calloutY + 17}
+                fontSize={12}
+                fontFamily="monospace"
+                fontWeight="700"
+                fill={accent}
+              >
+                {lang === 'es' ? 'MX$27M · PRECIO 9× SUPERIOR' : 'MX$27M · PRICE 9× HIGHER'}
+              </text>
+              <text
+                x={calloutX + 10}
+                y={calloutY + 33}
+                fontSize={12}
+                fontFamily="monospace"
+                fill={textMuted}
+              >
+                {lang === 'es' ? 'misma categoría · jun 2020' : 'same category · jun 2020'}
+              </text>
+            </g>
+          )}
+        </svg>
+      </div>
     </ChartCard>
   )
 }
