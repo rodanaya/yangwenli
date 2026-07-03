@@ -63,14 +63,14 @@ export function CartaMasthead({ lang }: CartaMastheadProps) {
       style={{ borderBottom: '1px solid var(--color-border)' }}
     >
       <div className="min-w-0 flex flex-col justify-center">
-        <div className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.16em] text-text-muted leading-tight truncate">
-          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>FOLIO·IX</span>
+        <div className="font-mono text-[12px] md:text-[13px] uppercase tracking-[0.16em] text-text-muted leading-tight truncate">
+          <span style={{ color: 'var(--color-accent)', fontStyle: 'normal' }}>FOLIO·IX</span>
           {lang === 'en'
             ? ' · THE SKY SURVEY · COMPRANET 2002–2025 · v0.8.5'
             : ' · LA CARTA DEL CIELO · COMPRANET 2002–2025 · v0.8.5'}
         </div>
         <h1
-          className="hidden md:block italic text-[22px] leading-tight truncate"
+          className="hidden md:block text-[22px] leading-tight truncate"
           style={{
             fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
             color: 'var(--color-text-primary)',
@@ -84,7 +84,7 @@ export function CartaMasthead({ lang }: CartaMastheadProps) {
           )}
         </h1>
         {top && (
-          <div className="hidden md:block font-mono text-[10.5px] text-text-muted leading-tight truncate">
+          <div className="hidden md:block font-mono text-[12px] text-text-muted leading-tight truncate">
             {lang === 'en' ? (
               <>highest body on the patterns plate: {top.label_en} — {Math.round(top.high_risk_rate * 100)}% of its {formatNumber(top.vendors)} vendors in the high or critical band · risk indicator, not a probability</>
             ) : (
@@ -134,7 +134,7 @@ export function CartaMasthead({ lang }: CartaMastheadProps) {
               <X className="h-3.5 w-3.5" />
             </button>
             <div
-              className="font-mono text-[9px] uppercase tracking-[0.16em] mb-2"
+              className="font-mono text-[13px] uppercase tracking-[0.16em] mb-2"
               style={{ color: 'var(--color-text-muted)' }}
             >
               {lang === 'en' ? 'HOW TO READ THE SURVEY' : 'CÓMO LEER LA CARTA'}

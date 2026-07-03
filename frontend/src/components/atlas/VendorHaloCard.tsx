@@ -113,7 +113,7 @@ export function VendorHaloCard({
         title={formatVendorName(dot.name, 80)}
         style={{
           fontFamily: '"Playfair Display", serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 600,
           fontSize: 14,
           lineHeight: 1.15,
@@ -127,13 +127,13 @@ export function VendorHaloCard({
       <div className="flex items-center gap-2 mt-1.5">
         <DotBar value={dot.riskScore} max={1} color={riskColor} ariaLabel={`${pct}% risk`} />
         <span
-          className="font-mono text-[10px] tabular-nums"
+          className="font-mono text-[12px] tabular-nums"
           style={{ color: riskColor, fontWeight: 700 }}
         >
           {pct}%
         </span>
         <span
-          className="font-mono text-[9px] uppercase"
+          className="font-mono text-[13px] uppercase"
           style={{ color: riskColor, letterSpacing: '0.08em', fontWeight: 700 }}
         >
           {riskLabel}
@@ -143,7 +143,7 @@ export function VendorHaloCard({
       {/* Sector chip + open-dossier link */}
       <div className="flex items-center justify-between gap-2 mt-1.5">
         <span
-          className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase"
+          className="inline-flex items-center gap-1.5 font-mono text-[13px] uppercase"
           style={{ letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}
         >
           <span
@@ -162,7 +162,7 @@ export function VendorHaloCard({
           <button
             type="button"
             onClick={handleOpen}
-            className="inline-flex items-center gap-1 font-mono text-[10px] uppercase hover:underline transition-colors"
+            className="inline-flex items-center gap-1 font-mono text-[12px] uppercase hover:underline transition-colors"
             style={{
               color: 'var(--color-accent)',
               letterSpacing: '0.1em',

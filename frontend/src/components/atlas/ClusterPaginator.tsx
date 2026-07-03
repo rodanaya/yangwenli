@@ -37,7 +37,7 @@ export function ClusterPaginator({
         background: 'var(--color-background-card)',
         border: '1px solid var(--color-border)',
         borderRadius: 999,
-        fontSize: 11,
+        fontSize: 13,
         fontFamily: 'monospace',
         letterSpacing: '0.08em',
         textTransform: 'uppercase',

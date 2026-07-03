@@ -3,7 +3,7 @@
  *
  * Rendered when a contract dot in a vendor's planetary orbit is clicked.
  * Sibling to ClusterFloatingCard / CanvasVendorHaloCard — same visual idiom
- * (Playfair italic anchor + mono kicker + sector-accent left border), but
+ * (Playfair anchor + mono kicker + sector-accent left border), but
  * scoped to a single contract: title, institution, amount, risk, procedure.
  *
  * The card pins to the top-right of the Observatory viewport (where the
@@ -132,7 +132,7 @@ export function ContractFloatingCard({
         <div
           className="font-mono uppercase"
           style={{
-            fontSize: 9,
+            fontSize: 13,
             letterSpacing: '0.14em',
             color: 'var(--color-text-muted)',
           }}
@@ -160,7 +160,7 @@ export function ContractFloatingCard({
         className="mt-1"
         style={{
           fontFamily: '"Playfair Display", serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 600,
           fontSize: 15,
           lineHeight: 1.2,
@@ -181,7 +181,7 @@ export function ContractFloatingCard({
           <span
             className="font-mono"
             style={{
-              fontSize: 9,
+              fontSize: 13,
               letterSpacing: '0.12em',
               color: 'var(--color-text-muted)',
               textTransform: 'uppercase',
@@ -191,13 +191,13 @@ export function ContractFloatingCard({
           </span>
           <span
             className="font-mono tabular-nums"
-            style={{ fontSize: 11, color: riskColor, fontWeight: 700 }}
+            style={{ fontSize: 13, color: riskColor, fontWeight: 700 }}
           >
             {pct}%
           </span>
           <span
             className="font-mono uppercase"
-            style={{ fontSize: 9, letterSpacing: '0.1em', color: riskColor, fontWeight: 700 }}
+            style={{ fontSize: 13, letterSpacing: '0.1em', color: riskColor, fontWeight: 700 }}
           >
             {riskLabel}
           </span>
@@ -247,7 +247,7 @@ export function ContractFloatingCard({
         </dt>
         <dd
           className="font-mono tabular-nums"
-          style={{ fontSize: 11, color: 'var(--color-text-primary)', margin: 0 }}
+          style={{ fontSize: 13, color: 'var(--color-text-primary)', margin: 0 }}
         >
           {amountLabel}
         </dd>
@@ -260,7 +260,7 @@ export function ContractFloatingCard({
         </dt>
         <dd
           style={{
-            fontSize: 11,
+            fontSize: 13,
             color: 'var(--color-text-primary)',
             margin: 0,
             display: '-webkit-box',
@@ -281,7 +281,7 @@ export function ContractFloatingCard({
         </dt>
         <dd
           className="font-mono tabular-nums"
-          style={{ fontSize: 11, color: 'var(--color-text-primary)', margin: 0 }}
+          style={{ fontSize: 13, color: 'var(--color-text-primary)', margin: 0 }}
         >
           {dateLabel ?? t.unknownDate}
         </dd>
@@ -293,7 +293,7 @@ export function ContractFloatingCard({
           {t.procedure}
         </dt>
         <dd
-          style={{ fontSize: 11, color: 'var(--color-text-primary)', margin: 0 }}
+          style={{ fontSize: 13, color: 'var(--color-text-primary)', margin: 0 }}
           title={contract.procedureType ?? undefined}
         >
           {contract.procedureType ?? t.unknownProc}
@@ -306,7 +306,7 @@ export function ContractFloatingCard({
         className="inline-flex items-center gap-1 font-mono uppercase mt-3 hover:underline transition-colors"
         style={{
           color: 'var(--color-accent)',
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: '0.12em',
           background: 'transparent',
           border: 'none',

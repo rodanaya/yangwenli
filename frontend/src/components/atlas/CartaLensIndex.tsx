@@ -97,7 +97,7 @@ export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLens
               }}
             >
               <span
-                className="font-mono text-[9px] tabular-nums"
+                className="font-mono text-[13px] tabular-nums"
                 style={{
                   color: active ? 'var(--color-accent)' : 'var(--color-text-muted)',
                 }}
@@ -105,7 +105,7 @@ export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLens
                 {p.folio}
               </span>
               <span
-                className="font-mono text-[11px] uppercase tracking-[0.08em]"
+                className="font-mono text-[13px] uppercase tracking-[0.08em]"
                 style={{
                   color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
                   fontWeight: active ? 700 : 400,
@@ -208,12 +208,12 @@ function KeymapPopover({ lang }: { lang: 'en' | 'es' }) {
       }}
     >
       <div
-        className="font-mono text-[9px] uppercase tracking-[0.16em] mb-2"
+        className="font-mono text-[13px] uppercase tracking-[0.16em] mb-2"
         style={{ color: 'var(--color-text-muted)' }}
       >
         {lang === 'en' ? 'KEYMAP' : 'ATAJOS'}
       </div>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px]">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
         {rows.map(([key, label]) => (
           <div key={key} className="contents">
             <dt

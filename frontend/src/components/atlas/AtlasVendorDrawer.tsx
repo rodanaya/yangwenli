@@ -158,7 +158,7 @@ export function AtlasVendorDrawer({
     >
       {/* ─── HEADER (40px) — paginator + close, always visible ─── */}
       <div
-        className="h-10 px-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em]"
+        className="h-10 px-3 flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.1em]"
         style={{ color: 'var(--color-text-secondary)' }}
       >
         {/* Prev cluster button */}
@@ -181,7 +181,7 @@ export function AtlasVendorDrawer({
             className="truncate"
             style={{
               fontFamily: '"Playfair Display", serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 600,
               fontSize: 14,
               letterSpacing: 'normal',
@@ -189,7 +189,7 @@ export function AtlasVendorDrawer({
               color: 'var(--color-text-primary)',
             }}
           >
-            <span style={{ color: meta.color, fontFamily: 'monospace', fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', marginRight: 6 }}>
+            <span style={{ color: meta.color, fontFamily: 'monospace', fontWeight: 700, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', marginRight: 6 }}>
               {meta.code}
             </span>
             {meta.label}
@@ -271,7 +271,7 @@ export function AtlasVendorDrawer({
           <div className="px-3 py-3 lg:border-r lg:border-border" style={{ borderRightColor: 'var(--color-border)' }}>
             <div
               className="font-mono uppercase mb-2"
-              style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
             >
               {txt.stats}
             </div>
@@ -298,7 +298,7 @@ export function AtlasVendorDrawer({
           <div className="overflow-y-auto" style={{ maxHeight: '40vh' }}>
             <div
               className="font-mono uppercase px-3 pt-3 pb-1 sticky top-0"
-              style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)', background: 'var(--color-background)' }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-muted)', background: 'var(--color-background)' }}
             >
               {txt.topVendorsByRisk} · {count}
             </div>
@@ -328,7 +328,7 @@ export function AtlasVendorDrawer({
                         }}
                       />
                       <span
-                        className="font-mono text-[11px] truncate flex-1 min-w-0"
+                        className="font-mono text-[13px] truncate flex-1 min-w-0"
                         style={{ color: 'var(--color-text-primary)' }}
                       >
                         {formatVendorName(v.name, 50)}
@@ -342,7 +342,7 @@ export function AtlasVendorDrawer({
                         />
                       </span>
                       <span
-                        className="font-mono text-[11px] tabular-nums w-8 text-right flex-shrink-0"
+                        className="font-mono text-[13px] tabular-nums w-8 text-right flex-shrink-0"
                         style={{ color: riskColor, fontWeight: 600 }}
                       >
                         {pct}
@@ -358,7 +358,7 @@ export function AtlasVendorDrawer({
           <div className="px-3 py-3 lg:border-l lg:border-border" style={{ borderLeftColor: 'var(--color-border)' }}>
             <div
               className="font-mono uppercase mb-2"
-              style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
             >
               {txt.actions}
             </div>
@@ -366,7 +366,7 @@ export function AtlasVendorDrawer({
               <button
                 type="button"
                 onClick={onInvestigate}
-                className="font-mono text-[11px] uppercase text-left hover:underline transition-colors"
+                className="font-mono text-[13px] uppercase text-left hover:underline transition-colors"
                 style={{
                   color: 'var(--color-accent)',
                   letterSpacing: '0.08em',
@@ -382,13 +382,13 @@ export function AtlasVendorDrawer({
 
             <div
               className="font-mono uppercase mt-4 mb-2"
-              style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}
             >
               {txt.riskDist}
             </div>
             <div className="space-y-1">
               {(['critical', 'high', 'medium', 'low'] as const).map(level => (
-                <div key={level} className="flex items-center gap-2 font-mono text-[11px]">
+                <div key={level} className="flex items-center gap-2 font-mono text-[13px]">
                   <span
                     aria-hidden="true"
                     style={{
@@ -430,7 +430,7 @@ function StatCell({ value, label }: { value: string; label: string }) {
         className="tabular-nums"
         style={{
           fontFamily: '"Playfair Display", serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 700,
           fontSize: 18,
           lineHeight: 1.1,

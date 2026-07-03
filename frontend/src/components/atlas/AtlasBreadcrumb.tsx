@@ -45,7 +45,7 @@ export function AtlasBreadcrumb({
         type="button"
         onClick={handleGoHome}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleGoHome(e) }}
-        className="font-mono text-[11px] uppercase text-text-secondary hover:text-text-primary cursor-pointer transition-colors shrink-0"
+        className="font-mono text-[13px] uppercase text-text-secondary hover:text-text-primary cursor-pointer transition-colors shrink-0"
         style={{
           background: 'transparent',
           border: 'none',
@@ -58,25 +58,25 @@ export function AtlasBreadcrumb({
       {/* Lens crumb hides on the narrowest viewports — the cluster label
           (the current location) is more useful when space is tight. */}
       <span
-        className="font-mono text-[11px] uppercase text-text-muted select-none hidden sm:inline shrink-0"
+        className="font-mono text-[13px] uppercase text-text-muted select-none hidden sm:inline shrink-0"
         style={{ letterSpacing: '0.1em' }}
       >
         ·
       </span>
       <span
-        className="font-mono text-[11px] uppercase text-text-muted select-none hidden sm:inline shrink-0"
+        className="font-mono text-[13px] uppercase text-text-muted select-none hidden sm:inline shrink-0"
         style={{ letterSpacing: '0.1em' }}
       >
         {lensLabel}
       </span>
       <span
-        className="font-mono text-[11px] uppercase text-text-muted select-none shrink-0"
+        className="font-mono text-[13px] uppercase text-text-muted select-none shrink-0"
         style={{ letterSpacing: '0.1em' }}
       >
         ·
       </span>
       <span
-        className="font-mono text-[11px] uppercase text-text-primary truncate min-w-0"
+        className="font-mono text-[13px] uppercase text-text-primary truncate min-w-0"
         style={{ letterSpacing: '0.1em' }}
         aria-current="page"
         title={clusterLabel}

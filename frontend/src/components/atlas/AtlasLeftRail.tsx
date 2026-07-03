@@ -91,7 +91,7 @@ export interface AtlasLeftRailProps {
 function RailSection({ label }: { label: string }) {
   return (
     <div
-      className="px-4 pt-4 pb-1 text-[9px] font-mono font-bold uppercase tracking-[0.14em] flex items-center gap-2"
+      className="px-4 pt-4 pb-1 text-[13px] font-mono font-bold uppercase tracking-[0.14em] flex items-center gap-2"
       style={{ color: 'var(--color-text-muted)' }}
     >
       <span className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
@@ -190,7 +190,7 @@ export function AtlasLeftRail({
           {/* Back button */}
           <button
             onClick={() => dispatch({ type: 'escape-zoom' })}
-            className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-1.5 rounded-sm transition-colors text-[10px] font-mono font-bold uppercase tracking-[0.1em] hover:bg-background-elevated/40"
+            className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-1.5 rounded-sm transition-colors text-[12px] font-mono font-bold uppercase tracking-[0.1em] hover:bg-background-elevated/40"
             style={{ border: `1px solid ${ACCENT}`, color: ACCENT }}
             aria-label={lang === 'en' ? 'Zoom out to full sky' : 'Volver al cielo completo'}
           >
@@ -211,13 +211,13 @@ export function AtlasLeftRail({
         >
           <div className="min-w-0">
             <div
-              className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] leading-none"
+              className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] leading-none"
               style={{ color: ACCENT }}
             >
               {lang === 'en' ? 'OBSERVATORY' : 'OBSERVATORIO'}
             </div>
             <div
-              className="text-[9px] font-mono mt-1 leading-tight"
+              className="text-[13px] font-mono mt-1 leading-tight"
               style={{ color: 'var(--color-text-muted)' }}
             >
               {lang === 'en' ? '3.06M contracts · 2002–2025' : '3.06M contratos · 2002–2025'}
@@ -263,7 +263,7 @@ export function AtlasLeftRail({
                   {story.title[lang]}
                 </div>
                 <div
-                  className="font-mono text-[9px] uppercase tracking-widest mt-1"
+                  className="font-mono text-[13px] uppercase tracking-widest mt-1"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   {story.chapters.length} {lang === 'en' ? 'cap' : 'cap'} · {story.duration}
@@ -312,7 +312,7 @@ export function AtlasLeftRail({
                 <span className="flex-1 truncate">{lang === 'en' ? lens.en : lens.es}</span>
                 {/* FT Visual Vocabulary: quantify choices before committing */}
                 <span
-                  className="text-[9px] opacity-60 flex-shrink-0"
+                  className="text-[13px] opacity-60 flex-shrink-0"
                   style={{ color: isActive ? ACCENT : 'var(--color-text-muted)' }}
                 >
                   {lens.count}
@@ -333,7 +333,7 @@ export function AtlasLeftRail({
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
               fontWeight: 800,
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontSize: 28,
               color: ACCENT,
             }}
@@ -365,7 +365,7 @@ export function AtlasLeftRail({
           {/* Autoplay button */}
           <button
             onClick={() => onPlayChange(!isPlaying)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm font-mono uppercase tracking-[0.1em] text-[9px] font-bold transition-colors mt-1"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm font-mono uppercase tracking-[0.1em] text-[13px] font-bold transition-colors mt-1"
             style={{
               background: isPlaying ? '#dc2626' : 'var(--color-border)',
               color: isPlaying ? 'white' : 'var(--color-text-primary)',
@@ -397,7 +397,7 @@ export function AtlasLeftRail({
                   ◆
                 </span>
                 <span
-                  className="text-[10px] leading-[1.5]"
+                  className="text-[12px] leading-[1.5]"
                   style={{ color: 'var(--color-text-secondary)' }}
                 >
                   {snapshot.highlight[lang]}
@@ -411,7 +411,7 @@ export function AtlasLeftRail({
         <RailSection label={lang === 'en' ? 'RISK FLOOR' : 'PISO DE RIESGO'} />
         <div className="px-4 pb-3">
           <div
-            className="flex items-center text-[9px] font-mono uppercase tracking-[0.08em] rounded-sm overflow-hidden w-full"
+            className="flex items-center text-[13px] font-mono uppercase tracking-[0.08em] rounded-sm overflow-hidden w-full"
             role="group"
             aria-label={lang === 'en' ? 'Risk floor filter' : 'Filtro mínimo de riesgo'}
             style={{ border: '1px solid var(--color-border)' }}
@@ -468,7 +468,7 @@ export function AtlasLeftRail({
                 }
               }}
               placeholder={lang === 'en' ? 'Toka, Edenred, IMSS…' : 'Toka, Edenred, IMSS…'}
-              className="w-full pl-7 pr-2.5 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
+              className="w-full pl-7 pr-2.5 py-1.5 text-[13px] font-mono rounded-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
               style={{
                 background: 'var(--color-background-elevated, var(--color-border))',
                 border: '1px solid var(--color-border)',
@@ -478,7 +478,7 @@ export function AtlasLeftRail({
             />
           </div>
           <div
-            className="mt-1.5 text-[9px] font-mono"
+            className="mt-1.5 text-[13px] font-mono"
             style={{ color: 'var(--color-text-muted)' }}
           >
             {lang === 'en' ? '↵ to pin cluster · 42 curated vendors' : '↵ para pinear cúmulo · 42 proveedores curados'}
@@ -492,7 +492,7 @@ export function AtlasLeftRail({
         <div className="px-4 pb-4">
           {saveStatus === 'saved' ? (
             <div
-              className="w-full text-left px-3 py-2 rounded-sm text-[10px] font-mono flex items-center gap-1.5"
+              className="w-full text-left px-3 py-2 rounded-sm text-[12px] font-mono flex items-center gap-1.5"
               style={{ color: ACCENT, border: `1px solid ${ACCENT}`, background: 'rgba(160,104,32,0.06)' }}
               role="status"
               aria-live="polite"
@@ -511,7 +511,7 @@ export function AtlasLeftRail({
                   /* localStorage may be unavailable (private browsing, quota) — fail silent */
                 }
               }}
-              className="w-full text-left px-3 py-2 rounded-sm transition-colors text-[10px] font-mono flex items-center gap-1.5 hover:bg-background-elevated/30"
+              className="w-full text-left px-3 py-2 rounded-sm transition-colors text-[12px] font-mono flex items-center gap-1.5 hover:bg-background-elevated/30"
               style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
               title={lang === 'en'
                 ? 'Save this lens + year + filters + zoom so you can return to it later'
@@ -527,7 +527,7 @@ export function AtlasLeftRail({
               onClick={() => {
                 if (savedHref) location.href = savedHref
               }}
-              className="mt-1.5 w-full text-left px-3 py-1.5 rounded-sm transition-colors text-[10px] font-mono hover:bg-background-elevated/30"
+              className="mt-1.5 w-full text-left px-3 py-1.5 rounded-sm transition-colors text-[12px] font-mono hover:bg-background-elevated/30"
               style={{ color: 'var(--color-text-muted)' }}
               title={lang === 'en' ? 'Jump to your last saved view' : 'Ir a la última vista guardada'}
             >

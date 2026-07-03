@@ -18,7 +18,7 @@ export function CartaItinerarios({ stories, activeStoryId, onOpen, lang }: Carta
     >
       <div
         className="font-mono uppercase tracking-[0.18em] text-text-muted mb-3"
-        style={{ fontSize: '10px' }}
+        style={{ fontSize: '12px' }}
       >
         {lang === 'en'
           ? '§ THE ITINERARIES · THREE GUIDED ROUTES ACROSS THE SURVEY'
@@ -52,7 +52,7 @@ export function CartaItinerarios({ stories, activeStoryId, onOpen, lang }: Carta
                 background: 'var(--color-surface, transparent)',
               }}
             >
-              <div className="font-mono mb-1.5" style={{ fontSize: '9px' }}>
+              <div className="font-mono mb-1.5" style={{ fontSize: '13px' }}>
                 <span style={{ color: story.accent }}>
                   {lang === 'en' ? `ITINERARY ${roman}` : `ITINERARIO ${roman}`}
                 </span>
@@ -65,7 +65,7 @@ export function CartaItinerarios({ stories, activeStoryId, onOpen, lang }: Carta
               </div>
 
               <div
-                className="italic mb-1.5 text-text-primary"
+                className="mb-1.5 text-text-primary"
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
                   fontWeight: 600,

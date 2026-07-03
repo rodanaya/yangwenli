@@ -68,7 +68,7 @@ interface AtlasRightPanelProps {
 function PanelSection({ label }: { label: string }) {
   return (
     <div
-      className="text-[9px] font-mono font-bold uppercase tracking-[0.14em] pt-4 pb-2 flex items-center gap-2"
+      className="text-[13px] font-mono font-bold uppercase tracking-[0.14em] pt-4 pb-2 flex items-center gap-2"
       style={{ color: 'var(--color-text-muted)' }}
     >
       <span className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
@@ -89,7 +89,7 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
     <div className="px-4 pb-6">
       {/* Eyebrow */}
       <div
-        className="text-[9px] font-mono font-bold uppercase tracking-[0.14em] pt-5 pb-3"
+        className="text-[13px] font-mono font-bold uppercase tracking-[0.14em] pt-5 pb-3"
         style={{ color: ACCENT }}
       >
         {lang === 'en' ? 'OBSERVATORY · ALL YEARS' : 'EL OBSERVATORIO · TODOS LOS AÑOS'}
@@ -102,7 +102,7 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
           style={{
             fontFamily: "'Playfair Display', Georgia, serif",
             fontWeight: 800,
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontSize: 44,
             color: ACCENT,
           }}
@@ -116,12 +116,12 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
           {lang === 'en' ? 'contracts analyzed' : 'contratos analizados'}
         </div>
         <div
-          className="text-[11px] font-mono mt-0.5 font-bold"
+          className="text-[13px] font-mono mt-0.5 font-bold"
           style={{ color: 'var(--color-text-primary)' }}
         >
           {IDLE_STATS.totalSpend}
           <span
-            className="font-normal ml-1 text-[9px]"
+            className="font-normal ml-1 text-[13px]"
             style={{ color: 'var(--color-text-muted)' }}
           >
             {lang === 'en' ? 'validated spend' : 'gasto validado'}
@@ -137,20 +137,20 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
           <div key={r.label.en} className="space-y-1">
             <div className="flex items-center justify-between">
               <span
-                className="text-[9px] font-mono font-bold uppercase tracking-[0.1em]"
+                className="text-[13px] font-mono font-bold uppercase tracking-[0.1em]"
                 style={{ color: r.color }}
               >
                 {r.label[lang]}
               </span>
               <div className="flex items-center gap-2">
                 <span
-                  className="text-[11px] font-mono font-bold tabular-nums"
+                  className="text-[13px] font-mono font-bold tabular-nums"
                   style={{ color: 'var(--color-text-primary)' }}
                 >
                   {r.pct.toFixed(1)}%
                 </span>
                 <span
-                  className="text-[9px] font-mono tabular-nums"
+                  className="text-[13px] font-mono tabular-nums"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   {r.count}
@@ -167,7 +167,7 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
 
         {/* OECD benchmark anchor — turns 7.5% from a number into a finding */}
         <div
-          className="text-[9px] font-mono mt-1.5 pt-1.5 border-t"
+          className="text-[13px] font-mono mt-1.5 pt-1.5 border-t"
           style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}
         >
           ↑ {lang === 'en' ? 'OECD: flag ≥15% high+crit' : 'OCDE: bandera ≥15% alto+crít'}
@@ -190,20 +190,20 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
           >
             <div className="flex items-center gap-2 min-w-0">
               <span
-                className="text-[9px] font-mono font-bold uppercase tracking-[0.1em] flex-shrink-0"
+                className="text-[13px] font-mono font-bold uppercase tracking-[0.1em] flex-shrink-0"
                 style={{ color: ACCENT }}
               >
                 {p.code}
               </span>
               <span
-                className="text-[11px] font-mono truncate"
+                className="text-[13px] font-mono truncate"
                 style={{ color: 'var(--color-text-secondary)' }}
               >
                 {p.label[lang]}
               </span>
             </div>
             <span
-              className="text-[9px] font-mono font-bold flex-shrink-0 ml-2 tabular-nums"
+              className="text-[13px] font-mono font-bold flex-shrink-0 ml-2 tabular-nums"
               style={{ color: 'var(--color-risk-critical)' }}
             >
               {p.t1} T1
@@ -238,7 +238,7 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
               {row.value.toLocaleString()}
             </span>
             <span
-              className="text-[10px] font-mono leading-tight"
+              className="text-[12px] font-mono leading-tight"
               style={{ color: 'var(--color-text-muted)' }}
             >
               {row.suffix[lang]}
@@ -251,7 +251,7 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
       <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
         <button
           onClick={() => navigate('/aria')}
-          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[10px] font-bold transition-opacity hover:opacity-85"
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[12px] font-bold transition-opacity hover:opacity-85"
           style={{ background: ACCENT, color: 'white' }}
         >
           {lang === 'en' ? '→ Open investigation queue (ARIA)' : '→ Abrir cola de investigación (ARIA)'}
@@ -273,7 +273,7 @@ function HoverClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string }) 
     <div className="px-4 pb-6">
       {/* Cluster code chip */}
       <div
-        className="text-[9px] font-mono font-bold uppercase tracking-[0.14em] pt-5 pb-1"
+        className="text-[13px] font-mono font-bold uppercase tracking-[0.14em] pt-5 pb-1"
         style={{ color: ACCENT }}
       >
         {lang === 'en' ? `${code} · CLUSTER` : `${code} · CÚMULO`}
@@ -281,7 +281,7 @@ function HoverClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string }) 
 
       {/* Vendor count hint */}
       <div
-        className="text-[11px] font-mono mt-1"
+        className="text-[13px] font-mono mt-1"
         style={{ color: 'var(--color-text-secondary)' }}
       >
         {lang === 'en' ? 'Hover detected' : 'Cúmulo detectado'}
@@ -289,7 +289,7 @@ function HoverClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string }) 
 
       {/* Click-to-zoom tip */}
       <div
-        className="mt-4 rounded-sm px-3 py-2 text-[10px] font-mono leading-[1.6]"
+        className="mt-4 rounded-sm px-3 py-2 text-[12px] font-mono leading-[1.6]"
         style={{
           background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
           border: '1px solid var(--color-border)',
@@ -304,7 +304,7 @@ function HoverClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string }) 
       {/* Back-out affordance when zoomed */}
       <button
         onClick={() => dispatch({ type: 'escape-zoom' })}
-        className="inline-flex items-center gap-1 text-[10px] font-mono mt-4 transition-opacity hover:opacity-70"
+        className="inline-flex items-center gap-1 text-[12px] font-mono mt-4 transition-opacity hover:opacity-70"
         style={{ color: ACCENT }}
       >
         ← {lang === 'en' ? 'Back to whole sky' : 'Volver al cielo completo'}
@@ -322,7 +322,7 @@ function RiskPill({ score }: { score: number }) {
   const label = (score * 100).toFixed(0)
   return (
     <span
-      className="text-[9px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded-sm flex-shrink-0"
+      className="text-[13px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded-sm flex-shrink-0"
       style={{ color, background: `${color}18`, border: `1px solid ${color}44` }}
     >
       {label}%
@@ -396,7 +396,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
         {/* Rank chip / checkbox indicator */}
         {isSelected ? (
           <span
-            className="text-[9px] font-mono tabular-nums flex-shrink-0 w-5 text-center flex items-center justify-center"
+            className="text-[13px] font-mono tabular-nums flex-shrink-0 w-5 text-center flex items-center justify-center"
             style={{ color: 'var(--color-accent)' }}
             aria-hidden="true"
           >
@@ -404,7 +404,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
           </span>
         ) : (
           <span
-            className="text-[9px] font-mono tabular-nums flex-shrink-0 w-5 text-right"
+            className="text-[13px] font-mono tabular-nums flex-shrink-0 w-5 text-right"
             style={{ color: 'var(--color-text-muted)' }}
           >
             {rank}
@@ -436,7 +436,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
       >
         <span className="w-5 flex-shrink-0" />
         <span
-          className="text-[9px] font-mono tabular-nums flex-shrink-0"
+          className="text-[13px] font-mono tabular-nums flex-shrink-0"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {vendor.total_contracts.toLocaleString()}
@@ -444,7 +444,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
           {lang === 'en' ? 'contracts' : 'contratos'}
         </span>
         <span
-          className="text-[9px] font-mono tabular-nums ml-auto flex-shrink-0"
+          className="text-[13px] font-mono tabular-nums ml-auto flex-shrink-0"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {formatCompactMXN(vendor.total_amount_mxn)}
@@ -580,7 +580,7 @@ function ZoomedClusterPanel({
     <div className="px-4 pb-6">
       {/* Eyebrow */}
       <div
-        className="text-[9px] font-mono font-bold uppercase tracking-[0.14em] pt-5 pb-1"
+        className="text-[13px] font-mono font-bold uppercase tracking-[0.14em] pt-5 pb-1"
         style={{ color: ACCENT }}
       >
         {lang === 'en' ? `${code} · CLUSTER` : `${code} · CÚMULO`}
@@ -589,14 +589,14 @@ function ZoomedClusterPanel({
       {/* Back link */}
       <button
         onClick={() => dispatch({ type: 'escape-zoom' })}
-        className="inline-flex items-center gap-1 text-[10px] font-mono mt-1 mb-3 transition-opacity hover:opacity-70"
+        className="inline-flex items-center gap-1 text-[12px] font-mono mt-1 mb-3 transition-opacity hover:opacity-70"
         style={{ color: ACCENT }}
       >
         ← {lang === 'en' ? 'Back to whole sky' : 'Volver al cielo completo'}
       </button>
 
       {/* Cluster header card — 2026-05-08: shrunk header from text-[13px] to
-          text-[11px] and tightened paddings; the right panel is ~280px wide
+          text-[13px] and tightened paddings; the right panel is ~280px wide
           so the cluster label was wrapping to 3 lines and pushing the vendor
           list below the fold. line-clamp-2 caps verbose names. */}
       <div
@@ -607,14 +607,14 @@ function ZoomedClusterPanel({
         }}
       >
         <div
-          className="text-[11px] font-mono font-bold leading-snug line-clamp-2"
+          className="text-[13px] font-mono font-bold leading-snug line-clamp-2"
           style={{ color: 'var(--color-text-primary)' }}
           title={displayLabel}
         >
           {displayLabel}
         </div>
         <div
-          className="text-[9px] font-mono mt-0.5"
+          className="text-[13px] font-mono mt-0.5"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {totalCount.toLocaleString()}
@@ -649,13 +649,13 @@ function ZoomedClusterPanel({
             <div key={r.key} className="space-y-0.5">
               <div className="flex items-center justify-between">
                 <span
-                  className="text-[9px] font-mono font-bold uppercase tracking-[0.08em]"
+                  className="text-[13px] font-mono font-bold uppercase tracking-[0.08em]"
                   style={{ color: r.color }}
                 >
                   {r.label[lang]}
                 </span>
                 <span
-                  className="text-[9px] font-mono tabular-nums"
+                  className="text-[13px] font-mono tabular-nums"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   {count}
@@ -672,14 +672,14 @@ function ZoomedClusterPanel({
 
       {isLoading && allVendors.length === 0 ? (
         <div
-          className="text-[10px] font-mono py-4 text-center"
+          className="text-[12px] font-mono py-4 text-center"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {lang === 'en' ? 'Loading…' : 'Cargando…'}
         </div>
       ) : shownVendors.length === 0 ? (
         <div
-          className="text-[10px] font-mono py-4 text-center"
+          className="text-[12px] font-mono py-4 text-center"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {lang === 'en'
@@ -705,7 +705,7 @@ function ZoomedClusterPanel({
       {hasMore && (
         <button
           onClick={handleLoadMore}
-          className="w-full mt-3 py-2 text-[10px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm transition-opacity hover:opacity-75"
+          className="w-full mt-3 py-2 text-[12px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm transition-opacity hover:opacity-75"
           style={{
             border: '1px solid var(--color-border)',
             color: ACCENT,
@@ -718,7 +718,7 @@ function ZoomedClusterPanel({
 
       {/* ESC + Cmd-click hints */}
       <div
-        className="mt-4 text-[9px] font-mono space-y-0.5"
+        className="mt-4 text-[13px] font-mono space-y-0.5"
         style={{ color: 'var(--color-text-muted)' }}
       >
         <div>{lang === 'en' ? 'Press ESC or click background to zoom out' : 'Presiona ESC o haz clic en el fondo para alejar'}</div>
@@ -815,7 +815,7 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
       <div className="flex items-center justify-between mb-3">
         <div>
           <div
-            className="text-[9px] font-mono font-bold uppercase tracking-[0.14em]"
+            className="text-[13px] font-mono font-bold uppercase tracking-[0.14em]"
             style={{ color: ACCENT }}
           >
             {lang === 'en' ? 'SELECTION' : 'SELECCIÓN'}
@@ -825,7 +825,7 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
               fontWeight: 800,
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontSize: 28,
               color: ACCENT,
             }}
@@ -833,7 +833,7 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
             {count}
           </div>
           <div
-            className="text-[10px] font-mono"
+            className="text-[12px] font-mono"
             style={{ color: 'var(--color-text-muted)' }}
           >
             {lang === 'en' ? 'vendors selected' : 'proveedores seleccionados'}
@@ -841,7 +841,7 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
         </div>
         <button
           onClick={() => dispatch({ type: 'clear-selection' })}
-          className="text-[9px] font-mono font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 rounded-sm transition-opacity hover:opacity-70"
+          className="text-[13px] font-mono font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 rounded-sm transition-opacity hover:opacity-70"
           style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
           aria-label={lang === 'en' ? 'Clear selection' : 'Limpiar selección'}
         >
@@ -875,14 +875,14 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
                 aria-hidden="true"
               />
               <span
-                className="text-[10px] font-mono truncate flex-1 min-w-0"
+                className="text-[12px] font-mono truncate flex-1 min-w-0"
                 style={{ color: 'var(--color-text-secondary)' }}
               >
                 {name}
               </span>
               {v && (
                 <span
-                  className="text-[9px] font-mono tabular-nums flex-shrink-0"
+                  className="text-[13px] font-mono tabular-nums flex-shrink-0"
                   style={{ color }}
                 >
                   {(score * 100).toFixed(0)}%
@@ -893,7 +893,7 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
         })}
         {overflowCount > 0 && (
           <div
-            className="px-2.5 py-1.5 text-[9px] font-mono"
+            className="px-2.5 py-1.5 text-[13px] font-mono"
             style={{ color: 'var(--color-text-muted)' }}
           >
             + {overflowCount} {lang === 'en' ? 'more' : 'más'}
@@ -916,13 +916,13 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
           <span style={{ color: ACCENT }} className="text-[13px] leading-none flex-shrink-0">↓</span>
           <div>
             <div
-              className="text-[10px] font-mono font-bold uppercase tracking-[0.08em]"
+              className="text-[12px] font-mono font-bold uppercase tracking-[0.08em]"
               style={{ color: 'var(--color-text-primary)' }}
             >
               {lang === 'en' ? 'Export CSV' : 'Exportar CSV'}
             </div>
             <div
-              className="text-[9px] font-mono"
+              className="text-[13px] font-mono"
               style={{ color: 'var(--color-text-muted)' }}
             >
               {lang === 'en' ? 'Download vendor list' : 'Descargar lista de proveedores'}
@@ -947,13 +947,13 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
           />
           <div>
             <div
-              className="text-[10px] font-mono font-bold uppercase tracking-[0.08em]"
+              className="text-[12px] font-mono font-bold uppercase tracking-[0.08em]"
               style={{ color: 'var(--color-text-primary)' }}
             >
               {lang === 'en' ? 'Open all in ARIA' : 'Abrir todos en ARIA'}
             </div>
             <div
-              className="text-[9px] font-mono"
+              className="text-[13px] font-mono"
               style={{ color: 'var(--color-text-muted)' }}
             >
               {count > 10
@@ -967,7 +967,7 @@ function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProp
 
       {/* ── ESC hint ─────────────────────────────────────────────────── */}
       <div
-        className="mt-4 text-[9px] font-mono"
+        className="mt-4 text-[13px] font-mono"
         style={{ color: 'var(--color-text-muted)' }}
       >
         {lang === 'en'

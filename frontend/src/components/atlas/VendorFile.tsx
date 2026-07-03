@@ -146,7 +146,7 @@ export function VendorFile({
       {variant === 'panel' && (
         <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--color-border)', borderTop: `2px solid ${accent}`, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-            <div className="font-mono" style={{ fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+            <div className="font-mono" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
               <span style={{ color: accent, fontWeight: 700 }}>{es ? 'Expediente' : 'File'}</span>
               <span style={{ margin: '0 6px', opacity: 0.5 }}>·</span>
               {currentCode && codeLabels[currentCode] ? codeLabels[currentCode] : (es ? 'Atlas' : 'Atlas')}
@@ -161,25 +161,25 @@ export function VendorFile({
             {formatVendorName(item.name, 80)}
           </h3>
           <div className="flex flex-wrap items-center" style={{ gap: 6 }}>
-            <span className="font-mono" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: riskColor, border: `1px solid ${riskColor}`, padding: '2px 6px', borderRadius: 3 }}>
+            <span className="font-mono" style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: riskColor, border: `1px solid ${riskColor}`, padding: '2px 6px', borderRadius: 3 }}>
               {(RISK_LABEL[lvl] ?? RISK_LABEL.low)[lang]} · {Math.round((item.risk_score ?? 0) * 100)}%
             </span>
             {item.tier != null && item.tier >= 1 && item.tier <= 4 && (
-              <span className="font-mono" style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', padding: '2px 6px', borderRadius: 3 }}>
+              <span className="font-mono" style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', padding: '2px 6px', borderRadius: 3 }}>
                 ARIA T{item.tier}
               </span>
             )}
             {item.is_gt && (
               <span className="font-mono" title={es ? 'Vinculado a un caso documentado' : 'Linked to a documented case'}
-                style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-primary)', border: '1px solid var(--color-text-primary)', padding: '2px 6px', borderRadius: 3 }}>
+                style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary)', border: '1px solid var(--color-text-primary)', padding: '2px 6px', borderRadius: 3 }}>
                 ⊜ {es ? 'caso' : 'case'}
               </span>
             )}
             {item.primary_sector_name && (
-              <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{item.primary_sector_name}</span>
+              <span className="font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{item.primary_sector_name}</span>
             )}
           </div>
-          <div className="font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 7 }}>
+          <div className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 7 }}>
             {fmtAmount(item.total_amount_mxn)} · {formatNumber(item.total_contracts)} {es ? 'contratos' : 'contracts'}
           </div>
         </div>
@@ -209,13 +209,13 @@ export function VendorFile({
                 const isCurrent = code === currentCode
                 return (
                   <div key={code} className="flex items-center" style={{ gap: 8 }}>
-                    <span className="font-mono flex-shrink-0" style={{ fontSize: 9, fontWeight: isCurrent ? 700 : 400, color: isCurrent ? 'var(--color-text-primary)' : 'var(--color-text-muted)', width: 86, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span className="font-mono flex-shrink-0" style={{ fontSize: 13, fontWeight: isCurrent ? 700 : 400, color: isCurrent ? 'var(--color-text-primary)' : 'var(--color-text-muted)', width: 86, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {code} · {codeLabels[code] ?? code}
                     </span>
                     <span aria-hidden="true" className="flex-1" style={{ height: 5, borderRadius: 2, background: 'var(--color-background-elevated)', position: 'relative' }}>
                       <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.round(conf * 100)}%`, borderRadius: 2, background: isCurrent ? accent : 'var(--color-text-muted)', opacity: isCurrent ? 1 : 0.45 }} />
                     </span>
-                    <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-secondary)', width: 28, textAlign: 'right' }}>{conf.toFixed(2)}</span>
+                    <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, color: 'var(--color-text-secondary)', width: 28, textAlign: 'right' }}>{conf.toFixed(2)}</span>
                   </div>
                 )
               })}
@@ -224,7 +224,7 @@ export function VendorFile({
                   {jumpTargets.map(([code, conf]) => (
                     <button key={code} type="button" onClick={() => onJumpToPattern?.(code)}
                       className="font-mono hover:opacity-80 transition-opacity"
-                      style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--color-text-primary)', background: 'var(--color-background-elevated)', border: '1px solid var(--color-border)', padding: '4px 8px', borderRadius: 3, cursor: 'pointer' }}>
+                      style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--color-text-primary)', background: 'var(--color-background-elevated)', border: '1px solid var(--color-border)', padding: '4px 8px', borderRadius: 3, cursor: 'pointer' }}>
                       ⇄ {es ? 'también' : 'also'} {code} {codeLabels[code]} · {conf.toFixed(2)}
                     </button>
                   ))}
@@ -250,7 +250,7 @@ export function VendorFile({
                 return (
                   <div key={inst.institution_id}>
                     <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="xs" hideIcon fullName />
-                    <div className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)', paddingLeft: 2, marginTop: 1 }}>
+                    <div className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)', paddingLeft: 2, marginTop: 1 }}>
                       {tenure ? `${tenure} · ` : ''}{formatNumber(inst.contract_count)} {es ? 'contratos' : 'contracts'}
                       {share > 0.005 ? ` · ${Math.round(share * 100)}% ${es ? 'del valor' : 'of value'}` : ''}
                     </div>
@@ -270,7 +270,7 @@ export function VendorFile({
           ) : byYear.length > 0 ? (
             <>
               <YearRibbon byYear={byYear} peakYear={peakYear?.year ?? null} lang={lang} />
-              <div className="font-mono tabular-nums flex flex-wrap" style={{ fontSize: 9, color: 'var(--color-text-secondary)', gap: 10, marginTop: 6 }}>
+              <div className="font-mono tabular-nums flex flex-wrap" style={{ fontSize: 13, color: 'var(--color-text-secondary)', gap: 10, marginTop: 6 }}>
                 {aggQ.data && aggQ.data.total_contracts > 0 && (
                   <span>{Math.round((aggQ.data.direct_award / aggQ.data.total_contracts) * 100)}% {es ? 'adjudicación directa' : 'direct award'}</span>
                 )}
@@ -296,7 +296,7 @@ export function VendorFile({
               <div className="flex flex-wrap" style={{ gap: 6 }}>
                 {flagsQ.data?.sat_efos && (
                   <span className="font-mono" style={{
-                    fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: 3,
+                    fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: 3,
                     color: flagsQ.data.sat_efos.stage === 'definitivo' ? RISK_COLORS.critical : flagsQ.data.sat_efos.stage === 'presunto' ? RISK_COLORS.high : 'var(--color-text-muted)',
                     border: `1px solid ${flagsQ.data.sat_efos.stage === 'definitivo' ? RISK_COLORS.critical : flagsQ.data.sat_efos.stage === 'presunto' ? RISK_COLORS.high : 'var(--color-border)'}`,
                   }}>
@@ -304,12 +304,12 @@ export function VendorFile({
                   </span>
                 )}
                 {(flagsQ.data?.sfp_sanctions?.length ?? 0) > 0 && (
-                  <span className="font-mono" style={{ fontSize: 9, fontWeight: 700, color: RISK_COLORS.high, border: `1px solid ${RISK_COLORS.high}`, padding: '2px 6px', borderRadius: 3 }}>
+                  <span className="font-mono" style={{ fontSize: 13, fontWeight: 700, color: RISK_COLORS.high, border: `1px solid ${RISK_COLORS.high}`, padding: '2px 6px', borderRadius: 3 }}>
                     {flagsQ.data!.sfp_sanctions.length} {es ? 'sanciones SFP' : 'SFP sanctions'}
                   </span>
                 )}
                 {(flagsQ.data?.asf_cases?.length ?? 0) > 0 && (
-                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', padding: '2px 6px', borderRadius: 3 }}>
+                  <span className="font-mono" style={{ fontSize: 13, color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', padding: '2px 6px', borderRadius: 3 }}>
                     {flagsQ.data!.asf_cases.length} ASF
                   </span>
                 )}
@@ -358,7 +358,7 @@ export function VendorFile({
       <div style={{ padding: variant === 'panel' ? '10px 16px' : '8px 12px', borderTop: '1px solid var(--color-border)', flexShrink: 0 }}>
         <button type="button" onClick={() => onOpenVendor(item.vendor_id)}
           className="font-mono hover:opacity-85 transition-opacity w-full"
-          style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fff', background: accent, border: 'none', padding: '8px 12px', borderRadius: 3, cursor: 'pointer' }}>
+          style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fff', background: accent, border: 'none', padding: '8px 12px', borderRadius: 3, cursor: 'pointer' }}>
           {es ? 'Abrir expediente completo ↗' : 'Open full dossier ↗'}
         </button>
       </div>
@@ -394,7 +394,7 @@ function Skeleton({ lines }: { lines: number }) {
 
 function Honest({ text }: { text: string }) {
   return (
-    <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>{text}</p>
+    <p style={{ fontFamily: SERIF, fontStyle: 'normal', fontSize: 12, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>{text}</p>
   )
 }
 
@@ -440,7 +440,7 @@ function ShapDriverStrip({ rows, lang }: { rows: Array<{ label: string; value: n
 
   return (
     <div role="img" aria-label={es ? 'Factores del indicador de riesgo, ordenados por peso' : 'Risk indicator drivers, ranked by weight'}>
-      <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 13, lineHeight: 1.35, color: 'var(--color-text-primary)', margin: '0 0 9px' }}>
+      <p style={{ fontFamily: SERIF, fontStyle: 'normal', fontSize: 13, lineHeight: 1.35, color: 'var(--color-text-primary)', margin: '0 0 9px' }}>
         {verdict.pre}
         <span style={{ fontStyle: 'normal', color: verdict.color }}>{verdict.name}</span>
         {verdict.post}
@@ -454,9 +454,9 @@ function ShapDriverStrip({ rows, lang }: { rows: Array<{ label: string; value: n
           const sword = s === 3 ? (es ? 'fuerte' : 'strong') : s === 2 ? (es ? 'moderado' : 'moderate') : (es ? 'leve' : 'faint')
           return (
             <div key={`${r.label}-${i}`} className="flex items-center" style={{ gap: 7 }}>
-              <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 12, textAlign: 'right' }}>{i + 1}</span>
+              <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, color: 'var(--color-text-muted)', width: 12, textAlign: 'right' }}>{i + 1}</span>
               <span aria-hidden="true" style={{ width: 2, alignSelf: 'stretch', minHeight: 12, background: rail, opacity: pos ? 0.85 : 0.5, borderRadius: 1 }} />
-              <span className="font-mono" style={{ fontSize: 9.5, color: 'var(--color-text-secondary)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.label}>
+              <span className="font-mono" style={{ fontSize: 13, color: 'var(--color-text-secondary)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.label}>
                 {r.label}
               </span>
               {isDom && (

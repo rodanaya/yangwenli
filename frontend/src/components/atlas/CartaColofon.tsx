@@ -65,7 +65,7 @@ export function CartaColofon({ lang, totalContracts }: CartaColofonProps) {
       className="w-full py-6"
     >
       <div
-        className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted"
+        className="mb-3 font-mono text-[12px] uppercase tracking-[0.16em] text-text-muted"
       >
         {lang === 'en' ? 'SURVEYOR’S NOTE · METHOD AND LIMITS' : 'FE DE CARTA · MÉTODO Y LÍMITES'}
       </div>
@@ -73,11 +73,11 @@ export function CartaColofon({ lang, totalContracts }: CartaColofonProps) {
       <ol className="space-y-2">
         {clauses.map((clause) => (
           <li key={clause.roman} className="flex gap-2">
-            <span className="shrink-0 font-mono text-[9.5px] text-text-muted">
+            <span className="shrink-0 font-mono text-[13px] text-text-muted">
               {clause.roman}
             </span>
             <span
-              className="text-[12.5px] italic text-text-secondary"
+              className="text-[12.5px] text-text-secondary"
               style={{ fontFamily: '"EB Garamond", Georgia, serif', lineHeight: 1.5 }}
             >
               {lang === 'en' ? clause.en : clause.es}
@@ -86,7 +86,7 @@ export function CartaColofon({ lang, totalContracts }: CartaColofonProps) {
         ))}
       </ol>
 
-      <div className="mt-4 font-mono text-[9px] text-text-muted">
+      <div className="mt-4 font-mono text-[13px] text-text-muted">
         {lang === 'en' ? (
           <>
             model v0.8.5 &middot; test AUC 0.785 &middot;{' '}

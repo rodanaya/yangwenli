@@ -378,7 +378,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
 
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[10px] font-bold transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[12px] font-bold transition-colors"
             style={{
               background: isPlaying ? '#dc2626' : 'var(--color-border)',
               color: isPlaying ? 'white' : 'var(--color-text-primary)',
@@ -1461,7 +1461,7 @@ function Z1Overlay({ lang }: { lang: 'en' | 'es' }) {
         <button
           type="button"
           onClick={() => dispatch({ type: 'escape-zoom' })}
-          className="absolute top-2 right-2 px-2 py-1 text-[10px] font-mono uppercase tracking-[0.14em] rounded-sm hover:bg-background-elevated transition-colors"
+          className="absolute top-2 right-2 px-2 py-1 text-[12px] font-mono uppercase tracking-[0.14em] rounded-sm hover:bg-background-elevated transition-colors"
           style={{
             color: 'var(--color-accent)',
             border: '1px solid var(--color-border)',
@@ -1505,13 +1505,13 @@ function SelectionBadge({ lang }: { lang: 'en' | 'es' }) {
   const count = state.selection.size
   if (count === 0) return null
   return (
-    <div className="mb-2 inline-flex items-center gap-2 rounded-sm border border-accent/40 bg-accent/10 px-2 py-1 text-[10px] font-mono uppercase tracking-[0.12em] text-accent">
+    <div className="mb-2 inline-flex items-center gap-2 rounded-sm border border-accent/40 bg-accent/10 px-2 py-1 text-[12px] font-mono uppercase tracking-[0.12em] text-accent">
       <span className="font-bold">{count}</span>
       <span>{lang === 'en' ? 'selected' : 'seleccionados'}</span>
       <button
         type="button"
         onClick={() => dispatch({ type: 'clear-selection' })}
-        className="ml-1 rounded-sm border border-accent/30 px-1.5 py-0.5 text-[9px] hover:bg-accent/20"
+        className="ml-1 rounded-sm border border-accent/30 px-1.5 py-0.5 text-[13px] hover:bg-accent/20"
         aria-label={lang === 'en' ? 'Clear selection' : 'Limpiar selección'}
       >
         {lang === 'en' ? 'Clear' : 'Limpiar'}
@@ -2102,9 +2102,9 @@ export default function Atlas() {
       <div className="relative" style={{ zIndex: 1 }}>
       {/* ── Hero header ─ folio aesthetic ──────────────────────────────────
           Eyebrow becomes an archival index line: Folio·IX · Atlas of contracting.
-          Headline is set as a small-caps EB Garamond italic display — feels
+          Headline is set as a small-caps EB Garamond display — feels
           closer to a bound atlas plate than a generic dashboard title.
-          Lede sits in a narrower measure with EB Garamond regular italic for
+          Lede sits in a narrower measure with EB Garamond regular for
           the inline emphasis tokens. */}
       {/* §7 «La Carta del Cielo»: masthead states the survey's finding (thesis
           + computed-argmax dek) instead of a static stat strip. */}
@@ -2157,10 +2157,10 @@ export default function Atlas() {
             style={{ border: '1px solid var(--color-border-hover)', width: 380, maxWidth: '90vw' }}
           >
               <div className="px-4 py-3 border-b border-border/50" style={{ background: 'var(--color-border)' }}>
-                <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
+                <div className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
                   {lang === 'en' ? 'INVESTIGATIVE STORIES' : 'HISTORIAS DE INVESTIGACIÓN'}
                 </div>
-                <div className="text-[11px] text-text-secondary leading-[1.5]">
+                <div className="text-[13px] text-text-secondary leading-[1.5]">
                   {lang === 'en'
                     ? 'Multi-chapter narratives told by the constellation. Pause, explore, resume.'
                     : 'Narrativas de varios capítulos contadas por la constelación. Pausa, explora, reanuda.'}
@@ -2185,10 +2185,10 @@ export default function Atlas() {
                   >
                     {s.title[lang]}
                   </div>
-                  <div className="text-[10px] text-text-secondary leading-[1.5] mb-1.5">
+                  <div className="text-[12px] text-text-secondary leading-[1.5] mb-1.5">
                     {s.subtitle[lang]}
                   </div>
-                  <div className="text-[9px] font-mono uppercase tracking-[0.08em] flex items-center gap-2" style={{ color: s.accent }}>
+                  <div className="text-[13px] font-mono uppercase tracking-[0.08em] flex items-center gap-2" style={{ color: s.accent }}>
                     <span>{s.chapters.length} {lang === 'en' ? 'chapters' : 'capítulos'}</span>
                     <span className="text-text-muted">·</span>
                     <span className="text-text-muted">{s.duration}</span>
@@ -2204,7 +2204,7 @@ export default function Atlas() {
                     setStoryEnded(false)
                     setStoriesMenuOpen(false)
                   }}
-                  className="w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-[0.1em] font-bold transition-colors"
+                  className="w-full text-left px-4 py-2 text-[12px] font-mono uppercase tracking-[0.1em] font-bold transition-colors"
                   style={{ background: 'var(--color-border)', color: 'var(--color-risk-critical)' }}
                 >
                   <Square className="h-3 w-3 inline mr-1.5" aria-hidden="true" />
@@ -2226,7 +2226,7 @@ export default function Atlas() {
                   const qs = params.toString()
                   navigate(`/journalists${qs ? '?' + qs : ''}`)
                 }}
-                className="w-full text-left px-4 py-2.5 text-[10px] font-mono uppercase tracking-[0.1em] font-bold text-text-secondary hover:bg-background-elevated/40 transition-colors flex items-center justify-between border-t border-border/50"
+                className="w-full text-left px-4 py-2.5 text-[12px] font-mono uppercase tracking-[0.1em] font-bold text-text-secondary hover:bg-background-elevated/40 transition-colors flex items-center justify-between border-t border-border/50"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <FileText className="h-3 w-3" aria-hidden="true" />
@@ -2258,7 +2258,7 @@ export default function Atlas() {
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm mt-2 mx-3"
+          className="text-[12px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm mt-2 mx-3"
           style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
         >
           <Sparkles className="h-3 w-3" aria-hidden="true" />
@@ -2306,7 +2306,7 @@ export default function Atlas() {
                   >
                     ◆ {lang === 'en' ? 'STORY' : 'HISTORIA'}
                   </span>
-                  <span className="font-mono text-[11px] text-text-primary truncate font-semibold">
+                  <span className="font-mono text-[13px] text-text-primary truncate font-semibold">
                     {activeStory.title[lang]}
                   </span>
                   {/* Long-form deep-link — only when the tour has a paired
@@ -2389,12 +2389,12 @@ export default function Atlas() {
               <div className="px-5 py-5 md:px-7 md:py-6">
                 <div className="flex items-baseline gap-3 mb-2">
                   <span
-                    className="font-mono font-bold uppercase tracking-[0.14em] text-[10px]"
+                    className="font-mono font-bold uppercase tracking-[0.14em] text-[12px]"
                     style={{ color: activeStory.accent }}
                   >
                     {lang === 'en' ? 'CHAPTER' : 'CAPÍTULO'} {romanCh}
                   </span>
-                  <span className="font-mono text-[10px] text-text-muted">
+                  <span className="font-mono text-[12px] text-text-muted">
                     {chapter.yearLabel[lang]}
                   </span>
                 </div>
@@ -2427,7 +2427,7 @@ export default function Atlas() {
                     >
                       {chapter.pull.value[lang]}
                     </div>
-                    <div className="text-[11px] font-mono text-text-muted leading-[1.5] uppercase tracking-[0.06em]">
+                    <div className="text-[13px] font-mono text-text-muted leading-[1.5] uppercase tracking-[0.06em]">
                       {chapter.pull.caption[lang]}
                     </div>
                   </div>
@@ -2435,7 +2435,7 @@ export default function Atlas() {
 
                 {/* Continue / autoplay hint footer */}
                 <div className="mt-5 pt-3 border-t border-border/50 flex items-center justify-between gap-3 flex-wrap">
-                  <div className="text-[10px] font-mono text-text-muted">
+                  <div className="text-[12px] font-mono text-text-muted">
                     {storyPlaying
                       ? (lang === 'en' ? `auto-advancing in ${(chapter.dwellMs / 1000).toFixed(0)}s · pause to read & explore` : `avanza en ${(chapter.dwellMs / 1000).toFixed(0)}s · pausa para leer y explorar`)
                       : (lang === 'en' ? 'paused · click ▶ to resume or use → to advance' : 'pausado · clic ▶ para reanudar o → para avanzar')
@@ -2444,7 +2444,7 @@ export default function Atlas() {
                   {!isLastChapter && (
                     <button
                       onClick={() => setActiveChapter(activeChapter + 1)}
-                      className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
+                      className="text-[12px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
                       style={{ background: activeStory.accent, color: 'white' }}
                     >
                       {lang === 'en' ? 'Continue' : 'Continuar'}
@@ -2454,7 +2454,7 @@ export default function Atlas() {
                   {isLastChapter && (
                     <button
                       onClick={() => { setStoryPlaying(false); setStoryEnded(true) }}
-                      className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
+                      className="text-[12px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
                       style={{ background: activeStory.accent, color: 'white' }}
                     >
                       {lang === 'en' ? 'End of story' : 'Fin de la historia'}
@@ -2502,7 +2502,7 @@ export default function Atlas() {
                 {activeStory.longformSlug && (
                   <button
                     onClick={() => navigate(`/stories/${activeStory.longformSlug}`)}
-                    className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
+                    className="text-[12px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
                     style={{ background: activeStory.accent, color: 'white' }}
                   >
                     <FileText className="h-3 w-3" aria-hidden="true" />
@@ -2512,7 +2512,7 @@ export default function Atlas() {
                 <button
                   onClick={() => { setActiveChapter(0); setStoryPlaying(true); setStoryEnded(false) }}
                   className={cn(
-                    'text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors inline-flex items-center gap-1.5',
+                    'text-[12px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors inline-flex items-center gap-1.5',
                     activeStory.longformSlug
                       ? 'hover:bg-background-elevated/40'
                       : 'hover:opacity-90',
@@ -2530,7 +2530,7 @@ export default function Atlas() {
                   <button
                     key={s.id}
                     onClick={() => { setActiveStory(s); setActiveChapter(0); setStoryPlaying(true); setStoryEnded(false) }}
-                    className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors hover:bg-background-elevated/40 inline-flex items-center gap-1.5"
+                    className="text-[12px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors hover:bg-background-elevated/40 inline-flex items-center gap-1.5"
                     style={{ border: '1px solid var(--color-border)', color: s.accent }}
                   >
                     <BookOpen className="h-3 w-3" aria-hidden="true" />
@@ -2539,7 +2539,7 @@ export default function Atlas() {
                 ))}
                 <button
                   onClick={() => { setActiveStory(null); setActiveChapter(0); setStoryPlaying(false); setStoryEnded(false) }}
-                  className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors hover:bg-background-elevated/40 inline-flex items-center gap-1.5 text-text-muted ml-auto"
+                  className="text-[12px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors hover:bg-background-elevated/40 inline-flex items-center gap-1.5 text-text-muted ml-auto"
                   style={{ border: '1px solid var(--color-border)' }}
                 >
                   <X className="h-3 w-3" />
@@ -2553,7 +2553,7 @@ export default function Atlas() {
 
       {/* ── Constellation canvas A (always shown) ──────────────────────── */}
       {compareMode && (
-        <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5 inline-flex items-center gap-1.5">
+        <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5 inline-flex items-center gap-1.5">
           <span className="font-bold" style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'YEAR A' : 'AÑO A'}</span>
           <span>·</span>
           <span>{snapshot.year}</span>
@@ -2581,7 +2581,7 @@ export default function Atlas() {
             persistent chapter indicator so the reader never loses orientation. */}
         {activeStory && !storyEnded && activeStory.chapters[activeChapter] && (
           <div
-            className="absolute top-2 left-2 z-10 inline-flex items-center gap-2 rounded-sm px-2 py-1 text-[10px] font-mono uppercase tracking-[0.12em]"
+            className="absolute top-2 left-2 z-10 inline-flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] font-mono uppercase tracking-[0.12em]"
             style={{
               background: 'var(--color-background)',
               border: '1px solid var(--color-border)',
@@ -2604,7 +2604,7 @@ export default function Atlas() {
             modified (named outliers + dim layers + bigger labels) per user
             authorization to break the sacred-engine rule.
             folio-skin: PlateFrame above gives this card investigative-folio
-            chrome (corner crops, archival folio number, italic plate caption). */}
+            chrome (corner crops, archival folio number, plate caption). */}
         {canvasEnabled ? (
           <CanvasAtlasView
             key={constellationKey}
@@ -2669,7 +2669,7 @@ export default function Atlas() {
         const constellationKeyB = `B-${mode}`
         return (
           <>
-            <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-6 mb-1.5 inline-flex items-center gap-1.5">
+            <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-6 mb-1.5 inline-flex items-center gap-1.5">
               <span className="font-bold" style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'YEAR B' : 'AÑO B'}</span>
               <span>·</span>
               <span>{snapshotB.year}</span>

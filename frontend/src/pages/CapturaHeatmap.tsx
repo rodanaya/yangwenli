@@ -109,7 +109,7 @@ function WhatIsCaptureBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) 
         aria-controls="capture-explainer-body"
       >
         <Info className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
-        <span className="text-[11px] uppercase tracking-wide text-accent font-medium">
+        <span className="text-[13px] uppercase tracking-wide text-accent font-medium">
           {t('whatIsCapture.label')}
         </span>
         <span className="ml-auto text-accent/60 text-xs">{open ? '−' : '+'}</span>
@@ -156,7 +156,7 @@ function WhyItMattersBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
         aria-controls="why-it-matters-body"
       >
         <Info className="w-4 h-4 text-risk-high shrink-0" aria-hidden="true" />
-        <span className="text-[11px] uppercase tracking-wide text-risk-high font-semibold">
+        <span className="text-[13px] uppercase tracking-wide text-risk-high font-semibold">
           {t('whyItMatters.label')}
         </span>
         <span className="ml-auto text-risk-high/60 text-xs">{open ? '−' : '+'}</span>
@@ -226,7 +226,7 @@ function TopCapturedList({
             {/* Institution + vendor info */}
             <div className="flex-1 min-w-0 space-y-0.5">
               <div
-                className="text-[11px] text-text-muted/70 font-medium leading-snug"
+                className="text-[13px] text-text-muted/70 font-medium leading-snug"
                 title={row.institution}
               >
                 {row.institution}
@@ -235,7 +235,7 @@ function TopCapturedList({
                 {t('topCaptured.topVendor')}:{' '}
                 <EntityIdentityChip type="vendor" id={row.topVendorId} name={truncName(row.topVendor, 36)} size="sm" />
               </div>
-              <div className="text-[10px] text-text-muted/40">
+              <div className="text-[12px] text-text-muted/40">
                 {formatCompactMXN(row.value)} &middot; {formatNumber(row.contracts)} {t('topCaptured.contracts')}
               </div>
             </div>
@@ -248,8 +248,8 @@ function TopCapturedList({
               >
                 {formatPercent(row.pct, 1)}
               </div>
-              <div className="text-[10px] text-text-muted/50">{t(riskKey)}</div>
-              <div className="text-[9px] text-text-muted/30">{t('topCaptured.share')}</div>
+              <div className="text-[12px] text-text-muted/50">{t(riskKey)}</div>
+              <div className="text-[13px] text-text-muted/30">{t('topCaptured.share')}</div>
             </div>
           </li>
         )
@@ -262,20 +262,20 @@ function TopCapturedList({
 function HhiBadge({ hhi, t }: { hhi: number; t: ReturnType<typeof useTranslation>['t'] }) {
   if (hhi > 0.25) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/15 text-risk-critical border border-risk-critical/30">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[12px] font-semibold bg-risk-critical/15 text-risk-critical border border-risk-critical/30">
         {t('hhi.highCapture')}
       </span>
     )
   }
   if (hhi > 0.15) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-high/10 text-risk-high border border-risk-high/30">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[12px] font-semibold bg-risk-high/10 text-risk-high border border-risk-high/30">
         {t('hhi.moderate')}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-background-card text-text-muted/50 border border-border">
+    <span className="inline-flex items-center px-2 py-0.5 rounded text-[12px] font-semibold bg-background-card text-text-muted/50 border border-border">
       {t('hhi.low')}
     </span>
   )
@@ -296,7 +296,7 @@ function HeroCaptureCallout({
       aria-label={t('hero.worstCapture')}
     >
       <div className="flex-1 min-w-0">
-        <div className="text-[10px] tracking-[0.25em] uppercase text-risk-critical/70 font-semibold mb-1">
+        <div className="text-[12px] tracking-[0.25em] uppercase text-risk-critical/70 font-semibold mb-1">
           {t('hero.worstCapture')}
         </div>
         <div className="text-sm text-text-primary font-medium truncate" title={row.institution}>
@@ -315,7 +315,7 @@ function HeroCaptureCallout({
         >
           {formatPercent(row.pct, 1)}
         </div>
-        <div className="text-[11px] text-text-muted/50 mt-1">{t('topCaptured.share')}</div>
+        <div className="text-[13px] text-text-muted/50 mt-1">{t('topCaptured.share')}</div>
       </div>
     </div>
   )
@@ -403,7 +403,7 @@ function CaptureBarChart({
                 </div>
 
                 {/* Meta row */}
-                <div className="flex items-center gap-3 text-[10px] text-text-muted/40">
+                <div className="flex items-center gap-3 text-[12px] text-text-muted/40">
                   <span>{formatCompactMXN(row.value)}</span>
                   <span>&middot;</span>
                   <span>{formatNumber(row.contracts)} {t('topCaptured.contracts')}</span>
@@ -631,7 +631,7 @@ export default function CapturaHeatmap() {
             <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
               Institutional Capture
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+            <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
               CONCENTRATION ANALYSIS · WHEN ONE VENDOR DOMINATES ONE AGENCY
             </p>
           </div>
@@ -641,7 +641,7 @@ export default function CapturaHeatmap() {
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                   {topCaptured.length > 0 ? severeCount : '—'}
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">
                   Severe captures
                 </div>
               </div>
@@ -649,7 +649,7 @@ export default function CapturaHeatmap() {
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-high)' }}>
                   {valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—'}
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">
                   Under capture
                 </div>
               </div>
@@ -657,7 +657,7 @@ export default function CapturaHeatmap() {
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
                   {institutions.length > 0 ? formatNumber(institutions.length) : '—'}
                 </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                <div className="text-[13px] uppercase tracking-[0.12em] text-text-muted mt-1">
                   Institutions
                 </div>
               </div>
@@ -670,7 +670,7 @@ export default function CapturaHeatmap() {
 
       {/* ===== Editorial header ===== */}
       <div className="border-b border-border pb-6 mb-8">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
+        <div className="text-[12px] tracking-[0.3em] uppercase text-text-muted mb-2">
           {t('trackingLabel')}
         </div>
         <h1
@@ -686,7 +686,7 @@ export default function CapturaHeatmap() {
 
       {/* ===== Editorial lede: WHY this matters ===== */}
       <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5 mb-6">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-2">
+        <p className="text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-2">
           {t('editorialLede.overline')}
         </p>
         <p className="text-sm text-text-secondary leading-relaxed mb-3">
@@ -709,7 +709,7 @@ export default function CapturaHeatmap() {
             <div className="text-2xl font-mono font-bold text-risk-critical">
               {topCaptured.filter(r => r.pct >= 0.5).length}
             </div>
-            <div className="text-[10px] text-text-secondary uppercase tracking-wide mt-0.5">
+            <div className="text-[12px] text-text-secondary uppercase tracking-wide mt-0.5">
               {t('statStrip.severeCaptureLabel')}
             </div>
           </div>
@@ -718,7 +718,7 @@ export default function CapturaHeatmap() {
             <div className="text-2xl font-mono font-bold text-risk-high">
               {formatCompactMXN(topCaptured.slice(0, 10).reduce((s, r) => s + r.value, 0))}
             </div>
-            <div className="text-[10px] text-text-secondary uppercase tracking-wide mt-0.5">
+            <div className="text-[12px] text-text-secondary uppercase tracking-wide mt-0.5">
               {t('statStrip.valueAtRiskLabel')}
             </div>
           </div>
@@ -728,7 +728,7 @@ export default function CapturaHeatmap() {
               <div className="text-2xl font-mono font-bold text-risk-high">
                 {(topCaptured[0].pct * 100).toFixed(1)}%
               </div>
-              <div className="text-[10px] text-text-secondary uppercase tracking-wide mt-0.5 truncate" title={`${topCaptured[0].institution} → ${topCaptured[0].topVendor}`}>
+              <div className="text-[12px] text-text-secondary uppercase tracking-wide mt-0.5 truncate" title={`${topCaptured[0].institution} → ${topCaptured[0].topVendor}`}>
                 {t('statStrip.highestLabel')}: {truncName(topCaptured[0].institution, 20)}
               </div>
             </div>
@@ -747,7 +747,7 @@ export default function CapturaHeatmap() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-wrap items-center gap-4 text-[11px] text-text-muted/60"
+          className="flex flex-wrap items-center gap-4 text-[13px] text-text-muted/60"
         >
           <span className="bg-background-card px-3 py-1 rounded-sm border border-border">
             COMPRANET &middot; {formatNumber(flowData.total_contracts)} {t('sourcePill')}
@@ -769,7 +769,7 @@ export default function CapturaHeatmap() {
       {/* ===== Filters ===== */}
       <div className="space-y-3 rounded-sm border border-border bg-background-card/40 p-4">
         {/* Current filter state indicator */}
-        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+        <div className="flex flex-wrap items-center gap-2 text-[13px]">
           <span className="text-text-muted/60 uppercase tracking-wide">{t('filters.currentView')}:</span>
           <span className="inline-flex items-center gap-1.5 bg-accent/15 border border-accent/30 text-accent px-2.5 py-0.5 rounded-sm font-medium">
             {sectorId ? SECTORS.find((s) => s.id === sectorId)?.name : t('filters.allSectors')}
@@ -789,7 +789,7 @@ export default function CapturaHeatmap() {
                 setYearRange('all')
                 setMinCapture(0)
               }}
-              className="ml-auto inline-flex items-center gap-1 text-[11px] text-risk-high hover:text-accent-hover font-medium border border-risk-high/30 px-2.5 py-0.5 rounded-sm hover:bg-risk-high/10 transition-colors"
+              className="ml-auto inline-flex items-center gap-1 text-[13px] text-risk-high hover:text-accent-hover font-medium border border-risk-high/30 px-2.5 py-0.5 rounded-sm hover:bg-risk-high/10 transition-colors"
             >
               ↺ {t('filters.resetAll')}
             </button>
@@ -798,7 +798,7 @@ export default function CapturaHeatmap() {
 
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex flex-col gap-1">
-            <label htmlFor="captura-sector-select" className="text-[10px] tracking-[0.15em] uppercase text-text-muted/60 font-semibold">
+            <label htmlFor="captura-sector-select" className="text-[12px] tracking-[0.15em] uppercase text-text-muted/60 font-semibold">
               {t('filters.sectorLabel')}
             </label>
             <select
@@ -819,7 +819,7 @@ export default function CapturaHeatmap() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="captura-year-select" className="text-[10px] tracking-[0.15em] uppercase text-text-muted/60 font-semibold">
+            <label htmlFor="captura-year-select" className="text-[12px] tracking-[0.15em] uppercase text-text-muted/60 font-semibold">
               {t('filters.yearLabel')}
             </label>
             <select
@@ -837,7 +837,7 @@ export default function CapturaHeatmap() {
 
         {/* Capture threshold filter pills */}
         <div>
-          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-2">
+          <div className="text-[12px] tracking-[0.2em] uppercase text-text-muted/50 mb-2">
             {t('filters.captureThreshold')}
           </div>
           <div className="flex flex-wrap gap-2" role="group" aria-label={t('filters.captureThreshold')}>
@@ -910,7 +910,7 @@ export default function CapturaHeatmap() {
                 <Info className="h-5 w-5 text-risk-high" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
+                <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
                   {t('emptyState.overline')}
                 </p>
                 <h3 className="font-serif text-lg text-text-primary mb-2">
@@ -954,10 +954,10 @@ export default function CapturaHeatmap() {
           transition={{ duration: 0.4 }}
           aria-labelledby="top-captured-heading"
         >
-          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-1">
+          <div className="text-[12px] tracking-[0.2em] uppercase text-text-muted/50 mb-1">
             {t('topCaptured.label')}
           </div>
-          <p className="text-[11px] text-text-muted/40 mb-3">
+          <p className="text-[13px] text-text-muted/40 mb-3">
             {t('topCaptured.sublabel')}
           </p>
           <h2 id="top-captured-heading" className="sr-only">
@@ -966,9 +966,9 @@ export default function CapturaHeatmap() {
           {/* HHI badge strip for the top row */}
           {topCaptured.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3 items-center">
-              <span className="text-[10px] text-text-muted/40">{t('hhi.label')}:</span>
+              <span className="text-[12px] text-text-muted/40">{t('hhi.label')}:</span>
               {topCaptured.slice(0, 3).map((row) => (
-                <span key={row.institutionId} className="flex items-center gap-1.5 text-[10px] text-text-muted/50">
+                <span key={row.institutionId} className="flex items-center gap-1.5 text-[12px] text-text-muted/50">
                   <span className="truncate max-w-[120px]" title={row.institution}>
                     {truncName(row.institution, 18)}
                   </span>
@@ -994,7 +994,7 @@ export default function CapturaHeatmap() {
           transition={{ duration: 0.4, delay: 0.1 }}
           className="space-y-2"
         >
-          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-3">
+          <div className="text-[12px] tracking-[0.2em] uppercase text-text-muted/50 mb-3">
             {t('heatmap.mobileLabel')}
           </div>
           <ol className="space-y-2" aria-label={t('heatmap.mobileLabel')}>
@@ -1020,7 +1020,7 @@ export default function CapturaHeatmap() {
                   />
                   <div className="flex-1 min-w-0">
                     <div
-                      className="text-[11px] text-text-muted/60 truncate mb-0.5"
+                      className="text-[13px] text-text-muted/60 truncate mb-0.5"
                       title={cell.institution}
                     >
                       {truncName(cell.institution, 32)}
@@ -1040,11 +1040,11 @@ export default function CapturaHeatmap() {
                     >
                       {formatPercent(cell.pctOfInstitution, 1)}
                     </div>
-                    <div className="text-[10px] text-text-muted/50">{t(riskKey)}</div>
-                    <div className="text-[10px] text-text-muted/40">
+                    <div className="text-[12px] text-text-muted/50">{t(riskKey)}</div>
+                    <div className="text-[12px] text-text-muted/40">
                       {formatCompactMXN(cell.value)}
                     </div>
-                    <div className="text-[10px] text-text-muted/40">
+                    <div className="text-[12px] text-text-muted/40">
                       {formatNumber(cell.contracts)} {t('heatmap.contracts')}
                     </div>
                   </div>
@@ -1067,11 +1067,11 @@ export default function CapturaHeatmap() {
             <div>
               <div
                 id="capture-chart-heading"
-                className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-0.5"
+                className="text-[12px] tracking-[0.2em] uppercase text-text-muted/50 mb-0.5"
               >
                 {t('heatmap.sectionLabel')}
               </div>
-              <p className="text-[11px] text-text-muted/40">
+              <p className="text-[13px] text-text-muted/40">
                 {t('topCaptured.sublabel')}
               </p>
             </div>
@@ -1086,7 +1086,7 @@ export default function CapturaHeatmap() {
           </div>
 
           {/* Color legend -- descriptive labels */}
-          <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] text-text-muted/50">
+          <div className="flex flex-wrap items-center gap-4 mb-4 text-[12px] text-text-muted/50">
             {(
               [
                 { color: '#dc2626', label: '≥50%', desc: t('legendDescriptive.severe') },

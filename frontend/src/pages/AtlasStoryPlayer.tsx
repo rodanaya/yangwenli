@@ -88,7 +88,7 @@ export function AtlasStoryPlayer() {
           {/* Chapter kicker overlay */}
           <div className="absolute top-4 left-4 pointer-events-none">
             <div
-              className="text-[9px] font-mono uppercase tracking-[0.18em] mb-0.5"
+              className="text-[13px] font-mono uppercase tracking-[0.18em] mb-0.5"
               style={{ color: 'var(--color-text-muted)' }}
             >
               {lang === 'en'
@@ -120,7 +120,7 @@ export function AtlasStoryPlayer() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div
-                  className="text-[9px] font-mono uppercase tracking-[0.16em] mb-1"
+                  className="text-[13px] font-mono uppercase tracking-[0.16em] mb-1"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   {lang === 'en' ? 'INVESTIGATIVE STORY' : 'HISTORIA DE INVESTIGACIÓN'}
@@ -177,7 +177,7 @@ export function AtlasStoryPlayer() {
               <>
                 {/* Year label */}
                 <div
-                  className="font-mono text-[10px] uppercase tracking-[0.15em] mb-1"
+                  className="font-mono text-[12px] uppercase tracking-[0.15em] mb-1"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   {lang === 'en' ? chapter.yearLabel.en : chapter.yearLabel.es}
@@ -207,14 +207,14 @@ export function AtlasStoryPlayer() {
                       style={{
                         fontFamily: "'Playfair Display', Georgia, serif",
                         fontWeight: 800,
-                        fontStyle: 'italic',
+                        fontStyle: 'normal',
                         color: story.accent,
                       }}
                     >
                       {lang === 'en' ? chapter.pull.value.en : chapter.pull.value.es}
                     </div>
                     <div
-                      className="text-[11px] mt-1 font-mono"
+                      className="text-[13px] mt-1 font-mono"
                       style={{ color: 'var(--color-text-muted)' }}
                     >
                       {lang === 'en' ? chapter.pull.caption.en : chapter.pull.caption.es}
@@ -242,7 +242,7 @@ export function AtlasStoryPlayer() {
               type="button"
               onClick={() => setChapterIdx((i) => Math.max(0, i - 1))}
               disabled={chapterIdx === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[11px] font-mono uppercase tracking-[0.1em] disabled:opacity-40"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[13px] font-mono uppercase tracking-[0.1em] disabled:opacity-40"
               style={{
                 background: 'var(--color-background)',
                 border: '1px solid var(--color-border)',
@@ -254,7 +254,7 @@ export function AtlasStoryPlayer() {
             </button>
 
             <span
-              className="text-[10px] font-mono tabular-nums"
+              className="text-[12px] font-mono tabular-nums"
               style={{ color: 'var(--color-text-muted)' }}
             >
               {chapterIdx + 1} / {story.chapters.length}
@@ -268,7 +268,7 @@ export function AtlasStoryPlayer() {
                     Math.min(story.chapters.length - 1, i + 1),
                   )
                 }
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[11px] font-mono uppercase tracking-[0.1em]"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[13px] font-mono uppercase tracking-[0.1em]"
                 style={{
                   background: story.accent,
                   color: 'var(--color-background)',
@@ -281,7 +281,7 @@ export function AtlasStoryPlayer() {
             ) : (
               <Link
                 to="/atlas"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[11px] font-mono uppercase tracking-[0.1em]"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[13px] font-mono uppercase tracking-[0.1em]"
                 style={{
                   background: story.accent,
                   color: 'var(--color-background)',

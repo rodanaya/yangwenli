@@ -124,7 +124,7 @@ export function AtlasToolbar({
           <button
             type="button"
             onClick={() => setLensOpen((v) => !v)}
-            className="h-6 px-2 inline-flex items-center gap-1 rounded-sm font-mono text-[11px] uppercase tracking-[0.08em] hover:bg-background-elevated/60 transition-colors"
+            className="h-6 px-2 inline-flex items-center gap-1 rounded-sm font-mono text-[13px] uppercase tracking-[0.08em] hover:bg-background-elevated/60 transition-colors"
             style={{
               border: '1px solid var(--color-border)',
               color: 'var(--color-text-primary)',
@@ -158,7 +158,7 @@ export function AtlasToolbar({
                       setMode(l.id)
                       setLensOpen(false)
                     }}
-                    className="w-full text-left px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.08em] hover:bg-background-elevated/60 transition-colors"
+                    className="w-full text-left px-3 py-1.5 font-mono text-[13px] uppercase tracking-[0.08em] hover:bg-background-elevated/60 transition-colors"
                     style={{
                       color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
                       fontWeight: active ? 700 : 400,
@@ -190,7 +190,7 @@ export function AtlasToolbar({
             <ChevronLeft className="h-3 w-3" aria-hidden="true" />
           </button>
           <div
-            className="font-mono text-[11px] tabular-nums px-2 text-center"
+            className="font-mono text-[13px] tabular-nums px-2 text-center"
             style={{
               color: 'var(--color-text-primary)',
               fontWeight: 600,
@@ -228,7 +228,7 @@ export function AtlasToolbar({
                 type="button"
                 onClick={() => setRiskFloor(f.id)}
                 aria-pressed={active}
-                className="h-6 px-2 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors"
+                className="h-6 px-2 font-mono text-[12px] uppercase tracking-[0.08em] transition-colors"
                 style={{
                   background: active ? 'var(--color-background-elevated)' : 'transparent',
                   color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
@@ -348,12 +348,12 @@ function KeymapPopover({ lang }: { lang: 'en' | 'es' }) {
       }}
     >
       <div
-        className="font-mono text-[9px] uppercase tracking-[0.16em] mb-2"
+        className="font-mono text-[13px] uppercase tracking-[0.16em] mb-2"
         style={{ color: 'var(--color-text-muted)' }}
       >
         {lang === 'en' ? 'KEYMAP' : 'ATAJOS'}
       </div>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px]">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
         {rows.map(([key, label]) => (
           <div key={key} className="contents">
             <dt

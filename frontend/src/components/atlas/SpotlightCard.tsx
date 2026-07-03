@@ -15,13 +15,13 @@
  *   • Risk distribution mini-bar — 4-segment stacked bar computed
  *     from the actual vendor list (real data, not decoration)
  *   • CTAs demoted from heavy filled-color button to editorial links
- *     (Playfair italic chevron-link for primary, mono+arrow for secondary)
+ *     (Playfair chevron-link for primary, mono+arrow for secondary)
  *   • Lucide X icon replaces fat Unicode ✕
  *
  * Card layout (top → bottom):
  *   ┌─────────────────────────────┐
  *   │ ▎P3 · PATTERN          X    │  kicker + close
- *   │ Single-Use Intermediary     │  Playfair italic title
+ *   │ Single-Use Intermediary     │  Playfair title
  *   │ ────                        │  hairline rule (NEW)
  *   │ A burst of contracts        │  LEDE (NEW)
  *   │ and a quiet exit.           │
@@ -262,7 +262,7 @@ export function SpotlightCard({
       <div
         className="font-mono uppercase"
         style={{
-          fontSize: 9,
+          fontSize: 13,
           letterSpacing: '0.14em',
           color: meta.color,
           fontWeight: 700,
@@ -271,12 +271,12 @@ export function SpotlightCard({
         {meta.code} · {kindLabel(meta.code, lang)}
       </div>
 
-      {/* Title — Playfair italic */}
+      {/* Title — Playfair */}
       <div
         className="break-words mt-1"
         style={{
           fontFamily: '"Playfair Display", serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 600,
           fontSize: 22,
           lineHeight: 1.15,
@@ -299,12 +299,12 @@ export function SpotlightCard({
         aria-hidden="true"
       />
 
-      {/* Editorial lede — Playfair italic body */}
+      {/* Editorial lede — Playfair body */}
       {lede && (
         <div
           style={{
             fontFamily: '"Playfair Display", serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 400,
             fontSize: 14,
             lineHeight: 1.45,
@@ -339,7 +339,7 @@ export function SpotlightCard({
           <div
             style={{
               fontFamily: '"Playfair Display", serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontWeight: 600,
               fontSize: 14,
               lineHeight: 1.2,
@@ -350,7 +350,7 @@ export function SpotlightCard({
           </div>
           <div
             className="font-mono"
-            style={{ fontSize: 10, color: 'var(--color-text-muted)', letterSpacing: '0.04em', marginTop: 1 }}
+            style={{ fontSize: 12, color: 'var(--color-text-muted)', letterSpacing: '0.04em', marginTop: 1 }}
           >
             {exemplar.period}
           </div>
@@ -412,7 +412,7 @@ export function SpotlightCard({
           </div>
           <div
             className="font-mono"
-            style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 4, display: 'flex', gap: 8, flexWrap: 'wrap' }}
+            style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4, display: 'flex', gap: 8, flexWrap: 'wrap' }}
           >
             <span><span style={{ color: RISK_COLORS.critical, fontWeight: 700 }}>{t.critical}</span> {Math.round(dist.pct.critical * 100)}%</span>
             <span><span style={{ color: RISK_COLORS.high, fontWeight: 700 }}>{t.high}</span> {Math.round(dist.pct.high * 100)}%</span>
@@ -436,7 +436,7 @@ export function SpotlightCard({
               <li
                 key={v.vendorId}
                 className="truncate font-mono"
-                style={{ fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.3 }}
+                style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.3 }}
                 title={formatVendorName(v.name, 80)}
               >
                 {formatVendorName(v.name, 36)}
@@ -454,7 +454,7 @@ export function SpotlightCard({
           className="text-left hover:underline transition-colors"
           style={{
             fontFamily: '"Playfair Display", serif',
-            fontStyle: 'italic',
+            fontStyle: 'normal',
             fontWeight: 600,
             fontSize: 15,
             color: meta.color,
@@ -477,7 +477,7 @@ export function SpotlightCard({
           className="text-left hover:underline transition-colors"
           style={{
             fontFamily: 'monospace',
-            fontSize: 11,
+            fontSize: 13,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
             fontWeight: 600,
@@ -508,7 +508,7 @@ function KeyHint({ label }: { label: string }) {
         color: 'var(--color-text-muted)',
         padding: '1px 5px',
         borderRadius: 2,
-        fontSize: 9,
+        fontSize: 13,
         letterSpacing: '0.05em',
         fontWeight: 600,
         textTransform: 'uppercase',
@@ -528,7 +528,7 @@ function StatCell({ value, label }: { value: string; label: string }) {
         className="tabular-nums"
         style={{
           fontFamily: '"Playfair Display", serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 700,
           fontSize: 18,
           lineHeight: 1.1,

@@ -9,8 +9,8 @@
  * Visual contract:
  *   ┌─────────────────────────┐
  *   │ {code} · PATTERN        │  kicker mono 9px uppercase
- *   │ {label}                 │  Playfair italic 18px
- *   │  44      23      85%    │  3 stat cells: Playfair italic 18px
+ *   │ {label}                 │  Playfair 18px
+ *   │  44      23      85%    │  3 stat cells: Playfair 18px
  *   │ VENDORS · T1 · HIGH+    │  mono 8-9px uppercase
  *   │ Top: {v1}/{v2}/{v3}     │  top 3 vendors (formatVendorName)
  *   │ [Investigate →]      ✕  │  link to /aria?pattern={code} + close
@@ -117,7 +117,7 @@ export function ClusterFloatingCard({
     >
       {/* Kicker — code · PATTERN */}
       <div
-        className="font-mono text-[9px] uppercase text-text-muted"
+        className="font-mono text-[13px] uppercase text-text-muted"
         style={{ letterSpacing: '0.14em' }}
       >
         {meta.code} · {t.pattern}
@@ -128,7 +128,7 @@ export function ClusterFloatingCard({
         className="text-text-primary mt-1 break-words"
         style={{
           fontFamily: '"Playfair Display", serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 600,
           fontSize: 'clamp(15px, 2.2vw, 18px)',
           lineHeight: 1.15,
@@ -140,7 +140,7 @@ export function ClusterFloatingCard({
       {/* Optional year-delta line */}
       {hasDelta && (
         <div
-          className="mt-1 font-mono text-[9px] uppercase text-text-muted"
+          className="mt-1 font-mono text-[13px] uppercase text-text-muted"
           style={{ letterSpacing: '0.14em' }}
         >
           {yearLabel}
@@ -177,12 +177,12 @@ export function ClusterFloatingCard({
       {top3.length > 0 && (
         <div className="mt-2 sm:mt-3">
           <div
-            className="font-mono text-[9px] uppercase text-text-muted mb-1"
+            className="font-mono text-[13px] uppercase text-text-muted mb-1"
             style={{ letterSpacing: '0.14em' }}
           >
             {t.top}
           </div>
-          <ul className="font-mono text-[10px] sm:text-[11px] text-text-secondary space-y-0.5">
+          <ul className="font-mono text-[12px] sm:text-[13px] text-text-secondary space-y-0.5">
             {top3.map((v) => (
               <li
                 key={v.vendorId}
@@ -201,7 +201,7 @@ export function ClusterFloatingCard({
         <button
           type="button"
           onClick={handleInvestigate}
-          className="font-mono text-[11px] uppercase hover:underline transition-colors"
+          className="font-mono text-[13px] uppercase hover:underline transition-colors"
           style={{
             color: 'var(--color-accent)',
             letterSpacing: '0.1em',
@@ -245,7 +245,7 @@ function StatCell({ value, label }: StatCellProps) {
         className="text-text-primary tabular-nums"
         style={{
           fontFamily: '"Playfair Display", serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 600,
           fontSize: 'clamp(14px, 1.8vw, 18px)',
           lineHeight: 1.05,

@@ -616,7 +616,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           {/* Quadrant gloss — names the danger corner the red tint only implied
               (the plate reads itself; FT-print annotated-quadrant grammar). */}
           <g style={{ pointerEvents: 'none' }} opacity={0.8}>
-            <text x={W - M.right - 10} y={M.top + 22} textAnchor="end" fill={RISK_COLORS.critical} fontSize={12.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600} opacity={0.75}>
+            <text x={W - M.right - 10} y={M.top + 22} textAnchor="end" fill={RISK_COLORS.critical} fontSize={12.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="normal" fontWeight={600} opacity={0.75}>
               {lang === 'es' ? 'el rincón que importa' : 'the corner that matters'}
             </text>
             <text x={W - M.right - 10} y={M.top + 35} textAnchor="end" fill={C.inkMuted} fontSize={8.5} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
@@ -938,7 +938,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                   {focusedBody ? (
                     <>
                       <div className="font-mono" style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'Proveedores · por riesgo' : 'Vendors · by risk'}</div>
-                      <div style={{ fontFamily: '"EB Garamond",Georgia,serif', fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', lineHeight: 1.15 }}>{toTitleCase(focusedBody.label)}</div>
+                      <div style={{ fontFamily: '"EB Garamond",Georgia,serif', fontStyle: 'normal', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', lineHeight: 1.15 }}>{toTitleCase(focusedBody.label)}</div>
                     </>
                   ) : (
                     <div className="font-mono" style={{ fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 700 }}>{lensLabel} · {bodies.length} · {lang === 'es' ? 'por riesgo' : 'by risk'}</div>
@@ -1039,7 +1039,7 @@ function IndexRow({ rank, dot, name, stat, gt, active, onEnter, onLeave, onClick
       <span className="flex items-baseline gap-2.5">
         <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 18 }}>{rank}</span>
         <span aria-hidden="true" className="flex-shrink-0 self-center" style={{ width: 8, height: 8, borderRadius: 999, background: dot, boxShadow: gt ? `0 0 0 2px var(--color-background-card), 0 0 0 3px ${dot}` : 'none' }} />
-        <span className="flex-1 min-w-0" style={{ fontFamily: '"EB Garamond",Georgia,serif', fontStyle: 'italic', fontWeight: 500, fontSize: 15, lineHeight: 1.2, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}>{name}</span>
+        <span className="flex-1 min-w-0" style={{ fontFamily: '"EB Garamond",Georgia,serif', fontStyle: 'normal', fontWeight: 500, fontSize: 15, lineHeight: 1.2, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}>{name}</span>
       </span>
       <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)', paddingLeft: 30 }}>{stat}</span>
     </button>
