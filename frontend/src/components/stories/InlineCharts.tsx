@@ -507,20 +507,10 @@ export function InlineBarChart({
   lang?: 'en' | 'es'
 }) {
   const mx = maxVal(data.points, data.maxValue)
-  const BAR_HEIGHT = 22
-  // 2026-05-25: bumped LABEL_W 140 → 200 so 18-char vendor names like
-  // "Mantenimiento Expreso" / "Constructora Arhnos" / "Dowell Schlumberger"
-  // / "Mota-Engil México" render fully without right-edge clipping.
-  // Affects gran-precio ch3, marea ch4, industria-del-intermediario ch3.
+  // LABEL_W / VALUE_W are used only by the dominance band path below; the
+  // standard register uses its own W=620 lane geometry (defined lower down).
   const LABEL_W = 200
-  // 2026-05-08: bumped VALUE_W 60 → 90 so 12-character values like
-  // "179.5 B MXN" don't clip the rightmost characters when the bar is
-  // long. User report: "in infrastructure, I don't see the n."
   const VALUE_W = 90
-  const BAR_AREA = 340
-  const ROW_GAP = 8
-  const svgH = data.points.length * (BAR_HEIGHT + ROW_GAP) + 20
-  const svgW = LABEL_W + BAR_AREA + VALUE_W + 8
   const unit = data.unit ?? ''
 
   // Pick lang-aware label per point.
@@ -537,8 +527,6 @@ export function InlineBarChart({
     if (lang === 'es') return ref.label_es ?? ref.label
     return ref.label
   }
-
-  const refX = (v: number) => LABEL_W + (v / mx) * BAR_AREA
 
   // Anchor stat = the highlighted row, or the largest value.
   // When the point opts into risk-tier coloring (riskScore present), the
@@ -693,6 +681,22 @@ export function InlineBarChart({
   }
   // ── end dominance band path ──────────────────────────────────────────────
 
+  // Standard 3-deck register: label+value / bar / annotation — three lanes that
+  // never share a horizontal band, so text can't collide at any bar length.
+  const W = 620
+  const hasAnno = data.points.some((p) => p.annotation)
+  const rowH = hasAnno ? 54 : 36
+  const refs = [data.referenceLine, data.referenceLine2].filter(
+    (r): r is NonNullable<typeof r> => !!r,
+  )
+  const HDR = refs.length === 0 ? 4 : refs.length === 1 ? 22 : 30
+  const regSvgH = HDR + data.points.length * rowH + 4
+  const regRefX = (v: number) => (v / mx) * W
+  // ES unit micro-map for the deck-1 readout (kills the worst "B MXN" leak).
+  const unitLoc = lang === 'es'
+    ? (unit === 'B MXN' ? 'mil M MXN' : unit === 'contracts' ? 'contratos' : unit === 'wins' ? 'victorias' : unit)
+    : unit
+
   return (
     <ChartCard
       title={title}
@@ -703,130 +707,103 @@ export function InlineBarChart({
       lang={lang}
     >
       <svg
-        viewBox={`0 0 ${svgW} ${svgH}`}
+        viewBox={`0 0 ${W} ${regSvgH}`}
         preserveAspectRatio="xMinYMin meet"
         className="w-full"
         aria-hidden="true"
       >
-        {data.referenceLine && (
-          <line
-            x1={refX(data.referenceLine.value)}
-            y1={0}
-            x2={refX(data.referenceLine.value)}
-            y2={svgH - 12}
-            stroke={data.referenceLine.color ?? REFERENCE_COLOR}
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            opacity={0.7}
-          />
-        )}
-        {data.referenceLine2 && (
-          <line
-            x1={refX(data.referenceLine2.value)}
-            y1={0}
-            x2={refX(data.referenceLine2.value)}
-            y2={svgH - 12}
-            stroke={data.referenceLine2.color ?? 'var(--color-sector-energia)'}
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            opacity={0.7}
-          />
-        )}
-
-        {data.points.map((pt, i) => {
-          const y = i * (BAR_HEIGHT + ROW_GAP) + 4
-          const barW = Math.max(2, (pt.value / mx) * BAR_AREA)
-          // Risk-tier color wins when the point opts in via riskScore.
-          // Otherwise: highlight → drama red; else palette/explicit color.
-          const tierColor = riskTierColor(pt)
-          const color = tierColor ?? (pt.highlight ? HIGHLIGHT_COLOR : getColor(pt, i))
-          // riskScore-driven bars carry full weight (the tier *is* the
-          // visual argument); legacy highlight bars keep their existing
-          // contrast pair (0.95 / 0.65).
-          const opacity = tierColor ? 0.95 : (pt.highlight ? 0.95 : 0.65)
-
-          const lbl = labelFor(pt)
+        {/* Reference lines drawn first (row text sits on top); labels in the header strip */}
+        {refs.map((ref, ri) => {
+          const rx = regRefX(ref.value)
+          const anchorEnd = rx > 0.7 * W
+          const labelY = refs.length > 1 ? (ri === 0 ? 10 : 22) : 13
+          const strokeC = safeInk(ref.color, 'var(--color-text-muted)')
           return (
-            <g key={i}>
-              <text
-                x={LABEL_W - 6}
-                y={y + BAR_HEIGHT / 2 + 1}
-                textAnchor="end"
-                dominantBaseline="middle"
-                fontSize={13}
-                fontFamily="var(--font-family-mono, monospace)"
-                fill="var(--color-text-secondary)"
-              >
-                {lbl}
-              </text>
-
-              <rect
-                x={LABEL_W}
-                y={y}
-                width={barW}
-                height={BAR_HEIGHT}
-                fill={color}
-                opacity={opacity}
-                rx={1}
+            <g key={`ref-${ri}`}>
+              <line
+                x1={rx}
+                y1={HDR}
+                x2={rx}
+                y2={regSvgH - 4}
+                stroke={strokeC}
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                opacity={0.7}
               />
-
-              {pt.annotation && barW > 140 && (() => {
-                const txt = annoFor(pt) ?? ''
-                return (
-                  <text
-                    x={LABEL_W + barW - 6}
-                    y={y + BAR_HEIGHT / 2 + 1}
-                    textAnchor="end"
-                    dominantBaseline="middle"
-                    fontSize={13}
-                    fontFamily="var(--font-family-mono, monospace)"
-                    fill={labelInkOn(color)}
-                  >
-                    {txt}
-                  </text>
-                )
-              })()}
-
               <text
-                x={LABEL_W + barW + 5}
-                y={y + BAR_HEIGHT / 2 + 1}
-                textAnchor="start"
+                x={anchorEnd ? rx - 5 : rx + 5}
+                y={labelY}
+                textAnchor={anchorEnd ? 'end' : 'start'}
                 dominantBaseline="middle"
-                fontSize={12}
+                fontSize={11}
                 fontFamily="var(--font-family-mono, monospace)"
-                fill={pt.highlight ? HIGHLIGHT_COLOR : 'var(--color-text-muted)'}
-                fontWeight={pt.highlight ? 700 : 400}
+                fill={strokeC}
+                opacity={0.9}
               >
-                {pt.value.toLocaleString()}{unit ? ` ${unit}` : ''}
+                {refLabelFor(ref)}
               </text>
             </g>
           )
         })}
 
-        {data.referenceLine && (
-          <text
-            x={refX(data.referenceLine.value) + 3}
-            y={svgH - 4}
-            fontSize={12}
-            fontFamily="var(--font-family-mono, monospace)"
-            fill={data.referenceLine.color ?? REFERENCE_COLOR}
-            opacity={0.9}
-          >
-            {refLabelFor(data.referenceLine)}
-          </text>
-        )}
-        {data.referenceLine2 && (
-          <text
-            x={refX(data.referenceLine2.value) + 3}
-            y={svgH - 4}
-            fontSize={12}
-            fontFamily="var(--font-family-mono, monospace)"
-            fill={data.referenceLine2.color ?? 'var(--color-sector-energia)'}
-            opacity={0.9}
-          >
-            {refLabelFor(data.referenceLine2)}
-          </text>
-        )}
+        {data.points.map((pt, i) => {
+          const rowY = HDR + i * rowH
+          const barW = Math.max(2, (pt.value / mx) * W)
+          const tierColor = riskTierColor(pt)
+          const barColor = tierColor ?? (pt.highlight ? HIGHLIGHT_COLOR : getColor(pt, i))
+          const barOpacity = tierColor || pt.highlight ? 0.92 : 0.55
+          const valueColor = tierColor ?? (pt.highlight ? HIGHLIGHT_COLOR : 'var(--color-text-primary)')
+          const rawLbl = labelFor(pt)
+          const lbl = rawLbl.length > 40 ? rawLbl.slice(0, 39) + '…' : rawLbl
+          const anno = annoFor(pt)
+          return (
+            <g key={i}>
+              {/* Deck 1 — label (left) · value (right ledger column). Text-only. */}
+              <text
+                x={0}
+                y={rowY + 12}
+                textAnchor="start"
+                dominantBaseline="middle"
+                fontSize={13}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill={pt.highlight ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'}
+                fontWeight={pt.highlight ? 700 : 400}
+              >
+                {lbl}
+              </text>
+              <text
+                x={W}
+                y={rowY + 12}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontSize={13}
+                fontFamily="var(--font-family-mono, monospace)"
+                className="tabular-nums"
+              >
+                <tspan fill={valueColor} fontWeight={700}>{pt.value.toLocaleString()}</tspan>
+                {unitLoc && <tspan fill="var(--color-text-muted)" fontWeight={400}> {unitLoc}</tspan>}
+              </text>
+
+              {/* Deck 2 — the ink bar. No text ever renders on it. */}
+              <rect x={0} y={rowY + 20} width={barW} height={10} fill={barColor} opacity={barOpacity} rx={1} />
+
+              {/* Deck 3 — annotation, always full-width at x=0, never on the bar. */}
+              {anno && (
+                <text
+                  x={0}
+                  y={rowY + 43}
+                  textAnchor="start"
+                  dominantBaseline="middle"
+                  fontSize={13}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="var(--color-text-muted)"
+                >
+                  {anno}
+                </text>
+              )}
+            </g>
+          )
+        })}
       </svg>
     </ChartCard>
   )
@@ -2607,7 +2584,7 @@ export function ClevelandPairChart({
     return denom > 0 ? p.value / denom : 0
   }
   const sorted = [...data.points].sort((a, b) =>
-    data.sortBy === 'ratio'
+    data.sortBy === 'ratio' || data.gapFormat === 'ratio'
       ? ratioOf(b) - ratioOf(a)
       : (b.value - (b.value2 ?? 0)) - (a.value - (a.value2 ?? 0))
   )
@@ -2624,7 +2601,7 @@ export function ClevelandPairChart({
   const firstPt = sorted[0]
   const firstGap = firstPt ? firstPt.value - (firstPt.value2 ?? 0) : 0
   const anchorValue =
-    data.sortBy === 'ratio' && firstPt?.value2
+    (data.sortBy === 'ratio' || data.gapFormat === 'ratio') && firstPt?.value2
       ? `${((firstPt.value / firstPt.value2) * 100).toFixed(1)}%`
       : firstGap.toLocaleString()
   const anchor = firstPt
@@ -2638,6 +2615,75 @@ export function ClevelandPairChart({
   // Column header labels (bilingual) — fixed short strings; yLabel belongs in annotation
   const actualLabel = lang === 'es' ? 'REAL' : 'ACTUAL'
   const referenceLabel = lang === 'es' ? 'REFERENCIA' : 'REFERENCE'
+
+  // ── RATIO mode: FT-bullet share register. Each row gets its OWN 100% track
+  //    (its total) with the intermediated share filled in — the fill FRACTION
+  //    is the finding, no filled/open-dot decoder caption needed. (2026-07-03)
+  if (data.gapFormat === 'ratio') {
+    const RW = 620
+    const R_HDR = 28
+    const R_ROWH = 54
+    const rSvgH = R_HDR + sorted.length * R_ROWH + 4
+    const rUnit = data.unit ?? ''
+    const rUnitLoc = lang === 'es' && rUnit === 'B MXN' ? 'mil M MXN' : rUnit
+    const sumV = sorted.reduce((s, p) => s + p.value, 0)
+    const sumV2 = sorted.reduce((s, p) => s + (p.value2 ?? 0), 0) || 1
+    const aggRatio = sumV / sumV2
+    const aggX = Math.max(0, Math.min(1, aggRatio)) * RW
+    const aggAnchorEnd = aggX > 0.7 * RW
+    const withR = sorted.map((p) => ({ p, r: ratioOf(p) }))
+    const minRow = withR.reduce((m, x) => (x.r < m.r ? x : m), withR[0])
+    const trackLabel = lang === 'es'
+      ? (data.trackLabel_es ?? data.trackLabel ?? 'del total de la fila')
+      : (data.trackLabel ?? 'of the row total')
+
+    return (
+      <ChartCard
+        title={title}
+        eyebrow={lang === 'es' ? `PORCIÓN DEL TOTAL · ${sorted.length} FILAS` : `SHARE OF TOTAL · ${sorted.length} ROWS`}
+        anchor={anchor}
+        annotation={cardAnnotation}
+      >
+        <svg viewBox={`0 0 ${RW} ${rSvgH}`} preserveAspectRatio="xMinYMin meet" className="w-full" aria-hidden="true">
+          {/* Header strip: 0 · aggregate tick · 100% = track denominator */}
+          <text x={0} y={15} fontSize={11} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)" textAnchor="start">0</text>
+          <text x={RW} y={15} fontSize={11} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)" textAnchor="end">100% = {trackLabel.toUpperCase()}</text>
+          <line x1={aggX} y1={R_HDR} x2={aggX} y2={rSvgH - 4} stroke="var(--color-text-primary)" strokeWidth={1} strokeDasharray="3 3" opacity={0.45} />
+          <text x={aggAnchorEnd ? aggX - 5 : aggX + 5} y={15} textAnchor={aggAnchorEnd ? 'end' : 'start'} fontSize={11} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-secondary)">
+            {lang === 'es' ? 'PROM.' : 'AVG'} · {(aggRatio * 100).toFixed(1)}%
+          </text>
+
+          {sorted.map((pt, i) => {
+            const rowY = R_HDR + i * R_ROWH
+            const ratio = ratioOf(pt)
+            const fillW = Math.max(2, Math.min(1, ratio) * RW)
+            const fillColor = safeFill(pt.color, HIGHLIGHT_COLOR)
+            const isHi = !!pt.highlight
+            const absA = lang === 'es'
+              ? `${pt.value.toLocaleString()} de ${(pt.value2 ?? 0).toLocaleString()} ${rUnitLoc} en riesgo`
+              : `${pt.value.toLocaleString()} of ${(pt.value2 ?? 0).toLocaleString()} ${rUnit} at risk`
+            const annoTxt = (lang === 'es' ? (pt.annotation_es ?? pt.annotation) : pt.annotation) ?? absA
+            const mult = minRow.r > 0 ? ratio / minRow.r : 0
+            const deck3 = i === 0 && mult >= 1.5
+              ? `${annoTxt} · ≈${mult.toFixed(1)}× ${labelFor(minRow.p)} (${(minRow.r * 100).toFixed(0)}%)`
+              : annoTxt
+            return (
+              <g key={i}>
+                {/* Deck 1 — label · share% */}
+                <text x={0} y={rowY + 12} textAnchor="start" dominantBaseline="middle" fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill={isHi ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'} fontWeight={isHi ? 700 : 400}>{labelFor(pt)}</text>
+                <text x={RW} y={rowY + 12} textAnchor="end" dominantBaseline="middle" fontSize={15} fontWeight={700} fontFamily="var(--font-family-mono, monospace)" fill={isHi ? fillColor : 'var(--color-text-primary)'} className="tabular-nums">{(ratio * 100).toFixed(1)}%</text>
+                {/* Deck 2 — the row's own 100% track with the share filled */}
+                <rect x={0} y={rowY + 20} width={RW} height={10} fill="none" stroke="var(--color-border)" strokeWidth={1} rx={1} />
+                <rect x={0} y={rowY + 20} width={fillW} height={10} fill={fillColor} opacity={0.9} rx={1} />
+                {/* Deck 3 — the absolutes (+ a computed ×-multiple on the top row) */}
+                <text x={0} y={rowY + 44} textAnchor="start" dominantBaseline="middle" fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">{deck3}</text>
+              </g>
+            )
+          })}
+        </svg>
+      </ChartCard>
+    )
+  }
 
   return (
     <ChartCard

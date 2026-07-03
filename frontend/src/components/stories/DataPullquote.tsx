@@ -1,28 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
-import { OutletBadge, type OutletType } from './OutletBadge'
+import { type OutletType } from './OutletBadge'
 import { cn, localizeAmount } from '@/lib/utils'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DataPullquote — editorial fact-tile redesigned to match the dashboard's
-// Playfair-Italic-800 + micro-viz aesthetic ("the bar"). Backward-compatible
-// with the existing 14 VizTemplate names: each maps to one of six disciplined
-// renderers below (proportion / threshold / gauge / sliver / era / null).
+// DataPullquote — editorial fact-tile. ONE shared component, FOUR roles, so a
+// story that shows several figures never stamps the same box twice in a row:
 //
-//   ┌────────────────────────────────────────┐
-//   ▎ DATELINE · OUTLET · MICRO MONO         │
-//   │ "soft Playfair quote ..."       │
-//   │ — attribution                          │
-//   │ ────────────────                       │
-//   │  6,034                  ← Playfair It. │
-//   │  ghost-pattern vendors  · 0.7% confirmed│
-//   │                                         │
-//   │  RUBLI VS OFFICIAL · MICRO MONO         │
-//   │  ▰▰▰▰▰▰▰▰▰▰░░░░░░░░  [micro-viz]      │
-//   │  caption mono micro                     │
-//   └────────────────────────────────────────┘
-//        ↑ left 3px sector accent
+//   ledger  — number-led boxed tile (the hero cifra)
+//   plate   — boxed tile + micro-viz (threshold / proportion / …)
+//   margin  — UNBOXED print pull-quote between hairlines (EB Garamond italic)
+//   verdict — centered closing figure between full-width rules
+//
+// The 14 legacy VizTemplate names still map to six disciplined renderers
+// (proportion / threshold / gauge / sliver / era / null). Role is chosen in
+// StoryNarrative (pickPullquoteRole) and passed in; `sledgehammer` stays as a
+// back-compat alias for `ledger`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type VizTemplate =
@@ -42,6 +36,8 @@ export type VizTemplate =
   | 'pile-up'
   | 'compare-gap'
 
+export type PullquoteRole = 'ledger' | 'plate' | 'margin' | 'verdict'
+
 interface DataPullquoteProps {
   quote: string
   attribution?: string
@@ -50,20 +46,20 @@ interface DataPullquoteProps {
   statColor?: string
   barValue?: number
   barLabel?: string
-  /** Optional Spanish translation of `barLabel`. When set, the Spanish UI
-   *  renders this instead of the English `barLabel`. Without this the EN
-   *  label appears in both locales. */
+  /** Optional Spanish translation of `barLabel`. */
   barLabel_es?: string
   outlet?: OutletType
   className?: string
   vizTemplate?: VizTemplate
-  /** sledgehammer = true → story-chapter-1 treatment: number fills ~50% of tile,
-   *  quote demoted below the stat, pure editorial-magazine feel. */
+  /** Editorial role — picks the typographic treatment. When omitted, derived
+   *  from `sledgehammer`/`barValue` (belt-and-braces; StoryNarrative always
+   *  passes an explicit role). */
+  role?: PullquoteRole
+  /** Legacy alias for role='ledger'. */
   sledgehammer?: boolean
 }
 
-// Map outlet → sector accent color. The accent drives the left border, the
-// stat color, and the viz fill — keeping every tile chromatically coherent.
+// Map outlet → sector accent color (drives left border, stat color, viz fill).
 const OUTLET_ACCENT: Record<OutletType, string> = {
   longform: 'var(--color-text-muted)',
   investigative: '#a06820',                      // dashboard amber
@@ -75,26 +71,20 @@ const OUTLET_ACCENT: Record<OutletType, string> = {
 type VizFamily = 'proportion' | 'threshold' | 'gauge' | 'sliver' | 'era' | 'null'
 
 const TEMPLATE_FAMILY: Record<VizTemplate, VizFamily> = {
-  // proportion — "X out of N", waffle-style, dashboard tile-2 echo
   'count-grid': 'proportion',
   'mosaic-tile': 'proportion',
   'dot-ratio': 'proportion',
-  // threshold — bar with OECD/limit marker
   'breach-ceiling': 'threshold',
   'threshold-band': 'threshold',
   'margin-rule': 'threshold',
   'pile-up': 'threshold',
-  // gauge — linear scale with marker tick (dashboard tile-4 echo)
   'redline-gauge': 'gauge',
   'range-band': 'gauge',
   'wave-breaker': 'gauge',
-  // sliver — tiny confirmed slice vs the rest in italic
   'mass-sliver': 'sliver',
   'compare-gap': 'sliver',
   'receipt-stamp': 'sliver',
-  // era — multi-row time horizon
   'horizon': 'era',
-  // null — empty / "no cases" editorial state
   'zero-bar': 'null',
 }
 
@@ -159,41 +149,69 @@ interface VizProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. Proportion — 100-dot waffle with confirmed/total split
-//    Mirrors the dashboard's "DIRECT AWARDS" tile. Reads at a glance: this
-//    block of solid dots vs the field of muted ones IS the ratio.
+// 1. Proportion — a ticked "out of ten" band (replaces the banned 100-dot
+//    waffle). Filled fraction + nine cut-lines reads as counting, no dots.
 // ─────────────────────────────────────────────────────────────────────────────
-function ProportionViz({ value, color, revealed }: VizProps) {
-  const total = 100
-  const filled = Math.max(1, Math.round(Math.max(0, Math.min(1, value)) * total))
-  const cols = 25
+function ProportionBandViz({ value, color, revealed }: VizProps) {
+  const v = Math.max(0, Math.min(1, value))
+  const pct = v * 100
+  const readout = pct < 10 ? pct.toFixed(1) : Math.round(pct).toString()
+  const readoutRight = pct > 78
   return (
-    <svg viewBox="0 0 200 22" className="w-full" style={{ height: 22 }} aria-hidden>
-      {Array.from({ length: total }).map((_, i) => {
-        const col = i % cols
-        const row = Math.floor(i / cols)
-        const cx = 4 + col * 7.5
-        const cy = 4 + row * 5
-        const isOn = i < filled
-        return (
-          <circle
-            key={i}
-            cx={cx}
-            cy={cy}
-            r={1.6}
-            fill={isOn ? color : 'var(--color-border-hover)'}
-            opacity={revealed ? (isOn ? 0.9 : 0.45) : 0}
-            style={{ transition: `opacity 240ms ease-out ${i * 5}ms` }}
-          />
-        )
-      })}
-    </svg>
+    <div className="relative" style={{ height: 24 }}>
+      {/* Track */}
+      <div
+        className="absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-sm"
+        style={{ height: 12, background: 'var(--color-border)', opacity: 0.55 }}
+      />
+      {/* Fill */}
+      <div
+        className="absolute top-1/2 left-0 -translate-y-1/2 origin-left rounded-sm"
+        style={{
+          height: 12,
+          width: `${pct}%`,
+          background: color,
+          opacity: revealed ? 0.9 : 0,
+          transform: `translateY(-50%) scaleX(${revealed ? 1 : 0})`,
+          transition: 'transform 1000ms cubic-bezier(0.16,1,0.3,1) 200ms, opacity 400ms',
+        }}
+      />
+      {/* Nine tick cuts at 10% steps */}
+      {Array.from({ length: 9 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute top-1/2 -translate-y-1/2"
+          style={{
+            left: `${(i + 1) * 10}%`,
+            width: 1,
+            height: 12,
+            background: 'var(--color-background-card)',
+            opacity: revealed ? 0.9 : 0,
+            transition: `opacity 300ms ease-out ${400 + i * 30}ms`,
+          }}
+        />
+      ))}
+      {/* Percent readout at the fill edge */}
+      <div
+        className="absolute top-1/2 -translate-y-1/2 font-mono font-bold tabular-nums"
+        style={{
+          left: `${pct}%`,
+          transform: readoutRight ? 'translate(calc(-100% - 6px), -50%)' : 'translate(6px, -50%)',
+          color: readoutRight ? 'var(--color-background)' : color,
+          fontSize: 11,
+          opacity: revealed ? 1 : 0,
+          transition: 'opacity 500ms ease-out 700ms',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {readout}%
+      </div>
+    </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. Threshold — solid bar with dotted OECD/limit tick. No hatching, no
-//    construction-zone stripes. The cleanness IS the editorial.
+// 2. Threshold — solid bar with dotted limit tick.
 // ─────────────────────────────────────────────────────────────────────────────
 function ThresholdViz({ value, color, revealed, label, lang }: VizProps) {
   const v = Math.max(0, Math.min(1, value))
@@ -202,12 +220,10 @@ function ThresholdViz({ value, color, revealed, label, lang }: VizProps) {
   const limitLabel = lang === 'es' ? 'LÍMITE' : 'CEILING'
   return (
     <div className="relative" style={{ height: 28 }}>
-      {/* Track */}
       <div
         className="absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-sm"
         style={{ height: 12, background: 'var(--color-border)', opacity: 0.55 }}
       />
-      {/* Filled bar */}
       <div
         className="absolute top-1/2 left-0 -translate-y-1/2 origin-left rounded-sm"
         style={{
@@ -219,7 +235,6 @@ function ThresholdViz({ value, color, revealed, label, lang }: VizProps) {
           transition: 'transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) 200ms, opacity 400ms',
         }}
       />
-      {/* Dotted threshold tick — same idiom as dashboard tile-2 OECD line */}
       <div
         className="absolute inset-y-0"
         style={{
@@ -251,8 +266,7 @@ function ThresholdViz({ value, color, revealed, label, lang }: VizProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. Gauge — linear scale (low→high) with a marker tick. Echoes dashboard
-//    tile-4 ("MODEL ACCURACY"). Replaces the speedometer.
+// 3. Gauge — linear scale (low→high) with a marker tick.
 // ─────────────────────────────────────────────────────────────────────────────
 function GaugeViz({ value, color, revealed, lang }: VizProps) {
   const v = Math.max(0, Math.min(1, value))
@@ -260,7 +274,6 @@ function GaugeViz({ value, color, revealed, lang }: VizProps) {
   return (
     <div>
       <div className="relative h-3.5 w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
-        {/* Filled portion 0 → value */}
         <div
           className="absolute inset-y-0 left-0 origin-left rounded-sm"
           style={{
@@ -271,7 +284,6 @@ function GaugeViz({ value, color, revealed, lang }: VizProps) {
             transition: 'transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) 200ms, opacity 500ms',
           }}
         />
-        {/* Marker tick */}
         <div
           className="absolute"
           style={{
@@ -296,12 +308,10 @@ function GaugeViz({ value, color, revealed, lang }: VizProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. Sliver — tiny confirmed slice and the unconfirmed remainder in italic.
-//    The contrast IS the story (Economist dumbbell idiom).
+// 4. Sliver — tiny confirmed slice vs the remainder in italic.
 // ─────────────────────────────────────────────────────────────────────────────
 function SliverViz({ value, color, revealed, lang }: VizProps) {
   const pct = Math.max(0, Math.min(1, value)) * 100
-  // Visual minimum so a 0.7% sliver is still legible
   const visualPct = Math.max(2.5, pct)
   const detectedStr = pct < 1 ? pct.toFixed(1) : Math.round(pct).toString()
   const undetectedStr = (100 - pct).toFixed(pct < 1 ? 1 : 0)
@@ -309,12 +319,10 @@ function SliverViz({ value, color, revealed, lang }: VizProps) {
   return (
     <div>
       <div className="relative" style={{ height: 28 }}>
-        {/* Track */}
         <div
           className="absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-sm"
           style={{ height: 12, background: 'var(--color-border)', opacity: 0.55 }}
         />
-        {/* Sliver */}
         <div
           className="absolute top-1/2 left-0 -translate-y-1/2 rounded-sm origin-left"
           style={{
@@ -326,13 +334,12 @@ function SliverViz({ value, color, revealed, lang }: VizProps) {
             transition: 'transform 1000ms cubic-bezier(0.16, 1, 0.3, 1) 200ms, opacity 400ms',
           }}
         />
-        {/* Pct label after the sliver edge */}
         <div
           className="absolute top-1/2 -translate-y-1/2 font-mono font-bold tabular-nums"
           style={{
             left: `calc(${visualPct}% + 6px)`,
             color,
-            fontSize: 13,
+            fontSize: 11,
             opacity: revealed ? 1 : 0,
             transition: 'opacity 500ms ease-out 700ms',
             whiteSpace: 'nowrap',
@@ -359,8 +366,7 @@ function SliverViz({ value, color, revealed, lang }: VizProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. Era — five Mexican administrations as a stacked horizon. Threshold
-//    line shared across rows. Replaces 'horizon' with proper labels.
+// 5. Era — five administrations as a stacked horizon.
 // ─────────────────────────────────────────────────────────────────────────────
 const ERAS = [
   { name: 'Fox', mult: 0.40 },
@@ -380,12 +386,7 @@ function EraViz({ value, color, revealed, label }: VizProps) {
           <div key={e.name} className="flex items-center gap-2">
             <span
               className="font-mono uppercase tabular-nums"
-              style={{
-                width: 64,
-                fontSize: 13,
-                letterSpacing: '0.08em',
-                color: 'var(--color-text-muted)',
-              }}
+              style={{ width: 64, fontSize: 9, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}
             >
               {e.name}
             </span>
@@ -402,21 +403,12 @@ function EraViz({ value, color, revealed, label }: VizProps) {
               />
               <div
                 className="absolute inset-y-0"
-                style={{
-                  left: `${threshold * 100}%`,
-                  width: 1,
-                  background: 'var(--color-text-primary)',
-                  opacity: 0.45,
-                }}
+                style={{ left: `${threshold * 100}%`, width: 1, background: 'var(--color-text-primary)', opacity: 0.45 }}
               />
             </div>
             <span
               className="text-right font-mono tabular-nums"
-              style={{
-                width: 36,
-                fontSize: 13,
-                color: 'var(--color-text-muted)',
-              }}
+              style={{ width: 36, fontSize: 9, color: 'var(--color-text-muted)' }}
             >
               {v.toFixed(0)}%
             </span>
@@ -428,19 +420,14 @@ function EraViz({ value, color, revealed, label }: VizProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. Null — editorial empty state. The "0" is the story. Italic prose
-//    sets the tone.
+// 6. Null — editorial empty state.
 // ─────────────────────────────────────────────────────────────────────────────
 function NullViz({ revealed, lang }: VizProps) {
   const msg = lang === 'es' ? 'ningún caso registrado.' : 'no cases on record.'
   return (
     <div
       className="relative flex items-center"
-      style={{
-        height: 36,
-        borderTop: '1px solid var(--color-border)',
-        borderBottom: '1px solid var(--color-border)',
-      }}
+      style={{ height: 36, borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}
     >
       <div
         className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full"
@@ -463,13 +450,10 @@ function NullViz({ revealed, lang }: VizProps) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Renderer dispatch — old templates → six families
-// ─────────────────────────────────────────────────────────────────────────────
 function renderViz(template: VizTemplate, props: VizProps) {
   const family = TEMPLATE_FAMILY[template]
   switch (family) {
-    case 'proportion': return <ProportionViz {...props} />
+    case 'proportion': return <ProportionBandViz {...props} />
     case 'threshold':  return <ThresholdViz {...props} />
     case 'gauge':      return <GaugeViz {...props} />
     case 'sliver':     return <SliverViz {...props} />
@@ -478,7 +462,6 @@ function renderViz(template: VizTemplate, props: VizProps) {
   }
 }
 
-// Section eyebrow text for each viz family — bilingual, dashboard-style
 function familyEyebrow(family: VizFamily, lang: 'en' | 'es'): string {
   const map: Record<VizFamily, [string, string]> = {
     proportion: ['SHARE OF TOTAL',     'PROPORCIÓN'],
@@ -506,9 +489,10 @@ export default function DataPullquote({
   outlet,
   className,
   vizTemplate,
+  role,
   sledgehammer = false,
 }: DataPullquoteProps) {
-  const { i18n, t: tc } = useTranslation('common')
+  const { i18n } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const localizedBarLabel = lang === 'es' ? (barLabel_es ?? barLabel) : barLabel
   const stat = localizeAmount(rawStat, lang)
@@ -519,14 +503,7 @@ export default function DataPullquote({
     parsed ? parsed.decimals : 0
   )
 
-  // Accent precedence (April 2026 fix):
-  //   1. statColor as a literal hex (e.g. "#dc2626") — this is the
-  //      editorial color set per-story in story-content.ts via
-  //      leadStat.color, and it must MATCH the hero stat for the same
-  //      story to have a coherent chromatic identity. Wins over outlet.
-  //   2. statColor as a Tailwind utility ("text-red-400" etc.) — legacy
-  //      callers used to pass these; map by substring.
-  //   3. Outlet category default — last-resort, only when no statColor.
+  // Accent precedence (April 2026 fix): hex statColor > tailwind substring > outlet.
   const accent = /^#[0-9a-f]{3,8}$/i.test(statColor)
     ? statColor
     : statColor.includes('red')   ? 'var(--color-sector-salud)'
@@ -538,48 +515,182 @@ export default function DataPullquote({
   const [vizRef, revealed] = useReveal()
   const template = vizTemplate ?? autoSelectTemplate(barValue ?? 0, stat, localizedBarLabel)
   const family = TEMPLATE_FAMILY[template]
-  const vizProps: VizProps = {
-    value: barValue ?? 0,
-    color: accent,
-    label: localizedBarLabel,
-    stat,
-    revealed,
-    lang,
-  }
+  const vizProps: VizProps = { value: barValue ?? 0, color: accent, label: localizedBarLabel, stat, revealed, lang }
 
-  // Editorial dateline = the story's analysis-as-of period, NOT new Date().
-  // These figures are static analyses of a frozen COMPRANET snapshot; a live
-  // clock here read as a publication date and contradicted the hero's
-  // "Analysis as of May 2026" line. DataPullquote is story-only (one call site
-  // in StoryNarrative), so the shared analysis period applies universally —
-  // keep this in sync with the hero label in StoryNarrative.tsx.
+  // Role resolution: explicit role wins; else legacy alias / content shape.
+  const resolvedRole: PullquoteRole =
+    role ?? (sledgehammer ? 'ledger' : barValue !== undefined ? 'plate' : 'margin')
+
   const dateline = lang === 'es' ? 'ANÁLISIS · MAYO 2026' : 'ANALYSIS · MAY 2026'
   const sectionLabel = lang === 'es' ? 'CIFRA · COMPRANET' : 'FIGURE · COMPRANET'
+  const ariaLabel = lang === 'en' ? 'Data pull quote' : 'Cita con datos'
 
-  // Use the eyebrow text in mark-up; ignore the translation hook's t() since
-  // these editorial strings live in this component.
-  void tc
+  const numStr = parsed
+    ? `${animatedValue.toLocaleString('es-MX', {
+        minimumFractionDigits: parsed.decimals,
+        maximumFractionDigits: parsed.decimals,
+      })}${parsed.suffix}`
+    : stat
 
+  // Shared Playfair-Italic-800 stat number (only one renders per pullquote).
+  const statNumber = (fontSize: string, extra?: React.CSSProperties) => (
+    <span
+      ref={countRef}
+      className="dpq-stat tabular-nums"
+      style={{
+        fontFamily: "'Playfair Display', Georgia, serif",
+        fontWeight: 800,
+        fontSize,
+        lineHeight: 0.95,
+        letterSpacing: '-0.025em',
+        color: accent,
+        overflowWrap: 'anywhere',
+        maxWidth: '100%',
+        ...extra,
+      }}
+      aria-label={`${stat} ${statLabel}`}
+    >
+      {numStr}
+    </span>
+  )
+
+  // Shared viz block (plate + verdict). `withEyebrow` false when the tile's top
+  // chrome already carries the family eyebrow.
+  const vizBlock = (withEyebrow: boolean) =>
+    barValue !== undefined ? (
+      <div ref={vizRef} className="mt-3">
+        {withEyebrow && (
+          <div
+            className="font-mono uppercase mb-2.5"
+            style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
+          >
+            {familyEyebrow(family, lang)}
+          </div>
+        )}
+        <div role="img" aria-label={`${stat}${localizedBarLabel ? ` — ${localizedBarLabel}` : ''}`}>
+          {renderViz(template, vizProps)}
+        </div>
+        {localizedBarLabel && (
+          <p
+            className="font-mono leading-[1.45]"
+            style={{ fontSize: 9.5, color: 'var(--color-text-muted)', marginTop: family === 'threshold' ? 18 : 10 }}
+          >
+            {localizedBarLabel}
+          </p>
+        )}
+      </div>
+    ) : null
+
+  const containerStyle = (
+    <style>{`
+      .dpq-fig { container-type: inline-size; container-name: dpq; }
+      @container dpq (max-width: 480px) {
+        .dpq-pad     { padding-left: 16px; padding-right: 16px; }
+        .dpq-pad-top { padding-top: 12px; padding-bottom: 8px; }
+        .dpq-pad-bot { padding-bottom: 16px; }
+        .dpq-chrome  { flex-direction: column; align-items: flex-start; gap: 4px; }
+        .dpq-stat    { font-size: 2rem !important; }
+        .dpq-quote   { font-size: 0.92rem !important; line-height: 1.5; }
+        .dpq-mstat   { flex-direction: column; align-items: flex-start; gap: 6px; }
+      }
+    `}</style>
+  )
+
+  // ─── Role: MARGIN — unboxed print pull-quote ───
+  if (resolvedRole === 'margin') {
+    return (
+      <ScrollReveal className={cn('my-12', className)}>
+        {containerStyle}
+        <figure className="dpq-fig relative" role="figure" aria-label={ariaLabel}>
+          {/* Top rule with a short accent segment at the left */}
+          <div className="relative" style={{ height: 2 }}>
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2" style={{ height: 1, background: 'var(--color-border)' }} />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2" style={{ width: 28, height: 2, background: accent }} />
+          </div>
+          <div className="py-5">
+            <blockquote
+              className="dpq-quote"
+              style={{
+                fontFamily: "'EB Garamond', Georgia, serif",
+                        fontWeight: 500,
+                fontSize: 'clamp(1.1rem, 2.6cqw, 1.3rem)',
+                lineHeight: 1.45,
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              &ldquo;{quote}&rdquo;
+            </blockquote>
+            <div className="dpq-mstat flex items-baseline gap-3 mt-4 flex-wrap">
+              {statNumber('clamp(1.5rem, 3.4cqw, 1.9rem)')}
+              <span
+                className="font-mono uppercase"
+                style={{ fontSize: 9.5, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}
+              >
+                {statLabel}
+              </span>
+            </div>
+            {attribution && (
+              <figcaption className="font-mono uppercase text-text-muted mt-2" style={{ fontSize: 9, letterSpacing: '0.16em' }}>
+                — {attribution}
+              </figcaption>
+            )}
+          </div>
+          <div style={{ height: 1, background: 'var(--color-border)' }} />
+        </figure>
+      </ScrollReveal>
+    )
+  }
+
+  // ─── Role: VERDICT — centered closing figure ───
+  if (resolvedRole === 'verdict') {
+    return (
+      <ScrollReveal className={cn('my-12', className)}>
+        {containerStyle}
+        <figure className="dpq-fig relative text-center" role="figure" aria-label={ariaLabel}>
+          <div style={{ height: 1, background: 'var(--color-border)' }} />
+          <div className="py-8 px-4">
+            <div className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+              {lang === 'es' ? 'EL SALDO · CIFRA FINAL' : 'THE BALANCE · CLOSING FIGURE'}
+            </div>
+            <div className="flex justify-center mt-3">
+              {statNumber('clamp(3rem, 8cqw, 4.5rem)', { letterSpacing: '-0.03em' })}
+            </div>
+            <p
+              className="font-mono uppercase mx-auto mt-3"
+              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-secondary)', maxWidth: '52ch' }}
+            >
+              {statLabel}
+            </p>
+            <p
+              className="mx-auto mt-4"
+              style={{
+                fontFamily: "'EB Garamond', Georgia, serif",
+                fontWeight: 500,
+                fontSize: '1.05rem',
+                color: 'var(--color-text-muted)',
+                maxWidth: '46ch',
+                lineHeight: 1.5,
+              }}
+            >
+              &ldquo;{quote}&rdquo;
+            </p>
+            {barValue !== undefined && (
+              <div className="mx-auto mt-6 text-left" style={{ maxWidth: 320 }}>
+                {vizBlock(false)}
+              </div>
+            )}
+          </div>
+          <div style={{ height: 1, background: 'var(--color-border)' }} />
+        </figure>
+      </ScrollReveal>
+    )
+  }
+
+  // ─── Roles: LEDGER + PLATE — boxed tiles ───
+  const isPlate = resolvedRole === 'plate'
   return (
     <ScrollReveal className={cn('my-12', className)}>
-      {/* Container queries scope adaptations to the figure's *own* width
-          (not the viewport). FeatureChapter places this in a 5-of-12
-          sidebar grid where rendered width drops to ~380px on desktop;
-          DataSpotlight gives it 656px; closing chapters give 848px. The
-          rules below let one component look right at all three.
-
-          Browser support: 95%+ Baseline 2023 — safe for prod. */}
-      <style>{`
-        .dpq-fig { container-type: inline-size; container-name: dpq; }
-        @container dpq (max-width: 480px) {
-          .dpq-pad     { padding-left: 16px; padding-right: 16px; }
-          .dpq-pad-top { padding-top: 12px; padding-bottom: 8px; }
-          .dpq-pad-bot { padding-bottom: 16px; }
-          .dpq-chrome  { flex-direction: column; align-items: flex-start; gap: 4px; }
-          .dpq-stat    { font-size: 2rem !important; }
-          .dpq-quote   { font-size: 0.92rem !important; line-height: 1.5; }
-        }
-      `}</style>
+      {containerStyle}
       <figure
         className="dpq-fig relative bg-background-card overflow-hidden"
         style={{
@@ -591,185 +702,57 @@ export default function DataPullquote({
           boxShadow: '0 1px 6px rgba(0,0,0,0.07)',
         }}
         role="figure"
-        aria-label="Cita con datos"
+        aria-label={ariaLabel}
       >
-        {/* ─── Top chrome: dateline + section label ─── */}
+        {/* Top chrome — ledger shows CIFRA · COMPRANET; plate shows the family eyebrow */}
         <div
           className="dpq-chrome dpq-pad dpq-pad-top flex items-center justify-between px-5 pt-4 pb-3 font-mono uppercase"
-          style={{
-            fontSize: 13,
-            letterSpacing: '0.18em',
-            color: 'var(--color-text-muted)',
-          }}
+          style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
         >
-          <span>{sectionLabel}</span>
+          <span>{isPlate ? familyEyebrow(family, lang) : sectionLabel}</span>
           <span aria-hidden>{dateline}</span>
         </div>
 
         <div className="dpq-pad dpq-pad-bot px-5 pb-5">
-          {/* ─── Outlet badge ─── */}
-          {outlet && (
-            <div className="mb-3">
-              <OutletBadge outlet={outlet} />
-            </div>
-          )}
+          {/* Number */}
+          <div className="flex items-baseline gap-3 mb-3 pt-2">
+            {statNumber(isPlate ? 'clamp(1.85rem, 4cqw, 2.6rem)' : 'clamp(2.4rem, 5.5cqw, 3.5rem)', {
+              letterSpacing: isPlate ? '-0.02em' : '-0.025em',
+            })}
+          </div>
 
-          {/* ─── SLEDGEHAMMER layout: number first, quote below ─── */}
-          {sledgehammer ? (
-            <>
-              {/* Giant opening number — Pudding sledgehammer pattern */}
-              <div className="flex items-baseline gap-3 mb-3 pt-2">
-                <span
-                  ref={countRef}
-                  className="tabular-nums"
-                  style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontStyle: 'normal',
-                    fontWeight: 800,
-                    // 2026-05-07: shrunk from clamp(4.5rem, 12vw, 7rem) — multi-character
-                    // strings like "1,200-2,400" overflowed at narrow side-column widths.
-                    // Container-query-style sizing: cap at 3.5rem so 9-character strings
-                    // (~"1,200-2,400") fit in a 380px sidebar column.
-                    fontSize: 'clamp(2.4rem, 5.5vw, 3.5rem)',
-                    lineHeight: 0.95,
-                    letterSpacing: '-0.025em',
-                    color: accent,
-                    // Allow long ranges to wrap rather than overflow if a column is even narrower
-                    overflowWrap: 'anywhere',
-                    maxWidth: '100%',
-                  }}
-                  aria-label={`${stat} ${statLabel}`}
-                >
-                  {parsed
-                    ? `${animatedValue.toLocaleString('es-MX', {
-                        minimumFractionDigits: parsed.decimals,
-                        maximumFractionDigits: parsed.decimals,
-                      })}${parsed.suffix}`
-                    : stat}
-                </span>
-              </div>
-              <p
-                className="font-mono uppercase mb-4"
-                style={{ fontSize: 13, letterSpacing: '0.12em', color: accent, opacity: 0.85 }}
-              >
-                {statLabel}
-              </p>
-              {/* Hairline */}
-              <div className="h-px w-full mb-4" style={{ background: 'var(--color-border)' }} />
-              {/* Quote — demoted below the number */}
-              <blockquote
-                className="text-text-muted mb-2"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontStyle: 'normal',
-                  fontWeight: 400,
-                  fontSize: 'clamp(0.85rem, 1.4vw, 0.95rem)',
-                  lineHeight: 1.5,
-                  letterSpacing: '0.005em',
-                }}
-              >
-                &ldquo;{quote}&rdquo;
-              </blockquote>
-              {attribution && (
-                <figcaption
-                  className="font-mono uppercase text-text-muted mb-4"
-                  style={{ fontSize: 13, letterSpacing: '0.16em' }}
-                >
-                  — {attribution}
-                </figcaption>
-              )}
-            </>
+          {/* Label */}
+          {isPlate ? (
+            <p className="text-text-secondary text-sm leading-snug mb-4">{statLabel}</p>
           ) : (
-            <>
-              {/* ─── Standard layout: quote first, then number ─── */}
-              <blockquote
-                className="dpq-quote text-text-secondary mb-2"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontStyle: 'normal',
-                  fontWeight: 400,
-                  fontSize: 'clamp(0.95rem, 1.6vw, 1.05rem)',
-                  lineHeight: 1.55,
-                  letterSpacing: '0.005em',
-                }}
-              >
-                &ldquo;{quote}&rdquo;
-              </blockquote>
-
-              {attribution && (
-                <figcaption
-                  className="font-mono uppercase text-text-muted mb-5"
-                  style={{ fontSize: 13, letterSpacing: '0.16em' }}
-                >
-                  — {attribution}
-                </figcaption>
-              )}
-
-              {/* ─── Hairline rule between quote and number ─── */}
-              <div className="h-px w-full mb-4" style={{ background: 'var(--color-border)' }} />
-
-              {/* ─── Headline number — Playfair Italic 800, dashboard idiom ─── */}
-              <div className="flex items-baseline gap-3 mb-1">
-                <span
-                  ref={countRef}
-                  className="dpq-stat tabular-nums"
-                  style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontStyle: 'normal',
-                    fontWeight: 800,
-                    // 2026-05-07: trimmed from clamp(2.4rem, 5.6vw, 3.6rem) so
-                    // multi-character ranges sit on one line at narrow columns.
-                    fontSize: 'clamp(1.85rem, 4vw, 2.6rem)',
-                    lineHeight: 0.95,
-                    letterSpacing: '-0.02em',
-                    color: accent,
-                    overflowWrap: 'anywhere',
-                    maxWidth: '100%',
-                  }}
-                  aria-label={`${stat} ${statLabel}`}
-                >
-                  {parsed
-                    ? `${animatedValue.toLocaleString('es-MX', {
-                        minimumFractionDigits: parsed.decimals,
-                        maximumFractionDigits: parsed.decimals,
-                      })}${parsed.suffix}`
-                    : stat}
-                </span>
-              </div>
-
-              <p className="text-text-secondary text-sm leading-snug mb-5">{statLabel}</p>
-            </>
+            <p className="font-mono uppercase mb-4" style={{ fontSize: 11, letterSpacing: '0.12em', color: accent, opacity: 0.85 }}>
+              {statLabel}
+            </p>
           )}
 
-          {/* ─── Micro-viz block ─── */}
-          {barValue !== undefined && (
-            <div ref={vizRef} className="mt-3">
-              <div
-                className="font-mono uppercase mb-2.5"
-                style={{
-                  fontSize: 13,
-                  letterSpacing: '0.18em',
-                  color: 'var(--color-text-muted)',
-                }}
-              >
-                {familyEyebrow(family, lang)}
-              </div>
-              <div role="img" aria-label={`${stat}${localizedBarLabel ? ` — ${localizedBarLabel}` : ''}`}>
-                {renderViz(template, vizProps)}
-              </div>
-              {localizedBarLabel && (
-                <p
-                  className="font-mono leading-[1.45]"
-                  style={{
-                    fontSize: 13,
-                    color: 'var(--color-text-muted)',
-                    marginTop: family === 'threshold' ? 18 : 10,
-                  }}
-                >
-                  {localizedBarLabel}
-                </p>
-              )}
-            </div>
+          {/* Plate: viz between label and the demoted quote */}
+          {isPlate && vizBlock(false)}
+
+          {/* Hairline */}
+          <div className="h-px w-full my-4" style={{ background: 'var(--color-border)' }} />
+
+          {/* Quote — demoted below the number (both boxed roles) */}
+          <blockquote
+            className="text-text-muted mb-2"
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+                    fontWeight: 400,
+              fontSize: 'clamp(0.85rem, 1.4vw, 0.95rem)',
+              lineHeight: 1.5,
+              letterSpacing: '0.005em',
+            }}
+          >
+            &ldquo;{quote}&rdquo;
+          </blockquote>
+          {attribution && (
+            <figcaption className="font-mono uppercase text-text-muted" style={{ fontSize: 9, letterSpacing: '0.16em' }}>
+              — {attribution}
+            </figcaption>
           )}
         </div>
       </figure>
