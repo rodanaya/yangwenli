@@ -15,9 +15,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Play, Pause, SkipBack, SkipForward, RotateCcw, ArrowRight, Volume2, VolumeX } from 'lucide-react'
-import type { FilmBeat, FilmDef } from '@/lib/gallery/films'
+import type { FilmBeat, FilmDef, StatSlot } from '@/lib/gallery/films'
 import { SEXENIO_COLORS } from '@/lib/gallery/films'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, getSectorName } from '@/lib/constants'
+import { formatCompactUSD } from '@/lib/utils'
 import { SCENES } from '@/components/gallery/scenes'
 
 type Lang = 'en' | 'es'
@@ -72,7 +73,7 @@ function fmtTime(ms: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-function StatNumber({ beat, accent }: { beat: FilmBeat; accent: string }) {
+function StatNumber({ beat, accent, slot = 'hero', mono = false }: { beat: FilmBeat; accent: string; slot?: StatSlot; mono?: boolean }) {
   const reduce = useReducedMotion()
   const st = beat.stat
   const [val, setVal] = useState(0)
@@ -103,17 +104,24 @@ function StatNumber({ beat, accent }: { beat: FilmBeat; accent: string }) {
   // Red stats count up in ink-white and flip to accent only on landing (the number
   // turns red the moment it becomes true); pct/currency read accent throughout.
   const accentNow = st.red ? landed : (st.format === 'pct' || st.format === 'currencyB' || st.format === 'currencyT')
+  const isText = st.format === 'text'
+  const isHero = slot === 'hero'
+  // Rails + tallies read in mono; hero + counted figures stay serif italic (the sledgehammer).
+  const useMono = mono || (isText && !isHero)
+  const size = isHero
+    ? (isText ? 'clamp(2.1rem, 6.5vw, 4.4rem)' : 'clamp(2.8rem, 8.5vw, 6rem)')
+    : 'clamp(1.7rem, 3.8vw, 3rem)'
   return (
     <span
-      className="block tabular-nums leading-[0.92]"
+      className="block tabular-nums leading-[0.95]"
       style={{
         color: 'white',
-        fontFamily: 'var(--font-family-serif, Georgia, serif)',
-        fontStyle: st.format === 'text' ? 'normal' : 'italic',
-        fontWeight: 800,
-        fontSize: st.format === 'text' ? 'clamp(1.8rem, 5vw, 3.2rem)' : 'clamp(2.8rem, 9vw, 6.5rem)',
-        textShadow: '0 2px 34px rgba(0,0,0,0.6)',
-        letterSpacing: st.format === 'text' ? '0.08em' : '-0.02em',
+        fontFamily: useMono ? 'var(--font-family-mono, "JetBrains Mono", ui-monospace, monospace)' : 'var(--font-family-serif, Georgia, serif)',
+        fontStyle: (isText || useMono) ? 'normal' : 'italic',
+        fontWeight: useMono ? 700 : 800,
+        fontSize: size,
+        textShadow: '0 2px 30px rgba(0,0,0,0.72)',
+        letterSpacing: useMono ? '0.02em' : (isText ? '0.06em' : '-0.02em'),
       }}
     >
       {accentNow ? <span style={{ color: accent, transition: 'color 200ms ease-out' }}>{text}</span> : text}
@@ -512,31 +520,22 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
         const barX0 = W * 0.16, barW = W * 0.68, barY = H * 0.52, tickX = barX0 + 0.4 * barW
         ctx!.setLineDash([5, 5]); ctx!.strokeStyle = `rgba(${pal.ink},0.7)`; ctx!.lineWidth = 1.4
         ctx!.beginPath(); ctx!.moveTo(tickX, barY - H * 0.11); ctx!.lineTo(tickX, barY + H * 0.11); ctx!.stroke(); ctx!.setLineDash([])
-        ctx!.fillStyle = `rgba(${pal.ink},0.85)`; ctx!.font = `${Math.round(11 * KF)}px ui-monospace, monospace`; ctx!.textAlign = 'center'
-        ctx!.fillText('OECD ~40%', tickX, barY - H * 0.13); ctx!.textAlign = 'left'
+        // tick label lives in the DOM stat label now (one text authority)
       } else if (mode === 'torrent') {
         // the reading frame — one legible document while thousands pour past
         const fx = W * 0.24, fy = H * 0.38, fw = 34 * KF, fh = 46 * KF
         ctx!.strokeStyle = `rgba(${pal.ink},0.85)`; ctx!.lineWidth = 1.2
         ctx!.strokeRect(fx - fw / 2, fy - fh / 2, fw, fh)
-        ctx!.fillStyle = `rgba(${pal.ink},0.5)`; ctx!.font = `${Math.round(9 * KF)}px ui-monospace, monospace`; ctx!.textAlign = 'center'
-        ctx!.fillText(langRef.current === 'es' ? 'uno a la vez' : 'one at a time', fx, fy + fh / 2 + 16 * KF); ctx!.textAlign = 'left'
+        // "one at a time" reading-rate note lives in the DOM annotation layer now
       } else if (mode === 'strata') {
         const barX0 = W * 0.16, barW = W * 0.68, barY = H * 0.56
         ctx!.strokeStyle = `rgba(${pal.ink},0.22)`; ctx!.lineWidth = 1
         ctx!.beginPath(); ctx!.moveTo(barX0, barY + H * 0.05); ctx!.lineTo(barX0 + barW, barY + H * 0.05); ctx!.stroke()
-        ctx!.font = `${Math.round(9 * KF)}px ui-monospace, monospace`; ctx!.textAlign = 'center'; ctx!.fillStyle = `rgba(${pal.ink},0.5)`
-        const es = langRef.current === 'es'
-        const segs: Array<[number, string]> = [
-          [0.364, es ? '72.8 BAJO' : '72.8 LOW'], [0.809, es ? '16.2 MEDIO' : '16.2 MED'],
-          [0.9155, es ? '5.9 ALTO' : '5.9 HIGH'], [0.9705, es ? '5.2 CRÍT' : '5.2 CRIT'],
-        ]
-        for (const [frac, label] of segs) ctx!.fillText(label, barX0 + frac * barW, barY + H * 0.095)
-        // bracket over the lifted 11.1% tail
+        // segment + tail numbers live in the DOM stat/agate now (one text authority);
+        // the bracket stays to point the eye at the lifted high-risk tail.
         const tx0 = barX0 + 0.889 * barW, tx1 = barX0 + barW, ty = barY - H * 0.115
         ctx!.strokeStyle = `rgba(${pal.accentRGB},0.7)`; ctx!.lineWidth = 1.2
         ctx!.beginPath(); ctx!.moveTo(tx0, ty + 6); ctx!.lineTo(tx0, ty); ctx!.lineTo(tx1, ty); ctx!.lineTo(tx1, ty + 6); ctx!.stroke()
-        ctx!.fillStyle = `rgba(${pal.accentRGB},0.9)`; ctx!.fillText('11.1%', (tx0 + tx1) / 2, ty - 6); ctx!.textAlign = 'left'
       } else if (mode === 'monopoly') {
         const pr = easeOut(clamp01(ls / (dur * 0.4)))
         const cx = W * 0.5, cy = H * 0.54, radius = Math.min(W, H) * 0.30
@@ -547,8 +546,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
           ctx!.beginPath(); ctx!.moveTo(cx, cy); ctx!.lineTo(ex, ey); ctx!.stroke()
         }
         ctx!.fillStyle = `rgba(${pal.ink},0.9)`; ctx!.fillRect(cx - 5 * KF, cy - 6.5 * KF, 10 * KF, 13 * KF)
-        ctx!.font = `${Math.round(9 * KF)}px ui-monospace, monospace`; ctx!.textAlign = 'center'; ctx!.fillStyle = `rgba(${pal.ink},0.5)`
-        ctx!.fillText(langRef.current === 'es' ? '1 INSTITUCIÓN · 44 PROVEEDORES' : '1 INSTITUTION · 44 VENDORS', cx, cy + radius + 24 * KF); ctx!.textAlign = 'left'
+        // ring caption ("1 institution · 44 vendors") lives in the DOM stat label now
       } else if (mode === 'redact') {
         const sweepX = lerp(0, W * 1.05, easeOut(clamp01(ls / (dur * 0.6))))
         if (sweepX < W) {
@@ -571,7 +569,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
           const x = gx0 + c * cw + cw * 0.06, y = gy0 + rr * ch + ch * 0.06, w = cw * 0.88, hh = ch * 0.88
           const col = sectorHex(s)
           ctx!.strokeStyle = col + '55'; ctx!.lineWidth = 1; ctx!.strokeRect(x, y, w, hh)
-          ctx!.fillStyle = col + 'cc'; ctx!.fillText(SECTOR_SLUGS[s].toUpperCase().slice(0, 9), x + 5, y + 5)
+          ctx!.fillStyle = col + 'cc'; ctx!.fillText(getSectorName(SECTOR_SLUGS[s], langRef.current).toUpperCase().slice(0, 9), x + 5, y + 5)
         }
         ctx!.textBaseline = 'alphabetic'
       } else if (mode === 'modelnet') {
@@ -840,37 +838,83 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
           </AnimatePresence>
         </div>
 
-        {/* big stat */}
-        <div className="pointer-events-none absolute inset-x-0 top-[25%] z-10 flex flex-col items-center px-6 text-center">
-          <AnimatePresence mode="wait">
-            {started && beat?.stat && (
-              <motion.div key={`stat-${beatIdx}`}
-                initial={{ opacity: 0, y: reduce ? 0 : 16, scale: reduce ? 1 : 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: reduce ? 0 : -12 }}
-                transition={{ duration: 0.55, ease: [0.22, 0.61, 0.36, 1] }}>
-                <StatNumber beat={beat} accent={pal.accent} />
-                <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em]" style={{ color: `rgba(${pal.dim},0.95)` }}>
-                  {t(beat.stat.label)}
-                  {beat.ref && <span className="ml-2 opacity-80">· {t(beat.ref.label)} {beat.ref.value}%</span>}
-                </div>
-                {beat.agate && (
-                  <div className="mx-auto mt-2 max-w-md font-mono text-[9px] leading-snug" style={{ color: `rgba(${pal.dim},0.6)` }}>
-                    {t(beat.agate)}
-                  </div>
-                )}
-                {beat.verdict && <div className="mt-4 font-serif text-xl italic" style={{ color: 'white' }}>{t(beat.verdict)}</div>}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        {/* stat — slot-positioned (Intro redesign 2026-07-03). Never a forced centre pile;
+            each beat's layout.slot places it in a rail, a corner stamp, the hero centre, or nowhere. */}
+        {(() => {
+          const slot: StatSlot = beat?.layout?.slot ?? 'hero'
+          if (!started || !beat?.stat || slot === 'none') return null
+          const isRailR = slot === 'rail-right'
+          const isStamp = slot === 'stamp'
+          const wrap =
+            slot === 'hero' ? 'inset-x-0 top-[23%] items-center px-6 text-center'
+            : isRailR ? 'right-[5%] top-[19%] max-w-[38%] items-end text-right'
+            : slot === 'rail-left' ? 'left-[5%] top-[19%] max-w-[38%] items-start text-left'
+            : 'right-[5%] top-[14%] items-end text-right' // stamp
+          const dim = (o: number) => `rgba(${pal.dim},${o})`
+          return (
+            <div className={`pointer-events-none absolute z-10 flex flex-col ${wrap}`}>
+              <AnimatePresence mode="wait">
+                <motion.div key={`stat-${beatIdx}`} className="flex flex-col"
+                  style={{ alignItems: slot === 'hero' ? 'center' : isRailR || isStamp ? 'flex-end' : 'flex-start' }}
+                  initial={{ opacity: 0, y: reduce ? 0 : 14, scale: reduce ? 1 : 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: reduce ? 0 : -10 }}
+                  transition={{ duration: 0.55, ease: [0.22, 0.61, 0.36, 1] }}>
+                  {isStamp ? (
+                    <div className="inline-block font-mono uppercase" style={{
+                      transform: 'rotate(-3deg)', border: `1px solid ${beat.stat.red ? pal.accent : dim(0.6)}`,
+                      color: beat.stat.red ? pal.accent : `rgba(${pal.ink},0.9)`, padding: '6px 12px',
+                      fontSize: 'clamp(0.8rem, 1.7vw, 1.15rem)', letterSpacing: '0.22em', background: 'rgba(12,10,9,0.5)',
+                    }}>{beat.stat.text}</div>
+                  ) : (
+                    <StatNumber beat={beat} accent={pal.accent} slot={slot} mono={beat.layout?.mono} />
+                  )}
+                  {beat.stat.mxn != null && (
+                    <div className="mt-1 font-mono tabular-nums" style={{ color: dim(0.75), fontSize: 'clamp(0.7rem, 1.2vw, 0.95rem)', letterSpacing: '0.04em' }}>
+                      ≈ {formatCompactUSD(beat.stat.mxn)}
+                    </div>
+                  )}
+                  {!isStamp && (
+                    <div className="mt-2.5 max-w-[34ch] font-mono text-[11px] uppercase leading-snug tracking-[0.16em]" style={{ color: dim(0.95) }}>
+                      {t(beat.stat.label)}
+                    </div>
+                  )}
+                  {isStamp && (
+                    <div className="mt-2 max-w-[30ch] font-mono text-[10px] uppercase leading-snug tracking-[0.16em]" style={{ color: dim(0.9) }}>
+                      {t(beat.stat.label)}
+                    </div>
+                  )}
+                  {beat.agate && (
+                    <div className="mt-2 max-w-[38ch] font-mono text-[9px] leading-snug" style={{ color: dim(0.6) }}>
+                      {t(beat.agate)}
+                    </div>
+                  )}
+                  {beat.verdict && <div className="mt-4 font-serif text-xl italic" style={{ color: 'white' }}>{t(beat.verdict)}</div>}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          )
+        })()}
 
-        {/* lower-third subtitle — the narrative for sound-off viewers (accessibility:
-            the caption was previously spoken only, leaving muted viewers with no story). */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-[11%] z-10 flex justify-center px-8 text-center">
+        {/* annotation layer — DOM pills pinned on the stage; the single text authority for
+            scene labels (replaces canvas fillText that used to collide with the stat). */}
+        {started && beat?.layout?.annotations?.map((a, i) => (
+          <div key={`ann-${beatIdx}-${i}`} className="pointer-events-none absolute z-10 whitespace-nowrap font-mono uppercase"
+            style={{ left: `${a.x}%`, top: `${a.y}%`, transform: 'translate(-50%,-50%)', fontSize: '9.5px', letterSpacing: '0.14em',
+              color: a.red ? pal.accent : `rgba(${pal.ink},0.82)`, background: 'rgba(12,10,9,0.72)', border: `1px solid rgba(${pal.ink},0.14)`, padding: '2px 6px', borderRadius: 2 }}>
+            {t(a.text)}
+          </div>
+        ))}
+
+        {/* lower-third subtitle scrim — guarantees the chyron reads over any scene ink */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[7] h-[36%]" style={{ background: 'linear-gradient(to bottom, transparent, rgba(12,10,9,0.9))' }} />
+
+        {/* lower-third subtitle — left-aligned documentary chyron, ≤3 lines, accent left-rule */}
+        <div className="pointer-events-none absolute left-[5%] right-[10%] bottom-[7%] z-10">
           <AnimatePresence mode="wait">
             {started && beat && !beat.silence && t(beat.caption) && (
               <motion.p key={`cap-${beatIdx}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
-                className="max-w-[60ch] leading-snug"
-                style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontSize: 'clamp(0.95rem, 2.1vw, 1.06rem)', color: `rgba(${pal.ink},0.9)`, textShadow: '0 1px 22px rgba(0,0,0,0.85)' }}>
+                className="border-l-2 pl-4 leading-snug"
+                style={{ borderColor: pal.accent, maxWidth: '58ch', fontFamily: 'var(--font-family-serif, Georgia, serif)', fontSize: 'clamp(0.95rem, 2vw, 1.08rem)', color: `rgba(${pal.ink},0.94)`, textShadow: '0 1px 18px rgba(0,0,0,0.9)',
+                  display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                 {t(beat.caption)}
               </motion.p>
             )}

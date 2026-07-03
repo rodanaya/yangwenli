@@ -203,7 +203,6 @@ const plazaFreeze: SceneFn = (ctx, a) => {
 const scaleScene: SceneFn = (ctx, a) => {
   const { W, H, KF, ls, dur, pal } = a
   const ink = (o: number) => `rgba(${pal.ink},${o})`
-  const dim = (o: number) => `rgba(${pal.dim},${o})`
   const red = (o: number) => `rgba(${pal.accentRGB},${o})`
   const cx = W * 0.28, topY = H * 0.46, floorY = H * 0.86  // moved down + left so $2.84T (centre) doesn't collide
   const load = easeOut(clamp01((ls - dur * 0.15) / (dur * 0.5)))
@@ -237,8 +236,7 @@ const scaleScene: SceneFn = (ctx, a) => {
   ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(ux, H * 0.52); ctx.lineTo(ux - W * 0.09, uy); ctx.lineTo(ux + W * 0.09, uy); ctx.closePath(); ctx.fill()
   ctx.lineWidth = 1.3
   for (let i = 0; i < 6; i++) { const bw = W * 0.075 - i * 2 * KF; ctx.fillStyle = ink(0.08 + 0.1 * spot); ctx.fillRect(ux - bw / 2, uy - 6 * KF - i * 6 * KF, bw, 6 * KF); ctx.strokeStyle = ink(0.4 + 0.45 * spot); ctx.strokeRect(ux - bw / 2, uy - 6 * KF - i * 6 * KF, bw, 6 * KF) }
-  ctx.fillStyle = dim(0.55 + 0.4 * spot); ctx.font = `${Math.round(10 * KF)}px ui-monospace, monospace`; ctx.textAlign = 'center'
-  ctx.fillText(a.lang === 'es' ? '41 sin pesar' : '41 unweighed', ux, uy + 18 * KF); ctx.textAlign = 'left'
+  // "41 unweighed" label lives in the DOM annotation layer now (one text authority)
 }
 
 export const SCENES: Record<string, SceneFn> = {
