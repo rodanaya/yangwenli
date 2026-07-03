@@ -982,4 +982,4 @@
 /* Legibility directive (2026-07-03): kill ALL italic site-wide. The Tailwind
    .italic utility and any residual italic class render upright. Inline
    fontStyle:'italic' is removed at source by the legibility codemod. */
-.italic { font-style: normal !important; }
+.italic, em, i { font-style: normal !important; }
