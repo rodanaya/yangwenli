@@ -204,9 +204,13 @@ interface CalloutLabel extends CalloutSrc {
 // Greedy vertical de-collision that accounts for each label's true WIDTH:
 // two center-anchored labels overlap when their gap is smaller than the sum of
 // their half-widths, so a long name pushes its neighbour to the row above.
-function layoutCalloutLabels(callouts: CalloutSrc[]): CalloutLabel[] {
+function layoutCalloutLabels(callouts: CalloutSrc[], isMobile = false): CalloutLabel[] {
   const sorted = [...callouts].sort((a, b) => a.x - b.x)
   const lastByRow: { x: number; half: number }[] = []
+  // Mobile: row 0 starts higher (-34 vs -22) to clear the ½/80% wall count
+  // sublabels (render at y≈-11) with real vertical headroom — at -22 the two
+  // stacks visually overprinted in the tight MARGIN_MOBILE.top=66 band.
+  const startY = isMobile ? -34 : -22
   return sorted.map((c) => {
     const half = estLabelPx(c.name) / 2
     let row = 0
@@ -216,9 +220,7 @@ function layoutCalloutLabels(callouts: CalloutSrc[]): CalloutLabel[] {
     )
       row++
     lastByRow[row] = { x: c.x, half }
-    // Row 0 starts above the ½/80% flag band (flags render at y≈-11) so the
-    // needle-name stack never collides with the concentration flags.
-    return { ...c, labelY: -22 - row * CALLOUT_ROW_H }
+    return { ...c, labelY: startY - row * CALLOUT_ROW_H }
   })
 }
 
@@ -317,7 +319,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
     return out
   }, [needles, isMobile, isEs, x])
 
-  const calloutLabels = useMemo(() => layoutCalloutLabels(calloutSources), [calloutSources])
+  const calloutLabels = useMemo(() => layoutCalloutLabels(calloutSources, isMobile), [calloutSources, isMobile])
 
   // ── computed intersection deck (graft: replaces the ported anaquel deck) ──
   const deckSentence = useMemo(() => {
@@ -446,15 +448,30 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
                 innerW={innerW}
                 label={isEs ? 'MEDIO 25' : 'MEDIUM 25'}
                 dashed
+                isMobile={isMobile}
               />
             )}
             {RISK_THRESHOLDS.high <= yMax && (
-              <HRule yPos={y(RISK_THRESHOLDS.high)} innerW={innerW} label={isEs ? 'ALTO 40' : 'HIGH 40'} dashed />
+              <HRule yPos={y(RISK_THRESHOLDS.high)} innerW={innerW} label={isEs ? 'ALTO 40' : 'HIGH 40'} dashed isMobile={isMobile} />
             )}
             {qualifiedMeanRisk !== null && (
               <g aria-hidden="true">
                 <line x1={0} x2={innerW} y1={y(qualifiedMeanRisk)} y2={y(qualifiedMeanRisk)} stroke="var(--color-accent)" strokeWidth={1} strokeOpacity={0.55} />
-                <text x={innerW - 2} y={y(qualifiedMeanRisk) - 3} textAnchor="end" fontFamily="var(--font-family-mono, monospace)" fontSize={isMobile ? 8 : 9} fill="var(--color-accent)" fillOpacity={0.85}>
+                {/* Mobile: left-anchor at x=2 (left edge is empty) so the
+                    label never overruns the viewBox's right edge. */}
+                <text
+                  x={isMobile ? 2 : innerW - 2}
+                  y={y(qualifiedMeanRisk) - 3}
+                  textAnchor={isMobile ? 'start' : 'end'}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fontSize={isMobile ? 8 : 9}
+                  fill="var(--color-accent)"
+                  fillOpacity={isMobile ? 1 : 0.85}
+                  paintOrder="stroke"
+                  stroke={isMobile ? 'var(--color-background)' : 'none'}
+                  strokeWidth={isMobile ? 3 : 0}
+                  strokeLinejoin="round"
+                >
                   {isEs ? 'media del inventario' : 'inventory mean'}
                 </text>
               </g>
@@ -564,7 +581,12 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
                       crowded top margin (no floating head callouts). */}
                   {!h.subFloor && hi < 3 && colW >= 30 && colH >= 62 && (() => {
                     const maxChars = Math.max(4, Math.floor((colH - 12) / 6.6))
-                    const vName = label.length > maxChars ? label.slice(0, maxChars - 1).trimEnd() + '…' : label
+                    const needsTruncation = label.length > maxChars
+                    // Mobile (600-767px band, no sidebar): a truncated name
+                    // reads as broken ("Building…"). Only show the FULL
+                    // name on mobile; suppress cleanly rather than clip.
+                    if (isMobile && needsTruncation) return null
+                    const vName = needsTruncation ? label.slice(0, maxChars - 1).trimEnd() + '…' : label
                     const cx = colX + colW / 2
                     const by = innerH - 8
                     return (
@@ -753,11 +775,27 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
 
 // ── horizontal reference rule (risk threshold) ─────────────────────────────
 
-function HRule({ yPos, innerW, label, dashed }: { yPos: number; innerW: number; label: string; dashed?: boolean }) {
+function HRule({ yPos, innerW, label, dashed, isMobile }: { yPos: number; innerW: number; label: string; dashed?: boolean; isMobile?: boolean }) {
+  // Mobile: left-anchor at the plot's left edge (x=2), which is otherwise
+  // empty — the desktop right-anchor at innerW-2 clips at narrow widths
+  // because the label text runs past the viewBox's right boundary.
   return (
     <g aria-hidden="true">
       <line x1={0} x2={innerW} y1={yPos} y2={yPos} stroke="var(--color-border)" strokeWidth={1} strokeDasharray={dashed ? '4,4' : undefined} strokeOpacity={0.7} />
-      <text x={innerW - 2} y={yPos - 3} textAnchor="end" fontFamily="var(--font-family-mono, monospace)" fontSize={11} fill="var(--color-text-muted)" fillOpacity={0.75} letterSpacing="0.06em">
+      <text
+        x={isMobile ? 2 : innerW - 2}
+        y={yPos - 3}
+        textAnchor={isMobile ? 'start' : 'end'}
+        fontFamily="var(--font-family-mono, monospace)"
+        fontSize={isMobile ? 9 : 11}
+        fill="var(--color-text-muted)"
+        fillOpacity={isMobile ? 1 : 0.75}
+        letterSpacing="0.06em"
+        paintOrder="stroke"
+        stroke={isMobile ? 'var(--color-background)' : 'none'}
+        strokeWidth={isMobile ? 3 : 0}
+        strokeLinejoin="round"
+      >
         {label}
       </text>
     </g>
