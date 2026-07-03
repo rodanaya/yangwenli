@@ -58,6 +58,15 @@ const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t)
 const easeOut = (t: number) => 1 - (1 - t) * (1 - t)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
+// Reading-time floor: a beat must never advance before its caption can be READ.
+// ~176 wpm + ~2.8s to absorb the visual; the beat's own durationMs is the minimum.
+function beatDwellMs(beat: FilmBeat, lang: 'en' | 'es'): number {
+  const cap = (beat.caption?.[lang] ?? '').trim()
+  if (!cap) return beat.durationMs
+  const words = cap.split(/\s+/).length
+  return Math.max(beat.durationMs, Math.min(words * 340 + 2800, 32000))
+}
+
 function fmtTime(ms: number) {
   const s = Math.max(0, Math.round(ms / 1000))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
@@ -697,10 +706,11 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
   // timer pacing (sound off)
   useEffect(() => {
     if (!started || !playing || sound || atEnd) return
-    const dur = film.beats[beatIdx]?.durationMs ?? 22000
+    const b = film.beats[beatIdx]
+    const dur = b ? beatDwellMs(b, lang) : 22000
     const id = setTimeout(advance, dur)
     return () => clearTimeout(id)
-  }, [beatIdx, started, playing, sound, atEnd, film, advance])
+  }, [beatIdx, started, playing, sound, atEnd, film, lang, advance])
 
   // narration pacing (sound on): mp3 per beat, browser-TTS fallback, advance on end
   useEffect(() => {
@@ -721,7 +731,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
     // are unreliable (they can fire instantly) and must never race the film.
     const useFallback = () => {
       if (cancelled || fallbackTimer) return
-      fallbackTimer = setTimeout(doAdvance, b.durationMs)
+      fallbackTimer = setTimeout(doAdvance, beatDwellMs(b, lang))
       try {
         const synth = window.speechSynthesis
         if (synth) {
