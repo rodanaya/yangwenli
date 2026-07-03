@@ -77,6 +77,14 @@ export interface FilmBeat {
   agate?: { en: string; es: string }
   /** a beat that paces on durationMs with no narration (engineered silence). */
   silence?: boolean
+  /**
+   * Rendering medium for this beat's canvas layer (El Teatro de Papel, 2026-07-03).
+   * 'objects' → a cut-vector object scene from SCENES[mode]; 'particles' (default) →
+   * the legacy particle-morph engine. Lets object scenes land incrementally with a
+   * particle fallback, so nothing blocks launch. DOM overlays (stat/subtitle/VO) are
+   * renderer-independent.
+   */
+  renderer?: 'objects' | 'particles'
 }
 
 export interface FilmPalette {
@@ -273,6 +281,7 @@ export const FILMS: Record<string, FilmDef> = {
         id: 'ledger',
         chapterLabel: { en: 'I · THE LEDGER', es: 'I · EL LIBRO MAYOR' },
         mode: 'field',
+        renderer: 'objects',
         tag: { en: 'THE LEDGER', es: 'EL LIBRO MAYOR' },
         caption: {
           en: 'Over twenty-three years, the Mexican federal government signed three million contracts — nine point nine trillion pesos. All of it, by law, public record.',
@@ -322,6 +331,7 @@ export const FILMS: Record<string, FilmDef> = {
         id: 'blackout',
         chapterLabel: { en: 'III · THE BLACKOUT', es: 'III · EL APAGÓN' },
         mode: 'dissolve',
+        renderer: 'objects',
         tag: { en: 'THE BLACKOUT', es: 'EL APAGÓN' },
         caption: {
           en: 'Then, just as an outside audit became possible, the record went dark. In twenty twenty-five the transparency institute was dissolved and CompraNet abolished. On September twenty-eighth, the federal feed moved for the last time. The spending continued. The record of it did not.',
@@ -372,6 +382,7 @@ export const FILMS: Record<string, FilmDef> = {
         id: 'ghosts',
         chapterLabel: { en: 'IV · THE FINDINGS', es: 'IV · LOS HALLAZGOS' },
         mode: 'ghosts',
+        renderer: 'objects',
         tag: { en: 'GHOST VENDORS', es: 'PROVEEDORES FANTASMA' },
         caption: {
           en: 'Inside the flagged record: six thousand one hundred eighteen vendors with the shape of a company and none of the substance — no footprint beyond the ledger. Together they billed nearly forty billion pesos.',
@@ -398,6 +409,7 @@ export const FILMS: Record<string, FilmDef> = {
         id: 'capture',
         chapterLabel: { en: 'IV · THE FINDINGS', es: 'IV · LOS HALLAZGOS' },
         mode: 'lattice',
+        renderer: 'objects',
         tag: { en: 'CAPTURE', es: 'LA CAPTURA' },
         caption: {
           en: 'Markets move. Captured ones freeze. Across the record, fifteen thousand nine hundred thirty-nine actors sit inside capture patterns — institutions whose spending locks onto a closed circle of vendors, year after year.',
@@ -425,6 +437,7 @@ export const FILMS: Record<string, FilmDef> = {
         id: 'scale',
         chapterLabel: { en: 'IV · THE FINDINGS', es: 'IV · LOS HALLAZGOS' },
         mode: 'mass',
+        renderer: 'objects',
         tag: { en: 'THE SCALE', es: 'LA ESCALA' },
         caption: {
           en: 'The documented cases alone put the loss at an estimated two point eight four trillion pesos diverted. That figure is a floor, not a ceiling — forty-one cases carry no estimate at all.',

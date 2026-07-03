@@ -18,6 +18,7 @@ import { Play, Pause, SkipBack, SkipForward, RotateCcw, ArrowRight, Volume2, Vol
 import type { FilmBeat, FilmDef } from '@/lib/gallery/films'
 import { SEXENIO_COLORS } from '@/lib/gallery/films'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { SCENES } from '@/components/gallery/scenes'
 
 type Lang = 'en' | 'es'
 
@@ -128,6 +129,10 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const partsRef = useRef<Particle[]>([])
+  // Canvas draw reads current lang via a ref so switching language doesn't rebuild
+  // the particle system (the on-canvas mode labels stay correct either way).
+  const langRef = useRef(lang)
+  useEffect(() => { langRef.current = lang }, [lang])
 
   useEffect(() => {
     beatRef.current = beatIdx
@@ -500,6 +505,41 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
         ctx!.beginPath(); ctx!.moveTo(tickX, barY - H * 0.11); ctx!.lineTo(tickX, barY + H * 0.11); ctx!.stroke(); ctx!.setLineDash([])
         ctx!.fillStyle = `rgba(${pal.ink},0.85)`; ctx!.font = `${Math.round(11 * KF)}px ui-monospace, monospace`; ctx!.textAlign = 'center'
         ctx!.fillText('OECD ~40%', tickX, barY - H * 0.13); ctx!.textAlign = 'left'
+      } else if (mode === 'torrent') {
+        // the reading frame — one legible document while thousands pour past
+        const fx = W * 0.24, fy = H * 0.38, fw = 34 * KF, fh = 46 * KF
+        ctx!.strokeStyle = `rgba(${pal.ink},0.85)`; ctx!.lineWidth = 1.2
+        ctx!.strokeRect(fx - fw / 2, fy - fh / 2, fw, fh)
+        ctx!.fillStyle = `rgba(${pal.ink},0.5)`; ctx!.font = `${Math.round(9 * KF)}px ui-monospace, monospace`; ctx!.textAlign = 'center'
+        ctx!.fillText(langRef.current === 'es' ? 'uno a la vez' : 'one at a time', fx, fy + fh / 2 + 16 * KF); ctx!.textAlign = 'left'
+      } else if (mode === 'strata') {
+        const barX0 = W * 0.16, barW = W * 0.68, barY = H * 0.56
+        ctx!.strokeStyle = `rgba(${pal.ink},0.22)`; ctx!.lineWidth = 1
+        ctx!.beginPath(); ctx!.moveTo(barX0, barY + H * 0.05); ctx!.lineTo(barX0 + barW, barY + H * 0.05); ctx!.stroke()
+        ctx!.font = `${Math.round(9 * KF)}px ui-monospace, monospace`; ctx!.textAlign = 'center'; ctx!.fillStyle = `rgba(${pal.ink},0.5)`
+        const es = langRef.current === 'es'
+        const segs: Array<[number, string]> = [
+          [0.364, es ? '72.8 BAJO' : '72.8 LOW'], [0.809, es ? '16.2 MEDIO' : '16.2 MED'],
+          [0.9155, es ? '5.9 ALTO' : '5.9 HIGH'], [0.9705, es ? '5.2 CRÍT' : '5.2 CRIT'],
+        ]
+        for (const [frac, label] of segs) ctx!.fillText(label, barX0 + frac * barW, barY + H * 0.095)
+        // bracket over the lifted 11.1% tail
+        const tx0 = barX0 + 0.889 * barW, tx1 = barX0 + barW, ty = barY - H * 0.115
+        ctx!.strokeStyle = `rgba(${pal.accentRGB},0.7)`; ctx!.lineWidth = 1.2
+        ctx!.beginPath(); ctx!.moveTo(tx0, ty + 6); ctx!.lineTo(tx0, ty); ctx!.lineTo(tx1, ty); ctx!.lineTo(tx1, ty + 6); ctx!.stroke()
+        ctx!.fillStyle = `rgba(${pal.accentRGB},0.9)`; ctx!.fillText('11.1%', (tx0 + tx1) / 2, ty - 6); ctx!.textAlign = 'left'
+      } else if (mode === 'monopoly') {
+        const pr = easeOut(clamp01(ls / (dur * 0.4)))
+        const cx = W * 0.5, cy = H * 0.54, radius = Math.min(W, H) * 0.30
+        for (let i = 0; i < 44; i++) {
+          const a = (i / 44) * Math.PI * 2 - Math.PI / 2
+          const ex = cx + Math.cos(a) * radius * pr, ey = cy + Math.sin(a) * radius * pr
+          ctx!.strokeStyle = i < 36 ? `rgba(${pal.accentRGB},0.15)` : `rgba(${pal.ink},0.07)`; ctx!.lineWidth = 1
+          ctx!.beginPath(); ctx!.moveTo(cx, cy); ctx!.lineTo(ex, ey); ctx!.stroke()
+        }
+        ctx!.fillStyle = `rgba(${pal.ink},0.9)`; ctx!.fillRect(cx - 5 * KF, cy - 6.5 * KF, 10 * KF, 13 * KF)
+        ctx!.font = `${Math.round(9 * KF)}px ui-monospace, monospace`; ctx!.textAlign = 'center'; ctx!.fillStyle = `rgba(${pal.ink},0.5)`
+        ctx!.fillText(langRef.current === 'es' ? '1 INSTITUCIÓN · 44 PROVEEDORES' : '1 INSTITUTION · 44 VENDORS', cx, cy + radius + 24 * KF); ctx!.textAlign = 'left'
       } else if (mode === 'redact') {
         const sweepX = lerp(0, W * 1.05, easeOut(clamp01(ls / (dur * 0.6))))
         if (sweepX < W) {
@@ -597,6 +637,11 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
         ctx!.translate(W / 2 + panX, H / 2 + panY); ctx!.scale(zoom, zoom); ctx!.translate(-W / 2, -H / 2)
         // double-exposure: the structural systems (network, model, torch) bleed
         // through the document field as light, instead of sitting flat under it.
+        // El Teatro de Papel — object scenes replace the particle layer per beat.
+        const scene = b.renderer === 'objects' ? SCENES[b.mode] : undefined
+        if (scene) {
+        scene(ctx!, { ls, dur: b.durationMs, W, H, KF, lang: langRef.current, reduce: !!reduce, pal })
+        } else {
         const bleed = b.mode === 'network' || b.mode === 'modelnet' || b.mode === 'torch'
         if (bleed) ctx!.globalCompositeOperation = 'screen'
         drawShapes(b.mode, ls, b.durationMs)
@@ -629,6 +674,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
           if (film.glyph === 'doc') { const gw2 = rr2 * 1.35, gh2 = rr2 * 1.85; ctx!.fillRect(gx2 - gw2 / 2, gy2 - gh2 / 2, gw2, gh2) }
           else { ctx!.beginPath(); ctx!.arc(gx2, gy2, rr2, 0, Math.PI * 2); ctx!.fill() }
           if (isCat || isRibbon) ctx!.globalAlpha = 1
+        }
         }
         ctx!.restore()
       }
@@ -842,19 +888,14 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
           {!started && (
             <motion.button key="poster" onClick={start} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0 z-30 flex cursor-pointer flex-col items-center justify-center px-6 text-center">
-              <div
-                className="absolute right-6 top-6 rotate-[-8deg] rounded border-2 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.2em]"
-                style={{ borderColor: `rgba(${pal.accentRGB},0.45)`, color: `rgba(${pal.accentRGB},0.7)` }}
-              >
-                {lang === 'es' ? 'Expediente' : 'Case File'}
-              </div>
               <div className="font-mono text-[10px] uppercase tracking-[0.32em]" style={{ color: pal.accent }}>
-                {lang === 'es' ? 'La Galería · Reportaje animado' : 'The Gallery · Animated report'}
+                {lang === 'es' ? 'RUBLI presenta · Reportaje animado' : 'RUBLI presents · An animated report'}
               </div>
               <h2 className="mt-4 max-w-3xl" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontWeight: 800, fontSize: 'clamp(2.4rem, 7vw, 4.5rem)', lineHeight: 1.02, color: 'white' }}>
                 {t(film.title)}
               </h2>
               <p className="mt-4 max-w-xl text-sm" style={{ color: `rgba(${pal.ink},0.78)` }}>{t(film.subtitle)}</p>
+              <div className="mt-6 h-px w-16" style={{ background: pal.accent }} />
               <span className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-mono text-xs uppercase tracking-[0.16em]" style={{ backgroundColor: pal.accent, color: 'white' }}>
                 <Play className="h-4 w-4" /> {lang === 'es' ? 'Reproducir con sonido' : 'Play with sound'}
               </span>
