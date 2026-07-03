@@ -20,6 +20,7 @@ import {
   Network,
   GitCompareArrows,
   Newspaper,
+  Clapperboard,
   Sparkles,
   Tag,
   Archive,
@@ -77,6 +78,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
       // find the map (restored 2026-06-23). The logo still links to / too;
       // El Archivo keeps its own row under EXPLORAR. Then the executive
       // briefing and the two editorial surfaces. Atlas storytelling at /atlas.
+      // «El Registro» — the animated presentation film (the platform's intro).
+      { i18nKey: 'film', href: '/registro', icon: Clapperboard },
       { i18nKey: 'explore', href: '/', icon: Map },
       { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
@@ -133,7 +136,7 @@ function NavSection({
     <div>
       {!collapsed && (
         <div className="mb-2 mt-1 px-2.5 flex items-center gap-2">
-          <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-on-dark-muted select-none font-mono">
+          <span className="text-[13px] font-bold tracking-[0.22em] uppercase text-text-on-dark-muted select-none font-mono">
             {title}
           </span>
           <span className="flex-1 h-px bg-border" aria-hidden="true" />
@@ -267,7 +270,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="min-w-0">
             <div className="flex items-baseline gap-1.5">
               <span className="text-text-on-dark-primary font-bold text-lg tracking-[-0.02em] leading-none" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)' }}>RUBLI</span>
-              <span className="text-text-on-dark-muted font-mono text-[9px] leading-none tracking-[0.05em]">v0.8.5</span>
+              <span className="text-text-on-dark-muted font-mono text-[13px] leading-none tracking-[0.05em]">v0.8.5</span>
             </div>
           </div>
         )}
@@ -338,7 +341,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0" aria-hidden="true" />
-              <span className="text-[10px] font-mono text-text-on-dark-muted tracking-wide">
+              <span className="text-[12px] font-mono text-text-on-dark-muted tracking-wide">
                 {t('contractsIndexed')}
               </span>
             </div>
@@ -362,14 +365,14 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         <div className="px-3 pb-1 flex items-center gap-3">
           <a
             href="/privacy"
-            className="text-[10px] text-text-muted hover:text-text-secondary transition-colors"
+            className="text-[12px] text-text-muted hover:text-text-secondary transition-colors"
           >
             {tc('legal.privacy')}
           </a>
-          <span className="text-text-disabled text-[10px]" aria-hidden="true">·</span>
+          <span className="text-text-disabled text-[12px]" aria-hidden="true">·</span>
           <a
             href="/terms"
-            className="text-[10px] text-text-muted hover:text-text-secondary transition-colors"
+            className="text-[12px] text-text-muted hover:text-text-secondary transition-colors"
           >
             {tc('legal.terms')}
           </a>
@@ -416,7 +419,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                     className="h-7 w-7 flex items-center justify-center rounded-sm text-text-on-dark-muted hover:text-text-on-dark-primary hover:bg-sidebar-hover transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                     aria-label={i18n.language.startsWith('es') ? 'Switch to English' : 'Cambiar a Español'}
                   >
-                    <span className="text-[10px] font-bold font-mono">
+                    <span className="text-[12px] font-bold font-mono">
                       {i18n.language.startsWith('es') ? 'EN' : 'ES'}
                     </span>
                   </button>
@@ -523,7 +526,7 @@ function SidebarNavItem({
       {/* Alert badge -- only visible in expanded mode */}
       {badge > 0 && !collapsed && (
         <span
-          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-accent text-[10px] font-bold text-sidebar px-1"
+          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-accent text-[12px] font-bold text-sidebar px-1"
           aria-label={`${badge} alert${badge !== 1 ? 's' : ''}`}
         >
           {badge > 9 ? '9+' : badge}
@@ -532,7 +535,7 @@ function SidebarNavItem({
       {/* Count badge -- subdued, shows total items */}
       {countBadge > 0 && !collapsed && badge === 0 && (
         <span
-          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded-sm bg-sidebar-hover text-[10px] font-mono text-text-muted px-1 border border-border"
+          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded-sm bg-sidebar-hover text-[12px] font-mono text-text-muted px-1 border border-border"
           aria-label={`${countBadge} items`}
         >
           {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}

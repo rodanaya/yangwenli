@@ -102,9 +102,9 @@ export function AdminBuyersSection({
   if (isLoading) {
     return (
       <div>
-        <div className="space-y-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+        <div className="space-y-1">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <Skeleton key={i} className="h-7 w-full" />
           ))}
         </div>
       </div>
@@ -134,7 +134,7 @@ export function AdminBuyersSection({
   return (
     <div>
       {/* Export button — placed top-right, mirrors §II pattern */}
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="flex items-start justify-between gap-3 mb-2">
         <div className="min-w-0">
           {/* Concentration lede — only when we have meaningful data */}
           {topNSharePct > 0 && (
@@ -167,14 +167,16 @@ export function AdminBuyersSection({
         />
       </div>
 
-      {/* Institution rows */}
-      <ul className="space-y-2" role="list">
+      {/* Institution rows — single-line agate register (FT/Economist density) */}
+      <ul className="space-y-0" role="list">
         {institutions.map((inst: AdminInstitutionBuyer, i: number) => {
           const isTopThree = i < 3
+          const metaFull = isEs
+            ? `${inst.contracts.toLocaleString()} contratos · ${inst.direct_award_pct.toFixed(0)}% adjudicación directa`
+            : `${inst.contracts.toLocaleString()} contracts · ${inst.direct_award_pct.toFixed(0)}% direct award`
           return (
-            <li key={inst.institution_id}>
-              {/* Main grid row */}
-              <div className="grid grid-cols-[1.6rem_minmax(0,1fr)_auto] items-center gap-x-3 group hover:bg-background-elevated/30 transition-colors">
+            <li key={inst.institution_id} className="border-b border-border/25 last:border-0">
+              <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_max-content_88px_max-content] items-center gap-x-3 py-[5px] group hover:bg-background-elevated/30 transition-colors">
                 {/* 1. Rank */}
                 <span
                   className={[
@@ -186,65 +188,68 @@ export function AdminBuyersSection({
                   {i + 1}
                 </span>
 
-                {/* 2. Identity — chip + FED marker */}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <EntityIdentityChip
-                      type="institution"
-                      id={inst.institution_id}
-                      name={inst.siglas || inst.institution_name}
-                      size="xs"
-                      sectorCode={inst.top_sector_code ?? undefined}
-                      className="min-w-0"
-                    />
-                    {inst.is_federal === 1 && (
-                      <span
-                        className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70 border border-border/50 rounded-sm px-1 leading-tight shrink-0"
-                        title={isEs ? 'Dependencia federal' : 'Federal entity'}
-                      >
-                        FED
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-text-muted mt-0.5 font-mono tabular-nums">
-                    {inst.contracts.toLocaleString()}{' '}
-                    {isEs ? 'contratos' : 'contracts'}
-                    {' · '}
-                    {inst.direct_award_pct.toFixed(0)}%{' '}
-                    {isEs ? 'adj. dir.' : 'direct'}
-                  </div>
+                {/* 2. Identity — chip + FED, single line */}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <EntityIdentityChip
+                    type="institution"
+                    id={inst.institution_id}
+                    name={inst.siglas || inst.institution_name}
+                    size="xs"
+                    sectorCode={inst.top_sector_code ?? undefined}
+                    className="min-w-0"
+                  />
+                  {inst.is_federal === 1 && (
+                    <span
+                      className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70 border border-border/50 rounded-sm px-1 leading-tight shrink-0"
+                      title={isEs ? 'Dependencia federal' : 'Federal entity'}
+                    >
+                      FED
+                    </span>
+                  )}
                 </div>
 
-                {/* 3. Share + value */}
-                <div className="w-[92px] text-right shrink-0">
-                  <div
-                    className="text-[13px] tabular-nums text-text-primary"
+                {/* 3. Meta — inline, desktop only (full text in title) */}
+                <span
+                  className="hidden md:block text-[9.5px] font-mono tabular-nums text-text-muted whitespace-nowrap"
+                  title={metaFull}
+                >
+                  {inst.contracts.toLocaleString()}{' '}
+                  {isEs ? 'cttos.' : 'ct.'}
+                  {' · '}
+                  {inst.direct_award_pct.toFixed(0)}%{' '}
+                  {isEs ? 'adj. dir.' : 'direct'}
+                </span>
+
+                {/* 4. Share bar — inline, ≥sm, fixed column so bars align */}
+                <div className="hidden sm:block">
+                  <DotBar
+                    value={inst.share_pct}
+                    max={shareMax}
+                    color={eraColorResolved}
+                    emptyColor="var(--color-background-elevated)"
+                    emptyStroke="var(--color-border)"
+                    dots={16}
+                    dotR={2}
+                    dotGap={5}
+                    ariaLabel={`${inst.share_pct.toFixed(1)}% ${isEs ? 'del gasto del periodo' : 'of term spending'}`}
+                  />
+                </div>
+
+                {/* 5. Value + share on one baseline */}
+                <div className="flex items-baseline justify-end gap-1.5">
+                  <span
+                    className="text-[12.5px] tabular-nums text-text-primary"
                     style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700 }}
                   >
                     {formatCompactMXN(inst.total_mxn)}
-                  </div>
-                  <div
-                    className="text-[10px] font-mono tabular-nums text-text-muted"
+                  </span>
+                  <span
+                    className="text-[9.5px] font-mono tabular-nums text-text-muted w-[2.9rem] text-right"
                     title={isEs ? 'del gasto del periodo' : 'of term spending'}
                   >
                     {inst.share_pct.toFixed(1)}%
-                  </div>
+                  </span>
                 </div>
-              </div>
-
-              {/* Share bar — indented under identity */}
-              <div className="mt-1 ml-[1.6rem]">
-                <DotBar
-                  value={inst.share_pct}
-                  max={shareMax}
-                  color={eraColorResolved}
-                  emptyColor="var(--color-background-elevated)"
-                  emptyStroke="var(--color-border)"
-                  dots={24}
-                  dotR={2.5}
-                  dotGap={6}
-                  ariaLabel={`${inst.share_pct.toFixed(1)}% ${isEs ? 'del gasto del periodo' : 'of term spending'}`}
-                />
               </div>
             </li>
           )
@@ -252,7 +257,7 @@ export function AdminBuyersSection({
       </ul>
 
       {/* Concentration footer */}
-      <div className="mt-3 pt-2 border-t border-border/30 flex items-baseline justify-between">
+      <div className="mt-2 pt-1.5 border-t border-border/30 flex items-baseline justify-between">
         <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-text-muted">
           {isEs
             ? `Concentración · top ${institutions.length}`
@@ -283,8 +288,8 @@ export function AdminBuyersSection({
       {/* Footer legend */}
       <p className="text-[9px] font-mono text-text-muted/70 mt-2">
         {isEs
-          ? '● = sector dominante · FED = dependencia federal · barra = % del gasto del periodo'
-          : '● = agency top sector · FED = federal agency · bar = % of term spend'}
+          ? '● = sector dominante · FED = dependencia federal · barra = % del gasto (escala: líder)'
+          : '● = agency top sector · FED = federal agency · bar = % of spend (scaled to leader)'}
       </p>
 
       {/* Source attribution */}

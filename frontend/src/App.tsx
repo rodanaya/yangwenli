@@ -589,6 +589,9 @@ function App() {
                 }
               />
 
+              {/* «El Registro» presentation film — memorable route → the gallery player */}
+              <Route path="registro" element={<Navigate to="/gallery/el-registro" replace />} />
+
               {/* La Galería — narrated motion films (StoryFilm) + animated story players */}
               <Route
                 path="gallery"
