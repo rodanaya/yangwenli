@@ -109,19 +109,19 @@ function StatNumber({ beat, accent, slot = 'hero', mono = false }: { beat: FilmB
   // Rails + tallies read in mono; hero + counted figures stay serif italic (the sledgehammer).
   const useMono = mono || (isText && !isHero)
   const size = isHero
-    ? (isText ? 'clamp(2.1rem, 6.5vw, 4.4rem)' : 'clamp(2.8rem, 8.5vw, 6rem)')
-    : 'clamp(1.7rem, 3.8vw, 3rem)'
+    ? (isText ? 'clamp(2rem, 5.6vw, 3.9rem)' : 'clamp(2.6rem, 7.4vw, 5.2rem)')
+    : 'clamp(1.6rem, 3.4vw, 2.7rem)'
   return (
     <span
-      className="block tabular-nums leading-[0.95]"
+      className="block tabular-nums leading-[0.98]"
       style={{
-        color: 'white',
+        color: 'rgba(255,255,255,0.94)',
         fontFamily: useMono ? 'var(--font-family-mono, "JetBrains Mono", ui-monospace, monospace)' : 'var(--font-family-serif, Georgia, serif)',
         fontStyle: (isText || useMono) ? 'normal' : 'italic',
-        fontWeight: useMono ? 700 : 800,
+        fontWeight: useMono ? 400 : 500,
         fontSize: size,
-        textShadow: '0 2px 30px rgba(0,0,0,0.72)',
-        letterSpacing: useMono ? '0.02em' : (isText ? '0.06em' : '-0.02em'),
+        textShadow: '0 2px 26px rgba(0,0,0,0.6)',
+        letterSpacing: useMono ? '0.01em' : (isText ? '0.04em' : '-0.01em'),
       }}
     >
       {accentNow ? <span style={{ color: accent, transition: 'color 200ms ease-out' }}>{text}</span> : text}
@@ -819,7 +819,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
           <AnimatePresence mode="wait">
             {started && beat && (
               <motion.div key={`tag-${beatIdx}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
-                className="font-mono text-[11px] uppercase tracking-[0.34em]" style={{ color: pal.accent }}>
+                className="font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color: `rgba(${pal.accentRGB},0.85)` }}>
                 {t(beat.tag)}
               </motion.div>
             )}
@@ -831,7 +831,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
           <AnimatePresence mode="wait">
             {started && beat?.chapterLabel && (
               <motion.div key={`ch-${beatIdx}`} initial={{ opacity: 0 }} animate={{ opacity: 0.85 }} exit={{ opacity: 0 }}
-                className="font-mono text-[9px] uppercase tracking-[0.22em]" style={{ color: `rgba(${pal.dim},0.9)` }}>
+                className="font-mono text-[9px] uppercase tracking-[0.16em]" style={{ color: `rgba(${pal.dim},0.8)` }}>
                 {t(beat.chapterLabel)}
               </motion.div>
             )}
@@ -873,12 +873,12 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
                     </div>
                   )}
                   {!isStamp && (
-                    <div className="mt-2.5 max-w-[34ch] font-mono text-[11px] uppercase leading-snug tracking-[0.16em]" style={{ color: dim(0.95) }}>
+                    <div className="mt-2.5 max-w-[34ch] font-mono text-[11px] uppercase leading-snug tracking-[0.12em]" style={{ color: dim(0.9) }}>
                       {t(beat.stat.label)}
                     </div>
                   )}
                   {isStamp && (
-                    <div className="mt-2 max-w-[30ch] font-mono text-[10px] uppercase leading-snug tracking-[0.16em]" style={{ color: dim(0.9) }}>
+                    <div className="mt-2 max-w-[30ch] font-mono text-[10px] uppercase leading-snug tracking-[0.12em]" style={{ color: dim(0.85) }}>
                       {t(beat.stat.label)}
                     </div>
                   )}
@@ -929,7 +929,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
               <div className="font-mono text-[12px] uppercase tracking-[0.4em]" style={{ color: `rgba(${pal.dim},0.9)` }}>
                 {beat.cardKicker ? t(beat.cardKicker) : ''}
               </div>
-              <h2 className="mt-3" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontWeight: 800, fontStyle: 'italic', fontSize: 'clamp(2.2rem, 7vw, 4.2rem)', color: 'white' }}>
+              <h2 className="mt-3" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontWeight: 600, fontStyle: 'italic', fontSize: 'clamp(2.2rem, 7vw, 4.2rem)', color: 'white' }}>
                 {beat.cardTitle ? t(beat.cardTitle) : ''}
               </h2>
               <div className="mt-5 h-[3px] w-16" style={{ background: pal.accent }} />
@@ -945,7 +945,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
               <div className="font-mono text-[10px] uppercase tracking-[0.32em]" style={{ color: pal.accent }}>
                 {lang === 'es' ? 'RUBLI presenta · Reportaje animado' : 'RUBLI presents · An animated report'}
               </div>
-              <h2 className="mt-4 max-w-3xl" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontWeight: 800, fontSize: 'clamp(2.4rem, 7vw, 4.5rem)', lineHeight: 1.02, color: 'white' }}>
+              <h2 className="mt-4 max-w-3xl" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontWeight: 600, fontSize: 'clamp(2.4rem, 7vw, 4.5rem)', lineHeight: 1.02, color: 'white' }}>
                 {t(film.title)}
               </h2>
               <p className="mt-4 max-w-xl text-sm" style={{ color: `rgba(${pal.ink},0.78)` }}>{t(film.subtitle)}</p>
@@ -968,7 +968,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
               <div className="font-mono text-[10px] uppercase tracking-[0.3em]" style={{ color: `rgba(${pal.dim},0.9)` }}>
                 {lang === 'es' ? 'Fin del reportaje' : 'End of report'}
               </div>
-              <h2 className="mt-3" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontWeight: 800, fontSize: 'clamp(1.6rem, 4vw, 2.6rem)', color: 'white' }}>{t(film.title)}</h2>
+              <h2 className="mt-3" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontWeight: 600, fontSize: 'clamp(1.6rem, 4vw, 2.6rem)', color: 'white' }}>{t(film.title)}</h2>
               <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
                 <button onClick={restart} className="inline-flex items-center gap-2 rounded-sm border border-border px-4 py-2 font-mono text-xs uppercase tracking-[0.14em]" style={{ color: 'white' }}>
                   <RotateCcw className="h-3.5 w-3.5" /> {lang === 'es' ? 'Repetir' : 'Replay'}
