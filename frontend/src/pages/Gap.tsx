@@ -14,22 +14,25 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { slideUp } from '@/lib/animations'
 import {
-  FileSearch,
-  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   Search,
   X,
   Loader2,
   AlertCircle,
-  Users,
   ShieldAlert,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { gapApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS } from '@/lib/constants'
 import { cn, formatCompactMXN, formatNumber, formatDualCurrency, clampPage } from '@/lib/utils'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
+import { DotBar } from '@/components/ui/DotBar'
+import { BlackoutTimeline } from '@/components/gap/BlackoutTimeline'
+import { ExceptionCatalog } from '@/components/gap/ExceptionCatalog'
+import { BuyersLedger } from '@/components/gap/BuyersLedger'
+import { CounterpartyExhibit } from '@/components/gap/CounterpartyExhibit'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import type { GapContractFilterParams, GapContractItem, GapSummaryResponse } from '@/api/types'
 import { useDebouncedValue } from '@/hooks/useDebouncedSearch'
@@ -71,42 +74,10 @@ function RiskLevelPill({ level, lang }: { level: string; lang: string }) {
   )
 }
 
-// ─── stat tile ────────────────────────────────────────────────────────────────
-
-function StatTile({
-  label,
-  value,
-  sub,
-  accent,
-  icon: Icon,
-}: {
-  label: string
-  value: string
-  sub?: string
-  accent?: string
-  icon?: React.ComponentType<{ className?: string }>
-}) {
-  return (
-    <div className="border border-border rounded-sm p-4 bg-surface flex flex-col gap-1">
-      <div className="flex items-center gap-1.5 text-text-muted text-xs font-mono uppercase tracking-widest">
-        {Icon && <Icon className="w-3 h-3" />}
-        {label}
-      </div>
-      <div
-        className="font-serif text-2xl font-bold tabular-nums leading-tight"
-        style={accent ? { color: accent } : undefined}
-      >
-        {value}
-      </div>
-      {sub && <div className="text-text-muted text-xs font-mono">{sub}</div>}
-    </div>
-  )
-}
-
 // ─── structural grade block ───────────────────────────────────────────────────
 
 function GradeBlock({ summary, lang }: { summary: GapSummaryResponse; lang: string }) {
-  const { by_risk_level, worst_institutions, grade_methodology } = summary
+  const { by_risk_level, grade_methodology } = summary
   const total =
     by_risk_level.critical + by_risk_level.high + by_risk_level.medium + by_risk_level.low
   if (total === 0) return null
@@ -188,39 +159,6 @@ function GradeBlock({ summary, lang }: { summary: GapSummaryResponse; lang: stri
         </div>
       </div>
 
-      {/* worst institutions */}
-      {worst_institutions.length > 0 && (
-        <div>
-          <div className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono mb-2">
-            {lang === 'es'
-              ? 'Instituciones con mayor concentración de alertas'
-              : 'Institutions with highest alert concentration'}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {worst_institutions.map((inst) => (
-              <div
-                key={inst.siglas}
-                className="flex items-center gap-1.5 border border-border rounded-sm px-2 py-1 bg-surface-2"
-              >
-                <span className="text-xs font-mono font-semibold text-text-primary">
-                  {inst.siglas}
-                </span>
-                <span className="text-text-muted text-[10px]">·</span>
-                <span
-                  className="text-xs font-mono tabular-nums"
-                  style={{ color: RISK_COLORS.critical }}
-                >
-                  {inst.avg_score.toFixed(1)}
-                </span>
-                <span className="text-[10px] text-text-muted font-mono">
-                  ({formatNumber(inst.count)})
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* methodology caption */}
       <div className="border-t border-border pt-3 text-[10px] text-text-muted font-mono leading-relaxed">
         <strong className="text-text-secondary">
@@ -238,89 +176,49 @@ function GradeBlock({ summary, lang }: { summary: GapSummaryResponse; lang: stri
 
 // ─── exception article panel ──────────────────────────────────────────────────
 
-function ExceptionPanel({ items, lang }: { items: GapSummaryResponse['by_exception_article']; lang: string }) {
-  if (!items.length) return null
-
-  const total = items.reduce((s, i) => s + i.count, 0)
-
-  return (
-    <div className="border border-border rounded-sm p-4 bg-surface">
-      <div className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono mb-3">
-        {lang === 'es' ? 'Artículo de excepción invocado' : 'Exception article invoked'}
-      </div>
-      <div className="space-y-2">
-        {items.map((item) => {
-          const pct = total > 0 ? (item.count / total) * 100 : 0
-          return (
-            <div key={item.article} className="flex items-center gap-2">
-              <div
-                className="w-44 shrink-0 text-xs font-mono text-text-secondary whitespace-normal break-words leading-tight"
-              >
-                {item.article || (lang === 'es' ? 'No especificado' : 'Unspecified')}
-              </div>
-              <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${pct}%`, backgroundColor: RISK_COLORS.critical }}
-                />
-              </div>
-              <div className="text-xs font-mono text-text-muted w-14 text-right">
-                {formatNumber(item.count)}{' '}
-                <span className="text-text-on-dark-muted">({pct.toFixed(0)}%)</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      <div className="mt-3 pt-2 border-t border-border text-[10px] text-text-muted font-mono">
-        {lang === 'es'
-          ? 'Cada adjudicación directa requiere un artículo legal de justificación. La concentración en un solo artículo es señal de elusión sistemática del proceso competitivo.'
-          : 'Each direct award requires a legal exception article. Concentration in a single article is a marker of systematic competitive-process avoidance.'}
-      </div>
-    </div>
-  )
-}
-
 // ─── sector breakdown ─────────────────────────────────────────────────────────
 
-function SectorBar({ items, lang }: { items: GapSummaryResponse['by_sector']; lang: string }) {
+function SectorBar({ items, lang, onPick }: { items: GapSummaryResponse['by_sector']; lang: 'en' | 'es'; onPick: (id: number) => void }) {
   if (!items.length) return null
-
+  const es = lang === 'es'
+  const totalAll = items.reduce((s, i) => s + i.count, 0)
   const sorted = [...items].sort((a, b) => b.count - a.count).slice(0, 8)
-  const max = sorted[0]?.count ?? 1
-
+  const leader = sorted[0]
+  const leaderSector = SECTORS.find((s) => s.id === leader?.sector_id)
+  const leaderName = leader ? (es ? leaderSector?.name ?? leader.sector : leaderSector?.nameEN ?? leader.sector) : ''
+  const leaderPct = leader && totalAll > 0 ? Math.round((leader.count / totalAll) * 100) : 0
   return (
-    <div className="border border-border rounded-sm p-4 bg-surface">
-      <div className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono mb-3">
-        {lang === 'es' ? 'Distribución por sector' : 'By sector'}
+    <div>
+      <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-3">
+        {es ? 'LOS SECTORES · POR PROCEDIMIENTOS' : 'SECTORS · BY PROCEDURES'}
       </div>
-      <div className="space-y-2">
+      <div className="divide-y divide-border">
         {sorted.map((item) => {
           const sector = SECTORS.find((s) => s.id === item.sector_id)
           const color = sector ? SECTOR_COLORS[sector.code] : '#64748b'
-          const pct = max > 0 ? (item.count / max) * 100 : 0
-          const label =
-            lang === 'es' ? sector?.name ?? item.sector : sector?.nameEN ?? item.sector
+          const textColor = sector ? SECTOR_TEXT_COLORS[sector.code] : '#94a3b8'
+          const label = es ? sector?.name ?? item.sector : sector?.nameEN ?? item.sector
+          const share = totalAll > 0 ? (item.count / totalAll) * 100 : 0
           return (
-            <div key={item.sector_id} className="flex items-center gap-2">
-              <div
-                className="w-36 shrink-0 text-xs font-mono text-text-secondary whitespace-normal break-words leading-tight"
-              >
-                {label}
-              </div>
-              <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${pct}%`, backgroundColor: color }}
-                />
-              </div>
-              <div className="text-xs font-mono text-text-muted w-10 text-right">
-                {formatNumber(item.count)}
-              </div>
-            </div>
+            <button key={item.sector_id} onClick={() => onPick(item.sector_id)}
+              className="w-full grid grid-cols-[1fr_auto] items-center gap-x-3 py-2 text-left cursor-pointer hover:bg-surface-2 transition-colors"
+              aria-label={es ? `Filtrar el registro por ${label}` : `Filter the register by ${label}`}>
+              <span className="text-[12.5px] font-medium truncate" style={{ color: textColor }}>{label}</span>
+              <span className="flex items-center gap-2 justify-self-end">
+                <DotBar value={item.count} max={totalAll} dots={22} color={color} ariaLabel={`${label}: ${share.toFixed(0)}%`} />
+                <span className="font-mono text-xs tabular-nums text-text-muted w-20 text-right">{formatNumber(item.count)} <span className="text-text-on-dark-muted">({share.toFixed(0)}%)</span></span>
+              </span>
+            </button>
           )
         })}
       </div>
+      {leader && (
+        <div className="mt-3 text-[10px] text-text-muted font-mono leading-snug">
+          {es
+            ? `${leaderName} concentra ${leaderPct}% de la recuperación — por número de procedimientos, no por valor (la mayoría de los montos no son públicos).`
+            : `${leaderName} holds ${leaderPct}% of the recovery — by number of procedures, not value (most amounts aren’t public).`}
+        </div>
+      )}
     </div>
   )
 }
@@ -439,7 +337,7 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
               {lang === 'es' ? 'Institución' : 'Institution'}
             </th>
             <th className="text-left px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[16%]">
-              {lang === 'es' ? 'Proveedor' : 'Vendor'}
+              {lang === 'es' ? 'Proveedor (OCR)' : 'Vendor (OCR)'}
             </th>
             <th className="text-right px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[11%]">
               {lang === 'es' ? 'Monto' : 'Amount'}
@@ -702,6 +600,11 @@ export default function Gap() {
     [lang]
   )
 
+  const L: 'en' | 'es' = lang === 'es' ? 'es' : 'en'
+  const scrollToRegister = () => document.getElementById('registro')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const pickBuyer = (siglas: string) => { setInputQ(siglas); scrollToRegister() }
+  const pickSector = (id: number) => { setFilter('sector', String(id)); scrollToRegister() }
+
   return (
     <motion.div
       {...slideUp}
@@ -716,74 +619,40 @@ export default function Gap() {
           gutter. Previously the header was a left-only block with the stat
           tiles in a full-width row below, leaving the whole right side of
           the headline as dead whitespace. ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] items-start gap-x-10 gap-y-6">
-        {/* header (left column) */}
-        <div className="space-y-2 min-w-0">
-          <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono">
-            <FileSearch className="w-3 h-3" />
-            {lang === 'es'
-              ? 'EL APAGÓN · RECUPERACIÓN COMPRASMX · SEP 2025–2026'
-              : 'THE BLACKOUT · COMPRASMX RECOVERY · SEP 2025–2026'}
-          </div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary">
-            {lang === 'es' ? 'El Apagón' : 'The Blackout'}
-          </h1>
-          <p className="text-text-secondary leading-relaxed">
-            {lang === 'es'
-              ? 'El feed masivo de CompraNet se congeló el 28 de septiembre de 2025 cuando el sistema fue abolido legalmente. Mediante ingeniería inversa de su sucesor —ComprasMX (Secretaría Anticorrupción)— recuperamos las adjudicaciones post-cierre que de otro modo quedaban fuera del registro público.'
-              : 'The CompraNet bulk feed froze on September 28 2025 when the system was legally abolished. By reverse-engineering its successor — ComprasMX (Secretaría Anticorrupción) — we recovered the post-freeze awards that would otherwise fall outside the public record.'}
-          </p>
-          {summary && !summaryLoading && (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted font-mono pt-1">
-              <span className="opacity-60">
-                {lang === 'es' ? 'Ventana de datos:' : 'Data window:'} {summary.data_window}
-              </span>
-              <span className="opacity-40">·</span>
-              <span className="opacity-60">
-                {lang === 'es' ? 'Fuente:' : 'Source:'} {summary.source}
-              </span>
-            </div>
-          )}
+      {/* ── ACT I · masthead + «La Línea del Registro» ── */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-[0.18em] uppercase font-mono">
+          <span style={{ color: 'var(--color-accent)' }}>Folio·X</span>
+          <span className="text-text-muted">· {lang === 'es' ? 'EL APAGÓN · RECUPERACIÓN COMPRASMX · SEP 2025 —' : 'THE BLACKOUT · COMPRASMX RECOVERY · SEP 2025 —'}</span>
         </div>
-
-        {/* key figures (right column) — moved up from below to fill the gutter */}
-        {summaryLoading ? (
-          <div className="grid w-full grid-cols-2 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-sm" />
-            ))}
+        <h1 className="font-serif text-text-primary" style={{ fontWeight: 500, fontSize: 'clamp(32px, 5vw, 54px)', lineHeight: 1.04 }}>
+          {lang === 'es' ? 'El registro se apagó en septiembre. ' : 'The public record went dark in September. '}
+          <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{lang === 'es' ? 'Esto es lo que se compró a oscuras.' : 'This is what was bought in the dark.'}</span>
+        </h1>
+        {summary && (
+          <p className="text-deck text-text-secondary" style={{ maxWidth: '68ch' }}>
+            {lang === 'es'
+              ? `CompraNet fue abolido por ley en abril de 2025; su feed público murió el 28 de septiembre. Su sucesor, ComprasMX, publica los fallos carpeta por carpeta detrás de una firma criptográfica, sin exportación masiva. RUBLI reprodujo la firma y leyó ${formatNumber(summary.total_contracts)} adjudicaciones de los PDF escaneados de fallo.`
+              : `CompraNet was abolished by law in April 2025; its public feed died on September 28. Its successor, ComprasMX, releases awards one folder at a time behind a cryptographic signature, with no bulk export. RUBLI reproduced the signature and read ${formatNumber(summary.total_contracts)} awards off the scanned award PDFs.`}
+          </p>
+        )}
+        {summary && !summaryLoading && (
+          <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted font-mono pt-1">
+            <span className="opacity-60">{lang === 'es' ? 'Ventana:' : 'Window:'} {summary.data_window}</span>
+            <span className="opacity-40">·</span>
+            <span className="opacity-60">{lang === 'es' ? 'Fuente:' : 'Source:'} {summary.source}</span>
           </div>
-        ) : summary && summary.available ? (
-          <div className="grid w-full grid-cols-2 gap-3">
-            <StatTile
-              icon={FileSearch}
-              label={lang === 'es' ? 'Procedimientos recuperados' : 'Procedures recovered'}
-              value={formatNumber(summary.total_contracts)}
-              sub={lang === 'es' ? 'post-28 sep 2025' : 'post-Sep 28 2025'}
-            />
-            <StatTile
-              icon={AlertTriangle}
-              label={lang === 'es' ? 'Sin licitación' : 'No-bid awards'}
-              value={`${summary.direct_award_pct.toFixed(1)}%`}
-              sub={`${formatNumber(summary.direct_award_count)} ${lang === 'es' ? 'adjudicaciones directas' : 'direct awards'}`}
-              accent={RISK_COLORS.critical}
-            />
-            <StatTile
-              icon={ShieldAlert}
-              label={lang === 'es' ? 'Montos OCR recuperados' : 'OCR-recovered amounts'}
-              value={formatCompactMXN(summary.recovered_sum_mxn)}
-              sub={`${formatNumber(summary.recovered_count)} ${lang === 'es' ? 'con monto real' : 'with real amount'}`}
-            />
-            <StatTile
-              icon={Users}
-              label={lang === 'es' ? 'Empresas <3 años' : 'Companies <3 yrs old'}
-              value={formatNumber(summary.young_vendor_count)}
-              sub={lang === 'es' ? 'ganaron adjudicaciones' : 'winning awards'}
-              accent={RISK_COLORS.medium}
-            />
-          </div>
-        ) : null}
+        )}
       </div>
+
+      {summary && summary.available && (
+        <PlateFrame lang={L} folio="X·a" contextLabel={{ es: 'Expediente de recuperación', en: 'Recovery dossier' }}
+          caption={lang === 'es'
+            ? 'Lámina — La vida del registro público de compras federales, 2002–2026. La línea superior es el feed oficial; muere el 28 de septiembre de 2025. La línea punteada es lo que RUBLI recuperó del sucesor.'
+            : 'Plate — The life of the public federal-procurement record, 2002–2026. The upper line is the official feed; it dies on September 28 2025. The dashed line is what RUBLI recovered from the successor.'}>
+          <div className="py-3"><BlackoutTimeline totalContracts={summary.total_contracts} lang={L} /></div>
+        </PlateFrame>
+      )}
 
       {/* ── availability gate ── */}
       {!summaryLoading && summary && !summary.available && (
@@ -808,72 +677,73 @@ export default function Gap() {
         </div>
       )}
 
-      {/* ── editorial callout ── */}
-      {summary && (
-        <div className="border-l-4 pl-4 py-1" style={{ borderLeftColor: RISK_COLORS.critical }}>
-          <p className="text-sm text-text-secondary leading-relaxed">
-            {lang === 'es' ? (
-              <>
-                <strong className="text-text-primary font-semibold">
-                  {summary.direct_award_pct.toFixed(1)}% de los procedimientos fueron adjudicaciones
-                  directas
-                </strong>{' '}
-                — sin convocatoria pública ni competencia de proveedores. La media OCDE para
-                contrataciones de emergencia es 20–40%; compras de rutina esperan &lt;30%. El{' '}
-                {formatDualCurrency(summary.best_available_sum_mxn)} en valor agregado abarca solo los
-                contratos donde se recuperó o estimó el monto.
-              </>
-            ) : (
-              <>
-                <strong className="text-text-primary font-semibold">
-                  {summary.direct_award_pct.toFixed(1)}% of procedures were direct awards
-                </strong>{' '}
-                — no public tender, no competitive bidding. The OECD benchmark for emergency
-                procurement is 20–40%; routine purchases expect &lt;30%. The{' '}
-                {formatDualCurrency(summary.best_available_sum_mxn)} in aggregate value covers only
-                contracts where an amount was recovered or estimated.
-              </>
-            )}
-          </p>
-        </div>
-      )}
-
-      {/* ── structural grade block ── */}
-      {summaryLoading ? (
-        <Skeleton className="h-48 rounded-sm" />
-      ) : summary ? (
-        <GradeBlock summary={summary} lang={lang} />
-      ) : null}
-
-      {/* ── analytics panels ── */}
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ExceptionPanel items={summary.by_exception_article} lang={lang} />
-          <SectorBar items={summary.by_sector} lang={lang} />
-        </div>
-      )}
-
-      {/* ── the vendor blind spot — the honest limit of OCR recovery ── */}
+      {/* ── ACT II · Tres golpes — the three anchor numbers, each stated once ── */}
       {summary && summary.available && (
-        <div className="border border-border rounded-sm bg-surface p-4 flex items-start gap-3">
-          <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-text-muted" />
-          <div className="space-y-1">
-            <div className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono">
-              {lang === 'es' ? 'Lo que esta recuperación puede mostrar — y lo que no' : 'What this recovery can show — and can’t'}
-            </div>
-            <p className="text-sm text-text-secondary leading-relaxed">
-              {lang === 'es'
-                ? <>Los registros recuperados nombran de forma confiable al <strong className="text-text-primary font-semibold">comprador</strong> (la institución), el <strong className="text-text-primary font-semibold">sector</strong>, la <strong className="text-text-primary font-semibold">excepción legal</strong> invocada y la <strong className="text-text-primary font-semibold">escala</strong>. No nombran de forma confiable al <strong className="text-text-primary font-semibold">vendedor</strong>: los PDF de fallo no separan limpiamente los nombres de proveedores, así que las identidades de proveedor del registro de abajo son recuperadas por OCR y parciales. Lea esta página por el patrón institucional —quién compró, cómo y bajo qué regla— no como un padrón de proveedores.</>
-                : <>The recovered records reliably name the <strong className="text-text-primary font-semibold">buyer</strong> (the institution), the <strong className="text-text-primary font-semibold">sector</strong>, the <strong className="text-text-primary font-semibold">legal exception</strong> invoked, and the <strong className="text-text-primary font-semibold">scale</strong>. They do not reliably name the <strong className="text-text-primary font-semibold">seller</strong>: the source award PDFs don’t cleanly separate vendor names, so the vendor identities in the register below are OCR-recovered and partial. Read this page for the institutional pattern — who bought, how, and under what rule — not as a vendor ledger.</>}
-            </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="border-l-2 pl-4" style={{ borderColor: 'var(--color-text-muted)' }}>
+            <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'PROCEDIMIENTOS RECUPERADOS' : 'PROCEDURES RECOVERED'}</div>
+            <div className="font-serif text-text-primary tabular-nums" style={{ fontWeight: 500, fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1 }}>{formatNumber(summary.total_contracts)}</div>
+            <div className="mt-1.5 text-[12px] text-text-secondary leading-snug">{lang === 'es' ? 'posteriores al 28 sep 2025 · fuera del registro público' : 'after Sep 28 2025 · outside the public record'}</div>
+          </div>
+          <div className="border-l-2 pl-4" style={{ borderColor: RISK_COLORS.critical }}>
+            <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'SIN CONCURSO' : 'NO CONTEST'}</div>
+            <div className="font-serif tabular-nums" style={{ color: RISK_COLORS.critical, fontWeight: 500, fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1 }}>{summary.direct_award_pct.toFixed(1)}%</div>
+            <div className="mt-1.5 text-[12px] text-text-secondary leading-snug">{formatNumber(summary.direct_award_count)} {lang === 'es' ? 'adjud. directas · referencia OCDE: rutina <30%, emergencia 20–40%' : 'direct awards · OECD reference: routine <30%, emergency 20–40%'}</div>
+          </div>
+          <div className="border-l-2 pl-4" style={{ borderColor: 'var(--color-text-muted)' }}>
+            <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'VALOR MEJOR DISPONIBLE' : 'BEST AVAILABLE VALUE'}</div>
+            <div className="font-serif text-text-primary tabular-nums" style={{ fontWeight: 500, fontSize: 'clamp(22px,3vw,34px)', lineHeight: 1.05 }}>{formatDualCurrency(summary.best_available_sum_mxn)}</div>
+            <div className="mt-1.5 text-[12px] text-text-secondary leading-snug">{formatNumber(summary.recovered_count)} {lang === 'es' ? `montos reales por OCR (${formatDualCurrency(summary.recovered_sum_mxn)}); el resto estimado o no revelado` : `real amounts via OCR (${formatDualCurrency(summary.recovered_sum_mxn)}); the rest estimated or undisclosed`}</div>
           </div>
         </div>
       )}
 
-      {/* ── register section ── */}
-      <div className="space-y-4">
-        <div className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono">
-          {lang === 'es' ? 'Registro de contratos' : 'Contract register'}
+      {/* ── ACT III · El Catálogo de Excepciones (centerpiece) ── */}
+      {summary && summary.available && summary.by_exception_article.length > 0 && (
+        <PlateFrame lang={L} folio="X·b" contextLabel={{ es: 'Expediente de recuperación', en: 'Recovery dossier' }}
+          caption={lang === 'es' ? 'Lámina — El artículo legal invocado en cada adjudicación directa. La concentración en las fracciones discrecionales del Art. 54 es la firma de la elusión del concurso.' : 'Plate — The legal article invoked in each direct award. Concentration in the discretionary Art. 54 fractions is the signature of contest-avoidance.'}>
+          <ExceptionCatalog items={summary.by_exception_article} daCount={summary.direct_award_count} lang={L} />
+        </PlateFrame>
+      )}
+
+      {/* ── ACT IV · Los Compradores + Los Sectores ── */}
+      {summary && summary.available && (
+        <PlateFrame lang={L} folio="X·c" contextLabel={{ es: 'Columna analítica', en: 'Analytical spine' }}
+          caption={lang === 'es' ? 'Lámina — Quién compró y en qué. Instituciones por concentración de alertas; sectores por número de procedimientos recuperados.' : 'Plate — Who bought and in what. Institutions by alert concentration; sectors by number of recovered procedures.'}>
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8">
+            <BuyersLedger items={summary.worst_institutions} lang={L} onPick={pickBuyer} />
+            <SectorBar items={summary.by_sector} lang={L} onPick={pickSector} />
+          </div>
+        </PlateFrame>
+      )}
+
+      {/* ── ACT V · La Contraparte Ausente (blind spot as exhibit) ── */}
+      {summary && summary.available && (
+        <PlateFrame lang={L} folio="X·d" contextLabel={{ es: 'Expediente de recuperación', en: 'Recovery dossier' }}
+          caption={lang === 'es' ? 'Lámina — Lo que el expediente recuperado nombra con fiabilidad, y lo que no.' : 'Plate — What the recovered file reliably names, and what it doesn’t.'}>
+          <CounterpartyExhibit youngCount={summary.young_vendor_count} efosCount={summary.efos_count} lang={L} />
+        </PlateFrame>
+      )}
+
+      {/* ── ACT VI · structural-alert strip (register preamble) ── */}
+      {summaryLoading ? (
+        <Skeleton className="h-40 rounded-sm" />
+      ) : summary ? (
+        <GradeBlock summary={summary} lang={lang} />
+      ) : null}
+
+      {/* ── ACT VII · Muestra del registro ── */}
+      <div id="registro" className="space-y-4 scroll-mt-8">
+        <div>
+          <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-1">
+            {lang === 'es' ? 'MUESTRA · EL REGISTRO RECUPERADO' : 'SAMPLE · THE RECOVERED RECORD'}
+          </div>
+          <h2 className="font-serif text-2xl text-text-primary">
+            {lang === 'es' ? 'Una muestra de las adjudicaciones recuperadas' : 'A sample of the recovered awards'}
+          </h2>
+          <p className="mt-1 text-[13px] text-text-secondary" style={{ maxWidth: '68ch' }}>
+            {lang === 'es' ? 'Cada fila es un procedimiento leído de un PDF de fallo escaneado — no un padrón completo ni un registro de proveedores.' : 'Each row is a procedure read from a scanned award PDF — not a complete registry or a vendor ledger.'}
+          </p>
         </div>
 
         {/* filter bar */}
@@ -1026,8 +896,18 @@ export default function Gap() {
         )}
       </div>
 
-      {/* ── honesty footnotes ── */}
+      {/* ── Fe de recuperación (colophon) ── */}
       <div className="border-t border-border pt-4 text-xs text-text-muted font-mono space-y-1">
+        <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-secondary mb-1">
+          {lang === 'es' ? 'FE DE RECUPERACIÓN' : 'RECOVERY COLOPHON'}
+        </div>
+        {summary && (
+          <div>
+            {lang === 'es'
+              ? `† Método: firma criptográfica de ComprasMX reproducida por RUBLI; montos leídos por OCR de los PDF de fallo. Ventana: ${summary.data_window}.`
+              : `† Method: ComprasMX cryptographic signature reproduced by RUBLI; amounts read via OCR from award PDFs. Window: ${summary.data_window}.`}
+          </div>
+        )}
         <div>
           {lang === 'es'
             ? '† Montos: solo las adjudicaciones de mayor valor tienen monto real (OCR del PDF de fallo). El resto usa estimaciones o figura como no disponible.'
