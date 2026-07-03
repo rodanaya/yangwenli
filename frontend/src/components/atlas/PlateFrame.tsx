@@ -9,9 +9,9 @@
  *
  * The frame wraps a chart / data section with:
  *   - Four corner crop marks (thin L-brackets) like a film cell or map plate
- *   - Top-left tag: FOLIO·N · context label · in IBM Plex Mono italic 300
+ *   - Top-left tag: FOLIO·N · context label · in IBM Plex Mono 300
  *   - Top-right tag: file-stamp date + bilingual classification
- *   - Bottom plate caption: italic EB Garamond — context-aware copy
+ *   - Bottom plate caption: EB Garamond — context-aware copy
  *   - A measured rule above the caption (not a generic divider)
  *
  * For /atlas: the caption updates with the active lens + year + cluster count
@@ -165,7 +165,7 @@ export function PlateFrame({
 
       {/* ── Folio header strip ──────────────────────────────────────────────
           Two columns: catalog index left, archival date stamp right.
-          IBM Plex Mono italic 300 / 400 — quiet, archival, never shouting.
+          IBM Plex Mono 300 / 400 — quiet, archival, never shouting.
           Suppressed when `minimal` — Atlas surfaces its own masthead/toolbar. */}
       {!minimal && (<div
         className={bleed
@@ -181,7 +181,7 @@ export function PlateFrame({
           fontWeight: 400,
         }}
       >
-        <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+        <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
           <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·{folio}</span>
           <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
           <span>{contextLabelText}</span>
@@ -195,13 +195,13 @@ export function PlateFrame({
       {/* ── The chart itself ───────────────────────────────────────────── */}
       <div className="relative">{children}</div>
 
-      {/* ── Plate caption — italic serif, kept brief and concrete ───── */}
+      {/* ── Plate caption — serif, kept brief and concrete ───── */}
       <figcaption
         className="mt-4 pt-3"
         style={{
           borderTop: '1px solid rgba(160, 104, 32, 0.18)',
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontSize: '13.5px',
           lineHeight: 1.45,
           color: 'var(--color-text-secondary, var(--color-text-muted))',

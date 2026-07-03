@@ -978,3 +978,8 @@
   .hero-dropcap::first-letter { font-size: 4em; }
   .feature-dropcap::first-letter { font-size: 2.8em; }
 }
+
+/* Legibility directive (2026-07-03): kill ALL italic site-wide. The Tailwind
+   .italic utility and any residual italic class render upright. Inline
+   fontStyle:'italic' is removed at source by the legibility codemod. */
+.italic { font-style: normal !important; }
