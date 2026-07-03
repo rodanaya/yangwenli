@@ -75,7 +75,8 @@
   "eraLabel": {
     "pena": "EPN · 2012–2018",
     "amlo": "4T · 2018–2024",
-    "cross": "MULTI-SEXENIO"
+    "cross": "MULTI-SEXENIO",
+    "sheinbaum": "CSP · 2024–"
   },
   "typeLabel": {
     "ghost_company": "EMP. FANTASMA",
@@ -88,58 +89,6 @@
     "readStory": "Leer historia",
     "readInvestigation": "Leer investigación",
     "scale": "Escala"
-  },
-  "investigations": {
-    "el-ejercito-fantasma": {
-      "headline": "El Ejército Fantasma: 6,118 Proveedores Que No Existen",
-      "sub": "RUBLI identificó 6,118 proveedores con patrón fantasma · solo 42 confirmados oficialmente",
-      "brief": "RUBLI identificó 6,118 proveedores con patrones de empresa fantasma en 23 años de contratación pública federal. Aparecen, ganan contratos y luego desaparecen del registro fiscal."
-    },
-    "el-gran-precio": {
-      "headline": "Cuanto Más Grande el Contrato, Mayor el Riesgo",
-      "sub": "23,469 contratos grandes · 6.24 billones MXN · puntaje de riesgo promedio 0.70",
-      "brief": "El modelo de riesgo de RUBLI revela una escalera casi monótona en 3 millones de contratos: a medida que crece el monto, crece el riesgo de corrupción. Los contratos más grandes concentran el mayor riesgo."
-    },
-    "el-monopolio-invisible": {
-      "headline": "Los 44 Monopolistas: Los Proveedores Que Devoraron su Sector",
-      "sub": "Grupo Fármacos · 133,000 MDP · 6,303 contratos · una sola institución",
-      "brief": "Cuatro distribuidoras farmacéuticas recaudaron 326,000 millones de pesos del IMSS en 23 años sin competencia real. Su puntaje de riesgo combinado promedia 0.96."
-    },
-    "la-ilusion-competitiva": {
-      "headline": "La Competencia Que Nunca Existió",
-      "sub": "49.4% de licitaciones con un solo postor en procesos \"competitivos\" · 2023",
-      "brief": "Durante 14 años consecutivos, más del 45% de las licitaciones \"competitivas\" de México tuvo un solo postor. La OCDE señala como señal de alerta estructural cualquier porcentaje mayor al 15%."
-    },
-    "captura-institucional": {
-      "headline": "Captura Institucional: 15,923 Proveedores, 787,000 MDP en Cinco Dependencias",
-      "sub": "IMSS · CFE · PEMEX · SCT · CONAGUA · patrón P6 en las instituciones más grandes del país",
-      "brief": "15,923 proveedores muestran firmas de captura conductual en el IMSS, CFE, PEMEX, SCT y CONAGUA. Eso representa casi un billón de pesos en contratación sistemáticamente capturada."
-    },
-    "marea-de-adjudicaciones": {
-      "headline": "La Marea de las Adjudicaciones Directas: De 60% a 82% en 13 Años",
-      "sub": "82.2% sin licitación en 2023 · cada sexenio peor que el anterior",
-      "brief": "El 82.2% de los contratos federales de 2023 fueron adjudicaciones directas: sin competencia, sin licitación pública. Cada administración desde 2010 ha sido peor que la anterior."
-    },
-    "el-sexenio-del-riesgo": {
-      "headline": "El Sexenio Más Riesgoso en 23 Años",
-      "sub": "AMLO HR 12.6% · Fox 7.5% · Calderón 8.2% · Peña Nieto 11.2% · v0.8.5",
-      "brief": "El indicador de riesgo elevado del 12.6% durante el sexenio de AMLO es el mayor de cualquier administración en 23 años. Cada administración desde Fox fue peor que la anterior: 5.1 puntos porcentuales de deriva en 24 años."
-    },
-    "la-industria-del-intermediario": {
-      "headline": "La Industria del Intermediario: 2,974 Proveedores, 518,000 MDP",
-      "sub": "Infraestructura 174,000 MDP · Salud 129,000 MDP · Energía 121,000 MDP · patrón RUBLI P3",
-      "brief": "2,974 proveedores funcionan como intermediarios puros de contratación pública: sin producto físico, sin servicio técnico, solo extrayendo margen entre dependencias gubernamentales y proveedores reales."
-    },
-    "el-umbral-de-los-300k": {
-      "headline": "La Trampa del Umbral de los 300 Mil Pesos",
-      "sub": "75,474 contratos por exactamente 300 mil MXN · imposibilidad estadística sin coordinación",
-      "brief": "Picos estadísticos en 210K, 250K y 300K MXN — matemáticamente imposibles en un universo de precios aleatorio. La evidencia apunta a una manipulación sistemática del umbral para evitar requisitos de licitación."
-    },
-    "volatilidad-el-precio-del-riesgo": {
-      "headline": "Volatilidad de Precios: La Pistola Humeante del Algoritmo",
-      "sub": "Predictor más fuerte del modelo v0.8.5 · coeficiente +0.558 en 3M de contratos",
-      "brief": "La volatilidad de precios es el predictor más fuerte del modelo v0.8.5 de RUBLI, superando a las otras 17 variables por un margen del 43%. Captura la huella forense de precios negociados — no competidos."
-    }
   },
   "footer": {
     "source": "Fuente",

@@ -3,19 +3,23 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ariaApi } from '@/api/client'
-import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { getStoriesByLensTag, type AriaPattern, type SectorCode } from '@/lib/story-content'
 import { SECTOR_NAMES_EN, getNewsTypeColor } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PageFooter } from '@/components/layout/PageFooter'
+import { PlanaMasthead } from '@/components/journalists/PlanaMasthead'
+import { PlanaLeadBlock } from '@/components/journalists/PlanaLeadBlock'
+import { PlanaDesk } from '@/components/journalists/PlanaDesk'
+import { PlanaColofon } from '@/components/journalists/PlanaColofon'
+import type { PlanaStory } from '@/components/journalists/plana-parts'
 
 // ---------------------------------------------------------------------------
-// INVESTIGATIONS — hardcoded editorial metadata
+// INVESTIGATIONS — hardcoded editorial metadata (the front page's story set)
 // ---------------------------------------------------------------------------
 
 type FraudType = 'ghost_company' | 'procurement_fraud' | 'embezzlement' | 'monopoly' | 'overpricing'
 type StatusKind = 'procesado' | 'auditado' | 'reporteado' | 'solo_datos'
-type Era = 'pena' | 'amlo' | 'cross'
+type Era = 'pena' | 'amlo' | 'cross' | 'sheinbaum'
 
 interface Investigation {
   slug: string
@@ -34,6 +38,7 @@ interface Investigation {
 }
 
 const LEAD_SLUG = 'el-sexenio-del-riesgo'
+const OFFLEAD_SLUG = 'el-vacio'
 
 const INVESTIGATIONS: Investigation[] = [
   {
@@ -49,6 +54,21 @@ const INVESTIGATIONS: Investigation[] = [
     yearSpan: '2018–2024',
     brief: "AMLO's 12.6% high-risk rate is the highest of any administration in 23 years. Every administration since Fox has been riskier than the one before it — 5.1 points of drift in a generation.",
     brief_es: 'La tasa de riesgo alto de 12.6% de AMLO es la más alta de cualquier administración en 23 años. Cada sexenio desde Fox ha sido más riesgoso que el anterior — 5.1 puntos de deriva en una generación.',
+  },
+  {
+    slug: 'el-vacio',
+    headline: 'A Government Erased Its Own Procurement Record',
+    headline_es: 'Un Gobierno Borró Su Propio Registro de Compras',
+    sub: 'ComprasMX gap · 78.7% direct award',
+    sub_es: 'Hueco ComprasMX · 78.7% adjudicación directa',
+    type: 'procurement_fraud',
+    status: 'solo_datos',
+    amount: 65.5,
+    era: 'sheinbaum',
+    contracts: 69516,
+    yearSpan: '2025–2026',
+    brief: 'CompraNet froze in September 2025 and the successor portal publishes only fragments. By reverse-engineering it, RUBLI rebuilt 69,516 awards that fell out of the public record — 78.7% with no competition, three in four with no disclosed price.',
+    brief_es: 'CompraNet se congeló en septiembre de 2025 y el portal sucesor publica solo fragmentos. Con ingeniería inversa, RUBLI reconstruyó 69,516 adjudicaciones que se cayeron del registro público — 78.7% sin competencia, tres de cada cuatro sin precio divulgado.',
   },
   {
     slug: 'captura-institucional',
@@ -214,29 +234,31 @@ const TYPE_LABEL: Record<FraudType, { en: string; es: string }> = {
   overpricing: { en: 'Overpricing', es: 'Sobreprecio' },
 }
 
-// ---------------------------------------------------------------------------
-// ObservatoryTourBadge — surfaces the matching Atlas tour (kept)
-// ---------------------------------------------------------------------------
+// Distance-to-consequence ladder — drives the agate rubric's ink weight + order.
+const STATUS_RANK: Record<StatusKind, PlanaStory['statusRank']> = {
+  procesado: 'consequence',
+  auditado: 'consequence',
+  reporteado: 'reported',
+  solo_datos: 'lead',
+}
+const RANK_ORDER: Record<PlanaStory['statusRank'], number> = { consequence: 0, reported: 1, lead: 2 }
 
-function ObservatoryTourBadge({ slug, accent, lang }: { slug: string; accent: string; lang: 'en' | 'es' }) {
-  const tour = findStoryByLongformSlug(slug)
-  if (!tour) return null
-  return (
-    <Link
-      to={`/atlas?story=${tour.id}`}
-      onClick={(e) => e.stopPropagation()}
-      className="inline-flex items-center gap-1.5 px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] rounded-sm border transition-opacity hover:opacity-80"
-      style={{ borderColor: `${accent}55`, color: accent, background: `${accent}0d` }}
-      aria-label={lang === 'en' ? `${tour.duration} Atlas tour: ${tour.title.en}` : `Tour de ${tour.duration} en El Atlas: ${tour.title.es}`}
-    >
-      <span aria-hidden="true">◆</span>
-      <span>{lang === 'en' ? `${tour.duration} TOUR · ATLAS` : `TOUR ${tour.duration} · ATLAS`}</span>
-    </Link>
-  )
+// i18n fallbacks (keys live in journalists.json; these guard against a missing key).
+const STATUS_FALLBACK: Record<StatusKind, { en: string; es: string }> = {
+  procesado: { en: 'PROSECUTED', es: 'PROCESADO' },
+  auditado: { en: 'UNDER AUDIT', es: 'BAJO AUDITORÍA' },
+  reporteado: { en: 'REPORTED', es: 'REPORTADO' },
+  solo_datos: { en: 'DATA LEAD', es: 'PISTA DE DATOS' },
+}
+const ERA_FALLBACK: Record<Era, { en: string; es: string }> = {
+  pena: { en: 'EPN · 2012–2018', es: 'EPN · 2012–2018' },
+  amlo: { en: '4T · 2018–2024', es: '4T · 2018–2024' },
+  cross: { en: 'CROSS-ERA', es: 'MULTI-SEXENIO' },
+  sheinbaum: { en: 'CSP · 2024–', es: 'CSP · 2024–' },
 }
 
 // ---------------------------------------------------------------------------
-// ARIA T1 live ticker (kept; EntityIdentityChip only)
+// AriaLiveTicker — the wire desk (kept; EntityIdentityChip only, header re-skinned)
 // ---------------------------------------------------------------------------
 
 function AriaLiveTicker({ lang }: { lang: 'en' | 'es' }) {
@@ -252,7 +274,10 @@ function AriaLiveTicker({ lang }: { lang: 'en' | 'es' }) {
 
   return (
     <section aria-label={lang === 'es' ? 'Investigaciones en vivo' : 'Live investigations'} className="mt-16 pt-8 border-t border-border">
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-5 flex-wrap">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+          {lang === 'es' ? '§ EL CABLE · ARIA T1' : '§ THE WIRE · ARIA T1'}
+        </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-risk-critical">
@@ -264,7 +289,6 @@ function AriaLiveTicker({ lang }: { lang: 'en' | 'es' }) {
           {lang === 'es' ? 'proveedores bajo investigación activa' : 'vendors under active investigation'}
         </span>
         <span className="h-px flex-1 bg-background-elevated" />
-        <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">ARIA · TIER 1</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {items.slice(0, 6).map((item) => {
@@ -294,16 +318,8 @@ function AriaLiveTicker({ lang }: { lang: 'en' | 'es' }) {
 }
 
 // ---------------------------------------------------------------------------
-// Main page — the Newsroom front page (lead + clean section-colored list)
+// Main page — «La Primera Plana»: the newsroom prints its own front page
 // ---------------------------------------------------------------------------
-
-interface Story {
-  slug: string
-  headline: string
-  brief: string
-  type: FraudType
-  color: string
-}
 
 export default function Journalists() {
   const { t, i18n } = useTranslation('journalists')
@@ -322,27 +338,49 @@ export default function Journalists() {
     )
   }, [lensPattern, lensSector, lensFilterActive])
 
-  // Localize the 12 stories (kept editorial set; presentation only)
-  const stories: Story[] = useMemo(
-    () =>
-      INVESTIGATIONS.map((inv) => ({
-        slug: inv.slug,
-        headline: t(`investigations.${inv.slug}.headline`, { defaultValue: isEs ? inv.headline_es ?? inv.headline : inv.headline }),
-        brief: t(`investigations.${inv.slug}.brief`, { defaultValue: isEs ? inv.brief_es ?? inv.brief : inv.brief }),
-        type: inv.type,
-        color: getNewsTypeColor(inv.type),
-      })),
-    [t, isEs],
-  )
+  // Status counts drive the masthead thesis + the colophon (all computed, none hardcoded).
+  const counts = useMemo(() => {
+    const c = { total: INVESTIGATIONS.length, procesado: 0, auditado: 0, reporteado: 0, soloDatos: 0 }
+    for (const inv of INVESTIGATIONS) {
+      if (inv.status === 'procesado') c.procesado++
+      else if (inv.status === 'auditado') c.auditado++
+      else if (inv.status === 'reporteado') c.reporteado++
+      else c.soloDatos++
+    }
+    return c
+  }, [])
 
-  const shown = useMemo(
-    () => (lensFilteredSlugs ? stories.filter((s) => lensFilteredSlugs.has(s.slug)) : stories),
-    [stories, lensFilteredSlugs],
-  )
-  const lead = shown.find((s) => s.slug === LEAD_SLUG) ?? shown[0]
-  const rest = shown.filter((s) => s.slug !== lead?.slug)
+  // Map one investigation to the localized shape the front-page parts render.
+  const toPlana = (inv: Investigation, withContracts: boolean): PlanaStory => ({
+    slug: inv.slug,
+    headline: isEs ? inv.headline_es ?? inv.headline : inv.headline,
+    brief: isEs ? inv.brief_es ?? inv.brief : inv.brief,
+    color: getNewsTypeColor(inv.type),
+    typeLabel: isEs ? TYPE_LABEL[inv.type].es : TYPE_LABEL[inv.type].en,
+    statusLabel: t(`status.${inv.status}`, { defaultValue: isEs ? STATUS_FALLBACK[inv.status].es : STATUS_FALLBACK[inv.status].en }),
+    statusRank: STATUS_RANK[inv.status],
+    eraLabel: t(`eraLabel.${inv.era}`, { defaultValue: isEs ? ERA_FALLBACK[inv.era].es : ERA_FALLBACK[inv.era].en }),
+    contractsLabel:
+      withContracts && inv.contracts > 0
+        ? `${inv.contracts.toLocaleString('en-US')} ${isEs ? 'CONTRATOS' : 'CONTRACTS'}`
+        : null,
+  })
 
-  const typeLabel = (type: FraudType) => (isEs ? TYPE_LABEL[type].es : TYPE_LABEL[type].en)
+  // Partition (lens-filtered subset when a lens is active).
+  const shownInvs = useMemo(
+    () => (lensFilteredSlugs ? INVESTIGATIONS.filter((i) => lensFilteredSlugs.has(i.slug)) : INVESTIGATIONS),
+    [lensFilteredSlugs],
+  )
+  const leadInv = shownInvs.find((i) => i.slug === LEAD_SLUG) ?? shownInvs[0] ?? null
+  const offLeadInv = shownInvs.find((i) => i.slug === OFFLEAD_SLUG && i.slug !== leadInv?.slug) ?? null
+  const restInvs = shownInvs
+    .filter((i) => i.slug !== leadInv?.slug && i.slug !== offLeadInv?.slug)
+    .sort((a, b) => RANK_ORDER[STATUS_RANK[a.status]] - RANK_ORDER[STATUS_RANK[b.status]])
+
+  const leadPlana = leadInv ? toPlana(leadInv, true) : null
+  const offLeadPlana = offLeadInv ? toPlana(offLeadInv, true) : null
+  const restPlana = restInvs.map((i) => toPlana(i, false))
+  const allShownPlana = shownInvs.map((i) => toPlana(i, false))
 
   const clearLens = () => {
     const next = new URLSearchParams(searchParams)
@@ -354,31 +392,12 @@ export default function Journalists() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* ── Nameplate (compact — the lead story is the hero, not this) ── */}
-        <header className="pt-12 sm:pt-16 pb-6 border-b-2 border-text-primary/85">
-          <div className="flex items-center justify-between gap-3 mb-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
-              <span className="font-bold tracking-[0.2em] text-text-secondary">RUBLI</span>
-            </span>
-            <span className="tabular-nums">{isEs ? 'Datos hasta sep 2025' : 'Data through Sep 2025'}</span>
-          </div>
-          <div className="flex items-end justify-between gap-4 flex-wrap">
-            <h1
-              className="text-text-primary"
-              style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}
-            >
-              {isEs ? 'Sala de Redacción' : 'The Newsroom'}
-            </h1>
-            <p className="text-[12px] font-serif italic text-text-muted pb-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
-              {isEs ? `${stories.length} investigaciones sobre la contratación federal` : `${stories.length} investigations into federal contracting`}
-            </p>
-          </div>
-        </header>
+        {/* ── Masthead / folio ── */}
+        <PlanaMasthead lang={lang} counts={counts} />
 
         {/* ── Lens filter pill (from the Atlas) ── */}
         {lensFilterActive && (
-          <div className="mt-5 flex items-center gap-2 flex-wrap">
+          <div className="mt-6 flex items-center gap-2 flex-wrap">
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">◆ {isEs ? 'Desde el Atlas:' : 'From the Atlas:'}</span>
             <button
               type="button"
@@ -393,73 +412,26 @@ export default function Journalists() {
           </div>
         )}
 
-        {shown.length === 0 ? (
+        {/* ── The stories ── */}
+        {shownInvs.length === 0 ? (
           <div className="py-20 text-center border border-dashed border-border rounded-sm mt-8">
             <p className="text-sm font-mono text-text-muted">
               {isEs ? 'Ninguna investigación coincide con este filtro.' : 'No investigations match this filter.'}
             </p>
           </div>
+        ) : lensFilterActive ? (
+          // Filtered mode — tiers collapse to one flat register (avoids half-empty tiers)
+          <div className="mt-2">
+            <PlanaDesk stories={allShownPlana} lang={lang} filtered />
+          </div>
         ) : (
           <>
-            {/* ── LEAD STORY ── */}
-            {lead && (
-              <Link
-                to={`/stories/${lead.slug}`}
-                className="group block py-8 sm:py-10"
-                style={{ borderLeft: `4px solid ${lead.color}`, paddingLeft: 'clamp(20px, 3vw, 36px)' }}
-              >
-                <div className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] mb-3" style={{ color: lead.color }}>
-                  {typeLabel(lead.type)}
-                </div>
-                <h2
-                  className="text-text-primary group-hover:underline decoration-1 underline-offset-[6px]"
-                  style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(30px, 4.6vw, 54px)', fontWeight: 700, lineHeight: 1.04, letterSpacing: '-0.02em' }}
-                >
-                  {lead.headline}
-                </h2>
-                <p
-                  className="mt-4 max-w-3xl text-text-secondary"
-                  style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 'clamp(18px, 1.6vw, 21px)', lineHeight: 1.5 }}
-                >
-                  {lead.brief}
-                </p>
-                <div className="mt-4">
-                  <ObservatoryTourBadge slug={lead.slug} accent={lead.color} lang={lang} />
-                </div>
-              </Link>
-            )}
-
-            {/* ── THE LIST ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-9 border-t border-text-primary/15 pt-9">
-              {rest.map((s) => (
-                <Link
-                  key={s.slug}
-                  to={`/stories/${s.slug}`}
-                  className="group block"
-                  style={{ borderLeft: `3px solid ${s.color}`, paddingLeft: '16px' }}
-                >
-                  <div className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] mb-2" style={{ color: s.color }}>
-                    {typeLabel(s.type)}
-                  </div>
-                  <h3
-                    className="text-text-primary group-hover:underline decoration-1 underline-offset-[4px]"
-                    style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '21px', fontWeight: 700, lineHeight: 1.18, letterSpacing: '-0.01em' }}
-                  >
-                    {s.headline}
-                  </h3>
-                  <p
-                    className="mt-2 text-text-secondary line-clamp-3"
-                    style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: '15px', lineHeight: 1.45 }}
-                  >
-                    {s.brief}
-                  </p>
-                </Link>
-              ))}
-            </div>
+            {leadPlana && <PlanaLeadBlock lead={leadPlana} offLead={offLeadPlana} lang={lang} />}
+            <PlanaDesk stories={restPlana} lang={lang} />
           </>
         )}
 
-        {/* ── ARIA live ticker (kept) ── */}
+        {/* ── The wire (ARIA ticker, kept) ── */}
         <AriaLiveTicker lang={lang} />
 
         {/* ── Atlas band (kept, Day-13 copy) ── */}
@@ -477,6 +449,9 @@ export default function Journalists() {
             {isEs ? 'Explorar →' : 'Explore →'}
           </Link>
         </div>
+
+        {/* ── Fe de plana (editor's note) ── */}
+        <PlanaColofon lang={lang} total={counts.total} procesadoCount={counts.procesado} />
 
         <PageFooter />
       </div>

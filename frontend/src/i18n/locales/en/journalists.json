@@ -75,7 +75,8 @@
   "eraLabel": {
     "pena": "EPN · 2012–2018",
     "amlo": "4T · 2018–2024",
-    "cross": "CROSS-ERA"
+    "cross": "CROSS-ERA",
+    "sheinbaum": "CSP · 2024–"
   },
   "typeLabel": {
     "ghost_company": "GHOST CO.",
@@ -88,58 +89,6 @@
     "readStory": "Read story",
     "readInvestigation": "Read investigation",
     "scale": "Scale"
-  },
-  "investigations": {
-    "el-ejercito-fantasma": {
-      "headline": "The Ghost Army: 6,118 Vendors That Look Like Nothing",
-      "sub": "RUBLI found 6,118 ghost-pattern vendors · only 42 officially confirmed",
-      "brief": "RUBLI identified 6,118 vendors matching ghost company patterns across 23 years of Mexican federal procurement. They appear, win contracts, then vanish from the tax registry."
-    },
-    "el-gran-precio": {
-      "headline": "The Bigger the Contract, the Higher the Risk",
-      "sub": "23,469 large contracts · MX$6.24T · avg risk score 0.70",
-      "brief": "RUBLI's risk model reveals a near-monotonic ladder across 3 million contracts: as contract size grows, corruption risk grows in lockstep. The biggest deals carry the most risk."
-    },
-    "el-monopolio-invisible": {
-      "headline": "The 44 Monopolists: Vendors Who Ate Their Sector",
-      "sub": "Grupo Fármacos · MX$133B · 6,303 contracts · one institution",
-      "brief": "Four pharmaceutical distributors collected 326 billion pesos from IMSS over 23 years with no meaningful competition. Their combined risk score averages 0.96."
-    },
-    "la-ilusion-competitiva": {
-      "headline": "The Competition That Never Was",
-      "sub": "49.4% single-bid rate in \"competitive\" procedures · 2023",
-      "brief": "For 14 straight years, over 45% of Mexico's \"competitive\" procurement had exactly one bidder. The OECD flags anything above 15% as a structural red flag."
-    },
-    "captura-institucional": {
-      "headline": "Inside Institutional Capture: 15,923 Vendors, 787B in Five Agencies",
-      "sub": "IMSS · CFE · PEMEX · SCT · CONAGUA · P6 pattern at Mexico's largest institutions",
-      "brief": "15,923 vendors show behavioral capture signatures at IMSS, CFE, PEMEX, SCT, and CONAGUA. That's nearly a trillion pesos of systematically captured contracting."
-    },
-    "marea-de-adjudicaciones": {
-      "headline": "The Direct Award Tide: From 60% to 82% in 13 Years",
-      "sub": "82.2% non-competitive in 2023 · every administration worse than the last",
-      "brief": "82.2% of 2023 federal contracts were direct awards — no competition, no public tender. Every administration since 2010 has been worse than the one before it."
-    },
-    "el-sexenio-del-riesgo": {
-      "headline": "The Riskiest Administration in 23 Years",
-      "sub": "AMLO HR 12.6% · Fox 7.5% · Calderón 8.2% · Peña Nieto 11.2% · v0.8.5",
-      "brief": "AMLO's 12.6% high-risk rate is the highest of any administration in 23 years. Every administration since Fox has been riskier than its predecessor — 5.1 percentage points of drift in 24 years."
-    },
-    "la-industria-del-intermediario": {
-      "headline": "The Intermediary Industry: 2,974 Vendors, 518B MXN",
-      "sub": "Infrastructure 174B · Health 129B · Energy 121B · RUBLI P3 pattern",
-      "brief": "2,974 vendors function as pure procurement intermediaries — no physical product, no technical service, just margin extraction between government agencies and real suppliers."
-    },
-    "el-umbral-de-los-300k": {
-      "headline": "The 300,000 Peso Threshold Trap",
-      "sub": "75,474 contracts at exactly MX$300K · statistical impossibility without coordination",
-      "brief": "Statistical spikes at 210K, 250K, and 300K MXN — mathematically impossible in a random pricing universe. The evidence points to systematic threshold manipulation to avoid competitive bidding requirements."
-    },
-    "volatilidad-el-precio-del-riesgo": {
-      "headline": "Price Volatility: The Algorithm's Smoking Gun",
-      "sub": "Strongest predictor in v0.8.5 model · coefficient +0.558 across 3M contracts",
-      "brief": "Price volatility is the single strongest predictor in RUBLI's v0.8.5 risk model, outperforming 17 other features by 43%. It captures the forensic fingerprint of negotiated — not competed — prices."
-    }
   },
   "footer": {
     "source": "Source",
