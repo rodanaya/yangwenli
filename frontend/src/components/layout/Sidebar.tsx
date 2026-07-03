@@ -20,6 +20,7 @@ import {
   Network,
   GitCompareArrows,
   Newspaper,
+  Clapperboard,
   Sparkles,
   Tag,
   Archive,
@@ -77,6 +78,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
       // find the map (restored 2026-06-23). The logo still links to / too;
       // El Archivo keeps its own row under EXPLORAR. Then the executive
       // briefing and the two editorial surfaces. Atlas storytelling at /atlas.
+      // «Intro» — the animated presentation film; the platform's front door.
+      { i18nKey: 'film', href: '/registro', icon: Clapperboard },
       { i18nKey: 'explore', href: '/', icon: Map },
       { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
