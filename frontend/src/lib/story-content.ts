@@ -46,6 +46,8 @@ export interface StoryChapterDef {
     barLabel?: string
     barLabel_es?: string
     vizTemplate?: VizTemplate
+    /** Optional explicit pull-quote role (else auto-derived from chapter variant). */
+    role?: 'ledger' | 'plate' | 'margin' | 'verdict'
   }
   chartConfig?: {
     type:
@@ -164,6 +166,11 @@ export interface StoryInlineChartData {
    *  metric IS the share (gapFormat 'ratio'), so the most-distorted row reads
    *  at the top. Opt-in so charts ranking by magnitude are unaffected. */
   sortBy?: 'gap' | 'ratio'
+  /** ClevelandPairChart ratio mode: label for the row's own 100% track (the
+   *  denominator, e.g. "sector's high-risk spend"). Falls back to a generic
+   *  "of the row total" when absent. */
+  trackLabel?: string
+  trackLabel_es?: string
   /** ThresholdDistribution-only: draw a faint ordered connector through the
    *  dots (e.g. the rising "water line" across administrations) so the
    *  trajectory reads as a single climb rather than disconnected points. */
@@ -2399,8 +2406,8 @@ export const STORIES: StoryDef[] = [
         ],
         chartConfig: {
           type: 'editorial-cleveland-pair',
-          title: 'The Only Bidders: Top 12 Vendors by Single-Bid Wins',
-          title_es: 'Los únicos oferentes: top 12 proveedores por victorias en oferta única',
+          title: 'The Captives: Single-Bid Wins as a Share of Each Vendor\'s Total',
+          title_es: 'Los cautivos: victorias de oferta única como porción del total de cada proveedor',
           chartId: 'sb-top-vendors',
           data: {
             points: [
@@ -2511,10 +2518,12 @@ export const STORIES: StoryDef[] = [
             yLabel_es: 'Victorias de contrato',
             unit: 'wins',
             gapFormat: 'ratio',
+            trackLabel: "the vendor's total contract wins",
+            trackLabel_es: 'las victorias totales del proveedor',
             annotation:
-              'Filled dot = single-bid wins (vendor was the only bidder). Open dot = total contract wins of any kind. The ratio shows what fraction of every contract this vendor secured came as the only "competitive" bidder — Efectivale S.A. is structurally captive at 92%; Liconsa and PRAXAIR run diversified books at 17–21%.',
+              'Each bar is filled to the share of a vendor\'s total contract wins that came as the only bidder. Efectivale S.A. is structurally captive at 92%; Liconsa and PRAXAIR run diversified books at 17–21%. The dashed line marks the average across the twelve.',
             annotation_es:
-              'Punto relleno = victorias de oferta única (único oferente). Punto abierto = victorias totales de contrato de cualquier tipo. La razón muestra qué fracción de los contratos que ganó este proveedor llegó como único oferente "competitivo" — Efectivale S.A. es estructuralmente cautivo al 92%; Liconsa y PRAXAIR operan carteras diversificadas al 17–21%.',
+              'Cada barra se llena hasta la porción de las victorias totales del proveedor que llegaron como único oferente. Efectivale S.A. es estructuralmente cautivo al 92%; Liconsa y PRAXAIR operan carteras diversificadas al 17–21%. La línea punteada marca el promedio de los doce.',
           },
         },
         pullquote: {
@@ -2996,10 +3005,12 @@ export const STORIES: StoryDef[] = [
             unit: 'B MXN',
             gapFormat: 'ratio',
             sortBy: 'ratio',
+            trackLabel: "sector's high/critical-risk spend",
+            trackLabel_es: 'gasto en riesgo alto/crítico del sector',
             annotation:
-              "Filled dot = P3 intermediary spend (B MXN). Open dot = sector total at high or critical risk (B MXN). Right column = P3 share of the sector's at-risk footprint. Infrastructure routes 19.6% of its high-risk spend through P3 intermediaries — roughly three times the share seen in Health (6.0%) or Hacienda (6.5%).",
+              "Each bar is filled to the share of that sector's high/critical-risk spend that runs through P3 intermediary structures. Infrastructure fills to 19.6% — roughly three times the share in Health (6.0%) or Hacienda (6.5%). The dashed line marks the eight-sector average.",
             annotation_es:
-              'Punto relleno = gasto P3 de intermediación (miles de millones MXN). Punto abierto = total sectorial en riesgo alto o crítico (miles de millones MXN). Columna derecha = porción del gasto de riesgo del sector que corre por estructuras P3. Infraestructura canaliza 19.6% de su gasto de alto riesgo por intermediarios P3 — cerca del triple de la porción que se observa en Salud (6.0%) o Hacienda (6.5%).',
+              'Cada barra se llena hasta la porción del gasto en riesgo alto/crítico del sector que corre por estructuras de intermediación P3. Infraestructura se llena al 19.6% — cerca del triple de la porción en Salud (6.0%) o Hacienda (6.5%). La línea punteada marca el promedio de los ocho sectores.',
           },
         },
         pullquote: {

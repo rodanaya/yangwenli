@@ -16,7 +16,7 @@ import type { StoryChapterDef, StoryDef, StoryStatus } from '@/lib/story-content
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { OutletBadge } from '@/components/stories/OutletBadge'
 import ChapterBanner from '@/components/stories/ChapterBanner'
-import DataPullquote from '@/components/stories/DataPullquote'
+import DataPullquote, { type PullquoteRole } from '@/components/stories/DataPullquote'
 import ProseStat from '@/components/stories/ProseStat'
 import { StoryCard } from '@/components/stories/StoryCard'
 import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
@@ -410,8 +410,29 @@ function renderChartBlock(
   )
 }
 
-function renderPullquote(chapter: StoryChapterDef, story: StoryDef, className = '', isFirst = false) {
+// Derive the pull-quote role from the chapter variant + content shape, so a
+// story that shows several figures never stamps the same box twice in a row.
+function pickPullquoteRole(
+  pq: NonNullable<StoryChapterDef['pullquote']>,
+  variant: ChapterVariant,
+  isFirst: boolean,
+): PullquoteRole {
+  if (pq.role) return pq.role
+  if (variant === 'closing') return 'verdict'
+  if (pq.barValue !== undefined) return 'plate'
+  if (variant === 'hero' || (variant === 'feature' && isFirst)) return 'ledger'
+  return 'margin'
+}
+
+function renderPullquote(
+  chapter: StoryChapterDef,
+  story: StoryDef,
+  className = '',
+  isFirst = false,
+  variant: ChapterVariant = 'standard',
+) {
   if (!chapter.pullquote) return null
+  const role = pickPullquoteRole(chapter.pullquote, variant, isFirst)
   return (
     <div className={className}>
       <DataPullquote
@@ -424,7 +445,7 @@ function renderPullquote(chapter: StoryChapterDef, story: StoryDef, className = 
         outlet={story.outlet}
         statColor={story.leadStat.color}
         vizTemplate={chapter.pullquote.vizTemplate}
-        sledgehammer={isFirst}
+        role={role}
       />
     </div>
   )
@@ -911,7 +932,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
             breakout below the lede. */}
         {chapter.pullquote && (
           <ScrollReveal className="my-10">
-            {renderPullquote(chapter, story)}
+            {renderPullquote(chapter, story, '', false, 'hero')}
           </ScrollReveal>
         )}
 
@@ -984,7 +1005,7 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
         {chapter.pullquote && (
           <aside className="lg:col-span-5 lg:col-start-8">
             <ScrollReveal className="lg:sticky lg:top-24">
-              {renderPullquote(chapter, story, '', isFirst)}
+              {renderPullquote(chapter, story, '', isFirst, 'feature')}
             </ScrollReveal>
           </aside>
         )}
@@ -1059,7 +1080,7 @@ function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: 
       {chapter.pullquote && (
         <div className="max-w-prose mx-auto px-4 sm:px-0 mt-10">
           <ScrollReveal>
-            {renderPullquote(chapter, story, '', isFirst)}
+            {renderPullquote(chapter, story, '', isFirst, 'data-spotlight')}
           </ScrollReveal>
         </div>
       )}
@@ -1421,7 +1442,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       {chapter.pullquote && (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-10">
           <ScrollReveal>
-            {renderPullquote(chapter, story)}
+            {renderPullquote(chapter, story, '', false, 'closing')}
           </ScrollReveal>
         </div>
       )}
@@ -1480,7 +1501,7 @@ function StandardChapter({ chapter, story, accentColor, isFirst = false }: Chapt
         {chapter.chartConfig && renderChartBlock(chapter, 'my-8', lang)}
         {chapter.pullquote && (
           <div className="my-10">
-            <ScrollReveal>{renderPullquote(chapter, story, '', isFirst)}</ScrollReveal>
+            <ScrollReveal>{renderPullquote(chapter, story, '', isFirst, 'standard')}</ScrollReveal>
           </div>
         )}
       </div>
