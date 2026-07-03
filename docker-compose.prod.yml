@@ -25,6 +25,10 @@ services:
       # (localhost:3009 only).  Always set this in .env.prod for production.
       - CORS_ORIGINS=${CORS_ORIGINS}
       - RUBLI_WRITE_KEY=${RUBLI_WRITE_KEY:?RUBLI_WRITE_KEY must be set in .env.prod}
+      # JWT signing secret — MUST be injected from .env.prod. Without it the
+      # backend (auth_jwt.py) falls back to a literal that is public in the
+      # source repo → forgeable tokens. Fail the deploy if it is unset.
+      - RUBLI_JWT_SECRET=${RUBLI_JWT_SECRET:?RUBLI_JWT_SECRET must be set in .env.prod}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
