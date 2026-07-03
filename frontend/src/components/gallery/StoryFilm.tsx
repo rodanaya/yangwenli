@@ -796,6 +796,18 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
 
   const totalMs = useMemo(() => film.beats.reduce((a, b) => a + b.durationMs, 0), [film])
   const elapsedMs = useMemo(() => film.beats.slice(0, Math.min(beatIdx, N)).reduce((a, b) => a + b.durationMs, 0), [beatIdx, film, N])
+  // Continuous within-beat timer — the timecode is the sum of COMPLETED beats, so on a
+  // long beat it sat frozen (the 17s opener read as "stuck"). Tick inside the current beat.
+  const [beatElapsed, setBeatElapsed] = useState(0)
+  useEffect(() => {
+    setBeatElapsed(0)
+    if (!started || !playing || atEnd) return
+    const t0 = performance.now()
+    const id = setInterval(() => setBeatElapsed(performance.now() - t0), 250)
+    return () => clearInterval(id)
+  }, [beatIdx, started, playing, atEnd])
+  const curDur = film.beats[Math.min(beatIdx, N - 1)]?.durationMs ?? 0
+  const shownMs = Math.min(elapsedMs + Math.min(beatElapsed, curDur), totalMs)
 
   return (
     <div className="overflow-hidden rounded-md border border-border" style={{ background: pal.bg }}>
@@ -1005,7 +1017,7 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
             </button>
           </div>
           <div className="font-mono text-[11px] tabular-nums" style={{ color: `rgba(${pal.dim},0.9)` }}>
-            {fmtTime(Math.min(elapsedMs, totalMs))} / {fmtTime(totalMs)}
+            {fmtTime(shownMs)} / {fmtTime(totalMs)}
           </div>
         </div>
       </div>
