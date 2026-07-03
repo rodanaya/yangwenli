@@ -3,6 +3,7 @@ Story endpoints for journalist investigation starting-points.
 Each endpoint returns a pre-computed narrative dataset with context.
 Bilingual: pass ?lang=en for English, default is ?lang=es for Spanish.
 """
+import json
 import logging
 import threading
 import time
@@ -135,35 +136,53 @@ def administration_comparison(lang: str = Query("es", pattern="^(en|es)$")):
     if cached:
         return cached
     with get_db() as conn:
-        rows = conn.execute("""
-            SELECT
-                CASE
-                    WHEN contract_year BETWEEN 2000 AND 2006 THEN 'Fox (2000-2006)'
-                    WHEN contract_year BETWEEN 2006 AND 2012 THEN 'Calderón (2006-2012)'
-                    WHEN contract_year BETWEEN 2012 AND 2018 THEN 'Peña Nieto (2012-2018)'
-                    WHEN contract_year >= 2018             THEN 'AMLO/Sheinbaum (2018-)'
-                    ELSE 'Pre-2000'
-                END                                               AS administration,
-                MIN(contract_year)                                AS year_from,
-                MAX(contract_year)                                AS year_to,
-                COUNT(*)                                          AS total_contracts,
-                SUM(amount_mxn)                                   AS total_value_mxn,
-                ROUND(AVG(CASE WHEN is_direct_award=1 THEN 100.0 ELSE 0.0 END), 1) AS direct_award_pct,
-                ROUND(AVG(CASE WHEN is_single_bid=1  THEN 100.0 ELSE 0.0 END), 1)  AS single_bid_pct,
-                ROUND(AVG(risk_score), 4)                         AS avg_risk_score,
-                ROUND(AVG(CASE WHEN risk_level IN ('critical','high') THEN 100.0 ELSE 0.0 END), 1) AS high_risk_pct
-            FROM contracts
-            WHERE amount_mxn > 0
-              AND contract_year IS NOT NULL
-              AND contract_year BETWEEN 2000 AND 2025
-            GROUP BY administration
-            ORDER BY year_from
-        """).fetchall()
+        # Precompute-first: scripts/precompute_story_stats.py writes the
+        # language-independent `data` array to
+        # precomputed_stats['story_administration_comparison'] so this endpoint
+        # reads it O(1). The live query below stays as the fallback (fresh DB /
+        # precompute not yet run). The live path is a full-table scan of ~3.1M
+        # rows (~9-12s per cache miss) that 502'd the gateway under launch load.
+        data = None
+        try:
+            prow = conn.execute(
+                "SELECT stat_value FROM precomputed_stats "
+                "WHERE stat_key = 'story_administration_comparison'"
+            ).fetchone()
+            if prow and prow[0]:
+                data = json.loads(prow[0])
+        except Exception:
+            data = None
 
-    cols = ["administration", "year_from", "year_to", "total_contracts",
-            "total_value_mxn", "direct_award_pct", "single_bid_pct",
-            "avg_risk_score", "high_risk_pct"]
-    data = [dict(zip(cols, r)) for r in rows]
+        if data is None:
+            rows = conn.execute("""
+                SELECT
+                    CASE
+                        WHEN contract_year BETWEEN 2000 AND 2006 THEN 'Fox (2000-2006)'
+                        WHEN contract_year BETWEEN 2006 AND 2012 THEN 'Calderón (2006-2012)'
+                        WHEN contract_year BETWEEN 2012 AND 2018 THEN 'Peña Nieto (2012-2018)'
+                        WHEN contract_year >= 2018             THEN 'AMLO/Sheinbaum (2018-)'
+                        ELSE 'Pre-2000'
+                    END                                               AS administration,
+                    MIN(contract_year)                                AS year_from,
+                    MAX(contract_year)                                AS year_to,
+                    COUNT(*)                                          AS total_contracts,
+                    SUM(amount_mxn)                                   AS total_value_mxn,
+                    ROUND(AVG(CASE WHEN is_direct_award=1 THEN 100.0 ELSE 0.0 END), 1) AS direct_award_pct,
+                    ROUND(AVG(CASE WHEN is_single_bid=1  THEN 100.0 ELSE 0.0 END), 1)  AS single_bid_pct,
+                    ROUND(AVG(risk_score), 4)                         AS avg_risk_score,
+                    ROUND(AVG(CASE WHEN risk_level IN ('critical','high') THEN 100.0 ELSE 0.0 END), 1) AS high_risk_pct
+                FROM contracts
+                WHERE amount_mxn > 0
+                  AND contract_year IS NOT NULL
+                  AND contract_year BETWEEN 2000 AND 2025
+                GROUP BY administration
+                ORDER BY year_from
+            """).fetchall()
+
+            cols = ["administration", "year_from", "year_to", "total_contracts",
+                    "total_value_mxn", "direct_award_pct", "single_bid_pct",
+                    "avg_risk_score", "high_risk_pct"]
+            data = [dict(zip(cols, r)) for r in rows]
 
     t = lambda es, en: en if lang == "en" else es  # noqa: E731
 
