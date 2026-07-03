@@ -180,9 +180,6 @@ export default function Administrations() {
     return (match?.name ?? 'AMLO') as AdminName
   })
   const [compareOpen, setCompareOpen] = useState(false)
-  // §IV drill-down: the top-100 beneficiaries archive drawer (lazy, mount-on-open).
-  // Open by default — the full ledger is the section users came for.
-  const [vendorsDeepOpen, setVendorsDeepOpen] = useState(true)
 
   // Keep ?admin= synced with the selection so a chosen administration is a
   // shareable, reload-safe deep link (e.g. /administrations?admin=amlo).
@@ -194,12 +191,6 @@ export default function Administrations() {
       setSearchParams(next, { replace: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAdmin])
-
-  // Collapse the §IV drill-down drawer when the reader switches administration —
-  // the open archive of one term shouldn't bleed into the next.
-  useEffect(() => {
-    setVendorsDeepOpen(false)
   }, [selectedAdmin])
 
   // Data queries
@@ -527,14 +518,11 @@ export default function Administrations() {
             {isEs ? 'El patrón' : 'The pattern'}
           </div>
           <section
-            aria-label={isEs ? 'El patrón — supervivencia entre sexenios' : 'The pattern — survival across terms'}
+            aria-label={isEs ? 'El patrón — riesgo a través de cuatro relevos' : 'The pattern — risk across four handovers'}
             className="rounded-sm border border-border/50 bg-background-card overflow-hidden mb-6"
             style={{ borderLeftWidth: 4, borderLeftColor: 'var(--color-accent)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
           >
             <div className="px-4 sm:px-5 py-4">
-              <AdminSurvivorsSlope columns={survivorColumns} isEs={isEs} onSelectAdmin={onSelectAdmin} />
-            </div>
-            <div className="border-t border-border/40 px-4 sm:px-5 py-4">
               <SeamStrip series={seamSeries} nationalAvgPct={allTimeAvg.hr} admins={seamAdmins} seams={seams} isEs={isEs} onSelectAdmin={onSelectAdmin} />
             </div>
           </section>
@@ -959,31 +947,29 @@ export default function Administrations() {
               </div>
             </div>
 
-            {/* ── §IV drill-down · the top-100 beneficiaries archive drawer ──
-                Front-of-house keeps the top-10 above; this is the full ledger,
-                lazy-mounted on open (clones the "Comparar dos periodos" toggle). */}
-            <div className="mt-4 border-t border-border/40">
-              <button
-                className="w-full flex items-center justify-between py-3 text-left hover:bg-background-elevated/40 transition-colors"
-                onClick={() => setVendorsDeepOpen((v) => !v)}
-                aria-expanded={vendorsDeepOpen}
-                aria-controls="beneficiarios-100"
-              >
-                <span className="text-[12px] tracking-[0.2em] uppercase font-mono text-text-muted">
-                  {isEs ? '§ LOS 100 MAYORES BENEFICIARIOS' : '§ THE TOP 100 BENEFICIARIES'}
+            {/* ── §IV · the top-100 beneficiaries ledger — ALWAYS OPEN.
+                The accountability table is the product; it is never hidden
+                behind a disclosure widget (ProPublica Bailout Tracker). */}
+            <div className="mt-4 border-t border-border/40 pt-3">
+              <div className="mb-1">
+                <span className="text-[12px] tracking-[0.2em] uppercase font-mono text-text-secondary">
+                  <span style={{ color: 'var(--color-accent)' }}>§</span>{' '}
+                  {isEs ? 'LOS 100 MAYORES BENEFICIARIOS' : 'THE TOP 100 BENEFICIARIES'}
                 </span>
-                <span className="text-text-muted text-xs font-mono">{vendorsDeepOpen ? '−' : '+'}</span>
-              </button>
-              {vendorsDeepOpen && (
-                <div id="beneficiarios-100" className="pt-1 pb-1">
-                  <AdminVendorsDeepList
-                    era={ERA_KEYS[selectedAdmin]}
-                    eraColor={selectedMeta.color}
-                    isEs={isEs}
-                    selectedDisplay={selectedDisplay}
-                  />
-                </div>
-              )}
+                <p className="text-[11px] text-text-muted mt-0.5">
+                  {isEs
+                    ? 'El padrón completo — ordenable por valor, riesgo o contratos.'
+                    : 'The full ledger — sortable by value, risk, or contracts.'}
+                </p>
+              </div>
+              <div id="beneficiarios-100" className="pt-1 pb-1">
+                <AdminVendorsDeepList
+                  era={ERA_KEYS[selectedAdmin]}
+                  eraColor={selectedMeta.color}
+                  isEs={isEs}
+                  selectedDisplay={selectedDisplay}
+                />
+              </div>
             </div>
           </div>
 
@@ -1028,6 +1014,15 @@ export default function Administrations() {
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'Los que permanecen' : 'The ones who remain'}
           </div>
+          <section
+            aria-label={isEs ? 'Los sobrevivientes — proveedores que permanecen entre sexenios' : 'The survivors — suppliers that persist across terms'}
+            className="rounded-sm border border-border/50 bg-background-card overflow-hidden mb-6"
+            style={{ borderLeftWidth: 4, borderLeftColor: 'var(--color-accent)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
+          >
+            <div className="px-4 sm:px-5 py-4">
+              <AdminSurvivorsSlope columns={survivorColumns} isEs={isEs} onSelectAdmin={onSelectAdmin} />
+            </div>
+          </section>
           {moversResp?.data_available && moversResp.movers.length > 0 && (
             <OfficialTenureBands movers={moversResp.movers} isEs={isEs} />
           )}

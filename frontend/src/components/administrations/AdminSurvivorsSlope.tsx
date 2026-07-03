@@ -261,19 +261,29 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
               const y2 = HEADER_H + edge.rowB * ROW_H + 19
               const bow = edge.isSkip ? -10 : 0
               const isHovered = hoveredKey === edge.key
+              const dimmed = hoveredKey !== null && !isHovered
               const stroke = edge.crossParty ? OCHRE : ZINC
-              const path = `M${x1},${y1} C${x1 + 20},${y1 + bow} ${x2 - 20},${y2 + bow} ${x2},${y2}`
+              const path = `M${x1},${y1} C${x1 + 32},${y1 + bow} ${x2 - 32},${y2 + bow} ${x2},${y2}`
+              const mainWidth = edge.crossParty ? (isHovered ? 3 : 2.25) : 1.5
+              const mainOpacity = edge.crossParty ? 1 : 0.6
+              const dotR = edge.crossParty ? (isHovered ? 4 : 2.75) : 2.25
+              const dotOpacity = edge.crossParty ? 1 : 0.7
               return (
-                <g key={`${edge.key}-${i}`}>
+                // Group opacity dims the whole edge (halo + line + dots) to 20%
+                // when another bridge is hovered — Reuters highlight isolation.
+                <g key={`${edge.key}-${i}`} opacity={dimmed ? 0.2 : 1}>
+                  {edge.crossParty && (
+                    <path d={path} fill="none" style={{ stroke: OCHRE }} strokeWidth={7} opacity={0.14} />
+                  )}
                   <path
                     d={path}
                     fill="none"
                     style={{ stroke }}
-                    strokeWidth={isHovered ? 2.5 : 1.5}
-                    opacity={isHovered ? 1 : 0.8}
+                    strokeWidth={mainWidth}
+                    opacity={mainOpacity}
                   />
-                  <circle cx={x1} cy={y1} r={isHovered ? 3.5 : 2} style={{ fill: stroke }} opacity={isHovered ? 1 : 0.7} />
-                  <circle cx={x2} cy={y2} r={isHovered ? 3.5 : 2} style={{ fill: stroke }} opacity={isHovered ? 1 : 0.7} />
+                  <circle cx={x1} cy={y1} r={dotR} style={{ fill: stroke }} opacity={dotOpacity} />
+                  <circle cx={x2} cy={y2} r={dotR} style={{ fill: stroke }} opacity={dotOpacity} />
                 </g>
               )
             })}
@@ -327,41 +337,54 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
                         onMouseEnter={() => bridgeKey && setHoveredKey(bridgeKey)}
                         onMouseLeave={() => setHoveredKey(null)}
                       >
-                        <title>{seat.name}</title>
-                        {isBridged && (
-                          <rect
-                            x={colX}
-                            y={rowY - 11}
-                            width={3}
-                            height={14}
-                            style={{ fill: tickColor }}
-                            opacity={isHovered ? 1 : 0.85}
-                          />
+                        <title>
+                          {isBridged ? seat.name : `${seat.name} · ${formatCompactMXN(seat.totalMxn)}`}
+                        </title>
+                        {isBridged ? (
+                          <>
+                            {/* Survivor — full-height tick + promoted two-line label. */}
+                            <rect
+                              x={colX}
+                              y={rowY - 13}
+                              width={3}
+                              height={26}
+                              style={{ fill: tickColor }}
+                              opacity={isHovered ? 1 : 0.85}
+                            />
+                            <text
+                              x={colX + 6}
+                              y={rowY - 3}
+                              fontFamily={MONO_DATA}
+                              fontSize={11}
+                              style={{ fontWeight: 700, fill: 'var(--color-text-primary)' }}
+                            >
+                              {formatVendorName(seat.name, 19)}
+                              {showDagger && (
+                                <tspan dy={-4} fontSize={7}>†</tspan>
+                              )}
+                            </text>
+                            <text
+                              x={colX + 6}
+                              y={rowY + 10}
+                              fontFamily={MONO_DATA}
+                              fontSize={9.5}
+                              style={{ fill: 'var(--color-text-secondary)' }}
+                            >
+                              {formatCompactMXN(seat.totalMxn)}
+                            </text>
+                          </>
+                        ) : (
+                          /* Non-survivor — muted single name line; amount lives in the title. */
+                          <text
+                            x={colX + 6}
+                            y={rowY + 2}
+                            fontFamily={MONO_DATA}
+                            fontSize={10}
+                            style={{ fontWeight: 400, fill: 'var(--color-text-muted)', opacity: 0.5 }}
+                          >
+                            {formatVendorName(seat.name, 20)}
+                          </text>
                         )}
-                        <text
-                          x={colX + 6}
-                          y={rowY - 3}
-                          fontFamily={MONO_DATA}
-                          fontSize={12}
-                          style={{
-                            fontWeight: isBridged ? 600 : 400,
-                            fill: isBridged ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-                          }}
-                        >
-                          {formatVendorName(seat.name, 22)}
-                          {showDagger && (
-                            <tspan dy={-4} fontSize={7}>†</tspan>
-                          )}
-                        </text>
-                        <text
-                          x={colX + 6}
-                          y={rowY + 10}
-                          fontFamily={MONO_DATA}
-                          fontSize={13}
-                          style={{ fill: 'var(--color-text-muted)' }}
-                        >
-                          {formatCompactMXN(seat.totalMxn)}
-                        </text>
                       </g>
                     )
                   })}
@@ -391,6 +414,13 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
             )
           })}
         </ul>
+
+        {/* Legend — desktop only, directly under the plate. */}
+        <p className="mt-2 text-text-muted" style={{ fontFamily: MONO_ARCHIVAL, fontSize: 9 }}>
+          {isEs
+            ? '— ocre = sobrevive un cambio de partido · gris = mismo partido'
+            : '— ochre = survives a change of party · grey = same party'}
+        </p>
       </div>
 
       {/* Mobile — computed bridge cards, same data as the slope chart. */}
