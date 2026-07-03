@@ -665,27 +665,36 @@ export function StoryFilm({ film, lang, onOpenFull }: { film: FilmDef; lang: Lan
       const sid = setTimeout(advance, b.durationMs)
       return () => clearTimeout(sid)
     }
-    let cancelled = false
+    let cancelled = false, advanced = false
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null
     duckMusic(true)
-    const finish = () => { if (!cancelled) { duckMusic(false); setTimeout(advance, 550) } }
-    const speakFallback = () => {
+    const doAdvance = () => { if (!cancelled && !advanced) { advanced = true; duckMusic(false); advance() } }
+    // When a real VO clip is present it plays to the end and drives pacing. When it
+    // is missing (e.g. el-registro before neural VO is regenerated), pace on the
+    // beat's durationMs and let browser-TTS narrate UNDERNEATH — its end/error events
+    // are unreliable (they can fire instantly) and must never race the film.
+    const useFallback = () => {
+      if (cancelled || fallbackTimer) return
+      fallbackTimer = setTimeout(doAdvance, b.durationMs)
       try {
-        const synth = window.speechSynthesis; if (!synth) { finish(); return }
-        synth.cancel()
-        const u = new SpeechSynthesisUtterance(b.caption[lang])
-        u.lang = lang === 'es' ? 'es-MX' : 'en-US'; u.rate = 0.95
-        u.onend = finish; u.onerror = finish
-        synth.speak(u)
-      } catch { finish() }
+        const synth = window.speechSynthesis
+        if (synth) {
+          synth.cancel()
+          const u = new SpeechSynthesisUtterance(b.caption[lang])
+          u.lang = lang === 'es' ? 'es-MX' : 'en-US'; u.rate = 0.95
+          synth.speak(u)
+        }
+      } catch { /* subtitles carry it; the timer paces */ }
     }
     const a = new Audio(); audioRef.current = a
     a.src = `/gallery-vo/${film.slug}/${lang}/${b.id}.mp3`
-    a.onended = finish
-    a.onerror = () => { if (!cancelled) speakFallback() }
+    a.onended = () => { if (!cancelled) { duckMusic(false); setTimeout(doAdvance, 400) } }
+    a.onerror = useFallback
     const p = a.play()
-    if (p && p.catch) p.catch(() => { if (!cancelled) speakFallback() })
+    if (p && p.catch) p.catch(useFallback)
     return () => {
       cancelled = true
+      if (fallbackTimer) clearTimeout(fallbackTimer)
       try { a.pause() } catch { /* */ }
       try { window.speechSynthesis?.cancel() } catch { /* */ }
     }
