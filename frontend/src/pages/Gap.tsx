@@ -853,6 +853,23 @@ export default function Gap() {
         </div>
       )}
 
+      {/* ── the vendor blind spot — the honest limit of OCR recovery ── */}
+      {summary && summary.available && (
+        <div className="border border-border rounded-sm bg-surface p-4 flex items-start gap-3">
+          <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-text-muted" />
+          <div className="space-y-1">
+            <div className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono">
+              {lang === 'es' ? 'Lo que esta recuperación puede mostrar — y lo que no' : 'What this recovery can show — and can’t'}
+            </div>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              {lang === 'es'
+                ? <>Los registros recuperados nombran de forma confiable al <strong className="text-text-primary font-semibold">comprador</strong> (la institución), el <strong className="text-text-primary font-semibold">sector</strong>, la <strong className="text-text-primary font-semibold">excepción legal</strong> invocada y la <strong className="text-text-primary font-semibold">escala</strong>. No nombran de forma confiable al <strong className="text-text-primary font-semibold">vendedor</strong>: los PDF de fallo no separan limpiamente los nombres de proveedores, así que las identidades de proveedor del registro de abajo son recuperadas por OCR y parciales. Lea esta página por el patrón institucional —quién compró, cómo y bajo qué regla— no como un padrón de proveedores.</>
+                : <>The recovered records reliably name the <strong className="text-text-primary font-semibold">buyer</strong> (the institution), the <strong className="text-text-primary font-semibold">sector</strong>, the <strong className="text-text-primary font-semibold">legal exception</strong> invoked, and the <strong className="text-text-primary font-semibold">scale</strong>. They do not reliably name the <strong className="text-text-primary font-semibold">seller</strong>: the source award PDFs don’t cleanly separate vendor names, so the vendor identities in the register below are OCR-recovered and partial. Read this page for the institutional pattern — who bought, how, and under what rule — not as a vendor ledger.</>}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── register section ── */}
       <div className="space-y-4">
         <div className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono">
