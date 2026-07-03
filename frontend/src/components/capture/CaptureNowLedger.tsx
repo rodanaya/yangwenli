@@ -112,7 +112,7 @@ export function CaptureNowLedger({
       </div>
 
       <div className="overflow-x-auto rounded-sm border border-border bg-background-card">
-        <table className="w-full text-[13px]" style={{ minWidth: 640 }}>
+        <table className="w-full text-[13px]" style={{ minWidth: 720 }}>
           <thead>
             <tr className="border-b border-border font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
               <th className="px-3 py-2 text-left w-8">#</th>
@@ -132,15 +132,15 @@ export function CaptureNowLedger({
                     {String(i + 1).padStart(3, '0')}
                   </td>
                   <td className="px-3 py-2">
-                    <span className="inline-flex items-center gap-1.5 max-w-[220px]">
+                    <span className="inline-flex items-center gap-1.5 max-w-[300px]">
                       {sector && (
                         <span className="inline-block h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: SECTOR_COLORS[sector.code] }} aria-hidden="true" />
                       )}
-                      <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="xs" className="min-w-0" />
+                      <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="sm" className="min-w-0" />
                     </span>
                   </td>
                   <td className="px-3 py-2">
-                    <EntityIdentityChip type="vendor" id={r.top1_vendor_id} name={r.top1_vendor_name} size="xs" className="max-w-[200px]" />
+                    <EntityIdentityChip type="vendor" id={r.top1_vendor_id} name={r.top1_vendor_name} size="sm" className="max-w-[260px]" />
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     <span className="inline-flex items-center gap-2">
@@ -156,7 +156,7 @@ export function CaptureNowLedger({
                       <>
                         {Math.round(r.latest_hhi).toLocaleString()}
                         {r.latest_hhi >= HHI_CONCENTRATED && (
-                          <span className="ml-1.5 text-[8.5px] uppercase tracking-wider" style={{ color: 'var(--color-risk-critical)' }}>
+                          <span className="ml-1.5 text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-risk-critical)' }}>
                             conc.
                           </span>
                         )}

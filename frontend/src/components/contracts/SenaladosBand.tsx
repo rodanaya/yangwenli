@@ -179,7 +179,7 @@ function SenaladoEntry({
       onClick={go}
       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); go() } }}
       aria-label={lang === 'es' ? `Abrir expediente: ${title}` : `Open dossier: ${title}`}
-      className="group grid cursor-pointer grid-cols-[auto_1fr_auto] items-start gap-x-4 gap-y-1.5 border-b border-border/60 px-1 py-3 transition-colors last:border-b-0 hover:bg-background-elevated/40"
+      className="group grid cursor-pointer grid-cols-[auto_1fr_auto] items-start gap-x-4 gap-y-1 border-b border-border/60 px-1 py-2.5 transition-colors last:border-b-0 hover:bg-background-elevated/40"
     >
       <span className="pt-0.5 font-mono text-[13px] tabular-nums text-text-muted">
         {String(rank).padStart(2, '0')}
@@ -189,7 +189,7 @@ function SenaladoEntry({
         <p className="truncate text-sm font-medium text-text-primary group-hover:text-accent" title={title}>
           {title}
         </p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
           {contract.vendor_id ? (
             <span onClick={(e) => e.stopPropagation()}>
               <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || ''} size="xs" />
@@ -219,13 +219,13 @@ function SenaladoEntry({
             <span className="font-mono tabular-nums">· {contract.contract_date.slice(0, 7)}</span>
           )}
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <CaseSeal contract={contract} lang={lang} />
           <WhyFlags contract={contract} lang={lang} max={2} />
         </div>
       </div>
 
-      <div className="flex flex-col items-end gap-1.5 text-right">
+      <div className="flex flex-col items-end gap-1 text-right">
         <span className="font-mono text-sm font-semibold tabular-nums text-text-primary">
           {formatCompactMXN(contract.amount_mxn)}
         </span>
@@ -260,7 +260,7 @@ export function SenaladosBand({
       className="rounded-sm border border-border bg-background-card"
       aria-label={t('senalados.kicker', 'The flagged')}
     >
-      <header className="flex items-baseline justify-between gap-3 border-b border-border/60 px-4 py-2.5">
+      <header className="flex items-baseline justify-between gap-3 border-b border-border/60 px-4 py-2">
         <div className="flex items-baseline gap-2">
           <ScrollText className="h-3.5 w-3.5 self-center text-risk-high" aria-hidden="true" />
           <h2 className="font-mono text-[13px] font-semibold uppercase tracking-[0.16em] text-text-primary">

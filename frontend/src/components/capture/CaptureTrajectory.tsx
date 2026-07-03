@@ -135,7 +135,7 @@ export function CaptureTrajectory({
           x={x(yr)}
           y={PLOT_H + (isLead ? 14 : 9)}
           textAnchor="middle"
-          fontSize={isLead ? 9 : 8}
+          fontSize={9}
           fontFamily="JetBrains Mono, monospace"
           fill="var(--color-text-muted)"
         >
@@ -148,7 +148,7 @@ export function CaptureTrajectory({
           x={x(crossYear)}
           y={y(ceil) - 4}
           textAnchor="middle"
-          fontSize={isLead ? 10 : 7.5}
+          fontSize={isLead ? 10 : 9}
           fontFamily="JetBrains Mono, monospace"
           fontWeight={700}
           fill={RED}

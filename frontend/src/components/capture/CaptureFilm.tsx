@@ -93,11 +93,11 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
   const keyOf = (c: CaptureItem) => `${c.institution_id}-${c.vendor_id}`
 
   return (
-    <section id="la-pelicula" aria-labelledby="pelicula-heading" className="mt-12">
+    <section id="la-pelicula" aria-labelledby="pelicula-heading" className="mt-8">
       {/* ── §B′ Exhibit A — the documented climber, shown intimately ── */}
       {lead && (
-        <div className="mb-10">
-          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+        <div className="mb-8">
+          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
             {lang === 'en' ? '§ Exhibit A' : '§ Prueba A'}
           </p>
           <LeadExhibit
@@ -125,7 +125,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
       </p>
       {/* Standfirst — the legal-honesty sentence (frozen contract, kept once) */}
       <p
-        className="mb-3"
+        className="mb-2"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'normal',
@@ -138,14 +138,14 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
           ? 'Institutional capture is not proof of wrongdoing. Some legitimate concentrations emerge from technical certification, regional exclusivity, or single-source regulatory dependency. Each line warrants investigation — not accusation.'
           : 'La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada línea merece investigación — no acusación.'}
       </p>
-      <p className="mb-4 font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
+      <p className="mb-3 font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
         {lang === 'en'
           ? `dashed line = the ${ceil}% capture ceiling · zinc below · red above`
           : `línea punteada = el techo de captura del ${ceil}% · zinc abajo · rojo arriba`}
       </p>
 
       {/* Sort control */}
-      <div className="flex items-center gap-3 mb-4 overflow-x-auto">
+      <div className="flex items-center gap-3 mb-3 overflow-x-auto">
         <span className="text-[12px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted flex-shrink-0">
           {lang === 'en' ? 'Order' : 'Ordenar'}
         </span>
@@ -206,7 +206,7 @@ function CrossSeal({ c, lang }: { c: CaptureItem; lang: 'en' | 'es' }) {
       {badges.map((b) => (
         <span
           key={b.t}
-          className="font-mono text-[8px] uppercase tracking-[0.1em] px-1 py-0.5 rounded-[2px]"
+          className="font-mono text-[10px] uppercase tracking-[0.1em] px-1 py-0.5 rounded-[2px]"
           style={{ color: b.color, border: `1px solid ${b.color}`, opacity: 0.9 }}
         >
           {b.t}
@@ -242,14 +242,14 @@ function FacetRow({
 }) {
   if (rows.length === 0) return null
   return (
-    <div className="mb-8">
-      <div className="flex items-baseline gap-2 mb-3">
+    <div className="mb-6">
+      <div className="flex items-baseline gap-2 mb-2">
         <h3 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-text-secondary">
           {title}
         </h3>
         <span className="font-mono text-[13px] uppercase tracking-[0.1em] text-text-muted">· {sub}</span>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-4">
         {rows.map((c) => {
           const expanded = openKey === keyOf(c)
           const delta = c.peak_share_pct - c.earliest_share_pct
@@ -285,7 +285,7 @@ function FacetRow({
                     lang={lang}
                   />
                 </div>
-                <div className="mt-1.5 flex items-center gap-1 flex-wrap">
+                <div className="mt-1 flex items-center gap-1 flex-wrap">
                   <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" className="max-w-full" />
                 </div>
                 <div className="flex items-center gap-1 flex-wrap mt-0.5">
@@ -294,7 +294,7 @@ function FacetRow({
                   </span>
                   <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="xs" className="min-w-0" />
                 </div>
-                <p className="mt-1 font-mono text-[13px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
+                <p className="mt-0.5 font-mono text-[13px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
                   <span>+{delta.toFixed(0)}pp</span>
                   <span>·</span>
                   <span>{formatCompactMXN(c.cumulative_value_mxn)}</span>
