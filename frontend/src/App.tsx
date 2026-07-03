@@ -95,6 +95,7 @@ const PatternDossier = lazy(() => import('@/pages/PatternDossier'))
 const PatternConstellation = lazy(() => import('@/pages/PatternConstellation'))
 const AtlasStoryPlayer = lazy(() => import('@/pages/AtlasStoryPlayer'))
 const Gallery = lazy(() => import('@/pages/Gallery'))
+const Press = lazy(() => import('@/pages/Press'))
 
 // Redirect /sector/:id → /sectors/:id (singular alias)
 function SectorRedirect() {
@@ -390,6 +391,15 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<SectorsSkeleton />}>
                     <Sectors />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route path="prensa" element={<Navigate to="/press" replace />} />
+              <Route
+                path="press"
+                element={
+                  <SuspenseBoundary fallback={<div className="p-8" />}>
+                    <Press />
                   </SuspenseBoundary>
                 }
               />

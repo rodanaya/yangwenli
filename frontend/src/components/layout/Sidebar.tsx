@@ -21,6 +21,7 @@ import {
   GitCompareArrows,
   Newspaper,
   Clapperboard,
+  Megaphone,
   Sparkles,
   Tag,
   Archive,
@@ -119,6 +120,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.platform',
     items: [
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
+      { i18nKey: 'press', href: '/press', icon: Megaphone },
     ],
   },
 ]
