@@ -12,7 +12,7 @@
  * NOTE: flags are computed over WHATEVER set is passed (a page or a population).
  * Callers should label the scope honestly.
  */
-import { shortenContractName } from '@/lib/utils'
+import { shortenContractName, stripEncodingArtifacts } from '@/lib/utils'
 
 export type ContractLike = {
   id: number
@@ -25,7 +25,7 @@ export type ContractLike = {
 }
 
 export function cleanContractDescription(raw: string): { objeto: string | null; expediente: string | null } {
-  const s = (raw ?? '')
+  const s = stripEncodingArtifacts(raw ?? '')
     // Strip Excel/CSV escape artifacts (_x000D_ = CR, _x000A_ = LF, etc.) that
     // leak into ~3.6K COMPRANET titles, plus any stray control chars, before
     // tokenising — otherwise they cling to words ("México:_x000D_ Paquete").

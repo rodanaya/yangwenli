@@ -19,7 +19,7 @@ import type {
   ContractRiskBreakdownResponse,
 } from '@/api/types'
 import { RISK_COLORS } from './constants'
-import { formatDualCurrency } from './utils'
+import { formatDualCurrency, stripEncodingArtifacts } from './utils'
 import { formatEntityName } from './entity/format'
 
 // ── Procedure type ──────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ export function localizeProcedure(
 
 export function sanitizeContractText(s: string | null | undefined): string {
   if (!s) return ''
-  return s
+  return stripEncodingArtifacts(s)
     .replace(/_x000[DA]_|&#x000[DA];/gi, ' ')
     .replace(/\s+/g, ' ')
     .replace(/^[\s:"'“”·—–-]+/, '')

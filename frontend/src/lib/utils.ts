@@ -517,9 +517,20 @@ const INSTITUTION_ABBREVS: Record<string, string> = {
   'BANCO NACIONAL DE OBRAS Y SERVICIOS PÚBLICOS': 'BANOBRAS',
 }
 
+/**
+ * ~4.6% of pre-2010 COMPRANET contract titles (source_structure A/B) have every
+ * accented vowel collapsed into a single garbage byte at original ingestion —
+ * "ý" never legitimately appears in Spanish, so stripping it is safe wherever
+ * contract text is displayed. Not recoverable: distinct source characters
+ * (ó/á/é/ª) all map to the same byte, so there's no correct letter to restore.
+ */
+export function stripEncodingArtifacts(s: string): string {
+  return s.replace(/[ýÝ]/g, '')
+}
+
 export function shortenContractName(name: string, maxChars = 80): string {
   if (!name) return ''
-  let s = name.toUpperCase()
+  let s = stripEncodingArtifacts(name).toUpperCase()
   for (const prefix of CONTRACT_STRIP_PREFIXES) {
     if (s.startsWith(prefix)) { s = s.slice(prefix.length); break }
   }
