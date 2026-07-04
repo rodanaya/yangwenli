@@ -303,7 +303,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
   // ── callouts: NEEDLES ONLY (the surprising hot-tail finding). Head columns
   //    are named IN-COLUMN below, so nothing floats over the fat left slabs. ──
   const calloutSources = useMemo(() => {
-    const needleCap = isMobile ? 2 : 5
+    const needleCap = isMobile ? 2 : 3
     const out: CalloutSrc[] = []
     for (const n of needles.slice(0, needleCap)) {
       const w = Math.max(MIN_NEEDLE_PX, x(n.sharePct) - 1)
