@@ -159,6 +159,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                           id={s.vendor_id}
                           name={s.vendor_name}
                           size="sm"
+                          fullName
                           hideIcon
                         />
                       </span>

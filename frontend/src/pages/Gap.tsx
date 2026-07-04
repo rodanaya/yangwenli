@@ -367,7 +367,7 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
                 )}
               </td>
               <td className="px-3 py-2.5 align-top">
-                <div className="font-medium text-text-primary leading-snug line-clamp-3 text-xs" title={item.title || undefined}>
+                <div className="font-medium text-text-primary leading-snug text-xs">
                   {item.title || <span className="text-text-muted">—</span>}
                 </div>
                 {item.publication_date && (

@@ -487,7 +487,7 @@ export function SectorModelLadder({
             const barPct = (Math.abs(c.coefficient) / maxAbs) * 100
             return (
               <div key={c.feature} className="flex items-center gap-3">
-                <span className="font-mono truncate shrink-0 w-28 sm:w-40" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>{featureLabel(c.feature, lang)}</span>
+                <span className="font-mono shrink-0 w-28 sm:w-40 leading-tight" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>{featureLabel(c.feature, lang)}</span>
                 <SignedBar pct={barPct} positive={positive} color={color} />
                 <span className="font-mono tabular-nums shrink-0 w-12 text-right" style={{ fontSize: 13, fontWeight: 600, color }}>{sign}{c.coefficient.toFixed(2)}</span>
               </div>
