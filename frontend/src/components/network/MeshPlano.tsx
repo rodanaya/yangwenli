@@ -121,7 +121,7 @@ export function MeshPlano({ communities, totalCommunities, selectedId, onSelect,
     const annotations: { mark: PlacedMark; label: string }[] = []
     for (const m of candidates) {
       if (annotations.length >= cap) break
-      const label = `C-${m.community_id} · ${formatEntityName('vendor', m.hub_vendor_name, 'xs')}`
+      const label = `C-${m.community_id} · ${formatEntityName('vendor', m.hub_vendor_name, 'sm')}`
       const w = label.length * CH_W
       const cx = m.cx
       const cy = m.cy - m.side / 2 - 10

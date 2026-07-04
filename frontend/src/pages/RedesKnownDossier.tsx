@@ -67,7 +67,9 @@ function readPins(): number[] {
 function clusterLabel(c: CommunityIndexItem, isEs: boolean): { code: string; orbit: string } {
   return {
     code: `C-${c.community_id}`,
-    orbit: `${isEs ? 'órbita de' : 'orbit of'} ${formatEntityName('vendor', c.hub_vendor_name, 'md')}`,
+    // 'full' (no char cut) — the 2-line clamp on the row governs overflow, so
+    // long hub names read as far as the row allows instead of a double "…".
+    orbit: `${isEs ? 'órbita de' : 'orbit of'} ${formatEntityName('vendor', c.hub_vendor_name, 'full')}`,
   }
 }
 
@@ -1027,32 +1029,6 @@ export default function RedesKnownDossier() {
                     lang={lang}
                   />
                 </PlateFrame>
-
-                {/* El acta del nudo — the cluster read as a prosecutable case */}
-                {effectiveCommItem && (
-                  <div className="mt-4">
-                    <ClusterActa
-                      community={effectiveCommItem}
-                      graph={graph}
-                      meshMedianRisk={meshMedianRisk}
-                      besiegedBuyers={besiegedBuyers}
-                      selectedVendorId={selectedVendor}
-                      onViewVendorRing={(vid) => {
-                        const next = new URLSearchParams(searchParams)
-                        next.set('vendor', String(vid))
-                        if (effectiveComm != null) next.set('comm', String(effectiveComm))
-                        setSearchParams(next)
-                      }}
-                      onOpenBuyerSiege={(instId) => {
-                        setLens('institutions')
-                        setInstId(instId)
-                        setSelectedVendor(null)
-                        setQuery('')
-                      }}
-                      lang={lang}
-                    />
-                  </div>
-                )}
               </>
             )}
             {lens === 'clusters' && !graph && !graphLoading && !graphError && !indexLoading && (
@@ -1102,8 +1078,43 @@ export default function RedesKnownDossier() {
                   />
                 </PlateFrame>
 
-                {/* Siege dossier */}
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ── The dossier — full-width band. Lifted out of the instrument's
+            right column so the charge sheet / siege reads at full page width
+            instead of being squeezed beside the plate; this also balances the
+            instrument row so the sticky index rail no longer strands a lone
+            card above a tall empty void. ── */}
+        {lens === 'clusters' && graph && !graphLoading && effectiveCommItem && (
+          <div className="mt-6">
+            <ClusterActa
+              community={effectiveCommItem}
+              graph={graph}
+              meshMedianRisk={meshMedianRisk}
+              besiegedBuyers={besiegedBuyers}
+              selectedVendorId={selectedVendor}
+              onViewVendorRing={(vid) => {
+                const next = new URLSearchParams(searchParams)
+                next.set('vendor', String(vid))
+                if (effectiveComm != null) next.set('comm', String(effectiveComm))
+                setSearchParams(next)
+              }}
+              onOpenBuyerSiege={(instId) => {
+                setLens('institutions')
+                setInstId(instId)
+                setSelectedVendor(null)
+                setQuery('')
+              }}
+              lang={lang}
+            />
+          </div>
+        )}
+        {lens === 'institutions' && star && !starLoading && (
+          <div className="mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div
                     className="rounded-sm border border-border bg-background-card px-4 py-3.5"
                     style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
@@ -1269,10 +1280,8 @@ export default function RedesKnownDossier() {
                     )}
                   </div>
                 </div>
-              </>
-            )}
           </div>
-        </div>
+        )}
 
         {/* ── Methodology footer ───────────────────────────────────── */}
         <div className="mt-8 rounded-sm border border-border bg-background-card px-5 py-4">

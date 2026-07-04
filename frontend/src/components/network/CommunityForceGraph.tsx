@@ -136,9 +136,10 @@ export function CommunityForceGraph({
     // Named-outlier callouts (NYT Upshot, greedy non-overlap): top-5 by pagerank,
     // each accepted only if its label box clears every already-placed box (AABB).
     // x/y/r are final + clamped here, so placement is exact and runs once per
-    // community (no per-frame cost, no #301). 'xs' (16) labels stay short BY
-    // DESIGN — widening to sm/md re-triggers the collision this pass resolves;
-    // the full name is one hover away in the dossier card.
+    // community (no per-frame cost, no #301). Labels render 'sm' (24) so hub
+    // names read closer to full ("Nabors Perforaciones", not "Nabors Perfora…");
+    // the AABB pass silently drops any that would collide (no overlap, just
+    // fewer labels), and every actor's full name is in the roster below.
     const CH_W = 6.2   // ~9.5px mono advance + 0.04em tracking + stroke halo
     const LABEL_H = 13 // cap-height + the 3px paint-order stroke halo
     const PAD = 2
@@ -146,7 +147,7 @@ export function CommunityForceGraph({
     const placedBoxes: { x0: number; y0: number; x1: number; y1: number }[] = []
     const labeledIds = new Set<number>()
     for (const n of candidates) {
-      const txt = formatEntityName('vendor', n.node.name, 'xs')
+      const txt = formatEntityName('vendor', n.node.name, 'sm')
       const w = txt.length * CH_W
       const cx = n.x as number
       const cy = (n.y as number) - n.r - 6
@@ -279,7 +280,7 @@ export function CommunityForceGraph({
                   strokeWidth: 3,
                 }}
               >
-                {formatEntityName('vendor', n.node.name, 'xs')}
+                {formatEntityName('vendor', n.node.name, 'sm')}
               </text>
             ))}
         </g>
