@@ -83,8 +83,8 @@ export function FeatureSection({
   children: React.ReactNode
 }) {
   return (
-    <section id={id} className="py-10" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <div className="flex items-baseline justify-between gap-4 mb-6">
+    <section id={id} className="py-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <div className="flex items-baseline justify-between gap-4 mb-4">
         <p
           className="font-mono"
           style={{
@@ -185,7 +185,7 @@ export function SeverityScale({
         : `Severity ${severity} of ${SEVERITY_MAX} — ${graver} of ${total} documented cases are graver.`
 
   return (
-    <div className="mt-6">
+    <div className="mt-5">
       <div
         className="flex w-full"
         style={{ height: 16, gap: 2 }}

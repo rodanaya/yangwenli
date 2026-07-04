@@ -209,10 +209,10 @@ export function ScaleBlock({
     <div
       style={{
         border: `1px solid ${sectorAccent}55`,
-        padding: '32px 48px',
+        padding: '22px 36px',
         background: `${sectorAccent}06`,
         textAlign: 'center',
-        minWidth: 280,
+        minWidth: 240,
         maxWidth: 480,
       }}
     >
@@ -232,7 +232,7 @@ export function ScaleBlock({
       </div>
       <div
         aria-hidden="true"
-        className="mx-auto my-4"
+        className="mx-auto my-2.5"
         style={{ height: 1, width: 60, background: `${sectorAccent}55` }}
       />
       <div

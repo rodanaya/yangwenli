@@ -133,9 +133,9 @@ function CaseHero({
   return (
     <header className="relative">
       <div aria-hidden="true" className="absolute left-0 right-0" style={{ top: 0, height: 6, background: sectorAccent }} />
-      <div className="pt-12 pb-8">
+      <div className="pt-8 pb-5">
         {/* Index strip */}
-        <div className="flex items-baseline justify-between gap-4 mb-5">
+        <div className="flex items-baseline justify-between gap-4 mb-4">
           <div
             className="font-mono tabular-nums uppercase"
             style={{ fontSize: 13, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 500 }}
@@ -185,7 +185,7 @@ function CaseHero({
         </h1>
 
         {/* Meta strip */}
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
           <DispositionSeal status={scandal.legal_status} lang={lang} size="md" />
           <span
             className="font-mono uppercase"
@@ -227,8 +227,8 @@ function CaseHero({
 function ProvenanceFooter({ lang }: { lang: Lang }) {
   const navigate = useNavigate()
   return (
-    <section id="methodology" className="py-12">
-      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 28, textAlign: 'center' }}>
+    <section id="methodology" className="py-8">
+      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 20, textAlign: 'center' }}>
         <p
           className="font-mono mb-3 uppercase"
           style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-muted)', fontWeight: 500 }}
@@ -265,7 +265,7 @@ function ActorList({ actors, lang }: { actors: KeyActor[]; lang: Lang }) {
     journalist: { en: 'Journalist', es: 'Periodista' },
   }
   return (
-    <ul className="space-y-3.5 list-none p-0 m-0 max-w-2xl">
+    <ul className="space-y-2.5 list-none p-0 m-0 max-w-2xl">
       {actors.map((actor, i) => (
         <li
           key={`${actor.name}-${i}`}
@@ -541,9 +541,9 @@ export default function CaseDossier() {
 
           <CaseHero scandal={scandal} lang={lang} sectorAccent={sectorAccent} sectorName={sectorName} />
 
-          <div className="lg:grid lg:grid-cols-[212px_minmax(0,1fr)] lg:gap-10 items-start">
+          <div className="lg:grid lg:grid-cols-[212px_minmax(0,1fr)] lg:gap-8 items-start">
             {/* Docket rail — sticky on desktop, stacked above on mobile */}
-            <div className="lg:sticky lg:top-6 mb-8 lg:mb-0">
+            <div className="lg:sticky lg:top-6 mb-6 lg:mb-0">
               <CaseDocketRail
                 scandal={scandal}
                 totalCases={allCases?.length ?? null}
@@ -623,7 +623,7 @@ export default function CaseDossier() {
                 lang={lang}
               >
                 {headlineAmount != null && (
-                  <div className="flex flex-wrap items-start gap-7">
+                  <div className="flex flex-wrap items-start gap-5">
                     <ScaleBlock
                       mxn={headlineAmount}
                       sectorAccent={scandal.legal_status === 'impunity' ? disposition.ink : sectorAccent}
@@ -664,7 +664,7 @@ export default function CaseDossier() {
 
                 {/* Legal status callout */}
                 <div
-                  className="mt-8"
+                  className="mt-6"
                   style={{ borderLeft: `3px solid ${disposition.ring ? 'var(--color-accent)' : disposition.fill}`, paddingLeft: 18 }}
                 >
                   <p

@@ -43,7 +43,7 @@ function RailLabel({ children }: { children: React.ReactNode }) {
 }
 
 function RailDivider() {
-  return <div aria-hidden="true" className="my-3 h-px" style={{ background: 'var(--color-border)' }} />
+  return <div aria-hidden="true" className="my-2 h-px" style={{ background: 'var(--color-border)' }} />
 }
 
 export function CaseDocketRail({
@@ -136,7 +136,7 @@ export function CaseDocketRail({
               {sectorName}
             </span>
           </p>
-          <div className="mt-3" />
+          <div className="mt-2" />
         </>
       )}
       <RailLabel>{lang === 'es' ? 'Tipo' : 'Type'}</RailLabel>
@@ -146,7 +146,7 @@ export function CaseDocketRail({
       >
         {fraudLabel(scandal.fraud_type, lang)}
       </p>
-      <div className="mt-3" />
+      <div className="mt-2" />
       <RailLabel>{lang === 'es' ? 'Sexenio' : 'Term'}</RailLabel>
       <p
         className="font-mono uppercase mt-1"
@@ -154,7 +154,7 @@ export function CaseDocketRail({
       >
         {sexenioLabel(scandal, lang)}
       </p>
-      <div className="mt-3" />
+      <div className="mt-2" />
       <RailLabel>{lang === 'es' ? 'Gravedad' : 'Severity'}</RailLabel>
       <div className="mt-1.5">
         <SeverityDots severity={scandal.severity} lang={lang} />
@@ -184,7 +184,7 @@ export function CaseDocketRail({
       </p>
       {scandal.ground_truth_case_id != null && (
         <>
-          <div className="mt-3" />
+          <div className="mt-2" />
           <p
             className="font-mono"
             style={{ fontSize: 13, letterSpacing: '0.16em', color: 'var(--color-accent)', fontWeight: 700 }}
@@ -253,7 +253,7 @@ export function MoneyBenchmark({
   const sector = sectorName ?? (lang === 'es' ? 'el sector' : 'the sector')
 
   return (
-    <div className="mt-7 max-w-xl">
+    <div className="mt-4 max-w-xl">
       <div className="space-y-2.5">
         <div>
           <div
@@ -331,7 +331,7 @@ export function CompranetVisibilityBanner({
   const vis = visibilityMeta(scandal.compranet_visibility)
   return (
     <div
-      className="mb-6"
+      className="mb-4"
       style={{
         borderLeft: '2px solid rgba(160,104,32,0.45)',
         paddingLeft: 14,
@@ -492,9 +492,9 @@ export function KeepReadingFooter({
       : 'Keep reading'
 
   return (
-    <section className="py-10" style={{ borderTop: '1px solid var(--color-border)' }}>
+    <section className="py-7" style={{ borderTop: '1px solid var(--color-border)' }}>
       <div
-        className="flex items-center gap-3 mb-4 font-mono uppercase"
+        className="flex items-center gap-3 mb-3 font-mono uppercase"
         style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
       >
         <span>{heading}</span>
@@ -539,7 +539,7 @@ export function KeepReadingFooter({
           )
         })}
       </ul>
-      <p className="mt-5 text-center">
+      <p className="mt-4 text-center">
         <Link
           to="/cases"
           className="font-mono uppercase hover:opacity-70 transition-opacity"
@@ -552,7 +552,7 @@ export function KeepReadingFooter({
       </p>
       {(allCases ?? []).filter((c) => c.legal_status === 'convicted').length === 1 && (
         <p
-          className="mt-6 text-center"
+          className="mt-4 text-center"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
             fontStyle: 'normal',
