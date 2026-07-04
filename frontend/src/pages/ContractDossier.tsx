@@ -20,11 +20,7 @@ import { useQuery } from '@tanstack/react-query'
 import { contractApi } from '@/api/client'
 import { AlertTriangle, ArrowLeft, Copy, Check, ExternalLink } from 'lucide-react'
 
-import {
-  ChapterShell,
-  SubheadRule,
-  FadeIn,
-} from '@/components/dossier/primitives'
+import { FadeIn } from '@/components/dossier/primitives'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -32,7 +28,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DossierSectionHeader } from '@/components/dossier/DossierSectionHeader'
 import { ActaLedger } from '@/components/contract/ActaLedger'
 import { RelationSection, getRelationSectionMeta } from '@/components/contract/RelationSection'
-import { localizeProcedure, describeContractFactor } from '@/lib/contract-format'
+import { localizeProcedure, describeContractFactor, buildChargeLine, sanitizeContractText } from '@/lib/contract-format'
 import { formatEntityName } from '@/lib/entity/format'
 import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD } from '@/lib/utils'
@@ -45,69 +41,6 @@ function localizeLevel(level: 'critical' | 'high' | 'medium' | 'low', lang: 'en'
     : level === 'high' ? 'ALTO'
     : level === 'medium' ? 'MEDIO'
     : 'BAJO'
-}
-
-function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
-  const navigate = useNavigate()
-  return (
-    <section id="methodology" className="py-16 px-4 sm:px-8 max-w-4xl mx-auto">
-      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 32, textAlign: 'center' }}>
-        <p
-          className="font-mono mb-3"
-          style={{
-            fontSize: 12,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-muted)',
-            fontWeight: 500,
-          }}
-        >
-          § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
-        </p>
-        <p
-          style={{
-            fontFamily: '"EB Garamond", Georgia, serif',
-            fontStyle: 'normal',
-            fontSize: 14,
-            color: 'var(--color-text-secondary)',
-            maxWidth: '64ch',
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}
-        >
-          {lang === 'es'
-            ? 'Datos COMPRANET 2002–2025. La puntuación de riesgo y sus factores provienen del modelo v0.8.5; son indicadores estadísticos, no determinaciones legales.'
-            : 'COMPRANET data 2002–2025. The risk score and its factors come from the v0.8.5 model; they are statistical indicators, not legal determinations.'}
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/methodology')}
-          className="mt-4 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-          style={{
-            fontSize: 12,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-secondary)',
-            background: 'none',
-            border: 'none',
-          }}
-        >
-          {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
-        </button>
-      </div>
-    </section>
-  )
-}
-
-function ChapterDivider({ sectorAccent }: { sectorAccent?: string }) {
-  const color = sectorAccent ?? 'var(--color-border)'
-  return (
-    <div className="flex items-center justify-center gap-4 py-12">
-      <div className="h-px w-24" style={{ background: 'var(--color-border)' }} />
-      <div className="w-1.5 h-1.5 rounded-full" style={{ background: color, opacity: 0.5 }} />
-      <div className="h-px w-24" style={{ background: 'var(--color-border)' }} />
-    </div>
-  )
 }
 
 // ─── Main page ──────────────────────────────────────────────────────────────
@@ -217,6 +150,13 @@ export default function ContractDossier() {
   const objectionCount = riskBreakdown?.factors?.length ?? 0
   const relMeta = getRelationSectionMeta(context)
 
+  // Masthead: computed charge line (the finding), confidence interval, sanitized text.
+  const charge = buildChargeLine(contract, context, riskBreakdown, lang)
+  const ciLo = contract.risk_confidence_lower != null ? Math.round(Number(contract.risk_confidence_lower) * 100) : null
+  const ciHi = contract.risk_confidence_upper != null ? Math.round(Number(contract.risk_confidence_upper) * 100) : null
+  const hasCI = ciLo != null && ciHi != null
+  const cleanDesc = sanitizeContractText(contract.description ?? contract.title)
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {fromAria && (
@@ -236,7 +176,7 @@ export default function ContractDossier() {
           className="absolute left-0 right-0"
           style={{ top: 0, height: 6, background: sectorAccent }}
         />
-        <div className="pt-16 pb-12">
+        <div className="pt-10 pb-8">
           <div className="flex items-baseline justify-between gap-4 mb-7">
             <div
               className="font-mono tabular-nums"
@@ -277,19 +217,28 @@ export default function ContractDossier() {
               fontWeight: 500,
             }}
           >
-            § {lang === 'es' ? 'EL COTEJO · ACTA DE CONTRATO' : 'EL COTEJO · CONTRACT RECORD'}
+            § {lang === 'es' ? 'EL SUMARIO · ACTA DE CONTRATO' : 'EL SUMARIO · CONTRACT RECORD'}
           </div>
 
-          <div className="grid gap-6 lg:gap-10" style={{ gridTemplateColumns: 'minmax(0, 1fr) auto' }}>
+          {/* Fused masthead band — amount + verdict share one baseline (W5) */}
+          <div
+            className="grid gap-6 lg:gap-10 items-baseline"
+            style={{
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              borderTop: '1px solid var(--color-border)',
+              borderBottom: '1px solid var(--color-border)',
+              paddingTop: 20,
+              paddingBottom: 20,
+            }}
+          >
             <div className="min-w-0">
-              {/* Amount as the headline */}
               <h1
                 className="tabular-nums"
                 style={{
                   fontFamily: '"Playfair Display", Georgia, serif',
                   fontStyle: 'normal',
                   fontWeight: 800,
-                  fontSize: 'clamp(48px, 6vw, 72px)',
+                  fontSize: 'clamp(44px, 5.5vw, 64px)',
                   lineHeight: 1,
                   letterSpacing: '-0.025em',
                   color: verdictColor,
@@ -310,61 +259,38 @@ export default function ContractDossier() {
               >
                 ≈ {formatCompactUSD(Number(contract.amount_mxn ?? 0))} · {contract.contract_year ?? '—'}
               </div>
-
-              {/* Title in serif */}
-              {(contract.description ?? contract.title) && (
-                <p
-                  className="mt-4"
-                  style={{
-                    fontFamily: '"EB Garamond", Georgia, serif',
-                    fontStyle: 'normal',
-                    fontSize: 15,
-                    lineHeight: 1.5,
-                    color: 'var(--color-text-secondary)',
-                    borderLeft: `2px solid ${sectorAccent}`,
-                    paddingLeft: 14,
-                    maxWidth: '60ch',
-                  }}
-                >
-                  {(contract.description ?? contract.title)?.slice(0, 280)}
-                  {((contract.description ?? contract.title)?.length ?? 0) > 280 && '…'}
-                </p>
-              )}
             </div>
 
-            {/* Verdict card */}
-            <aside
-              className="flex-shrink-0 relative"
-              style={{ width: 168, paddingTop: 10, paddingBottom: 12, paddingLeft: 18, paddingRight: 18 }}
+            {/* Verdict cell — shares the band baseline, vertical divider */}
+            <div
+              className="flex-shrink-0"
+              style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: 24, minWidth: 132 }}
             >
-              <div aria-hidden="true" className="absolute top-0 left-0 right-0" style={{ height: 2, background: verdictColor }} />
-              <div className="text-center">
-                <div
-                  className="tabular-nums"
-                  style={{
-                    fontFamily: '"Playfair Display", Georgia, serif',
-                    fontStyle: 'normal',
-                    fontWeight: 800,
-                    fontSize: 52,
-                    lineHeight: 1,
-                    color: verdictColor,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {riskPct ?? '—'}
-                </div>
-                <div
-                  className="font-mono tabular-nums mt-1"
-                  style={{ fontSize: 12, color: 'var(--color-text-muted)', opacity: 0.55, letterSpacing: '0.06em' }}
-                >
-                  / 100
-                </div>
-              </div>
-              <div aria-hidden="true" className="my-3 mx-auto" style={{ height: 1, width: '60%', background: 'var(--color-border)' }} />
               <div
-                className="font-mono text-center"
+                className="tabular-nums"
+                style={{
+                  fontFamily: '"Playfair Display", Georgia, serif',
+                  fontStyle: 'normal',
+                  fontWeight: 800,
+                  fontSize: 44,
+                  lineHeight: 1,
+                  color: verdictColor,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {riskPct ?? '—'}
+                <span
+                  className="font-mono"
+                  style={{ fontSize: 12, fontWeight: 400, color: 'var(--color-text-muted)', opacity: 0.55, letterSpacing: '0.06em' }}
+                >
+                  {' '}/100
+                </span>
+              </div>
+              <div
+                className="font-mono"
                 style={{
                   fontSize: 12,
+                  marginTop: 6,
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
                   color: verdictColor,
@@ -375,32 +301,79 @@ export default function ContractDossier() {
                   ? (lang === 'es' ? 'Sin puntuación' : 'Not scored')
                   : (lang === 'es' ? localizeLevel(level, 'es') : level.toUpperCase())}
               </div>
-            </aside>
+              {hasCI && (
+                <div
+                  className="font-mono tabular-nums"
+                  style={{ fontSize: 10, marginTop: 4, color: 'var(--color-text-muted)', letterSpacing: '0.08em' }}
+                >
+                  {lang === 'es' ? 'IC' : 'CI'} {ciLo}–{ciHi}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div aria-hidden="true" className="mt-8" style={{ height: 1, background: 'var(--color-border)' }} />
-
-          {/* Lede */}
-          <div className="mt-10" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
+          {/* Charge line — the computed finding (W8), display size when high-stakes */}
+          {charge && (
             <p
+              className="tabular-nums"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
                 fontStyle: 'normal',
-                fontSize: 17,
-                lineHeight: 1.55,
-                color: 'var(--color-text-secondary)',
-                letterSpacing: '0.005em',
+                fontSize: charge.tier === 'routine' ? 16 : 'clamp(19px, 2.2vw, 26px)',
+                lineHeight: 1.3,
+                color: charge.tier === 'routine' ? 'var(--color-text-secondary)' : 'var(--color-text-primary)',
+                maxWidth: '48ch',
+                marginTop: 18,
+                borderLeft: `2px solid ${sectorAccent}`,
+                paddingLeft: 16,
               }}
             >
-              {lede}
+              {charge.text}
             </p>
-          </div>
+          )}
+
+          {/* Sanitized description (W4) — 2-line clamp */}
+          {cleanDesc && (
+            <p
+              className="mt-4"
+              style={{
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontStyle: 'normal',
+                fontSize: 14,
+                lineHeight: 1.5,
+                color: 'var(--color-text-secondary)',
+                maxWidth: '64ch',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {cleanDesc}
+            </p>
+          )}
+
+          {/* Lede deck — the transaction sentence, demoted below the charge */}
+          <p
+            className="mt-3"
+            style={{
+              fontFamily: '"EB Garamond", Georgia, serif',
+              fontStyle: 'normal',
+              fontSize: 15,
+              lineHeight: 1.55,
+              color: 'var(--color-text-secondary)',
+              maxWidth: '68ch',
+              letterSpacing: '0.005em',
+            }}
+          >
+            {lede}
+          </p>
         </div>
       </header>
 
-      {/* Remade body — «El Acta Anotada»: the annotated record (§1 acta) then
-          the relationship in time (§2 ribbon). Centered reading column. */}
-      <div className="mt-10 max-w-3xl mx-auto px-4 sm:px-8 space-y-10">
+      {/* Remade body — «El Sumario»: the annotated record (§1 acta) then
+          «La Prueba» pair-flow exhibit (§2). Reading column. */}
+      <div className="mt-10 max-w-4xl mx-auto px-4 sm:px-8 space-y-10">
 
         {/* §1 · EL ACTA — the contract as an annotated record: risk-model
             objections pinned in the margin beside the field they indict.
@@ -411,7 +384,7 @@ export default function ContractDossier() {
             <DossierSectionHeader
               id="acta"
               eyebrow={lang === 'es' ? 'Acta' : 'Record'}
-              title={lang === 'es' ? 'El acta, con objeciones al margen' : 'The record, with objections in the margin'}
+              title={lang === 'es' ? 'El acta, anotada línea por línea' : 'The record, annotated line by line'}
               meta={
                 objectionCount > 0
                   ? `${objectionCount} ${lang === 'es' ? 'objeciones' : 'objections'}`
@@ -431,8 +404,8 @@ export default function ContractDossier() {
             >
               {riskPct != null
                 ? (lang === 'es'
-                    ? `El modelo v0.8.5 lo marca en ${riskPct}/100 — las objeciones aparecen al margen del acta.`
-                    : `The v0.8.5 model rates it ${riskPct}/100 — its objections appear in the record's margin.`)
+                    ? `El modelo v0.8.5 lo marca en ${riskPct}/100 — las objeciones se anotan bajo la línea que señalan.`
+                    : `The v0.8.5 model rates it ${riskPct}/100 — its objections are noted beneath the line they flag.`)
                 : (lang === 'es'
                     ? 'Sin puntuación registrada para este contrato. El acta se presenta sin objeciones del modelo.'
                     : 'No recorded score for this contract. The record is presented without model objections.')}
@@ -484,58 +457,95 @@ export default function ContractDossier() {
 
       </div>
 
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      {/* § ADÓNDE IR — mandatory coda: investigate CTA + entity chips (charter §II / §IV #13) */}
-      <ChapterShell id="adonde-ir">
+      {/* § TERMINAL BAND — coda (adónde ir) + provenance fused into one band (W1/W7) */}
+      <section
+        id="adonde-ir"
+        className="max-w-4xl mx-auto px-4 sm:px-8"
+        style={{ borderTop: '1px solid var(--color-border)', marginTop: 40, paddingTop: 28, paddingBottom: 48 }}
+      >
         <FadeIn>
-          <SubheadRule label={lang === 'es' ? 'Adónde ir' : 'Where to go next'} />
-          <div className="mt-7 max-w-3xl mx-auto">
-            {/* Investigate CTA — amber, mono, uppercase */}
-            <Link
-              to="/aria"
-              state={{ from: '/contracts', vendorId: contract.vendor_id }}
-              className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
-              style={{ fontSize: 13, color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}
-              aria-label={lang === 'es' ? 'Ver al proveedor en la Lista de Vigilancia de ARIA' : 'See this vendor in the ARIA Watchlist'}
-            >
-              <ExternalLink className="w-3 h-3" aria-hidden="true" />
-              {lang === 'es' ? 'Ver proveedor en la Lista de Vigilancia' : 'See vendor in the Watchlist'} →
-            </Link>
+          <div className="grid gap-8 md:gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,44ch)]">
+            {/* Left — Adónde ir */}
+            <div>
+              <p
+                className="font-mono mb-4"
+                style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
+              >
+                § {lang === 'es' ? 'Adónde ir' : 'Where to go next'}
+              </p>
+              <Link
+                to="/aria"
+                state={{ from: '/contracts', vendorId: contract.vendor_id }}
+                className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+                style={{ fontSize: 13, color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}
+                aria-label={lang === 'es' ? 'Ver al proveedor en la Lista de Vigilancia de ARIA' : 'See this vendor in the ARIA Watchlist'}
+              >
+                <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                {lang === 'es' ? 'Ver proveedor en la Lista de Vigilancia' : 'See vendor in the Watchlist'} →
+              </Link>
 
-            {/* Related-entity chips — recomposed from already-fetched contract data */}
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              {contract.vendor_id && contract.vendor_name && (
-                <EntityIdentityChip
-                  type="vendor"
-                  id={contract.vendor_id}
-                  name={contract.vendor_name}
-                  riskScore={score > 0 ? score : null}
-                  sectorCode={sectorCode}
-                />
-              )}
-              {contract.institution_id && contract.institution_name && (
-                <EntityIdentityChip
-                  type="institution"
-                  id={contract.institution_id}
-                  name={contract.institution_name}
-                  sectorCode={sectorCode}
-                />
-              )}
-              {contract.sector_id != null && (sectorName ?? contract.sector_name) && (
-                <EntityIdentityChip
-                  type="sector"
-                  id={contract.sector_id}
-                  name={sectorName ?? contract.sector_name}
-                  sectorCode={sectorCode}
-                />
-              )}
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                {contract.vendor_id && contract.vendor_name && (
+                  <EntityIdentityChip
+                    type="vendor"
+                    id={contract.vendor_id}
+                    name={contract.vendor_name}
+                    riskScore={score > 0 ? score : null}
+                    sectorCode={sectorCode}
+                  />
+                )}
+                {contract.institution_id && contract.institution_name && (
+                  <EntityIdentityChip
+                    type="institution"
+                    id={contract.institution_id}
+                    name={contract.institution_name}
+                    sectorCode={sectorCode}
+                  />
+                )}
+                {contract.sector_id != null && (sectorName ?? contract.sector_name) && (
+                  <EntityIdentityChip
+                    type="sector"
+                    id={contract.sector_id}
+                    name={sectorName ?? contract.sector_name}
+                    sectorCode={sectorCode}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Right — Metodología y procedencia */}
+            <div id="methodology">
+              <p
+                className="font-mono mb-3"
+                style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
+              >
+                § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
+              </p>
+              <p
+                style={{
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  fontStyle: 'normal',
+                  fontSize: 14,
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: 1.6,
+                }}
+              >
+                {lang === 'es'
+                  ? 'Datos COMPRANET 2002–2025. La puntuación de riesgo y sus factores provienen del modelo v0.8.5; son indicadores estadísticos, no determinaciones legales.'
+                  : 'COMPRANET data 2002–2025. The risk score and its factors come from the v0.8.5 model; they are statistical indicators, not legal determinations.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/methodology')}
+                className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
+                style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: 0 }}
+              >
+                {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
+              </button>
             </div>
           </div>
         </FadeIn>
-      </ChapterShell>
-
-      <ProvenanceFooter lang={lang} />
+      </section>
     </div>
   )
 }

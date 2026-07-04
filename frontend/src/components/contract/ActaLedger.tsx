@@ -9,10 +9,12 @@
  * (severity ranking, factor localization, fallback basis, structural tags),
  * their geometry does not.
  *
- * Spec: contract-el-cotejo-fable-2026-07-02-spec.md §2.2, §3, §4.
- * Desktop: 3-column grid (label · value · margin), the margin rule running
- * the full acta height. Mobile (<768px): single column, label above value,
- * margin notes indented beneath their row.
+ * Spec: contract-dossier-2026-07-04 «El Sumario» §III (re-geometry). 2-column
+ * grid (label · value); objections interleave INSIDE the value cell, beneath
+ * the field they indict (ICIJ Pandora × ProPublica document-reader mechanic)
+ * — no fixed margin rail, zero dead space when a row carries no notes.
+ * Mobile (<768px): single column, label above value — annotations already
+ * live in the value flow, so no separate mobile geometry is needed.
  *
  * P6 (MonthBand): a rects+lines-only micro-strip on the FECHAS row — zero
  * <circle> anywhere in this file, per the platform's dot-grid ban.
@@ -113,44 +115,55 @@ function noteFromStructural(n: StructuralNote): MarginNote {
   }
 }
 
-function MarginNoteRow({ note, mobile }: { note: MarginNote; mobile?: boolean }) {
+// Horizontal annotation bar — interleaved directly beneath the value/sublines
+// it indicts (ICIJ Pandora × ProPublica document-reader mechanic). One
+// wrapping flex line: glyph · severityWord · label · param.
+function MarginNoteRow({ note }: { note: MarginNote }) {
   return (
     <div
-      className={mobile ? 'flex items-baseline gap-2 py-1 pl-3' : 'flex items-baseline gap-2 py-1.5 pl-3'}
-      style={{ borderLeft: `2px solid ${note.color}` }}
+      className="flex flex-wrap items-baseline"
+      style={{
+        borderLeft: `2px solid ${note.color}`,
+        background: `color-mix(in srgb, ${note.color} 5%, transparent)`,
+        padding: '4px 10px',
+        gap: 8,
+        marginTop: 4,
+      }}
       title={note.title}
     >
-      <span aria-hidden="true" style={{ fontSize: 12, color: note.color, fontWeight: 700, minWidth: 12, textAlign: 'center' }}>
+      <span aria-hidden="true" style={{ fontSize: 12, fontWeight: 700, color: note.color }}>
         {note.glyph}
       </span>
-      <span className="min-w-0">
-        {note.severityLabel && (
-          <span
-            className="font-mono block"
-            style={{ fontSize: 8.5, letterSpacing: '0.10em', fontWeight: 700, color: note.color }}
-          >
-            {note.severityLabel}
-          </span>
-        )}
-        <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12.5, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
-          {note.label}
+      {note.severityLabel && (
+        <span
+          className="font-mono"
+          style={{ fontSize: 8.5, letterSpacing: '0.10em', fontWeight: 700, color: note.color }}
+        >
+          {note.severityLabel}
         </span>
-        {note.param && (
-          <span
-            className="block font-mono tabular-nums"
-            style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
-          >
-            {note.param}
-          </span>
-        )}
+      )}
+      <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12.5, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
+        {note.label}
       </span>
+      {note.param && (
+        <span
+          className="font-mono tabular-nums"
+          style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
+        >
+          {note.param}
+        </span>
+      )}
     </div>
   )
 }
 
-// ── One acta row: label · value(+sublines) · margin(notes). Desktop renders
-// the three as a 3-column grid row; mobile stacks them (label above value,
-// margin indented beneath, no vertical rule). ───────────────────────────────
+// ── One acta row: label · value(+sublines+interleaved notes). 2-column
+// grid (label · value) — annotations render INSIDE the value cell, beneath
+// the value/sublines, as interleaved horizontal bars (ICIJ Pandora ×
+// ProPublica document-reader mechanic: comments threaded under the passage
+// they indict, occupying zero space when absent). Mobile stacks label
+// above value at <768px — annotations already live in the value flow, so
+// no separate mobile geometry is needed. ────────────────────────────────────
 function ActaRow({
   label,
   value,
@@ -168,7 +181,7 @@ function ActaRow({
 }) {
   return (
     <div
-      className="grid grid-cols-1 md:grid-cols-[108px_minmax(0,1fr)_236px] gap-x-4"
+      className="grid grid-cols-1 md:grid-cols-[112px_minmax(0,1fr)] gap-x-4"
       style={{ paddingTop: 12, paddingBottom: 12 }}
     >
       <div className="md:pt-0.5" style={LABEL_STYLE}>{label}</div>
@@ -182,11 +195,6 @@ function ActaRow({
         {value}
         {sublines?.map((s, i) => <div key={i} className="mt-1">{s}</div>)}
         {extra && <div className="mt-2">{extra}</div>}
-      </div>
-      <div
-        className="md:pl-4 mt-2 md:mt-0 md:border-l space-y-0.5"
-        style={{ borderColor: 'var(--color-border)' }}
-      >
         {notes.map((n) => <MarginNoteRow key={n.key} note={n} />)}
       </div>
     </div>
@@ -411,6 +419,21 @@ export function ActaLedger({
     </div>
   ) : undefined
 
+  // ── VIGENCIA / TERM (NEW row, between PROCEDIM. and CATEGORÍA) ─────────
+  const termStart = contract.start_date ? new Date(contract.start_date) : null
+  const termEnd = contract.end_date ? new Date(contract.end_date) : null
+  const hasTerm = !!(termStart || termEnd)
+  const termDays = termStart && termEnd ? Math.round((termEnd.getTime() - termStart.getTime()) / 86_400_000) : null
+  const termValue = termStart && termEnd
+    ? (isEs
+        ? `del ${formatDate(contract.start_date as string)} al ${formatDate(contract.end_date as string)}${termDays != null ? ` · ${termDays} días` : ''}`
+        : `${formatDate(contract.start_date as string)} → ${formatDate(contract.end_date as string)}${termDays != null ? ` · ${termDays} days` : ''}`)
+    : termStart
+      ? formatDate(contract.start_date as string)
+      : termEnd
+        ? formatDate(contract.end_date as string)
+        : null
+
   // ── CATEGORÍA ──────────────────────────────────────────────────────────
   const categoryId = context?.official?.category_id
   const categoryName = isEs
@@ -466,20 +489,34 @@ export function ActaLedger({
     <div>
       <div
         className="relative rounded-sm px-5 md:px-6"
-        style={{ border: INK_BORDER, boxShadow: INK_INSET, background: 'var(--color-background-elevated)', paddingTop: 34, paddingBottom: 30 }}
+        style={{ border: INK_BORDER, boxShadow: INK_INSET, background: 'var(--color-background-elevated)', paddingTop: 18, paddingBottom: 30 }}
       >
         <CropMark position="tl" />
         <CropMark position="tr" />
         <CropMark position="bl" />
         <CropMark position="br" />
 
-        {/* Header strip */}
+        {/* Header strip — in-flow (PlateFrame fix pattern), first child: cannot
+            overprint the first row on mobile the way the old absolute strip did. */}
         <div
-          className="absolute left-5 right-5 md:left-6 md:right-6 flex items-center justify-between gap-3 flex-wrap"
-          style={{ top: 12, fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace', fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+          className="flex justify-between items-center gap-3"
+          style={{
+            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+            fontSize: 13,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            borderBottom: '1px solid var(--color-border)',
+            paddingBottom: 10,
+            marginBottom: 4,
+          }}
         >
-          <span>ACTA · CONT-{contract.id}</span>
-          {struct && <span>COMPRANET · {isEs ? 'ESTRUCTURA' : 'STRUCTURE'} {struct}</span>}
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis">ACTA · CONT-{contract.id}</span>
+          {struct && (
+            <span className="hidden min-[480px]:inline whitespace-nowrap">
+              COMPRANET · {isEs ? 'ESTRUCTURA' : 'STRUCTURE'} {struct}
+            </span>
+          )}
         </div>
 
         {/* Rows */}
@@ -497,6 +534,13 @@ export function ActaLedger({
             extra={procedurePills}
             notes={rowNotes.procedimiento}
           />
+          {hasTerm && (
+            <ActaRow
+              label={isEs ? 'VIGENCIA' : 'TERM'}
+              value={<span style={VALUE_MONO_STYLE}>{termValue}</span>}
+              notes={[]}
+            />
+          )}
           {hasCategory && (
             <ActaRow
               label={isEs ? 'CATEGORÍA' : 'CATEGORY'}
@@ -602,7 +646,7 @@ export function ActaLedger({
               {isEs ? 'Objeciones generales' : 'General objections'}
             </div>
             <div className="space-y-0.5 max-w-md">
-              {generalNotes.map((n) => <MarginNoteRow key={n.key} note={n} mobile />)}
+              {generalNotes.map((n) => <MarginNoteRow key={n.key} note={n} />)}
             </div>
           </div>
         )}

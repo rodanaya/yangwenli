@@ -12,8 +12,15 @@
  *    derive the category client-side from the code, and never print the weight.
  */
 import { parseFactorLabel, getFactorCategoryColor, type FactorCategory } from './risk-factors'
-import type { ContractRiskFactor, ContractDetail } from '@/api/types'
+import type {
+  ContractRiskFactor,
+  ContractDetail,
+  ContractContextResponse,
+  ContractRiskBreakdownResponse,
+} from '@/api/types'
 import { RISK_COLORS } from './constants'
+import { formatDualCurrency } from './utils'
+import { formatEntityName } from './entity/format'
 
 // ── Procedure type ──────────────────────────────────────────────────────────
 
@@ -57,6 +64,76 @@ export function localizeProcedure(
     .trim()
     .toLowerCase()
     .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+// ── Description sanitizer (W4 — COMPRANET XML-escape leakage) ──────────────
+
+export function sanitizeContractText(s: string | null | undefined): string {
+  if (!s) return ''
+  return s
+    .replace(/_x000[DA]_|&#x000[DA];/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s:"'“”·—–-]+/, '')
+    .trim()
+}
+
+// ── Charge line (W8 — computed one-line finding, spec §I cascade) ──────────
+
+export interface ChargeLine {
+  text: string
+  tier: 'landmark' | 'notable' | 'routine'
+}
+
+function formatMultiple(mult: number): string {
+  if (mult >= 100) return `×${Math.round(mult)}`
+  if (mult >= 10) return `×${mult.toFixed(0)}`
+  return `×${mult.toFixed(1)}`
+}
+
+export function buildChargeLine(
+  contract: ContractDetail,
+  context: ContractContextResponse | undefined,
+  breakdown: ContractRiskBreakdownResponse | undefined,
+  lang: 'en' | 'es',
+): ChargeLine | null {
+  const isEs = lang === 'es'
+  const pair = context?.pair
+
+  if (pair?.total_contracts && pair.total_contracts > 1 && pair.this_rank != null) {
+    const total = formatDualCurrency(pair.total_amount_mxn)
+    const inst = formatEntityName('institution', contract.institution_name)
+    const y0 = pair.first_year ?? ''
+    const y1 = pair.last_year ?? ''
+    const text = isEs
+      ? `Acta ${pair.this_rank} de ${pair.total_contracts} — una relación de ${total} con ${inst}, ${y0}–${y1}.`
+      : `Act ${pair.this_rank} of ${pair.total_contracts} — a ${total} relationship with ${inst}, ${y0}–${y1}.`
+    return { text, tier: 'landmark' }
+  }
+
+  if (context?.size_vs_p99 != null && context.size_vs_p99 >= 2) {
+    const mult = formatMultiple(context.size_vs_p99)
+    const text = isEs
+      ? `Un contrato ${mult} el percentil 99 de su sector.`
+      : `A contract at ${mult} the sector's 99th percentile.`
+    return { text, tier: 'notable' }
+  }
+
+  const score = Number(contract.risk_score)
+  if (Number.isFinite(score) && score >= 0.6 && breakdown?.factors?.length) {
+    const top = [...breakdown.factors]
+      .map((f) => describeContractFactor(f, lang))
+      .filter((f) => f.severity)
+      .sort((a, b) => b.sortKey - a.sortKey)[0]
+    if (top) {
+      const pct = Math.round(score * 100)
+      const text = isEs
+        ? `Marcado ${pct}/100 — señal dominante: ${top.label.toLowerCase()}.`
+        : `Rated ${pct}/100 — leading signal: ${top.label.toLowerCase()}.`
+      return { text, tier: 'notable' }
+    }
+  }
+
+  return null
 }
 
 // ── Risk factor row ───────────────────────────────────────────────────────────
@@ -284,6 +361,11 @@ export function buildStructuralNotes(contract: ContractDetail, lang: 'en' | 'es'
       glyph: '▲',
       color: RISK_COLORS.critical,
       label: isEs ? 'Juego de umbral' : 'Threshold gaming',
+      param: contract.threshold_proximity != null
+        ? (isEs
+          ? `${Math.round(contract.threshold_proximity * 100)}% del umbral`
+          : `${Math.round(contract.threshold_proximity * 100)}% of threshold`)
+        : undefined,
       dedupeKey: 'threshold_split',
     })
   }

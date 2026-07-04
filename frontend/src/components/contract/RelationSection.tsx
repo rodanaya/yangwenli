@@ -12,14 +12,12 @@
  *
  * Spec: contract-el-cotejo-fable-2026-07-02-spec.md §2.3 · §5-P5.
  */
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
 import { contractApi } from '@/api/client'
-import type { ContractContextResponse, ContractDetail, ContractListItem } from '@/api/types'
+import type { ContractContextResponse, ContractDetail } from '@/api/types'
 import { formatCompactMXN } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
-import { RelationRibbon } from '@/components/contract/RelationRibbon'
+import { PairLedger } from '@/components/contract/PairLedger'
 
 const CRIMSON = RISK_COLORS.critical
 const REF_ZINC = '#71717a'
@@ -37,12 +35,18 @@ export function getRelationSectionMeta(context: ContractContextResponse | undefi
   const pair = context?.pair
   const hasRelationship = !!pair && pair.total_contracts > 1 && !!pair.vendor_id && !!pair.institution_id
   const hasFallback = context?.sector_p99_mxn != null && context?.size_vs_p99 != null
-  const eyebrow = { es: 'Cotejo', en: 'Cross-check' }
+  const eyebrow = { es: 'La prueba', en: 'The exhibit' }
   if (hasRelationship) {
+    const nYears = pair!.first_year != null && pair!.last_year != null
+      ? pair!.last_year - pair!.first_year + 1
+      : null
+    const total = formatCompactMXN(pair!.total_amount_mxn ?? 0)
     return {
       mode: 'relationship',
       eyebrow,
-      title: { es: 'La relación en el tiempo', en: 'The relationship in time' },
+      title: nYears != null
+        ? { es: `${total} en ${nYears} años`, en: `${total} across ${nYears} years` }
+        : { es: 'La relación en el tiempo', en: 'The relationship in time' },
       meta: {
         es: `${pair!.total_contracts.toLocaleString('es-MX')} contratos · ${pair!.first_year ?? '—'}–${pair!.last_year ?? '—'}`,
         en: `${pair!.total_contracts.toLocaleString('en-US')} contracts · ${pair!.first_year ?? '—'}–${pair!.last_year ?? '—'}`,
@@ -125,66 +129,6 @@ function RatioBullet({
   )
 }
 
-// ── RegisterRow — lifted verbatim from ContractCotejo ───────────────────────
-
-function RegisterRow({
-  rank,
-  c,
-  isSubject,
-  sectorAccent,
-  lang,
-}: {
-  rank: number
-  c: ContractListItem
-  isSubject: boolean
-  sectorAccent: string
-  lang: 'en' | 'es'
-}) {
-  const isEs = lang === 'es'
-  const flags: string[] = []
-  if (c.is_direct_award) flags.push(isEs ? 'AD' : 'DA')
-  if (c.is_single_bid) flags.push(isEs ? 'UP' : 'SB')
-  const year = c.contract_year ?? (c.contract_date ? new Date(c.contract_date).getUTCFullYear() : '—')
-
-  const inner = (
-    <div
-      className="flex items-baseline gap-3 px-3 py-1.5"
-      style={{
-        borderLeft: `2px solid ${isSubject ? sectorAccent : 'transparent'}`,
-        background: isSubject ? `${sectorAccent}0f` : undefined,
-      }}
-    >
-      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, color: 'var(--color-text-muted)', minWidth: 38 }}>
-        #{rank}
-      </span>
-      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, color: 'var(--color-text-secondary)', minWidth: 36 }}>
-        {year}
-      </span>
-      <span
-        className="font-mono tabular-nums flex-1 text-right"
-        style={{ fontSize: 12, color: isSubject ? sectorAccent : 'var(--color-text-primary)', fontWeight: isSubject ? 700 : 400 }}
-      >
-        {formatCompactMXN(c.amount_mxn ?? 0)}
-      </span>
-      <span className="font-mono flex-shrink-0" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)', minWidth: 44, textAlign: 'right' }}>
-        {flags.join(' ')}
-      </span>
-      {isSubject && (
-        <span className="font-mono flex-shrink-0" style={{ fontSize: 13, letterSpacing: '0.10em', textTransform: 'uppercase', color: sectorAccent, fontWeight: 700 }}>
-          {isEs ? '◀ este' : '◀ this'}
-        </span>
-      )}
-    </div>
-  )
-
-  if (isSubject) return inner
-  return (
-    <Link to={`/contracts/${c.id}`} className="block hover:bg-background-elevated/60 transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px]">
-      {inner}
-    </Link>
-  )
-}
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export function RelationSection({
@@ -201,7 +145,6 @@ export function RelationSection({
   lang: 'en' | 'es'
 }) {
   const isEs = lang === 'es'
-  const [registerOpen, setRegisterOpen] = useState(false)
 
   const vendorName = contract.vendor_name?.replace(/[A-ZÁÉÍÓÚÑ]{2,}/g, (m) => m.charAt(0) + m.slice(1).toLowerCase()) || (isEs ? 'el proveedor' : 'the vendor')
   const instName = contract.institution_name?.replace(/[A-ZÁÉÍÓÚÑ]{2,}/g, (m) => m.charAt(0) + m.slice(1).toLowerCase()) || (isEs ? 'la institución' : 'the institution')
@@ -234,7 +177,6 @@ export function RelationSection({
   })
 
   const rows = register?.data ?? []
-  const subjectInTop = rows.some((r) => r.id === contract.id)
 
   // ── Rank prose (verbatim, becomes the plate caption) ───────────────────────
   const rankProse = (() => {
@@ -315,72 +257,17 @@ export function RelationSection({
     }
 
     return (
-      <div className="space-y-3">
-        <RelationRibbon
-          rows={rows}
-          subject={contract}
-          pairTotal={pairCount}
-          pairRank={pairRank}
-          p99={p99}
-          sizeVsP99={sizeVsP99}
-          sectorAccent={sectorAccent}
-          sectorName={sectorName}
-          captionProse={rankProse ?? ''}
-          lang={lang}
-        />
-
-        <div>
-          <button
-            type="button"
-            onClick={() => setRegisterOpen((v) => !v)}
-            aria-expanded={registerOpen}
-            className="font-mono uppercase tracking-[0.10em] hover:opacity-70 transition-opacity cursor-pointer"
-            style={{ fontSize: 12, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: '4px 0' }}
-          >
-            {registerOpen
-              ? (isEs ? '⌃ Ocultar el registro' : '⌃ Hide the register')
-              : (isEs ? `⌄ Ver el registro · ${pairCount.toLocaleString('es-MX')} contratos` : `⌄ See the register · ${pairCount.toLocaleString('en-US')} contracts`)}
-          </button>
-
-          {registerOpen && (
-            <div className="mt-2 border border-border rounded-sm overflow-hidden">
-              {rows.length > 0 ? (
-                <div className="max-h-[420px] overflow-y-auto divide-y divide-border/30">
-                  {/* Synthetic pinned subject row when it falls below the top-100 cut */}
-                  {!subjectInTop && pairRank != null && (
-                    <>
-                      <RegisterRow
-                        rank={pairRank}
-                        c={contract as unknown as ContractListItem}
-                        isSubject
-                        sectorAccent={sectorAccent}
-                        lang={lang}
-                      />
-                      <div className="px-3 py-1 text-center font-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                        ⋮ {isEs ? 'mayores del par' : 'largest of the pair'}
-                      </div>
-                    </>
-                  )}
-                  {rows.map((c, i) => (
-                    <RegisterRow
-                      key={c.id}
-                      rank={i + 1}
-                      c={c}
-                      isSubject={c.id === contract.id}
-                      sectorAccent={sectorAccent}
-                      lang={lang}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="px-3 py-6 text-center font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-                  {isEs ? 'Sin contratos comparables.' : 'No comparable contracts.'}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+      <PairLedger
+        rows={rows}
+        subject={contract}
+        pair={context.pair}
+        p99={p99}
+        sizeVsP99={sizeVsP99}
+        sectorAccent={sectorAccent}
+        sectorName={sectorName}
+        captionProse={rankProse ?? ''}
+        lang={lang}
+      />
     )
   }
 
