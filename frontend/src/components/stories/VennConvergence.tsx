@@ -110,7 +110,7 @@ export function VennConvergence({ lang = 'es' }: Props) {
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
-        className="block w-full max-w-[420px] mx-auto"
+        className="block w-full max-w-[420px] sm:max-w-[560px] mx-auto"
         aria-hidden="true"
       >
         {/* Left ellipse — supervised model (blue) */}

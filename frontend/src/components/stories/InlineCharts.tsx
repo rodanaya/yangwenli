@@ -1140,8 +1140,9 @@ export function InlineAreaChart({
               opacity={0.65}
             />
             <text
-              x={W - PAD.right + 2}
+              x={W - PAD.right - 2}
               y={plotY(data.referenceLine.value) + 4}
+              textAnchor="end"
               fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
@@ -1351,8 +1352,9 @@ export function InlineSpikeChart({
               opacity={0.65}
             />
             <text
-              x={PAD.left + 2}
+              x={W - PAD.right - 2}
               y={PAD.top + plotH - (data.referenceLine.value / mx) * plotH - 3}
+              textAnchor="end"
               fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
@@ -1999,7 +2001,10 @@ export function ThresholdDistribution({
   // 2026-05-25: bumped bottom 56 → 96 so rotated x-axis labels like
   // "2019 pre-COVID" (134px content, rotated -40° ≈ 102px horizontal +
   // 86px vertical) don't get clipped by the SVG bottom edge.
-  const margin = { top: 48, right: 40, bottom: 96, left: 20 }
+  // left 20 → 70: the leftmost point's label is end-anchored + rotated
+  // -40°, so it draws UP-LEFT from its dot. A long label there (e.g.
+  // "Infraestructura") ran past x=0 and clipped to "cructura".
+  const margin = { top: 48, right: 40, bottom: 96, left: 70 }
   const plotW = 450
   const plotH = 156
   const totalH = margin.top + plotH + margin.bottom
@@ -3539,14 +3544,15 @@ export function InlineTimeline({
         {/* Hairline scale */}
         <line x1={PAD_L} x2={W - PAD_R} y1={trackY} y2={trackY} stroke="var(--color-border)" strokeWidth={1} />
 
-        {/* Axis ticks */}
+        {/* Axis ticks. Last tick end-anchors so its digits don't run into
+            the unit label ("MESES") sitting just past the axis end. */}
         {tickValues.map((tv, i) => (
           <g key={`tick-${i}`}>
             <line x1={xFor(tv)} x2={xFor(tv)} y1={trackY - 3} y2={trackY + 3} stroke="var(--color-border)" strokeWidth={1} />
             <text
               x={xFor(tv)}
               y={trackY + 18}
-              textAnchor="middle"
+              textAnchor={i === tickValues.length - 1 ? 'end' : 'middle'}
               fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
