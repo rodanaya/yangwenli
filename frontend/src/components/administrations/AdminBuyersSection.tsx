@@ -35,6 +35,34 @@ function resolveColor(color: string): string {
     : color
 }
 
+// ── Full-name cleaner (local — so we can show untruncated agency names without
+//    the shared formatInstitutionName's naive "De/Y/S.n.c." title-casing). Only
+//    all-caps sources get re-cased; mixed-case names (SICT, INSABI) pass through.
+const ES_MINOR = new Set([
+  'de', 'del', 'la', 'las', 'los', 'y', 'e', 'en', 'a', 'al', 'para', 'por', 'con',
+])
+function cleanInstitutionName(raw: string): string {
+  if (!raw) return ''
+  const stripped = raw
+    .replace(/,?\s*S\.?N\.?C\.?\s*$/i, '')                        // drop trailing S.N.C.
+    .replace(/,?\s*S\.?A\.?\s+DE\s+C\.?V\.?\s*$/i, '')            // drop S.A. de C.V.
+    .replace(/,?\s*S\.?\s+DE\s+R\.?L\.?\s+DE\s+C\.?V\.?\s*$/i, '') // drop S. de R.L. de C.V.
+    .replace(/\s+/g, ' ')
+    .replace(/[\s,;]+$/, '')
+    .trim()
+  if (stripped !== stripped.toUpperCase()) return stripped       // already cased — leave it
+  return stripped
+    .split(' ')
+    .map((w, i) => {
+      if (!w) return w
+      const lower = w.toLowerCase()
+      if (i > 0 && ES_MINOR.has(lower.replace(/[.,]/g, ''))) return lower
+      if (w.includes('.')) return w                              // preserve acronyms (S.N.C.)
+      return lower.charAt(0).toUpperCase() + lower.slice(1)
+    })
+    .join(' ')
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
   era: string
@@ -167,20 +195,24 @@ export function AdminBuyersSection({
         />
       </div>
 
-      {/* Institution rows — single-line agate register (FT/Economist density) */}
-      <ul className="space-y-0" role="list">
+      {/* Institution rows — ledger entries: full name · dotted leader · value.
+          Full untruncated agency names get their own line; a dotted leader
+          bridges to the right-aligned value so there is no dead band at any
+          name length. Siglas + FED + metrics drop to a second line. */}
+      <ul className="space-y-2.5" role="list">
         {institutions.map((inst: AdminInstitutionBuyer, i: number) => {
           const isTopThree = i < 3
-          const metaFull = isEs
-            ? `${inst.contracts.toLocaleString()} contratos · ${inst.direct_award_pct.toFixed(0)}% adjudicación directa`
-            : `${inst.contracts.toLocaleString()} contracts · ${inst.direct_award_pct.toFixed(0)}% direct award`
+          const displayName = cleanInstitutionName(inst.institution_name)
           return (
-            <li key={inst.institution_id} className="border-b border-border/25 last:border-0">
-              <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_max-content_88px_max-content] items-center gap-x-3 py-[5px] group hover:bg-background-elevated/30 transition-colors">
-                {/* 1. Rank */}
+            <li
+              key={inst.institution_id}
+              className="group rounded-sm px-1 -mx-1 hover:bg-background-elevated/30 transition-colors"
+            >
+              {/* Line A — rank · full name · dotted leader · value */}
+              <div className="flex items-center gap-2">
                 <span
                   className={[
-                    'text-[12px] font-mono tabular-nums text-right',
+                    'w-[1.6rem] shrink-0 text-right text-[12px] font-mono tabular-nums',
                     isTopThree ? 'font-semibold' : 'text-text-muted/70',
                   ].join(' ')}
                   style={isTopThree ? { color: eraColorResolved } : undefined}
@@ -188,68 +220,79 @@ export function AdminBuyersSection({
                   {i + 1}
                 </span>
 
-                {/* 2. Identity — chip + FED, single line */}
-                <div className="flex items-center gap-1.5 min-w-0">
+                {/* Full institution name (untruncated, sizes to content) */}
+                <div className="flex min-w-0 shrink items-center">
                   <EntityIdentityChip
                     type="institution"
                     id={inst.institution_id}
-                    name={inst.siglas || inst.institution_name}
+                    name={displayName}
                     size="xs"
+                    fullName
                     sectorCode={inst.top_sector_code ?? undefined}
-                    className="min-w-0"
+                    className="w-auto"
                   />
+                </div>
+
+                {/* Ledger leader — eats the remaining space, bridges to the value */}
+                <span
+                  aria-hidden="true"
+                  className="flex-1 min-w-[0.75rem] border-b border-dotted border-border/60 translate-y-[-0.15em]"
+                />
+
+                {/* Value */}
+                <span
+                  className="shrink-0 text-[13px] tabular-nums text-text-primary"
+                  style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'normal', fontWeight: 700 }}
+                >
+                  {formatCompactMXN(inst.total_mxn)}
+                </span>
+              </div>
+
+              {/* Line B — siglas · FED · metrics (left) + share of spend (right) */}
+              <div className="flex items-baseline justify-between gap-3 mt-0.5 ml-[calc(1.6rem+0.5rem)]">
+                <div className="min-w-0 flex items-center gap-1.5 text-[12px] font-mono tabular-nums text-text-muted">
+                  {inst.siglas && (
+                    <span className="uppercase tracking-[0.08em] text-text-secondary shrink-0">
+                      {inst.siglas}
+                    </span>
+                  )}
                   {inst.is_federal === 1 && (
                     <span
-                      className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/70 border border-border/50 rounded-sm px-1 leading-tight shrink-0"
+                      className="text-[10px] uppercase tracking-[0.14em] text-text-muted/70 border border-border/50 rounded-sm px-1 leading-tight shrink-0"
                       title={isEs ? 'Dependencia federal' : 'Federal entity'}
                     >
                       FED
                     </span>
                   )}
+                  <span className="truncate">
+                    {inst.contracts.toLocaleString()}{' '}
+                    {isEs ? 'contratos' : 'contracts'}
+                    {' · '}
+                    {inst.direct_award_pct.toFixed(0)}%{' '}
+                    {isEs ? 'adj. dir.' : 'direct'}
+                  </span>
                 </div>
-
-                {/* 3. Meta — inline, desktop only (full text in title) */}
                 <span
-                  className="hidden md:block text-[13px] font-mono tabular-nums text-text-muted whitespace-nowrap"
-                  title={metaFull}
+                  className="shrink-0 text-[12px] font-mono tabular-nums text-text-muted"
+                  title={isEs ? 'del gasto del periodo' : 'of term spending'}
                 >
-                  {inst.contracts.toLocaleString()}{' '}
-                  {isEs ? 'cttos.' : 'ct.'}
-                  {' · '}
-                  {inst.direct_award_pct.toFixed(0)}%{' '}
-                  {isEs ? 'adj. dir.' : 'direct'}
+                  {inst.share_pct.toFixed(1)}%
                 </span>
+              </div>
 
-                {/* 4. Share bar — inline, ≥sm, fixed column so bars align */}
-                <div className="hidden sm:block">
-                  <DotBar
-                    value={inst.share_pct}
-                    max={shareMax}
-                    color={eraColorResolved}
-                    emptyColor="var(--color-background-elevated)"
-                    emptyStroke="var(--color-border)"
-                    dots={16}
-                    dotR={2}
-                    dotGap={5}
-                    ariaLabel={`${inst.share_pct.toFixed(1)}% ${isEs ? 'del gasto del periodo' : 'of term spending'}`}
-                  />
-                </div>
-
-                {/* 5. Value + share on one baseline */}
-                <div className="flex items-baseline justify-end gap-1.5">
-                  <span
-                    className="text-[12.5px] tabular-nums text-text-primary"
-                    style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'normal', fontWeight: 700 }}
-                  >
-                    {formatCompactMXN(inst.total_mxn)}
-                  </span>
-                  <span
-                    className="text-[13px] font-mono tabular-nums text-text-muted w-[2.9rem] text-right"
-                    title={isEs ? 'del gasto del periodo' : 'of term spending'}
-                  >
-                    {inst.share_pct.toFixed(1)}%
-                  </span>
-                </div>
+              {/* Line C — share bar (scaled to leader) */}
+              <div className="mt-1 ml-[calc(1.6rem+0.5rem)]">
+                <DotBar
+                  value={inst.share_pct}
+                  max={shareMax}
+                  color={eraColorResolved}
+                  emptyColor="var(--color-background-elevated)"
+                  emptyStroke="var(--color-border)"
+                  dots={24}
+                  dotR={2.5}
+                  dotGap={6}
+                  ariaLabel={`${inst.share_pct.toFixed(1)}% ${isEs ? 'del gasto del periodo' : 'of term spending'}`}
+                />
               </div>
             </li>
           )
