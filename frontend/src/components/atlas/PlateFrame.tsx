@@ -181,12 +181,15 @@ export function PlateFrame({
           fontWeight: 400,
         }}
       >
-        <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
+        <span style={{ fontStyle: 'normal', fontWeight: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
           <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·{folio}</span>
           <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
           <span>{contextLabelText}</span>
         </span>
-        <span>
+        {/* Date stamp is archival flavor — hidden below 480px so the folio +
+            context label keeps the full width on a phone (it otherwise wrapped
+            to a 2nd line and overprinted the chart's top readout strip). */}
+        <span className="hidden min-[480px]:inline" style={{ whiteSpace: 'nowrap', flexShrink: 0, paddingLeft: 8 }}>
           <span style={{ opacity: 0.55 }}>{lang === 'en' ? 'Indexed' : 'Indexado'} </span>
           <span style={{ fontWeight: 500 }}>{dateStamp}</span>
         </span>
