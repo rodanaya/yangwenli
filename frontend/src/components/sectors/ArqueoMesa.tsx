@@ -40,7 +40,7 @@ const STRIP_H = 4
 const LABEL_H = 18
 const GUTTER_W = 34
 const RIGHT_PAD = 8
-const MIN_COL_W = 3
+const MIN_COL_W = 6
 const NARROW_LABEL_THRESHOLD = 48
 const MOBILE_BREAKPOINT = 768
 const MOBILE_ROW_MIN_H = 18
@@ -102,8 +102,17 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
   // Narrow columns (below label threshold at current width) → circled-number legend.
   const bandW = Math.max(0, width - GUTTER_W - RIGHT_PAD)
   const colWidths = useMemo(() => {
-    if (totalSpend <= 0) return ordered.map(() => 0)
-    return ordered.map((r) => Math.max(MIN_COL_W, (r.totalMxn / totalSpend) * bandW))
+    if (totalSpend <= 0 || bandW <= 0) return ordered.map(() => 0)
+    // Marimekko min-width allocation: give every column a legible floor, then
+    // split the REMAINING band strictly by spend share. This guarantees
+    // Σ widths === bandW exactly — so the run can never spill past the plate's
+    // right edge (the old `max(MIN_COL_W, prop*bandW)` over-allocated whenever a
+    // tail sector's true width fell below the floor) — while keeping the tiny
+    // tail sectors a visible, hoverable sliver instead of a sub-pixel hairline.
+    const n = ordered.length
+    const floor = Math.min(MIN_COL_W, bandW / n)
+    const free = Math.max(0, bandW - floor * n)
+    return ordered.map((r) => floor + (r.totalMxn / totalSpend) * free)
   }, [ordered, totalSpend, bandW])
 
   const narrowSet = useMemo(
@@ -145,7 +154,7 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
     )
 
   return (
-    <div ref={containerRef} className="w-full">
+    <div className="w-full">
       <p
         className="font-mono mb-1"
         style={{ fontSize: 13, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
@@ -171,23 +180,28 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
         contextLabel={{ en: 'The counting table', es: 'La mesa del arqueo' }}
         caption={caption}
       >
-        {isMobile ? (
-          <MobileMesa rows={ordered} lang={lang} onSelect={goToSector} readoutText={readoutText} hoverId={hoverId} setHoverId={setHoverId} />
-        ) : (
-          <DesktopMesa
-            rows={ordered}
-            colWidths={colWidths}
-            width={width}
-            lang={lang}
-            hoverId={hoverId}
-            setHoverId={setHoverId}
-            onSelect={goToSector}
-            readoutText={readoutText}
-            widest={widest}
-            tallest={tallest}
-            narrowSet={narrowSet}
-          />
-        )}
+        {/* Ref lives INSIDE the frame so the ResizeObserver measures the
+            plate's padded content width — not the full column width. The SVG
+            is sized to this, so it can never overhang the frame's border. */}
+        <div ref={containerRef} className="w-full">
+          {isMobile ? (
+            <MobileMesa rows={ordered} lang={lang} onSelect={goToSector} readoutText={readoutText} hoverId={hoverId} setHoverId={setHoverId} />
+          ) : (
+            <DesktopMesa
+              rows={ordered}
+              colWidths={colWidths}
+              width={width}
+              lang={lang}
+              hoverId={hoverId}
+              setHoverId={setHoverId}
+              onSelect={goToSector}
+              readoutText={readoutText}
+              widest={widest}
+              tallest={tallest}
+              narrowSet={narrowSet}
+            />
+          )}
+        </div>
       </PlateFrame>
     </div>
   )
@@ -240,7 +254,9 @@ function DesktopMesa({
       const share = ownSpendShare(r)
       const x0 = xOffsets[i]
       const x1 = xOffsets[i] + colWidths[i]
-      const y = READOUT_H + BAND_H * (1 - share)
+      // Band-local coords: the readout strip is a sibling <div>, NOT part of
+      // this SVG, so the waterline must sit at the hatch top (no READOUT_H).
+      const y = BAND_H * (1 - share)
       return `${x0.toFixed(1)},${y.toFixed(1)} ${x1.toFixed(1)},${y.toFixed(1)}`
     })
     .join(' ')
@@ -484,8 +500,8 @@ function AnnotationTallest({
   if (idx < 0) return null
   const share = ownSpendShare(row)
   const x = xOffsets[idx] + colWidths[idx] / 2
-  const yTop = READOUT_H + BAND_H * (1 - share)
-  const labelY = Math.max(READOUT_H + 10, yTop - 14)
+  const yTop = BAND_H * (1 - share)
+  const labelY = Math.max(10, yTop - 14)
   const pct = (share * 100).toFixed(0)
   const label =
     lang === 'es'
