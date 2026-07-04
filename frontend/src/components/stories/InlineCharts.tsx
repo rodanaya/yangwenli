@@ -3485,43 +3485,50 @@ export function InlineTimeline({
   const annotationFor = (p: StoryChartPoint) =>
     lang === 'es' ? (p.annotation_es ?? p.annotation ?? '') : (p.annotation ?? '')
 
-  // SVG geometry
+  // ── geometry ──────────────────────────────────────────────────────────
   const W = 760
-  const H = 260
-  const PAD_L = 40
-  const PAD_R = 40
-  const trackY = 130 // hairline y
+  const PAD_L = 44
+  const PAD_R = 44
+  const trackY = 92
   const innerW = W - PAD_L - PAD_R
+  const clampV = (v: number) => Math.min(Math.max(v, 0), maxV)
+  const xFor = (v: number) => PAD_L + (clampV(v) / maxV) * innerW
+  const unitAbbrev = unitLabel.toLowerCase().startsWith('mes') ? 'mo' : unitLabel.slice(0, 2)
 
-  const xFor = (v: number) => PAD_L + (Math.min(Math.max(v, 0), maxV) / maxV) * innerW
+  // ── staggered below-track label layout (greedy de-collision) ──────────
+  // Each marker's role + annotation gets a vertical row; markers whose labels
+  // would overlap horizontally are pushed to the next row down, connected by a
+  // leader line from the dot. Text is edge-anchored so it never clips the right
+  // margin. Replaces the old constant-Y layout whose labels overprinted
+  // whenever markers clustered (0.5 / 6 / 15 on a 0–40 axis) — badly on mobile.
+  const CHAR_W = 6.4
+  const ROW_TOP = trackY + 30
+  const ROW_STEP = 40
+  const GAP = 18
+  const estWidth = (p: StoryChartPoint) =>
+    Math.max(labelFor(p).length, annotationFor(p).length) * CHAR_W
+  const ordered = pts
+    .map((p, i) => ({ p, i, x: xFor(p.value) }))
+    .sort((a, b) => a.x - b.x)
+  const rowEnds: number[] = []
+  const placed = ordered.map(({ p, i, x }) => {
+    const w = estWidth(p)
+    const anchor: 'start' | 'end' = x + w > W - PAD_R ? 'end' : 'start'
+    const left = anchor === 'end' ? x - w : x
+    const right = anchor === 'end' ? x : x + w
+    let row = 0
+    while (rowEnds[row] !== undefined && left < rowEnds[row] + GAP) row++
+    rowEnds[row] = right
+    return { p, i, x, row, anchor }
+  })
+  const nRows = Math.max(1, rowEnds.length)
+  const H = ROW_TOP + nRows * ROW_STEP + 6
 
-  // Derive bracket arcs: highlighted markers form one window, others form
-  // the second. We pick the min/max value for each group.
-  const hiPts = pts.filter((p) => p.highlight)
-  const otherPts = pts.filter((p) => !p.highlight)
-  const hiMin = hiPts.length ? Math.min(...hiPts.map((p) => p.value)) : null
-  const hiMax = hiPts.length ? Math.max(...hiPts.map((p) => p.value)) : null
-  const otMin = otherPts.length ? Math.min(...otherPts.map((p) => p.value)) : null
-  const otMax = otherPts.length ? Math.max(...otherPts.map((p) => p.value)) : null
-
-  // Reference labels for the two windows. referenceLine = highlight window
-  // (ARIA), referenceLine2 = non-highlight window (SAT).
-  const hiBracketLabel = data.referenceLine
-    ? (lang === 'es' ? (data.referenceLine.label_es ?? data.referenceLine.label) : data.referenceLine.label)
-    : null
-  const otBracketLabel = data.referenceLine2
-    ? (lang === 'es' ? (data.referenceLine2.label_es ?? data.referenceLine2.label) : data.referenceLine2.label)
-    : null
-
-  // Axis ticks at 0 / maxV/4 / maxV/2 / 3*maxV/4 / maxV
+  // Axis ticks at 0 / ¼ / ½ / ¾ / max
   const tickValues = [0, Math.round(maxV / 4), Math.round(maxV / 2), Math.round((3 * maxV) / 4), maxV]
 
   return (
-    <ChartCard
-      title={title}
-      eyebrow={`TIMELINE · ${pts.length} MARKERS`}
-      annotation={annotation}
-    >
+    <ChartCard title={title} eyebrow={`TIMELINE · ${pts.length} MARKERS`} annotation={annotation}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
@@ -3530,26 +3537,12 @@ export function InlineTimeline({
         aria-label={title}
       >
         {/* Hairline scale */}
-        <line
-          x1={PAD_L}
-          x2={W - PAD_R}
-          y1={trackY}
-          y2={trackY}
-          stroke="var(--color-border)"
-          strokeWidth={1}
-        />
+        <line x1={PAD_L} x2={W - PAD_R} y1={trackY} y2={trackY} stroke="var(--color-border)" strokeWidth={1} />
 
-        {/* Axis ticks (faint) */}
+        {/* Axis ticks */}
         {tickValues.map((tv, i) => (
           <g key={`tick-${i}`}>
-            <line
-              x1={xFor(tv)}
-              x2={xFor(tv)}
-              y1={trackY - 3}
-              y2={trackY + 3}
-              stroke="var(--color-border)"
-              strokeWidth={1}
-            />
+            <line x1={xFor(tv)} x2={xFor(tv)} y1={trackY - 3} y2={trackY + 3} stroke="var(--color-border)" strokeWidth={1} />
             <text
               x={xFor(tv)}
               y={trackY + 18}
@@ -3557,104 +3550,43 @@ export function InlineTimeline({
               fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
-              opacity={0.6}
+              opacity={0.55}
             >
               {tv}
             </text>
           </g>
         ))}
-        {/* Scale unit label at far right of ticks */}
         <text
           x={W - PAD_R + 4}
           y={trackY + 18}
           textAnchor="start"
-          fontSize={13}
+          fontSize={12}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
-          opacity={0.55}
+          opacity={0.5}
           style={{ letterSpacing: '0.14em' }}
         >
           {unitLabel.toUpperCase()}
         </text>
 
-        {/* Bracket arc 1 — highlight window (above the track) */}
-        {hiBracketLabel && hiMin != null && hiMax != null && (
-          <g>
-            <path
-              d={`M ${xFor(hiMin) - 6} ${trackY - 36} Q ${(xFor(hiMin) + xFor(hiMax)) / 2} ${trackY - 52} ${xFor(hiMax) + 6} ${trackY - 36}`}
-              fill="none"
-              stroke={ANCHOR_COLOR}
-              strokeWidth={1}
-              opacity={0.55}
-            />
-            <text
-              x={(xFor(hiMin) + xFor(hiMax)) / 2}
-              y={trackY - 58}
-              textAnchor="middle"
-              fontSize={13}
-              fontFamily="var(--font-family-mono, monospace)"
-              fill={ANCHOR_COLOR}
-              style={{ letterSpacing: '0.18em', textTransform: 'uppercase' }}
-            >
-              {hiBracketLabel}
-            </text>
-          </g>
-        )}
-
-        {/* Bracket arc 2 — non-highlight window (below the track) */}
-        {otBracketLabel && otMin != null && otMax != null && (
-          <g>
-            <path
-              d={`M ${xFor(otMin) - 6} ${trackY + 56} Q ${(xFor(otMin) + xFor(otMax)) / 2} ${trackY + 72} ${xFor(otMax) + 6} ${trackY + 56}`}
-              fill="none"
-              stroke="var(--color-text-muted)"
-              strokeWidth={1}
-              opacity={0.55}
-            />
-            <text
-              x={(xFor(otMin) + xFor(otMax)) / 2}
-              y={trackY + 86}
-              textAnchor="middle"
-              fontSize={13}
-              fontFamily="var(--font-family-mono, monospace)"
-              fill="var(--color-text-muted)"
-              style={{ letterSpacing: '0.18em', textTransform: 'uppercase' }}
-            >
-              {otBracketLabel}
-            </text>
-          </g>
-        )}
-
-        {/* Markers + labels */}
-        {pts.map((p, i) => {
-          const cx = xFor(p.value)
+        {/* Markers: dot + Playfair value above (upright, per legibility sweep) */}
+        {placed.map(({ p, i, x }) => {
           const highlight = !!p.highlight
           const color = highlight ? ANCHOR_COLOR : 'var(--color-text-muted)'
-          const opacity = highlight ? 1 : 0.7
-          // Stagger above/below labels to avoid collision when markers are
-          // close (e.g. 0.5 and 6). Pure rule: highlight markers always
-          // anchor labels ABOVE the track; non-highlight labels anchor
-          // ABOVE as well but at a slightly lower y so they read together.
-          const valueY = trackY - 16
-          const captionY = trackY + 36
           return (
             <g key={`mk-${i}`}>
-              {/* Marker dot */}
-              <circle cx={cx} cy={trackY} r={5} fill={color} opacity={opacity} />
-              {/* Outer ring on highlight for emphasis */}
+              <circle cx={x} cy={trackY} r={5} fill={color} opacity={highlight ? 1 : 0.7} />
               {highlight && (
-                <circle cx={cx} cy={trackY} r={9} fill="none" stroke={color} strokeWidth={1} opacity={0.4} />
+                <circle cx={x} cy={trackY} r={9} fill="none" stroke={color} strokeWidth={1} opacity={0.4} />
               )}
-
-              {/* Playfair Italic 800 value above */}
               <text
-                x={cx}
-                y={valueY}
+                x={x}
+                y={trackY - 14}
                 textAnchor="middle"
                 fontFamily="'Playfair Display', Georgia, serif"
                 fontStyle="normal"
                 fontWeight={800}
-                fontSize={highlight ? 28 : 22}
+                fontSize={highlight ? 27 : 21}
                 fill={highlight ? ANCHOR_COLOR : 'var(--color-text-primary)'}
                 style={{ letterSpacing: '-0.02em' }}
               >
@@ -3664,49 +3596,56 @@ export function InlineTimeline({
                   fontFamily="var(--font-family-mono, monospace)"
                   fontStyle="normal"
                   fontWeight={500}
-                  fontSize={13}
+                  fontSize={12}
                   fill="var(--color-text-muted)"
-                  style={{ letterSpacing: '0.16em', textTransform: 'uppercase' }}
+                  style={{ letterSpacing: '0.14em' }}
                 >
-                  {unitLabel.toLowerCase().startsWith('mes') ? 'mo' : unitLabel.slice(0, 2)}
+                  {unitAbbrev}
                 </tspan>
               </text>
+            </g>
+          )
+        })}
 
-              {/* Vertical drop line from marker to label cluster below */}
+        {/* Staggered role + annotation labels below, each with a leader line */}
+        {placed.map(({ p, i, x, row, anchor }) => {
+          const highlight = !!p.highlight
+          const color = highlight ? ANCHOR_COLOR : 'var(--color-text-muted)'
+          const rowY = ROW_TOP + row * ROW_STEP
+          const ann = annotationFor(p)
+          return (
+            <g key={`lb-${i}`}>
               <line
-                x1={cx}
-                x2={cx}
-                y1={trackY + 6}
-                y2={captionY - 12}
+                x1={x}
+                x2={x}
+                y1={trackY + 7}
+                y2={rowY - 13}
                 stroke={color}
                 strokeWidth={1}
                 opacity={highlight ? 0.6 : 0.3}
               />
-
-              {/* Role / label (below) */}
               <text
-                x={cx}
-                y={captionY}
-                textAnchor="middle"
+                x={x}
+                y={rowY}
+                textAnchor={anchor}
                 fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={highlight ? ANCHOR_COLOR : 'var(--color-text-secondary)'}
-                style={{ letterSpacing: '0.16em', textTransform: 'uppercase' }}
+                style={{ letterSpacing: '0.14em', textTransform: 'uppercase' }}
               >
                 {labelFor(p)}
               </text>
-              {/* Caption (annotation) — second line below role */}
-              {annotationFor(p) && (
+              {ann && (
                 <text
-                  x={cx}
-                  y={captionY + 14}
-                  textAnchor="middle"
+                  x={x}
+                  y={rowY + 15}
+                  textAnchor={anchor}
                   fontSize={13}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="var(--color-text-muted)"
-                  opacity={0.85}
+                  opacity={0.9}
                 >
-                  {annotationFor(p)}
+                  {ann}
                 </text>
               )}
             </g>
