@@ -64,7 +64,7 @@ export function MoneySledgehammer({
         className="leading-[0.9] font-extrabold tabular-nums mb-2"
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: 'clamp(48px, 8vw, 104px)',
+          fontSize: 'clamp(36px, 5.5vw, 68px)',
           color: accentColor,
           letterSpacing: '-0.03em',
         }}

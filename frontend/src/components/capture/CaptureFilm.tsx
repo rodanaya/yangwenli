@@ -249,7 +249,7 @@ function FacetRow({
         </h3>
         <span className="font-mono text-[13px] uppercase tracking-[0.1em] text-text-muted">· {sub}</span>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {rows.map((c) => {
           const expanded = openKey === keyOf(c)
           const delta = c.peak_share_pct - c.earliest_share_pct
@@ -257,7 +257,7 @@ function FacetRow({
             <div
               key={keyOf(c)}
               style={expanded ? { gridColumn: '1 / -1' } : undefined}
-              className={expanded ? 'rounded-sm border border-border bg-background-card' : ''}
+              className={expanded ? 'rounded-sm border border-border bg-background-card' : 'rounded-sm border border-border/60 bg-background-card'}
             >
               <div
                 role="button"
@@ -273,7 +273,7 @@ function FacetRow({
                   }
                 }}
                 aria-expanded={expanded}
-                className="w-full text-left p-2 cursor-pointer hover:bg-background-elevated transition-colors focus:outline-none focus:ring-1 focus:ring-text-muted rounded-sm"
+                className="w-full text-left p-3 cursor-pointer hover:bg-background-elevated transition-colors focus:outline-none focus:ring-1 focus:ring-text-muted rounded-sm"
               >
                 <div className={expanded ? 'max-w-[260px]' : ''}>
                   <CaptureTrajectory
@@ -285,14 +285,14 @@ function FacetRow({
                     lang={lang}
                   />
                 </div>
-                <div className="mt-1 flex items-center gap-1 flex-wrap">
-                  <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" className="max-w-full" />
+                <div className="mt-1.5">
+                  <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" fullName />
                 </div>
-                <div className="flex items-center gap-1 flex-wrap mt-0.5">
-                  <span className="text-[13px] text-text-muted font-mono uppercase tracking-wide">
+                <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-[13px] text-text-muted font-mono uppercase tracking-wide flex-shrink-0">
                     {lang === 'en' ? 'captured' : 'capturó'}
                   </span>
-                  <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="xs" className="min-w-0" />
+                  <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="sm" fullName />
                 </div>
                 <p className="mt-0.5 font-mono text-[13px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
                   <span>+{delta.toFixed(0)}pp</span>

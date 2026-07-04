@@ -132,15 +132,15 @@ export function CaptureNowLedger({
                     {String(i + 1).padStart(3, '0')}
                   </td>
                   <td className="px-3 py-2">
-                    <span className="inline-flex items-center gap-1.5 max-w-[300px]">
+                    <span className="inline-flex items-center gap-1.5">
                       {sector && (
                         <span className="inline-block h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: SECTOR_COLORS[sector.code] }} aria-hidden="true" />
                       )}
-                      <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="sm" className="min-w-0" />
+                      <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="md" />
                     </span>
                   </td>
                   <td className="px-3 py-2">
-                    <EntityIdentityChip type="vendor" id={r.top1_vendor_id} name={r.top1_vendor_name} size="sm" className="max-w-[260px]" />
+                    <EntityIdentityChip type="vendor" id={r.top1_vendor_id} name={r.top1_vendor_name} size="md" />
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     <span className="inline-flex items-center gap-2">
