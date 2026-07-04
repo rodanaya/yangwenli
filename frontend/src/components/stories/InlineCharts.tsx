@@ -1999,7 +1999,7 @@ export function ThresholdDistribution({
   // 2026-05-25: bumped bottom 56 → 96 so rotated x-axis labels like
   // "2019 pre-COVID" (134px content, rotated -40° ≈ 102px horizontal +
   // 86px vertical) don't get clipped by the SVG bottom edge.
-  const margin = { top: 48, right: 90, bottom: 96, left: 20 }
+  const margin = { top: 48, right: 40, bottom: 96, left: 20 }
   const plotW = 450
   const plotH = 156
   const totalH = margin.top + plotH + margin.bottom
@@ -2057,11 +2057,13 @@ export function ThresholdDistribution({
               opacity={0.7}
             />
             <text
-              x={margin.left + plotW + 4}
-              y={dotY(topThreshold) + 4}
-              fontSize={13}
+              x={margin.left + 3}
+              y={dotY(topThreshold) - 5}
+              textAnchor="start"
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
-              fill="var(--color-text-muted)"
+              fill={data.referenceLine!.color ?? HIGHLIGHT_COLOR}
+              opacity={0.9}
             >
               {refLabelFor(data.referenceLine!)}
             </text>
@@ -2080,11 +2082,13 @@ export function ThresholdDistribution({
               opacity={0.7}
             />
             <text
-              x={margin.left + plotW + 4}
-              y={dotY(midThreshold) + 4}
-              fontSize={13}
+              x={margin.left + 3}
+              y={dotY(midThreshold) - 5}
+              textAnchor="start"
+              fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
-              fill="var(--color-text-muted)"
+              fill={data.referenceLine2!.color ?? ANCHOR_COLOR}
+              opacity={0.9}
             >
               {refLabelFor(data.referenceLine2!)}
             </text>
@@ -2165,7 +2169,11 @@ export function ThresholdDistribution({
             opacity = 0.45
           }
 
-          const valueLabel = `${pt.value.toFixed(unit === '%' ? 1 : 2)}${unit ? ` ${unit}` : ''}`
+          // Per-dot labels carry only the number (+ a SHORT unit like "%").
+          // A long unit ("risk score") makes adjacent labels ~95px wide and
+          // they overprint at ~56px dot spacing — the unit lives in the axis /
+          // ChartCard anchor instead.
+          const valueLabel = `${pt.value.toFixed(unit === '%' ? 1 : 2)}${unit && unit.length <= 2 ? ` ${unit}` : ''}`
 
           return (
             <g key={i}>
@@ -2239,9 +2247,13 @@ export function AnnotatedThermometer({
   // 2026-05-25: bumped LABEL_W 138 → 200 to match the InlineBarChart fix.
   // Thermometer is used on captura ch3 and similar — sector/institution
   // names like "Infraestructura" / "Pharmaceuticals" need ~165px.
+  // 2026-07-04: BAR_W 288→250 + VALUE_W 94→150 so a full-width bar's in-bar
+  // peso readout never lands in the far-right annotation column — the
+  // "917.3 B MXN50 contracts" collision. The annotation column now fits
+  // "34.5% · 250 contracts" without overflowing left into the bar.
   const LABEL_W = 200
-  const BAR_W = 288
-  const VALUE_W = 94
+  const BAR_W = 230
+  const VALUE_W = 170
   const TOTAL_W = LABEL_W + BAR_W + VALUE_W
   const ROW_H = 22
   const ROW_GAP = 10
@@ -2266,7 +2278,7 @@ export function AnnotatedThermometer({
   const refLabelFor = (ref: { label: string; label_es?: string }) =>
     lang === 'es' ? (ref.label_es ?? ref.label) : ref.label
 
-  const totalSvgH = sorted.length * (ROW_H + ROW_GAP) + 28
+  const totalSvgH = sorted.length * (ROW_H + ROW_GAP) + 34
 
   // Anchor stat: highest value point's share pct
   const topPt = sorted[0]
@@ -2307,7 +2319,7 @@ export function AnnotatedThermometer({
         )}
 
         {sorted.map((pt, i) => {
-          const rowY = i * (ROW_H + ROW_GAP) + 20
+          const rowY = i * (ROW_H + ROW_GAP) + 26
           const sharePct = total > 0 ? (pt.value / total * 100) : 0
           const barPx = (pt.value / mx) * BAR_W
           const aboveRef = pt.value > refVal
@@ -2366,8 +2378,12 @@ export function AnnotatedThermometer({
                   not collide with the contracts annotation at the far right —
                   the collision that made the top sectors unreadable. */}
               {(() => {
-                const valTxt = `${sharePct.toFixed(1)}% · ${pt.value.toLocaleString()}${data.unit ? ` ${data.unit}` : ''}`
                 const inBar = barPx > 150
+                const peso = `${pt.value.toLocaleString()}${data.unit ? ` ${data.unit}` : ''}`
+                // Above-ref rows get a far-right annotation ("share% · N contracts"),
+                // so their bar readout is the peso value ALONE — no repeated share%.
+                // Below-ref rows have no annotation, so they carry share% inline.
+                const valTxt = aboveRef ? peso : `${sharePct.toFixed(1)}% · ${peso}`
                 return (
                   <text
                     x={inBar ? LABEL_W + barPx - 6 : LABEL_W + Math.max(2, barPx) + 6}
