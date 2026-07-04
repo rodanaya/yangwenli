@@ -525,10 +525,10 @@ export function InstitutionRecord({
                   return (
                     <tr key={c.id} className="border-t border-border/30">
                       <td className="py-2 pr-3" style={{ color: 'var(--color-text-secondary)', maxWidth: 280 }}>
-                        <span className="block whitespace-normal break-words leading-tight" title={c.title ?? ''}>{c.title ? shortenContractName(c.title, 64) : `#${c.contract_number ?? c.id}`}</span>
+                        <span className="block whitespace-normal break-words leading-tight">{c.title ? shortenContractName(c.title, Infinity) : `#${c.contract_number ?? c.id}`}</span>
                       </td>
                       <td className="py-2 pr-3">
-                        {c.vendor_id && c.vendor_name ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" /> : <span style={{ color: 'var(--color-text-muted)' }}>—</span>}
+                        {c.vendor_id && c.vendor_name ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" fullName /> : <span style={{ color: 'var(--color-text-muted)' }}>—</span>}
                       </td>
                       <td className="py-2 pr-3 text-right font-mono tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{c.contract_year ?? '—'}</td>
                       <td className="py-2 pr-3 text-right font-mono tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>{formatCompactMXN(c.amount_mxn ?? 0)}</td>

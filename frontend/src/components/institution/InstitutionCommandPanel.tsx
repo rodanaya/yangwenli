@@ -307,7 +307,7 @@ export function InstitutionSupplierTable({
               return (
                 <tr key={v.vendor_id} className="border-t border-border/30">
                   <td className="px-3 py-2 font-mono tabular-nums text-text-muted">{i + 1}</td>
-                  <td className="px-3 py-2"><EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" /></td>
+                  <td className="px-3 py-2"><EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" fullName /></td>
                   <td className="px-3 py-2 text-right font-mono tabular-nums text-text-muted">{formatNumber(v.contract_count ?? 0)}</td>
                   <td className="px-3 py-2 text-right font-mono tabular-nums">{formatCompactMXN(v.total_value_mxn ?? 0)}</td>
                   <td className="px-3 py-2 text-right font-mono tabular-nums" style={{ color: share >= 10 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: share >= 10 ? 600 : 400 }}>{share.toFixed(1)}%</td>

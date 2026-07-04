@@ -63,12 +63,11 @@ export function WaterfallRiskChart({
         const color = isPos ? '#dc2626' : '#64748b'
         const barPct = Math.max(1.5, (Math.abs(entry.contribution) / maxVal) * 100)
         return (
-          <div key={entry.feature} className="flex items-center gap-3">
+          <div key={entry.feature} className="flex items-start gap-3">
             {/* Factor label + z-score — left-aligned column, anchors the section */}
             <div className="flex-shrink-0" style={{ width: 188 }}>
               <div
-                className="truncate"
-                title={entry.label}
+                className="break-words"
                 style={{
                   fontFamily: 'var(--font-family-mono, monospace)',
                   fontSize: 13,

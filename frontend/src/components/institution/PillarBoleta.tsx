@@ -16,7 +16,7 @@
  * espectro-del-padron P2 § 3.3
  */
 import { useTranslation } from 'react-i18next'
-import { INSTITUTION_PILLARS, pillarLabel, type InstitutionPillar } from '@/lib/institution-pillars'
+import { INSTITUTION_PILLARS, pillarLabel, pillarShort, type InstitutionPillar } from '@/lib/institution-pillars'
 import { TIER_STYLES } from '@/lib/tiers'
 import { formatCompactMXN } from '@/lib/utils'
 
@@ -72,7 +72,8 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
 
   const rows = INSTITUTION_PILLARS.map((p) => ({
     pillar: p,
-    label: pillarLabel(p, lang),
+    label: pillarShort(p, lang),
+    fullLabel: pillarLabel(p, lang),
     value: (item[p.dbField] as number) ?? 0,
     max: p.max,
   }))
@@ -107,8 +108,8 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
           return (
             <div key={row.pillar.dbField} className="flex items-center gap-3">
               <span
-                className="text-[12px] font-mono uppercase tracking-wide text-text-muted w-32 shrink-0 truncate"
-                title={row.label}
+                className="text-[12px] font-mono uppercase tracking-wide text-text-muted w-32 shrink-0 whitespace-normal break-words leading-tight"
+                title={row.fullLabel}
               >
                 {row.pillar.letter} · {row.label}
               </span>
