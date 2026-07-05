@@ -157,6 +157,7 @@ function VendorCoda({
               id={topInst.institution_id}
               name={topInst.institution_name}
               size="sm"
+              fullName
             />
           </ChipRow>
         )}
@@ -188,6 +189,7 @@ function VendorCoda({
               id={caseAnchor.slug}
               name={caseAnchor.name}
               size="sm"
+              fullName
               flags={caseAnchor.isGt ? ['gt'] : undefined}
             />
           </ChipRow>

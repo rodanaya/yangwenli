@@ -180,6 +180,7 @@ export function VendorNetworkTab({
                   id={s.scandal_slug}
                   name={s.scandal_title ?? s.case_name ?? s.scandal_slug}
                   size="sm"
+                  fullName
                 />
                 {s.fraud_type && (
                   <span className="text-[13px] font-mono uppercase tracking-wider text-text-muted">
