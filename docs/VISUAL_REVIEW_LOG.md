@@ -4058,3 +4058,38 @@ None detected — no actionable bilingual gaps.
 
 ### Overall: WARN
 HTTP and API checks could not be completed — `rubli.xyz:443` blocked by cloud egress policy (persistent `connect_rejected 403`). Not a site issue. Bilingual scan clean. To resolve: add `rubli.xyz` to allowed egress in environment network policy, or schedule health checks from a host with direct internet access.
+
+---
+## Visual Review — 2026-07-05T12:08:54Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ⚠ network |
+| https://rubli.xyz/atlas | BLOCKED | ⚠ network |
+| https://rubli.xyz/aria | BLOCKED | ⚠ network |
+| https://rubli.xyz/sectors | BLOCKED | ⚠ network |
+| https://rubli.xyz/sectors/salud | BLOCKED | ⚠ network |
+| https://rubli.xyz/cases | BLOCKED | ⚠ network |
+| https://rubli.xyz/methodology | BLOCKED | ⚠ network |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ⚠ network |
+
+All HTTP checks returned `000` / exit 56. Proxy log: `connect_rejected 403` for `rubli.xyz:443` — outbound HTTPS to this host is denied by the cloud environment's egress policy. This is a runner network policy issue, not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same egress policy) | ⚠ network |
+| /api/v1/cases?limit=5 | BLOCKED | ⚠ network |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | ⚠ network |
+| /api/v1/sectors | BLOCKED | ⚠ network |
+
+### Bilingual Gaps
+Local static scan of `frontend/src/pages/` and `frontend/src/components/`:
+- `frontend/src/pages/explore/VendorsTab.tsx:294` — `'Loading...'` fallback without Spanish variant (minor; spinner default)
+- `frontend/src/components/ui/spinner.tsx:37` — `LoadingState` default prop `'Loading...'` (minor; component default)
+- All `ConcentrationConstellation.tsx` pattern labels already use `isEs ? ES : EN` guard — OK
+- No `Generate Report`, `SIGN IN`, or raw ALLCAPS.ALLCAPS i18n key leaks detected in UI code
+
+### Overall: WARN
+HTTP and API checks could not be completed — `rubli.xyz:443` is blocked by the cloud runner's egress policy (persistent `connect_rejected 403`). This is **not a site failure**; it is a runner configuration issue. Two minor bilingual gaps found (`'Loading...'` defaults) — low priority. Recommend running health checks from an environment with direct internet access, or adding `rubli.xyz` to the allowed egress list.
