@@ -4022,3 +4022,39 @@ None detected — no actionable bilingual gaps.
 
 ### Overall: WARN
 HTTP and API checks could not be completed — `rubli.xyz:443` blocked by cloud egress policy (persistent `connect_rejected 403`). Not a site issue. Bilingual scan clean. To resolve: add `rubli.xyz` to allowed egress in environment network policy, or schedule health checks from a host with direct internet access.
+
+---
+## Visual Review — 2026-07-05T06:09:01Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | WARN |
+| https://rubli.xyz/atlas | BLOCKED | WARN |
+| https://rubli.xyz/aria | BLOCKED | WARN |
+| https://rubli.xyz/sectors | BLOCKED | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED | WARN |
+| https://rubli.xyz/cases | BLOCKED | WARN |
+| https://rubli.xyz/methodology | BLOCKED | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | WARN |
+
+Note: Cloud egress proxy issues `connect_rejected` (gateway 403) for `rubli.xyz:443`. Persistent environment limitation — not indicative of site downtime. Same block observed in prior runs (2026-07-03, 2026-07-05T00:09Z). HTTP/API checks require a network policy change or running from a non-sandboxed host.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress policy 403 | WARN |
+| /api/v1/cases?limit=5 | BLOCKED — egress policy 403 | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress policy 403 | WARN |
+| /api/v1/sectors | BLOCKED — egress policy 403 | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- All grep hits are in JSDoc comments, type annotations, object property accesses, or properly bilingual (`isEs ? ES : EN`) patterns.
+- "Generate Report" hardcoded: **None found**.
+- "SIGN IN" hardcoded: **None found**.
+
+None detected — no actionable bilingual gaps.
+
+### Overall: WARN
+HTTP and API checks could not be completed — `rubli.xyz:443` blocked by cloud egress policy (persistent `connect_rejected 403`). Not a site issue. Bilingual scan clean. To resolve: add `rubli.xyz` to allowed egress in environment network policy, or schedule health checks from a host with direct internet access.
