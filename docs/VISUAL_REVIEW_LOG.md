@@ -4315,3 +4315,46 @@ Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
 
 ### Overall: WARN
 HTTP and API checks blocked by persistent egress proxy policy (cloud session → proxy → gateway 403 on CONNECT to rubli.xyz:443). All WARN flags are infrastructure constraints, not site failures. Bilingual static scan clean — no new gaps detected.
+
+---
+## Visual Review — 2026-07-07T00:09:19Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/aria | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/cases | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (proxy 403 — policy denial) | WARN |
+
+Note: `rubli.xyz:443` rejected by session egress proxy (`connect_rejected — gateway answered 403 to CONNECT`). Persistent block across all runs from this cloud environment; not indicative of site downtime.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- `CaseLibrary.tsx:19` — JSDoc comment referencing FRAUDTYPES enum; not UI-rendered. OK.
+- `Methodology.tsx:93` — academic citation (Mahalanobis, P.C.) — untranslatable bibliographic reference. OK.
+- `TIER_STYLES.Excelente.color` in `PillarBoleta.tsx:43` — style/color lookup, not a rendered string. OK.
+- `PATTERN_CHIP[item.primary_pattern]` in `RegisterRow.tsx:161` — object property lookup, not rendered. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ... : ...`). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx:1493` — code data, not rendered UI labels. OK.
+- `VendorHero.tsx:717` — code comment with vendor name example, not rendered. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — `target_name: 'Maypo S.A.'` in chart data, vendor proper name. OK.
+- `ExpedienteSpine.tsx:76` and `EvidenceIndex.tsx:19` — JSX.Element return type annotations, not rendered. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by persistent egress proxy policy (cloud session → proxy → gateway 403 on CONNECT to rubli.xyz:443). All WARN flags are infrastructure constraints, not site failures. Bilingual static scan clean — no new gaps detected.
