@@ -734,7 +734,7 @@ export const STORIES: StoryDef[] = [
       label_es: "proveedores con el mismo patrón",
       sublabel: "0.7% officially confirmed",
       sublabel_es: "0.7% confirmados oficialmente",
-      color: '#f59e0b',
+      color: '#dc2626',
     },
     kickerStats: [
       {
@@ -850,6 +850,11 @@ export const STORIES: StoryDef[] = [
               },
             ],
             unit: 'MDP',
+            referenceLine: {
+              value: 370,
+              label: 'persona floor',
+              label_es: 'piso personas',
+            },
             annotation:
               'Five named P2-pattern vendors, top by contract value. Rows 1–2 are foreign-domiciled incorporated entities; rows 3–5 are physical persons — not companies — each holding ≈370M-peso federal contracts and then disappearing from the procurement record entirely.',
             annotation_es:
@@ -926,58 +931,45 @@ export const STORIES: StoryDef[] = [
           "El Reporte de Desempeño en Contrataciones Públicas 2023 de la OCDE identificó esta misma brecha en todo el mundo y recomendó que los sistemas de compra construyan en paralelo su propia detección de señales de alerta por conducta — porque la fiscalización mira al pasado mientras el fraude en contrataciones mira al futuro. La investigación del Banco Mundial sobre contrataciones en Europa del Este llegó a la misma conclusión en 2019. P2 es esa recomendación hecha operación: basada en patrones, nativa de la contratación, rápida. No reemplaza al SAT; aporta lo único que la fiscalización no puede entregar a escala — velocidad.",
         ],
         chartConfig: {
-          type: 'inline-timeline',
+          type: 'editorial-cleveland-pair',
           title: 'Time to Definitive Listing — SAT vs RUBLI',
           title_es: 'Tiempo hasta listado definitivo — SAT vs RUBLI',
           chartId: 'sat-rubli-latency',
           data: {
             points: [
               {
-                label: 'RUBLI · P2',
-                label_es: 'RUBLI · P2',
-                value: 0.5,
-                highlight: true,
-                annotation: '~2 weeks per pipeline run',
-                annotation_es: '~2 semanas por corrida',
-              },
-              {
-                label: 'SAT · best case',
-                label_es: 'SAT · óptimo',
-                value: 6,
-                annotation: 'fastest definitive listing',
-                annotation_es: 'listado definitivo más rápido',
+                label: 'SAT · worst case',
+                label_es: 'SAT · peor caso',
+                value: 36,
+                value2: 0.5,
+                color: '#dc2626',
+                annotation: '36+ months (legal challenges)',
+                annotation_es: '36+ meses (impugnaciones)',
               },
               {
                 label: 'SAT · typical',
                 label_es: 'SAT · típico',
                 value: 15,
+                value2: 0.5,
+                color: '#a06820',
                 annotation: '12–18 months range',
                 annotation_es: 'rango 12–18 meses',
               },
               {
-                label: 'SAT · worst case',
-                label_es: 'SAT · peor caso',
-                value: 36,
-                annotation: '36+ months (legal challenges)',
-                annotation_es: '36+ meses (impugnaciones)',
+                label: 'SAT · best case',
+                label_es: 'SAT · óptimo',
+                value: 6,
+                value2: 0.5,
+                color: '#71717a',
+                annotation: 'fastest definitive listing',
+                annotation_es: 'listado definitivo más rápido',
               },
             ],
             unit: 'months',
-            maxValue: 40,
-            referenceLine: {
-              value: 0.5,
-              label: 'ARIA window',
-              label_es: 'Ventana ARIA',
-            },
-            referenceLine2: {
-              value: 6,
-              label: 'SAT window',
-              label_es: 'Ventana SAT',
-            },
             annotation:
-              "Months to definitive Art. 69-B listing versus a single ARIA P2 pipeline run. During SAT's window, flagged vendors keep contracting. Source: OECD 2023 Public Procurement Performance Report.",
+              "Filled dot = SAT's Art. 69-B benchmark; open dot = RUBLI's own P2 pipeline run, a constant 0.5 months across all three rows. Even SAT's fastest listing (6mo) takes 12× longer than one ARIA run; the worst case (36mo) takes 72× longer. During SAT's window, flagged vendors keep contracting. Source: OECD 2023 Public Procurement Performance Report.",
             annotation_es:
-              'Meses hasta listado definitivo bajo el Art. 69-B frente a una sola corrida del pipeline P2 de ARIA. Durante la ventana del SAT, los proveedores marcados siguen contratando. Fuente: OCDE, Reporte de Desempeño en Contrataciones Públicas 2023.',
+              'Punto lleno = referente del SAT bajo el Art. 69-B; punto abierto = una corrida del pipeline P2 de RUBLI, constante en 0.5 meses en las tres filas. Incluso el listado más rápido del SAT (6 meses) tarda 12 veces más que una corrida de ARIA; el peor caso (36 meses) tarda 72 veces más. Durante la ventana del SAT, los proveedores marcados siguen contratando. Fuente: OCDE, Reporte de Desempeño en Contrataciones Públicas 2023.',
           },
         },
         pullquote: {
