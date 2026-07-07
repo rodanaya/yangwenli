@@ -4447,3 +4447,47 @@ None detected — no new actionable bilingual gaps.
 
 ### Overall: WARN
 HTTP and API checks blocked by egress proxy policy (403 on rubli.xyz:443) — recurring environment limitation, not a site issue. Bilingual scan: PASS (no gaps).
+
+---
+## Visual Review — 2026-07-07T18:09:14Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/aria | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/cases | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (proxy 403 — policy denial) | WARN |
+
+Note: `rubli.xyz:443` blocked by session egress proxy (`gateway answered 403 to CONNECT — policy denial`). Recurring environment limitation; not indicative of site downtime.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`) — all matches are false positives (same stable baseline as prior runs):
+- `CaseLibrary.tsx:19` — JSDoc comment referencing FRAUDTYPES enum; not UI-rendered. OK.
+- `Methodology.tsx:93` — academic bibliography citation (untranslatable). OK.
+- `StoryMoneySankeyChart.tsx:22,37` — fixture data property, not user-facing text. OK.
+- `ExpedienteSpine.tsx:76`, `EvidenceIndex.tsx:19` — TypeScript return type annotations. OK.
+- `PillarBoleta.tsx:43` — `TIER_STYLES.Excelente.color` is a JS property access, not a key leak. OK.
+- `RegisterRow.tsx:161` — `PATTERN_CHIP[item.primary_pattern]` lookup. OK.
+- `ExploreCanvas.tsx:1478,1479,1493` — inline comments + siglas array (legal corporate tokens). OK.
+- `VendorHero.tsx:717` — JSDoc comment. OK.
+- `ConcentrationConstellation.tsx:155–167` — all bilingual (`isEs ? ES : EN` pattern). OK.
+- "Generate Report" hardcoded: None found.
+- "SIGN IN" hardcoded: None found.
+
+None detected — no new actionable bilingual gaps.
+
+### Overall: WARN
+HTTP and API checks blocked by egress proxy policy (403 on rubli.xyz:443) — recurring environment limitation, not a site issue. Bilingual scan: PASS (no gaps).
