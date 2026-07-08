@@ -72,6 +72,8 @@ export function FeatureSection({
   title,
   meta,
   lang,
+  accent,
+  movement,
   children,
 }: {
   id: string
@@ -80,10 +82,27 @@ export function FeatureSection({
   /** Optional right-aligned mono meta fragment. */
   meta?: string
   lang: Lang
+  /** Sector-tinted accent for the § numeral (falls back to var(--color-accent)). */
+  accent?: string
+  /** Optional act-movement label rendered above the § eyebrow — groups
+   *  sections into the three-act structure without restructuring the tree. */
+  movement?: { en: string; es: string }
   children: React.ReactNode
 }) {
+  const accentColor = accent ?? 'var(--color-accent)'
   return (
     <section id={id} className="py-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+      {movement && (
+        <div className="flex items-center gap-3 mb-3">
+          <span
+            className="font-mono uppercase"
+            style={{ fontSize: 9.5, letterSpacing: '0.22em', color: accentColor, fontWeight: 600 }}
+          >
+            {lang === 'es' ? movement.es : movement.en}
+          </span>
+          <span aria-hidden="true" className="h-px flex-1" style={{ background: `${accentColor}33` }} />
+        </div>
+      )}
       <div className="flex items-baseline justify-between gap-4 mb-4">
         <p
           className="font-mono"
@@ -95,7 +114,7 @@ export function FeatureSection({
             fontWeight: 500,
           }}
         >
-          <span style={{ color: 'var(--color-accent)', fontWeight: 700 }}>§ {numeral}</span>
+          <span style={{ color: accentColor, fontWeight: 700 }}>§ {numeral}</span>
           <span className="mx-2 opacity-50">·</span>
           {lang === 'es' ? title.es : title.en}
         </p>

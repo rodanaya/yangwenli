@@ -15,8 +15,9 @@
  *     (chrome marking) — never green, never an ochre fill.
  *   - fraud type carries NO color (the FRAUD_TYPE_LEFT rainbow is dead).
  */
-import { RISK_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, SECTORS } from '@/lib/constants'
 import { ADMINISTRATIONS, getAdministrationByYear } from '@/lib/administrations'
+import type { ScandalDetail, ScandalListItem } from '@/api/types'
 
 export type Lang = 'en' | 'es'
 
@@ -380,4 +381,174 @@ export function evidenceLabel(value: string | undefined | null, lang: Lang): str
 
 export function folio(id: number): string {
   return `EXP·${String(id).padStart(4, '0')}`
+}
+
+// ─── The Charge — a live-computed, ranked lede sentence (El Cargo) ──────────
+// DESIGNUS synthesis 2026-07-07 ("narrative-first" / "El Cargo"). Ranks a
+// fixed candidate set (threshold multiple, archive cost-rank, impunity gap,
+// conviction rarity, severity) by strength and emits the strongest as the
+// primary clause, the next distinct-kind candidate as an optional secondary
+// clause. The fallback candidate always exists (strength 0) so the function
+// is total — it never returns an empty finding.
+
+export interface LeadFinding {
+  eyebrow: string
+  primaryText: string
+  secondaryText?: string
+  /** emphasis[0] is the accented token inside primaryText; emphasis[1] (if
+   *  present) is the accented token inside secondaryText. */
+  emphasis: string[]
+  accentKind: string
+}
+
+interface FindingCandidate {
+  kind: 'threshold' | 'cost-rank' | 'impunity' | 'conviction' | 'severity' | 'fallback'
+  text: string
+  emphasis: string
+  strength: number
+}
+
+function formatMultiplier(m: number): string {
+  return m >= 10 ? String(Math.round(m)) : m.toFixed(1)
+}
+
+function ordinalSuffixEn(n: number): string {
+  const j = n % 10
+  const k = n % 100
+  if (j === 1 && k !== 11) return 'st'
+  if (j === 2 && k !== 12) return 'nd'
+  if (j === 3 && k !== 13) return 'rd'
+  return 'th'
+}
+
+/**
+ * "The 3rd-costliest of 43 documented cases" — the cost-rank clause, plus
+ * the substring inside it that should carry the accent color.
+ */
+export function ordinalCostRank(
+  rank: number,
+  total: number,
+  lang: Lang,
+): { text: string; emphasis: string } {
+  if (rank === 1) {
+    return lang === 'es'
+      ? { text: `el caso más costoso de ${total} documentados`, emphasis: 'más costoso' }
+      : { text: `the costliest of ${total} documented cases`, emphasis: 'costliest' }
+  }
+  if (rank === 2) {
+    return lang === 'es'
+      ? { text: `el segundo más costoso de ${total} documentados`, emphasis: 'segundo más costoso' }
+      : { text: `the 2nd-costliest of ${total} documented cases`, emphasis: '2nd-costliest' }
+  }
+  if (rank === 3) {
+    return lang === 'es'
+      ? { text: `el tercero más costoso de ${total} documentados`, emphasis: 'tercero más costoso' }
+      : { text: `the 3rd-costliest of ${total} documented cases`, emphasis: '3rd-costliest' }
+  }
+  const suffix = ordinalSuffixEn(rank)
+  return lang === 'es'
+    ? { text: `el ${rank}.º más costoso de ${total} documentados`, emphasis: `${rank}.º más costoso` }
+    : { text: `the ${rank}${suffix}-costliest of ${total} documented cases`, emphasis: `${rank}${suffix}-costliest` }
+}
+
+/**
+ * The Charge — a pure, total function of `scandal` + the in-memory
+ * `allCases` docket. Never hardcoded per-case; degrades to a status
+ * fallback clause when the case has no amount, no distribution, and no gap.
+ */
+export function leadFinding(
+  scandal: ScandalDetail,
+  allCases: ScandalListItem[] | undefined,
+  lang: Lang,
+): LeadFinding {
+  const amount = scandal.amount_mxn_high ?? scandal.amount_mxn_low ?? null
+  const sectorId = scandal.sector_id ?? scandal.sector_ids?.[0] ?? null
+  const sector = sectorId != null ? SECTORS.find((s) => s.id === sectorId) : null
+  const sectorName = sector
+    ? lang === 'es' ? sector.name : sector.nameEN
+    : lang === 'es' ? 'el sector' : 'the sector'
+  const sectorAccent = sector?.color ?? RISK_COLORS.critical
+  const disposition = dispositionFor(scandal.legal_status)
+  const gap = impunityGap(scandal)
+
+  const candidates: FindingCandidate[] = []
+
+  // C1 — threshold multiplier
+  if (amount != null) {
+    const threshold = sectorRedFlag(sectorId)
+    const mult = amount / threshold
+    if (Number.isFinite(mult) && mult >= 1.5) {
+      const emphasis = `${formatMultiplier(mult)}×`
+      const text = lang === 'es'
+        ? `${emphasis} el umbral de revisión de la plataforma para ${sectorName}`
+        : `${emphasis} the platform's ${sectorName} review threshold`
+      candidates.push({ kind: 'threshold', text, emphasis, strength: Math.min(1, mult / 12) })
+    }
+  }
+
+  // C2 — cost-rank among the documented archive
+  const usableAmounts = (allCases ?? [])
+    .map((c) => c.amount_mxn_high ?? c.amount_mxn_low ?? null)
+    .filter((v): v is number => v != null)
+  if (amount != null && usableAmounts.length >= 5) {
+    const total = usableAmounts.length
+    const rank = usableAmounts.filter((v) => v > amount).length + 1
+    const cap = Math.max(3, Math.round(total * 0.15))
+    if (rank <= cap) {
+      const { text, emphasis } = ordinalCostRank(rank, total, lang)
+      candidates.push({ kind: 'cost-rank', text, emphasis, strength: 1 - (rank - 1) / total })
+    }
+  }
+
+  // C3 — impunity gap
+  if (disposition.isOpen && gap && gap.years >= 2) {
+    const emphasis = lang === 'es' ? `${gap.years} años` : `${gap.years} years`
+    const text = lang === 'es'
+      ? `sin resolución ${gap.years} años después del descubrimiento`
+      : `unresolved ${gap.years} years after discovery`
+    candidates.push({ kind: 'impunity', text, emphasis, strength: Math.min(1, gap.years / 10) })
+  }
+
+  // C4 — conviction rarity
+  if (allCases && scandal.legal_status === 'convicted') {
+    const n = allCases.filter((c) => c.legal_status === 'convicted').length
+    const t = allCases.length
+    const emphasis = lang === 'es' ? `${n} condenas` : `${n} convictions`
+    const text = lang === 'es'
+      ? `una de solo ${n} condenas en ${t} casos documentados`
+      : `one of only ${n} convictions in ${t} documented cases`
+    candidates.push({ kind: 'conviction', text, emphasis, strength: 0.7 })
+  }
+
+  // C5 — severity
+  if (scandal.severity >= 4) {
+    const emphasis = lang === 'es' ? 'más graves' : 'gravest'
+    const text = lang === 'es' ? 'entre los más graves del archivo' : 'among the gravest in the archive'
+    candidates.push({ kind: 'severity', text, emphasis, strength: 0.55 })
+  }
+
+  // Fallback — always present, lowest priority; guarantees a total function.
+  candidates.push({
+    kind: 'fallback',
+    text: lang === 'es'
+      ? 'documentado; sin resolución firme en el registro'
+      : 'documented; no final disposition on record',
+    emphasis: '',
+    strength: 0,
+  })
+
+  candidates.sort((a, b) => b.strength - a.strength)
+  const primary = candidates[0]
+  const secondary = candidates.find((c) => c.kind !== primary.kind && c.strength > 0)
+
+  const emphasis = [primary.emphasis]
+  if (secondary) emphasis.push(secondary.emphasis)
+
+  return {
+    eyebrow: lang === 'es' ? 'EL HALLAZGO' : 'THE FINDING',
+    primaryText: primary.text,
+    secondaryText: secondary?.text,
+    emphasis,
+    accentKind: scandal.legal_status === 'impunity' ? disposition.ink : sectorAccent,
+  }
 }
