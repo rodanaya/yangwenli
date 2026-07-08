@@ -21,6 +21,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Building2 } from 'lucide-react'
 import type {
   StoryInlineChartData,
   StoryChartPoint,
@@ -29,6 +30,26 @@ import type {
   StoryStackedBarData,
 } from '@/lib/story-content'
 import { RISK_COLORS, SECTOR_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { formatCompactMXN } from '@/lib/utils'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+
+// ---------------------------------------------------------------------------
+// Cross-referenced vendor IDs for InlineBarChart's "named vendor" rows.
+// Story-content.ts chart points carry a name string only (StoryChartPoint has
+// no id field, and it is frozen — shared by 13 stories). These five entries
+// are NOT fabricated: they are the same real vendors' ids already present in
+// OTHER stories' `entities` arrays in this same file (el-sexenio-del-riesgo,
+// el-monopolio-invisible), matched by exact name. Every other riskScore-
+// bearing bar row (a "named vendor" row without a confirmed id) still renders
+// as styled text with the Building2 marker — never a fabricated link.
+// ---------------------------------------------------------------------------
+const KNOWN_VENDOR_IDS: Record<string, number> = {
+  'OPERADORA CICSA': 36961,
+  'DOWELL SCHLUMBERGER': 8143,
+  'GRUPO FÁRMACOS': 29277,
+  'ALSTOM TRANSPORT': 139711,
+  'CONSTRUCTORA ARHNOS': 28111,
+}
 
 // Eyebrow translation map. The structural labels at the top of each
 // chart card ("HORIZONTAL · RANKED", "MULTI-SERIES · 4 VENDORS", etc.)
@@ -88,17 +109,6 @@ const ANCHOR_COLOR = '#a06820'
 // untouched — mirrors the diverging-bar CANONICAL_COLOR_ALLOWLIST below.
 // ---------------------------------------------------------------------------
 
-// Known design-token CSS var names → hex, so we can read their luminance.
-const TOKEN_HEX: Record<string, string> = {
-  ...Object.fromEntries(
-    Object.entries(SECTOR_COLORS).map(([k, v]) => [`var(--color-sector-${k})`, v]),
-  ),
-  'var(--color-text-primary)': '#1a1714',
-  'var(--color-text-secondary)': '#6b6560',
-  'var(--color-text-muted)': '#7a716c',
-  'var(--color-background)': '#faf9f6',
-}
-
 function relLuminance(hex: string): number | null {
   const m = /^#?([0-9a-fA-F]{6})$/.exec(hex.trim())
   if (!m) return null
@@ -108,17 +118,6 @@ function relLuminance(hex: string): number | null {
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
   })
   return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
-}
-
-// Luminance of any color string (hex or a known var token); null if unknown.
-function lumOf(color: string | undefined): number | null {
-  if (!color) return null
-  const v = color.trim()
-  if (v.startsWith('var(')) {
-    const hex = TOKEN_HEX[v]
-    return hex ? relLuminance(hex) : null
-  }
-  return relLuminance(v)
 }
 
 // Contrast-safe line/series/marker palette — every entry is dark enough to read
@@ -155,15 +154,6 @@ function safeFill(raw: string | undefined, fallback: string): string {
   const L = relLuminance(raw)
   if (L === null || L > 0.8) return fallback
   return raw
-}
-
-// Legible ink for a label drawn ON TOP of a filled bar/area: white on dark
-// fills, near-black on light fills (e.g. RISK_COLORS.high #f59e0b ≈0.45, energia
-// yellow) where white would vanish.
-function labelInkOn(fillColor: string): string {
-  const L = lumOf(fillColor)
-  if (L === null) return 'rgba(255,255,255,0.92)'
-  return L < 0.38 ? 'rgba(255,255,255,0.92)' : 'var(--color-text-primary)'
 }
 
 function getColor(point: StoryChartPoint, index: number): string {
@@ -540,6 +530,13 @@ export function InlineBarChart({
   const VALUE_W = 90
   const unit = data.unit ?? ''
 
+  // Called unconditionally (rules of hooks) even though only the standard
+  // 3-deck path below reads `measured` — the dominance path keeps its fixed
+  // W. See ThresholdDistribution for why literal-size mobile rendering
+  // needs the actual measured width instead of viewBox+preserveAspectRatio
+  // auto-shrink.
+  const { ref: regWrapRef, width: regMeasured } = useMeasuredWidth<HTMLDivElement>()
+
   // Pick lang-aware label per point.
   const labelFor = (pt: { label: string; label_en?: string; label_es?: string }) => {
     if (lang === 'en') return pt.label_en ?? pt.label
@@ -710,7 +707,12 @@ export function InlineBarChart({
 
   // Standard 3-deck register: label+value / bar / annotation — three lanes that
   // never share a horizontal band, so text can't collide at any bar length.
-  const W = 620
+  // 2026-07-07: W tracks the measured container width (floor 300 for phones,
+  // ceiling 620 to preserve the original desktop proportions) instead of a
+  // fixed 620 scaled down via preserveAspectRatio — label/value/bar text
+  // stays literal-size at every width instead of shrinking below ~8px on a
+  // 360px phone.
+  const W = Math.max(300, Math.min(regMeasured, 620))
   const hasAnno = data.points.some((p) => p.annotation)
   const rowH = hasAnno ? 54 : 36
   const refs = [data.referenceLine, data.referenceLine2].filter(
@@ -724,6 +726,20 @@ export function InlineBarChart({
     ? (unit === 'B MXN' ? 'mil M MXN' : unit === 'contracts' ? 'contratos' : unit === 'wins' ? 'victorias' : unit)
     : unit
 
+  // Deck-1 "named vendor" treatment (§ ch3 directory, and every other
+  // InlineBarChart caller that opts a point into riskScore/RISK_COLORS
+  // tier coloring — verified every such point across story-content.ts is a
+  // real vendor row, never a category/sector bar). Vendor dossier ids are
+  // NOT in StoryChartPoint (frozen shape, shared by 13 stories) and there is
+  // no live lookup here (this whole surface is bundled data, zero API
+  // calls). KNOWN_VENDOR_IDS is a small, cross-referenced (not fabricated)
+  // subset — the same 5 vendors' real ids already live in other stories'
+  // `entities` arrays in this file. Those 5 rows become a real
+  // EntityIdentityChip dossier link; every other named-vendor row gets a
+  // Building2 marker (visually "this is a tracked entity") but stays plain,
+  // non-interactive text — never a fake/dead link.
+  const LANE_W = Math.max(120, W - 100)
+
   return (
     <ChartCard
       title={title}
@@ -733,10 +749,12 @@ export function InlineBarChart({
       stamp={data.stamp}
       lang={lang}
     >
+      <div ref={regWrapRef} className="w-full">
       <svg
         viewBox={`0 0 ${W} ${regSvgH}`}
-        preserveAspectRatio="xMinYMin meet"
-        className="w-full"
+        width={W}
+        height={regSvgH}
+        style={{ maxWidth: '100%', display: 'block' }}
         aria-hidden="true"
       >
         {/* Reference lines drawn first (row text sits on top); labels in the header strip */}
@@ -783,21 +801,53 @@ export function InlineBarChart({
           const rawLbl = labelFor(pt)
           const lbl = rawLbl.length > 40 ? rawLbl.slice(0, 39) + '…' : rawLbl
           const anno = annoFor(pt)
+          const knownVendorId = KNOWN_VENDOR_IDS[rawLbl.trim().toUpperCase()]
+          const isNamedVendor = pt.riskScore !== undefined
           return (
             <g key={i}>
-              {/* Deck 1 — label (left) · value (right ledger column). Text-only. */}
-              <text
-                x={0}
-                y={rowY + 12}
-                textAnchor="start"
-                dominantBaseline="middle"
-                fontSize={13}
-                fontFamily="var(--font-family-mono, monospace)"
-                fill={pt.highlight ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'}
-                fontWeight={pt.highlight ? 700 : 400}
-              >
-                {lbl}
-              </text>
+              {/* Deck 1 — label (left) · value (right ledger column).
+                  Known vendor → real EntityIdentityChip dossier link (HTML,
+                  via foreignObject). Named-but-unlinked vendor → Building2
+                  marker + plain text. Everything else → plain text, x=0. */}
+              {knownVendorId != null ? (
+                <foreignObject x={0} y={rowY} width={LANE_W} height={20}>
+                  <div className="flex h-full items-center" style={{ fontSize: 13 }}>
+                    <EntityIdentityChip
+                      type="vendor"
+                      id={knownVendorId}
+                      name={rawLbl}
+                      size="sm"
+                      riskScore={pt.riskScore}
+                      hideIcon
+                    />
+                  </div>
+                </foreignObject>
+              ) : (
+                <>
+                  {isNamedVendor && (
+                    <Building2
+                      x={0}
+                      y={rowY + 4}
+                      width={9}
+                      height={9}
+                      color="var(--color-text-muted)"
+                      strokeWidth={2.2}
+                    />
+                  )}
+                  <text
+                    x={isNamedVendor ? 13 : 0}
+                    y={rowY + 12}
+                    textAnchor="start"
+                    dominantBaseline="middle"
+                    fontSize={13}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fill={pt.highlight ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'}
+                    fontWeight={pt.highlight ? 700 : 400}
+                  >
+                    {lbl}
+                  </text>
+                </>
+              )}
               <text
                 x={W}
                 y={rowY + 12}
@@ -832,6 +882,7 @@ export function InlineBarChart({
           )
         })}
       </svg>
+      </div>
     </ChartCard>
   )
 }
@@ -2005,8 +2056,24 @@ export function ThresholdDistribution({
   // -40°, so it draws UP-LEFT from its dot. A long label there (e.g.
   // "Infraestructura") ran past x=0 and clipped to "cructura".
   const margin = { top: 48, right: 40, bottom: 96, left: 70 }
-  const plotW = 450
   const plotH = 156
+
+  // 2026-07-07: literal-size mobile rendering. The old fixed 560px viewBox
+  // scaled down via preserveAspectRatio, so a 360px phone rendered every
+  // glyph at ~0.64x (an 11.5px label became <8px) — collisions got WORSE on
+  // mobile because text kept shrinking while the W1 fixes below assume a
+  // readable literal size. plotW now tracks the measured container width
+  // between two guardrails: never denser than MIN_CATEGORY_PX per category
+  // (rotated -40° x-axis labels start overlapping below that, independent
+  // of screen size) and never wider than the original 450px desktop
+  // plot (keeps existing desktop proportions byte-identical). When the
+  // category floor needs more room than the phone has, the SVG is wider
+  // than its wrapper and scrolls horizontally instead of illegibly
+  // compressing — the same pattern already used for dense mobile tables.
+  const { ref: wrapRef, width: measured } = useMeasuredWidth<HTMLDivElement>()
+  const MIN_CATEGORY_PX = 40
+  const desiredPlotW = Math.max(160, measured) - margin.left - margin.right
+  const plotW = Math.max(n * MIN_CATEGORY_PX, Math.min(desiredPlotW, 450))
   const totalH = margin.top + plotH + margin.bottom
   const totalW = margin.left + plotW + margin.right
 
@@ -2035,6 +2102,38 @@ export function ThresholdDistribution({
       }
     : undefined
 
+  // W1 fix, width-aware: always label the two endpoints (first/last point —
+  // "0.25 at the bottom, 0.94 at the top" is the chapter's own framing) plus
+  // every point that has crossed a threshold. When two selected labels would
+  // overprint at the ACTUAL measured dot spacing (tight on mobile — an
+  // 8-category ladder is ~26px/dot at 360px vs ~56px/dot on desktop), the
+  // later one stacks onto a higher tier instead of colliding. This is a
+  // no-op at desktop widths for every existing threshold-distribution story
+  // (verified: their labeled points never sit close enough to trigger it).
+  const TIERS = 3
+  const ROW_STEP = 13
+  const tierRight: number[] = new Array(TIERS).fill(-Infinity)
+  const labelTier = new Map<number, number>()
+  pts.forEach((pt, i) => {
+    const aboveTop = topThreshold != null && pt.value >= topThreshold
+    const aboveMid = midThreshold != null && pt.value >= midThreshold
+    const isEndpoint = i === 0 || i === n - 1
+    if (!aboveTop && !aboveMid && !isEndpoint) return
+    const cx = dotX(i)
+    const fontSize = aboveTop ? 11.5 : 10
+    const text = `${pt.value.toFixed(unit === '%' ? 1 : 2)}${unit && unit.length <= 2 ? ` ${unit}` : ''}`
+    const halfW = text.length * fontSize * 0.32 + 3
+    let tier = TIERS - 1
+    for (let t = 0; t < TIERS; t++) {
+      if (cx - halfW > tierRight[t] + 4) {
+        tier = t
+        break
+      }
+    }
+    tierRight[tier] = Math.max(tierRight[tier], cx + halfW)
+    labelTier.set(i, tier)
+  })
+
   return (
     <ChartCard
       title={title}
@@ -2042,10 +2141,12 @@ export function ThresholdDistribution({
       anchor={anchor}
       annotation={cardAnnotation}
     >
+      <div ref={wrapRef} className="w-full overflow-x-auto">
       <svg
         viewBox={`0 0 ${totalW} ${totalH}`}
-        preserveAspectRatio="xMidYMid meet"
-        className="w-full"
+        width={totalW}
+        height={totalH}
+        style={{ display: 'block' }}
         aria-hidden="true"
       >
         {/* Threshold lines */}
@@ -2179,21 +2280,24 @@ export function ThresholdDistribution({
           // they overprint at ~56px dot spacing — the unit lives in the axis /
           // ChartCard anchor instead.
           const valueLabel = `${pt.value.toFixed(unit === '%' ? 1 : 2)}${unit && unit.length <= 2 ? ` ${unit}` : ''}`
+          const tier = labelTier.get(i)
 
           return (
             <g key={i}>
               <circle cx={cx} cy={cy} r={r} fill={fill} opacity={opacity} />
-              {/* Value label above dot — only for above-top and above-mid tiers */}
-              {(aboveTop || aboveMid) && (
+              {/* Value label above dot — endpoints + above-threshold points
+                  only, tier-stacked when the measured spacing is too tight
+                  for two adjacent labels to sit on the same row. */}
+              {tier !== undefined && (
                 <text
                   x={cx}
-                  y={cy - r - 3}
+                  y={cy - r - 3 - tier * ROW_STEP}
                   textAnchor="middle"
                   dominantBaseline="auto"
                   fontSize={aboveTop ? 11.5 : 10}
                   fontFamily={aboveTop ? "'Playfair Display', Georgia, serif" : 'var(--font-family-mono, monospace)'}
                   fontStyle="normal"
-                  fill={aboveTop ? (pt.color ?? HIGHLIGHT_COLOR) : ANCHOR_COLOR}
+                  fill={aboveTop ? (pt.color ?? HIGHLIGHT_COLOR) : aboveMid ? ANCHOR_COLOR : 'var(--color-text-muted)'}
                 >
                   {valueLabel}
                 </text>
@@ -2230,6 +2334,7 @@ export function ThresholdDistribution({
           )
         })}
       </svg>
+      </div>
     </ChartCard>
   )
 }
@@ -2240,6 +2345,24 @@ export function ThresholdDistribution({
 // tick is the editorial chrome showing "expected" level.
 // ---------------------------------------------------------------------------
 
+// Currency-unit multipliers this chart knows how to convert to raw pesos for
+// the canonical formatCompactMXN() table-cell formatter (see CLAUDE.md's
+// currency-helper table). Units outside this map fall back to the previous
+// literal `value + unit` print — the chart stays generic beyond its one
+// current caller.
+const THERMOMETER_CURRENCY_MULT: Record<string, number> = {
+  'B MXN': 1e9,
+  'M MXN': 1e6,
+  'K MXN': 1e3,
+  MXN: 1,
+}
+
+function extractLeadingPct(s: string | undefined): number | null {
+  if (!s) return null
+  const m = /^([\d.]+)\s*%/.exec(s.trim())
+  return m ? parseFloat(m[1]) : null
+}
+
 export function AnnotatedThermometer({
   data,
   title,
@@ -2249,20 +2372,16 @@ export function AnnotatedThermometer({
   title: string
   lang?: 'en' | 'es'
 }) {
-  // 2026-05-25: bumped LABEL_W 138 → 200 to match the InlineBarChart fix.
-  // Thermometer is used on captura ch3 and similar — sector/institution
-  // names like "Infraestructura" / "Pharmaceuticals" need ~165px.
-  // 2026-07-04: BAR_W 288→250 + VALUE_W 94→150 so a full-width bar's in-bar
-  // peso readout never lands in the far-right annotation column — the
-  // "917.3 B MXN50 contracts" collision. The annotation column now fits
-  // "34.5% · 250 contracts" without overflowing left into the bar.
-  const LABEL_W = 200
-  const BAR_W = 230
-  const VALUE_W = 170
-  const TOTAL_W = LABEL_W + BAR_W + VALUE_W
-  const ROW_H = 22
-  const ROW_GAP = 10
-
+  // 2026-07-07: rebuilt on percentage-based CSS instead of a fixed
+  // LABEL_W/BAR_W/VALUE_W SVG viewBox. The old 3-lane layout needed ~600px
+  // of horizontal room (200+230+170) that no longer fits inside a 316px
+  // phone card once literal (non-shrunk) text is the goal — and the in-bar
+  // readout vs. right-column annotation was exactly the W2 double-print
+  // collision ("917.3 B MXN50 contracts"). Each row now says every number
+  // exactly once, on its own line: label+peso above the bar, share%+count
+  // (verbatim from the data, never recomputed) below it. Bars are CSS %
+  // widths, so they scale correctly at any card width with zero JS
+  // measurement and the text never shrinks below its literal font size.
   const cardAnnotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
 
   const labelFor = (pt: StoryChartPoint) => {
@@ -2271,23 +2390,30 @@ export function AnnotatedThermometer({
   }
   const annoFor = (pt: StoryChartPoint) =>
     lang === 'es' ? (pt.annotation_es ?? pt.annotation) : pt.annotation
+  const refLabelFor = (ref: { label: string; label_es?: string }) =>
+    lang === 'es' ? (ref.label_es ?? ref.label) : ref.label
+
+  const currencyMult = data.unit ? THERMOMETER_CURRENCY_MULT[data.unit] : undefined
+  const formatValue = (v: number) =>
+    currencyMult != null ? formatCompactMXN(v * currencyMult) : `${v.toLocaleString()}${data.unit ? ` ${data.unit}` : ''}`
 
   // Sort descending by value
   const sorted = [...data.points].sort((a, b) => b.value - a.value)
 
-  const total = sorted.reduce((s, p) => s + p.value, 0)
   const mx = maxVal(data.points, data.maxValue)
   const refVal = data.referenceLine?.value ?? 0
-  const refPx = (refVal / mx) * BAR_W
+  const refPct = Math.min(96, (refVal / mx) * 100)
 
-  const refLabelFor = (ref: { label: string; label_es?: string }) =>
-    lang === 'es' ? (ref.label_es ?? ref.label) : ref.label
-
-  const totalSvgH = sorted.length * (ROW_H + ROW_GAP) + 34
-
-  // Anchor stat: highest value point's share pct
+  // Anchor stat: the data's OWN stated share for the top row, not a live
+  // recompute — el-gran-precio's per-point annotations ("34.5% · 250
+  // contracts") were hand-rounded from a slightly different base than a
+  // naive value/Σ recompute (which lands on 34.6%). Printing the headline
+  // anchor and the row's own annotation from two different computations is
+  // the mismatch this fix removes; only points without a parseable
+  // annotation fall back to computing a share.
   const topPt = sorted[0]
-  const topShare = total > 0 ? (topPt.value / total * 100) : 0
+  const total = sorted.reduce((s, p) => s + p.value, 0)
+  const topShare = extractLeadingPct(annoFor(topPt)) ?? (total > 0 ? (topPt.value / total) * 100 : 0)
   const anchor = topPt
     ? {
         value: `${topShare.toFixed(1)}%`,
@@ -2303,125 +2429,80 @@ export function AnnotatedThermometer({
       anchor={anchor}
       annotation={cardAnnotation}
     >
-      <svg
-        viewBox={`0 0 ${TOTAL_W} ${totalSvgH}`}
-        preserveAspectRatio="xMinYMin meet"
-        className="w-full"
-        aria-hidden="true"
-      >
-        {/* Header: reference label */}
+      <div className="px-2 pb-1">
         {data.referenceLine && (
-          <text
-            x={LABEL_W + refPx}
-            y={12}
-            textAnchor={refPx > BAR_W * 0.5 ? 'end' : 'start'}
-            fontSize={13}
-            fontFamily="var(--font-family-mono, monospace)"
-            fill="var(--color-text-muted)"
-          >
-            {refLabelFor(data.referenceLine)}
-          </text>
+          <div className="relative mb-3" style={{ height: 13 }}>
+            <span
+              className="absolute font-mono whitespace-nowrap"
+              style={{
+                left: `${refPct}%`,
+                transform: refPct > 65 ? 'translateX(-100%)' : undefined,
+                fontSize: 11,
+                color: 'var(--color-text-muted)',
+              }}
+            >
+              {refLabelFor(data.referenceLine)}
+            </span>
+          </div>
         )}
 
-        {sorted.map((pt, i) => {
-          const rowY = i * (ROW_H + ROW_GAP) + 26
-          const sharePct = total > 0 ? (pt.value / total * 100) : 0
-          const barPx = (pt.value / mx) * BAR_W
-          const aboveRef = pt.value > refVal
-          const barFill = aboveRef ? (pt.color ?? HIGHLIGHT_COLOR) : 'var(--color-text-muted)'
-          const barOpacity = aboveRef ? 0.85 : 0.35
-          const valueColor = aboveRef ? (pt.color ?? HIGHLIGHT_COLOR) : 'var(--color-text-muted)'
-          const anno = annoFor(pt)
+        <div className="flex flex-col gap-3.5">
+          {sorted.map((pt, i) => {
+            const barPct = Math.max(0.6, (pt.value / mx) * 100)
+            const aboveRef = pt.value > refVal
+            const barFill = aboveRef ? (pt.color ?? HIGHLIGHT_COLOR) : 'var(--color-text-muted)'
+            const barOpacity = aboveRef ? 0.85 : 0.35
+            const valueColor = aboveRef ? (pt.color ?? HIGHLIGHT_COLOR) : 'var(--color-text-muted)'
+            const anno = annoFor(pt)
 
-          return (
-            <g key={i}>
-              {/* Background track */}
-              <rect
-                x={LABEL_W}
-                y={rowY}
-                width={BAR_W}
-                height={ROW_H}
-                fill="var(--color-background-elevated)"
-                opacity={0.08}
-                rx={1}
-              />
-              {/* Fill bar */}
-              <rect
-                x={LABEL_W}
-                y={rowY}
-                width={Math.max(2, barPx)}
-                height={ROW_H}
-                fill={barFill}
-                opacity={barOpacity}
-                rx={1}
-              />
-              {/* Reference tick */}
-              {data.referenceLine && (
-                <line
-                  x1={LABEL_W + refPx}
-                  y1={rowY - 2}
-                  x2={LABEL_W + refPx}
-                  y2={rowY + ROW_H + 2}
-                  stroke={data.referenceLine.color ?? REFERENCE_COLOR}
-                  strokeWidth={1.5}
-                />
-              )}
-              {/* Label */}
-              <text
-                x={LABEL_W - 6}
-                y={rowY + ROW_H / 2 + 1}
-                textAnchor="end"
-                dominantBaseline="middle"
-                fontSize={13}
-                fontFamily="var(--font-family-mono, monospace)"
-                fill="var(--color-text-secondary)"
-              >
-                {labelFor(pt)}
-              </text>
-              {/* Value: share% · absolute. On a long bar, render the readout
-                  INSIDE the bar (right-aligned, contrast-safe ink) so it does
-                  not collide with the contracts annotation at the far right —
-                  the collision that made the top sectors unreadable. */}
-              {(() => {
-                const inBar = barPx > 150
-                const peso = `${pt.value.toLocaleString()}${data.unit ? ` ${data.unit}` : ''}`
-                // Above-ref rows get a far-right annotation ("share% · N contracts"),
-                // so their bar readout is the peso value ALONE — no repeated share%.
-                // Below-ref rows have no annotation, so they carry share% inline.
-                const valTxt = aboveRef ? peso : `${sharePct.toFixed(1)}% · ${peso}`
-                return (
-                  <text
-                    x={inBar ? LABEL_W + barPx - 6 : LABEL_W + Math.max(2, barPx) + 6}
-                    y={rowY + ROW_H / 2 + 1}
-                    textAnchor={inBar ? 'end' : 'start'}
-                    dominantBaseline="middle"
-                    fontSize={13}
-                    fontFamily="var(--font-family-mono, monospace)"
-                    fontWeight={700}
-                    fill={inBar ? labelInkOn(barFill) : valueColor}
+            return (
+              <div key={i}>
+                <div className="flex items-baseline justify-between gap-3 font-mono" style={{ fontSize: 13 }}>
+                  <span className="truncate" style={{ color: 'var(--color-text-secondary)' }}>
+                    {labelFor(pt)}
+                  </span>
+                  <span
+                    className="tabular-nums shrink-0 font-bold"
+                    style={{ color: valueColor }}
                   >
-                    {valTxt}
-                  </text>
-                )
-              })()}
-              {/* Annotation for highlighted rows */}
-              {aboveRef && anno && (
-                <text
-                  x={LABEL_W + BAR_W + VALUE_W - 4}
-                  y={rowY + ROW_H / 2 + 1}
-                  textAnchor="end"
-                  dominantBaseline="middle"
-                  fontSize={13}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fill="var(--color-text-muted)"
-                >
-                  {anno}
-                </text>
-              )}
-            </g>
-          )
-        })}
-      </svg>
+                    {formatValue(pt.value)}
+                  </span>
+                </div>
+                <div className="relative mt-1" style={{ height: 10 }}>
+                  <div
+                    className="absolute inset-0 rounded-sm"
+                    style={{ background: 'var(--color-background-elevated)', opacity: 0.08 }}
+                  />
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-sm"
+                    style={{ width: `${barPct}%`, background: barFill, opacity: barOpacity }}
+                  />
+                  {data.referenceLine && (
+                    <div
+                      className="absolute"
+                      style={{
+                        left: `${refPct}%`,
+                        top: -2,
+                        bottom: -2,
+                        width: 1.5,
+                        background: data.referenceLine.color ?? REFERENCE_COLOR,
+                      }}
+                    />
+                  )}
+                </div>
+                {anno && (
+                  <div
+                    className="mt-1 font-mono"
+                    style={{ fontSize: 12, color: 'var(--color-text-muted)' }}
+                  >
+                    {anno}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </ChartCard>
   )
 }
