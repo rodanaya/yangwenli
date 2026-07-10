@@ -4878,3 +4878,37 @@ None detected — no new actionable bilingual gaps.
 
 ### Overall: WARN
 HTTP and API checks blocked by egress proxy policy (403 on rubli.xyz:443) — recurring environment limitation, not a site issue. Bilingual scan: PASS (no new gaps). Note: this is the 5th+ consecutive run blocked by proxy — to resolve, add rubli.xyz to the session's egress allowlist.
+
+---
+## Visual Review — 2026-07-10T06:10:09Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/aria | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/cases | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- Raw i18n key leaks: All matches are false positives — code-level lookups (PATTERN_CHIP, TIER_STYLES), TypeScript constructs, JSDoc comments, corporate siglas arrays (S.A., C.V.), and bilingual `isEs ? ES : EN` patterns.
+- "Generate Report" hardcoded: None found.
+- "SIGN IN" hardcoded: None found.
+
+None detected — no new actionable bilingual gaps.
+
+### Overall: WARN
+HTTP and API checks blocked by egress proxy policy (403 on rubli.xyz:443) — environment limitation, not a site issue. Bilingual scan: PASS (no new gaps). **Action required**: add rubli.xyz to egress allowlist in session network policy to enable actual uptime monitoring.
