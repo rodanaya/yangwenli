@@ -5102,3 +5102,37 @@ None detected — no new actionable bilingual gaps.
 
 ### Overall: WARN
 HTTP and API checks blocked by egress proxy policy (403 on `rubli.xyz:443`) — environment limitation, not a site issue. Consecutive run with same result; uptime/API health cannot be verified from this environment. Bilingual scan: PASS. **Action required**: add `rubli.xyz` to the session's egress allowlist in the environment's network policy to enable actual uptime monitoring.
+
+---
+## Visual Review — 2026-07-11T18:08:51Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/aria | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/cases | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- Raw i18n key leaks: All matches are false positives — code-level lookups (PATTERN_CHIP, TIER_STYLES), academic citations, corporate siglas arrays (S.A., C.V.), and correctly bilingual `isEs ? ES : EN` patterns (ConcentrationConstellation.tsx).
+- "Generate Report" hardcoded: None found.
+- "SIGN IN" hardcoded: None found.
+
+None detected — no new actionable bilingual gaps.
+
+### Overall: WARN
+HTTP and API checks blocked by egress proxy policy (403 on `rubli.xyz:443`) — environment limitation, not a site issue. Third consecutive run today with same block. Bilingual scan: PASS. **Action required**: add `rubli.xyz` to the session's egress allowlist in the environment's network policy to enable actual uptime monitoring.
