@@ -5510,3 +5510,39 @@ None detected — no new actionable bilingual gaps.
 
 ### Overall: WARN
 HTTP and API checks blocked by egress proxy policy (403 on `rubli.xyz:443`) — environment limitation, not a site issue. Bilingual scan: PASS. **Persistent issue**: `rubli.xyz` is not in the egress allowlist for this remote execution environment. Live uptime monitoring requires updating the network policy via environment settings on code.claude.com.
+
+---
+## Visual Review — 2026-07-14T18:09:07Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/aria | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/cases | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+
+Note: Network policy for this remote session blocks outbound CONNECT to rubli.xyz:443. All HTTP and API checks skipped — proxy returns 403 on every attempt. This is a persistent environment constraint (also seen at 12:11 UTC today), not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- Raw i18n key leaks: All matches are false positives — code-level lookups (PATTERN_CHIP, TIER_STYLES), academic citations (Mahalanobis 1936), corporate siglas arrays (S.A., C.V.), and correctly bilingual `isEs ? ES : EN` patterns (ConcentrationConstellation.tsx).
+- "Generate Report" hardcoded: None found.
+- "SIGN IN" hardcoded: None found.
+
+None detected — no new actionable bilingual gaps.
+
+### Overall: WARN
+Site reachability unknown — proxy blocks outbound to rubli.xyz from this remote environment. Local bilingual scan: clean.
