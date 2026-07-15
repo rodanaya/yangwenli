@@ -5582,3 +5582,38 @@ None detected — no actionable bilingual gaps.
 
 ### Overall: WARN
 Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (persistent, present on all runs this week). Local bilingual scan: clean.
+---
+## Visual Review — 2026-07-15T06:08:22Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/aria | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/cases | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (proxy 403 — policy denial, curl exit 56) | WARN |
+
+Note: Network egress policy for this remote session blocks outbound CONNECT to rubli.xyz:443 (persistent — present on all runs this week). HTTP and API checks cannot be performed from this environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- Raw i18n key leaks: All matches are false positives — code-level lookups (PATTERN_CHIP, TIER_STYLES), academic citation (Mahalanobis 1936), corporate siglas arrays (S.A., C.V.), and correctly bilingual `isEs ? ES : EN` patterns (ConcentrationConstellation.tsx, ExploreCanvas.tsx, etc.).
+- "Generate Report" hardcoded: None found.
+- "SIGN IN" hardcoded: None found.
+
+None detected — no actionable bilingual gaps.
+
+### Overall: WARN
+Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (persistent constraint). Local bilingual scan: clean. Action needed: run HTTP/API checks from an environment with direct egress to rubli.xyz, or configure egress policy to allow rubli.xyz:443.
