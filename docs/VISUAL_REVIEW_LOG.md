@@ -5719,3 +5719,37 @@ None detected — no actionable bilingual gaps.
 
 ### Overall: WARN
 Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (persistent constraint; 7th+ consecutive run affected). Local bilingual scan: clean. Action needed: configure egress policy to allow rubli.xyz:443, or run checks from an environment with direct access.
+---
+## Visual Review — 2026-07-16T06:10:36Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/atlas | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/aria | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/sectors/salud | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/cases | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/methodology | BLOCKED (proxy 403 — policy denial) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- Raw i18n key leaks: All matches are false positives — PATTERN_CHIP lookups, TIER_STYLES color access, TypeScript type annotations, JSDoc comments, academic citation (Mahalanobis 1936), siglas arrays, bilingual `isEs ? ES : EN` constructs (ConcentrationConstellation, ExploreCanvas).
+- "Generate Report" hardcoded: None found.
+- "SIGN IN" hardcoded: None found.
+
+None detected — no actionable bilingual gaps.
+
+### Overall: WARN
+Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (persistent constraint; 8th+ consecutive run affected). Local bilingual scan: clean. Action needed: configure egress policy to allow rubli.xyz:443, or run checks from an environment with direct access.
+
