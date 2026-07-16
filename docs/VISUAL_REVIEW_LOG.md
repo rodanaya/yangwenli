@@ -5753,3 +5753,39 @@ None detected — no actionable bilingual gaps.
 ### Overall: WARN
 Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (persistent constraint; 8th+ consecutive run affected). Local bilingual scan: clean. Action needed: configure egress policy to allow rubli.xyz:443, or run checks from an environment with direct access.
 
+
+---
+## Visual Review — 2026-07-16T12:12:25Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 000 (proxy 403 — policy denial) | WARN |
+| /atlas | 000 (proxy 403 — policy denial) | WARN |
+| /aria | 000 (proxy 403 — policy denial) | WARN |
+| /sectors | 000 (proxy 403 — policy denial) | WARN |
+| /sectors/salud | 000 (proxy 403 — policy denial) | WARN |
+| /cases | 000 (proxy 403 — policy denial) | WARN |
+| /methodology | 000 (proxy 403 — policy denial) | WARN |
+| /stories/el-ejercito-fantasma | 000 (proxy 403 — policy denial) | WARN |
+
+Note: Proxy blocks all CONNECT to rubli.xyz:443 (403 gateway policy denial). HTTP checks cannot be completed from this remote environment. This is a persistent constraint — network egress policy must be updated to allow rubli.xyz:443 for these checks to run.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (proxy 403 — policy denial) | WARN |
+| /api/v1/sectors | BLOCKED (proxy 403 — policy denial) | WARN |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (`*.tsx`):
+- Raw i18n key leaks: All matches are false positives — PATTERN_CHIP lookups, TIER_STYLES color access, TypeScript type annotations, JSDoc comments, academic citation (Mahalanobis 1936), siglas arrays, bilingual `isEs ? ES : EN` constructs (ConcentrationConstellation, ExploreCanvas).
+- "Generate Report" hardcoded: None found.
+- "SIGN IN" hardcoded: None found.
+
+None detected — no actionable bilingual gaps.
+
+### Overall: WARN
+Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (persistent constraint; 9th consecutive run affected). Local bilingual scan: clean. Action needed: configure egress policy to allow rubli.xyz:443, or run checks from an environment with direct access.
