@@ -6658,3 +6658,34 @@ None detected — no actionable bilingual gaps.
 
 ### Overall: WARN
 Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (seventh consecutive run affected). Local bilingual scan: clean. **Action required**: configure egress policy to allow rubli.xyz:443, or move health checks to an environment with direct outbound access (e.g., GitHub Actions with direct internet).
+
+---
+## Visual Review — 2026-07-22T12:13:57Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ❌ |
+| https://rubli.xyz/atlas | BLOCKED | ❌ |
+| https://rubli.xyz/aria | BLOCKED | ❌ |
+| https://rubli.xyz/sectors | BLOCKED | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED | ❌ |
+| https://rubli.xyz/cases | BLOCKED | ❌ |
+| https://rubli.xyz/methodology | BLOCKED | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ❌ |
+
+> **Cause**: Egress proxy returned `403 connect_rejected` for `rubli.xyz:443`. This is a remote-environment policy restriction — not a site outage. Confirmed via `/__agentproxy/status` (recentRelayFailures). Eighth consecutive run affected.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same proxy) | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED (same proxy) | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (same proxy) | ❌ |
+| /api/v1/sectors | BLOCKED (same proxy) | ❌ |
+
+### Bilingual Gaps
+None detected — `grep` scans of `frontend/src/pages/` and `frontend/src/components/` found no raw i18n key leaks, no hardcoded "Generate Report", and no hardcoded "SIGN IN" strings outside guarded i18n calls.
+
+### Overall: WARN
+Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (eighth consecutive run affected). Local bilingual scan: clean. **Action required**: configure egress policy to allow rubli.xyz:443, or move health checks to an environment with direct outbound access (e.g., GitHub Actions with direct internet).
