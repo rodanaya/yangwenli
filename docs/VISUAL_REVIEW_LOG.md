@@ -6720,3 +6720,34 @@ None detected — `grep` scans of `frontend/src/pages/` and `frontend/src/compon
 
 ### Overall: WARN
 Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (ninth consecutive run affected). Local bilingual scan: clean. **Action required**: configure egress policy to allow rubli.xyz:443, or move health checks to an environment with direct outbound access (e.g., GitHub Actions with direct internet).
+
+---
+## Visual Review — 2026-07-23T00:11:06Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ❌ |
+| https://rubli.xyz/atlas | BLOCKED | ❌ |
+| https://rubli.xyz/aria | BLOCKED | ❌ |
+| https://rubli.xyz/sectors | BLOCKED | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED | ❌ |
+| https://rubli.xyz/cases | BLOCKED | ❌ |
+| https://rubli.xyz/methodology | BLOCKED | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ❌ |
+
+> **Cause**: Egress proxy returned `403 connect_rejected` for `rubli.xyz:443`. Remote-environment policy restriction — not a site outage. Tenth consecutive run affected.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same proxy) | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED (same proxy) | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (same proxy) | ❌ |
+| /api/v1/sectors | BLOCKED (same proxy) | ❌ |
+
+### Bilingual Gaps
+None detected — `grep` scans of `frontend/src/pages/` and `frontend/src/components/` found no raw i18n key leaks, no hardcoded "Generate Report", and no hardcoded "SIGN IN" strings outside guarded i18n calls.
+
+### Overall: WARN
+Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote environment (tenth consecutive run affected). Local bilingual scan: clean. **Action required**: configure egress policy to allow rubli.xyz:443, or move HTTP/API checks to a GitHub Actions workflow with direct internet access.
