@@ -1,4 +1,43 @@
 ---
+## Visual Review — 2026-07-24T12:13:17Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ❌ proxy policy denial |
+| https://rubli.xyz/atlas | BLOCKED | ❌ proxy policy denial |
+| https://rubli.xyz/aria | BLOCKED | ❌ proxy policy denial |
+| https://rubli.xyz/sectors | BLOCKED | ❌ proxy policy denial |
+| https://rubli.xyz/sectors/salud | BLOCKED | ❌ proxy policy denial |
+| https://rubli.xyz/cases | BLOCKED | ❌ proxy policy denial |
+| https://rubli.xyz/methodology | BLOCKED | ❌ proxy policy denial |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ❌ proxy policy denial |
+
+Note: All requests to rubli.xyz:443 rejected by egress proxy (403 CONNECT). Proxy log confirms `connect_rejected` / `gateway answered 403 to CONNECT (policy denial or upstream failure)`. HTTP and API checks cannot be performed from this remote execution environment. This is a persistent issue across all scheduled runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy policy denial | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy policy denial | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy policy denial | ❌ |
+| /api/v1/sectors | BLOCKED — proxy policy denial | ❌ |
+
+### Bilingual Gaps
+Grep results reviewed — no actionable leaks:
+- `CaseLibrary.tsx:19` — comment text, not rendered UI
+- `Methodology.tsx:93` — academic author surname in data structure, not UI string
+- `StoryMoneySankeyChart.tsx:22,37` — static data fields, not rendered labels
+- `RegisterRow.tsx:161` — object lookup pattern (`PATTERN_CHIP[...]`), not raw string
+- `ConcentrationConstellation.tsx:155–167` — already bilingual via `isEs ? ... : ...` ternary
+- No "Generate Report" or "SIGN IN" hardcoded strings found
+
+None detected — no actionable bilingual gaps.
+
+### Overall: WARN
+Site reachability unknown — egress proxy blocks all outbound to rubli.xyz:443 from this remote execution environment (6th consecutive run affected). Local bilingual scan: PASS. **Action required**: allow rubli.xyz:443 in the environment's network policy, or migrate health checks to an environment with direct egress (e.g., GitHub Actions or an external uptime monitor such as UptimeRobot/BetterUptime).
+
+---
 ## Visual Review — 2026-07-23T12:15:30Z
 
 ### HTTP Status
