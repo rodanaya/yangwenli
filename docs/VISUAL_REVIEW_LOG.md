@@ -7233,3 +7233,34 @@ None detected — `grep` scans of `frontend/src/pages/` and `frontend/src/compon
 ### Overall: WARN
 Site reachability unknown — proxy blocks all outbound to rubli.xyz:443 from this remote execution environment. Local bilingual scan: clean. **Persistent issue**: 6 consecutive runs blocked since 2026-07-24T00:11:30Z. **Action needed**: migrate HTTP/API checks to a GitHub Actions workflow (`/.github/workflows/health-check.yml`) where direct internet egress is available, or allowlist `rubli.xyz` in the remote environment network policy.
 
+
+---
+## Visual Review — 2026-07-26T18:08:59Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/atlas | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/aria | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/sectors | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/sectors/salud | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/cases | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/methodology | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (proxy 403) | BLOCKED |
+
+All 8 routes blocked: the remote execution environment proxy denies CONNECT to `rubli.xyz:443` (403 policy denial). Not a site outage — same block observed on all prior scheduled runs since 2026-07-24.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | Empty response (proxy blocked) | BLOCKED |
+| /api/v1/cases?limit=5 | Empty response (proxy blocked) | BLOCKED |
+| /api/v1/cases?vendor_id=4325 | Empty response (proxy blocked) | BLOCKED |
+| /api/v1/sectors | Empty response (proxy blocked) | BLOCKED |
+
+### Bilingual Gaps
+None detected — grep scans of `frontend/src/pages/` and `frontend/src/components/` found no raw i18n key leaks, no hardcoded "Generate Report", and no hardcoded "SIGN IN" strings outside guarded i18n calls. Pattern matches were all code constants, comments, and properly bilingual `isEs ? '...' : '...'` label definitions.
+
+### Overall: WARN
+Site reachability unknown (persistent proxy block). Local bilingual scan: clean. **Recurring issue**: 7 consecutive runs blocked. **Action needed**: move HTTP/API health checks to a GitHub Actions workflow (`/.github/workflows/health-check.yml`) where direct internet egress is available, or allowlist `rubli.xyz` in the environment network policy.
