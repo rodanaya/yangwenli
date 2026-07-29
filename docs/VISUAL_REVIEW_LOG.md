@@ -7544,3 +7544,44 @@ None detected — grep scans of `frontend/src/pages/` and `frontend/src/componen
 ### Overall: WARN
 Site reachability unknown (persistent proxy block — 11th consecutive run). Local bilingual scan: clean. **Recurring issue**: the scheduled health-check environment cannot reach `rubli.xyz:443`. Recommended fix: migrate HTTP/API health checks to a GitHub Actions workflow with direct internet egress, or add `rubli.xyz` to the environment's network allowlist.
 
+
+---
+## Visual Review — 2026-07-29T00:12:54Z
+
+### HTTP Status
+
+> **NOTE**: The remote execution environment's egress proxy blocks outbound connections to `rubli.xyz:443` with a 403 policy-denial response. HTTP and API checks could not be completed from this environment. This is a proxy policy restriction, not a site outage. Proxy status confirmed via `/__agentproxy/status` → `recentRelayFailures: connect_rejected (gateway answered 403)`.
+
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED | — |
+
+### API Health
+
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks detected in user-visible output. Matches found are in comments, data constants (pattern codes, author metadata), and internal object property names — none are rendered i18n keys leaking to UI.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**Bilingual scan: None detected.**
+
+### Overall: WARN
+
+> HTTP and API checks were skipped due to egress proxy policy blocking `rubli.xyz` from the remote execution environment. The bilingual gap scan (local, no network required) passed clean. To run a full HTTP+API health check, the scheduled task needs an environment with egress access to `rubli.xyz`, or the checks should be run from a machine with direct access (e.g. `curl` locally or a GitHub Action with network access).
