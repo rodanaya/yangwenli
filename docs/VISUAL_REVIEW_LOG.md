@@ -7585,3 +7585,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 > HTTP and API checks were skipped due to egress proxy policy blocking `rubli.xyz` from the remote execution environment. The bilingual gap scan (local, no network required) passed clean. To run a full HTTP+API health check, the scheduled task needs an environment with egress access to `rubli.xyz`, or the checks should be run from a machine with direct access (e.g. `curl` locally or a GitHub Action with network access).
+
+---
+## Visual Review — 2026-07-29T06:15:17Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED | — |
+
+### API Health
+
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. Matches are in comments, data constants, and internal property names — none are rendered i18n keys leaking to UI.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**Bilingual scan: None detected.**
+
+### Overall: WARN
+
+> HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual gap scan passed clean. **Persistent blocker**: this remote execution environment cannot reach rubli.xyz outbound. HTTP/API health checks should be moved to a GitHub Actions workflow with direct internet access to be effective.
