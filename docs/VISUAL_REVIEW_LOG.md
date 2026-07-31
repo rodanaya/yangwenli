@@ -7928,3 +7928,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual gap scan passed clean. Recommend migrating HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted internet access.
+
+---
+## Visual Review — 2026-07-31T12:16:39Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED | — |
+
+> Egress proxy returned 403 CONNECT to rubli.xyz:443 — network policy blocks external HTTP from this remote execution environment. (Recurring: see prior entries.)
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. Remaining grep hits are code comments (`CaseLibrary.tsx:19` comment block mentioning `FRAUDTYPES.INVOICE_FRAUD`), a bibliographic citation in `Methodology.tsx`, and properly-guarded bilingual data objects using `isEs ? '...' : '...'` patterns. All confirmed non-UI.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual gap scan passed clean. **Recurring issue — HTTP/API checks have been blocked on every run to date.** Recommend migrating health checks to a GitHub Actions cron workflow with unrestricted internet access so rubli.xyz is actually reachable.
