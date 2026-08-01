@@ -1,4 +1,41 @@
 ---
+## Visual Review — 2026-08-01T00:12:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED | — |
+
+> Egress proxy returned 403 CONNECT to rubli.xyz:443 — network policy blocks external HTTP from this remote execution environment. (Recurring: all prior runs in July blocked.)
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. Grep hits are code comments (`CaseLibrary.tsx:19`), a bibliographic citation in `Methodology.tsx`, and properly-guarded `isEs ? '...' : '...'` bilingual data in `ConcentrationConstellation.tsx`. All confirmed non-UI.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual gap scan passed clean. **Action needed**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted internet access; this remote execution environment cannot reach rubli.xyz outbound.
+---
 ## Visual Review — 2026-07-30T00:12:11Z
 
 ### HTTP Status
