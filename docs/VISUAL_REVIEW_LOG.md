@@ -8267,3 +8267,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443) — persistent across all prior runs. Bilingual gap scan PASS. **Recurring action item**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted egress to make these checks functional.
+
+---
+## Visual Review — 2026-08-02T18:09:15Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED (403 CONNECT) | — |
+
+_Egress proxy (127.0.0.1:37971) denies CONNECT to rubli.xyz:443 with 403 — confirmed via `/__agentproxy/status` showing `connect_rejected` / `gateway answered 403 to CONNECT (policy denial or upstream failure)`. Persistent across all prior runs in this environment._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks** (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`): Grep hits are code comments, bibliographic citations, TypeScript annotations (`JSX.Element`), constant-object lookups (`PATTERN_CHIP`, `TIER_STYLES`, `PATTERN_COLORS`), and already-bilingual data via `isEs ? '...' : '...'` ternaries. No raw key leaks in user-visible UI output.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443) — persistent across all prior automated runs. Bilingual gap scan PASS. **Action item**: move HTTP/API health checks to a GitHub Actions cron job with unrestricted egress so these checks are actually executable.
