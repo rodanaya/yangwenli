@@ -8343,3 +8343,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443) — persistent across all automated runs in this environment. Bilingual gap scan: PASS. **Recurring action item**: migrate HTTP/API health checks to GitHub Actions with unrestricted egress.
+
+---
+## Visual Review — 2026-08-03T06:22:18Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED (403 CONNECT) | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED (403 CONNECT) | — |
+
+_Egress proxy (127.0.0.1:43037) denies CONNECT to rubli.xyz:443 with 403 — persistent environment policy restriction. HTTP and API checks cannot run from this remote execution environment._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. All grep hits are code comments, TypeScript annotations, constant lookups (`PATTERN_CHIP`, `TIER_STYLES`, `PATTERN_COLORS`), or guarded `isEs ? '...' : '...'` ternaries.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks permanently blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual scan: PASS. **Recurring action item**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress.
