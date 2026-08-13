@@ -9219,3 +9219,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443) — persistent constraint in this remote execution environment. Bilingual scan: PASS. **Recurring action item**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress.
+
+---
+## Visual Review — 2026-08-13T06:28:11Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | PROXY_BLOCKED (403) | — |
+| /atlas | PROXY_BLOCKED (403) | — |
+| /aria | PROXY_BLOCKED (403) | — |
+| /sectors | PROXY_BLOCKED (403) | — |
+| /sectors/salud | PROXY_BLOCKED (403) | — |
+| /cases | PROXY_BLOCKED (403) | — |
+| /methodology | PROXY_BLOCKED (403) | — |
+| /stories/el-ejercito-fantasma | PROXY_BLOCKED (403) | — |
+
+Note: Egress proxy at 127.0.0.1:41095 returns 403 CONNECT-rejected for rubli.xyz:443 — policy denial in this remote execution environment. Recurring constraint across all automated runs. Recommended fix: run HTTP health checks from a GitHub Actions cron workflow with unrestricted outbound egress.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. Grep hits are code comments, TypeScript annotations, constant lookups (`PATTERN_CHIP`, `TIER_STYLES`, `PATTERN_COLORS`), or guarded `isEs ? '...' : '...'` ternaries — consistent with prior runs.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443) — persistent constraint in this remote execution environment. Bilingual scan: PASS. **Recurring action item**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress.
