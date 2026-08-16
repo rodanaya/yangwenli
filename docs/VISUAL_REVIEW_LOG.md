@@ -9639,3 +9639,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 HTTP and API checks permanently blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual scan: PASS. **Recurring action item**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment will never reach rubli.xyz.
+
+---
+## Visual Review — 2026-08-16T00:30:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | PROXY_BLOCKED | — |
+| /atlas | PROXY_BLOCKED | — |
+| /aria | PROXY_BLOCKED | — |
+| /sectors | PROXY_BLOCKED | — |
+| /sectors/salud | PROXY_BLOCKED | — |
+| /cases | PROXY_BLOCKED | — |
+| /methodology | PROXY_BLOCKED | — |
+| /stories/el-ejercito-fantasma | PROXY_BLOCKED | — |
+
+**Note**: All HTTP checks failed — egress proxy returns 403 on CONNECT to `rubli.xyz:443` (policy denial). This is a recurring infrastructure constraint of the remote execution environment; not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. All grep hits are code comments, TypeScript annotations, constant lookups (`PATTERN_CHIP`, `TIER_STYLES`, `PATTERN_COLORS`), or guarded `isEs ? '...' : '...'` ternaries — consistent with prior runs.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks permanently blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual scan: PASS. **Action item (repeated)**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment cannot reach rubli.xyz.
