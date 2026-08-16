@@ -54,6 +54,7 @@ import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn, type FlyToP
 import { CanvasVendorHaloCard } from '@/components/atlas/CanvasVendorHaloCard'
 // Atlas P6 Frontier C — planetary system: contracts orbiting a focused vendor.
 import { useVendorContracts, type VendorContractDot } from '@/lib/atlas/use-vendor-contracts'
+import { useInstitutionRelatedVendors } from '@/lib/atlas/use-institution-vendors'
 import { ContractFloatingCard } from '@/components/atlas/ContractFloatingCard'
 // `dotsFromRows` (1,200 synthetic Halton lattice) was the loading fallback
 // for the Canvas engine — removed 2026-05-22 because tan low-risk lattice
@@ -105,6 +106,16 @@ import { useTopVendorsForCluster } from '@/lib/atlas/use-top-vendors'
 // curated entries covering every documented GT case + the most-flagged T1
 // vendors. Search is case-insensitive substring.
 // ─────────────────────────────────────────────────────────────────────────────
+// Atlas P6 Frontier C — planetary-mode vendor focus. Also reused for the
+// inline drill-chain's vendorHistory stack (2026-08).
+type FocusedVendorState = {
+  id: number
+  name: string
+  x: number
+  y: number
+  accent?: string
+} | null
+
 interface VendorLookup {
   query: string                  // normalized search key (uppercase)
   displayName: string             // canonical display name
@@ -571,9 +582,12 @@ function CanvasAtlasView({
   const dispatch = useAtlasDispatch()
   const navigate = useNavigate()
   const [stageParams] = useSearchParams()
-  // 2026-05-29: faithful-encoding Observatory (bubble scatter) is the default
-  // macro view. ?legacy=1 falls back to the canvas constellation — reversible
-  // safety net while the new encoding beds in.
+  // 2026-05-29: faithful-encoding Observatory (bubble scatter, with the
+  // VendorFile "El Expediente" docked panel) is the default macro view.
+  // ?legacy=1 falls back to the canvas constellation, which has a
+  // different, contract-level drill-chain (vendor -> contract -> other
+  // vendors at that institution) that VendorFile doesn't have — kept as
+  // an opt-in for that reason, not because it's the better default.
   const useFaithfulObservatory = stageParams.get('legacy') !== '1'
   // Stage 2: live per-cluster aggregates for the faithful scatter (patterns +
   // sectors). Falls back to the static meta while loading / for other lenses.
@@ -591,15 +605,13 @@ function CanvasAtlasView({
   // Atlas P6 Frontier C — focused vendor state (LOCAL — not context state, to
   // avoid polluting the global state machine with a UI-only zoom-into-vendor
   // mode). When set, contract dots orbit the vendor and the breadcrumb extends.
-  const [focusedVendor, setFocusedVendor] = useState<{
-    id: number
-    name: string
-    x: number
-    y: number
-    accent?: string
-  } | null>(null)
+  const [focusedVendor, setFocusedVendor] = useState<FocusedVendorState>(null)
   // Currently shown contract panel (when a contract dot is clicked).
   const [focusedContract, setFocusedContract] = useState<VendorContractDot | null>(null)
+  // Inline drill-chain (2026-08): back-stack of vendors visited via
+  // "other vendors here" chips on the contract card, so ESC/back walks the
+  // chain one hop at a time instead of exiting planetary mode outright.
+  const [vendorHistory, setVendorHistory] = useState<NonNullable<FocusedVendorState>[]>([])
   // Double-click detection: remembers the last vendor-dot click time + id,
   // plus a pending single-click timer so a follow-up click within 320ms can
   // upgrade the single-click navigation into planetary mode.
@@ -607,6 +619,12 @@ function CanvasAtlasView({
   const pendingNavRef = useRef<number | null>(null)
 
   const vendorContractsQuery = useVendorContracts(focusedVendor?.id ?? null)
+  // Inline drill-chain — related vendors at the focused contract's
+  // institution, offered as "jump here" chips on the contract card.
+  const institutionVendorsQuery = useInstitutionRelatedVendors(
+    focusedContract?.institutionId ?? null,
+    focusedVendor?.id ?? null,
+  )
 
   // Atlas P6 Frontier A — VendorHaloCard at zoom ≥ 18×.
   // We track the currently hovered dot, its screen-space position (emitted by
@@ -850,6 +868,7 @@ function CanvasAtlasView({
     (vendor: { id: number; name: string; x: number; y: number; accent?: string }) => {
       setFocusedContract(null)
       setFocusedVendor(vendor)
+      setVendorHistory([])
       // Tight zoom on the vendor so the orbit is legible.
       flyVendorRef.current?.(vendor.x, vendor.y, 28)
     },
@@ -859,7 +878,36 @@ function CanvasAtlasView({
   const exitPlanetaryMode = useCallback(() => {
     setFocusedContract(null)
     setFocusedVendor(null)
+    setVendorHistory([])
   }, [])
+
+  // Inline drill-chain — jump the planetary-mode focus to a related vendor
+  // (surfaced on the contract card as "other vendors here"). Reuses the
+  // CURRENT vendor's world coords so the orbit re-centers in place with no
+  // camera fly — the visual equivalent of swapping a detail panel's content
+  // while the view stays anchored. Pushes the vendor we're leaving onto a
+  // stack so ESC/back-arrow can retrace the chain one hop at a time.
+  const jumpToRelatedVendor = useCallback(
+    (vendor: { id: number; name: string }) => {
+      if (!focusedVendor) return
+      setVendorHistory((h) => [...h, focusedVendor])
+      setFocusedVendor({ id: vendor.id, name: vendor.name, x: focusedVendor.x, y: focusedVendor.y, accent: focusedVendor.accent })
+      setFocusedContract(null)
+    },
+    [focusedVendor],
+  )
+
+  // ESC/back-arrow — pop one hop off the vendor-history stack, if any,
+  // before falling through to exitPlanetaryMode. Returns true if it
+  // consumed the back action (caller should not also exitPlanetaryMode).
+  const popVendorHistory = useCallback((): boolean => {
+    if (vendorHistory.length === 0) return false
+    const prev = vendorHistory[vendorHistory.length - 1]
+    setVendorHistory((h) => h.slice(0, -1))
+    setFocusedVendor(prev)
+    setFocusedContract(null)
+    return true
+  }, [vendorHistory])
 
   const handleDotClick = useCallback(
     (dot: { id: string; name?: string; x?: number; y?: number; sectorColor?: string; kind?: 'vendor' | 'contract' }) => {
@@ -1026,27 +1074,48 @@ function CanvasAtlasView({
 
   // ESC pops zoom (consistent with AtlasZoomLayer behavior). When in
   // planetary mode (focusedVendor !== null), ESC peels back one layer at a
-  // time: first the contract panel (if open), then planetary mode itself,
-  // then cluster zoom — matching the breadcrumb hierarchy.
+  // time: first the contract panel (if open), then one hop of the inline
+  // drill-chain (if the user jumped to a related vendor), then planetary
+  // mode itself, then cluster zoom — matching the breadcrumb hierarchy.
+  //
+  // 2026-08-16: AtlasShell (the page-level shell wrapping this component)
+  // has its OWN unconditional Escape listener that dispatches escape-zoom
+  // straight to 'idle' whenever the context view is zoomed — it has no idea
+  // this component is mid-drill-chain, because focusedVendor/focusedContract/
+  // vendorHistory are local state here, not in AtlasContext. Both listeners
+  // are attached to `window`, and since this effect's deps change on every
+  // vendor hop, re-subscription can reorder it AFTER AtlasShell's (stable)
+  // listener — so AtlasShell's blunt reset was winning the race and blowing
+  // past the back-stack entirely. Attaching in the CAPTURE phase + calling
+  // stopPropagation makes this handler run first and suppress AtlasShell's
+  // bubble-phase one, regardless of attachment order.
   useEffect(() => {
     if (!isZoomed && !focusedVendor && !focusedContract) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       if (focusedContract) {
+        e.stopPropagation()
         setFocusedContract(null)
         return
       }
+      if (popVendorHistory()) {
+        e.stopPropagation()
+        return
+      }
       if (focusedVendor) {
+        e.stopPropagation()
         exitPlanetaryMode()
         // Re-fly back to the cluster so the user lands where they started.
         if (zoomedCode) flyToRef.current?.(zoomedCode)
         return
       }
+      // Falling through to cluster-zoom exit — let AtlasShell's listener
+      // handle the actual context dispatch; no need to also stopPropagation.
       dispatch({ type: 'escape-zoom' })
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [isZoomed, dispatch, focusedVendor, focusedContract, exitPlanetaryMode, zoomedCode])
+    window.addEventListener('keydown', onKey, { capture: true })
+    return () => window.removeEventListener('keydown', onKey, { capture: true })
+  }, [isZoomed, dispatch, focusedVendor, focusedContract, exitPlanetaryMode, popVendorHistory, zoomedCode])
 
   // Exiting cluster zoom also exits planetary mode — guarantees the canvas
   // never carries orphan contract dots after the user pops back to galaxy.
@@ -1179,8 +1248,10 @@ function CanvasAtlasView({
           lensLabel={lensLabel}
           clusterLabel={clusterLabel}
           onGoHome={() => {
-            // Atlas P6 Frontier C — back-arrow exits planetary mode FIRST,
-            // peeling back one layer; a second click exits cluster zoom.
+            // Atlas P6 Frontier C — back-arrow retraces the inline
+            // drill-chain one hop at a time (related-vendor jumps), THEN
+            // exits planetary mode, THEN exits cluster zoom.
+            if (popVendorHistory()) return
             if (focusedVendor) {
               exitPlanetaryMode()
               if (zoomedCode) flyToRef.current?.(zoomedCode)
@@ -1285,6 +1356,13 @@ function CanvasAtlasView({
             vendorAccentColor={focusedVendor?.accent ?? zoomedMeta?.color}
             onClose={() => setFocusedContract(null)}
             lang={lang}
+            relatedVendors={institutionVendorsQuery}
+            onSelectVendor={jumpToRelatedVendor}
+            onViewInstitution={
+              focusedContract.institutionId
+                ? () => navigate(`/institutions/${focusedContract.institutionId}`)
+                : undefined
+            }
           />
         </div>
       )}
@@ -1408,6 +1486,12 @@ function AtlasUrlSync({
       // collapsing to /atlas?lens=... and the Z1 drill-in never fired.
       const z1Param = searchParams.get('z1')
       if (z1Param) params.set('z1', z1Param)
+      // 2026-08-16: also preserve ?legacy=1 (opt-in canvas-constellation
+      // engine) for the same reason — otherwise the first lens/year/zoom
+      // change 250ms after landing silently kicks the user back into the
+      // faithful-scatter engine they explicitly opted out of.
+      const legacyParam = searchParams.get('legacy')
+      if (legacyParam) params.set('legacy', legacyParam)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
@@ -1751,6 +1835,9 @@ export default function Atlas() {
       // 2026-05-09: preserve z1 flag (see same fix in the other URL writer above)
       const z1Param = searchParams.get('z1')
       if (z1Param) params.set('z1', z1Param)
+      // 2026-08-16: preserve legacy flag (see same fix in the other URL writer above)
+      const legacyParam = searchParams.get('legacy')
+      if (legacyParam) params.set('legacy', legacyParam)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)

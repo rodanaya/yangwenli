@@ -26,6 +26,7 @@ export interface VendorContractDot {
   riskLevel: 'critical' | 'high' | 'medium' | 'low' | null
   contractDate: string | null
   title: string | null
+  institutionId: number | null
   institutionName: string | null
   procedureType: string | null
   isDirectAward: boolean
@@ -45,6 +46,7 @@ function normalize(c: ContractListItem): VendorContractDot {
     riskLevel: normalizedLvl,
     contractDate: c.contract_date ?? null,
     title: c.title ?? null,
+    institutionId: typeof c.institution_id === 'number' ? c.institution_id : null,
     institutionName: c.institution_name ?? null,
     procedureType: c.procedure_type ?? null,
     isDirectAward: !!c.is_direct_award,

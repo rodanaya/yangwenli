@@ -13,19 +13,32 @@
  *
  * "View full contract →" links to `/contracts/{id}` (route already exists in
  * App.tsx — see Contracts.tsx l.1535 / Executive.tsx l.1982 for parity).
+ *
+ * Inline drill-chain (2026-08): the institution row is now a link
+ * (`onViewInstitution`) and, when related vendors at the same institution
+ * are available, a chip row lets the user jump the planetary-mode focus to
+ * one of them (`onSelectVendor`) without leaving /atlas — see Atlas.tsx
+ * `jumpToRelatedVendor`.
  */
 
 import { useNavigate } from 'react-router-dom'
 import { X, ArrowRight } from 'lucide-react'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import type { VendorContractDot } from '@/lib/atlas/use-vendor-contracts'
+import type { RelatedVendor } from '@/lib/atlas/use-institution-vendors'
 
 interface ContractFloatingCardProps {
   contract: VendorContractDot
   vendorAccentColor?: string
   onClose: () => void
   lang: 'en' | 'es'
+  /** Related vendors at the contract's institution — jump the orbit to one. */
+  relatedVendors?: RelatedVendor[]
+  onSelectVendor?: (vendor: { id: number; name: string }) => void
+  /** Navigate to the full institution dossier (escape hatch — institutions aren't graph nodes here). */
+  onViewInstitution?: () => void
 }
 
 const COPY = {
@@ -45,6 +58,7 @@ const COPY = {
     unknownAmount: 'Amount unavailable',
     unknownDate: 'Date unavailable',
     unknownProc: 'Procedure unavailable',
+    otherVendors: 'Other vendors here',
   },
   es: {
     eyebrow: 'CONTRATO',
@@ -62,6 +76,7 @@ const COPY = {
     unknownAmount: 'Monto no disponible',
     unknownDate: 'Fecha no disponible',
     unknownProc: 'Procedimiento no disponible',
+    otherVendors: 'Otros proveedores aquí',
   },
 } as const
 
@@ -86,6 +101,9 @@ export function ContractFloatingCard({
   vendorAccentColor,
   onClose,
   lang,
+  relatedVendors,
+  onSelectVendor,
+  onViewInstitution,
 }: ContractFloatingCardProps) {
   const navigate = useNavigate()
   const t = COPY[lang]
@@ -261,7 +279,7 @@ export function ContractFloatingCard({
         <dd
           style={{
             fontSize: 13,
-            color: 'var(--color-text-primary)',
+            color: onViewInstitution && contract.institutionId ? 'var(--color-accent)' : 'var(--color-text-primary)',
             margin: 0,
             display: '-webkit-box',
             WebkitLineClamp: 2,
@@ -270,7 +288,18 @@ export function ContractFloatingCard({
           }}
           title={contract.institutionName ?? undefined}
         >
-          {contract.institutionName ?? t.unknownInst}
+          {onViewInstitution && contract.institutionId ? (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onViewInstitution() }}
+              className="hover:underline text-left"
+              style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit' }}
+            >
+              {contract.institutionName ?? t.unknownInst}
+            </button>
+          ) : (
+            contract.institutionName ?? t.unknownInst
+          )}
         </dd>
 
         <dt
@@ -299,6 +328,39 @@ export function ContractFloatingCard({
           {contract.procedureType ?? t.unknownProc}
         </dd>
       </dl>
+
+      {relatedVendors && relatedVendors.length > 0 && onSelectVendor && (
+        <div className="mt-3">
+          <div
+            className="font-mono uppercase"
+            style={{ fontSize: 8, letterSpacing: '0.12em', color: 'var(--color-text-muted)', marginBottom: 4 }}
+          >
+            {t.otherVendors}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {relatedVendors.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onSelectVendor({ id: v.id, name: v.name }) }}
+                className="hover:underline transition-colors"
+                title={formatVendorName(v.name, 80)}
+                style={{
+                  fontSize: 10,
+                  color: 'var(--color-text-secondary)',
+                  background: 'var(--color-background)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 2,
+                  padding: '2px 6px',
+                  cursor: 'pointer',
+                }}
+              >
+                {formatVendorName(v.name, 22)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <button
         type="button"
