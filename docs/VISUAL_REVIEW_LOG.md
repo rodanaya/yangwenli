@@ -9829,3 +9829,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 HTTP and API checks permanently blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual scan: PASS. **Persistent action item**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment cannot reach rubli.xyz.
+
+---
+## Visual Review — 2026-08-17T06:25:14Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED | — |
+
+Egress proxy returns HTTP 403 on CONNECT to rubli.xyz:443 — identical to prior runs. Site reachability cannot be determined from this environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. Grep hits are code comments, TypeScript annotations, constant lookups (`PATTERN_CHIP`, `TIER_STYLES`, `PATTERN_COLORS`), or guarded `isEs ? '...' : '...'` ternaries — consistent with prior runs.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks permanently blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual scan: PASS. **Persistent action item**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment cannot reach rubli.xyz.
