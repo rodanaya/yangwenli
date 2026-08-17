@@ -9905,3 +9905,41 @@ Grep scan of frontend/src/pages/ and frontend/src/components/:
 ### Overall: WARN
 
 HTTP and API checks permanently blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual scan: PASS. **Persistent action item**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment cannot reach rubli.xyz.
+
+---
+## Visual Review — 2026-08-17T18:24:31Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ⚠️ |
+| https://rubli.xyz/atlas | BLOCKED | ⚠️ |
+| https://rubli.xyz/aria | BLOCKED | ⚠️ |
+| https://rubli.xyz/sectors | BLOCKED | ⚠️ |
+| https://rubli.xyz/sectors/salud | BLOCKED | ⚠️ |
+| https://rubli.xyz/cases | BLOCKED | ⚠️ |
+| https://rubli.xyz/methodology | BLOCKED | ⚠️ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ⚠️ |
+
+**Note**: All HTTP checks failed — egress proxy returns 403 CONNECT for `rubli.xyz:443` (policy denial). This is a persistent environment constraint, not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /api/v1/sectors | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (all `.tsx`):
+
+- **Raw i18n key leaks** (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`): Matches found only in code comments, JSDoc blocks, and constant lookups (`PATTERN_CHIP`, `TIER_STYLES`, `PATTERN_COLORS`). All bilingual ternaries in `ConcentrationConstellation.tsx` correctly guarded with `isEs`. No user-visible unresolved keys.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy — `rubli.xyz:443` unreachable (403 CONNECT, policy denial, 7th+ consecutive run). Bilingual gap scan: **PASS**. Action item: migrate health monitoring to GitHub Actions cron with unrestricted egress.
