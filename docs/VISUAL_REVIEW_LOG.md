@@ -1,4 +1,42 @@
 ---
+## Visual Review — 2026-08-18T06:24:38Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED | — |
+
+Proxy log: `connect_rejected` — gateway answered 403 to CONNECT for `rubli.xyz:443`. Egress to the production domain is blocked by the remote execution environment's network policy. HTTP checks cannot be performed from this environment. **Recurring issue — 5th consecutive blocked run (Aug 15, Aug 16, Aug 17, Aug 18@00:24, Aug 18@06:24).**
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. All grep hits are code comments, TypeScript annotations, constant lookups (`PATTERN_CHIP`, `TIER_STYLES`, `PATTERN_COLORS`), or guarded `isEs ? '...' : '...'` ternaries — consistent with prior runs.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks permanently blocked by egress proxy (403 CONNECT to rubli.xyz:443). Bilingual scan: PASS. **Action item (5th escalation)**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment cannot reach rubli.xyz. No value is gained by continuing to run this check here.
+
+---
 ## Visual Review — 2026-08-18T00:24:00Z
 
 ### HTTP Status
