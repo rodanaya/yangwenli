@@ -10247,3 +10247,39 @@ Scan of `frontend/src/pages/` and `frontend/src/components/` (all `.tsx`):
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy — `rubli.xyz:443` unreachable (403 CONNECT, policy denial, 13th consecutive run). Bilingual gap scan: **PASS**. To resolve: migrate this health check to a GitHub Actions cron workflow with unrestricted egress (see previous runs for context).
+
+---
+## Visual Review — 2026-08-20T00:24:53Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /atlas | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /aria | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /sectors | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /sectors/salud | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /cases | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /methodology | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /stories/el-ejercito-fantasma | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+| /api/v1/sectors | BLOCKED — proxy denies rubli.xyz | ⚠️ |
+
+### Bilingual Gaps
+Scan of `frontend/src/pages/` and `frontend/src/components/` (all `.tsx`):
+
+- **Raw i18n key leaks** (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`): Matches in code comments, JSDoc, and constant lookups only (`PATTERN_CHIP[item.primary_pattern]`, `TIER_STYLES.Excelente.color`, `PATTERN_COLORS.*`). Bilingual ternaries in `ConcentrationConstellation.tsx` correctly guarded with `isEs`. No user-visible unresolved keys.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy — `rubli.xyz:443` unreachable (403 CONNECT, policy denial, 14th consecutive run). Bilingual gap scan: **PASS**. To resolve: migrate this health check to a GitHub Actions cron workflow with unrestricted egress.
