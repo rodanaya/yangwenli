@@ -10475,3 +10475,42 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` via three grep pass
 ### Overall: WARN
 
 HTTP and API checks cannot run — `rubli.xyz:443` blocked by egress proxy (policy denial, consistent across all scheduled runs). Bilingual gap scan: **PASS**. **Action required**: to get useful HTTP/API checks, either (a) add `rubli.xyz` to this environment's network allowlist, or (b) migrate this health-check task to a GitHub Actions cron workflow with unrestricted egress.
+
+---
+## Visual Review — 2026-08-21T12:27:48Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/atlas | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/aria | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/sectors | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/cases | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/methodology | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — proxy 403 | ❌ |
+
+_Egress to rubli.xyz is blocked by this execution environment's network policy (proxy CONNECT tunnel returns 403 policy denial for rubli.xyz:443). All HTTP status checks cannot complete. This is a persistent environment limitation, not a site outage — identical block confirmed on all prior runs._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/sectors | BLOCKED — proxy 403 | ❌ |
+
+_Same egress policy blocks all API checks._
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` via three grep passes:
+- **i18n key leaks** (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`): All hits are in code comments, TypeScript type annotations, object-key lookups (e.g. `PATTERN_CHIP[item.primary_pattern]`), author citations, or properly guarded `isEs ? ... : ...` bilingual ternaries. No raw namespace.KEY strings leaking into rendered output.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks cannot run — `rubli.xyz:443` blocked by egress proxy (policy denial, consistent across all scheduled runs). Bilingual gap scan: **PASS**. **Action required**: to get useful HTTP/API checks, either (a) add `rubli.xyz` to this environment's network allowlist, or (b) migrate this health-check task to a GitHub Actions cron workflow with unrestricted egress.
