@@ -10670,3 +10670,42 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` via three grep pass
 ### Overall: WARN
 
 HTTP and API checks cannot run from this scheduled remote environment — `rubli.xyz:443` consistently blocked by egress proxy (403 policy denial). Bilingual gap scan: **PASS**. No regressions in i18n coverage detected. **Recommendation**: migrate HTTP/API health checks to GitHub Actions cron (unrestricted egress) for meaningful uptime coverage.
+
+---
+## Visual Review — 2026-08-23T06:24:25Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/atlas | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/aria | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/sectors | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/cases | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/methodology | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — egress proxy 403 | ❌ |
+
+_Egress policy in the Claude Code remote environment denies CONNECT to rubli.xyz:443 (curl exit 56, proxy 403 Forbidden). Persistent environment limitation — not a site outage._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/sectors | BLOCKED — proxy 403 | ❌ |
+
+_Same egress policy blocks all API checks._
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` via three grep passes:
+- **i18n key leaks** (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`): All hits are code comments, TypeScript type annotations, object-key lookups, or properly guarded `isEs ? ... : ...` ternaries. No raw namespace.KEY strings leaking into rendered output.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks cannot run from this scheduled remote environment — `rubli.xyz:443` consistently blocked by egress proxy (403 policy denial). Bilingual gap scan: **PASS**. No regressions in i18n coverage detected. **Recommendation**: migrate HTTP/API health checks to GitHub Actions cron (unrestricted egress) for meaningful uptime coverage.
