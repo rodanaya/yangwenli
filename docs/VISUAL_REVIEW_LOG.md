@@ -10816,3 +10816,41 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` for:
 
 ### Overall: WARN
 HTTP and API checks skipped — `rubli.xyz:443` blocked by egress proxy (403 policy denial, persistent). Bilingual gap scan: **PASS**. No regressions in i18n coverage. Recommend setting up GitHub Actions cron for HTTP/API monitoring.
+---
+## Visual Review — 2026-08-24T06:25:29Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ❌ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ❌ |
+| https://rubli.xyz/aria | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ❌ |
+| https://rubli.xyz/cases | BLOCKED (000) | ❌ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ❌ |
+
+_Proxy error: `rubli.xyz:443` 403 CONNECT — gateway policy denial (recurring; 3rd consecutive run blocked)._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/sectors | BLOCKED — proxy 403 | ❌ |
+
+_Egress to rubli.xyz is blocked by this environment's network policy. HTTP/API checks cannot complete from Claude Code on the web — migrate to GitHub Actions with unrestricted egress (see note below)._
+
+### Bilingual Gaps
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. All grep hits are code comments, TypeScript annotations, or properly guarded `isEs ? ... : ...` ternaries.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy for the 3rd consecutive run — `rubli.xyz:443` unreachable (403 CONNECT, policy denial). Bilingual gap scan: **PASS**. Recurring issue: this health-check schedule cannot verify site uptime from Claude Code on the web. Recommend moving to a GitHub Actions cron workflow (.github/workflows/health-check.yml) with unrestricted egress.
+
