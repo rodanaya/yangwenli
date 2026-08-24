@@ -10782,3 +10782,37 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` for:
 
 ### Overall: WARN
 HTTP and API checks skipped — `rubli.xyz:443` blocked by egress proxy (403 policy denial, persistent). Bilingual gap scan: **PASS**. No regressions in i18n coverage. Recommend setting up GitHub Actions cron for HTTP/API monitoring to get actual uptime data.
+
+---
+## Visual Review — 2026-08-24T00:23:59Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | NETWORK_ERROR (proxy 403) | SKIP |
+| https://rubli.xyz/atlas | NETWORK_ERROR (proxy 403) | SKIP |
+| https://rubli.xyz/aria | NETWORK_ERROR (proxy 403) | SKIP |
+| https://rubli.xyz/sectors | NETWORK_ERROR (proxy 403) | SKIP |
+| https://rubli.xyz/sectors/salud | NETWORK_ERROR (proxy 403) | SKIP |
+| https://rubli.xyz/cases | NETWORK_ERROR (proxy 403) | SKIP |
+| https://rubli.xyz/methodology | NETWORK_ERROR (proxy 403) | SKIP |
+| https://rubli.xyz/stories/el-ejercito-fantasma | NETWORK_ERROR (proxy 403) | SKIP |
+
+> **Note**: Egress to `rubli.xyz:443` is blocked by the remote container's network policy (connect_rejected, gateway 403). HTTP and API checks cannot be performed from this environment. This is a persistent infrastructure limitation — not indicative of site status. Migrate these checks to GitHub Actions (unrestricted egress) for meaningful uptime monitoring.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | NETWORK_ERROR (proxy 403) | SKIP |
+| /api/v1/cases?limit=5 | NETWORK_ERROR (proxy 403) | SKIP |
+| /api/v1/cases?vendor_id=4325 | NETWORK_ERROR (proxy 403) | SKIP |
+| /api/v1/sectors | NETWORK_ERROR (proxy 403) | SKIP |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` for:
+- Raw i18n key leaks (ALL_CAPS.ALL_CAPS patterns): **None detected** (matches were code abbreviations like S.A., C.V. and internal constants — not UI-rendered translation keys)
+- Hardcoded "Generate Report" / "Generar Reporte": **None detected**
+- Hardcoded "SIGN IN" / "INICIAR SESIÓN": **None detected**
+
+### Overall: WARN
+HTTP and API checks skipped — `rubli.xyz:443` blocked by egress proxy (403 policy denial, persistent). Bilingual gap scan: **PASS**. No regressions in i18n coverage. Recommend setting up GitHub Actions cron for HTTP/API monitoring.
