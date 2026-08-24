@@ -10854,3 +10854,39 @@ _Egress to rubli.xyz is blocked by this environment's network policy. HTTP/API c
 
 HTTP and API checks blocked by egress proxy for the 3rd consecutive run — `rubli.xyz:443` unreachable (403 CONNECT, policy denial). Bilingual gap scan: **PASS**. Recurring issue: this health-check schedule cannot verify site uptime from Claude Code on the web. Recommend moving to a GitHub Actions cron workflow (.github/workflows/health-check.yml) with unrestricted egress.
 
+
+---
+## Visual Review — 2026-08-24T12:25:59Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | BLOCKED — proxy 403 | ❌ |
+| /atlas | BLOCKED — proxy 403 | ❌ |
+| /aria | BLOCKED — proxy 403 | ❌ |
+| /sectors | BLOCKED — proxy 403 | ❌ |
+| /sectors/salud | BLOCKED — proxy 403 | ❌ |
+| /cases | BLOCKED — proxy 403 | ❌ |
+| /methodology | BLOCKED — proxy 403 | ❌ |
+| /stories/el-ejercito-fantasma | BLOCKED — proxy 403 | ❌ |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/sectors | BLOCKED — proxy 403 | ❌ |
+
+_Egress to rubli.xyz is blocked by this environment's network policy (4th consecutive run with same failure). HTTP/API checks cannot complete from Claude Code on the web. Recommend migrating to a GitHub Actions cron workflow with unrestricted egress._
+
+### Bilingual Gaps
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. All grep hits are code comments, TypeScript annotations, or properly guarded `isEs ? ... : ...` ternaries.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy for the **4th consecutive run** — `rubli.xyz:443` unreachable (403 CONNECT, policy denial). Bilingual gap scan: **PASS**. This scheduled health-check cannot verify site uptime from Claude Code on the web. Action required: migrate to a GitHub Actions cron workflow (`.github/workflows/health-check.yml`) with unrestricted egress, or disable this schedule.
