@@ -10964,3 +10964,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 
 HTTP and API checks blocked by egress proxy — `rubli.xyz:443` unreachable (403 CONNECT, policy denial, recurring since Aug 15). Bilingual gap scan: **PASS** (clean). **Action needed**: this check has been WARN on every run since Aug 15. Migrate to GitHub Actions cron with unrestricted egress so HTTP/API checks can actually verify the live site.
 
+
+---
+## Visual Review — 2026-08-25T06:25:14Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED (000) | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED (000) | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED (000) | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED (000) | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED (000) | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED (000) | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED (000) | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED (000) | — |
+
+_Proxy log: `connect_rejected` — gateway answered 403 to CONNECT for `rubli.xyz:443`. HTTP and API checks cannot run from this environment (recurring block, policy denial)._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. All grep hits are code constants (`PATTERN_CHIP`, `TIER_STYLES`, `JSX.Element`), comments, or guarded `isEs ? '...' : '...'` ternaries — all properly bilingual.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy — `rubli.xyz:443` unreachable (403 CONNECT, policy denial). Bilingual gap scan: **PASS** (clean). Recurring issue: HTTP/API checks have been skipped on every run. Recommend migrating to GitHub Actions cron with unrestricted egress for live site verification.
