@@ -11153,3 +11153,41 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy — `rubli.xyz:443` unreachable (403 CONNECT, policy denial). Bilingual gap scan: **PASS** (clean). Persistent environment limitation — HTTP/API health checks require a runner with unrestricted egress (e.g. GitHub Actions). Local checks pass cleanly.
+
+---
+## Visual Review — 2026-08-26T12:25:59Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | PROXY_BLOCKED | — |
+| https://rubli.xyz/atlas | PROXY_BLOCKED | — |
+| https://rubli.xyz/aria | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors | PROXY_BLOCKED | — |
+| https://rubli.xyz/sectors/salud | PROXY_BLOCKED | — |
+| https://rubli.xyz/cases | PROXY_BLOCKED | — |
+| https://rubli.xyz/methodology | PROXY_BLOCKED | — |
+| https://rubli.xyz/stories/el-ejercito-fantasma | PROXY_BLOCKED | — |
+
+> Egress proxy blocks rubli.xyz:443 (403 CONNECT, policy denial). HTTP checks require a runner with unrestricted egress.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | PROXY_BLOCKED | — |
+| /api/v1/cases?limit=5 | PROXY_BLOCKED | — |
+| /api/v1/cases?vendor_id=4325 | PROXY_BLOCKED | — |
+| /api/v1/sectors | PROXY_BLOCKED | — |
+
+### Bilingual Gaps
+
+Scan run against `frontend/src/pages/` and `frontend/src/components/`:
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. Grep hits are code constants (`PATTERN_CHIP`, `TIER_STYLES`, `JSX.Element`), comments, or guarded `isEs ? '...' : '...'` ternaries — all properly bilingual.
+- **"Generate Report" / "Generar Reporte"**: Not found hardcoded outside `t()` calls.
+- **"SIGN IN" / "INICIAR SESIÓN"**: Not found hardcoded outside `t()` calls.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy — `rubli.xyz:443` unreachable (403 CONNECT, policy denial). Bilingual gap scan: **PASS** (clean). Persistent environment limitation — HTTP/API health checks require a runner with unrestricted egress (e.g. GitHub Actions). Local checks pass cleanly.
