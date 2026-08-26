@@ -11191,3 +11191,39 @@ Scan run against `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy — `rubli.xyz:443` unreachable (403 CONNECT, policy denial). Bilingual gap scan: **PASS** (clean). Persistent environment limitation — HTTP/API health checks require a runner with unrestricted egress (e.g. GitHub Actions). Local checks pass cleanly.
+---
+## Visual Review — 2026-08-26T18:24:39Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ❌ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ❌ |
+| https://rubli.xyz/aria | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ❌ |
+| https://rubli.xyz/cases | BLOCKED (000) | ❌ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ❌ |
+
+> **Note**: Network policy in this remote execution environment blocks outbound HTTPS to `rubli.xyz:443` (proxy 403 connect_rejected). HTTP checks cannot be performed from this session. This is an environment constraint, not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | SKIPPED — proxy blocks rubli.xyz | ⚠️ |
+| /api/v1/cases | SKIPPED — proxy blocks rubli.xyz | ⚠️ |
+| /api/v1/cases?vendor_id=4325 | SKIPPED — proxy blocks rubli.xyz | ⚠️ |
+| /api/v1/sectors | SKIPPED — proxy blocks rubli.xyz | ⚠️ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` locally.
+
+- **i18n key leaks**: No raw key leaks found. Grep matches were code comments, data object property accesses in logic (not rendered as UI strings), and properly guarded bilingual strings using `isEs ? '...' : '...'` pattern.
+- **"Generate Report" hardcoded**: None detected.
+- **"SIGN IN" hardcoded**: None detected.
+
+None detected.
+
+### Overall: WARN
+(Site HTTP/API checks blocked by session network policy for 2 consecutive days — 2026-08-25 and 2026-08-26. Bilingual scan: clean. Recommend running health check from a session with broader network access, or adding rubli.xyz to the allowed hosts policy.)
