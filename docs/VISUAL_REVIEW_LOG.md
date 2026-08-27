@@ -11227,3 +11227,42 @@ None detected.
 
 ### Overall: WARN
 (Site HTTP/API checks blocked by session network policy for 2 consecutive days — 2026-08-25 and 2026-08-26. Bilingual scan: clean. Recommend running health check from a session with broader network access, or adding rubli.xyz to the allowed hosts policy.)
+
+---
+## Visual Review — 2026-08-27T00:24:35Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/atlas | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/aria | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/sectors | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/cases | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/methodology | BLOCKED — proxy 403 | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — proxy 403 | ❌ |
+
+_Egress to rubli.xyz is blocked by this execution environment's network policy (proxy CONNECT tunnel returns 403 policy denial for rubli.xyz:443). All HTTP status checks cannot complete._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/sectors | BLOCKED — proxy 403 | ❌ |
+
+_Same egress policy blocks all API checks._
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` via three grep passes:
+- **i18n key leaks** (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`): All hits are in code comments, TypeScript type annotations, object-key lookups (e.g. `PATTERN_CHIP[item.primary_pattern]`), author citations, or properly guarded `isEs ? ... : ...` bilingual ternaries. No raw namespace.KEY strings leaking into rendered output.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks cannot run — `rubli.xyz:443` blocked by egress proxy (policy denial, recurring since 2026-08-21, every run). Bilingual gap scan: **PASS**. This scheduled task requires outbound HTTPS to rubli.xyz; the execution environment's network policy does not permit it. Resolution: add `rubli.xyz` to the allowlist in the environment's network policy, or migrate this check to GitHub Actions with unrestricted egress.
