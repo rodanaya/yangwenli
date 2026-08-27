@@ -11266,3 +11266,38 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` via three grep pass
 ### Overall: WARN
 
 HTTP and API checks cannot run — `rubli.xyz:443` blocked by egress proxy (policy denial, recurring since 2026-08-21, every run). Bilingual gap scan: **PASS**. This scheduled task requires outbound HTTPS to rubli.xyz; the execution environment's network policy does not permit it. Resolution: add `rubli.xyz` to the allowlist in the environment's network policy, or migrate this check to GitHub Actions with unrestricted egress.
+
+---
+## Visual Review — 2026-08-27T06:26:35Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ❌ |
+| https://rubli.xyz/atlas | BLOCKED | ❌ |
+| https://rubli.xyz/aria | BLOCKED | ❌ |
+| https://rubli.xyz/sectors | BLOCKED | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED | ❌ |
+| https://rubli.xyz/cases | BLOCKED | ❌ |
+| https://rubli.xyz/methodology | BLOCKED | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ❌ |
+
+All requests returned curl exit 56: egress proxy (127.0.0.1:41519) returned HTTP 403 to CONNECT rubli.xyz:443. This is a network policy restriction on the execution environment — not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same network policy) | ❌ |
+| /api/v1/cases | BLOCKED | ❌ |
+| /api/v1/sectors | BLOCKED | ❌ |
+
+### Bilingual Gaps
+Scanned frontend/src/pages/ and frontend/src/components/ for raw i18n key leaks, hardcoded "Generate Report", and hardcoded "SIGN IN" strings.
+
+**None detected.** Matches in grep output were all legitimate: academic citation strings in Methodology.tsx, data-object type fields, corporate-form abbreviations in comments, and bilingual ternary expressions (isEs ? '…' : '…') in ConcentrationConstellation.tsx that are properly localized.
+
+### Overall: WARN
+
+**Recurring network policy block** — rubli.xyz:443 blocked by egress proxy policy denial on every scheduled run since 2026-08-21. HTTP and API checks cannot be performed from this execution environment. Bilingual scan (local filesystem): **PASS**.
+
+**Action required**: Add `rubli.xyz` to the environment's egress allowlist, or move HTTP/API checks to a GitHub Actions workflow with unrestricted outbound access.
