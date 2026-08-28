@@ -30,7 +30,7 @@ lxml>=5.0.0                # Fast XML/HTML parser
 pdfplumber>=0.10.0         # PDF table extraction (ASF reports)
 
 # Utilities
-tqdm>=4.65.0               # Progress bars in long-running scripts
+tqdm>=4.67.3               # Progress bars in long-running scripts
 
 # AI Memo Generation
 anthropic>=0.40.0          # ARIA memo generation (aria_generate_memos.py)

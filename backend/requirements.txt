@@ -36,7 +36,7 @@ lxml>=5.0.0                # Fast XML/HTML parser (ASF scraper)
 pdfplumber>=0.10.0         # PDF table extraction (ASF MDB reports)
 
 # Utilities
-tqdm>=4.65.0               # Progress bars
+tqdm>=4.67.3               # Progress bars
 
 # AI (used by ai_explain.py router + aria_generate_memos.py)
 anthropic>=0.40.0
