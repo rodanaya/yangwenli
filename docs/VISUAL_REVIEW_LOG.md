@@ -1,4 +1,42 @@
 ---
+## Visual Review — 2026-08-28T18:24:13Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ❌ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ❌ |
+| https://rubli.xyz/aria | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ❌ |
+| https://rubli.xyz/cases | BLOCKED (000) | ❌ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ❌ |
+
+_Proxy error: `rubli.xyz:443` 403 CONNECT — gateway policy denial (persistent, every run)._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy 403 | ❌ |
+| /api/v1/sectors | BLOCKED — proxy 403 | ❌ |
+
+_Egress to rubli.xyz is blocked by this environment's network policy. All HTTP and API checks cannot complete._
+
+### Bilingual Gaps
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. Grep hits are code comments, TypeScript type annotations, and properly guarded `isEs ? ... : ...` ternaries.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy (403 CONNECT to rubli.xyz:443, persistent across all runs). Bilingual scan: **PASS**. **Action required**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment's network policy permanently blocks rubli.xyz.
+
+---
 ## Visual Review — 2026-08-28T00:24:08Z
 
 ### HTTP Status
