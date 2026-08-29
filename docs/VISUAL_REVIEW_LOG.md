@@ -11565,3 +11565,40 @@ Scanned frontend/src/pages/ and frontend/src/components/ for:
 HTTP and API checks cannot run from this execution environment — rubli.xyz:443 is blocked by egress proxy policy (403 CONNECT tunnel rejected). Bilingual scan (local filesystem): **PASS** — no gaps detected.
 
 **Note (recurring)**: This is the second consecutive run blocked by the same egress policy. HTTP/API health checks should be moved to a GitHub Actions workflow or another host with unrestricted outbound access to rubli.xyz.
+
+---
+## Visual Review — 2026-08-29T06:24:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/atlas | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/aria | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/sectors | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/cases | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/methodology | BLOCKED — egress proxy 403 | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — egress proxy 403 | ❌ |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same network policy) | ❌ |
+| /api/v1/cases | BLOCKED | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | ❌ |
+| /api/v1/sectors | BLOCKED | ❌ |
+
+### Bilingual Gaps
+Scanned frontend/src/pages/ and frontend/src/components/ for:
+- Raw i18n key leaks (ALL_CAPS.ALL_CAPS patterns)
+- Hardcoded "Generate Report" / "Generar Reporte"
+- Hardcoded "SIGN IN" / "INICIAR SESIÓN"
+
+**None detected.** All grep matches were false positives: academic citation in Methodology.tsx, data-object field literals, corporate-form abbreviations in code comments, and properly-localized bilingual ternaries (`isEs ? '…' : '…'`) in ConcentrationConstellation.tsx.
+
+### Overall: WARN
+
+HTTP and API checks cannot run from this execution environment — rubli.xyz:443 is blocked by egress proxy policy (403 CONNECT tunnel rejected). Bilingual scan (local filesystem): **PASS** — no gaps detected.
+
+**Note (3rd consecutive blocked run)**: This scheduled task cannot perform HTTP/API health checks from the claude.ai remote execution environment due to egress policy. Recommend migrating health checks to a GitHub Actions workflow (`.github/workflows/health-check.yml`) with unrestricted outbound access, or configuring the environment with a "full network access" policy at claude.ai/admin-settings.
