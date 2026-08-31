@@ -11948,3 +11948,41 @@ _All external API checks blocked. Same root cause as HTTP above._
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy (connect_rejected to rubli.xyz:443). Bilingual scan: **PASS**. **Persistent issue**: This check has failed to reach rubli.xyz in every run since 2026-08-28. Recommend migrating HTTP/API monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this runner's network policy cannot reach the production site.
+
+---
+## Visual Review — 2026-08-31T18:28:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ❌ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ❌ |
+| https://rubli.xyz/aria | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ❌ |
+| https://rubli.xyz/cases | BLOCKED (000) | ❌ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ❌ |
+
+_Proxy error: `rubli.xyz:443` connect_rejected — 403 gateway policy denial. Confirmed again via `/__agentproxy/status` (recent relay failures list). Same blocker present since 2026-08-28. No change._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — egress denied | ❌ |
+| /api/v1/sectors | BLOCKED — egress denied | ❌ |
+
+_All external API checks blocked by same root cause._
+
+### Bilingual Gaps
+Grep hits are code comments, TypeScript annotations, and properly guarded `isEs ? ... : ...` ternaries — no raw namespace.key leaks in user-visible output.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked (connect_rejected, 403 egress policy). Bilingual scan: **PASS**. This is the 4th consecutive run blocked by the same proxy restriction. **Action recommended**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted egress — this Claude Code remote runner cannot reach rubli.xyz from its network policy.
