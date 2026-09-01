@@ -12024,3 +12024,42 @@ Grep hits are code comments, TypeScript annotations, and properly guarded `isEs 
 ### Overall: WARN
 
 HTTP and API checks blocked (connect_rejected, 403 egress policy). Bilingual scan: **PASS**. This is the 4th consecutive run blocked by the same proxy restriction. **Action recommended**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted egress — this Claude Code remote runner cannot reach rubli.xyz from its network policy.
+
+---
+## Visual Review — 2026-09-01T06:25:58Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — egress denied (403 connect_rejected) | ❌ |
+| https://rubli.xyz/atlas | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/aria | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/sectors | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/cases | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/methodology | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — egress denied | ❌ |
+
+_Root cause: remote runner network policy denies CONNECT to rubli.xyz:443._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — egress denied | ❌ |
+| /api/v1/sectors | BLOCKED — egress denied | ❌ |
+
+_All external checks blocked by same root cause._
+
+### Bilingual Gaps
+Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
+- **Raw i18n key leaks (NAMESPACE.KEY pattern)**: Hits are code comments, TypeScript annotations, and properly guarded `isEs ? ... : ...` ternaries — no user-visible namespace.key leaks detected.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+Bilingual scan **PASS**. HTTP and API checks remain **BLOCKED** (5th consecutive run) — the Claude Code remote runner's egress policy denies outbound CONNECT to rubli.xyz:443. **Recommended action**: migrate HTTP/API health monitoring to a GitHub Actions cron job with standard egress, or whitelist rubli.xyz in the remote runner's network policy.
