@@ -12258,3 +12258,41 @@ Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 Bilingual scan **PASS**. HTTP and API checks remain **BLOCKED** (recurring — 3rd consecutive run) — the Claude Code remote runner's egress policy denies outbound CONNECT to rubli.xyz:443. **Action required**: migrate HTTP/API checks to a GitHub Actions cron job with unrestricted egress, or whitelist rubli.xyz in the proxy policy. This scheduled task cannot verify live site health from this execution environment.
+---
+## Visual Review — 2026-09-02T00:00:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ❌ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ❌ |
+| https://rubli.xyz/aria | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ❌ |
+| https://rubli.xyz/cases | BLOCKED (000) | ❌ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ❌ |
+
+_Root cause: Claude Code remote runner egress policy denies CONNECT to rubli.xyz:443 (4th consecutive run)._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — egress denied | ❌ |
+| /api/v1/sectors | BLOCKED — egress denied | ❌ |
+
+_All external checks blocked by same root cause._
+
+### Bilingual Gaps
+Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
+- **Raw i18n key leaks (NAMESPACE.KEY pattern)**: No user-visible leaks. Hits are code comments, TypeScript annotations, data object keys (`PATTERN_CHIP.P5`), and properly guarded `isEs ? ... : ...` ternaries.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (4th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the proxy policy. This scheduled task cannot verify live site health.
