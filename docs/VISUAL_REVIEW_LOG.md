@@ -12180,3 +12180,42 @@ Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 Bilingual scan **PASS**. HTTP and API checks remain **BLOCKED** (recurring) — the Claude Code remote runner's egress policy denies outbound CONNECT to rubli.xyz:443. **Action required**: this scheduled task cannot verify live site health from this execution environment. Recommend migrating HTTP/API checks to a GitHub Actions cron job with unrestricted egress, or whitelisting rubli.xyz in the proxy policy.
+
+---
+## Visual Review — 2026-09-02T06:25:57Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/atlas | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/aria | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/sectors | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/cases | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/methodology | BLOCKED — egress denied | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — egress denied | ❌ |
+
+**Root cause**: Claude Code remote runner egress proxy blocks outbound CONNECT to rubli.xyz:443 (organization policy). All 8 routes untestable from this environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — egress denied | ❌ |
+| /api/v1/sectors | BLOCKED — egress denied | ❌ |
+
+_All external checks blocked by same root cause._
+
+### Bilingual Gaps
+Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
+- **Raw i18n key leaks (NAMESPACE.KEY pattern)**: Hits are code comments, TypeScript annotations, and properly guarded `isEs ? ... : ...` ternaries — no user-visible namespace.key leaks detected.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+Bilingual scan **PASS**. HTTP and API checks remain **BLOCKED** (recurring) — the Claude Code remote runner's egress policy denies outbound CONNECT to rubli.xyz:443. **Action required**: this scheduled task cannot verify live site health from this execution environment. Recommend migrating HTTP/API checks to a GitHub Actions cron job with unrestricted egress, or whitelisting rubli.xyz in the proxy policy.
