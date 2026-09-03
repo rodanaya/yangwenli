@@ -12411,3 +12411,37 @@ Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (7th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443 with 403. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the proxy policy. This scheduled task cannot verify live site health from the remote execution environment.
+
+---
+## Visual Review — 2026-09-03T18:24:32Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (egress proxy 403) | ✗ |
+| https://rubli.xyz/atlas | BLOCKED (egress proxy 403) | ✗ |
+| https://rubli.xyz/aria | BLOCKED (egress proxy 403) | ✗ |
+| https://rubli.xyz/sectors | BLOCKED (egress proxy 403) | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED (egress proxy 403) | ✗ |
+| https://rubli.xyz/cases | BLOCKED (egress proxy 403) | ✗ |
+| https://rubli.xyz/methodology | BLOCKED (egress proxy 403) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (egress proxy 403) | ✗ |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (egress proxy 403) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED (egress proxy 403) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (egress proxy 403) | ✗ |
+| /api/v1/sectors | BLOCKED (egress proxy 403) | ✗ |
+
+### Bilingual Gaps
+- Raw i18n key leaks: None detected (matches in grep are comments, data structs, or properly bilingual code with `isEs ? ... : ...` patterns).
+- "Generate Report" hardcoded: None detected.
+- "SIGN IN" hardcoded: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (8th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443 with 403. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the proxy policy. This scheduled task cannot verify live site health from the remote execution environment.
