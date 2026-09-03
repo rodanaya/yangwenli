@@ -12296,3 +12296,42 @@ Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (4th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the proxy policy. This scheduled task cannot verify live site health.
+
+---
+## Visual Review — 2026-09-03T00:24:16Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (egress blocked) | ❌ |
+| https://rubli.xyz/atlas | 000 (egress blocked) | ❌ |
+| https://rubli.xyz/aria | 000 (egress blocked) | ❌ |
+| https://rubli.xyz/sectors | 000 (egress blocked) | ❌ |
+| https://rubli.xyz/sectors/salud | 000 (egress blocked) | ❌ |
+| https://rubli.xyz/cases | 000 (egress blocked) | ❌ |
+| https://rubli.xyz/methodology | 000 (egress blocked) | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (egress blocked) | ❌ |
+
+Root cause: proxy returns 403 `connect_rejected` (policy denial) for all CONNECT to `rubli.xyz:443`. External checks cannot run from this remote execution environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — egress denied | ❌ |
+| /api/v1/sectors | BLOCKED — egress denied | ❌ |
+
+_All external checks blocked by same root cause._
+
+### Bilingual Gaps
+Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
+- **Raw i18n key leaks (NAMESPACE.KEY pattern)**: No user-visible leaks. Hits are code comments, TypeScript annotations, data object keys (`PATTERN_CHIP.P5`), and properly guarded `isEs ? ... : ...` ternaries.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (5th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the proxy policy. This scheduled task cannot verify live site health from the remote execution environment.
