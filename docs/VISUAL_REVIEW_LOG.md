@@ -12335,3 +12335,42 @@ Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
 ### Overall: WARN
 
 Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (5th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the proxy policy. This scheduled task cannot verify live site health from the remote execution environment.
+
+---
+## Visual Review — 2026-09-03T06:25:58Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED — egress proxy denied | ❌ |
+| https://rubli.xyz/atlas | BLOCKED — egress proxy denied | ❌ |
+| https://rubli.xyz/aria | BLOCKED — egress proxy denied | ❌ |
+| https://rubli.xyz/sectors | BLOCKED — egress proxy denied | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED — egress proxy denied | ❌ |
+| https://rubli.xyz/cases | BLOCKED — egress proxy denied | ❌ |
+| https://rubli.xyz/methodology | BLOCKED — egress proxy denied | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED — egress proxy denied | ❌ |
+
+_Root cause: egress proxy (connect_rejected) blocks all outbound HTTPS to rubli.xyz:443. This is a network policy constraint of the remote execution environment, not a site outage._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — egress denied | ❌ |
+| /api/v1/sectors | BLOCKED — egress denied | ❌ |
+
+_All external checks blocked by same root cause._
+
+### Bilingual Gaps
+Grep scan across `frontend/src/pages/` and `frontend/src/components/`:
+- **Raw i18n key leaks (NAMESPACE.KEY pattern)**: No user-visible leaks. Hits are code comments, TypeScript annotations, data object keys (`PATTERN_CHIP.P5`), and properly guarded `isEs ? ... : ...` ternaries.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (6th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the proxy policy. This scheduled task cannot verify live site health from the remote execution environment.
