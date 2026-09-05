@@ -12585,3 +12585,37 @@ Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (10th consecutive run) 
 ### Overall: WARN
 
 Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (11th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443 with `connect_rejected`. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the remote execution environment's egress policy. This scheduled task cannot verify live site health from the remote environment.
+
+---
+## Visual Review — 2026-09-05T00:24:55Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (egress proxy connect_rejected) | ✗ |
+| https://rubli.xyz/atlas | BLOCKED (egress proxy connect_rejected) | ✗ |
+| https://rubli.xyz/aria | BLOCKED (egress proxy connect_rejected) | ✗ |
+| https://rubli.xyz/sectors | BLOCKED (egress proxy connect_rejected) | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED (egress proxy connect_rejected) | ✗ |
+| https://rubli.xyz/cases | BLOCKED (egress proxy connect_rejected) | ✗ |
+| https://rubli.xyz/methodology | BLOCKED (egress proxy connect_rejected) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (egress proxy connect_rejected) | ✗ |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (egress proxy connect_rejected) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED (egress proxy connect_rejected) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (egress proxy connect_rejected) | ✗ |
+| /api/v1/sectors | BLOCKED (egress proxy connect_rejected) | ✗ |
+
+### Bilingual Gaps
+- Raw i18n key leaks: None detected (matches are code comments, data struct keys, or properly bilingual `isEs ? ... : ...` ternaries).
+- "Generate Report" hardcoded: None detected.
+- "SIGN IN" hardcoded: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (12th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443 with `connect_rejected`. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the remote execution environment's egress policy. This scheduled task cannot verify live site health from the remote environment.
