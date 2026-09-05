@@ -12619,3 +12619,35 @@ Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (11th consecutive run) 
 ### Overall: WARN
 
 Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (12th consecutive run) — egress proxy denies outbound CONNECT to rubli.xyz:443 with `connect_rejected`. **Action required**: migrate HTTP/API checks to a GitHub Actions cron or whitelist rubli.xyz in the remote execution environment's egress policy. This scheduled task cannot verify live site health from the remote environment.
+
+---
+## Visual Review — 2026-09-05T06:24:46Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 — egress proxy BLOCKED | ✗ |
+| https://rubli.xyz/atlas | 000 — egress proxy BLOCKED | ✗ |
+| https://rubli.xyz/aria | 000 — egress proxy BLOCKED | ✗ |
+| https://rubli.xyz/sectors | 000 — egress proxy BLOCKED | ✗ |
+| https://rubli.xyz/sectors/salud | 000 — egress proxy BLOCKED | ✗ |
+| https://rubli.xyz/cases | 000 — egress proxy BLOCKED | ✗ |
+| https://rubli.xyz/methodology | 000 — egress proxy BLOCKED | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 — egress proxy BLOCKED | ✗ |
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 000 — egress proxy BLOCKED (empty response) | ✗ |
+| /api/v1/cases?limit=5 | 000 — egress proxy BLOCKED (empty response) | ✗ |
+| /api/v1/cases?vendor_id=4325 | 000 — egress proxy BLOCKED (empty response) | ✗ |
+| /api/v1/sectors | 000 — egress proxy BLOCKED (empty response) | ✗ |
+
+### Bilingual Gaps
+- Raw i18n key leaks: None detected. Grep matches are code comments, bibliographic data, TypeScript type annotations, data-constant keys, or properly bilingual `isEs ? … : …` ternaries — no bare key names leaking into rendered UI.
+- "Generate Report" hardcoded: None detected.
+- "SIGN IN" hardcoded: None detected.
+
+### Overall: WARN
+
+**Bilingual scan: PASS.** HTTP and API checks: BLOCKED — egress proxy denies outbound CONNECT to rubli.xyz:443 (`connect_rejected` per proxy agent). Site health cannot be verified from the remote execution environment. Recommend moving HTTP/API health checks to a GitHub Actions cron job, or adding rubli.xyz to the environment's egress allowlist.
