@@ -12785,3 +12785,36 @@ Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (12th consecutive run) 
 ### Overall: WARN
 
 **Bilingual scan: PASS.** HTTP and API checks: BLOCKED — egress proxy (`connect_rejected`, 403 policy denial) denies outbound CONNECT to rubli.xyz:443 for the **fifth consecutive run** (00:24Z + 06:23Z today). Site health remains unverifiable from this remote execution environment. Action required: migrate HTTP/API health checks to a GitHub Actions cron job, or add rubli.xyz to the environment's egress allowlist under claude.ai session settings.
+
+---
+## Visual Review — 2026-09-06T12:24:54Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/aria | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/cases | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ⚠️ |
+
+**Note**: Outbound proxy returns HTTP 403 to CONNECT rubli.xyz:443 — network policy blocks external HTTPS in this remote execution environment. HTTP checks cannot be performed from this context.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — same proxy policy | ⚠️ |
+| /api/v1/cases?limit=5 | BLOCKED — same proxy policy | ⚠️ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — same proxy policy | ⚠️ |
+| /api/v1/sectors | BLOCKED — same proxy policy | ⚠️ |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: No rendering leaks detected (grep hits were code comments, data structures, and properly-guarded `isEs` conditionals — not UI output)
+
+### Overall: WARN
+Site reachability cannot be confirmed from this remote execution environment (proxy policy blocks rubli.xyz outbound). No code-level bilingual regressions found. Recommend running HTTP/API checks from an environment with direct internet access, or adding rubli.xyz to the proxy allowlist.
