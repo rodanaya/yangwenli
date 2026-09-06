@@ -12818,3 +12818,36 @@ Bilingual scan **PASS**. HTTP and API checks **BLOCKED** (12th consecutive run) 
 
 ### Overall: WARN
 Site reachability cannot be confirmed from this remote execution environment (proxy policy blocks rubli.xyz outbound). No code-level bilingual regressions found. Recommend running HTTP/API checks from an environment with direct internet access, or adding rubli.xyz to the proxy allowlist.
+
+---
+## Visual Review — 2026-09-06T18:23:31Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/aria | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/cases | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ⚠️ |
+
+**Note**: Egress proxy returns 403 to CONNECT rubli.xyz:443 — organization network policy blocks external HTTPS from this remote execution environment. HTTP checks cannot be performed. **Sixth consecutive blocked run.**
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy policy | ⚠️ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy policy | ⚠️ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy policy | ⚠️ |
+| /api/v1/sectors | BLOCKED — proxy policy | ⚠️ |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected (grep hits were code comments, bibliographic data, data-constant keys, and properly-guarded `isEs` ternaries — not UI-visible output)
+
+### Overall: WARN
+**Persistent blocker**: HTTP and API health checks remain unverifiable (sixth consecutive blocked run). Bilingual scan: PASS. **Action required**: migrate these checks to a GitHub Actions cron job with direct internet access, or add `rubli.xyz` to the environment's egress allowlist in claude.ai session settings.
