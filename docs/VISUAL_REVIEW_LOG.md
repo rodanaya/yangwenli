@@ -12984,3 +12984,36 @@ Site reachability cannot be confirmed from this remote execution environment (pr
 
 ### Overall: WARN
 **Persistent blocker**: HTTP and API health checks remain unverifiable (tenth consecutive blocked run). Bilingual scan: PASS. **Action required**: migrate these checks to a GitHub Actions cron job with direct internet access, or add `rubli.xyz` to the environment's egress allowlist in claude.ai session settings (environment network policy).
+
+---
+## Visual Review — 2026-09-08T00:00:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/aria | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/cases | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ⚠️ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ⚠️ |
+
+**Note**: Egress proxy returns 403 to CONNECT rubli.xyz:443 — organization network policy blocks external HTTPS from this remote execution environment. HTTP checks cannot be performed. **Eleventh consecutive blocked run.**
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — proxy policy | ⚠️ |
+| /api/v1/cases?limit=5 | BLOCKED — proxy policy | ⚠️ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — proxy policy | ⚠️ |
+| /api/v1/sectors | BLOCKED — proxy policy | ⚠️ |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep hits are code comments, TypeScript data-constant property accesses, bibliographic strings, and properly-guarded `isEs ?` ternaries; not UI-visible output
+
+### Overall: WARN
+**Persistent blocker**: HTTP and API health checks remain unverifiable (eleventh consecutive blocked run). Bilingual scan: PASS. **Action required**: migrate these checks to a GitHub Actions cron job with direct internet access, or add `rubli.xyz` to the environment's egress allowlist in claude.ai session settings (environment network policy).
