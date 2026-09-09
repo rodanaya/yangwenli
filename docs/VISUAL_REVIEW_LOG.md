@@ -13159,3 +13159,36 @@ Site reachability cannot be confirmed from this remote execution environment (pr
 
 ### Overall: WARN
 **Persistent blocker**: HTTP and API health checks remain unverifiable due to proxy policy denying egress to rubli.xyz (thirteenth consecutive blocked run). Bilingual scan: PASS. **Recommended fix**: Add `rubli.xyz` to the egress allowlist in the claude.ai session environment settings, or run HTTP/API checks from a GitHub Actions cron job with unrestricted internet access.
+
+---
+## Visual Review — 2026-09-09T06:24:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/atlas | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/aria | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/sectors | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/sectors/salud | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/cases | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/methodology | 000 (proxy 403) | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (proxy 403) | BLOCKED |
+
+**Root cause**: Remote execution environment network policy denies CONNECT to `rubli.xyz:443` (proxy 403). Not a site outage — same environment-level restriction as previous runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | Unreachable (proxy 403) | BLOCKED |
+| /api/v1/cases?limit=5 | Unreachable (proxy 403) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | Unreachable (proxy 403) | BLOCKED |
+| /api/v1/sectors | Unreachable (proxy 403) | BLOCKED |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep hits are code-level object lookups (`PATTERN_CHIP.P5`, `TIER_STYLES.Excelente.color`, `PATTERN_COLORS.P6`, etc.), TypeScript constant references, and properly-guarded `isEs ?` ternaries; not UI-visible raw key output
+
+### Overall: WARN
+HTTP and API health checks remain unverifiable due to proxy policy blocking egress to rubli.xyz (fourteenth consecutive blocked run). Bilingual scan: PASS. To fix: add `rubli.xyz` to the session environment egress allowlist, or move HTTP/API checks to a GitHub Actions cron job with unrestricted internet access.
