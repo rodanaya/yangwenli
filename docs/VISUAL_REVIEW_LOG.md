@@ -13263,3 +13263,36 @@ HTTP and API health checks remain unverifiable due to proxy policy blocking egre
 
 ### Overall: WARN
 HTTP and API health checks remain unverifiable due to proxy policy blocking egress to rubli.xyz (fifteenth consecutive blocked run). Bilingual scan: PASS. Fix required: add `rubli.xyz` to the session egress allowlist, or migrate HTTP/API checks to a GitHub Actions cron with unrestricted internet access.
+
+---
+## Visual Review — 2026-09-10T00:24:36Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (proxy blocked) | ❌ BLOCKED |
+| https://rubli.xyz/atlas | 000 (proxy blocked) | ❌ BLOCKED |
+| https://rubli.xyz/aria | 000 (proxy blocked) | ❌ BLOCKED |
+| https://rubli.xyz/sectors | 000 (proxy blocked) | ❌ BLOCKED |
+| https://rubli.xyz/sectors/salud | 000 (proxy blocked) | ❌ BLOCKED |
+| https://rubli.xyz/cases | 000 (proxy blocked) | ❌ BLOCKED |
+| https://rubli.xyz/methodology | 000 (proxy blocked) | ❌ BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (proxy blocked) | ❌ BLOCKED |
+
+**Root cause**: Remote execution environment egress policy denies CONNECT to `rubli.xyz:443`. Not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | Unreachable (proxy blocked) | ❌ BLOCKED |
+| /api/v1/cases?limit=5 | Unreachable (proxy blocked) | ❌ BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | Unreachable (proxy blocked) | ❌ BLOCKED |
+| /api/v1/sectors | Unreachable (proxy blocked) | ❌ BLOCKED |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep hits are TypeScript constant references (`PATTERN_CHIP.P5`, `TIER_STYLES.Excelente.color`) and properly-guarded `isEs ?` ternaries; not UI-visible raw key output
+
+### Overall: WARN
+HTTP and API health checks blocked by proxy policy (recurring issue). Bilingual scan: PASS. To fix: add `rubli.xyz` to the session egress allowlist, or move HTTP/API checks to a GitHub Actions cron with unrestricted outbound access.
