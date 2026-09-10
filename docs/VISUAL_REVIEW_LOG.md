@@ -13369,3 +13369,41 @@ _All API checks unreachable — same egress policy blocking `rubli.xyz:443`. Thi
 
 ### Overall: WARN
 HTTP and API checks blocked by environment egress policy (persistent issue — same every run). Bilingual scan: PASS. **Action needed**: add `rubli.xyz` to the session network allowlist (https://code.claude.com/docs/en/claude-code-on-the-web), or migrate these checks to a GitHub Actions workflow with unrestricted outbound access so live site health can actually be verified.
+---
+## Visual Review — 2026-09-10T18:24:39Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ❌ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ❌ |
+| https://rubli.xyz/aria | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ❌ |
+| https://rubli.xyz/cases | BLOCKED (000) | ❌ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ❌ |
+
+_Proxy error: `rubli.xyz:443` connect_rejected — gateway policy denial (persistent, every run since 2026-08-28). See proxy status: `gateway answered 403 to CONNECT`._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED — egress denied | ❌ |
+| /api/v1/sectors | BLOCKED — egress denied | ❌ |
+
+_Egress to rubli.xyz is blocked by this environment's network policy. All HTTP and API checks cannot complete._
+
+### Bilingual Gaps
+- **i18n key leaks**: No raw `NAMESPACE.KEY` leaks in user-visible output. Grep hits are code comments, TypeScript type annotations, data-lookup expressions (`PATTERN_CHIP[item.primary_pattern]`), and properly guarded `isEs ? ... : ...` ternaries. `TIER_STYLES.Excelente.color` is a data object property access, not rendered text.
+- **"Generate Report" / "Generar Reporte" hardcoded**: None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded**: None detected.
+
+**None detected.**
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy (connect_rejected to rubli.xyz:443, persistent across every run since 2026-08-28). Bilingual scan: **PASS**. **Action required (recurring)**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment's network policy permanently blocks rubli.xyz.
+
