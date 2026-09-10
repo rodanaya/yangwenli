@@ -13296,3 +13296,38 @@ HTTP and API health checks remain unverifiable due to proxy policy blocking egre
 
 ### Overall: WARN
 HTTP and API health checks blocked by proxy policy (recurring issue). Bilingual scan: PASS. To fix: add `rubli.xyz` to the session egress allowlist, or move HTTP/API checks to a GitHub Actions cron with unrestricted outbound access.
+
+---
+## Visual Review — 2026-09-10T06:24:30Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ❌ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ❌ |
+| https://rubli.xyz/aria | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ❌ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ❌ |
+| https://rubli.xyz/cases | BLOCKED (000) | ❌ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ❌ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ❌ |
+
+_Proxy error: `rubli.xyz:443` connect_rejected — gateway policy denial (403). Recurring: confirmed blocked again this run (2026-09-10)._
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?limit=5 | BLOCKED — egress denied | ❌ |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED — egress denied | ❌ |
+| /api/v1/sectors | BLOCKED — egress denied | ❌ |
+
+_All API checks unreachable — same egress policy blocking `rubli.xyz:443`. This is a persistent infrastructure issue; the scheduled health-check cannot verify live site state from this environment._
+
+### Bilingual Gaps
+- **Raw i18n key leaks**: None detected. Grep hits are code comments, TypeScript type annotations (`JSX.Element`, `PATTERN_CHIP.P5`), and properly-guarded `isEs ? Spanish : English` ternaries — not raw key output in UI.
+- **"Generate Report" hardcoded**: None detected.
+- **"SIGN IN" hardcoded**: None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by environment egress policy (persistent issue — same every run). Bilingual scan: PASS. **Action needed**: add `rubli.xyz` to the session network allowlist (https://code.claude.com/docs/en/claude-code-on-the-web), or migrate these checks to a GitHub Actions workflow with unrestricted outbound access so live site health can actually be verified.
