@@ -13520,3 +13520,41 @@ Potential false-positive patterns reviewed:
 ### Overall: WARN
 
 HTTP and API checks blocked by egress proxy (connect_rejected to rubli.xyz:443 — persistent across all runs). Bilingual scan: **PASS**. **Recurring action required**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment's network policy permanently blocks rubli.xyz. Alternatively, disable HTTP/API sections of this scheduled task and run bilingual/lint checks only from this environment.
+
+---
+## Visual Review — 2026-09-11T18:24:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (egress 403) | BLOCKED |
+| https://rubli.xyz/atlas | BLOCKED (egress 403) | BLOCKED |
+| https://rubli.xyz/aria | BLOCKED (egress 403) | BLOCKED |
+| https://rubli.xyz/sectors | BLOCKED (egress 403) | BLOCKED |
+| https://rubli.xyz/sectors/salud | BLOCKED (egress 403) | BLOCKED |
+| https://rubli.xyz/cases | BLOCKED (egress 403) | BLOCKED |
+| https://rubli.xyz/methodology | BLOCKED (egress 403) | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (egress 403) | BLOCKED |
+
+**Note**: All curl attempts return HTTP 000 (connection refused at proxy). Proxy status confirms `connect_rejected` / gateway 403 for `rubli.xyz:443`. This is a persistent environment-level policy block, not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | BLOCKED | BLOCKED |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | BLOCKED |
+| /api/v1/sectors | BLOCKED | BLOCKED |
+
+### Bilingual Gaps
+No raw i18n key leaks in rendered UI text detected. All grep matches were in code comments, JSDoc, or data-object literals, not in rendered UI strings. No hardcoded "Generate Report" or "SIGN IN" strings found.
+
+Notable patterns reviewed and cleared:
+- `FRAUDTYPES.INVOICE_FRAUD` — code comment only, not rendered
+- `PATTERN_CHIP[item.primary_pattern]` — lookup expression, not a leaked key
+- `TIER_STYLES.Excelente.color` — color-lookup, not displayed text
+
+### Overall: WARN
+HTTP and API checks are **persistently blocked** by the remote container's egress proxy (policy denial on rubli.xyz:443 — confirmed by proxy status endpoint). This is an environment-level restriction, not a site outage. Bilingual scan: **PASS**.
+
+**Recurring recommendation**: move HTTP/API uptime monitoring to a GitHub Actions cron workflow (unrestricted outbound egress). This scheduled task can continue to cover bilingual/token lint checks from the managed container environment.
