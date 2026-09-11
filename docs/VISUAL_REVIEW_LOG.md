@@ -13445,3 +13445,40 @@ _Egress to rubli.xyz is blocked by this environment's network policy. All HTTP a
 
 HTTP and API checks blocked by egress proxy (connect_rejected to rubli.xyz:443, persistent across every run since 2026-08-28). Bilingual scan: **PASS**. **Action required (recurring)**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment's network policy permanently blocks rubli.xyz.
 
+
+---
+## Visual Review — 2026-09-11T00:00:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 | BLOCKED |
+| https://rubli.xyz/atlas | 000 | BLOCKED |
+| https://rubli.xyz/aria | 000 | BLOCKED |
+| https://rubli.xyz/sectors | 000 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 000 | BLOCKED |
+| https://rubli.xyz/cases | 000 | BLOCKED |
+| https://rubli.xyz/methodology | 000 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 | BLOCKED |
+
+All HTTP checks returned status 000 — egress proxy (organization policy) blocks outbound CONNECT to rubli.xyz:443.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | Empty response (proxy blocked) | BLOCKED |
+| /api/v1/cases?limit=5 | Empty response (proxy blocked) | BLOCKED |
+| /api/v1/cases?vendor_id=4325 | Empty response (proxy blocked) | BLOCKED |
+| /api/v1/sectors | Empty response (proxy blocked) | BLOCKED |
+
+### Bilingual Gaps
+No raw i18n key leaks in UI strings detected. Grep matches were all in code comments, JSDoc, or data-object literals — not rendered UI text. No hardcoded "Generate Report" or "SIGN IN" strings found.
+
+Potential false-positive patterns reviewed:
+- `FRAUDTYPES.INVOICE_FRAUD` — in a comment block, not rendered
+- `PATTERN_CHIP[item.primary_pattern]` — lookup expression, not a leaked key
+- `TIER_STYLES.Excelente.color` — color lookup, not rendered text
+
+### Overall: WARN
+
+HTTP and API checks blocked by egress proxy (connect_rejected to rubli.xyz:443 — persistent across all runs). Bilingual scan: **PASS**. **Recurring action required**: migrate HTTP/API health monitoring to a GitHub Actions cron workflow with unrestricted outbound egress — this remote execution environment's network policy permanently blocks rubli.xyz. Alternatively, disable HTTP/API sections of this scheduled task and run bilingual/lint checks only from this environment.
