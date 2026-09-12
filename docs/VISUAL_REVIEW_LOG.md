@@ -13591,3 +13591,36 @@ HTTP and API checks are **persistently blocked** by the remote container's egres
 
 ### Overall: WARN
 **Persistent blocker**: HTTP and API health checks remain unverifiable (consecutive blocked runs). Bilingual scan: PASS. **Action required**: migrate these checks to a GitHub Actions cron job with direct internet access, or add `rubli.xyz` to the environment's egress allowlist in claude.ai session settings.
+
+---
+## Visual Review — 2026-09-12T06:24:37Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | BLOCKED |
+| https://rubli.xyz/atlas | BLOCKED | BLOCKED |
+| https://rubli.xyz/aria | BLOCKED | BLOCKED |
+| https://rubli.xyz/sectors | BLOCKED | BLOCKED |
+| https://rubli.xyz/sectors/salud | BLOCKED | BLOCKED |
+| https://rubli.xyz/cases | BLOCKED | BLOCKED |
+| https://rubli.xyz/methodology | BLOCKED | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | BLOCKED |
+
+**Reason**: Egress proxy returns 403 CONNECT (policy denial) for rubli.xyz:443. Environment-level restriction confirmed via `/__agentproxy/status` — not a site outage. This constraint has persisted across multiple consecutive scheduled runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | BLOCKED | BLOCKED |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | BLOCKED |
+| /api/v1/sectors | BLOCKED | BLOCKED |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep hits are code comments, TypeScript data-constant property accesses (e.g. `PATTERN_CHIP.P5`, `TIER_STYLES.Excelente`), bibliographic strings, corporate form abbreviations (S.A., C.V.), and properly-guarded `isEs ? '...' : '...'` ternaries; not UI-visible output
+
+### Overall: WARN
+**Persistent blocker**: HTTP and API health checks remain unverifiable — all blocked by egress policy on rubli.xyz:443 (repeated across ≥3 consecutive runs). Bilingual gap scan: PASS. **Action required**: move these checks to a GitHub Actions scheduled workflow with direct internet access, or add rubli.xyz to the environment's egress allowlist in claude.ai session settings.
