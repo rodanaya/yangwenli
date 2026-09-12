@@ -13558,3 +13558,36 @@ Notable patterns reviewed and cleared:
 HTTP and API checks are **persistently blocked** by the remote container's egress proxy (policy denial on rubli.xyz:443 — confirmed by proxy status endpoint). This is an environment-level restriction, not a site outage. Bilingual scan: **PASS**.
 
 **Recurring recommendation**: move HTTP/API uptime monitoring to a GitHub Actions cron workflow (unrestricted outbound egress). This scheduled task can continue to cover bilingual/token lint checks from the managed container environment.
+
+---
+## Visual Review — 2026-09-12T00:25:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | BLOCKED |
+| https://rubli.xyz/atlas | BLOCKED | BLOCKED |
+| https://rubli.xyz/aria | BLOCKED | BLOCKED |
+| https://rubli.xyz/sectors | BLOCKED | BLOCKED |
+| https://rubli.xyz/sectors/salud | BLOCKED | BLOCKED |
+| https://rubli.xyz/cases | BLOCKED | BLOCKED |
+| https://rubli.xyz/methodology | BLOCKED | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | BLOCKED |
+
+**Reason**: Egress proxy returns 403 CONNECT (policy denial) for rubli.xyz:443. Environment-level restriction, not a site outage. Confirmed via `/__agentproxy/status`.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | BLOCKED | BLOCKED |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | BLOCKED |
+| /api/v1/sectors | BLOCKED | BLOCKED |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep hits are code comments, TypeScript data-constant property accesses, bibliographic strings, and properly-guarded `isEs ?` ternaries; not UI-visible output
+
+### Overall: WARN
+**Persistent blocker**: HTTP and API health checks remain unverifiable (consecutive blocked runs). Bilingual scan: PASS. **Action required**: migrate these checks to a GitHub Actions cron job with direct internet access, or add `rubli.xyz` to the environment's egress allowlist in claude.ai session settings.
