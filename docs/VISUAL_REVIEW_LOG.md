@@ -13723,3 +13723,36 @@ HTTP and API checks are **persistently blocked** by the remote container's egres
 
 ### Overall: WARN
 **Persistent blocker (≥6 runs)**: HTTP and API health checks remain unverifiable — all blocked by egress policy on rubli.xyz:443. Bilingual gap scan: PASS. **Action required**: move these checks to a GitHub Actions scheduled workflow with direct internet access, or add rubli.xyz to the environment's egress allowlist in claude.ai session settings.
+
+---
+## Visual Review — 2026-09-13T07:00:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (blocked) | BLOCKED |
+| https://rubli.xyz/atlas | 000 (blocked) | BLOCKED |
+| https://rubli.xyz/aria | 000 (blocked) | BLOCKED |
+| https://rubli.xyz/sectors | 000 (blocked) | BLOCKED |
+| https://rubli.xyz/sectors/salud | 000 (blocked) | BLOCKED |
+| https://rubli.xyz/cases | 000 (blocked) | BLOCKED |
+| https://rubli.xyz/methodology | 000 (blocked) | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (blocked) | BLOCKED |
+
+**Reason**: Egress proxy returns `connect_rejected` (organization policy) for rubli.xyz:443. Status code 000 = no connection established. This constraint has now persisted across ≥7 consecutive scheduled runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | BLOCKED | BLOCKED |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | BLOCKED |
+| /api/v1/sectors | BLOCKED | BLOCKED |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep hits are code comments, TypeScript data-constant property accesses (e.g. `PATTERN_CHIP.P5`, `TIER_STYLES.Excelente`), bibliographic strings, corporate form abbreviations (S.A., C.V.), and properly-guarded `isEs ? '...' : '...'` ternaries in bilingual components; not UI-visible output
+
+### Overall: WARN
+**Persistent blocker (≥7 runs)**: HTTP and API health checks remain unverifiable — all blocked by egress proxy policy on rubli.xyz:443. Bilingual gap scan (local): PASS. **Action required**: migrate these checks to a GitHub Actions scheduled workflow with direct internet access, or add rubli.xyz to the allowed egress list in the claude.ai remote session network policy.
