@@ -283,3 +283,23 @@ class TestResponseContract:
             pc = v.get("pattern_confidences")
             if pc and "P6" in pc:
                 assert v["capture_score"] == pytest.approx(pc["P6"])
+
+
+# ---------------------------------------------------------------------------
+# period= sexenio time filter (Atlas step 02)
+# ---------------------------------------------------------------------------
+
+class TestClusterVendorsPeriod:
+    def test_period_narrows_total(self, client):
+        unfiltered = _get(client, lens="patterns", code="P5", limit=1).json()
+        filtered = _get(client, lens="patterns", code="P5", limit=1, period="amlo").json()
+        assert filtered["total"] <= unfiltered["total"]
+
+    def test_period_categories_narrows_total(self, client):
+        unfiltered = _get(client, lens="categories", code="cat_medications", limit=1).json()
+        filtered = _get(client, lens="categories", code="cat_medications", limit=1, period="amlo").json()
+        assert filtered["total"] <= unfiltered["total"]
+
+    def test_invalid_period_returns_422(self, client):
+        r = _get(client, lens="patterns", code="P5", period="not_a_sexenio")
+        assert r.status_code == 422
