@@ -14189,3 +14189,41 @@ HTTP and API health checks unverifiable — egress proxy blocks `rubli.xyz:443` 
 
 ### Overall: WARN
 HTTP/API checks unverifiable — persistent egress proxy block on rubli.xyz:443 (every run since environment setup). Local bilingual scan: PASS. Recommend migrating HTTP/API checks to GitHub Actions scheduled workflow with unrestricted egress.
+
+---
+## Visual Review — 2026-09-16T18:24:06Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ✗ |
+| https://rubli.xyz/atlas | BLOCKED | ✗ |
+| https://rubli.xyz/aria | BLOCKED | ✗ |
+| https://rubli.xyz/sectors | BLOCKED | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED | ✗ |
+| https://rubli.xyz/cases | BLOCKED | ✗ |
+| https://rubli.xyz/methodology | BLOCKED | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ✗ |
+
+> **Note**: All HTTP checks blocked — egress proxy (organization network policy) denies CONNECT to rubli.xyz:443 in this remote execution environment. This is an environment constraint, not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (network policy) | ✗ |
+| /api/v1/cases | BLOCKED (network policy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (network policy) | ✗ |
+| /api/v1/sectors | BLOCKED (network policy) | ✗ |
+
+> **Note**: Same network restriction applies to all API checks.
+
+### Bilingual Gaps
+Grepped `frontend/src/pages/` and `frontend/src/components/` for:
+- Raw i18n key leaks (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*` pattern)
+- Hardcoded `Generate Report` / `Generar Reporte`
+- Hardcoded `SIGN IN` / `INICIAR SESIÓN`
+
+Findings: **None detected.** All apparent matches were legitimate constant references (`PATTERN_CHIP`, `PATTERN_COLORS`, `TIER_STYLES`, etc.) or properly bilingual with `isEs ? '...' : '...'` guards.
+
+### Overall: WARN
+Network policy blocks all outbound HTTPS from this remote execution environment — HTTP and API checks could not run. Local bilingual scan passed. To get full HTTP/API coverage, this routine needs to run in an environment with egress access to rubli.xyz, or checks should be moved to a server-side ping (e.g. GitHub Actions with outbound access).
