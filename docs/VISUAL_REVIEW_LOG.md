@@ -14123,3 +14123,36 @@ HTTP and API checks are **persistently blocked** by the remote container's egres
 ### Overall: WARN
 HTTP and API health checks unverifiable (egress proxy blocks rubli.xyz:443 — persistent ≥18 runs). Bilingual scan (local): PASS. **Action needed**: migrate HTTP/API checks to a GitHub Actions workflow with direct internet access, or add rubli.xyz to the allowed egress list in the claude.ai remote session network policy.
 
+
+---
+## Visual Review — 2026-09-16T06:24:01Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ✗ |
+| https://rubli.xyz/atlas | BLOCKED | ✗ |
+| https://rubli.xyz/aria | BLOCKED | ✗ |
+| https://rubli.xyz/sectors | BLOCKED | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED | ✗ |
+| https://rubli.xyz/cases | BLOCKED | ✗ |
+| https://rubli.xyz/methodology | BLOCKED | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ✗ |
+
+**Note**: All curl requests returned 000. Egress proxy confirmed blocking `rubli.xyz:443` with `connect_rejected` (403 policy denial). This is an environment network-policy constraint, not a site outage — the same block has appeared in all prior runs in this session environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED (proxy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (proxy) | ✗ |
+| /api/v1/sectors | BLOCKED (proxy) | ✗ |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep matches are TypeScript code property accesses (`PATTERN_CHIP.P5`, `TIER_STYLES.Excelente`, `PATTERN_COLORS.P5`), bibliographic author strings, corporate abbreviation lists, and properly-guarded `isEs ? '...' : '...'` ternaries. No UI-visible raw key leaks.
+
+### Overall: WARN
+HTTP and API health checks unverifiable — egress proxy blocks `rubli.xyz:443` (persistent, every run in this session environment). Local bilingual scan: **PASS**. **Action needed**: migrate HTTP/API checks to a GitHub Actions workflow with unrestricted internet access, or add `rubli.xyz` to the allowed egress list in the claude.ai remote session network policy at https://code.claude.com/docs/en/claude-code-on-the-web.
