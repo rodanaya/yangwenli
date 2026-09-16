@@ -166,7 +166,7 @@ export default function Executive() {
   // § 1 The Observatory — faithful-scatter cluster data (live per-cluster
   // aggregates with static-meta fallback), shared with /atlas via the hook so
   // both surfaces render the identical map.
-  const scatterClusters = useScatterClusters(atlasMode, lang)
+  const { clusters: scatterClusters, isLoading: scatterLoading } = useScatterClusters(atlasMode, lang)
 
   // § 1 The Atlas — click navigation: each mode opens the right page
   const handleAtlasClusterClick = (clusterCode: string) => {
@@ -446,13 +446,22 @@ export default function Executive() {
               its own folio frame + how-to-read strip + ranked name index, so it
               is NOT wrapped in PlateFrame (that would double-frame + double the
               encoding caption). */}
-          <ObservatoryScatter
-            clusters={scatterClusters}
-            lens={atlasMode}
-            lang={lang}
-            onOpenDossier={handleAtlasClusterClick}
-            onVendorClick={(id) => navigate(`/vendors/${id}`)}
-          />
+          {scatterClusters.length === 0 && !scatterLoading ? (
+            <p
+              className="font-mono text-[12px] text-text-muted py-10 text-center"
+              style={{ letterSpacing: '0.08em' }}
+            >
+              {lang === 'es' ? 'Sin datos en vivo para esta lente todavía.' : 'No live data for this lens yet.'}
+            </p>
+          ) : (
+            <ObservatoryScatter
+              clusters={scatterClusters}
+              lens={atlasMode}
+              lang={lang}
+              onOpenDossier={handleAtlasClusterClick}
+              onVendorClick={(id) => navigate(`/vendors/${id}`)}
+            />
+          )}
           {/* Footer link into the full /atlas surface — preserves the
               current lens by passing it through as ?lens=<atlasMode>. */}
           <div className="mt-3 flex items-center justify-end">

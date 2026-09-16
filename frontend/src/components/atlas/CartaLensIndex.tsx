@@ -33,8 +33,9 @@ const PLATES: Array<{
   { id: 'sexenios',   folio: 'IX·d', en: 'TERMS',      es: 'SEXENIOS'    },
 ]
 
-// Structural fact: patterns + sectors compute live from the register;
-// categories + sexenios are curated archival aggregates.
+// patterns + sectors compute live from the register. categories + sexenios
+// have no live endpoint yet and render no data — they are NOT archival
+// aggregates (the old hand-typed categories table was removed).
 const LIVE = new Set<ConstellationMode>(['patterns', 'sectors'])
 
 export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLensIndexProps) {
@@ -78,8 +79,8 @@ export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLens
                 ? 'Live aggregates from the register'
                 : 'Agregados en vivo del padrón')
             : (lang === 'en'
-                ? 'Archival plate: curated aggregates — live computation pending'
-                : 'Lámina de archivo: agregados curados — cómputo en vivo pendiente')
+                ? 'No live data for this lens yet — nothing is drawn'
+                : 'Sin datos en vivo para esta lente todavía — no se dibuja nada')
 
           return (
             <button
@@ -119,7 +120,7 @@ export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLens
               >
                 {live
                   ? (lang === 'en' ? ' · live' : ' · en vivo')
-                  : (lang === 'en' ? ' · archive' : ' · archivo')}
+                  : (lang === 'en' ? ' · no data' : ' · sin datos')}
               </span>
             </button>
           )
