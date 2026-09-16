@@ -14156,3 +14156,36 @@ HTTP and API health checks unverifiable (egress proxy blocks rubli.xyz:443 — p
 
 ### Overall: WARN
 HTTP and API health checks unverifiable — egress proxy blocks `rubli.xyz:443` (persistent, every run in this session environment). Local bilingual scan: **PASS**. **Action needed**: migrate HTTP/API checks to a GitHub Actions workflow with unrestricted internet access, or add `rubli.xyz` to the allowed egress list in the claude.ai remote session network policy at https://code.claude.com/docs/en/claude-code-on-the-web.
+
+---
+## Visual Review — 2026-09-16T12:25:19Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ✗ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ✗ |
+| https://rubli.xyz/aria | BLOCKED (000) | ✗ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ✗ |
+| https://rubli.xyz/cases | BLOCKED (000) | ✗ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ✗ |
+
+**Note**: Egress proxy continues to block rubli.xyz:443 (connect_rejected). Not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED (proxy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (proxy) | ✗ |
+| /api/v1/sectors | BLOCKED (proxy) | ✗ |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep matches are TypeScript property accesses (PATTERN_CHIP.P5, TIER_STYLES.Excelente, PATTERN_COLORS.P5), bibliographic strings, and properly-guarded isEs ternaries.
+
+### Overall: WARN
+HTTP/API checks unverifiable — persistent egress proxy block on rubli.xyz:443 (every run since environment setup). Local bilingual scan: PASS. Recommend migrating HTTP/API checks to GitHub Actions scheduled workflow with unrestricted egress.
