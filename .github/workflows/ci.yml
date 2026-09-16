@@ -18,7 +18,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
-        run: cd frontend && npm ci
+        # react-ecosystem bumps outpace @testing-library/react's React-19
+        # peer range; --legacy-peer-deps matches the flag already used for
+        # local installs on this project.
+        run: cd frontend && npm ci --legacy-peer-deps
       - name: TypeScript check
         run: cd frontend && npx tsc --noEmit
       - name: Build
