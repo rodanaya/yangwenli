@@ -1,17 +1,13 @@
 /**
  * CartaMasthead — folio masthead for /atlas «La Carta del Cielo» (§7 Sky Survey).
  *
- * Reskins AtlasMasthead's compressed strip with the survey's thesis headline
- * plus one COMPUTED finding (argmax high_risk_rate across the live patterns
- * cluster-stats query, same query key as the engine so React Query dedupes —
- * zero extra network requests).
+ * Reskins AtlasMasthead's compressed strip with the survey's thesis headline.
+ * The per-lens finding sentence lives in the § EL SALDO block above each
+ * plate instead (it used to be hardcoded here to a patterns-only finding).
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { Info, X } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { atlasApi } from '@/api/client'
-import { formatNumber } from '@/lib/utils'
 
 interface CartaMastheadProps {
   lang: 'en' | 'es'
@@ -21,12 +17,6 @@ export function CartaMasthead({ lang }: CartaMastheadProps) {
   const [infoOpen, setInfoOpen] = useState(false)
   const popoverRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-
-  const { data } = useQuery({
-    queryKey: ['atlas-cluster-stats', 'patterns'],
-    queryFn: () => atlasApi.getClusterStats('patterns'),
-    staleTime: 10 * 60 * 1000,
-  })
 
   // Close on outside click / Esc
   useEffect(() => {
@@ -51,11 +41,6 @@ export function CartaMasthead({ lang }: CartaMastheadProps) {
       document.removeEventListener('keydown', onKey)
     }
   }, [infoOpen])
-
-  const clusters = data?.clusters ?? []
-  const top = clusters.length
-    ? clusters.reduce((best, c) => (c.high_risk_rate > best.high_risk_rate ? c : best), clusters[0])
-    : null
 
   return (
     <header
@@ -83,15 +68,6 @@ export function CartaMasthead({ lang }: CartaMastheadProps) {
             <>Lo que más arde en este cielo <span style={{ color: 'var(--color-accent)', fontStyle: 'normal' }}>es pequeño</span>.</>
           )}
         </h1>
-        {top && (
-          <div className="hidden md:block font-mono text-[12px] text-text-muted leading-tight truncate">
-            {lang === 'en' ? (
-              <>highest body on the patterns plate: {top.label_en} — {Math.round(top.high_risk_rate * 100)}% of its {formatNumber(top.vendors)} vendors in the high or critical band · risk indicator, not a probability</>
-            ) : (
-              <>cuerpo más alto de la lámina de patrones: {top.label_es} — {Math.round(top.high_risk_rate * 100)}% de sus {formatNumber(top.vendors)} proveedores en banda alta o crítica · indicador de riesgo, no probabilidad</>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="relative flex-shrink-0">
@@ -150,9 +126,9 @@ export function CartaMasthead({ lang }: CartaMastheadProps) {
             >
               <p>
                 {lang === 'en' ? (
-                  <>Four plates of one sky: patterns, sectors, categories and terms. Each body is a vendor cohort — right = more vendors, up = higher high-risk rate, area = priority files (T1).</>
+                  <>Three plates of one sky: patterns, sectors and categories. Each body is a vendor cohort — right = more vendors, up = higher high-risk rate, area = priority files (T1).</>
                 ) : (
-                  <>Cuatro láminas de un mismo cielo: patrones, sectores, categorías y sexenios. Cada cuerpo es una cohorte de proveedores — derecha = más proveedores, arriba = mayor tasa de riesgo alto, área = expedientes prioritarios (T1).</>
+                  <>Tres láminas de un mismo cielo: patrones, sectores y categorías. Cada cuerpo es una cohorte de proveedores — derecha = más proveedores, arriba = mayor tasa de riesgo alto, área = expedientes prioritarios (T1).</>
                 )}
               </p>
               <p>

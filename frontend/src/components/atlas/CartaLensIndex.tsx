@@ -1,6 +1,6 @@
 /**
  * CartaLensIndex — the atlas's VISIBLE PLATE INDEX (RUBLI §7 "La Carta del
- * Cielo"). Four folio-numbered tabs (IX·a–IX·d), each stamped with data
+ * Cielo"). Three folio-numbered tabs (IX·a–IX·c), each stamped with data
  * PROVENANCE (live vs archival). An atlas that hides its plate index behind
  * a dropdown is just a PDF — this component makes the survey's structure
  * visible at all times.
@@ -30,12 +30,11 @@ const PLATES: Array<{
   { id: 'patterns',   folio: 'IX·a', en: 'PATTERNS',   es: 'PATRONES'    },
   { id: 'sectors',    folio: 'IX·b', en: 'SECTORS',    es: 'SECTORES'    },
   { id: 'categories', folio: 'IX·c', en: 'CATEGORIES', es: 'CATEGORÍAS'  },
-  { id: 'sexenios',   folio: 'IX·d', en: 'TERMS',      es: 'SEXENIOS'    },
 ]
 
-// patterns + sectors compute live from the register. categories + sexenios
-// have no live endpoint yet and render no data — they are NOT archival
-// aggregates (the old hand-typed categories table was removed).
+// patterns + sectors compute live from the register. categories has no live
+// endpoint yet and renders no data — it is NOT an archival aggregate (the
+// old hand-typed categories table was removed).
 const LIVE = new Set<ConstellationMode>(['patterns', 'sectors'])
 
 export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLensIndexProps) {

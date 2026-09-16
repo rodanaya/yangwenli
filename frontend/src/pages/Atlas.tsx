@@ -36,7 +36,6 @@ import {
   ConcentrationConstellation,
   buildPatternMeta,
   buildSectorMeta,
-  buildSexenioMeta,
   type ConstellationMode,
   type ConstellationRiskRow,
   type ClusterMeta,
@@ -1682,7 +1681,7 @@ export default function Atlas() {
   const [mode, setMode] = useState<ConstellationMode>(() => {
     const p = new URLSearchParams(window.location.search)
     const l = p.get('lens') as ConstellationMode | null
-    return (l && ['patterns', 'sectors', 'categories', 'sexenios'].includes(l)) ? l : 'patterns'
+    return (l && ['patterns', 'sectors', 'categories'].includes(l)) ? l : 'patterns'
   })
   const [yearIndex, setYearIndex] = useState<number>(() => {
     const p = new URLSearchParams(window.location.search)
@@ -1813,7 +1812,7 @@ export default function Atlas() {
     const compare = searchParams.get('compare')
     const floor = searchParams.get('floor') as typeof riskFloor | null
 
-    if (lens && ['patterns', 'sectors', 'categories', 'sexenios'].includes(lens)) {
+    if (lens && ['patterns', 'sectors', 'categories'].includes(lens)) {
       setMode(lens)
     }
     if (year) {
@@ -2050,7 +2049,6 @@ export default function Atlas() {
   const activeConstellationMeta: ClusterMeta[] = useMemo(() => {
     const isEs = lang === 'es'
     if (mode === 'sectors')    return buildSectorMeta(isEs)
-    if (mode === 'sexenios')   return buildSexenioMeta(isEs)
     // Categories has no curated meta. The hand-typed table that used to live
     // here rendered 33 invented cohorts with made-up counts and positions;
     // the lens now shows live data only (empty until the backend serves it).
@@ -2130,7 +2128,6 @@ export default function Atlas() {
     // Returns the cluster code so the rail can auto-zoom into it (M-OBS P5).
     const matches = searchKnownVendors(query)
     if (!matches[0]) return null
-    if (mode === 'sexenios') setMode('patterns')
     const code = vendorToClusterCode(matches[0], mode === 'sexenios' ? 'patterns' : mode)
     setPinnedCode(code)
     setFoundVendor(matches[0])
