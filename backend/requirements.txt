@@ -50,3 +50,9 @@ email-validator>=2.0.0            # Required by pydantic EmailStr
 pytest>=7.4.0              # Test framework
 pytest-asyncio>=0.21.0     # Async test support
 pytest-cov>=4.1.0          # Coverage reporting (70% threshold target)
+pytest-timeout>=2.2.0      # Required by ci.yml's `pytest ... --timeout=120`
+
+# Error monitoring (optional — no-op when SENTRY_DSN env var is not set)
+# main.py imports this unconditionally at module load, so it must be
+# installed even when unused — missing here breaks `import api.main` in CI.
+sentry-sdk[fastapi]==2.22.0
