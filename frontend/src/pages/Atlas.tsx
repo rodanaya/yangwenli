@@ -41,7 +41,7 @@ import {
   type ConstellationRiskRow,
   type ClusterMeta,
 } from '@/components/charts/ConcentrationConstellation'
-import { formatNumber, cn } from '@/lib/utils'
+import { formatNumber, formatDualCurrency, cn } from '@/lib/utils'
 // atlas-C-P1: three-pane investigator console shell
 import { AtlasContextProvider, useAtlasState, useAtlasDispatch, type AtlasState } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
@@ -77,7 +77,8 @@ import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
 //   "Open dossier" navigates to /patterns/:code (subpage).
 import { GalaxyDimmer } from '@/components/atlas/GalaxyDimmer'
 import { SpotlightCard } from '@/components/atlas/SpotlightCard'
-import { ObservatoryScatter } from '@/components/atlas/ObservatoryScatter'
+import { PadronBand } from '@/components/atlas/PadronBand'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
@@ -1145,12 +1146,31 @@ function CanvasAtlasView({
         vendors: c.vendors,
         t1: c.t1,
         highRiskPct: c.high_risk_rate,
+        totalValueMxn: c.total_value_mxn,
       }))
     }
-    return activeMeta.map((m) => ({
-      code: m.code, label: m.label, vendors: m.vendors, t1: m.t1, highRiskPct: m.highRiskPct,
-    }))
-  }, [clusterStats, activeMeta, lang])
+    // Static meta carries no value, so the band cannot draw it. Live data only.
+    return []
+  }, [clusterStats, lang])
+
+  // § EL SALDO — computed only from what the API returns. high_risk_rate is a
+  // share of VENDORS, so no peso figure is derived from it: money and heat
+  // stay separate numbers.
+  const padronSaldo = useMemo(() => {
+    if (scatterClusters.length === 0) return null
+    const total = scatterClusters.reduce((acc, c) => acc + c.totalValueMxn, 0)
+    const vendors = scatterClusters.reduce((acc, c) => acc + c.vendors, 0)
+    const widest = [...scatterClusters].sort((a, b) => b.totalValueMxn - a.totalValueMxn)[0]
+    const hottest = [...scatterClusters].sort((a, b) => b.highRiskPct - a.highRiskPct)[0]
+    return {
+      total,
+      vendors,
+      widest,
+      hottest,
+      n: scatterClusters.length,
+      widestShare: total > 0 ? (widest.totalValueMxn / total) * 100 : 0,
+    }
+  }, [scatterClusters])
 
   // Faithful Observatory: a bubble click opens the cluster's dossier
   // (overview → dossier IA) instead of in-page semantic zoom. Mirrors the
@@ -1189,14 +1209,80 @@ function CanvasAtlasView({
             {lang === 'es' ? 'Sin datos en vivo para esta lente todavía.' : 'No live data for this lens yet.'}
           </p>
         ) : (
-        <ObservatoryScatter
-          clusters={scatterClusters}
-          lens={mode}
-          lang={lang}
-          onOpenDossier={handleScatterNav}
-          onVendorClick={(id) => navigate(`/vendors/${id}`)}
-          spotlightCode={pinnedCode}
-        />
+        <>
+          {padronSaldo && (
+            <div className="mb-3">
+              <p
+                className="font-mono"
+                style={{ fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+              >
+                {lang === 'es' ? '§ EL SALDO' : '§ THE BALANCE'}
+              </p>
+              <h2
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontWeight: 700,
+                  fontSize: 'clamp(1.1rem, 2vw, 1.45rem)',
+                  lineHeight: 1.3,
+                  color: 'var(--color-text-primary)',
+                  margin: 0,
+                }}
+              >
+                {lang === 'es' ? (
+                  <>
+                    {padronSaldo.n} cohortes suman{' '}
+                    <strong style={{ color: 'var(--color-accent)' }}>{formatDualCurrency(padronSaldo.total)}</strong>
+                    {' '}entre {formatNumber(padronSaldo.vendors)} proveedores. El dinero está en {padronSaldo.widest.label}
+                    {' '}({padronSaldo.widestShare.toFixed(0)}% de la banda); el calor en {padronSaldo.hottest.label}, con
+                    {' '}{(padronSaldo.hottest.highRiskPct * 100).toFixed(0)}% de sus {formatNumber(padronSaldo.hottest.vendors)}
+                    {' '}proveedores en alto o crítico.
+                  </>
+                ) : (
+                  <>
+                    {padronSaldo.n} cohorts hold{' '}
+                    <strong style={{ color: 'var(--color-accent)' }}>{formatDualCurrency(padronSaldo.total)}</strong>
+                    {' '}across {formatNumber(padronSaldo.vendors)} vendors. The money sits in {padronSaldo.widest.label}
+                    {' '}({padronSaldo.widestShare.toFixed(0)}% of the band); the heat in {padronSaldo.hottest.label}, with
+                    {' '}{(padronSaldo.hottest.highRiskPct * 100).toFixed(0)}% of its {formatNumber(padronSaldo.hottest.vendors)}
+                    {' '}vendors high or critical.
+                  </>
+                )}
+              </h2>
+            </div>
+          )}
+          <PadronBand
+            clusters={scatterClusters}
+            lens={mode}
+            lang={lang}
+            onSelect={handleScatterNav}
+            spotlightCode={pinnedCode}
+          />
+          {/* Rule #1: entity mentions route via EntityIdentityChip. The SVG
+              slices are the picture; these chips are the navigation. */}
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5">
+            {[...scatterClusters]
+              .sort((a, b) => b.totalValueMxn - a.totalValueMxn)
+              .map((c) => {
+                const sector = mode === 'sectors' ? SECTORS.find((sec) => sec.code === c.code) : undefined
+                if (mode === 'sectors' && !sector) return null
+                return (
+                  // fullName makes the chip `w-full`; the inline-flex wrapper
+                  // shrinks that to content width so the legend stays one row.
+                  <span key={c.code} className="inline-flex max-w-full">
+                    <EntityIdentityChip
+                      type={mode === 'sectors' ? 'sector' : 'pattern'}
+                      id={mode === 'sectors' && sector ? sector.id : c.code}
+                      name={c.label}
+                      size="sm"
+                      hideIcon
+                      fullName
+                      sectorCode={mode === 'sectors' ? c.code : null}
+                    />
+                  </span>
+                )
+              })}
+          </div>
+        </>
         )
       ) : (
       <>
@@ -2024,12 +2110,12 @@ export default function Atlas() {
       if (!isLive || K === 0) {
         return `Plate IX·${letter} — no live data for ${lensLabel} yet. Nothing is drawn until the register serves it; this plate carries no curated stand-ins · data cut 2025·09·28.`
       }
-      return `Plate IX·${letter} — ${K} bodies: each a vendor cohort (${lensLabel}), placed by scale (x, log) and high-risk rate (y); area is the count of priority files (T1). Live aggregates from the register · data cut 2025·09·28.`
+      return `Plate IX·${letter} — the whole band is what ${K} ${lensLabel} contracted; each slice's width is its value, and the hatch rises to the share of its vendors in the high or critical band — a vendor rate, not a peso share. Red line = that rate. Live aggregates from the register · data cut 2025·09·28.`
     }
     if (!isLive || K === 0) {
       return `Lámina IX·${letter} — sin datos en vivo para ${lensLabel} todavía. No se dibuja nada hasta que el padrón los sirva; esta lámina no lleva sustitutos curados · corte de datos 28·09·2025.`
     }
-    return `Lámina IX·${letter} — ${K} cuerpos: cada uno una cohorte de proveedores (${lensLabel}), situada por escala (x, log) y tasa de alto riesgo (y); el área es la cuenta de expedientes prioritarios (T1). Agregados en vivo del padrón · corte de datos 28·09·2025.`
+    return `Lámina IX·${letter} — la banda completa es lo que contrataron ${K} ${lensLabel}; el ancho de cada rebanada es su valor, y el achurado sube hasta la parte de sus proveedores en alto o crítico — una tasa de proveedores, no de pesos. Línea roja = esa tasa. Agregados en vivo del padrón · corte de datos 28·09·2025.`
   }, [mode, lang, activeConstellationMeta])
 
   // ─── atlas-C-P1: bridge callbacks for left rail ──────────────────────────
