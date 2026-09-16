@@ -32,10 +32,9 @@ const PLATES: Array<{
   { id: 'categories', folio: 'IX·c', en: 'CATEGORIES', es: 'CATEGORÍAS'  },
 ]
 
-// patterns + sectors compute live from the register. categories has no live
-// endpoint yet and renders no data — it is NOT an archival aggregate (the
-// old hand-typed categories table was removed).
-const LIVE = new Set<ConstellationMode>(['patterns', 'sectors'])
+// All three plates compute live from the register (categories via the
+// category_stats precompute served by /atlas/cluster-stats since backend 02).
+const LIVE = new Set<ConstellationMode>(['patterns', 'sectors', 'categories'])
 
 export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLensIndexProps) {
   const [keymapOpen, setKeymapOpen] = useState(false)

@@ -147,9 +147,11 @@ export function PadronBand({ clusters, lens, lang, onSelect, spotlightCode }: Pr
     })
     .join(' ')
 
-  const legend = narrow
-    .map((d, i) => `${CIRCLED[i] ?? '·'} ${d.c.label} ${(d.c.highRiskPct * 100).toFixed(0)}%`)
-    .join(' · ')
+  // Circled indices cover 20 narrow slices; past that (72 categories) the chip
+  // row below carries every name, so the legend line is dropped, not garbled.
+  const legend = narrow.length <= CIRCLED.length
+    ? narrow.map((d, i) => `${CIRCLED[i]} ${d.c.label} ${(d.c.highRiskPct * 100).toFixed(0)}%`).join(' · ')
+    : ''
 
   const callout =
     widest && hottest && widest.code !== hottest.code
@@ -278,14 +280,18 @@ export function PadronBand({ clusters, lens, lang, onSelect, spotlightCode }: Pr
                   >
                     {formatCompactMXN(c.totalValueMxn)} · {(c.highRiskPct * 100).toFixed(0)}%
                   </text>
-                  <text x={x + w / 2} y={BAND_H + STRIP_H + 12} textAnchor="middle" fontFamily={MONO} fontSize={9} letterSpacing="0.06em" fill="var(--color-text-muted)">
-                    {c.code.toUpperCase()}
-                  </text>
+                  {w >= 110 && (
+                    <text x={x + w / 2} y={BAND_H + STRIP_H + 12} textAnchor="middle" fontFamily={MONO} fontSize={9} letterSpacing="0.06em" fill="var(--color-text-muted)">
+                      {c.code.replace(/^cat_/, '').toUpperCase()}
+                    </text>
+                  )}
                 </>
               ) : (
-                <text x={x + w / 2} y={BAND_H + STRIP_H + 12} textAnchor="middle" fontFamily={MONO} fontSize={9} fill="var(--color-text-muted)">
-                  {CIRCLED[narrowIdx] ?? '·'}
-                </text>
+                narrowIdx < CIRCLED.length && (
+                  <text x={x + w / 2} y={BAND_H + STRIP_H + 12} textAnchor="middle" fontFamily={MONO} fontSize={9} fill="var(--color-text-muted)">
+                    {CIRCLED[narrowIdx]}
+                  </text>
+                )
               )}
             </g>
           )
