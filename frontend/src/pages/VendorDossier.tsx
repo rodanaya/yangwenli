@@ -49,7 +49,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { WayfindingSpine } from '@/components/nav/WayfindingSpine'
-import { DossierOriginProvider, type WayfindingLinkState } from '@/lib/nav/wayfinding'
+import { DossierOriginProvider, useSiblingNav, type WayfindingLinkState } from '@/lib/nav/wayfinding'
 import { formatEntityName } from '@/lib/entity/format'
 import { DossierSectionHeader } from '@/components/dossier/DossierSectionHeader'
 import { SECTOR_COLORS } from '@/lib/constants'
@@ -314,6 +314,11 @@ export default function VendorDossier() {
   const queryClient = useQueryClient()
   const { t, i18n } = useTranslation(['vendors', 'common'])
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
+  // No index page publishes a vendor list yet except the Atlas cohort
+  // register (CohortRegister) — wf.hasContext stays false everywhere else,
+  // so this call must run unconditionally (hook rule) even though most
+  // arrivals are out of context.
+  const wf = useSiblingNav('vendor', id, '/aria', 'ARIA')
 
   const [selectedContract, setSelectedContract] = useState<ContractListItem | null>(null)
   const [networkOpen, setNetworkOpen] = useState(false)
@@ -416,21 +421,12 @@ export default function VendorDossier() {
   return (
     <DossierOriginProvider value={{ route: `/vendors/${vendorId}`, label: formatEntityName('vendor', vendor.name, 'sm') }}>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {(wfOrigin || fromAria) && (
+      {(wfOrigin || fromAria || wf.hasContext) && (
         <WayfindingSpine
-          nav={{
-            hasContext: false,
-            index: 0,
-            total: 0,
-            prevTo: null,
-            nextTo: null,
-            backTo: '/aria',
-            backLabel: 'ARIA',
-          }}
+          nav={wf}
           origin={wfOrigin}
           lang={lang}
           accent={sectorAccent}
-          showStepper={false}
         />
       )}
 
