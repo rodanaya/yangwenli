@@ -634,6 +634,26 @@ export const vendorApi = {
   },
 
   /**
+   * Get vendor's spending categories (Atlas scope 2 § categorías pivot, Sep 2026)
+   */
+  async getCategories(vendorId: number): Promise<{
+    vendor_id: number
+    total_contracts: number
+    categories: Array<{
+      category_id: number
+      code: string
+      name_es: string
+      name_en: string
+      contracts: number
+      total_amount_mxn: number
+      share_of_vendor_value: number
+    }>
+  }> {
+    const { data } = await api.get(`/vendors/${vendorId}/categories`)
+    return data
+  },
+
+  /**
    * Search vendors by name
    */
   async search(query: string, limit = 10): Promise<VendorListResponse> {

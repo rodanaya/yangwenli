@@ -30,7 +30,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, BookOpen, Square, RotateCcw, SkipForward, FileText } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { ATLAS_STORIES, type Story, type StoryChapter } from '@/lib/atlas-stories'
-import { analysisApi, atlasApi } from '@/api/client'
+import { analysisApi, atlasApi, type AtlasClusterVendorItem } from '@/api/client'
 import type { RiskDistribution, YearOverYearChange } from '@/api/types'
 import {
   ConcentrationConstellation,
@@ -78,6 +78,7 @@ import { GalaxyDimmer } from '@/components/atlas/GalaxyDimmer'
 import { SpotlightCard } from '@/components/atlas/SpotlightCard'
 import { PadronBand } from '@/components/atlas/PadronBand'
 import { CohortRegister } from '@/components/atlas/CohortRegister'
+import { VendorPivots } from '@/components/atlas/VendorPivots'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
@@ -521,11 +522,19 @@ interface CanvasAtlasViewProps {
    *  not here — because `key={constellationKey}` remounts this component on
    *  every lens change, which would otherwise re-read a stale scope/code
    *  pair from the URL for the new lens. */
-  scope: 'padron' | 'cohorte'
+  scope: 'padron' | 'cohorte' | 'proveedor'
   cohortCode: string | null
   onCohortSelect: (code: string) => void
   onCohortExit: () => void
   onCohortLoaded: (info: { code: string; label: string; loaded: number; total: number }) => void
+  /** Scope 2 (Sep 2026): a vendor's short card + relation pivots, opened
+   *  from a CohortRegister row. Same reasoning as scope 1 for living in
+   *  Atlas() rather than here. */
+  vendorId: number | null
+  vendorRow: AtlasClusterVendorItem | null
+  onOpenVendor: (vendor: AtlasClusterVendorItem) => void
+  onVendorExit: () => void
+  onVendorLoaded: (info: { vendorId: number; label: string; institutions: number; coBidders: number; categories: number }) => void
 }
 
 function CanvasAtlasView({
@@ -541,6 +550,11 @@ function CanvasAtlasView({
   onCohortSelect,
   onCohortExit,
   onCohortLoaded,
+  vendorId,
+  vendorRow,
+  onOpenVendor,
+  onVendorExit,
+  onVendorLoaded,
 }: CanvasAtlasViewProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -1195,16 +1209,18 @@ function CanvasAtlasView({
   // scoped to this orthogonal piece of state (faithful-scatter only, never
   // set while the legacy canvas engine is active).
   useEffect(() => {
-    if (scope !== 'cohorte') return
+    if (scope !== 'cohorte' && scope !== 'proveedor') return
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       const t = e.target as HTMLElement | null
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return
-      onCohortExit()
+      // Scope 2 escapes back to scope 1 (the cohort), not all the way home.
+      if (scope === 'proveedor') onVendorExit()
+      else onCohortExit()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [scope, onCohortExit])
+  }, [scope, onCohortExit, onVendorExit])
 
   // Field click in the canvas wrapper (background) escapes zoom.
   // The CanvasConstellation engine handles dot/cluster clicks itself;
@@ -1228,6 +1244,19 @@ function CanvasAtlasView({
           >
             {lang === 'es' ? 'Sin datos en vivo para esta lente todavía.' : 'No live data for this lens yet.'}
           </p>
+        ) : scope === 'proveedor' && cohortCode && vendorId ? (
+          <VendorPivots
+            lens={mode}
+            code={cohortCode}
+            cohortLabel={scatterClusters.find((c) => c.code === cohortCode)?.label ?? cohortCode}
+            lensLabel={lensLabel}
+            vendorId={vendorId}
+            vendorRow={vendorRow}
+            lang={lang}
+            onGoHome={onCohortExit}
+            onExitToCohort={onVendorExit}
+            onVendorLoaded={onVendorLoaded}
+          />
         ) : scope === 'cohorte' && cohortCode ? (
           <CohortRegister
             lens={mode}
@@ -1244,6 +1273,7 @@ function CanvasAtlasView({
                 total,
               })
             }
+            onOpenVendor={onOpenVendor}
           />
         ) : (
         <>
@@ -1495,8 +1525,10 @@ interface AtlasUrlSyncProps {
   /** Scope 1 (Sep 2026): owned by Atlas(), passed through so this writer's
    *  from-scratch URLSearchParams doesn't evict scope/code 250ms after any
    *  other tracked field changes (e.g. risk floor) while a cohort is open. */
-  scope: 'padron' | 'cohorte'
+  scope: 'padron' | 'cohorte' | 'proveedor'
   cohortCode: string | null
+  /** Scope 2 (Sep 2026): same eviction-guard reasoning as cohortCode. */
+  vendorId: number | null
 }
 
 function AtlasUrlSync({
@@ -1510,6 +1542,7 @@ function AtlasUrlSync({
   initialSelectRef,
   scope,
   cohortCode,
+  vendorId,
 }: AtlasUrlSyncProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -1580,8 +1613,12 @@ function AtlasUrlSync({
       // faithful-scatter engine they explicitly opted out of.
       const legacyParam = searchParams.get('legacy')
       if (legacyParam) params.set('legacy', legacyParam)
-      // Scope 1 (Sep 2026): shareable cohort-register deep link.
-      if (scope === 'cohorte' && cohortCode) {
+      // Scope 1/2 (Sep 2026): shareable cohort-register / vendor-pivots deep link.
+      if (scope === 'proveedor' && cohortCode && vendorId) {
+        params.set('scope', 'proveedor')
+        params.set('code', cohortCode)
+        params.set('vendor', String(vendorId))
+      } else if (scope === 'cohorte' && cohortCode) {
         params.set('scope', 'cohorte')
         params.set('code', cohortCode)
       }
@@ -1589,7 +1626,7 @@ function AtlasUrlSync({
     }, 250)
     return () => clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, yearIndex, pinnedCode, riskFloor, compareMode, yearIndexB, zoomedCode, selectionIds.join(','), scope, cohortCode, setSearchParams])
+  }, [mode, yearIndex, pinnedCode, riskFloor, compareMode, yearIndexB, zoomedCode, selectionIds.join(','), scope, cohortCode, vendorId, setSearchParams])
 
   return null
 }
@@ -1777,18 +1814,36 @@ export default function Atlas() {
   // Lives here (not in CanvasAtlasView, which is remounted via
   // key={constellationKey} on every lens change) so a lens switch can
   // reliably reset it before the remount reads the URL for the new lens.
-  const [atlasScope, setAtlasScope] = useState<'padron' | 'cohorte'>(() => {
+  const [atlasScope, setAtlasScope] = useState<'padron' | 'cohorte' | 'proveedor'>(() => {
     const p = new URLSearchParams(window.location.search)
-    return p.get('scope') === 'cohorte' && p.get('code') ? 'cohorte' : 'padron'
+    const s = p.get('scope')
+    if (s === 'proveedor' && p.get('code') && p.get('vendor')) return 'proveedor'
+    if (s === 'cohorte' && p.get('code')) return 'cohorte'
+    return 'padron'
   })
   const [cohortCode, setCohortCode] = useState<string | null>(() => {
     const p = new URLSearchParams(window.location.search)
-    return p.get('scope') === 'cohorte' ? p.get('code') : null
+    const s = p.get('scope')
+    return s === 'cohorte' || s === 'proveedor' ? p.get('code') : null
   })
   // Caption-only cache (label + loaded/total) reported up by CohortRegister
   // via CanvasAtlasView; null falls back to the default padron caption.
   const [cohortScopeInfo, setCohortScopeInfo] = useState<
     { code: string; label: string; loaded: number; total: number } | null
+  >(null)
+  // Scope 2 (Sep 2026): the vendor short card + relation pivots opened from
+  // a CohortRegister row. vendorId parses from the URL on a hard reload;
+  // vendorRow (the AtlasClusterVendorItem clicked) is click-time-only —
+  // VendorPivots re-derives it from the cached cohort-vendors page when null.
+  const [vendorId, setVendorId] = useState<number | null>(() => {
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('scope') !== 'proveedor') return null
+    const n = Number(p.get('vendor'))
+    return Number.isFinite(n) && n > 0 ? n : null
+  })
+  const [vendorRow, setVendorRow] = useState<AtlasClusterVendorItem | null>(null)
+  const [vendorScopeInfo, setVendorScopeInfo] = useState<
+    { vendorId: number; label: string; institutions: number; coBidders: number; categories: number } | null
   >(null)
   // Compare mode — when true, render a second constellation card with its own year
   const [compareMode, setCompareMode] = useState<boolean>(false)
@@ -1814,6 +1869,9 @@ export default function Atlas() {
       setAtlasScope('padron')
       setCohortCode(null)
       setCohortScopeInfo(null)
+      setVendorId(null)
+      setVendorRow(null)
+      setVendorScopeInfo(null)
       prevModeForScopeRef.current = mode
     }
   }, [mode])
@@ -1963,15 +2021,19 @@ export default function Atlas() {
       // 2026-08-16: preserve legacy flag (see same fix in the other URL writer above)
       const legacyParam = searchParams.get('legacy')
       if (legacyParam) params.set('legacy', legacyParam)
-      // Scope 1 (Sep 2026): shareable cohort-register deep link.
-      if (atlasScope === 'cohorte' && cohortCode) {
+      // Scope 1/2 (Sep 2026): shareable cohort-register / vendor-pivots deep link.
+      if (atlasScope === 'proveedor' && cohortCode && vendorId) {
+        params.set('scope', 'proveedor')
+        params.set('code', cohortCode)
+        params.set('vendor', String(vendorId))
+      } else if (atlasScope === 'cohorte' && cohortCode) {
         params.set('scope', 'cohorte')
         params.set('code', cohortCode)
       }
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
-  }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, atlasScope, cohortCode, setSearchParams])
+  }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, atlasScope, cohortCode, vendorId, setSearchParams])
 
   // V5: first-visit auto-tour. Launch "The Pharmaceutical Cartel" automatically
   // the first time a user lands on /atlas with no URL state. Subsequent visits
@@ -2202,6 +2264,14 @@ export default function Atlas() {
     const isLive = mode === 'patterns' || mode === 'sectors' || mode === 'categories'
     const letter = folioLetter[mode]
     const lensLabel = lensLabelMap[mode][lang]
+    // Scope 2: vendor-pivots caption, only once VendorPivots has reported in
+    // for THIS vendor (same staleness guard as scope 1 below).
+    if (atlasScope === 'proveedor' && cohortCode && vendorId && vendorScopeInfo && vendorScopeInfo.vendorId === vendorId) {
+      const { label, institutions, coBidders, categories } = vendorScopeInfo
+      return lang === 'en'
+        ? `Plate IX·${letter}·${cohortCode} — ${label}: ${institutions} institutions, ${coBidders} co-bidders, ${categories} categories; amount = lifetime contracted value. Live aggregates from the register.`
+        : `Lámina IX·${letter}·${cohortCode} — ${label}: ${institutions} instituciones, ${coBidders} co-licitantes, ${categories} categorías; monto = valor contratado de por vida. Agregados en vivo del padrón.`
+    }
     // Scope 1: register caption, only once CohortRegister has reported in
     // for THIS cohort (guards against a stale label/count from the
     // previously viewed cohort while the new one is still loading).
@@ -2221,7 +2291,7 @@ export default function Atlas() {
       return `Lámina IX·${letter} — sin datos en vivo para ${lensLabel} todavía. No se dibuja nada hasta que el padrón los sirva; esta lámina no lleva sustitutos curados · corte de datos 28·09·2025.`
     }
     return `Lámina IX·${letter} — la banda completa es lo que contrataron ${K} ${lensLabel}; el ancho de cada rebanada es su valor, y el achurado sube hasta la parte de sus proveedores en alto o crítico — una tasa de proveedores, no de pesos. Línea roja = esa tasa. Agregados en vivo del padrón · corte de datos 28·09·2025.`
-  }, [mode, lang, activeConstellationMeta, faithfulObservatory, liveClusterCount, atlasScope, cohortCode, cohortScopeInfo])
+  }, [mode, lang, activeConstellationMeta, faithfulObservatory, liveClusterCount, atlasScope, cohortCode, cohortScopeInfo, vendorId, vendorScopeInfo])
 
   // ─── atlas-C-P1: bridge callbacks for left rail ──────────────────────────
   // The left rail dispatches into AtlasContext AND calls these bridge
@@ -2288,6 +2358,7 @@ export default function Atlas() {
         initialSelectRef={initialSelectRef}
         scope={atlasScope}
         cohortCode={cohortCode}
+        vendorId={vendorId}
       />
       {/* omega-N N2: story-chart binding — headless, renders null.
           Wires active chapter's pinnedCode to zoom dispatch + highlight state.
@@ -2854,13 +2925,34 @@ export default function Atlas() {
               setAtlasScope('cohorte')
               setCohortCode(code)
               setCohortScopeInfo(null)
+              setVendorId(null)
+              setVendorRow(null)
+              setVendorScopeInfo(null)
             }}
             onCohortExit={() => {
               setAtlasScope('padron')
               setCohortCode(null)
               setCohortScopeInfo(null)
+              setVendorId(null)
+              setVendorRow(null)
+              setVendorScopeInfo(null)
             }}
             onCohortLoaded={setCohortScopeInfo}
+            vendorId={vendorId}
+            vendorRow={vendorRow}
+            onOpenVendor={(vendor) => {
+              setAtlasScope('proveedor')
+              setVendorId(vendor.vendor_id)
+              setVendorRow(vendor)
+              setVendorScopeInfo(null)
+            }}
+            onVendorExit={() => {
+              setAtlasScope('cohorte')
+              setVendorId(null)
+              setVendorRow(null)
+              setVendorScopeInfo(null)
+            }}
+            onVendorLoaded={setVendorScopeInfo}
           />
         ) : (
           <AtlasZoomLayer

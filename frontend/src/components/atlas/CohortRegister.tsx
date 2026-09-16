@@ -32,6 +32,10 @@ interface Props {
   lang: 'en' | 'es'
   onGoHome: () => void
   onLoaded?: (loaded: number, total: number) => void
+  /** Scope 2 (Sep 2026): clicking a row (outside the chip) opens the
+   *  vendor's short card + relation pivots in-page instead of navigating
+   *  out to the dossier — the chip stays the way out. */
+  onOpenVendor?: (vendor: AtlasClusterVendorItem) => void
 }
 
 function primaryPatternOf(v: AtlasClusterVendorItem): string {
@@ -45,7 +49,7 @@ function primaryPatternOf(v: AtlasClusterVendorItem): string {
   return best ?? ''
 }
 
-export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, onLoaded }: Props) {
+export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, onLoaded, onOpenVendor }: Props) {
   const isEs = lang === 'es'
   const location = useLocation()
 
@@ -201,8 +205,15 @@ export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, o
                   <div
                     key={v.vendor_id}
                     data-wf-row={String(v.vendor_id)}
+                    role={onOpenVendor ? 'button' : undefined}
+                    tabIndex={onOpenVendor ? 0 : undefined}
+                    aria-label={onOpenVendor ? v.name : undefined}
+                    onClick={onOpenVendor ? () => onOpenVendor(v) : undefined}
+                    onKeyDown={onOpenVendor ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenVendor(v) }
+                    } : undefined}
                     className="grid items-center gap-2 hover:bg-background-elevated/40 transition-colors border-b border-border/50"
-                    style={{ gridTemplateColumns: '40px minmax(0,1fr) 110px 110px 64px 56px', height: 40 }}
+                    style={{ gridTemplateColumns: '40px minmax(0,1fr) 110px 110px 64px 56px', height: 40, cursor: onOpenVendor ? 'pointer' : undefined, outline: 'none' }}
                   >
                     <span className="font-mono tabular-nums text-[13px] text-text-primary">
                       {String(i + 1).padStart(3, '0')}
