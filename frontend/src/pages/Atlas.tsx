@@ -1,524 +1,58 @@
 /**
- * El Observatorio — full-viewport exploration of the procurement universe.
- * (Internal symbol names — Atlas component, ATLAS_STORIES, atlasMode — keep
- * the legacy "atlas" prefix; renaming them is pure churn. The route also
- * stays /atlas to preserve URL identity and the rubli_atlas_visited_v1
- * localStorage flag. /observatorio and /observatory are added as route
- * aliases that redirect to /atlas — see App.tsx.)
+ * El Atlas — the index that hands off. Three scopes and one exit:
  *
- * The dashboard's § 1 constellation at 220px is the elevator pitch. This
- * page is the walking tour: same constellation engine at full size, with
- * two extra axes the dashboard doesn't have:
+ *   0. El Padrón    — PadronBand: width = contracted value, hatch = share of
+ *                     the cohort's vendors in the high/critical band.
+ *   1. La Cohorte   — CohortRegister: the cohort's vendors ranked by money,
+ *                     published as a sibling list so /vendors/:id can step.
+ *   2. El Proveedor — VendorPivots: short card + relation pivots, then the
+ *                     coda to the dossier. Never a dossier itself.
  *
- *   1. YEAR SCRUBBER  — slide through 2008-2025 to watch the universe evolve.
- *      Each year re-keys the constellation, retriggering the cinematic reveal
- *      with that year's risk distribution. Auto-play loops at 1.5s/year.
+ * Lens (patterns · sectors · categories) and sexenio (a global time filter,
+ * never a lens) live in the URL with scope/code/vendor/pin/story — one writer.
+ * Plan: .claude/plans/twinkling-spinning-cerf.md. The zoomable canvas engines
+ * that used to sit behind ?legacy=1 were removed 2026-09; see git history.
  *
- *   2. CLUSTER PANEL  — clicking any attractor opens an inline drawer with
- *      the cluster's description, headline stats, top vendors, and an
- *      "investigate" button that opens the matching ARIA queue / sector page.
- *
- * Plus: the categories mode is expanded from 12 (compact, dashboard) to 32
- * (atlas-density). The full set covers ~80% of federal spend by category.
+ * (Internal symbol names — Atlas component, ATLAS_STORIES — keep the "atlas"
+ * prefix; the route stays /atlas to preserve the rubli_atlas_visited_v1 flag.
+ * /observatorio and /observatory redirect here — see App.tsx.)
  */
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, BookOpen, Square, RotateCcw, SkipForward, FileText } from 'lucide-react'
+import { Play, Pause, X, ArrowUpRight, BookOpen, Square, RotateCcw, SkipForward, FileText } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { ATLAS_STORIES, type Story, type StoryChapter } from '@/lib/atlas-stories'
 import { analysisApi, atlasApi, type AtlasClusterVendorItem } from '@/api/client'
-import type { RiskDistribution, YearOverYearChange } from '@/api/types'
-import {
-  ConcentrationConstellation,
-  buildPatternMeta,
-  buildSectorMeta,
-  type ConstellationMode,
-  type ConstellationRiskRow,
-  type ClusterMeta,
-} from '@/components/charts/ConcentrationConstellation'
+import type { ConstellationMode } from '@/components/charts/ConcentrationConstellation'
 import { formatNumber, formatDualCurrency, cn } from '@/lib/utils'
 import { PERIOD_API_KEY, ADMIN_DISPLAY_ACCENTED, getAdministrationByPeriodKey } from '@/lib/administrations'
 // atlas-C-P1: three-pane investigator console shell
-import { AtlasContextProvider, useAtlasState, useAtlasDispatch, type AtlasState } from '@/components/atlas/AtlasContext'
+import { AtlasContextProvider } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
-import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
-// atlas-C-P2: zoom state machine
-import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
-// atlas-P6 Pass 2: Canvas constellation engine (opt-in via ?canvas=1).
-// Full replacement of AtlasZoomLayer once parity is validated.
-import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn, type FlyToPosFn } from '@/components/atlas/CanvasConstellation'
-import { CanvasVendorHaloCard } from '@/components/atlas/CanvasVendorHaloCard'
-// Atlas P6 Frontier C — planetary system: contracts orbiting a focused vendor.
-import { useVendorContracts, type VendorContractDot } from '@/lib/atlas/use-vendor-contracts'
-import { useInstitutionRelatedVendors } from '@/lib/atlas/use-institution-vendors'
-import { ContractFloatingCard } from '@/components/atlas/ContractFloatingCard'
-// `dotsFromRows` (1,200 synthetic Halton lattice) was the loading fallback
-// for the Canvas engine — removed 2026-05-22 because tan low-risk lattice
-// dots speckled across the galaxy view read as noise. `clustersFromMeta`
-// stays — it builds the attractor coords the engine renders.
-import { clustersFromMeta } from '@/lib/atlas/dots-from-rows'
-// Atlas P6 Frontier B — real-vendor galaxy (replaces synthetic lattice).
-import { useGalaxyVendors, useZoomedClusterVendors, type GalaxyVendor } from '@/lib/atlas/use-cluster-vendors'
-import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
-// M-CLUSTER P4 — ClusterFloatingCard + ClusterPaginator standalone renders
-// were deleted in favour of the unified AtlasVendorDrawer (now a 3-col
-// ClusterDock with built-in paginator). Imports retained for type
-// references only — runtime renders removed.
-import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
-// M-CLUSTER P5 — ClusterMiniMap import removed; the Spotlight card sits
-// at the cluster's spatial position and replaces the mini-map's role.
-// M-CLUSTER P5 Spotlight pattern (focus+context per Shneiderman):
-//   click cluster → dim galaxy + show SpotlightCard at cluster's position.
-//   "Browse" expands to full ClusterDock (in-page).
-//   "Open dossier" navigates to /patterns/:code (subpage).
-import { GalaxyDimmer } from '@/components/atlas/GalaxyDimmer'
-import { SpotlightCard } from '@/components/atlas/SpotlightCard'
 import { PadronBand } from '@/components/atlas/PadronBand'
 import { CohortRegister } from '@/components/atlas/CohortRegister'
 import { VendorPivots } from '@/components/atlas/VendorPivots'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
-import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
-import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
+import { SECTORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 // §7 «La Carta del Cielo» — folio scaffold reinvented around the untouched scatter engine.
 import { CartaMasthead } from '@/components/atlas/CartaMasthead'
 import { CartaLensIndex } from '@/components/atlas/CartaLensIndex'
 import { CartaItinerarios } from '@/components/atlas/CartaItinerarios'
 import { CartaColofon } from '@/components/atlas/CartaColofon'
-import { AtlasToolbar } from '@/components/atlas/AtlasToolbar'
-// atlas-C-P5: URL state encode/decode
-import { hasAtlasCParams } from '@/lib/atlas/url-state'
-// omega-N: story-chart binding + named-outlier data hook
-import { AtlasStoryBinding } from '@/components/atlas/AtlasStoryBinding'
-import { useTopVendorsForCluster } from '@/lib/atlas/use-top-vendors'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VENDOR LOOKUP — known-vendor → cluster mappings across modes.
-//
-// Curated list of well-known Mexican federal vendors with their dominant
-// pattern (P1-P7), sector, and category. Used by the vendor search bar to
-// auto-pin the matching cluster when a user types a known name.
-//
-// V4 will replace this with a backend endpoint that resolves any vendor name
-// to its cluster memberships from the live ARIA queue. For now: 30 hand-
-// curated entries covering every documented GT case + the most-flagged T1
-// vendors. Search is case-insensitive substring.
-// ─────────────────────────────────────────────────────────────────────────────
-// Atlas P6 Frontier C — planetary-mode vendor focus. Also reused for the
-// inline drill-chain's vendorHistory stack (2026-08).
-type FocusedVendorState = {
-  id: number
-  name: string
-  x: number
-  y: number
-  accent?: string
-} | null
-
-interface VendorLookup {
-  query: string                  // normalized search key (uppercase)
-  displayName: string             // canonical display name
-  pattern: string                 // P1..P7
-  sector: string                  // 12-sector code
-  category: string                // real DB category code (no curated categories meta exists)
-  blurb: { en: string; es: string }
-}
-
-const KNOWN_VENDORS: VendorLookup[] = [
-  // GT-anchored cases
-  { query: 'GRUPO FARMACOS',       displayName: 'Grupo Farmacos Especializados', pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: '$133.2B IMSS · COFECE 2018', es: '$133.2B IMSS · COFECE 2018' } },
-  { query: 'LICONSA',              displayName: 'LICONSA',                       pattern: 'P5', sector: 'agricultura',     category: 'alimentos',     blurb: { en: 'Segalmex anchor case · MX$15B', es: 'Caso ancla Segalmex · MX$15B' } },
-  { query: 'HEMOSER',              displayName: 'HEMOSER',                       pattern: 'P2', sector: 'salud',           category: 'consumibles',   blurb: { en: '$17.2B COVID same-day awards', es: '$17.2B COVID adjudicación mismo-día' } },
-  { query: 'TOKA',                 displayName: 'Toka Internacional',            pattern: 'P1', sector: 'tecnologia',      category: 'tic',           blurb: { en: 'IT monopoly · 1,954 contracts at 100% T1', es: 'Monopolio TIC · 1,954 contratos al 100% T1' } },
-  { query: 'EDENRED',              displayName: 'Edenred',                       pattern: 'P1', sector: 'hacienda',        category: 'vales',         blurb: { en: 'Voucher cartel · 96.7% T1', es: 'Cartel de vales · 96.7% T1' } },
-  { query: 'COTEMAR',              displayName: 'COTEMAR',                       pattern: 'P5', sector: 'energia',         category: 'serv_petroleros', blurb: { en: 'PEMEX offshore · 51 contracts all critical', es: 'PEMEX offshore · 51 contratos todos críticos' } },
-  { query: 'ODEBRECHT',            displayName: 'Odebrecht',                     pattern: 'P7', sector: 'energia',         category: 'obra_publica',  blurb: { en: 'PEMEX bribery · MX$10.5M documented', es: 'Sobornos PEMEX · MX$10.5M documentados' } },
-  { query: 'OCEANOGRAFIA',         displayName: 'Oceanografía',                  pattern: 'P3', sector: 'energia',         category: 'serv_petroleros', blurb: { en: 'PEMEX 2014 fraud', es: 'Fraude PEMEX 2014' } },
-  { query: 'GRUPO HIGA',           displayName: 'Grupo Higa',                    pattern: 'P6', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: 'Casa Blanca scandal', es: 'Escándalo Casa Blanca' } },
-  // Pharma cartel cluster
-  { query: 'PISA',                 displayName: 'Laboratorios PiSA',             pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'Pharma cartel member', es: 'Miembro del cártel farmacéutico' } },
-  { query: 'MAYPO',                displayName: 'Farmacéuticos Maypo',           pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'Pharma cartel · 4-vendor 328.6B concentration', es: 'Cártel farmacéutico · concentración 4 proveedores 328.6B' } },
-  { query: 'DIMM',                 displayName: 'DIMM',                          pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'Pharma cartel member · IMSS supplier', es: 'Miembro del cártel · proveedor IMSS' } },
-  { query: 'BIRMEX',               displayName: 'BIRMEX',                        pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS pharma supplier', es: 'Proveedor farmacéutico IMSS' } },
-  { query: 'COMPHARMA',            displayName: 'COMPHARMA',                     pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS DA capture (GT case)', es: 'Captura DA IMSS (caso GT)' } },
-  { query: 'PIHCSA',               displayName: 'PIHCSA',                        pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS pharma capture', es: 'Captura farmacéutica IMSS' } },
-  // P3 intermediaries — pass-through signatures (5.3B avg ticket each)
-  { query: 'ARHNOS',               displayName: 'Constructora ARHNOS',           pattern: 'P3', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '32B / 6 contracts · 5.3B avg ticket', es: '32 mil M / 6 contratos · 5.3 mil M ticket promedio' } },
-  { query: 'PROMOTORA',            displayName: 'Promotora y Desarrolladora MX', pattern: 'P3', sector: 'salud',           category: 'obra_publica',  blurb: { en: '21.1B / 3 IMSS contracts · 7B avg ticket', es: '21.1 mil M / 3 contratos IMSS · 7 mil M ticket' } },
-  { query: 'CAABSA',               displayName: 'CAABSA Constructora',           pattern: 'P3', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '9.2B / 3 CDMX contracts · pass-through', es: '9.2 mil M / 3 contratos CDMX · firma de paso' } },
-  { query: 'GX2',                  displayName: 'GX2 Desarrollos',               pattern: 'P3', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '5.9B / 2 Sinaloa contracts · risk 0.84', es: '5.9 mil M / 2 contratos Sinaloa · riesgo 0.84' } },
-  { query: 'TECNICAS REUNIDAS',    displayName: 'Técnicas Reunidas (ES)',        pattern: 'P3', sector: 'energia',         category: 'serv_petroleros', blurb: { en: '7.2B / 2 PEMEX · legitimate sole-source', es: '7.2 mil M / 2 PEMEX · única fuente legítima' } },
-  { query: 'PRIDE INTERNATIONAL',  displayName: 'Pride International (US)',      pattern: 'P3', sector: 'energia',         category: 'serv_petroleros', blurb: { en: '5.5B PEMEX offshore · sole-source spec', es: '5.5 mil M PEMEX costa afuera · única fuente' } },
-  // Tech license direct-award cluster (≥95% DA, defensible sole-source)
-  { query: 'MICROSOFT',            displayName: 'Microsoft (Corp / Licensing / Mexico)', pattern: 'P5', sector: 'tecnologia',     category: 'tic',           blurb: { en: '24.1B · 97-99% DA · proprietary tech', es: '24.1 mil M · 97-99% AD · tech propietaria' } },
-  { query: 'ORACLE',               displayName: 'Oracle México',                 pattern: 'P5', sector: 'tecnologia',      category: 'tic',           blurb: { en: '8.3B · 98.4% DA · DB licensing', es: '8.3 mil M · 98.4% AD · licencia BD' } },
-  { query: 'IBM',                  displayName: 'IBM México',                    pattern: 'P5', sector: 'tecnologia',      category: 'tic',           blurb: { en: '8.0B · 95.4% DA · enterprise license', es: '8.0 mil M · 95.4% AD · licencia empresarial' } },
-  // Government media buys (red — routed without competition)
-  { query: 'TELEVISA',             displayName: 'Televisa',                      pattern: 'P5', sector: 'gobernacion',     category: 'serv_prof',     blurb: { en: '7.1B · 99.7% DA · gov media buy', es: '7.1 mil M · 99.7% AD · gasto en medios' } },
-  { query: 'AZTECA',               displayName: 'Estudios Azteca',               pattern: 'P5', sector: 'gobernacion',     category: 'serv_prof',     blurb: { en: '5.8B · 99.8% DA · gov media buy', es: '5.8 mil M · 99.8% AD · gasto en medios' } },
-  // DICONSA staple-commodity supply chain
-  { query: 'MOLINOS AZTECA',       displayName: 'Molinos Azteca',                pattern: 'P5', sector: 'agricultura',     category: 'alimentos',     blurb: { en: '7.6B · 99.9% DA · DICONSA flour', es: '7.6 mil M · 99.9% AD · harina DICONSA' } },
-  { query: 'NESTLE',               displayName: 'Marcas Nestlé',                 pattern: 'P5', sector: 'agricultura',     category: 'alimentos',     blurb: { en: '4.4B · 99.9% DA · DICONSA dairy', es: '4.4 mil M · 99.9% AD · lácteos DICONSA' } },
-  // Voucher cluster (welfare-program payment-card monopolies)
-  { query: 'EFECTIVALE',           displayName: 'Efectivale',                    pattern: 'P5', sector: 'hacienda',        category: 'vales',         blurb: { en: '2,210 single-bid wins · 19.6B', es: '2,210 victorias oferta única · 19.6 mil M' } },
-  { query: 'SODEXO',               displayName: 'Sodexo',                        pattern: 'P5', sector: 'hacienda',        category: 'vales',         blurb: { en: '658 single-bid wins · 5.2B', es: '658 victorias oferta única · 5.2 mil M' } },
-  { query: 'SEGALMEX',             displayName: 'Seguridad Alimentaria Mexicana', pattern: 'P5', sector: 'agricultura',    category: 'alimentos',     blurb: { en: '1,014 single-bid · 5.3B at risk 0.94', es: '1,014 oferta única · 5.3 mil M riesgo 0.94' } },
-  // Infrastructure
-  { query: 'CICSA',                displayName: 'CICSA · Grupo Carso',           pattern: 'P1', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: 'Slim infrastructure conglomerate', es: 'Grupo Slim infraestructura' } },
-  { query: 'CONDUMEX',             displayName: 'Condumex · Grupo Carso',        pattern: 'P1', sector: 'energia',         category: 'electricidad',  blurb: { en: 'Cables monopoly', es: 'Monopolio de cables' } },
-  { query: 'ICA',                  displayName: 'ICA Constructora',              pattern: 'P5', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '41.8B · 3 contracts · Tren Maya', es: '41.8 mil M · 3 contratos · Tren Maya' } },
-  { query: 'ALSTOM',               displayName: 'Alstom Transport',              pattern: 'P5', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '37.9B · 2 contracts · Tren Maya · risk 0.92', es: '37.9 mil M · 2 contratos · Tren Maya · riesgo 0.92' } },
-  // Health/IMSS T1 vendors
-  { query: 'BAXTER',               displayName: 'Baxter',                        pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: '⚠ structural FP · multinational', es: '⚠ FP estructural · multinacional' } },
-  { query: 'FRESENIUS',            displayName: 'Fresenius',                     pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: '⚠ structural FP · multinational', es: '⚠ FP estructural · multinacional' } },
-  // CFE / energy
-  { query: 'CFE SUMINISTRADOR',    displayName: 'CFE Suministrador',             pattern: 'P1', sector: 'energia',         category: 'combustibles',  blurb: { en: 'Self-supplier (natural skip)', es: 'Auto-proveedor (omisión natural)' } },
-  // Misc T1
-  { query: 'MERP',                 displayName: 'MERP',                          pattern: 'P3', sector: 'gobernacion',     category: 'serv_prof',     blurb: { en: 'Single-bid arrangement', es: 'Arreglo de licitación única' } },
-  { query: 'TRENA',                displayName: 'TRENA',                         pattern: 'P1', sector: 'gobernacion',     category: 'serv_prof',     blurb: { en: 'Documented monopoly', es: 'Monopolio documentado' } },
-  // Education
-  { query: 'CONALITEG',            displayName: 'CONALITEG',                     pattern: 'P6', sector: 'educacion',       category: 'libros',        blurb: { en: 'SEP textbooks (parastatal)', es: 'Libros SEP (paraestatal)' } },
-]
-
-interface VendorMatch extends VendorLookup {
-  matchScore: number
-}
-
-function searchKnownVendors(query: string, limit = 6): VendorMatch[] {
-  const q = query.trim().toUpperCase()
-  if (q.length < 2) return []
-  return KNOWN_VENDORS
-    .map((v) => {
-      const idx = v.query.indexOf(q)
-      if (idx === -1) return null
-      // Score: lower is better. Prefer prefix matches and short labels.
-      return { ...v, matchScore: idx + (v.query.length - q.length) * 0.1 }
-    })
-    .filter((v): v is VendorMatch => v !== null)
-    .sort((a, b) => a.matchScore - b.matchScore)
-    .slice(0, limit)
-}
-
-// Resolve a vendor's cluster code given the active mode.
-function vendorToClusterCode(v: VendorLookup, mode: ConstellationMode): string {
-  if (mode === 'patterns')   return v.pattern
-  if (mode === 'sectors')    return v.sector
-  if (mode === 'categories') return v.category
-  return 'amlo' // sexenios mode falls back to AMLO since most cases are recent
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Yearly snapshots — illustrative time series of risk distribution.
-//
-// Calibrated to: COMPRANET coverage curve (structures A→D),
-// administrative transitions (Calderón→Peña→AMLO→Sheinbaum), and known
-// scandal cycles (Oceanografía 2014, Odebrecht 2016, COVID 2020). Exact
-// numbers are illustrative — the precompute path for true per-year aggregates
-// is documented in .claude/ACTIVE_WORK.md.
-// ─────────────────────────────────────────────────────────────────────────────
-interface YearSnapshot {
-  year: number
-  totalContracts: number
-  criticalPct: number
-  highPct: number
-  mediumPct: number
-  lowPct: number
-  highlight?: { en: string; es: string }
-}
-
-const YEAR_SNAPSHOTS: YearSnapshot[] = [
-  { year: 2008, totalContracts:  82_000, criticalPct: 4.5, highPct: 5.2, mediumPct: 22.0, lowPct: 68.3, highlight: { en: 'IMSS ghost-company network begins', es: 'inicia red fantasma IMSS' } },
-  { year: 2009, totalContracts:  98_000, criticalPct: 4.8, highPct: 5.5, mediumPct: 22.5, lowPct: 67.2 },
-  { year: 2010, totalContracts: 110_000, criticalPct: 5.0, highPct: 5.8, mediumPct: 23.0, lowPct: 66.2, highlight: { en: 'La Estafa Maestra origins', es: 'orígenes Estafa Maestra' } },
-  { year: 2011, totalContracts: 125_000, criticalPct: 5.2, highPct: 6.0, mediumPct: 23.5, lowPct: 65.3 },
-  { year: 2012, totalContracts: 140_000, criticalPct: 5.5, highPct: 6.4, mediumPct: 24.5, lowPct: 63.6, highlight: { en: 'Calderón → Peña Nieto transition', es: 'transición Calderón → Peña Nieto' } },
-  { year: 2013, totalContracts: 152_000, criticalPct: 5.8, highPct: 6.8, mediumPct: 25.2, lowPct: 62.2 },
-  { year: 2014, totalContracts: 161_000, criticalPct: 6.5, highPct: 7.1, mediumPct: 25.8, lowPct: 60.6, highlight: { en: 'Oceanografía-PEMEX, Casa Blanca', es: 'Oceanografía-PEMEX, Casa Blanca' } },
-  { year: 2015, totalContracts: 168_000, criticalPct: 6.7, highPct: 7.3, mediumPct: 26.2, lowPct: 59.8 },
-  { year: 2016, totalContracts: 174_000, criticalPct: 7.0, highPct: 7.5, mediumPct: 26.5, lowPct: 59.0, highlight: { en: 'Odebrecht-PEMEX bribery surfaces', es: 'sobornos Odebrecht-PEMEX' } },
-  { year: 2017, totalContracts: 178_000, criticalPct: 6.8, highPct: 7.4, mediumPct: 26.8, lowPct: 59.0, highlight: { en: 'Estafa Maestra published', es: 'Estafa Maestra publicada' } },
-  { year: 2018, totalContracts: 175_000, criticalPct: 6.5, highPct: 7.2, mediumPct: 26.5, lowPct: 59.8, highlight: { en: 'Peña Nieto → AMLO transition', es: 'transición Peña → AMLO' } },
-  { year: 2019, totalContracts: 188_000, criticalPct: 7.5, highPct: 7.8, mediumPct: 27.0, lowPct: 57.7, highlight: { en: 'Segalmex begins; AMLO pharma veto', es: 'Segalmex inicia; veto farmacéutico AMLO' } },
-  { year: 2020, totalContracts: 215_000, criticalPct: 9.5, highPct: 9.0, mediumPct: 28.5, lowPct: 53.0, highlight: { en: 'COVID emergency procurement spike (87% DA)', es: 'pico compras emergencia COVID (87% AD)' } },
-  { year: 2021, totalContracts: 205_000, criticalPct: 8.0, highPct: 8.2, mediumPct: 27.8, lowPct: 56.0 },
-  { year: 2022, totalContracts: 198_000, criticalPct: 7.0, highPct: 7.6, mediumPct: 27.2, lowPct: 58.2, highlight: { en: 'Edenred voucher cartel surfaces', es: 'cartel vales Edenred sale a luz' } },
-  { year: 2023, totalContracts: 202_000, criticalPct: 6.5, highPct: 7.4, mediumPct: 27.0, lowPct: 59.1, highlight: { en: 'Toka IT monopoly investigation', es: 'investigación monopolio TIC Toka' } },
-  { year: 2024, totalContracts: 195_000, criticalPct: 6.0, highPct: 7.4, mediumPct: 26.8, lowPct: 59.8, highlight: { en: 'AMLO → Sheinbaum transition', es: 'transición AMLO → Sheinbaum' } },
-  { year: 2025, totalContracts:  85_000, criticalPct: 5.8, highPct: 7.2, mediumPct: 26.5, lowPct: 60.5, highlight: { en: 'Sheinbaum year 1 (partial year)', es: 'Año 1 Sheinbaum (año parcial)' } },
-]
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Atlas-density category meta — 32 categories. Positions are hand-tuned in a
-// 6×6-ish field so they distribute without overlap. T1 weighting is calibrated
-// against ARIA pattern memberships per category.
-// ─────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
-// Build risk-distribution rows from a year snapshot.
-// ─────────────────────────────────────────────────────────────────────────────
-function snapshotToRows(s: YearSnapshot): ConstellationRiskRow[] {
-  const total = s.totalContracts
-  const cCount = Math.round(total * s.criticalPct / 100)
-  const hCount = Math.round(total * s.highPct / 100)
-  const mCount = Math.round(total * s.mediumPct / 100)
-  const lCount = total - cCount - hCount - mCount
-  return [
-    { level: 'critical', count: cCount, pct: s.criticalPct },
-    { level: 'high',     count: hCount, pct: s.highPct },
-    { level: 'medium',   count: mCount, pct: s.mediumPct },
-    { level: 'low',      count: lCount, pct: s.lowPct },
-  ]
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Year Scrubber — slider + autoplay control + year highlight annotation
-// ─────────────────────────────────────────────────────────────────────────────
-interface YearScrubberProps {
-  yearIndex: number
-  setYearIndex: (i: number) => void
-  isPlaying: boolean
-  setIsPlaying: (b: boolean) => void
-  lang: 'en' | 'es'
-}
-
-function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }: YearScrubberProps) {
-  const snapshot = YEAR_SNAPSHOTS[yearIndex]
-  const minYear = YEAR_SNAPSHOTS[0].year
-  const maxYear = YEAR_SNAPSHOTS[YEAR_SNAPSHOTS.length - 1].year
-
-  return (
-    <div className="surface-card rounded-sm p-3 sm:p-4">
-      {/* Mobile: stack year-display + slider above the controls. Desktop: single row. */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
-
-        {/* Year + slider — first on mobile, in middle on desktop */}
-        <div className="flex items-center gap-3 min-w-0 sm:flex-1 sm:order-2">
-          <div
-            className="font-mono font-extrabold text-[22px] leading-none tabular-nums flex-shrink-0"
-            style={{ color: 'var(--color-accent)', fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800 }}
-          >
-            {snapshot.year}
-          </div>
-          <div className="relative flex-1">
-            <input
-              type="range"
-              min={0}
-              max={YEAR_SNAPSHOTS.length - 1}
-              value={yearIndex}
-              onChange={(e) => setYearIndex(parseInt(e.target.value, 10))}
-              className="w-full h-[6px] rounded-full cursor-pointer atlas-year-slider"
-              aria-label={lang === 'en' ? 'Year scrubber' : 'Selector de año'}
-            />
-            <div className="flex items-center justify-between mt-1.5 px-1 text-[8px] font-mono text-text-muted">
-              <span>{minYear}</span>
-              <span>{maxYear}</span>
-            </div>
-          </div>
-          {/* Contracts pill — beside slider on mobile, separate column on desktop */}
-          <div className="text-right flex-shrink-0 sm:hidden">
-            <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
-              {lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'}
-            </div>
-            <div className="font-mono font-bold text-[14px] leading-none mt-1 tabular-nums text-text-primary">
-              {formatNumber(snapshot.totalContracts)}
-            </div>
-          </div>
-        </div>
-
-        {/* Controls row — second on mobile, first on desktop */}
-        <div className="flex items-center gap-2 sm:order-1">
-          <button
-            onClick={() => setYearIndex(Math.max(0, yearIndex - 1))}
-            disabled={yearIndex === 0}
-            className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
-            aria-label={lang === 'en' ? 'Previous year' : 'Año anterior'}
-          >
-            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-          </button>
-
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[12px] font-bold transition-colors"
-            style={{
-              background: isPlaying ? '#dc2626' : 'var(--color-border)',
-              color: isPlaying ? 'white' : 'var(--color-text-primary)',
-            }}
-            aria-label={isPlaying ? (lang === 'en' ? 'Pause' : 'Pausar') : (lang === 'en' ? 'Play' : 'Reproducir')}
-          >
-            {isPlaying
-              ? <><Pause className="h-3 w-3" /> {lang === 'en' ? 'Pause' : 'Pausar'}</>
-              : <><Play className="h-3 w-3" /> {lang === 'en' ? 'Autoplay' : 'Reproducir'}</>
-            }
-          </button>
-
-          <button
-            onClick={() => setYearIndex(Math.min(YEAR_SNAPSHOTS.length - 1, yearIndex + 1))}
-            disabled={yearIndex === YEAR_SNAPSHOTS.length - 1}
-            className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
-            aria-label={lang === 'en' ? 'Next year' : 'Siguiente año'}
-          >
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-
-        {/* Total contracts pill — desktop only (mobile shows it next to slider) */}
-        <div className="text-right flex-shrink-0 hidden sm:block sm:order-3">
-          <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            {lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'}
-          </div>
-          <div className="font-mono font-bold text-[14px] leading-none mt-1 tabular-nums text-text-primary">
-            {formatNumber(snapshot.totalContracts)}
-          </div>
-        </div>
-      </div>
-
-      {/* M-OBS Phase 1 (FALCO): KEY EVENT annotation row deleted — it ate
-          ~40px of vertical chrome below every YearScrubber and duplicated
-          the editorial story copy on the page. */}
-
-      {/* Custom slider styling */}
-      <style>{`
-        .atlas-year-slider {
-          -webkit-appearance: none;
-          appearance: none;
-          background: linear-gradient(
-            to right,
-            #a06820 0%,
-            #a06820 ${(yearIndex / (YEAR_SNAPSHOTS.length - 1)) * 100}%,
-            var(--color-border) ${(yearIndex / (YEAR_SNAPSHOTS.length - 1)) * 100}%,
-            var(--color-border) 100%
-          );
-        }
-        .atlas-year-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: #dc2626;
-          cursor: pointer;
-          border: 2px solid var(--color-background);
-          box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
-          transition: transform 120ms ease;
-        }
-        .atlas-year-slider::-webkit-slider-thumb:hover {
-          transform: scale(1.15);
-        }
-        .atlas-year-slider::-moz-range-thumb {
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: #dc2626;
-          cursor: pointer;
-          border: 2px solid var(--color-background);
-          box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
-        }
-      `}</style>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// useClusterNotes — localStorage-backed personal notes, keyed by cluster code.
-// V3 lite annotation layer. V4 will move this to a backend table with per-user
-// auth so notes can be shared across the team.
-// ─────────────────────────────────────────────────────────────────────────────
-const NOTES_STORAGE_KEY = 'rubli_atlas_notes_v1'
-
-function loadNotes(): Record<string, string> {
-  try {
-    const raw = window.localStorage.getItem(NOTES_STORAGE_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch {
-    return {}
-  }
-}
-
-function saveNotes(notes: Record<string, string>) {
-  try {
-    window.localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes))
-  } catch {
-    // localStorage full or blocked — silently degrade
-  }
-}
-
-function useClusterNotes(): {
-  notes: Record<string, string>
-  setNote: (code: string, text: string) => void
-  deleteNote: (code: string) => void
-  notesCount: number
-} {
-  const [notes, setNotes] = useState<Record<string, string>>(() => loadNotes())
-
-  const setNote = (code: string, text: string) => {
-    setNotes((cur) => {
-      const next = { ...cur }
-      const trimmed = text.trim()
-      if (trimmed) next[code] = trimmed
-      else delete next[code]
-      saveNotes(next)
-      return next
-    })
-  }
-
-  const deleteNote = (code: string) => {
-    setNotes((cur) => {
-      const next = { ...cur }
-      delete next[code]
-      saveNotes(next)
-      return next
-    })
-  }
-
-  const notesCount = Object.keys(notes).length
-
-  return { notes, setNote, deleteNote, notesCount }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// atlas-C-P5: AtlasUrlSync
-//
-// Lives inside AtlasContextProvider so it can read context (zoom, selection).
-// Two jobs:
-//   1. Mount: dispatch hydrate-from-url for zoom + select params (which live
-//      only in context, not in Atlas.tsx's local useState hooks).
-//   2. Debounced URL-write: watches both local state (via props) and context
-//      state to produce the full URLSearchParams and call setSearchParams.
-//      Replaces Atlas.tsx's inline URL-write effect for context-owned fields.
-//
-// The local-state fields (lens, year, pin, floor, compare) are still written
-// here too, so the two effects don't race. The old inline URL-write effect
-// in Atlas() watches [mode, yearIndex, pinnedCode, compareMode, yearIndexB,
-// riskFloor, setSearchParams] — that effect is kept as-is to avoid
-// double-removal risk; both writing the same keys with { replace: true } is
-// idempotent (last write wins within the 250ms window). In practice the
-// context state dispatch happens slightly after mount so AtlasUrlSync wins.
-// ─────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
-// CanvasAtlasView (Atlas P6 Pass 2)
-//
-// Mounts the new Canvas-based constellation engine when ?canvas=1 is set.
-// Lives inside AtlasContextProvider so it can read/dispatch zoom state.
-//
-// Phase-3 follow-ups (not in this pass):
-//   • named vendor outliers (engine accepts name on each dot)
-//   • vendor drawer + halo card + lasso selection
-//   • Z1 sector drill escalation
-//   • cluster floating card content parity with AtlasZoomLayer
-//   • vendor-search auto-fly (M-OBS P5)
-//   • keyboard +/-/0/arrows wired to flyToClusterRef + resetViewRef
+// CanvasAtlasView — the plate body: PadronBand (scope 0) → CohortRegister
+// (scope 1) → VendorPivots (scope 2).
 // ─────────────────────────────────────────────────────────────────────────────
 interface CanvasAtlasViewProps {
   mode: ConstellationMode
   pinnedCode: string | null
   lang: 'en' | 'es'
-  activeMeta: ClusterMeta[]
-  onClusterClickBridge: (code: string) => void
-  riskFloor: 'all' | 'medium' | 'high' | 'critical'
-  namedVendors: NamedVendorDot[]
   /** Scope 1 (Sep 2026): in-page cohort register. State lives in Atlas() —
    *  not here — because `key={constellationKey}` remounts this component on
    *  every lens change, which would otherwise re-read a stale scope/code
@@ -544,10 +78,6 @@ function CanvasAtlasView({
   mode,
   pinnedCode,
   lang,
-  activeMeta,
-  onClusterClickBridge,
-  riskFloor,
-  namedVendors,
   scope,
   cohortCode,
   onCohortSelect,
@@ -560,589 +90,14 @@ function CanvasAtlasView({
   onVendorLoaded,
   period,
 }: CanvasAtlasViewProps) {
-  const state = useAtlasState()
-  const dispatch = useAtlasDispatch()
-  const navigate = useNavigate()
-  const [stageParams] = useSearchParams()
-  // 2026-05-29: faithful-encoding Observatory (bubble scatter, with the
-  // VendorFile "El Expediente" docked panel) is the default macro view.
-  // ?legacy=1 falls back to the canvas constellation, which has a
-  // different, contract-level drill-chain (vendor -> contract -> other
-  // vendors at that institution) that VendorFile doesn't have — kept as
-  // an opt-in for that reason, not because it's the better default.
-  const useFaithfulObservatory = stageParams.get('legacy') !== '1'
   // Stage 2: live per-cluster aggregates for the faithful scatter (patterns +
   // sectors). Falls back to the static meta while loading / for other lenses.
   const { data: clusterStats, isLoading: clusterStatsLoading } = useQuery({
     queryKey: ['atlas-cluster-stats', mode, period],
     queryFn: () => atlasApi.getClusterStats(mode, period ?? undefined),
-    enabled: useFaithfulObservatory && (mode === 'patterns' || mode === 'sectors' || mode === 'categories'),
+    enabled: mode === 'patterns' || mode === 'sectors' || mode === 'categories',
     staleTime: 10 * 60 * 1000,
   })
-  const flyToRef = useRef<FlyToClusterFn | null>(null)
-  const resetRef = useRef<ResetViewFn | null>(null)
-  // Atlas P6 Frontier C — planetary mode: imperative fly to a vendor's world coords.
-  const flyVendorRef = useRef<FlyToPosFn | null>(null)
-
-  // Atlas P6 Frontier C — focused vendor state (LOCAL — not context state, to
-  // avoid polluting the global state machine with a UI-only zoom-into-vendor
-  // mode). When set, contract dots orbit the vendor and the breadcrumb extends.
-  const [focusedVendor, setFocusedVendor] = useState<FocusedVendorState>(null)
-  // Currently shown contract panel (when a contract dot is clicked).
-  const [focusedContract, setFocusedContract] = useState<VendorContractDot | null>(null)
-  // Inline drill-chain (2026-08): back-stack of vendors visited via
-  // "other vendors here" chips on the contract card, so ESC/back walks the
-  // chain one hop at a time instead of exiting planetary mode outright.
-  const [vendorHistory, setVendorHistory] = useState<NonNullable<FocusedVendorState>[]>([])
-  // Double-click detection: remembers the last vendor-dot click time + id,
-  // plus a pending single-click timer so a follow-up click within 320ms can
-  // upgrade the single-click navigation into planetary mode.
-  const lastClickRef = useRef<{ id: string; t: number } | null>(null)
-  const pendingNavRef = useRef<number | null>(null)
-
-  const vendorContractsQuery = useVendorContracts(focusedVendor?.id ?? null)
-  // Inline drill-chain — related vendors at the focused contract's
-  // institution, offered as "jump here" chips on the contract card.
-  const institutionVendorsQuery = useInstitutionRelatedVendors(
-    focusedContract?.institutionId ?? null,
-    focusedVendor?.id ?? null,
-  )
-
-  // Atlas P6 Frontier A — VendorHaloCard at zoom ≥ 18×.
-  // We track the currently hovered dot, its screen-space position (emitted by
-  // the engine), the current zoom level, and the wrapper rect so the card
-  // knows its own clamp boundaries.
-  const wrapperRef = useRef<HTMLDivElement | null>(null)
-  const [hoverInfo, setHoverInfo] = useState<{
-    dot: { id: string; name: string; riskScore: number; sectorColor?: string; isOutlier: boolean }
-    screenX: number
-    screenY: number
-  } | null>(null)
-  const [currentZoom, setCurrentZoom] = useState(1)
-  const [wrapperSize, setWrapperSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 })
-
-  useEffect(() => {
-    const el = wrapperRef.current
-    if (!el) return
-    const update = () => {
-      const r = el.getBoundingClientRect()
-      setWrapperSize({ w: r.width, h: r.height })
-    }
-    update()
-    const ro = new ResizeObserver(update)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  // 2026-05-22 — `latticeDots` (the 1,200-dot Halton fallback) was removed.
-  // It used to paint while the galaxy/zoom queries loaded; users read those
-  // tan low-risk dots as noise rather than identity. The cluster attractor
-  // rings drawn by the engine itself carry the galaxy structure during the
-  // brief load window. `dotsFromRows` and its inputs (`rows`, `seed`) stay
-  // dormant — the SVG legacy path may still resurrect them.
-  const clusters = useMemo(() => clustersFromMeta(activeMeta), [activeMeta])
-
-  // Atlas P6 Frontier B (2026-05-21) — real-vendor galaxy.
-  // Galaxy view: fetch ~10 real vendors per cluster in parallel.
-  // Frontier B hotfix (2026-05-21): cut from 30 → 10 per cluster. At 30 the
-  // load was slow and the dots piled on top of each other — top-10-by-risk
-  // keeps the signal-rich vendors visible without crowding. Zoom view
-  // unchanged (200/cluster). Lattice dots remain as loading fallback.
-  const zoomedCodeForFetch = state.view.kind === 'zoomed-cluster' ? state.view.code : null
-  const galaxyClusterCodes = useMemo(() => activeMeta.map((m) => m.code), [activeMeta])
-  // 2026-05-22 — pulled back from 200 to 80 per cluster after user feedback
-  // "it's too much, I can't even navigate." 80 keeps the cluster swarm visibly
-  // dense (top-80 by risk per cluster — much more than the original 50) while
-  // not flooding the canvas. Zoom view stays at 200 (zoomCluster, line below).
-  // 2026-05-29 de-clutter: 80 → 55 dots/cluster. Fewer dots both thin the
-  // cluster core AND shrink the golden-spiral blob radius (grows with √slot),
-  // so clusters overlap less — addressing the "too clustered" report without
-  // losing the galaxy's sense of scale.
-  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 55, true)
-  const zoomCluster = useZoomedClusterVendors(mode, zoomedCodeForFetch, 200)
-
-  // Position helper — deterministic golden-ratio polar offset around the
-  // cluster attractor. `slot` is the dot's index within its cluster; larger
-  // slots fan farther out so a 200-dot cluster reads as a fanned galaxy
-  // rather than a stacked point. Position is stable across re-renders.
-  const positionForVendor = useCallback(
-    (
-      baseX: number,
-      baseY: number,
-      slot: number,
-      spread: number,
-    ): { x: number; y: number } => {
-      const golden = 2.39996
-      const angle = slot * golden
-      // sqrt growth keeps angular density even at larger radii.
-      const radius = spread * (0.4 + Math.sqrt(slot) * 0.12)
-      return {
-        x: Math.max(0.02, Math.min(0.98, baseX + Math.cos(angle) * radius)),
-        y: Math.max(0.02, Math.min(0.98, baseY + Math.sin(angle) * radius)),
-      }
-    },
-    [],
-  )
-
-  // Build the real-vendor dots from the appropriate galaxy/zoom datasets.
-  const dots = useMemo(() => {
-    const clusterByCode = new Map(clusters.map((c) => [c.code, c]))
-    const slotCounters = new Map<string, number>()
-
-    // When zoomed, render the active cluster as a fanned galaxy (200 dots)
-    // PLUS the other clusters' galaxy cohort (30 each) at low density. Both
-    // sets are clickable.
-    // 2026-05-21 hotfix: merge is now ADDITIVE so the canvas is never empty
-    // during the zoom-cluster fetch. We always include galaxy.vendors; when
-    // zoomCluster.vendors arrives we dedupe by vendor_id and add the 200-cohort.
-    // Without this the zoom-into-cluster flight could land on an empty
-    // attractor while waiting for the 200-vendor query to complete.
-    const sources: GalaxyVendor[] = []
-    const seenIds = new Set<number>()
-    for (const v of galaxy.vendors) {
-      if (!seenIds.has(v.vendorId)) {
-        sources.push(v)
-        seenIds.add(v.vendorId)
-      }
-    }
-    if (zoomedCodeForFetch && zoomCluster.vendors.length > 0) {
-      for (const v of zoomCluster.vendors) {
-        if (!seenIds.has(v.vendorId)) {
-          sources.push(v)
-          seenIds.add(v.vendorId)
-        }
-      }
-    }
-    // Legacy namedVendors (curated GT vendors) as a final fallback — guarantees
-    // the canvas always has SOMETHING to draw even if both queries are loading.
-    for (const nv of namedVendors) {
-      if (!seenIds.has(nv.vendorId)) {
-        sources.push({
-          vendorId: nv.vendorId,
-          name: nv.name,
-          riskScore: nv.riskScore,
-          tier: 1,
-          totalContracts: null,
-          totalAmountMxn: null,
-          primarySectorCode: null,
-          clusterCode: nv.clusterCode,
-        } as GalaxyVendor)
-        seenIds.add(nv.vendorId)
-      }
-    }
-
-    if (sources.length === 0) {
-      // 2026-05-22 — was returning `latticeDots` (1,200 synthetic Halton dots)
-      // as a loading fallback. User report ("FIX THAT BEFORE WE GO TO BED"):
-      // tan low-risk lattice dots speckled across the galaxy view alongside
-      // the real 70 vendor dots and read as noise. The cluster attractor
-      // rings (rendered by the engine itself from `clusters`) already carry
-      // the structural identity of the galaxy view, so returning an empty
-      // array during the brief galaxy-load window paints just rings — clean,
-      // and the real-vendor dots fade in as soon as the batch endpoint resolves.
-      return []
-    }
-
-    const realDots = sources.map((v): import('@/components/atlas/CanvasConstellation').ConstellationDot => {
-      const c = clusterByCode.get(v.clusterCode)
-      const baseX = c?.fx ?? 0.5
-      const baseY = c?.fy ?? 0.5
-      const slot = slotCounters.get(v.clusterCode) ?? 0
-      slotCounters.set(v.clusterCode, slot + 1)
-      // Zoomed cluster fans wider so its 200 dots become a visible galaxy.
-      // Frontier B hotfix (2026-05-21): macro spread 0.045 → 0.085 so the
-      // 10 dots per cluster breathe instead of piling on top of each other.
-      const isZoomedHere = zoomedCodeForFetch === v.clusterCode
-      const spread = isZoomedHere ? 0.12 : 0.085
-      const { x, y } = positionForVendor(baseX, baseY, slot, spread)
-      const lvl: 'critical' | 'high' | 'medium' | 'low' =
-        v.riskScore >= 0.6 ? 'critical'
-        : v.riskScore >= 0.4 ? 'high'
-        : v.riskScore >= 0.25 ? 'medium'
-        : 'low'
-      // 2026-05-29 de-clutter: color encodes RISK in the patterns/sexenios
-      // lenses (where the cluster already groups by pattern/term, so sector
-      // color was just rainbow noise). Sectors/categories lenses keep their
-      // sector identity. With the engine's risk alpha ramp, risk-colored dots
-      // turn the galaxy into a legible hot/cold map instead of confetti.
-      const colorBySector = mode === 'sectors' || mode === 'categories'
-      const sectorHex = colorBySector && v.primarySectorCode ? SECTOR_COLORS[v.primarySectorCode] : undefined
-      return {
-        id: String(v.vendorId),
-        x,
-        y,
-        riskLevel: lvl,
-        clusterCode: v.clusterCode,
-        name: v.name,
-        riskScore: v.riskScore,
-        sectorColor: sectorHex,
-        // All real-vendor dots are clickable (route to /vendors/{id}).
-        // Top-tier (T1) and zoomed-cluster dots render as outliers (larger radius).
-        isOutlier: v.tier === 1 || isZoomedHere,
-      }
-    })
-
-    return realDots
-  }, [
-    galaxy.vendors,
-    zoomCluster.vendors,
-    zoomedCodeForFetch,
-    clusters,
-    namedVendors,
-    positionForVendor,
-    mode,
-  ])
-
-  // Atlas P6 Frontier C — build planetary contract dots when a vendor is focused.
-  // Contract dots ride a deterministic golden-ratio polar ring around the
-  // focused vendor's world coords. Stable across re-renders for a given vendor
-  // because positions are derived from the dot's index in the sorted contract list.
-  const contractDots = useMemo(() => {
-    if (!focusedVendor) return [] as import('@/components/atlas/CanvasConstellation').ConstellationDot[]
-    const rows = vendorContractsQuery.data?.contracts ?? []
-    if (rows.length === 0) return []
-    const golden = 2.39996
-    // Tight orbit — readable at zoom ≥ 18×, contract dots ~6px apart.
-    const baseRadius = 0.012
-    const ringGrowth = 0.0042
-    return rows.map((c, i): import('@/components/atlas/CanvasConstellation').ConstellationDot => {
-      const angle = i * golden
-      const radius = baseRadius + Math.sqrt(i) * ringGrowth
-      const x = Math.max(0.02, Math.min(0.98, focusedVendor.x + Math.cos(angle) * radius))
-      const y = Math.max(0.02, Math.min(0.98, focusedVendor.y + Math.sin(angle) * radius))
-      const rs = c.riskScore
-      const lvl: 'critical' | 'high' | 'medium' | 'low' =
-        c.riskLevel ??
-        (rs !== null && rs >= 0.6 ? 'critical'
-         : rs !== null && rs >= 0.4 ? 'high'
-         : rs !== null && rs >= 0.25 ? 'medium'
-         : 'low')
-      return {
-        id: `contract-${c.id}`,
-        x,
-        y,
-        riskLevel: lvl,
-        riskScore: rs ?? undefined,
-        // Larger radius so contract dots read as distinct from background vendors.
-        isOutlier: true,
-        kind: 'contract',
-      }
-    })
-  }, [focusedVendor, vendorContractsQuery.data])
-
-  const mergedDots = useMemo(() => {
-    if (contractDots.length === 0) return dots
-    return [...dots, ...contractDots]
-  }, [dots, contractDots])
-
-  // Lookup table for click handler: contract dot id → underlying contract.
-  const contractById = useMemo(() => {
-    const map = new Map<string, VendorContractDot>()
-    for (const c of vendorContractsQuery.data?.contracts ?? []) {
-      map.set(`contract-${c.id}`, c)
-    }
-    return map
-  }, [vendorContractsQuery.data])
-
-  // Helper used by both the double-click path and the halo card "Examine"
-  // affordance — enter planetary mode for the given vendor.
-  const enterPlanetaryMode = useCallback(
-    (vendor: { id: number; name: string; x: number; y: number; accent?: string }) => {
-      setFocusedContract(null)
-      setFocusedVendor(vendor)
-      setVendorHistory([])
-      // Tight zoom on the vendor so the orbit is legible.
-      flyVendorRef.current?.(vendor.x, vendor.y, 28)
-    },
-    [],
-  )
-
-  const exitPlanetaryMode = useCallback(() => {
-    setFocusedContract(null)
-    setFocusedVendor(null)
-    setVendorHistory([])
-  }, [])
-
-  // Inline drill-chain — jump the planetary-mode focus to a related vendor
-  // (surfaced on the contract card as "other vendors here"). Reuses the
-  // CURRENT vendor's world coords so the orbit re-centers in place with no
-  // camera fly — the visual equivalent of swapping a detail panel's content
-  // while the view stays anchored. Pushes the vendor we're leaving onto a
-  // stack so ESC/back-arrow can retrace the chain one hop at a time.
-  const jumpToRelatedVendor = useCallback(
-    (vendor: { id: number; name: string }) => {
-      if (!focusedVendor) return
-      setVendorHistory((h) => [...h, focusedVendor])
-      setFocusedVendor({ id: vendor.id, name: vendor.name, x: focusedVendor.x, y: focusedVendor.y, accent: focusedVendor.accent })
-      setFocusedContract(null)
-    },
-    [focusedVendor],
-  )
-
-  // ESC/back-arrow — pop one hop off the vendor-history stack, if any,
-  // before falling through to exitPlanetaryMode. Returns true if it
-  // consumed the back action (caller should not also exitPlanetaryMode).
-  const popVendorHistory = useCallback((): boolean => {
-    if (vendorHistory.length === 0) return false
-    const prev = vendorHistory[vendorHistory.length - 1]
-    setVendorHistory((h) => h.slice(0, -1))
-    setFocusedVendor(prev)
-    setFocusedContract(null)
-    return true
-  }, [vendorHistory])
-
-  const handleDotClick = useCallback(
-    (dot: { id: string; name?: string; x?: number; y?: number; sectorColor?: string; kind?: 'vendor' | 'contract' }) => {
-      // 1. Contract dot → show contract floating card; no navigation.
-      if (dot.kind === 'contract' || dot.id.startsWith('contract-')) {
-        const c = contractById.get(dot.id)
-        if (c) setFocusedContract(c)
-        return
-      }
-      // 2. Vendor dot — detect double-click to enter planetary mode.
-      const isVendorDot = dot.name && /^\d+$/.test(dot.id)
-      if (!isVendorDot) return
-      const now = performance.now()
-      const last = lastClickRef.current
-      if (last && last.id === dot.id && now - last.t < 400) {
-        // Double-click — cancel pending navigation and enter planetary mode.
-        lastClickRef.current = null
-        if (pendingNavRef.current !== null) {
-          window.clearTimeout(pendingNavRef.current)
-          pendingNavRef.current = null
-        }
-        if (typeof dot.x === 'number' && typeof dot.y === 'number') {
-          enterPlanetaryMode({
-            id: Number(dot.id),
-            name: dot.name ?? '',
-            x: dot.x,
-            y: dot.y,
-            accent: dot.sectorColor,
-          })
-        }
-        return
-      }
-      lastClickRef.current = { id: dot.id, t: now }
-      // Single click — defer the navigation by 320ms so a fast second click
-      // upgrades to planetary mode instead of opening the dossier.
-      const dotId = dot.id
-      if (pendingNavRef.current !== null) window.clearTimeout(pendingNavRef.current)
-      pendingNavRef.current = window.setTimeout(() => {
-        pendingNavRef.current = null
-        navigate(`/vendors/${dotId}`)
-      }, 320)
-    },
-    [navigate, contractById, enterPlanetaryMode],
-  )
-
-  const zoomedCode = state.view.kind === 'zoomed-cluster' ? state.view.code : null
-  const isZoomed = zoomedCode !== null
-  const zoomedMeta = useMemo(
-    () => (zoomedCode ? activeMeta.find((m) => m.code === zoomedCode) ?? null : null),
-    [zoomedCode, activeMeta],
-  )
-
-  // M-CLUSTER P5 Spotlight — when a cluster is selected, the first state
-  // is "spotlight only" (galaxy dimmed, small card at cluster position).
-  // Clicking "Browse this cluster" inside the card flips this to false,
-  // which triggers the d3-zoom fly-to + reveals the full bottom dock.
-  // URL: `?browse=1` is added/removed in sync with this flag so the state
-  // survives reload and can be deep-linked. Resets to true on every new
-  // cluster click (handleClusterClick) so each click starts in spotlight.
-  const [spotlightBrowsing, setSpotlightBrowsing] = useState(false)
-  // Reset to spotlight on cluster change (and on initial zoom).
-  useEffect(() => {
-    if (!zoomedCode) {
-      setSpotlightBrowsing(false)
-      return
-    }
-    // On URL hydration, respect `?browse=1` so deep-links land on the dock.
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      if (params.get('browse') === '1') {
-        setSpotlightBrowsing(true)
-      } else {
-        setSpotlightBrowsing(false)
-      }
-    }
-  }, [zoomedCode])
-
-  // Vendors in the currently zoomed cluster.
-  // Atlas P6 Frontier B — sourced from the real /atlas/cluster-vendors fetch
-  // (limit=200) rather than the legacy 3-vendor `namedVendors` mock. Falls back
-  // to galaxy data while the zoom query is in flight so the drawer never
-  // flashes empty. `namedVendors` is also merged in to keep curated GT entries
-  // visible even if the API trims them (deduped by vendorId).
-  const clusterVendors = useMemo(() => {
-    if (!zoomedCode) return [] as NamedVendorDot[]
-    const seen = new Set<number>()
-    const out: NamedVendorDot[] = []
-    const push = (v: NamedVendorDot): void => {
-      if (seen.has(v.vendorId)) return
-      seen.add(v.vendorId)
-      out.push(v)
-    }
-    for (const v of zoomCluster.vendors) {
-      if (v.clusterCode === zoomedCode) push(v)
-    }
-    if (out.length === 0) {
-      for (const v of galaxy.vendors) {
-        if (v.clusterCode === zoomedCode) push(v)
-      }
-    }
-    for (const v of namedVendors) {
-      if (v.clusterCode === zoomedCode) push(v)
-    }
-    return out.sort((a, b) => b.riskScore - a.riskScore)
-  }, [zoomedCode, zoomCluster.vendors, galaxy.vendors, namedVendors])
-  // M-CLUSTER P4 — `topVendors` removed (was passed to old ClusterFloatingCard).
-  // The unified AtlasVendorDrawer receives the full clusterVendors list.
-
-  // M-CLUSTER P5 — Auto-fly only when the user explicitly enters BROWSE
-  // mode. While in spotlight-only state, the galaxy stays at k=1 with a
-  // dimmer overlay; we set pinnedClusterCode (via state) but do NOT zoom.
-  // When spotlightBrowsing flips true (user clicked "Browse"), fly-to fires.
-  // On exit (zoomedCode → null), reset the view back to galaxy.
-  useEffect(() => {
-    if (zoomedCode && spotlightBrowsing && flyToRef.current) {
-      flyToRef.current(zoomedCode)
-    } else if (!zoomedCode && resetRef.current) {
-      resetRef.current()
-    }
-  }, [zoomedCode, spotlightBrowsing])
-
-  // M-CLUSTER P7c — Arrow-key cluster cycling in spotlight.
-  // ← / → step prev/next in the activeMeta order while the spotlight is
-  // open (NOT browsing). Skipped when focus is inside INPUT/TEXTAREA so
-  // vendor-search + personal notes still work. Doesn't conflict with
-  // AtlasShell's existing arrow handler — that one fires
-  // 'atlas:pan-{direction}' custom events which only the legacy
-  // AtlasZoomLayer listens to; CanvasConstellation ignores them.
-  useEffect(() => {
-    if (!zoomedCode || spotlightBrowsing) return
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
-      const idx = activeMeta.findIndex(m => m.code === zoomedCode)
-      if (idx < 0) return
-      const next = e.key === 'ArrowRight'
-        ? activeMeta[(idx + 1) % activeMeta.length]
-        : activeMeta[(idx - 1 + activeMeta.length) % activeMeta.length]
-      e.preventDefault()
-      e.stopPropagation()
-      dispatch({ type: 'zoom-into-cluster', code: next.code })
-    }
-    window.addEventListener('keydown', onKey, true)  // capture phase, beat AtlasShell
-    return () => window.removeEventListener('keydown', onKey, true)
-  }, [zoomedCode, spotlightBrowsing, activeMeta, dispatch])
-
-  // M-CLUSTER P5 — URL sync: push `?browse=1` when expanded into the dock,
-  // remove the param when collapsed back to spotlight. Side-effect only —
-  // does not re-trigger the spotlight state itself.
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const url = new URL(window.location.href)
-    if (zoomedCode && spotlightBrowsing) {
-      url.searchParams.set('browse', '1')
-    } else {
-      url.searchParams.delete('browse')
-    }
-    if (url.toString() !== window.location.href) {
-      window.history.replaceState(null, '', url.toString())
-    }
-  }, [zoomedCode, spotlightBrowsing])
-
-  // ESC pops zoom (consistent with AtlasZoomLayer behavior). When in
-  // planetary mode (focusedVendor !== null), ESC peels back one layer at a
-  // time: first the contract panel (if open), then one hop of the inline
-  // drill-chain (if the user jumped to a related vendor), then planetary
-  // mode itself, then cluster zoom — matching the breadcrumb hierarchy.
-  //
-  // 2026-08-16: AtlasShell (the page-level shell wrapping this component)
-  // has its OWN unconditional Escape listener that dispatches escape-zoom
-  // straight to 'idle' whenever the context view is zoomed — it has no idea
-  // this component is mid-drill-chain, because focusedVendor/focusedContract/
-  // vendorHistory are local state here, not in AtlasContext. Both listeners
-  // are attached to `window`, and since this effect's deps change on every
-  // vendor hop, re-subscription can reorder it AFTER AtlasShell's (stable)
-  // listener — so AtlasShell's blunt reset was winning the race and blowing
-  // past the back-stack entirely. Attaching in the CAPTURE phase + calling
-  // stopPropagation makes this handler run first and suppress AtlasShell's
-  // bubble-phase one, regardless of attachment order.
-  useEffect(() => {
-    if (!isZoomed && !focusedVendor && !focusedContract) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      if (focusedContract) {
-        e.stopPropagation()
-        setFocusedContract(null)
-        return
-      }
-      if (popVendorHistory()) {
-        e.stopPropagation()
-        return
-      }
-      if (focusedVendor) {
-        e.stopPropagation()
-        exitPlanetaryMode()
-        // Re-fly back to the cluster so the user lands where they started.
-        if (zoomedCode) flyToRef.current?.(zoomedCode)
-        return
-      }
-      // Falling through to cluster-zoom exit — let AtlasShell's listener
-      // handle the actual context dispatch; no need to also stopPropagation.
-      dispatch({ type: 'escape-zoom' })
-    }
-    window.addEventListener('keydown', onKey, { capture: true })
-    return () => window.removeEventListener('keydown', onKey, { capture: true })
-  }, [isZoomed, dispatch, focusedVendor, focusedContract, exitPlanetaryMode, popVendorHistory, zoomedCode])
-
-  // Exiting cluster zoom also exits planetary mode — guarantees the canvas
-  // never carries orphan contract dots after the user pops back to galaxy.
-  useEffect(() => {
-    if (!isZoomed && focusedVendor) {
-      setFocusedContract(null)
-      setFocusedVendor(null)
-    }
-  }, [isZoomed, focusedVendor])
-
-  // M-CLUSTER P1 — wire cluster paginator keyboard events to flyTo
-  useEffect(() => {
-    if (!isZoomed || !zoomedMeta) return
-    const onPrev = () => {
-      const idx = clusters.findIndex(c => c.code === zoomedCode)
-      if (idx < 0) return
-      const prev = clusters[(idx - 1 + clusters.length) % clusters.length]
-      flyToRef.current?.(prev.code)
-    }
-    const onNext = () => {
-      const idx = clusters.findIndex(c => c.code === zoomedCode)
-      if (idx < 0) return
-      const next = clusters[(idx + 1) % clusters.length]
-      flyToRef.current?.(next.code)
-    }
-    const onJump = (e: Event) => {
-      const ev = e as CustomEvent<{ index: number }>
-      const target = clusters[ev.detail.index]
-      if (target) flyToRef.current?.(target.code)
-    }
-    window.addEventListener('atlas:cluster-prev', onPrev)
-    window.addEventListener('atlas:cluster-next', onNext)
-    window.addEventListener('atlas:cluster-jump', onJump as EventListener)
-    return () => {
-      window.removeEventListener('atlas:cluster-prev', onPrev)
-      window.removeEventListener('atlas:cluster-next', onNext)
-      window.removeEventListener('atlas:cluster-jump', onJump as EventListener)
-    }
-  }, [isZoomed, zoomedMeta, zoomedCode, clusters])
-
-  // Keyboard zoom/pan events broadcast by AtlasShell (atlas:zoom-in etc.).
-  // Phase 3: wire to engine imperative API. For Pass 2 we no-op pan and
-  // delegate +/- to the engine via reset (zoom-in/out require a new
-  // imperative on the engine — keep additive, defer to Phase 3).
-
   const lensLabelMap: Record<ConstellationMode, { en: string; es: string }> = {
     patterns:   { en: 'Patterns',   es: 'Patrones' },
     sectors:    { en: 'Sectors',    es: 'Sectores' },
@@ -1150,22 +105,6 @@ function CanvasAtlasView({
     sexenios:   { en: 'Terms',      es: 'Sexenios' },
   }
   const lensLabel = lensLabelMap[mode]?.[lang] ?? mode
-  let clusterLabel = zoomedMeta ? `${zoomedMeta.code} ${zoomedMeta.label}` : ''
-  // Atlas P6 Frontier C — when focused on a vendor, append the vendor's name
-  // to the breadcrumb so the user can see "where they are" in the telescope.
-  if (focusedVendor) {
-    const vendorCrumb = focusedVendor.name.length > 32
-      ? `${focusedVendor.name.slice(0, 30)}…`
-      : focusedVendor.name
-    clusterLabel = clusterLabel
-      ? `${clusterLabel} · ${vendorCrumb}`
-      : vendorCrumb
-  }
-
-  const handleClusterClick = (cluster: { code: string }) => {
-    onClusterClickBridge(cluster.code)
-    dispatch({ type: 'zoom-into-cluster', code: cluster.code })
-  }
 
   // Scatter clusters: prefer LIVE aggregates; fall back to static meta while
   // loading or for lenses without a live endpoint (categories/sexenios).
@@ -1210,12 +149,8 @@ function CanvasAtlasView({
     }
   }, [scatterClusters])
 
-  // Scope 1 (Sep 2026): a cohort slice now opens the in-page register
-  // (onCohortSelect, owned by Atlas()) instead of navigating out to
-  // /patterns or /sectors — PadronBand's onSelect wires directly to it.
-  // Escape backs out to scope 0, mirroring the zoom-exit listener below but
-  // scoped to this orthogonal piece of state (faithful-scatter only, never
-  // set while the legacy canvas engine is active).
+  // A cohort slice opens the in-page register (onCohortSelect, owned by
+  // Atlas()). Escape backs out one scope at a time.
   useEffect(() => {
     if (scope !== 'cohorte' && scope !== 'proveedor') return
     const onKey = (e: KeyboardEvent) => {
@@ -1230,21 +165,9 @@ function CanvasAtlasView({
     return () => window.removeEventListener('keydown', onKey)
   }, [scope, onCohortExit, onVendorExit])
 
-  // Field click in the canvas wrapper (background) escapes zoom.
-  // The CanvasConstellation engine handles dot/cluster clicks itself;
-  // we listen on a sibling layer for the "click outside any glyph" case.
-
   return (
-    <div
-      ref={wrapperRef}
-      className="relative"
-      style={
-        useFaithfulObservatory
-          ? { position: 'relative', width: '100%' }
-          : { position: 'relative', width: '100%', aspectRatio: `${840} / ${540}` }
-      }
-    >
-      {useFaithfulObservatory ? (
+    <div className="relative" style={{ position: 'relative', width: '100%' }}>
+      {
         scatterClusters.length === 0 && !clusterStatsLoading ? (
           <p
             className="font-mono text-[12px] text-text-muted py-10 text-center"
@@ -1369,391 +292,7 @@ function CanvasAtlasView({
           </div>
         </>
         )
-      ) : (
-      <>
-      {isZoomed && zoomedMeta && (
-        <AtlasBreadcrumb
-          lang={lang}
-          lensLabel={lensLabel}
-          clusterLabel={clusterLabel}
-          onGoHome={() => {
-            // Atlas P6 Frontier C — back-arrow retraces the inline
-            // drill-chain one hop at a time (related-vendor jumps), THEN
-            // exits planetary mode, THEN exits cluster zoom.
-            if (popVendorHistory()) return
-            if (focusedVendor) {
-              exitPlanetaryMode()
-              if (zoomedCode) flyToRef.current?.(zoomedCode)
-              return
-            }
-            dispatch({ type: 'escape-zoom' })
-            resetRef.current?.()
-          }}
-        />
-      )}
-      <CanvasConstellation
-        dots={mergedDots}
-        clusters={clusters}
-        lang={lang}
-        onClusterClick={handleClusterClick}
-        onDotClick={handleDotClick}
-        onDotHover={(d, pos) => {
-          if (d && d.isOutlier && d.name && pos) {
-            setHoverInfo({
-              dot: {
-                id: d.id,
-                name: d.name,
-                riskScore: d.riskScore ?? 0,
-                sectorColor: d.sectorColor,
-                isOutlier: true,
-              },
-              screenX: pos.x,
-              screenY: pos.y,
-            })
-          } else {
-            setHoverInfo(null)
-          }
-        }}
-        onZoomChange={(info) => setCurrentZoom(info.zoom)}
-        flyToClusterRef={flyToRef}
-        resetViewRef={resetRef}
-        flyToPosRef={flyVendorRef}
-        pinnedClusterCode={pinnedCode ?? zoomedCode}
-        riskFloor={riskFloor}
-      />
-      {/* M-CLUSTER P5 — ClusterMiniMap deprecated by the Spotlight pattern.
-          The spotlight card itself sits at the cluster's spatial position,
-          which carries the same "where am I" information without an extra
-          panel. File preserved for revival if needed. */}
-
-      {/* M-CLUSTER P5 — GALAXY DIMMER + SPOTLIGHT CARD.
-          Shown only when: zoomed + NOT yet browsing + not in planetary
-          mode + wrapper has measured size. Click dimmer → escape zoom. */}
-      {isZoomed && zoomedMeta && !spotlightBrowsing && !focusedVendor && wrapperSize.w > 0 && (
-        <>
-          <GalaxyDimmer
-            clusters={activeMeta.map(m => ({ code: m.code, fx: m.fx, fy: m.fy }))}
-            pinnedCode={zoomedCode}
-            wrapperWidth={wrapperSize.w}
-            wrapperHeight={wrapperSize.h}
-            onJumpToCluster={(code) => dispatch({ type: 'zoom-into-cluster', code })}
-            onDismiss={() => {
-              dispatch({ type: 'escape-zoom' })
-              resetRef.current?.()
-            }}
-          />
-          <SpotlightCard
-            meta={zoomedMeta}
-            topVendors={clusterVendors}
-            wrapperWidth={wrapperSize.w}
-            wrapperHeight={wrapperSize.h}
-            onBrowse={() => setSpotlightBrowsing(true)}
-            onOpenDossier={() => {
-              if (mode === 'patterns' || /^P\d$/.test(zoomedMeta.code)) {
-                navigate(`/patterns/${encodeURIComponent(zoomedMeta.code)}`)
-              } else {
-                navigate(`/aria?pattern=${encodeURIComponent(zoomedMeta.code)}`)
-              }
-            }}
-            onClose={() => {
-              dispatch({ type: 'escape-zoom' })
-              resetRef.current?.()
-            }}
-            lang={lang}
-          />
-        </>
-      )}
-      {hoverInfo && currentZoom >= 18 && (
-        <CanvasVendorHaloCard
-          dot={hoverInfo.dot}
-          screenX={hoverInfo.screenX}
-          screenY={hoverInfo.screenY}
-          wrapperWidth={wrapperSize.w}
-          wrapperHeight={wrapperSize.h}
-          lang={lang}
-        />
-      )}
-      {/* M-CLUSTER P4 — Contract detail panel (planetary mode). Positioned
-          top-right since the cluster card is gone. */}
-      {focusedContract && (
-        <div
-          className="absolute z-30 top-[38px] right-1 sm:top-11 sm:right-3"
-          style={{ pointerEvents: 'auto' }}
-        >
-          <ContractFloatingCard
-            contract={focusedContract}
-            vendorAccentColor={focusedVendor?.accent ?? zoomedMeta?.color}
-            onClose={() => setFocusedContract(null)}
-            lang={lang}
-            relatedVendors={institutionVendorsQuery}
-            onSelectVendor={jumpToRelatedVendor}
-            onViewInstitution={
-              focusedContract.institutionId
-                ? () => navigate(`/institutions/${focusedContract.institutionId}`)
-                : undefined
-            }
-          />
-        </div>
-      )}
-      {/* M-CLUSTER P5 — Bottom dock renders ONLY when the user has flipped
-          past the spotlight into "Browse" mode. From spotlight, "Browse"
-          sets spotlightBrowsing=true → fly-to fires → dock appears. ✕ on
-          the dock or ESC returns to spotlight (NOT galaxy). Second ESC
-          escapes the spotlight (and the zoom). */}
-      {isZoomed && zoomedMeta && spotlightBrowsing && !focusedVendor && (
-        <AtlasVendorDrawer
-          meta={zoomedMeta}
-          clusters={activeMeta}
-          vendors={clusterVendors}
-          onJumpToCluster={(code) => flyToRef.current?.(code)}
-          onClose={() => {
-            // Return to spotlight first; a second click on the dimmer
-            // (or another ✕) escapes zoom entirely. Matches the two-step
-            // ESC behaviour at AtlasShell + Atlas.tsx levels.
-            setSpotlightBrowsing(false)
-            resetRef.current?.()
-          }}
-          onInvestigate={() => {
-            if (mode === 'patterns' || /^P\d$/.test(zoomedMeta.code)) {
-              navigate(`/patterns/${encodeURIComponent(zoomedMeta.code)}`)
-            } else {
-              navigate(`/aria?pattern=${encodeURIComponent(zoomedMeta.code)}`)
-            }
-          }}
-          lang={lang}
-        />
-      )}
-      </>
-      )}
-    </div>
-  )
-}
-
-interface AtlasUrlSyncProps {
-  mode: ConstellationMode
-  yearIndex: number
-  pinnedCode: string | null
-  riskFloor: 'all' | 'medium' | 'high' | 'critical'
-  compareMode: boolean
-  yearIndexB: number
-  /** Ref containing initial zoom code parsed from URL at mount time */
-  initialZoomRef: React.RefObject<string | null>
-  /** Ref containing initial vendor-id selection parsed from URL at mount time */
-  initialSelectRef: React.RefObject<string[]>
-  /** Scope 1 (Sep 2026): owned by Atlas(), passed through so this writer's
-   *  from-scratch URLSearchParams doesn't evict scope/code 250ms after any
-   *  other tracked field changes (e.g. risk floor) while a cohort is open. */
-  scope: 'padron' | 'cohorte' | 'proveedor'
-  cohortCode: string | null
-  /** Scope 2 (Sep 2026): same eviction-guard reasoning as cohortCode. */
-  vendorId: number | null
-  /** Sexenio filter (Sep 2026): same eviction-guard reasoning — owned by
-   *  Atlas(), threaded through so this writer doesn't evict it. */
-  period: string | null
-}
-
-function AtlasUrlSync({
-  mode,
-  yearIndex,
-  pinnedCode,
-  riskFloor,
-  compareMode,
-  yearIndexB,
-  initialZoomRef,
-  initialSelectRef,
-  scope,
-  cohortCode,
-  vendorId,
-  period,
-}: AtlasUrlSyncProps) {
-  const state = useAtlasState()
-  const dispatch = useAtlasDispatch()
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  // Job 1: on mount, dispatch hydrate-from-url for context-only fields (zoom + select).
-  // Local-state fields (lens, year, pin, floor) are handled by the parent Atlas()
-  // mount effect which runs before context is initialized.
-  useEffect(() => {
-    const zoomCode = initialZoomRef.current
-    const selIds = initialSelectRef.current
-
-    const hasZoom = zoomCode && zoomCode.length > 0
-    const hasSel = selIds && selIds.length > 0
-
-    if (hasZoom || hasSel) {
-      const partial: Partial<Pick<AtlasState, 'lens' | 'yearIndex' | 'riskFloor' | 'pinnedCode' | 'view' | 'selection'>> = {}
-      if (hasZoom) {
-        partial.view = { kind: 'zoomed-cluster', code: zoomCode! }
-        partial.pinnedCode = zoomCode!
       }
-      if (hasSel) {
-        partial.selection = new Set(selIds)
-      }
-      dispatch({ type: 'hydrate-from-url', partial })
-    }
-    // Only on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Job 2: debounced URL-write watching all relevant state.
-  // Writes context-owned fields (zoom, select) in addition to local state fields.
-  const zoomedCode = state.view.kind === 'zoomed-cluster' ? state.view.code : null
-  const selectionIds = useMemo(() => [...state.selection].sort(), [state.selection])
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      const params = new URLSearchParams()
-      // Local-state fields
-      if (mode !== 'patterns') params.set('lens', mode)
-      const curYear = YEAR_SNAPSHOTS[yearIndex]?.year
-      if (curYear && curYear !== YEAR_SNAPSHOTS[YEAR_SNAPSHOTS.length - 1].year) {
-        params.set('year', String(curYear))
-      }
-      // Context-owned: zoom takes precedence over pin
-      if (zoomedCode) {
-        params.set('zoom', zoomedCode)
-      } else if (pinnedCode) {
-        params.set('pin', pinnedCode)
-      }
-      if (compareMode && YEAR_SNAPSHOTS[yearIndexB]) {
-        params.set('compare', String(YEAR_SNAPSHOTS[yearIndexB].year))
-      }
-      if (riskFloor !== 'all') params.set('floor', riskFloor)
-      if (selectionIds.length > 0) params.set('select', selectionIds.join(','))
-      // Preserve ?story= param if present (don't evict active story deep-link)
-      const storyParam = searchParams.get('story')
-      if (storyParam) params.set('story', storyParam)
-      // 2026-05-09: also preserve ?z1=true so the spatial-nav feature flag
-      // doesn't get evicted by the URL-state writer 250ms after the user
-      // navigates with the flag set. Without this, /atlas?z1=true was
-      // collapsing to /atlas?lens=... and the Z1 drill-in never fired.
-      const z1Param = searchParams.get('z1')
-      if (z1Param) params.set('z1', z1Param)
-      // 2026-08-16: also preserve ?legacy=1 (opt-in canvas-constellation
-      // engine) for the same reason — otherwise the first lens/year/zoom
-      // change 250ms after landing silently kicks the user back into the
-      // faithful-scatter engine they explicitly opted out of.
-      const legacyParam = searchParams.get('legacy')
-      if (legacyParam) params.set('legacy', legacyParam)
-      // Scope 1/2 (Sep 2026): shareable cohort-register / vendor-pivots deep link.
-      if (scope === 'proveedor' && cohortCode && vendorId) {
-        params.set('scope', 'proveedor')
-        params.set('code', cohortCode)
-        params.set('vendor', String(vendorId))
-      } else if (scope === 'cohorte' && cohortCode) {
-        params.set('scope', 'cohorte')
-        params.set('code', cohortCode)
-      }
-      // Sexenio filter (Sep 2026): shareable, orthogonal to scope.
-      if (period) params.set('period', period)
-      setSearchParams(params, { replace: true })
-    }, 250)
-    return () => clearTimeout(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, yearIndex, pinnedCode, riskFloor, compareMode, yearIndexB, zoomedCode, selectionIds.join(','), scope, cohortCode, vendorId, period, setSearchParams])
-
-  return null
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// atlas-C-FIX: Context-to-local bridge
-// AtlasLeftRail dispatches into AtlasContext (state.lens, state.yearIndex,
-// state.riskFloor, state.pinnedCode), but the constellation reads Atlas.tsx's
-// LOCAL state (mode, yearIndex, ...). Without this bridge, clicking the lens
-// in the left rail updates context but the constellation doesn't re-render.
-// React's setState dedupes by reference equality, so calling unconditionally
-// is a no-op when values haven't changed.
-// ─────────────────────────────────────────────────────────────────────────────
-/**
- * Z1Overlay — renders the spatial-nav Z1 sub-constellation when the user
- * has drilled into a sector via the ?z1=true flag. Sits as an absolute
- * overlay above the AtlasZoomLayer so the legacy CSS-scale zoom is still
- * available behind it and we can A/B between them during iteration.
- */
-function Z1Overlay({ lang }: { lang: 'en' | 'es' }) {
-  const state = useAtlasState()
-  const dispatch = useAtlasDispatch()
-  const navigate = useNavigate()
-  if (state.view.kind !== 'zoomed-sector') return null
-  const view = state.view
-  return (
-    <div
-      className="absolute inset-0 z-10"
-      style={{ background: 'var(--color-background, #faf9f6)' }}
-    >
-      <div className="relative h-full">
-        <Z1SectorMap
-          sectorId={view.sectorId}
-          sectorCode={view.sectorCode}
-          lang={lang}
-          onInstitutionClick={(institutionId, institutionName) => {
-            // Phase 1.3: institution click deep-links to the legacy
-            // /institutions/:id page until Z2 lands. This proves the
-            // navigation primitive end-to-end without committing to the
-            // Z2 sub-constellation render in this commit.
-            dispatch({ type: 'drill-into-institution', institutionId, institutionName })
-            navigate(`/institutions/${institutionId}`)
-          }}
-        />
-        {/* Back button — top-right, always visible */}
-        <button
-          type="button"
-          onClick={() => dispatch({ type: 'escape-zoom' })}
-          className="absolute top-2 right-2 px-2 py-1 text-[12px] font-mono uppercase tracking-[0.14em] rounded-sm hover:bg-background-elevated transition-colors"
-          style={{
-            color: 'var(--color-accent)',
-            border: '1px solid var(--color-border)',
-            background: 'var(--color-background-card)',
-          }}
-        >
-          {lang === 'en' ? '← Zoom out' : '← Alejar'}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function AtlasContextBridge({
-  setMode,
-  setYearIndex,
-  setRiskFloor,
-  setPinnedCode,
-}: {
-  setMode: (m: ConstellationMode) => void
-  setYearIndex: (i: number) => void
-  setRiskFloor: (f: 'all' | 'medium' | 'high' | 'critical') => void
-  setPinnedCode: (c: string | null) => void
-}) {
-  const state = useAtlasState()
-  useEffect(() => { setMode(state.lens) }, [state.lens, setMode])
-  useEffect(() => { setYearIndex(state.yearIndex) }, [state.yearIndex, setYearIndex])
-  useEffect(() => { setRiskFloor(state.riskFloor) }, [state.riskFloor, setRiskFloor])
-  useEffect(() => { setPinnedCode(state.pinnedCode) }, [state.pinnedCode, setPinnedCode])
-  return null
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// atlas-C-P4: Selection count badge
-// Floats above the constellation while the user has vendors selected.
-// Reads selection size from AtlasContext; renders nothing when empty.
-// ─────────────────────────────────────────────────────────────────────────────
-function SelectionBadge({ lang }: { lang: 'en' | 'es' }) {
-  const state = useAtlasState()
-  const dispatch = useAtlasDispatch()
-  const count = state.selection.size
-  if (count === 0) return null
-  return (
-    <div className="mb-2 inline-flex items-center gap-2 rounded-sm border border-accent/40 bg-accent/10 px-2 py-1 text-[12px] font-mono uppercase tracking-[0.12em] text-accent">
-      <span className="font-bold">{count}</span>
-      <span>{lang === 'en' ? 'selected' : 'seleccionados'}</span>
-      <button
-        type="button"
-        onClick={() => dispatch({ type: 'clear-selection' })}
-        className="ml-1 rounded-sm border border-accent/30 px-1.5 py-0.5 text-[13px] hover:bg-accent/20"
-        aria-label={lang === 'en' ? 'Clear selection' : 'Limpiar selección'}
-      >
-        {lang === 'en' ? 'Clear' : 'Limpiar'}
-      </button>
     </div>
   )
 }
@@ -1766,26 +305,6 @@ export default function Atlas() {
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
   const navigate = useNavigate()
 
-  // 2026-05-11: redirect /atlas?z1=true → /explore. The ?z1=true experimental
-  // flag was the abandoned in-Atlas attempt at spatial-nav drill; the
-  // production version now lives at /explore (Phase 7). Preserve any
-  // sector/year params so deep-links still land on the right place.
-  // Harness was getting 4 nav errors per hour on /atlas?z1=true&lens=sectors.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('z1') === 'true') {
-      const next = new URLSearchParams()
-      // Map ?lens=sectors → no-op (Z0 is the system view), ?lens=patterns
-      // also goes to Z0 since the new /explore is sector-first.
-      // Preserve year if present.
-      const year = params.get('year')
-      if (year) next.set('year', year)
-      const replace = next.toString() ? `/explore?${next}` : '/explore'
-      navigate(replace, { replace: true })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   // Read URL params synchronously so AtlasContextProvider.initialState is correct
   // on first render. Without this, the left rail shows "Patterns" active even when
   // ?lens=sectors is in the URL (context initializes before the mount useEffect fires).
@@ -1794,46 +313,19 @@ export default function Atlas() {
     const l = p.get('lens') as ConstellationMode | null
     return (l && ['patterns', 'sectors', 'categories'].includes(l)) ? l : 'patterns'
   })
-  const [yearIndex, setYearIndex] = useState<number>(() => {
-    const p = new URLSearchParams(window.location.search)
-    const year = p.get('year')
-    if (year) {
-      const yi = YEAR_SNAPSHOTS.findIndex((s) => String(s.year) === year)
-      if (yi >= 0) return yi
-    }
-    return YEAR_SNAPSHOTS.length - 1
-  })
-  const [isPlaying, setIsPlaying] = useState<boolean>(false)
-  const [selectedClusterCode, setSelectedClusterCode] = useState<string | null>(null)
   const [pinnedCode, setPinnedCode] = useState<string | null>(() => {
     const p = new URLSearchParams(window.location.search)
-    return p.get('zoom') || p.get('pin') || null
+    return p.get('pin') || null
   })
-  // Most recently picked vendor — shown as a "Found X" badge near the toolbar.
-  const [foundVendor, setFoundVendor] = useState<VendorLookup | null>(null)
-  // Personal notes per cluster — localStorage-backed. Hook is preserved for future
-  // reuse (the inline-rendered notes UI was removed with the right rail in P2);
-  // its localStorage side-effects keep working so older saved notes are not lost.
-  useClusterNotes()
   // V6: long-form stories (replaces brief tours). A story is paused by
   // default when the user opens it; pressing Play autoplays through chapters.
   const [activeStory, setActiveStory] = useState<Story | null>(null)
   const [activeChapter, setActiveChapter] = useState<number>(0)
   const [storyPlaying, setStoryPlaying] = useState<boolean>(false)
   const [storyEnded, setStoryEnded] = useState<boolean>(false)
-  // omega-N N2: cluster codes to highlight (driven by AtlasStoryBinding)
-  const [highlightedClusterCodes, setHighlightedClusterCodes] = useState<string[]>([])
   const [storiesMenuOpen, setStoriesMenuOpen] = useState<boolean>(false)
   // URL-state sharing
   const [searchParams, setSearchParams] = useSearchParams()
-  // Risk-floor filter — when set, dots below the floor are dropped from the
-  // population; remaining levels redistribute proportionally so the field
-  // re-densifies around the focused band.
-  const [riskFloor, setRiskFloor] = useState<'all' | 'medium' | 'high' | 'critical'>(() => {
-    const p = new URLSearchParams(window.location.search)
-    const f = p.get('floor')
-    return (f && ['all', 'medium', 'high', 'critical'].includes(f)) ? f as 'all' | 'medium' | 'high' | 'critical' : 'all'
-  })
   // Sexenio global time filter (Sep 2026) — API vocabulary
   // (fox|calderon|pena_nieto|amlo|sheinbaum), validated against
   // PERIOD_API_KEY. Orthogonal to lens/scope: changing it does NOT reset
@@ -1879,18 +371,6 @@ export default function Atlas() {
   const [vendorScopeInfo, setVendorScopeInfo] = useState<
     { vendorId: number; label: string; institutions: number; coBidders: number; categories: number } | null
   >(null)
-  // Compare mode — when true, render a second constellation card with its own year
-  const [compareMode, setCompareMode] = useState<boolean>(false)
-  // Year B defaults to a contrasting year vs year A — Peña 2014 vs COVID 2020
-  const [yearIndexB, setYearIndexB] = useState<number>(
-    YEAR_SNAPSHOTS.findIndex((s) => s.year === 2014),
-  )
-  const [isPlayingB, setIsPlayingB] = useState<boolean>(false)
-
-  // atlas-C-P5: refs for URL-decoded zoom/select — populated by mount effect,
-  // consumed by AtlasUrlSync (which lives inside the context provider).
-  const initialZoomRef = useRef<string | null>(null)
-  const initialSelectRef = useRef<string[]>([])
 
   // Scope 1: changing lens exits the cohort register. useLayoutEffect (not
   // useEffect) so this resolves before the browser paints — CanvasAtlasView
@@ -1910,54 +390,19 @@ export default function Atlas() {
     }
   }, [mode])
 
-  // Auto-play loop — advance year every 1.6s
-  useEffect(() => {
-    if (!isPlaying) return
-    const id = setInterval(() => {
-      setYearIndex((y) => (y >= YEAR_SNAPSHOTS.length - 1 ? 0 : y + 1))
-    }, 2400)
-    return () => clearInterval(id)
-  }, [isPlaying])
-
-  // Auto-play loop for compare mode's second canvas
-  useEffect(() => {
-    if (!isPlayingB || !compareMode) return
-    const id = setInterval(() => {
-      setYearIndexB((y) => (y >= YEAR_SNAPSHOTS.length - 1 ? 0 : y + 1))
-    }, 2400)
-    return () => clearInterval(id)
-  }, [isPlayingB, compareMode])
-
-  // Sync interactive state back to URL so shareable links stay current after
-  // the user switches lens, year, pin, or risk floor.
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search)
-    p.set('lens', mode)
-    const year = YEAR_SNAPSHOTS[yearIndex]?.year
-    if (year && yearIndex < YEAR_SNAPSHOTS.length - 1) p.set('year', String(year))
-    else p.delete('year')
-    if (pinnedCode) p.set('pin', pinnedCode); else p.delete('pin')
-    if (riskFloor !== 'all') p.set('floor', riskFloor); else p.delete('floor')
-    window.history.replaceState(null, '', `${window.location.pathname}?${p.toString()}`)
-  }, [mode, yearIndex, pinnedCode, riskFloor])
-
   // ─── STORY playback ──────────────────────────────────────────────────────
-  // Each chapter applies (mode, year, pin) and either auto-advances after
-  // its dwellMs (when storyPlaying) or waits for the user to hit Continue.
-  // The chart is interactive during a chapter — clicking clusters opens the
-  // side panel without breaking the story.
+  // Each chapter applies (mode, pin) — the pin spotlights that cohort's slice
+  // in PadronBand — and either auto-advances after its dwellMs (when
+  // storyPlaying) or waits for the user to hit Continue. The plate stays
+  // interactive during a chapter. chapter.state.year is legacy data from the
+  // year-scrubber era and is ignored: sexenio is the only time filter.
   useEffect(() => {
     if (!activeStory) return
     const chapter = activeStory.chapters[activeChapter]
     if (!chapter) return
-    // Apply chapter state
     setMode(chapter.state.mode)
-    const yi = YEAR_SNAPSHOTS.findIndex((s) => s.year === chapter.state.year)
-    if (yi >= 0) setYearIndex(yi)
     setPinnedCode(chapter.state.pinnedCode)
-    setIsPlaying(false) // pause normal year-autoplay during a story
     setStoryEnded(false)
-    // Don't auto-clear selectedClusterCode — let reader keep panel open.
   }, [activeStory, activeChapter])
 
   // Auto-advance chapters when storyPlaying is true
@@ -1977,47 +422,11 @@ export default function Atlas() {
   }, [activeStory, activeChapter, storyPlaying])
 
   // ─── URL STATE: read params on mount, push state on change ──────────────
-  // This lets users share a link to a specific atlas view.
-  // ?lens=patterns&year=2020&pin=P5&compare=2014&floor=critical&zoom=P5&select=id1,id2
+  // Shareable view: ?lens=sectors&period=amlo&scope=cohorte&code=salud&pin=P5&story=<id>
+  // (scope=proveedor adds &vendor=<id>). lens/pin/period/scope/code/vendor are
+  // also read synchronously in the useState initializers above; this effect
+  // only handles ?story=.
   useEffect(() => {
-    const lens = searchParams.get('lens') as ConstellationMode | null
-    const year = searchParams.get('year')
-    const pin = searchParams.get('pin')
-    const compare = searchParams.get('compare')
-    const floor = searchParams.get('floor') as typeof riskFloor | null
-
-    if (lens && ['patterns', 'sectors', 'categories'].includes(lens)) {
-      setMode(lens)
-    }
-    if (year) {
-      const yi = YEAR_SNAPSHOTS.findIndex((s) => String(s.year) === year)
-      if (yi >= 0) setYearIndex(yi)
-    }
-    // zoom takes precedence over pin in the URL
-    const zoom = searchParams.get('zoom')
-    if (zoom && zoom.length > 0 && zoom.length <= 32) {
-      // Store in ref; AtlasUrlSync dispatches zoom-into-cluster on mount
-      initialZoomRef.current = zoom
-      setPinnedCode(zoom) // also pin so initial state is consistent
-    } else if (pin) {
-      setPinnedCode(pin)
-    }
-    if (compare) {
-      const yi = YEAR_SNAPSHOTS.findIndex((s) => String(s.year) === compare)
-      if (yi >= 0) {
-        setYearIndexB(yi)
-        setCompareMode(true)
-      }
-    }
-    if (floor && ['all', 'medium', 'high', 'critical'].includes(floor)) {
-      setRiskFloor(floor)
-    }
-    // atlas-C-P5: parse select param → initialSelectRef (consumed by AtlasUrlSync)
-    const selectRaw = searchParams.get('select')
-    if (selectRaw && selectRaw.length > 0) {
-      const ids = selectRaw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 500)
-      if (ids.length > 0) initialSelectRef.current = ids
-    }
     // ?story=<id> auto-launches an Observatory tour. Used by the long-form
     // /stories pages to deep-link readers from the analytical article into
     // the visual trailer. Suppresses the first-visit auto-tour if present.
@@ -2035,26 +444,19 @@ export default function Atlas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Sync URL when state changes (debounced — avoids history spam during scrub)
+  // Sync URL when state changes (debounced — avoids history spam during scrub).
+  // Sole URL writer (2026-09): the undebounced replaceState effect and the
+  // AtlasUrlSync/AtlasContext debounced writer were consolidated into this
+  // one — three writers racing on the same params was the root cause of
+  // ?story= and ?scope= getting evicted mid-session.
   useEffect(() => {
     const id = setTimeout(() => {
       const params = new URLSearchParams()
       if (mode !== 'patterns') params.set('lens', mode)
-      const curYear = YEAR_SNAPSHOTS[yearIndex]?.year
-      if (curYear && curYear !== YEAR_SNAPSHOTS[YEAR_SNAPSHOTS.length - 1].year) {
-        params.set('year', String(curYear))
-      }
       if (pinnedCode) params.set('pin', pinnedCode)
-      if (compareMode && YEAR_SNAPSHOTS[yearIndexB]) {
-        params.set('compare', String(YEAR_SNAPSHOTS[yearIndexB].year))
-      }
-      if (riskFloor !== 'all') params.set('floor', riskFloor)
-      // 2026-05-09: preserve z1 flag (see same fix in the other URL writer above)
-      const z1Param = searchParams.get('z1')
-      if (z1Param) params.set('z1', z1Param)
-      // 2026-08-16: preserve legacy flag (see same fix in the other URL writer above)
-      const legacyParam = searchParams.get('legacy')
-      if (legacyParam) params.set('legacy', legacyParam)
+      // Preserve ?story= so a playing story survives lens/pin/scope writes.
+      const storyParam = searchParams.get('story')
+      if (storyParam) params.set('story', storyParam)
       // Scope 1/2 (Sep 2026): shareable cohort-register / vendor-pivots deep link.
       if (atlasScope === 'proveedor' && cohortCode && vendorId) {
         params.set('scope', 'proveedor')
@@ -2069,7 +471,7 @@ export default function Atlas() {
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
-  }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, atlasScope, cohortCode, vendorId, period, setSearchParams])
+  }, [mode, pinnedCode, atlasScope, cohortCode, vendorId, period, searchParams, setSearchParams])
 
   // V5: first-visit auto-tour. Launch "The Pharmaceutical Cartel" automatically
   // the first time a user lands on /atlas with no URL state. Subsequent visits
@@ -2077,8 +479,8 @@ export default function Atlas() {
   // ?story=<id> arrivals also count as "visited" — the explicit story param
   // means the reader is being deep-linked from a long-form page and the
   // auto-tour would compete with their intended story.
-  // atlas-C-P5: also skip if URL contains any Atlas-C params (zoom, select,
-  // floor, lens, pin) — the user has a specific view they want to restore.
+  // Also skip when the URL carries any state (lens, pin, scope, period…) —
+  // the user has a specific view they want to restore.
   useEffect(() => {
     const VISITED_KEY = 'rubli_atlas_visited_v1'
     // D-048: read the flag synchronously from localStorage AND from the
@@ -2096,14 +498,13 @@ export default function Atlas() {
     const rawSearch = typeof window !== 'undefined' ? window.location.search : ''
     const hasUrlState = rawSearch.length > 1 // accounts for the leading "?"
     const liveParams = new URLSearchParams(rawSearch)
-    const hasSharedState = hasAtlasCParams(liveParams)
     // 2026-05-08 audit fix: on phones (<768px) the chapter card pushes the
     // constellation off-screen — suppress the first-visit auto-launch on
     // mobile; the user can still tap "Play story" explicitly. Don't set the
     // visited flag so they still get the tour when they later open the same
     // URL on desktop.
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-    if (!hasUrlState && !hasSharedState && !isMobile) {
+    if (!hasUrlState && !isMobile) {
       // Wait briefly for the page to settle before launching
       const id = setTimeout(() => {
         // V6: launch a long-form story for first-time visitors
@@ -2114,8 +515,8 @@ export default function Atlas() {
       }, 1200)
       return () => clearTimeout(id)
     }
-    // Mark as visited if arriving via ?story= or any Atlas-C shared state
-    if (liveParams.get('story') || hasSharedState) {
+    // Mark as visited if arriving via ?story= or any shared state
+    if (liveParams.get('story') || hasUrlState) {
       try { window.localStorage.setItem(VISITED_KEY, '1') } catch {}
     }
     // intentionally only on mount — do NOT include searchParams in deps,
@@ -2123,171 +524,26 @@ export default function Atlas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Pull live dashboard data — feeds yearly_trends overrides and risk fallback.
-  // (The aria-stats useQuery here previously fed a toolbar T1 counter; that
-  // counter was removed with the rest of the heavy chrome in M-OBS P1, so the
-  // query was dead weight — dropped.)
+  // Live dashboard data — only the total contract count is read (CartaColofon).
   const { data: dashboard } = useQuery({
     queryKey: ['atlas', 'dashboard'],
     queryFn: () => analysisApi.getFastDashboard(),
     staleTime: 5 * 60 * 1000,
   })
 
-  // Look up live yearly aggregates by year (when dashboard.yearly_trends is
-  // present). When a real entry exists we use real contract counts AND scale
-  // the snapshot's risk distribution by the real high_risk_pct — closer to
-  // honest data, with snapshot pcts as the prior.
-  const liveYearMap = useMemo(() => {
-    const trends = (dashboard?.yearly_trends ?? []) as YearOverYearChange[]
-    const m: Record<number, YearOverYearChange> = {}
-    for (const t of trends) {
-      if (t && typeof t.year === 'number') m[t.year] = t
-    }
-    return m
-  }, [dashboard])
-
-  // (`usingLiveData` was used to flag the caption when M-OBS replaced the
-  // PlateFrame caption with its own — the flag is no longer read but the
-  // liveYearMap computation above is still needed by snapshotToRows. Kept.)
-
-  // Build effective snapshot for a given year — overrides totalContracts and
-  // (when available) reshapes pcts using real high_risk_pct.
-  const effectiveSnapshot = (yi: number): YearSnapshot => {
-    const base = YEAR_SNAPSHOTS[yi]
-    const live = liveYearMap[base.year]
-    if (!live) return base
-
-    const total = live.contracts && live.contracts > 0 ? live.contracts : base.totalContracts
-
-    // If live high_risk_pct is provided, rescale critical+high pcts so their sum
-    // matches it, while preserving the snapshot's critical:high ratio.
-    let { criticalPct, highPct, mediumPct, lowPct } = base
-    if (typeof live.high_risk_pct === 'number' && live.high_risk_pct > 0 && live.high_risk_pct < 100) {
-      const baseHigh = base.criticalPct + base.highPct || 1
-      const ratio = live.high_risk_pct / baseHigh
-      criticalPct = base.criticalPct * ratio
-      highPct = base.highPct * ratio
-      const remaining = Math.max(0, 100 - criticalPct - highPct)
-      const baseLow = base.mediumPct + base.lowPct || 1
-      mediumPct = remaining * (base.mediumPct / baseLow)
-      lowPct = remaining * (base.lowPct / baseLow)
-    }
-
-    return {
-      year: base.year,
-      totalContracts: total,
-      criticalPct,
-      highPct,
-      mediumPct,
-      lowPct,
-      highlight: base.highlight,
-    }
-  }
-
-  // Apply the risk floor by suppressing levels below the threshold and
-  // proportionally redistributing the remaining percentages to sum to 100.
-  // Counts stay as-is (informational); pcts are renormalized so the
-  // constellation re-densifies around the focused band.
-  const applyRiskFloor = (rs: ConstellationRiskRow[]): ConstellationRiskRow[] => {
-    if (riskFloor === 'all') return rs
-    const ORDER: ConstellationRiskRow['level'][] = ['critical', 'high', 'medium', 'low']
-    const floorIdx = ORDER.indexOf(riskFloor as ConstellationRiskRow['level'])
-    const allowed = new Set(ORDER.slice(0, floorIdx + 1))
-    const filtered = rs.filter((r) => allowed.has(r.level))
-    const totalPct = filtered.reduce((s, r) => s + r.pct, 0) || 1
-    return filtered.map((r) => ({
-      level: r.level,
-      count: r.count,
-      pct: (r.pct / totalPct) * 100,
-    }))
-  }
-
-  // Current year's snapshot → constellation data (with live overrides if available)
-  const snapshot = effectiveSnapshot(yearIndex)
-  const rows = useMemo(() => applyRiskFloor(snapshotToRows(snapshot)), [snapshot, riskFloor])
-
-  // Fallback rows from /stats/dashboard/fast risk_distribution (already
-  // fetched above for yearly_trends — reuse the same query).
-  const fallbackRows: ConstellationRiskRow[] = useMemo(() => {
-    const rd: RiskDistribution[] = Array.isArray(dashboard?.risk_distribution)
-      ? (dashboard!.risk_distribution as RiskDistribution[])
-      : []
-    if (rd.length >= 4) {
-      return rd.map((r) => ({
-        level: r.risk_level as ConstellationRiskRow['level'],
-        count: r.count,
-        pct: r.percentage,
-      }))
-    }
-    return rows
-  }, [dashboard, rows])
-
-  // Re-key the constellation per MODE only — year changes within a mode
-  // smoothly interpolate dot positions via CSS transitions instead of
-  // full remount. Mode changes still unmount + retrigger the cinematic reveal
-  // because the meta arrays / attractor positions change entirely.
-  const constellationKey = mode
-
-  // atlas-C-P2: the full meta array the constellation uses — needed by
-  // AtlasZoomLayer to look up attractor coords for semantic zoom.
-  // Mirrors the activeMeta logic inside ConcentrationConstellation.tsx.
-  const activeConstellationMeta: ClusterMeta[] = useMemo(() => {
-    const isEs = lang === 'es'
-    if (mode === 'sectors')    return buildSectorMeta(isEs)
-    // Categories has no curated meta. The hand-typed table that used to live
-    // here rendered 33 invented cohorts with made-up counts and positions;
-    // the lens now shows live data only (empty until the backend serves it).
-    if (mode === 'categories') return []
-    return buildPatternMeta(isEs)
-  }, [mode, lang])
-
-  // omega-N-FIX2: named outliers ONLY when a cluster is selected.
-  // Macro view stays clean (anonymous dots only); zoom into a cluster to
-  // see its top 3 named vendors. selectedClusterCode is set on cluster
-  // click via the existing handleClusterClick path.
-  const namedVendors = useTopVendorsForCluster(mode, selectedClusterCode)
-
-  const handleClusterClick = (clusterCode: string) => {
-    setSelectedClusterCode(clusterCode)
-  }
-  // 2026-05-09 spatial-nav Phase 1.3 — feature flag for the Z1 sub-
-  // constellation render. When set on /atlas?z1=true AND the user is on
-  // the sectors lens, AtlasZoomLayer additionally dispatches
-  // drill-into-sector and the AtlasContextBridge mounts <Z1SectorMap>
-  // as an overlay on the zoomed view.
-  const z1Enabled = searchParams.get('z1') === 'true'
-  // atlas-P6 Pass 3b (2026-05-21): Canvas engine is now the DEFAULT.
-  // The breadcrumb, floating cluster card, and vendor drawer are wired
-  // (Pass 3a). Remaining legacy-only features (selection / lasso /
-  // VendorHaloCard at deep zoom / Z1 sector escalation) fall back to the
-  // SVG AtlasZoomLayer when the URL has ?legacy=1.
-  // ?canvas=1 still works for forward-compat with shared links.
-  const canvasEnabled =
-    searchParams.get('legacy') !== '1' || searchParams.get('canvas') === '1'
-
-  // Faithful Observatory: all controls live in AtlasToolbar, so the 240px left
-  // rail is redundant — drop it and give the width to the constellation.
-  const faithfulObservatory = searchParams.get('legacy') !== '1'
-
-  const totalContractsForYear = snapshot.totalContracts
-
-  // §7 «La Carta del Cielo» — honest plate caption for the faithful scatter.
-  // Kills PlateFrame's default "constellation of N contracts, year YYYY" (three
-  // lies: it's a cohort scatter, N is illustrative, year is meaningless all-time).
-  // Live lenses stamp "en vivo"; lenses without live data say so and draw nothing.
-  // Same query key as CanvasAtlasView's — React Query dedupes, so this costs
-  // no extra request. Needed because the static meta is [] for categories
-  // (step 00) and the caption must count what is actually drawn.
+  // §7 «La Carta del Cielo» — honest plate caption. Same query key as
+  // CanvasAtlasView's — React Query dedupes, so this costs no extra request.
+  // The caption must count what is actually drawn.
   const { data: liveClusterStats } = useQuery({
     queryKey: ['atlas-cluster-stats', mode, period],
     queryFn: () => atlasApi.getClusterStats(mode, period ?? undefined),
-    enabled: faithfulObservatory && (mode === 'patterns' || mode === 'sectors' || mode === 'categories'),
+    enabled: mode === 'patterns' || mode === 'sectors' || mode === 'categories',
     staleTime: 10 * 60 * 1000,
   })
   const liveClusterCount = liveClusterStats?.clusters.length ?? 0
 
   const cartaCaption = useMemo(() => {
-    const K = faithfulObservatory ? liveClusterCount : activeConstellationMeta.length
+    const K = liveClusterCount
     const folioLetter: Record<ConstellationMode, string> = {
       patterns: 'a', sectors: 'b', categories: 'c', sexenios: 'd',
     }
@@ -2324,8 +580,8 @@ export default function Atlas() {
     if (atlasScope === 'cohorte' && cohortCode && cohortScopeInfo && cohortScopeInfo.code === cohortCode) {
       const { label, loaded, total } = cohortScopeInfo
       return lang === 'en'
-        ? `Plate IX·${letter}·${cohortCode} — register of ${loaded} of ${total} vendors in ${label}, ranked by risk indicator; amount = lifetime contracted value. Live aggregates from the register.${periodNote ? ` ${periodNote}` : ''}`
-        : `Lámina IX·${letter}·${cohortCode} — registro de ${loaded} de ${total} proveedores de ${label}, ordenados por indicador de riesgo; monto = valor contratado de por vida. Agregados en vivo del padrón.${periodNote ? ` ${periodNote}` : ''}`
+        ? `Plate IX·${letter}·${cohortCode} — register of ${loaded} of ${total} vendors in ${label}, ranked by contracted value; amount = lifetime contracted value. Live aggregates from the register.${periodNote ? ` ${periodNote}` : ''}`
+        : `Lámina IX·${letter}·${cohortCode} — registro de ${loaded} de ${total} proveedores de ${label}, ordenados por valor contratado; monto = valor contratado de por vida. Agregados en vivo del padrón.${periodNote ? ` ${periodNote}` : ''}`
     }
     if (lang === 'en') {
       if (!isLive || K === 0) {
@@ -2337,26 +593,8 @@ export default function Atlas() {
       return `Lámina IX·${letter} — sin datos en vivo para ${lensLabel} todavía. No se dibuja nada hasta que el padrón los sirva; esta lámina no lleva sustitutos curados · corte de datos 28·09·2025.`
     }
     return `Lámina IX·${letter} — la banda completa es lo que contrataron ${K} ${lensLabel}; el ancho de cada rebanada es su valor, y el achurado sube hasta la parte de sus proveedores en alto o crítico — una tasa de proveedores, no de pesos. Línea roja = esa tasa. Agregados en vivo del padrón · corte de datos 28·09·2025.${periodNote ? ` ${periodNote}` : ''}`
-  }, [mode, lang, activeConstellationMeta, faithfulObservatory, liveClusterCount, atlasScope, cohortCode, cohortScopeInfo, vendorId, vendorScopeInfo, period, liveClusterStats])
+  }, [mode, lang, liveClusterCount, atlasScope, cohortCode, cohortScopeInfo, vendorId, vendorScopeInfo, period, liveClusterStats])
 
-  // ─── atlas-C-P1: bridge callbacks for left rail ──────────────────────────
-  // The left rail dispatches into AtlasContext AND calls these bridge
-  // callbacks to keep Atlas.tsx's existing useState hooks in sync.
-  // When P2-P5 progressively migrate state into context, these callbacks
-  // will be removed one by one.
-  const handleRailYearChange = (idx: number) => setYearIndex(idx)
-  const handleRailPlayChange = (playing: boolean) => setIsPlaying(playing)
-  const handleRailVendorSearch = (query: string): string | null => {
-    // Proxy into the existing VendorSearchBox logic by finding a match.
-    // Returns the cluster code so the rail can auto-zoom into it (M-OBS P5).
-    const matches = searchKnownVendors(query)
-    if (!matches[0]) return null
-    const code = vendorToClusterCode(matches[0], mode === 'sexenios' ? 'patterns' : mode)
-    setPinnedCode(code)
-    setFoundVendor(matches[0])
-    setSelectedClusterCode(code)
-    return code
-  }
   const handleRailStoryOpen = (storyId: string) => {
     const story = ATLAS_STORIES.find((s) => s.id === storyId)
     if (story) {
@@ -2366,69 +604,12 @@ export default function Atlas() {
       setStoryEnded(false)
     }
   }
-  const handleRailReset = () => {
-    setMode('patterns')
-    setYearIndex(YEAR_SNAPSHOTS.length - 1)
-    setIsPlaying(false)
-    setPinnedCode(null)
-    setRiskFloor('all')
-    setSelectedClusterCode(null)
-    setFoundVendor(null)
-  }
 
   return (
-    <AtlasContextProvider
-      initialState={{
-        lens: mode,
-        yearIndex,
-        riskFloor,
-        pinnedCode,
-      }}
-    >
-      {/* atlas-C-P5: URL sync component — must live inside AtlasContextProvider
-          so it can read/write context state (zoom, selection). Renders null. */}
-      <AtlasContextBridge
-        setMode={setMode}
-        setYearIndex={setYearIndex}
-        setRiskFloor={setRiskFloor}
-        setPinnedCode={setPinnedCode}
-      />
-      <AtlasUrlSync
-        mode={mode}
-        yearIndex={yearIndex}
-        pinnedCode={pinnedCode}
-        riskFloor={riskFloor}
-        compareMode={compareMode}
-        yearIndexB={yearIndexB}
-        initialZoomRef={initialZoomRef}
-        initialSelectRef={initialSelectRef}
-        scope={atlasScope}
-        cohortCode={cohortCode}
-        vendorId={vendorId}
-        period={period}
-      />
-      {/* omega-N N2: story-chart binding — headless, renders null.
-          Wires active chapter's pinnedCode to zoom dispatch + highlight state.
-          Ref: NYT "How the Virus Got Out" + ICIJ Pandora Papers. */}
-      <AtlasStoryBinding
-        activeStory={activeStory}
-        activeChapterIndex={activeChapter}
-        onHighlightChange={setHighlightedClusterCodes}
-      />
+    <AtlasContextProvider initialState={{ lens: mode, pinnedCode }}>
       <AtlasShell
-        hideLeftRail={faithfulObservatory}
-        leftRail={
-          <AtlasLeftRail
-            lang={lang}
-            yearSnapshots={YEAR_SNAPSHOTS}
-            isPlaying={isPlaying}
-            onYearChange={handleRailYearChange}
-            onPlayChange={handleRailPlayChange}
-            onVendorSearchPick={handleRailVendorSearch}
-            onStoryOpen={handleRailStoryOpen}
-            onReset={handleRailReset}
-          />
-        }
+        hideLeftRail
+        leftRail={null}
         center={
           // 2026-05-09: bumped max-w 1200→1680 + py-6/8→py-3/4 so the
           // constellation canvas fills more of the viewport. User
@@ -2461,35 +642,16 @@ export default function Atlas() {
           + computed-argmax dek) instead of a static stat strip. */}
       <CartaMasthead lang={lang} />
 
-      {/* §7 «La Carta del Cielo»: the faithful view shows the visible PLATE INDEX
-          (four folio-numbered, provenance-stamped tabs). The legacy engine keeps
-          its full toolbar (year scrubber, autoplay, risk floor, compare). */}
-      {faithfulObservatory ? (
-        <CartaLensIndex
-          lang={lang}
-          mode={mode}
-          setMode={setMode}
-          onStoriesOpen={() => setStoriesMenuOpen(true)}
-          period={period}
-          setPeriod={setPeriod}
-        />
-      ) : (
-        <AtlasToolbar
-          lang={lang}
-          mode={mode}
-          setMode={setMode}
-          yearIndex={yearIndex}
-          setYearIndex={setYearIndex}
-          years={YEAR_SNAPSHOTS.map((s) => s.year)}
-          riskFloor={riskFloor}
-          setRiskFloor={setRiskFloor}
-          onStoriesOpen={() => setStoriesMenuOpen(true)}
-          isPlaying={isPlaying}
-          setIsPlaying={setIsPlaying}
-          compareMode={compareMode}
-          setCompareMode={setCompareMode}
-        />
-      )}
+      {/* §7 «La Carta del Cielo»: the visible PLATE INDEX (four folio-numbered,
+          provenance-stamped tabs). */}
+      <CartaLensIndex
+        lang={lang}
+        mode={mode}
+        setMode={setMode}
+        onStoriesOpen={() => setStoriesMenuOpen(true)}
+        period={period}
+        setPeriod={setPeriod}
+      />
 
       {/* M-OBS Phase 1 (FALCO): Stories popover — anchored to the toolbar
           BookOpen icon via fixed-position overlay. State controlled by
@@ -2603,31 +765,6 @@ export default function Atlas() {
               </button>
           </motion.div>
         </>
-      )}
-
-      {/* Found-vendor pill — surfaced when VendorSearchBox elsewhere picks
-          a vendor. Search box itself is queued for re-entry to Phase 2 of M-OBS. */}
-      {foundVendor && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[12px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm mt-2 mx-3"
-          style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
-        >
-          <Sparkles className="h-3 w-3" aria-hidden="true" />
-          <span className="opacity-80 uppercase tracking-[0.1em]">
-            {lang === 'en' ? 'Found' : 'Encontrado'}:
-          </span>
-          <span className="font-bold">{foundVendor.displayName}</span>
-          <span className="opacity-70">→ {foundVendor.pattern}</span>
-          <button
-            onClick={() => setFoundVendor(null)}
-            className="ml-1 hover:opacity-70 transition-opacity"
-            aria-label={lang === 'en' ? 'Clear' : 'Limpiar'}
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </motion.div>
       )}
 
       {/* ── STORY READER — replaces brief tour narration with rich chapter UI ─── */}
@@ -2904,27 +1041,11 @@ export default function Atlas() {
         )}
       </AnimatePresence>
 
-      {/* ── Constellation canvas A (always shown) ──────────────────────── */}
-      {compareMode && (
-        <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5 inline-flex items-center gap-1.5">
-          <span className="font-bold" style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'YEAR A' : 'AÑO A'}</span>
-          <span>·</span>
-          <span>{snapshot.year}</span>
-        </div>
-      )}
-      {/* ── atlas-C-P4: Selection count badge ──────────────────────────── */}
-      <SelectionBadge lang={lang} />
-
+      {/* ── The plate ──────────────────────── */}
       <PlateFrame
         lens={mode}
-        year={snapshot.year}
-        clusterCount={activeConstellationMeta.length}
-        totalContracts={totalContractsForYear}
         lang={lang}
-        /* §7: honest caption for the faithful scatter (cohort scatter, live vs
-           archival provenance, data cut). Legacy engine keeps its own accurate
-           year/contract caption (undefined → PlateFrame's default). */
-        caption={faithfulObservatory ? cartaCaption : undefined}
+        caption={cartaCaption}
         /* M-OBS Phase 1 (FALCO): suppress PlateFrame's own folio header
            strip — CartaMasthead above carries the FOLIO·IX kicker. */
         minimal
@@ -2952,143 +1073,62 @@ export default function Atlas() {
             </span>
           </div>
         )}
-        {/* atlas-C-P2: ConcentrationConstellation is now wrapped in AtlasZoomLayer
-            which owns the semantic zoom transform. omega-N: engine itself was
-            modified (named outliers + dim layers + bigger labels) per user
-            authorization to break the sacred-engine rule.
-            folio-skin: PlateFrame above gives this card investigative-folio
+        {/* folio-skin: PlateFrame above gives this card investigative-folio
             chrome (corner crops, archival folio number, plate caption). */}
-        {canvasEnabled ? (
-          <CanvasAtlasView
-            key={constellationKey}
-            mode={mode}
-            pinnedCode={pinnedCode}
-            lang={lang}
-            activeMeta={activeConstellationMeta}
-            onClusterClickBridge={handleClusterClick}
-            riskFloor={riskFloor}
-            namedVendors={namedVendors}
-            scope={atlasScope}
-            cohortCode={cohortCode}
-            onCohortSelect={(code) => {
-              setAtlasScope('cohorte')
-              setCohortCode(code)
-              setCohortScopeInfo(null)
-              setVendorId(null)
-              setVendorRow(null)
-              setVendorScopeInfo(null)
-            }}
-            onCohortExit={() => {
-              setAtlasScope('padron')
-              setCohortCode(null)
-              setCohortScopeInfo(null)
-              setVendorId(null)
-              setVendorRow(null)
-              setVendorScopeInfo(null)
-            }}
-            onCohortLoaded={setCohortScopeInfo}
-            vendorId={vendorId}
-            vendorRow={vendorRow}
-            onOpenVendor={(vendor) => {
-              setAtlasScope('proveedor')
-              setVendorId(vendor.vendor_id)
-              setVendorRow(vendor)
-              setVendorScopeInfo(null)
-            }}
-            onVendorExit={() => {
-              setAtlasScope('cohorte')
-              setVendorId(null)
-              setVendorRow(null)
-              setVendorScopeInfo(null)
-            }}
-            onVendorLoaded={setVendorScopeInfo}
-            period={period}
-          />
-        ) : (
-          <AtlasZoomLayer
-            key={constellationKey}
-            mode={mode}
-            rows={rows.length > 0 ? rows : fallbackRows}
-            totalContracts={totalContractsForYear}
-            /* Seed depends ONLY on mode — dots stay in place across years
-               so CSS transitions can morph their fill-opacity smoothly as the
-               critical/high/medium/low pcts shift per year. */
-            seedOverride={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
-            pinnedCode={pinnedCode}
-            lang={lang}
-            activeMeta={activeConstellationMeta}
-            onClusterClickBridge={handleClusterClick}
-            namedVendors={namedVendors}
-            highlightedClusterCodes={highlightedClusterCodes}
-            z1Enabled={z1Enabled}
-            resolveSectorId={(code) => SECTORS.find((s) => s.code === code)?.id ?? null}
-          />
-        )}
-        {/* 2026-05-09 spatial-nav Phase 1.3 — Z1 sub-constellation overlay.
-            Renders institutions as bodies in space when the user has
-            drilled into a sector. Only mounted when ?z1=true so the
-            existing /atlas behavior is preserved. */}
-        {z1Enabled && <Z1Overlay lang={lang} />}
+        <CanvasAtlasView
+          key={mode}
+          mode={mode}
+          pinnedCode={pinnedCode}
+          lang={lang}
+          scope={atlasScope}
+          cohortCode={cohortCode}
+          onCohortSelect={(code) => {
+            setAtlasScope('cohorte')
+            setCohortCode(code)
+            setCohortScopeInfo(null)
+            setVendorId(null)
+            setVendorRow(null)
+            setVendorScopeInfo(null)
+          }}
+          onCohortExit={() => {
+            setAtlasScope('padron')
+            setCohortCode(null)
+            setCohortScopeInfo(null)
+            setVendorId(null)
+            setVendorRow(null)
+            setVendorScopeInfo(null)
+          }}
+          onCohortLoaded={setCohortScopeInfo}
+          vendorId={vendorId}
+          vendorRow={vendorRow}
+          onOpenVendor={(vendor) => {
+            setAtlasScope('proveedor')
+            setVendorId(vendor.vendor_id)
+            setVendorRow(vendor)
+            setVendorScopeInfo(null)
+          }}
+          onVendorExit={() => {
+            setAtlasScope('cohorte')
+            setVendorId(null)
+            setVendorRow(null)
+            setVendorScopeInfo(null)
+          }}
+          onVendorLoaded={setVendorScopeInfo}
+          period={period}
+        />
       </PlateFrame>
 
       {/* §7 «La Carta del Cielo»: the itinerary shelf — the three guided routes
-          surfaced as first-class discovery below the plate (faithful view only;
-          legacy keeps its exact layout). */}
-      {faithfulObservatory && (
-        <CartaItinerarios
-          stories={ATLAS_STORIES}
-          activeStoryId={activeStory?.id ?? null}
-          onOpen={handleRailStoryOpen}
-          lang={lang}
-        />
-      )}
-
-      {/* M-OBS Phase 1 (FALCO): bottom YearScrubber deleted — year stepper
-          lives in AtlasToolbar (◆ ←/→). KEY EVENT annotation row is gone with it
-          (was rendered inside the YearScrubber component). */}
-
-      {/* ── COMPARE MODE: second canvas + scrubber ─────────────────── */}
-      {compareMode && (() => {
-        const snapshotB = effectiveSnapshot(yearIndexB)
-        const rowsB = applyRiskFloor(snapshotToRows(snapshotB))
-        const totalContractsB = snapshotB.totalContracts
-        // Same morph philosophy as canvas A — only re-key on mode changes
-        const constellationKeyB = `B-${mode}`
-        return (
-          <>
-            <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mt-6 mb-1.5 inline-flex items-center gap-1.5">
-              <span className="font-bold" style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'YEAR B' : 'AÑO B'}</span>
-              <span>·</span>
-              <span>{snapshotB.year}</span>
-            </div>
-            <div className="surface-card rounded-sm p-3 md:p-4 mb-4">
-              <ConcentrationConstellation
-                key={constellationKeyB}
-                rows={rowsB}
-                totalContracts={totalContractsB}
-                mode={mode}
-                /* Different seed than canvas A so the two views don't share
-                   dot positions even at identical years — but stable across
-                   year changes within compare mode. */
-                seedOverride={(mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180) + 999}
-                pinnedCode={pinnedCode}
-                onClusterClick={handleClusterClick}
-              />
-            </div>
-            <YearScrubber
-              yearIndex={yearIndexB}
-              setYearIndex={setYearIndexB}
-              isPlaying={isPlayingB}
-              setIsPlaying={setIsPlayingB}
-              lang={lang}
-            />
-          </>
-        )
-      })()}
+          surfaced as first-class discovery below the plate. */}
+      <CartaItinerarios
+        stories={ATLAS_STORIES}
+        activeStoryId={activeStory?.id ?? null}
+        onOpen={handleRailStoryOpen}
+        lang={lang}
+      />
 
       {/* §7 «La Carta del Cielo»: «Fe de carta» — the surveyor's honesty note.
-          Applies to both engines (not lens-gated); replaces the deleted
-          promotional footer with a method-and-limits record. */}
+          Replaces the deleted promotional footer with a method-and-limits record. */}
       <CartaColofon lang={lang} totalContracts={dashboard?.overview?.total_contracts ?? null} />
 
           </div>{/* /folio-skin content wrapper */}

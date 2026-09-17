@@ -92,7 +92,6 @@ const Privacy = lazy(() => import('@/pages/Privacy'))
 const Terms = lazy(() => import('@/pages/Terms'))
 const ChartCatalog = lazy(() => import('@/pages/_dev/ChartCatalog'))
 const PatternDossier = lazy(() => import('@/pages/PatternDossier'))
-const PatternConstellation = lazy(() => import('@/pages/PatternConstellation'))
 const AtlasStoryPlayer = lazy(() => import('@/pages/AtlasStoryPlayer'))
 const Gallery = lazy(() => import('@/pages/Gallery'))
 const Press = lazy(() => import('@/pages/Press'))
@@ -109,6 +108,13 @@ function SectorRedirect() {
 function ThreadRedirect() {
   const { vendorId } = useParams<{ vendorId: string }>()
   return <Navigate to={`/vendors/${vendorId}`} replace />
+}
+
+// /patterns/:code/constellation retired 2026-09 with the legacy zoom engine —
+// the same cohort is the Atlas' scope 1.
+function PatternCohortRedirect() {
+  const { code } = useParams<{ code: string }>()
+  return <Navigate to={`/atlas?scope=cohorte&code=${encodeURIComponent(code ?? '')}`} replace />
 }
 
 // Enhanced QueryClient configuration for better caching and UX
@@ -328,15 +334,9 @@ function App() {
                   into the dossiers. Index content migrated into PatternDossier
                   (§ How to investigate + § Los Siete Patrones). */}
               <Route path="patterns" element={<Navigate to="/atlas" replace />} />
-              {/* UX-2: isolated full-screen constellation — MUST precede patterns/:code */}
-              <Route
-                path="patterns/:code/constellation"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <PatternConstellation />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* /patterns/:code/constellation (legacy zoom engine, unlinked) removed 2026-09 —
+                  the pattern's cohort now lives at /atlas?scope=cohorte&code=:code */}
+              <Route path="patterns/:code/constellation" element={<PatternCohortRedirect />} />
               <Route
                 path="patterns/:code"
                 element={
