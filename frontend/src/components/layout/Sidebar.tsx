@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -138,7 +138,9 @@ function NavSection({
     <div>
       {!collapsed && (
         <div className="mb-2 mt-1 px-2.5 flex items-center gap-2">
-          <span className="text-[13px] font-bold tracking-[0.22em] uppercase text-text-on-dark-muted select-none font-mono">
+          {/* PARALLAX D1 § Change 1: font-medium, not bold — the darker AA
+              muted token would otherwise read louder than the nav items. */}
+          <span className="text-[13px] font-medium tracking-[0.22em] uppercase text-text-on-dark-muted select-none font-mono">
             {title}
           </span>
           <span className="flex-1 h-px bg-border" aria-hidden="true" />
@@ -188,6 +190,49 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
 
   const [reportOpen, setReportOpen] = useState(false)
 
+  // ── PARALLAX D1 § Change 2: the mobile drawer is a real dialog ──────────
+  // Before: opening it left focus on the hamburger, Tab walked straight into
+  // the page behind the backdrop, and Escape did nothing. Now: focus moves to
+  // the close button, Tab wraps inside the aside, Escape closes, and focus
+  // returns to whatever opened it (header hamburger or bottom-nav "More").
+  const asideRef = useRef<HTMLElement>(null)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!mobileOpen) return
+    const opener = document.activeElement as HTMLElement | null
+    closeBtnRef.current?.focus()
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onMobileClose?.()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const nodes = asideRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      const list = Array.from(nodes ?? []).filter((n) => n.offsetParent !== null)
+      if (list.length === 0) return
+      const first = list[0]
+      const last = list[list.length - 1]
+      const active = document.activeElement
+      const outside = !asideRef.current?.contains(active)
+      if (e.shiftKey && (active === first || outside)) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (active === last || outside)) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      opener?.focus?.()
+    }
+  }, [mobileOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+
   function getBadgeCount(source?: NavItemDef['badgeSource']): number {
     if (!source) return 0
     switch (source) {
@@ -204,6 +249,12 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   return (
     <>
     <aside
+      ref={asideRef}
+      // Dialog semantics only while the mobile drawer is open; on desktop the
+      // aside stays a plain complementary landmark (PARALLAX D1 § Change 2).
+      role={mobileOpen ? 'dialog' : undefined}
+      aria-modal={mobileOpen ? true : undefined}
+      aria-label={mobileOpen ? t('mainNavigation') : undefined}
       className={cn(
         // Mobile: auto-height drawer. Sidebar sizes to its actual content
         // instead of stretching to 100vh. Below the natural bottom, the
@@ -213,7 +264,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         // If content ever exceeds viewport, overflow-y-auto kicks in.
         // Desktop: full viewport height with flex-col anchoring footer.
         'fixed left-0 top-0 flex flex-col border-r border-border bg-sidebar z-50',
-        'max-h-screen overflow-y-auto md:h-screen md:overflow-y-visible',
+        'max-h-screen overflow-y-auto overscroll-contain md:h-screen md:overflow-y-visible',
         'transition-all duration-200 ease-out',
         // Mobile: overlay -- hidden off-screen, revealed when open
         'w-64 -translate-x-full',
@@ -285,6 +336,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             className="h-10 w-10 flex-shrink-0 md:hidden text-text-on-dark-secondary hover:text-text-on-dark-primary hover:bg-sidebar-hover ml-auto"
             onClick={onMobileClose}
             aria-label={t('closeMenu')}
+            ref={closeBtnRef}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -365,19 +417,21 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       {/* Legal footer links — only visible in expanded mode */}
       {!isCollapsed && (
         <div className="px-3 pb-1 flex items-center gap-3">
-          <a
-            href="/privacy"
+          {/* PARALLAX D1 § Change 2: <Link>, not <a href> — the raw anchors
+              forced a full page reload out of the SPA. */}
+          <Link
+            to="/privacy"
             className="text-[12px] text-text-muted hover:text-text-secondary transition-colors"
           >
             {tc('legal.privacy')}
-          </a>
+          </Link>
           <span className="text-text-disabled text-[12px]" aria-hidden="true">·</span>
-          <a
-            href="/terms"
+          <Link
+            to="/terms"
             className="text-[12px] text-text-muted hover:text-text-secondary transition-colors"
           >
             {tc('legal.terms')}
-          </a>
+          </Link>
         </div>
       )}
 
@@ -493,6 +547,7 @@ function SidebarNavItem({
   badge?: number
   countBadge?: number
 }) {
+  const { t } = useTranslation('nav')
   const Icon = item.icon
 
   const linkContent = (
@@ -527,21 +582,33 @@ function SidebarNavItem({
       {!collapsed && <span className="truncate">{item.title}</span>}
       {/* Alert badge -- only visible in expanded mode */}
       {badge > 0 && !collapsed && (
+        /* PARALLAX D1 § Change 7: the hardcoded English plural
+           ("2 alerts") is gone — the badge's own digits are the label.
+           getBadgeStyle() always returns 'count', so this branch is
+           currently unreachable; left in place, not re-labelled. */
         <span
           className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-accent text-[12px] font-bold text-sidebar px-1"
-          aria-label={`${badge} alert${badge !== 1 ? 's' : ''}`}
         >
           {badge > 9 ? '9+' : badge}
         </span>
       )}
       {/* Count badge -- subdued, shows total items */}
       {countBadge > 0 && !collapsed && badge === 0 && (
-        <span
-          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded-sm bg-sidebar-hover text-[12px] font-mono text-text-muted px-1 border border-border"
-          aria-label={`${countBadge} items`}
-        >
-          {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}
-        </span>
+        /* PARALLAX D1 § Change 7: the badge used to be a role-less <span>
+           carrying an English-only aria-label ("299 items") — a label
+           assistive tech may ignore on a generic span. The digits are now
+           hidden from the a11y tree and the link's accessible name picks up
+           a bilingual sr-only count, which also reads the true number when
+           the badge abbreviates to "1.5k". */
+        <>
+          <span
+            className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded-sm bg-sidebar-hover text-[12px] font-mono text-text-muted px-1 border border-border"
+            aria-hidden="true"
+          >
+            {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}
+          </span>
+          <span className="sr-only">{t('badgeCount', { count: countBadge })}</span>
+        </>
       )}
     </NavLink>
   )

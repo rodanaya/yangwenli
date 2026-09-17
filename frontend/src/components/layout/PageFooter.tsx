@@ -14,6 +14,7 @@
 import { useTranslation } from 'react-i18next'
 import { useExecutiveSummary } from '@/hooks/useExecutiveSummary'
 import { CURRENT_MODEL_VERSION } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
 interface PageFooterProps {
   /** Optional editorial line under the strip (methodology note, disclaimer). */
@@ -31,7 +32,10 @@ export function PageFooter({ note, className }: PageFooterProps) {
   const loc = isEs ? 'es-MX' : 'en-US'
 
   return (
-    <footer className={className ?? 'mt-16 pt-8 pb-16 border-t border-border'}>
+    /* PARALLAX D1 § Change 8: the `page-footer` marker is what lets
+       index.css hide MainLayout's colophon on pages that close themselves.
+       Appended, never replaced — callers may override the rest via className. */
+    <footer className={cn('page-footer', className ?? 'mt-16 pt-8 pb-16 border-t border-border')}>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted">
         <span>
           {isEs ? 'Fuente' : 'Source'}:{' '}

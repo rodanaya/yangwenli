@@ -61,6 +61,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const [paletteEverOpened, setPaletteEverOpened] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const userTriggerRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -236,9 +237,11 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         >
           <Menu className="h-4 w-4 text-text-muted" aria-hidden="true" />
         </Button>
-        {/* Editorial dateline — Economist/NYT masthead feel */}
+        {/* Editorial dateline — Economist/NYT masthead feel.
+            PARALLAX D1 § Change 3: whitespace-nowrap — the 0.18em tracking made
+            it wrap to a second line inside the 44px bar on story routes. */}
         <span
-          className="hidden lg:inline-block text-[13px] tracking-[0.18em] text-text-muted font-mono select-none"
+          className="hidden lg:inline-block whitespace-nowrap text-[13px] tracking-[0.18em] text-text-muted font-mono select-none"
           aria-hidden="true"
         >
           {editorialDate}
@@ -260,8 +263,10 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         </div>
       </div>
 
-      {/* Right — Status indicators + actions */}
-      <div className="flex items-center gap-1">
+      {/* Right — Status indicators + actions.
+          PARALLAX D1 § Change 3: flex-shrink-0 so a long breadcrumb title
+          truncates on the left instead of squeezing this cluster into a wrap. */}
+      <div className="flex flex-shrink-0 items-center gap-1">
         {/* Search trigger — opens centered CommandPalette modal */}
         {/* Desktop: pill-shaped fake input with hint text */}
         <button
@@ -356,11 +361,24 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* Divider */}
         <div className="h-4 w-px bg-border/40 mx-1 hidden sm:block" />
 
-        {/* User menu */}
-        <div className="relative" ref={userMenuRef}>
+        {/* User menu.
+            PARALLAX D1 § Change 3: Escape closes the popup and hands focus back
+            to the trigger. Before, a keyboard user could only escape by tabbing
+            through the menu or clicking elsewhere. */}
+        <div
+          className="relative"
+          ref={userMenuRef}
+          onKeyDown={(e) => {
+            if (e.key !== 'Escape' || !userMenuOpen) return
+            e.stopPropagation()
+            setUserMenuOpen(false)
+            userTriggerRef.current?.focus()
+          }}
+        >
           {user ? (
             <>
               <button
+                ref={userTriggerRef}
                 onClick={() => setUserMenuOpen(v => !v)}
                 className="flex items-center gap-1.5 h-7 px-2 rounded-sm text-[12px] font-mono tracking-[0.08em] uppercase text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
                 aria-label={tc('header.userMenu')}
@@ -400,7 +418,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           ) : (
             <button
               onClick={() => navigate('/login')}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-sm text-[12px] font-mono tracking-[0.08em] uppercase text-text-muted hover:text-text-primary hover:bg-background-elevated border border-border hover:border-border-hover transition-colors"
+              className="flex items-center gap-1.5 h-9 px-3 rounded-sm whitespace-nowrap text-[12px] font-mono tracking-[0.08em] uppercase text-text-muted hover:text-text-primary hover:bg-background-elevated border border-border hover:border-border-hover transition-colors"
             >
               {tc('header.signIn')}
             </button>

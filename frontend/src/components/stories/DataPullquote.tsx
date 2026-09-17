@@ -249,9 +249,9 @@ function ThresholdViz({ value, color, revealed, label, lang }: VizProps) {
         className="absolute font-mono uppercase"
         style={{
           left: `${thresholdPct}%`,
-          bottom: -14,
+          bottom: -16,
           transform: 'translateX(-50%)',
-          fontSize: 8,
+          fontSize: 10,
           letterSpacing: '0.18em',
           color: 'var(--color-text-muted)',
           opacity: revealed ? 1 : 0,
@@ -298,7 +298,7 @@ function GaugeViz({ value, color, revealed, lang }: VizProps) {
         />
       </div>
       <div className="flex items-center justify-between mt-1.5 font-mono uppercase"
-        style={{ fontSize: 8, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+        style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
         <span>{lang === 'es' ? 'BAJO' : 'LOW'}</span>
         <span style={{ color }}>{pct.toFixed(0)}%</span>
         <span>{lang === 'es' ? 'CRÍTICO' : 'CRITICAL'}</span>
@@ -386,7 +386,7 @@ function EraViz({ value, color, revealed, label }: VizProps) {
           <div key={e.name} className="flex items-center gap-2">
             <span
               className="font-mono uppercase tabular-nums"
-              style={{ width: 64, fontSize: 9, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}
+              style={{ width: 64, fontSize: 10.5, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}
             >
               {e.name}
             </span>
@@ -408,7 +408,7 @@ function EraViz({ value, color, revealed, label }: VizProps) {
             </div>
             <span
               className="text-right font-mono tabular-nums"
-              style={{ width: 36, fontSize: 9, color: 'var(--color-text-muted)' }}
+              style={{ width: 36, fontSize: 10.5, color: 'var(--color-text-muted)' }}
             >
               {v.toFixed(0)}%
             </span>
@@ -521,7 +521,9 @@ export default function DataPullquote({
   const resolvedRole: PullquoteRole =
     role ?? (sledgehammer ? 'ledger' : barValue !== undefined ? 'plate' : 'margin')
 
-  const dateline = lang === 'es' ? 'ANÁLISIS · MAYO 2026' : 'ANALYSIS · MAY 2026'
+  // PARALLAX D1 § Change 6: "ANALYSIS · MAY 2026" was a build date on a frozen
+  // corpus. The data horizon is the true statement (dashboard Day-15 convention).
+  const dateline = lang === 'es' ? 'DATOS HASTA SEP 2025' : 'DATA THROUGH SEP 2025'
   const sectionLabel = lang === 'es' ? 'CIFRA · COMPRANET' : 'FIGURE · COMPRANET'
   const ariaLabel = lang === 'en' ? 'Data pull quote' : 'Cita con datos'
 
@@ -533,9 +535,15 @@ export default function DataPullquote({
     : stat
 
   // Shared Playfair-Italic-800 stat number (only one renders per pullquote).
+  // PARALLAX D1 § Change 7: the count-up span carried an aria-label on a
+  // role-less element, so a screen reader could announce a mid-animation
+  // number or nothing at all. The visual number is now hidden from the
+  // a11y tree and the final figure is read from an sr-only sibling.
   const statNumber = (fontSize: string, extra?: React.CSSProperties) => (
+    <>
     <span
       ref={countRef}
+      aria-hidden="true"
       className="dpq-stat tabular-nums"
       style={{
         fontFamily: "'Playfair Display', Georgia, serif",
@@ -548,10 +556,11 @@ export default function DataPullquote({
         maxWidth: '100%',
         ...extra,
       }}
-      aria-label={`${stat} ${statLabel}`}
     >
       {numStr}
     </span>
+    <span className="sr-only">{stat} {statLabel}</span>
+    </>
   )
 
   // Shared viz block (plate + verdict). `withEyebrow` false when the tile's top
@@ -562,7 +571,7 @@ export default function DataPullquote({
         {withEyebrow && (
           <div
             className="font-mono uppercase mb-2.5"
-            style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
+            style={{ fontSize: 10.5, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
           >
             {familyEyebrow(family, lang)}
           </div>
@@ -573,7 +582,7 @@ export default function DataPullquote({
         {localizedBarLabel && (
           <p
             className="font-mono leading-[1.45]"
-            style={{ fontSize: 9.5, color: 'var(--color-text-muted)', marginTop: family === 'threshold' ? 18 : 10 }}
+            style={{ fontSize: 10.5, color: 'var(--color-text-muted)', marginTop: family === 'threshold' ? 20 : 10 }}
           >
             {localizedBarLabel}
           </p>
@@ -624,13 +633,13 @@ export default function DataPullquote({
               {statNumber('clamp(1.5rem, 3.4cqw, 1.9rem)')}
               <span
                 className="font-mono uppercase"
-                style={{ fontSize: 9.5, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}
+                style={{ fontSize: 10.5, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}
               >
                 {statLabel}
               </span>
             </div>
             {attribution && (
-              <figcaption className="font-mono uppercase text-text-muted mt-2" style={{ fontSize: 9, letterSpacing: '0.16em' }}>
+              <figcaption className="font-mono uppercase text-text-muted mt-2" style={{ fontSize: 10.5, letterSpacing: '0.16em' }}>
                 — {attribution}
               </figcaption>
             )}
@@ -649,7 +658,7 @@ export default function DataPullquote({
         <figure className="dpq-fig relative text-center" role="figure" aria-label={ariaLabel}>
           <div style={{ height: 1, background: 'var(--color-border)' }} />
           <div className="py-8 px-4">
-            <div className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+            <div className="font-mono uppercase" style={{ fontSize: 10.5, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
               {lang === 'es' ? 'EL SALDO · CIFRA FINAL' : 'THE BALANCE · CLOSING FIGURE'}
             </div>
             <div className="flex justify-center mt-3">
@@ -707,7 +716,7 @@ export default function DataPullquote({
         {/* Top chrome — ledger shows CIFRA · COMPRANET; plate shows the family eyebrow */}
         <div
           className="dpq-chrome dpq-pad dpq-pad-top flex items-center justify-between px-5 pt-4 pb-3 font-mono uppercase"
-          style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 10.5, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
         >
           <span>{isPlate ? familyEyebrow(family, lang) : sectionLabel}</span>
           <span aria-hidden>{dateline}</span>
@@ -750,7 +759,7 @@ export default function DataPullquote({
             &ldquo;{quote}&rdquo;
           </blockquote>
           {attribution && (
-            <figcaption className="font-mono uppercase text-text-muted" style={{ fontSize: 9, letterSpacing: '0.16em' }}>
+            <figcaption className="font-mono uppercase text-text-muted" style={{ fontSize: 10.5, letterSpacing: '0.16em' }}>
               — {attribution}
             </figcaption>
           )}

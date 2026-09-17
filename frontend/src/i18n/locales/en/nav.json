@@ -88,6 +88,8 @@
   "mobileMore": "More",
   "tagline": "Procurement Transparency",
   "mainNavigation": "Main navigation",
+  "quickNavigation": "Quick navigation",
+  "badgeCount": "{{count}} entries",
   "contractsIndexed": "3.05M contracts analyzed",
   "contractsIndexedShort": "3.05M analyzed",
   "reportIssue": "Report an issue",

@@ -88,6 +88,8 @@
   "mobileMore": "Más",
   "tagline": "Transparencia en Contrataciones",
   "mainNavigation": "Navegación principal",
+  "quickNavigation": "Navegación rápida",
+  "badgeCount": "{{count}} registros",
   "contractsIndexed": "3.05M contratos analizados",
   "contractsIndexedShort": "3.05M analizados",
   "reportIssue": "Reportar un problema",

@@ -65,10 +65,12 @@ export function MainLayout() {
         {t('skipToContent')}
       </a>
 
-      {/* Mobile backdrop — tapping closes the sidebar */}
+      {/* Mobile backdrop — tapping closes the sidebar.
+          PARALLAX D1 § Change 2: z-[45], above the bottom nav's z-40, so the
+          nav is dimmed with the rest of the page instead of painting over it. */}
       {mobileSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-[45] bg-black/50 md:hidden"
           onClick={() => setMobileSidebarOpen(false)}
           aria-hidden="true"
         />
@@ -82,8 +84,12 @@ export function MainLayout() {
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
 
-      {/* Main content area */}
+      {/* Main content area.
+          PARALLAX D1 § Change 2: `inert` while the mobile drawer is open —
+          removes the whole column from the tab order, pointer events and the
+          accessibility tree, which is what `aria-modal` on the drawer promises. */}
       <div
+        inert={mobileSidebarOpen || undefined}
         className={cn(
           'relative flex min-h-screen flex-col transition-all duration-300',
           // Mobile: no left padding (sidebar is overlay)
@@ -130,7 +136,7 @@ export function MainLayout() {
       </div>
 
       {/* Mobile bottom navigation — fixed, only on < md */}
-      <MobileBottomNav onMenuClick={() => setMobileSidebarOpen(true)} />
+      <MobileBottomNav onMenuClick={() => setMobileSidebarOpen(true)} inert={mobileSidebarOpen} />
     </div>
   )
 }

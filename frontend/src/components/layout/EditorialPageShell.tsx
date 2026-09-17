@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -14,7 +15,15 @@ interface StatItem {
 // claims ("One vendor took 133.2 billion pesos") need a visible publisher,
 // data source, and last-updated date before a journalist will trust them.
 // Pages can override via the `dateline` prop; the default covers every page.
-const DEFAULT_DATELINE = 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025 · UPDATED APR 2026'
+//
+// PARALLAX D1 § Change 6: the old stamp read "UPDATED APR 2026" in English on
+// every Spanish page, and claimed a refresh date the data does not have. The
+// federal bulk feed froze at Sep 2025 — the honest statement is the data
+// horizon, not a build date.
+const DEFAULT_DATELINE = {
+  en: 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025 · DATA THROUGH SEP 2025',
+  es: 'HECHO POR RUBLI · DATOS: COMPRANET 2002–2025 · DATOS HASTA SEP 2025',
+} as const
 
 interface EditorialPageShellProps {
   kicker: string                    // "ARIA QUEUE · 17 APR 2026"
@@ -33,6 +42,8 @@ interface EditorialPageShellProps {
 export function EditorialPageShell({
   kicker, headline, paragraph, stats, meta, actions, dateline, loading, severity, className, children
 }: EditorialPageShellProps) {
+  const { i18n } = useTranslation()
+  const defaultDateline = i18n.language?.startsWith('es') ? DEFAULT_DATELINE.es : DEFAULT_DATELINE.en
   const severityAccent = {
     critical: 'border-risk-critical',
     high:     'border-risk-high',
@@ -76,7 +87,7 @@ export function EditorialPageShell({
             the data window is before trusting the lede. */}
         {!loading && (
           <p className="font-mono text-[12px] tracking-[0.14em] uppercase text-text-muted mb-5">
-            {dateline ?? DEFAULT_DATELINE}
+            {dateline ?? defaultDateline}
           </p>
         )}
 

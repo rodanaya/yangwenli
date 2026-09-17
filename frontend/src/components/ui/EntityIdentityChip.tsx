@@ -19,6 +19,7 @@
  * Click → navigates to the canonical dossier route /{type}/:id.
  */
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Building2, Landmark, Layers, Tag, FileWarning,
   Fingerprint, Network as NetworkIcon, Briefcase, FileText,
@@ -81,6 +82,18 @@ const RISK_DOT_BG: Record<'critical' | 'high' | 'medium' | 'low', string> = {
   high: 'bg-risk-high',
   medium: 'bg-risk-medium',
   low: 'bg-text-muted',
+}
+
+/**
+ * Screen-reader label for the risk dot (PARALLAX D1 § Change 7). The dot used
+ * to carry an `aria-label` on a role-less <span> — which assistive tech is
+ * free to ignore — and the label was English-only.
+ */
+const RISK_LEVEL_LABEL: Record<'critical' | 'high' | 'medium' | 'low', { en: string; es: string }> = {
+  critical: { en: 'critical', es: 'crítico' },
+  high:     { en: 'high',     es: 'alto' },
+  medium:   { en: 'medium',   es: 'medio' },
+  low:      { en: 'low',      es: 'bajo' },
 }
 
 const TIER_LABEL: Record<1 | 2 | 3 | 4, string> = {
@@ -159,6 +172,8 @@ export function EntityIdentityChip({
   fullName = false,
   className,
 }: EntityIdentityChipProps) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language?.startsWith('es')
   const Icon = ICON_FOR_TYPE[type]
   const displayName = formatEntityName(type, name, fullName ? 'full' : size)
   const href = dossierHref(type, id)
@@ -177,9 +192,14 @@ export function EntityIdentityChip({
     : size === 'xs' ? 'h-5 text-[13px]' : size === 'sm' ? 'h-6 text-xs' : 'h-8 text-sm'
   const iconSize = size === 'xs' ? 'h-3 w-3' : size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'
   const dotSize = size === 'xs' ? 'h-1.5 w-1.5' : 'h-2 w-2'
-  const tierSize = size === 'xs' ? 'text-[13px] px-1 py-px' : 'text-[12px] px-1 py-0.5'
+  // PARALLAX D1 § Change 7: xs was 13px against sm's 12px — the smaller size
+  // rendered the LARGER badge. Inversion fixed.
+  const tierSize = size === 'xs' ? 'text-[12px] px-1 py-px' : 'text-[12px] px-1 py-0.5'
 
   const riskLevel = typeof riskScore === 'number' ? getRiskLevelFromScore(riskScore) : null
+  const riskDotLabel = riskLevel
+    ? `${isEs ? 'Riesgo' : 'Risk'}: ${isEs ? RISK_LEVEL_LABEL[riskLevel].es : RISK_LEVEL_LABEL[riskLevel].en}`
+    : ''
   const flagsToShow = (flags ?? []).slice(0, 2)
 
   return (
@@ -193,7 +213,9 @@ export function EntityIdentityChip({
         heightCls,
         className,
       )}
-      title={name ?? ''}
+      // PARALLAX D1 § Change 7: the tooltip showed the raw COMPRANET name
+      // (all-caps, trailing legal suffixes); it now matches what is rendered.
+      title={displayName || (name ?? '')}
     >
       {sectorCode && (
         <span
@@ -220,8 +242,9 @@ export function EntityIdentityChip({
       {riskLevel && !ariaTier && (
         <span
           className={cn('flex-shrink-0 rounded-full', dotSize, RISK_DOT_BG[riskLevel])}
-          aria-label={`Risk: ${riskLevel}`}
-          title={`Risk: ${riskLevel} (${riskScore?.toFixed(2)})`}
+          role="img"
+          aria-label={riskDotLabel}
+          title={`${riskDotLabel} (${riskScore?.toFixed(2)})`}
         />
       )}
       {flagsToShow.map((flag) => (

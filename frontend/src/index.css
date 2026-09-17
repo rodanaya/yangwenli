@@ -47,7 +47,9 @@
   /* Text tokens — bible §3.4 */
   --color-text-primary: #1a1714;
   --color-text-secondary: #6b6560;
-  --color-text-muted: #7a716c;
+  /* PARALLAX D1 § Change 1: #7a716c failed WCAG AA (4.22 on elevated,
+     4.27 on the sidebar). #736a65 clears 4.5 on every surface. */
+  --color-text-muted: #736a65;
   --color-text-disabled: #c5bfb8;
 
   /* Legacy dark-context tokens, now aliased to light-mode text. The sidebar
@@ -57,7 +59,9 @@
      existing usage across Sidebar.tsx continues working without a rename. */
   --color-text-on-dark-primary: #1a1714;
   --color-text-on-dark-secondary: #6b6560;
-  --color-text-on-dark-muted: #9c9490;
+  /* PARALLAX D1 § Change 1: #9c9490 was a dark-sidebar leftover reading
+     2.67 on the cream sidebar. Aliased to the AA muted token. */
+  --color-text-on-dark-muted: #736a65;
 
   /* Primary accent — amber gold (bible §2) */
   --color-accent: #a06820;
@@ -983,3 +987,18 @@
    .italic utility and any residual italic class render upright. Inline
    fontStyle:'italic' is removed at source by the legibility codemod. */
 .italic, em, i { font-style: normal !important; }
+
+/* One footer per page (PARALLAX D1 § Change 8, 2026-09-17).
+   MainLayout closes every route with an editorial colophon. Pages that render
+   their own credibility strip (<PageFooter>, Executive's own footer) therefore
+   stacked two <footer> landmarks — measured on /dashboard, /cases,
+   /journalists, /administrations, /methodology, /institutions and /captura.
+   The page's footer lives inside <main>, the colophon is main's next sibling,
+   so :has() suppresses exactly the duplicate and nothing else. Card-level
+   <footer>s (CorruptionClusters' typology + spotlight cards) are untouched
+   because they do not carry the .page-footer marker.
+   :has() is Chrome 105+ / Safari 15.4+ / Firefox 121+; older Firefox keeps the
+   double colophon, which is the pre-existing behaviour. */
+main:has(.page-footer) + footer {
+  display: none;
+}

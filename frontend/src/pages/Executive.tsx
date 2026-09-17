@@ -2039,7 +2039,8 @@ export default function Executive() {
         )}
 
         {/* ─── Credibility strip ─── */}
-        <footer className="pt-8 border-t border-border">
+        {/* page-footer marker only — PARALLAX D1 § Change 8 */}
+        <footer className="page-footer pt-8 border-t border-border">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px] font-mono text-text-muted mb-4">
             <span className="inline-flex items-center gap-1.5">
               <Shield className="h-3 w-3" aria-hidden="true" />

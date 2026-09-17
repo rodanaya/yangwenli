@@ -3,6 +3,7 @@ import { NotFound } from './pages/NotFound'
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider, QueryCache, keepPreviousData } from '@tanstack/react-query'
+import { MotionConfig } from 'framer-motion'
 import { NuqsAdapter } from 'nuqs/adapters/react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ToastProvider } from '@/components/ui/toast'
@@ -159,6 +160,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      {/* PARALLAX D1 § Change 5: the CSS prefers-reduced-motion rule cannot
+          stop JS-driven animation. MotionConfig reducedMotion="user" makes
+          every framer-motion node in the tree (DotStrip circles, dossier
+          FadeIn, page transitions) honour the OS setting. */}
+      <MotionConfig reducedMotion="user">
       <ToastProvider>
         <TooltipProvider delayDuration={300}>
           <AuthProvider>
@@ -708,6 +714,7 @@ function App() {
           </AuthProvider>
         </TooltipProvider>
       </ToastProvider>
+      </MotionConfig>
     </QueryClientProvider>
   )
 }

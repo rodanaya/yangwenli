@@ -174,14 +174,17 @@ export function PlateFrame({
         }
         style={{
           fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-          fontSize: '9.5px',
+          // PARALLAX D1 § Change 6: 9.5px/300 was the single biggest source of
+          // sub-legibility text on the platform (14 surfaces). 11px/400 keeps
+          // the archival quiet without dropping under the 10px floor.
+          fontSize: '11px',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
           fontWeight: 400,
         }}
       >
-        <span style={{ fontStyle: 'normal', fontWeight: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+        <span style={{ fontStyle: 'normal', fontWeight: 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
           <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·{folio}</span>
           <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
           <span>{contextLabelText}</span>
