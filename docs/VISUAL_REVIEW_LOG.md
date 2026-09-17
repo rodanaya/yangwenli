@@ -14342,3 +14342,39 @@ Findings: **None detected.** All matches confirmed as legitimate constant refere
 
 ### Overall: WARN
 Network policy blocks all outbound HTTPS — HTTP and API checks blocked for the third run in a row. Local bilingual scan passed. Recommend migrating this scheduled check to GitHub Actions (with proper egress) to enable full HTTP/API coverage.
+
+---
+## Visual Review — 2026-09-17T18:24:17Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (403 network policy) | ✗ |
+| https://rubli.xyz/atlas | BLOCKED (403 network policy) | ✗ |
+| https://rubli.xyz/aria | BLOCKED (403 network policy) | ✗ |
+| https://rubli.xyz/sectors | BLOCKED (403 network policy) | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED (403 network policy) | ✗ |
+| https://rubli.xyz/cases | BLOCKED (403 network policy) | ✗ |
+| https://rubli.xyz/methodology | BLOCKED (403 network policy) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (403 network policy) | ✗ |
+
+> **Note**: Proxy returned `connect_rejected` (gateway 403) for all requests to `rubli.xyz:443`. This is a persistent environment network policy restriction — not a site-down condition.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (network policy) | ✗ |
+| /api/v1/cases | BLOCKED (network policy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (network policy) | ✗ |
+| /api/v1/sectors | BLOCKED (network policy) | ✗ |
+
+### Bilingual Gaps
+Grepped `frontend/src/pages/` and `frontend/src/components/` for:
+- Raw i18n key leaks (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*` pattern)
+- Hardcoded `Generate Report` / `Generar Reporte`
+- Hardcoded `SIGN IN` / `INICIAR SESIÓN`
+
+Findings: **None detected.** All grep matches were false positives: code comments, bibliography data, object key lookups (e.g., `PATTERN_CHIP[...]`), or properly bilingual ternary expressions (`isEs ? '...' : '...'`).
+
+### Overall: WARN
+Network policy blocks all outbound HTTPS to rubli.xyz (fourth consecutive blocked run). HTTP and API checks cannot execute from this environment. Local bilingual scan passed cleanly. **Action required**: migrate this health-check to GitHub Actions with an environment that permits outbound HTTPS to rubli.xyz.
