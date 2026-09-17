@@ -14304,3 +14304,41 @@ Findings: **None detected.** All apparent matches were legitimate constant refer
 
 ### Overall: WARN
 Network policy blocks all outbound HTTPS from this remote execution environment — HTTP and API checks could not run. Local bilingual scan passed (no gaps). Recurring issue: configure egress allowlist for rubli.xyz in the Claude Code on the Web environment to enable full health checks.
+
+---
+## Visual Review — 2026-09-17T12:24:19Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ✗ |
+| https://rubli.xyz/atlas | BLOCKED | ✗ |
+| https://rubli.xyz/aria | BLOCKED | ✗ |
+| https://rubli.xyz/sectors | BLOCKED | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED | ✗ |
+| https://rubli.xyz/cases | BLOCKED | ✗ |
+| https://rubli.xyz/methodology | BLOCKED | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ✗ |
+
+> **Note**: Egress proxy returns HTTP 403 to CONNECT on rubli.xyz:443. This is a persistent environment constraint — not a site outage. Third consecutive blocked run. Fix: add `rubli.xyz` to the allowed egress list in the Claude Code on the Web environment configuration.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (network policy) | ✗ |
+| /api/v1/cases | BLOCKED (network policy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (network policy) | ✗ |
+| /api/v1/sectors | BLOCKED (network policy) | ✗ |
+
+> **Note**: Same network restriction applies to all API checks.
+
+### Bilingual Gaps
+Grepped `frontend/src/pages/` and `frontend/src/components/` for:
+- Raw i18n key leaks (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*` pattern)
+- Hardcoded `Generate Report` / `Generar Reporte`
+- Hardcoded `SIGN IN` / `INICIAR SESIÓN`
+
+Findings: **None detected.** All matches confirmed as legitimate constant references or properly guarded bilingual strings.
+
+### Overall: WARN
+Network policy blocks all outbound HTTPS — HTTP and API checks blocked for the third run in a row. Local bilingual scan passed. Recommend migrating this scheduled check to GitHub Actions (with proper egress) to enable full HTTP/API coverage.
