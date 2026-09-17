@@ -67,7 +67,7 @@ Order is weakest-first. **Re-ranked by the Day 1 site-wide audit (2026-09-17)**:
 | Day | Section | Route | Files | Entering state | Status |
 |---|---|---|---|---|---|
 | 0 | Setup + this plan | — | `docs/PARALLAX.md` | 5 wshobson plugins installed (ui-design, accessibility-compliance, frontend-mobile-development, comprehensive-review, application-performance) | ✅ Sep 17 |
-| 1 | **Shell + shared primitives** — Sidebar, Header, MobileBottomNav, PlateFrame, EntityIdentityChip, DotBar/DotStrip, DataPullquote, dossier primitives | all | `components/layout/*`, `components/ui/*`, `components/dossier/primitives.tsx`, `index.css` | GOLD/enhance-in-place · 8 changes: AA muted tokens · dialog drawer · header nowrap · bottom-nav Map · MotionConfig · 10px floor + frozen datelines · ARIA · one footer | 🔨 Sep 17 |
+| 1 | **Shell + shared primitives** — Sidebar, Header, MobileBottomNav, PlateFrame, EntityIdentityChip, DotBar/DotStrip, DataPullquote, dossier primitives | all | `components/layout/*`, `components/ui/*`, `components/dossier/primitives.tsx`, `index.css` | GOLD/enhance-in-place · 8 changes: AA muted tokens · dialog drawer · header nowrap · bottom-nav Map · MotionConfig · 10px floor + frozen datelines · ARIA · one footer · `e427d5ac`+`2a2d27ee`, BUILD_ID `2026-09-17-parallax-d1-shell`, 68/68 | ✅ Sep 17 |
 | 2 | Metodología + El Apagón | `/methodology` `/gap` | `Methodology`, `Gap` | `/gap` 221 sub-10px (worst on site) + 10 empty "—" states; `/methodology` 19 sub-10px, 2 footers | ⬜ |
 | 3 | Sala de Redacción + story template | `/journalists` `/stories/:slug` | `Journalists`, `StoryNarrative`, `stories/*` | 45 sub-10px, **5 live italics (banned)**, 2 footers; story "Analysis as of May 2026" stale; graphics remake stalled at #3 | ⬜ |
 | 4 | La Trama | `/network` | `RedesKnownDossier.tsx` | 56 sub-10px (plate captions, cluster index); dossier band Jul 4 | ⬜ |
@@ -98,3 +98,6 @@ From Day 1 (shell):
 - `ScaleBlock` (dossier primitives) shows a USD line in Spanish; CLAUDE.md says ES surfaces are MXN-only.
 - `Header.getParentPath` returns English "Home"; Sidebar has a dead `useAuth()` call; PlateFrame hard-codes font families instead of `--font-family-*` tokens.
 - Sidebar mobile drawer is hand-rolled; if Day 1's dialog fix proves brittle, migrate to the existing Radix `Sheet` primitive.
+- `ContractDetail.tsx:649` is a third page-level colophon (print route `/print/contracts/:id`) without the `.page-footer` marker — still double-footered. One-line marker when Day 12 touches contracts.
+- Header user-menu Escape handler shipped type-checked only (needs a logged-in user to probe). Verify when a session has a JWT.
+- Mobile bottom nav: The Network was dropped for El Mapa (Day 1 judgment call). Revert is one line if the user misses it.

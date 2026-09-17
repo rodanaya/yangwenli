@@ -116,6 +116,13 @@ Each change lists file(s) and its acceptance check. Acceptance = the Playwright 
 - Commit message: `feat(shell § PARALLAX D1): AA muted tokens, dialog drawer, header nowrap, bottom-nav Map, MotionConfig, 10px floor, ARIA, one footer` + body citing `docs/parallax/DAY-01-shell.md § Change 1–8`. Do **not** push or deploy — Fable judges first.
 - Bilingual audit (`rubli-bilingual-audit`) on every touched TSX before reporting.
 
-## Result
+## Result — ✅ SHIPPED 2026-09-17
 
-_(filled at SHIP)_ commit · BUILD_ID · bundle · verified strings.
+- Commits on origin/main: `e427d5ac` (the 8 changes + these docs, rebased onto the Atlas #42 merge `f480afd3`) · `2a2d27ee` (BUILD_ID bump).
+- BUILD_ID `2026-09-17-parallax-d1-shell` · entry `index-Ds6XDEZX.js` · css `index-mD1N9-V7.css` · deploy via `deploy-safe.sh`.
+- Verified live by Fable: served CSS has `--color-text-muted:#736a65` and `main:has(.page-footer)+footer{display:none}`; entry chunk has `Quick navigation` / `Navegación rápida` and `reducedMotion`; `/`, `/aria`, `/dashboard`, `/health`, `/api/v1/health` all 200 with `db_connected:true`, 3,058,286 contracts.
+- Acceptance: 68/68 on the worktree dev server (`_parallax_shots/day01/accept-run.txt`); before/after PNGs in `_parallax_shots/day01/{before,after}/`.
+- Executor deviations, both accepted: (a) Change 7's sidebar badge uses `aria-hidden` digits + an sr-only `t('badgeCount')` sibling instead of an `aria-label` on the span (the brief's two lines conflicted); (b) Change 8 shipped the `.page-footer` marker variant because two `<footer>`s in `CorruptionClusters.tsx` are card footers inside `<article>`.
+- Not verified: the header user-menu Escape handler (needs a logged-in user; `VITE_REQUIRE_AUTH` is off locally). Type-checked only.
+- Found, not fixed: `ContractDetail.tsx:649` is a third page-level colophon (print route `/print/contracts/:id`) still double-footered → backlog.
+- Judge call to revisit with the user: The Network was dropped from the mobile bottom nav in favour of El Mapa (one-line revert if unwanted).
