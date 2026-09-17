@@ -14090,6 +14090,7 @@ HTTP and API checks are **persistently blocked** by the remote container's egres
 
 ### Overall: WARN
 **Persistent blocker (≥15 runs)**: HTTP and API health checks remain unverifiable — all blocked by egress proxy policy on rubli.xyz:443. Bilingual gap scan (local): PASS. **Action required**: migrate these checks to a GitHub Actions scheduled workflow with direct internet access, or add rubli.xyz to the allowed egress list in the claude.ai remote session network policy.
+
 ---
 ## Visual Review — 2026-09-16T00:24:22Z
 
@@ -14227,3 +14228,41 @@ Findings: **None detected.** All apparent matches were legitimate constant refer
 
 ### Overall: WARN
 Network policy blocks all outbound HTTPS from this remote execution environment — HTTP and API checks could not run. Local bilingual scan passed. To get full HTTP/API coverage, this routine needs to run in an environment with egress access to rubli.xyz, or checks should be moved to a server-side ping (e.g. GitHub Actions with outbound access).
+
+---
+## Visual Review — 2026-09-17T00:24:09Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | ✗ |
+| https://rubli.xyz/atlas | BLOCKED | ✗ |
+| https://rubli.xyz/aria | BLOCKED | ✗ |
+| https://rubli.xyz/sectors | BLOCKED | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED | ✗ |
+| https://rubli.xyz/cases | BLOCKED | ✗ |
+| https://rubli.xyz/methodology | BLOCKED | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | ✗ |
+
+> **Note**: All HTTP checks blocked — egress proxy (organization network policy) denies CONNECT to rubli.xyz:443 in this remote execution environment. This is an environment constraint, not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (network policy) | ✗ |
+| /api/v1/cases | BLOCKED (network policy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (network policy) | ✗ |
+| /api/v1/sectors | BLOCKED (network policy) | ✗ |
+
+> **Note**: Same network restriction applies to all API checks.
+
+### Bilingual Gaps
+Grepped `frontend/src/pages/` and `frontend/src/components/` for:
+- Raw i18n key leaks (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*` pattern)
+- Hardcoded `Generate Report` / `Generar Reporte`
+- Hardcoded `SIGN IN` / `INICIAR SESIÓN`
+
+Findings: **None detected.** All apparent matches were legitimate constant references (`PATTERN_CHIP`, `PATTERN_COLORS`, `TIER_STYLES`, `FRAUDTYPES` in comments) or properly bilingual with `isEs ? '...' : '...'` guards.
+
+### Overall: WARN
+Network policy blocks all outbound HTTPS from this remote execution environment — HTTP and API checks could not run. Local bilingual scan passed. To get full HTTP/API coverage, this routine should run in an environment with egress access to rubli.xyz (e.g. GitHub Actions with outbound access).
