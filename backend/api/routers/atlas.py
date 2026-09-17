@@ -18,10 +18,11 @@ import time
 import threading
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 
 from ..dependencies import get_db_dep
+from ..administrations import ADMINISTRATION_KEYS, ADMINISTRATIONS_BY_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -185,6 +186,8 @@ class ClusterStatItem(BaseModel):
 class ClusterStatsResponse(BaseModel):
     lens: str
     clusters: list[ClusterStatItem]
+    period: Optional[str] = None
+    note: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -195,21 +198,150 @@ _STATS_CACHE_TTL_S = 600.0
 _stats_cache: dict[str, tuple[float, "ClusterStatsResponse"]] = {}
 _stats_cache_lock = threading.Lock()
 
+# category_stats.vendor_count/t1_count are added by
+# scripts/_precompute_category_cohort_counts.py. Older DBs (prod before that
+# precompute has run) won't have the columns — checked once per process
+# instead of on every request.
+_category_stats_vendor_count_checked = False
+_category_stats_has_vendor_count = False
+
+
+def _check_category_stats_vendor_count(conn: sqlite3.Connection) -> bool:
+    global _category_stats_vendor_count_checked, _category_stats_has_vendor_count
+    if not _category_stats_vendor_count_checked:
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(category_stats)")}
+        _category_stats_has_vendor_count = "vendor_count" in cols and "t1_count" in cols
+        _category_stats_vendor_count_checked = True
+    return _category_stats_has_vendor_count
+
+
+def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
+    return conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)
+    ).fetchone() is not None
+
+
+_PERIOD_NOTE = (
+    "Vendor counts include vendors with at least one contract during this "
+    "period. The risk rate reflects each vendor's lifetime risk indicator — "
+    "the model is not re-run per period."
+)
+
+
+def _get_cluster_stats_period(conn: sqlite3.Connection, lens: str, period: str) -> ClusterStatsResponse:
+    """Period-scoped cluster aggregates, read from the precomputed
+    atlas_cohort_period_stats table (scripts/_precompute_atlas_cohort_periods.py).
+    """
+    if lens not in ("patterns", "sectors", "categories"):
+        return ClusterStatsResponse(lens=lens, clusters=[], period=period)
+    if not _table_exists(conn, "atlas_cohort_period_stats"):
+        return ClusterStatsResponse(
+            lens=lens, clusters=[], period=period,
+            note="Period cohort table not precomputed yet — run scripts._precompute_atlas_cohort_periods.",
+        )
+
+    rows = conn.execute(
+        """
+        SELECT code, vendors, t1, high_risk_rate, total_value_mxn
+        FROM atlas_cohort_period_stats
+        WHERE lens = ? AND period = ?
+        ORDER BY total_value_mxn DESC
+        """,
+        (lens, period),
+    ).fetchall()
+
+    if lens == "patterns":
+        label_map = _PATTERN_LABELS
+    elif lens == "sectors":
+        label_map = {
+            r[0]: (r[1] or r[0], r[2] or r[0])
+            for r in conn.execute("SELECT code, name_es, name_en FROM sectors")
+        }
+    else:  # categories
+        label_map = {
+            r[0]: (r[1] or r[0], r[2] or r[0])
+            for r in conn.execute("SELECT code, name_es, name_en FROM categories")
+        }
+
+    items = []
+    for r in rows:
+        code = r[0]
+        fb = _SECTOR_LABEL_FALLBACK.get(code, (code, code)) if lens == "sectors" else (code, code)
+        es, en = label_map.get(code, fb)
+        items.append(ClusterStatItem(
+            code=code, label_es=es, label_en=en,
+            vendors=int(r[1] or 0), t1=int(r[2] or 0),
+            high_risk_rate=round(float(r[3] or 0.0), 4),
+            total_value_mxn=float(r[4] or 0.0),
+        ))
+
+    return ClusterStatsResponse(lens=lens, clusters=items, period=period, note=_PERIOD_NOTE)
+
 
 @router.get("/cluster-stats", response_model=ClusterStatsResponse)
 def get_cluster_stats(
     response: Response,
-    lens: str = Query("patterns", description="Lens: patterns or sectors"),
+    lens: str = Query("patterns", description="Lens: patterns, sectors, or categories"),
+    period: Optional[str] = Query(
+        None,
+        description="Sexenio key to scope vendor cohort membership to "
+                     "(fox|calderon|pena_nieto|amlo|sheinbaum). Omit for all-time.",
+    ),
     conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """All-time per-cluster aggregates (vendor count, Tier-1 count, high-risk
     rate, total value) for the Observatory bubble scatter.
 
-    patterns + sectors only — categories/terms keep their static meta on the
-    client. NOT year-sliced: aria_queue is vendor-lifetime, so there is no
-    honest per-year aggregate (the scatter hides its year scrubber).
+    patterns + sectors + categories — terms keeps its static meta on the
+    client. NOT year-sliced by default: aria_queue is vendor-lifetime, so
+    there is no honest per-year aggregate (the scatter hides its year
+    scrubber). Pass `period` to scope vendor cohort membership to a
+    presidential sexenio via the atlas_cohort_period_stats precompute —
+    see `period` field docs on the response.
+
+    categories' all-time vendor_count/t1_count come from category_stats,
+    precomputed by scripts/_precompute_category_cohort_counts.py — a live
+    `COUNT(DISTINCT vendor_id) ... GROUP BY category_id` over the 3.1M-row
+    contracts table has no covering index and timed out (>60s) when tried
+    live.
     """
     lens = lens.lower()
+
+    if period is not None:
+        period = period.lower()
+        if period not in ADMINISTRATION_KEYS:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid period '{period}'. Valid values: {sorted(ADMINISTRATION_KEYS)}",
+            )
+        return _get_cluster_stats_period(conn, lens, period)
+
+    if lens == "categories":
+        if not _check_category_stats_vendor_count(conn):
+            return ClusterStatsResponse(lens=lens, clusters=[])
+        rows = conn.execute(
+            """
+            SELECT c.code, c.name_es, c.name_en,
+                   COALESCE(cs.vendor_count, 0), COALESCE(cs.t1_count, 0),
+                   COALESCE(cs.high_risk_pct, 0) / 100.0,
+                   COALESCE(cs.total_value, 0)
+            FROM categories c
+            JOIN category_stats cs ON cs.category_id = c.id
+            WHERE c.is_active = 1
+            ORDER BY cs.total_value DESC
+            """
+        ).fetchall()
+        items = [
+            ClusterStatItem(
+                code=r[0], label_es=(r[1] or r[0]), label_en=(r[2] or r[0]),
+                vendors=int(r[3] or 0), t1=int(r[4] or 0),
+                high_risk_rate=round(float(r[5] or 0.0), 4),
+                total_value_mxn=float(r[6] or 0.0),
+            )
+            for r in rows
+        ]
+        return ClusterStatsResponse(lens=lens, clusters=items)
+
     if lens not in ("patterns", "sectors"):
         return ClusterStatsResponse(lens=lens, clusters=[])
 
@@ -298,6 +430,11 @@ def get_cluster_vendors(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0, description="Offset for page-based pagination (ignored when cursor is set)"),
     cursor: Optional[float] = Query(None, description="Keyset cursor: last seen risk_score. Returns vendors with risk_score < cursor."),
+    period: Optional[str] = Query(
+        None,
+        description="Sexenio key to restrict to vendors with >=1 contract during that period "
+                     "(fox|calderon|pena_nieto|amlo|sheinbaum). Omit for all-time.",
+    ),
     conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """Return top vendors associated with a constellation cluster.
@@ -318,12 +455,23 @@ def get_cluster_vendors(
             note=f"Unknown lens '{lens}'. Valid values: {', '.join(sorted(_VALID_LENSES))}",
         )
 
+    period_years: Optional[tuple[int, int]] = None
+    if period is not None:
+        period = period.lower()
+        if period not in ADMINISTRATION_KEYS:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid period '{period}'. Valid values: {sorted(ADMINISTRATION_KEYS)}",
+            )
+        adm = ADMINISTRATIONS_BY_KEY[period]
+        period_years = (adm.year_min, adm.year_max)
+
     if lens == "patterns":
-        return _query_patterns(conn, code, limit, offset, cursor)
+        return _query_patterns(conn, code, limit, offset, cursor, period_years)
     if lens == "sectors":
-        return _query_sectors(conn, code, limit, offset, cursor)
+        return _query_sectors(conn, code, limit, offset, cursor, period_years)
     if lens == "categories":
-        return _query_categories(conn, code, limit, offset, cursor)
+        return _query_categories(conn, code, limit, offset, cursor, period_years)
     # lens == "terms"
     return _query_terms(conn, code)
 
@@ -532,18 +680,25 @@ def _query_patterns(
     limit: int,
     offset: int,
     cursor: Optional[float],
+    period_years: Optional[tuple[int, int]] = None,
 ) -> ClusterVendorsResponse:
     label_es, label_en = _PATTERN_LABELS.get(code, (code, code))
 
     # Total count
-    total = _get_total(
-        conn,
-        "SELECT COUNT(*) FROM aria_queue WHERE primary_pattern = ?",
-        [code],
-    )
+    count_sql = "SELECT COUNT(*) FROM aria_queue WHERE primary_pattern = ?"
+    count_params: list = [code]
+    if period_years is not None:
+        count_sql += " AND EXISTS (SELECT 1 FROM contracts ct WHERE ct.vendor_id = aria_queue.vendor_id AND ct.contract_year BETWEEN ? AND ?)"
+        count_params += list(period_years)
+    total = _get_total(conn, count_sql, count_params)
 
     where_clauses = ["aq.primary_pattern = ?"]
     params: list = [code]
+    if period_years is not None:
+        where_clauses.append(
+            "EXISTS (SELECT 1 FROM contracts ct WHERE ct.vendor_id = aq.vendor_id AND ct.contract_year BETWEEN ? AND ?)"
+        )
+        params += list(period_years)
     where_sql, params = _apply_cursor_or_offset(where_clauses, params, cursor, offset, limit)
 
     sql = f"""
@@ -578,6 +733,7 @@ def _query_sectors(
     limit: int,
     offset: int,
     cursor: Optional[float],
+    period_years: Optional[tuple[int, int]] = None,
 ) -> ClusterVendorsResponse:
     # Resolve sector labels from DB
     sector_row = conn.execute(
@@ -601,14 +757,20 @@ def _query_sectors(
             vendors=[],
         )
 
-    total = _get_total(
-        conn,
-        "SELECT COUNT(*) FROM aria_queue WHERE primary_sector_id = ?",
-        [sector_id],
-    )
+    count_sql = "SELECT COUNT(*) FROM aria_queue WHERE primary_sector_id = ?"
+    count_params: list = [sector_id]
+    if period_years is not None:
+        count_sql += " AND EXISTS (SELECT 1 FROM contracts ct WHERE ct.vendor_id = aria_queue.vendor_id AND ct.contract_year BETWEEN ? AND ?)"
+        count_params += list(period_years)
+    total = _get_total(conn, count_sql, count_params)
 
     where_clauses = ["aq.primary_sector_id = ?"]
     params: list = [sector_id]
+    if period_years is not None:
+        where_clauses.append(
+            "EXISTS (SELECT 1 FROM contracts ct WHERE ct.vendor_id = aq.vendor_id AND ct.contract_year BETWEEN ? AND ?)"
+        )
+        params += list(period_years)
     where_sql, params = _apply_cursor_or_offset(where_clauses, params, cursor, offset, limit)
 
     sql = f"""
@@ -643,6 +805,7 @@ def _query_categories(
     limit: int,
     offset: int,
     cursor: Optional[float],
+    period_years: Optional[tuple[int, int]] = None,
 ) -> ClusterVendorsResponse:
     # Resolve category from code
     cat_row = conn.execute(
@@ -664,11 +827,18 @@ def _query_categories(
     label_es = cat_row[1] or code
     label_en = cat_row[2] or code
 
-    # Count distinct vendors in this category (contracts table join)
+    # Count distinct vendors in this category (contracts table join), optionally
+    # restricted to vendors with >=1 contract in this category during `period_years`.
+    period_clause = ""
+    period_params: list = []
+    if period_years is not None:
+        period_clause = " AND contract_year BETWEEN ? AND ?"
+        period_params = list(period_years)
+
     total = _get_total(
         conn,
-        "SELECT COUNT(DISTINCT vendor_id) FROM contracts WHERE category_id = ? AND vendor_id IS NOT NULL",
-        [cat_id],
+        f"SELECT COUNT(DISTINCT vendor_id) FROM contracts WHERE category_id = ? AND vendor_id IS NOT NULL{period_clause}",
+        [cat_id] + period_params,
     )
 
     # Build a subquery: vendors that appear in this category
@@ -700,7 +870,7 @@ def _query_categories(
         FROM (
             SELECT DISTINCT vendor_id
             FROM contracts
-            WHERE category_id = ? AND vendor_id IS NOT NULL
+            WHERE category_id = ? AND vendor_id IS NOT NULL{period_clause}
         ) cat_vendors
         JOIN aria_queue aq ON aq.vendor_id = cat_vendors.vendor_id
         JOIN vendors v ON v.id = aq.vendor_id
@@ -712,7 +882,7 @@ def _query_categories(
         LIMIT {limit} {offset_clause}
     """
 
-    params = [cat_id] + cursor_params
+    params = [cat_id] + period_params + cursor_params
     rows = conn.execute(sql, params).fetchall()
     vendors = _build_vendor_items(rows)
     next_cursor = _compute_next_cursor(rows, limit)

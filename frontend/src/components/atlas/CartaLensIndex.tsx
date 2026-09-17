@@ -1,6 +1,6 @@
 /**
  * CartaLensIndex — the atlas's VISIBLE PLATE INDEX (RUBLI §7 "La Carta del
- * Cielo"). Four folio-numbered tabs (IX·a–IX·d), each stamped with data
+ * Cielo"). Three folio-numbered tabs (IX·a–IX·c), each stamped with data
  * PROVENANCE (live vs archival). An atlas that hides its plate index behind
  * a dropdown is just a PDF — this component makes the survey's structure
  * visible at all times.
@@ -13,12 +13,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { BookOpen, HelpCircle } from 'lucide-react'
 import type { ConstellationMode } from '@/components/charts/ConcentrationConstellation'
+import { ADMINISTRATIONS, ADMIN_DISPLAY_ACCENTED, PERIOD_API_KEY } from '@/lib/administrations'
 
 interface CartaLensIndexProps {
   lang: 'en' | 'es'
   mode: ConstellationMode
   setMode: (m: ConstellationMode) => void
   onStoriesOpen: () => void
+  /** Global sexenio time filter (Sep 2026) — orthogonal to the lens tabs
+   *  above; never a cohort lens itself. API vocabulary (pena_nieto, not
+   *  epn) — see PERIOD_API_KEY. */
+  period: string | null
+  setPeriod: (p: string | null) => void
 }
 
 const PLATES: Array<{
@@ -30,14 +36,13 @@ const PLATES: Array<{
   { id: 'patterns',   folio: 'IX·a', en: 'PATTERNS',   es: 'PATRONES'    },
   { id: 'sectors',    folio: 'IX·b', en: 'SECTORS',    es: 'SECTORES'    },
   { id: 'categories', folio: 'IX·c', en: 'CATEGORIES', es: 'CATEGORÍAS'  },
-  { id: 'sexenios',   folio: 'IX·d', en: 'TERMS',      es: 'SEXENIOS'    },
 ]
 
-// Structural fact: patterns + sectors compute live from the register;
-// categories + sexenios are curated archival aggregates.
-const LIVE = new Set<ConstellationMode>(['patterns', 'sectors'])
+// All three plates compute live from the register (categories via the
+// category_stats precompute served by /atlas/cluster-stats since backend 02).
+const LIVE = new Set<ConstellationMode>(['patterns', 'sectors', 'categories'])
 
-export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLensIndexProps) {
+export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen, period, setPeriod }: CartaLensIndexProps) {
   const [keymapOpen, setKeymapOpen] = useState(false)
   const keymapRef = useRef<HTMLDivElement>(null)
 
@@ -60,10 +65,8 @@ export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLens
   }, [keymapOpen])
 
   return (
-    <div
-      className="h-10 px-3 flex items-center justify-between gap-2"
-      style={{ borderBottom: '1px solid var(--color-border)' }}
-    >
+    <div style={{ borderBottom: '1px solid var(--color-border)' }}>
+    <div className="h-10 px-3 flex items-center justify-between gap-2">
       {/* ── Left: plate index (tab rail) ── */}
       <div
         role="tablist"
@@ -78,8 +81,8 @@ export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLens
                 ? 'Live aggregates from the register'
                 : 'Agregados en vivo del padrón')
             : (lang === 'en'
-                ? 'Archival plate: curated aggregates — live computation pending'
-                : 'Lámina de archivo: agregados curados — cómputo en vivo pendiente')
+                ? 'No live data for this lens yet — nothing is drawn'
+                : 'Sin datos en vivo para esta lente todavía — no se dibuja nada')
 
           return (
             <button
@@ -119,7 +122,7 @@ export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLens
               >
                 {live
                   ? (lang === 'en' ? ' · live' : ' · en vivo')
-                  : (lang === 'en' ? ' · archive' : ' · archivo')}
+                  : (lang === 'en' ? ' · no data' : ' · sin datos')}
               </span>
             </button>
           )
@@ -145,6 +148,57 @@ export function CartaLensIndex({ lang, mode, setMode, onStoriesOpen }: CartaLens
           </ToolbarIconButton>
           {keymapOpen && <KeymapPopover lang={lang} />}
         </div>
+      </div>
+    </div>
+
+      {/* ── Sexenio row: global time filter, orthogonal to the lens tabs
+          above (never a cohort lens). Same visual language, one notch
+          quieter (h-8, top border instead of accent tab underline color
+          on the container). ── */}
+      <div
+        role="tablist"
+        aria-label={lang === 'en' ? 'Administration' : 'Sexenio'}
+        className="h-8 px-3 flex items-center gap-4 overflow-x-auto"
+        style={{ borderTop: '1px solid var(--color-border)' }}
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={period === null}
+          onClick={() => setPeriod(null)}
+          className="font-mono text-[13px] uppercase tracking-[0.08em] whitespace-nowrap py-1.5 transition-colors"
+          style={{
+            color: period === null ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+            fontWeight: period === null ? 700 : 400,
+            borderBottom: period === null ? '2px solid var(--color-accent)' : '2px solid transparent',
+          }}
+        >
+          {lang === 'en' ? 'ALL' : 'TODO'}
+        </button>
+        {ADMINISTRATIONS.map((a) => {
+          const apiKey = PERIOD_API_KEY[a.key]
+          const active = period === apiKey
+          return (
+            <button
+              key={a.key}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setPeriod(apiKey)}
+              className="font-mono text-[13px] uppercase tracking-[0.08em] whitespace-nowrap py-1.5 transition-colors inline-flex items-baseline gap-1"
+              style={{
+                color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                fontWeight: active ? 700 : 400,
+                borderBottom: active ? '2px solid var(--color-accent)' : '2px solid transparent',
+              }}
+            >
+              {ADMIN_DISPLAY_ACCENTED[a.key]}
+              <span className="font-mono text-[8px] normal-case" style={{ color: 'var(--color-text-muted)' }}>
+                {a.yearStart}–{String(a.yearEnd).slice(-2)}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

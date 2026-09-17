@@ -294,6 +294,26 @@ class VendorInstitutionListResponse(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class VendorCategoryItem(BaseModel):
+    """Procurement category a vendor sells into."""
+
+    category_id: int
+    code: str
+    name_es: str
+    name_en: str
+    contracts: int
+    total_amount_mxn: float
+    share_of_vendor_value: float = Field(..., description="This category's share of the vendor's total contract value (0-1)")
+
+
+class VendorCategoriesResponse(BaseModel):
+    """Categories a vendor sells into — GET /vendors/{id}/categories."""
+
+    vendor_id: int
+    total_contracts: int
+    categories: List[VendorCategoryItem]
+
+
 class VendorRelatedListResponse(BaseModel):
     """List of related vendors."""
 

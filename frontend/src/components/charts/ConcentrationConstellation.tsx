@@ -210,26 +210,6 @@ export function buildSexenioMeta(isEs: boolean): ClusterMeta[] {
 // their sector affinity. Ring radius ∝ √(total spend), color = sector palette.
 // Critical-dot weight uses the avg_risk × log(spend) so high-risk + high-spend
 // categories pull the most critical mass.
-function buildCategoryMeta(isEs: boolean): ClusterMeta[] {
-  return [
-    // Row 0 (top) — biggest-spend categories
-    { code: 'medicamentos',   label: isEs ? 'Medicamentos' : 'Pharmaceuticals',    desc: isEs ? 'Salud · 1.1B MXN · 60% IMSS · capturas conocidas (Grupo Farmacos)' : 'Health · 1.1B MXN · 60% IMSS · known captures (Grupo Farmacos)',  color: SECTOR_COLORS.salud, vendors: 8200,  t1: 42, highRiskPct: 0.55, fx: 0.18, fy: 0.22 },
-    { code: 'combustibles',   label: isEs ? 'Combustibles' : 'Fuel & Energy',       desc: isEs ? 'Energía · 980B MXN · PEMEX/CFE · monopolio estructural certificado' : 'Energy · 980B MXN · PEMEX/CFE · structural certified monopoly',  color: SECTOR_COLORS.energia, vendors: 1400,  t1: 18, highRiskPct: 0.42, fx: 0.42, fy: 0.22 },
-    { code: 'obra_publica',   label: isEs ? 'Obra Pública' : 'Public Works',        desc: isEs ? 'Infraestructura · 870B MXN · SCT/CONAGUA · fraude ejecución' : 'Infrastructure · 870B MXN · SCT/CONAGUA · execution fraud',  color: SECTOR_COLORS.infraestructura, vendors: 6800,  t1: 36, highRiskPct: 0.51, fx: 0.66, fy: 0.22 },
-    { code: 'tic',            label: isEs ? 'Tecnología (TIC)' : 'IT Services',     desc: isEs ? 'Tecnología · 620B MXN · Toka, Mainbit · monopolios IT documentados' : 'Technology · 620B MXN · Toka, Mainbit · documented IT monopolies',  color: SECTOR_COLORS.tecnologia, vendors: 3100,  t1: 29, highRiskPct: 0.68, fx: 0.88, fy: 0.22 },
-    // Row 1 (middle)
-    { code: 'serv_prof',      label: isEs ? 'Servicios Profesionales' : 'Professional Services', desc: isEs ? 'Gobernación · 540B MXN · Estafa Maestra origen' : 'Interior · 540B MXN · Estafa Maestra origin',                color: SECTOR_COLORS.gobernacion, vendors: 12000, t1: 31, highRiskPct: 0.59, fx: 0.18, fy: 0.50 },
-    { code: 'vehiculos',      label: isEs ? 'Vehículos y Transporte' : 'Vehicles & Transport',   desc: isEs ? 'Infraestructura · 410B MXN · ambulancias, autobuses, camiones' : 'Infrastructure · 410B MXN · ambulances, buses, trucks',  color: SECTOR_COLORS.infraestructura, vendors: 2900,  t1: 14, highRiskPct: 0.46, fx: 0.42, fy: 0.50 },
-    { code: 'equipo_medico',  label: isEs ? 'Equipo Médico' : 'Medical Equipment',  desc: isEs ? 'Salud · 380B MXN · IMSS/ISSSTE · sobreprecio histórico' : 'Health · 380B MXN · IMSS/ISSSTE · historical overpricing',     color: SECTOR_COLORS.salud, vendors: 4500,  t1: 22, highRiskPct: 0.52, fx: 0.66, fy: 0.50 },
-    { code: 'alimentos',      label: isEs ? 'Alimentos' : 'Food & Distribution',    desc: isEs ? 'Agricultura · 290B MXN · Segalmex/Liconsa · MX$15B desviados' : 'Agriculture · 290B MXN · Segalmex/Liconsa · MX$15B diverted',  color: SECTOR_COLORS.agricultura, vendors: 1800,  t1: 17, highRiskPct: 0.66, fx: 0.88, fy: 0.50 },
-    // Row 2 (bottom)
-    { code: 'vales',          label: isEs ? 'Vales y Monederos' : 'Vouchers & E-cards', desc: isEs ? 'Hacienda · 240B MXN · Edenred 96.7% · monopolio confirmado' : 'Finance · 240B MXN · Edenred 96.7% · confirmed monopoly',  color: SECTOR_COLORS.hacienda, vendors: 80,    t1: 6,  highRiskPct: 0.71, fx: 0.18, fy: 0.78 },
-    { code: 'telecom',        label: isEs ? 'Telecomunicaciones' : 'Telecommunications', desc: isEs ? 'Tecnología · 210B MXN · enlaces dedicados, internet' : 'Technology · 210B MXN · dedicated links, internet',           color: SECTOR_COLORS.tecnologia, vendors: 950,   t1: 9,  highRiskPct: 0.49, fx: 0.42, fy: 0.78 },
-    { code: 'limpieza',       label: isEs ? 'Limpieza y Vigilancia' : 'Cleaning & Security', desc: isEs ? 'Otros · 180B MXN · contratos de servicios de bajo escrutinio' : 'Other · 180B MXN · low-scrutiny service contracts',          color: SECTOR_COLORS.otros, vendors: 5600,  t1: 11, highRiskPct: 0.43, fx: 0.66, fy: 0.78 },
-    { code: 'papeleria',      label: isEs ? 'Papelería y Oficina' : 'Office Supplies',   desc: isEs ? 'Otros · 95B MXN · alta volumen, baja revisión' : 'Other · 95B MXN · high-volume, low-scrutiny',                                color: SECTOR_COLORS.otros, vendors: 7200,  t1: 8,  highRiskPct: 0.38, fx: 0.88, fy: 0.78 },
-  ]
-}
-
 // PATTERN_SHORT_LABEL removed with omega-P2 revert; bilingual labels are
 // already in the meta data above.
 
@@ -281,7 +261,9 @@ export function ConcentrationConstellation({
     if (metaOverride && metaOverride.length > 0) return metaOverride
     if (mode === 'sectors')    return buildSectorMeta(isEs)
     if (mode === 'sexenios')   return buildSexenioMeta(isEs)
-    if (mode === 'categories') return buildCategoryMeta(isEs)
+    // No curated categories meta: the hardcoded table that lived here painted
+    // invented cohorts. Categories only render from live cluster-stats.
+    if (mode === 'categories') return []
     return buildPatternMeta(isEs)
   }, [mode, isEs, metaOverride])
 

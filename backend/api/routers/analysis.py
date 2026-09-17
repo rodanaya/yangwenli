@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 
 from ..dependencies import get_db, require_write_key
 from ..config.constants import MAX_CONTRACT_VALUE
+from ..administrations import ADMINISTRATIONS
 from ..services.active_model import normalize_coefficients
 from ..cache import SimpleCache
 from ..config.temporal_events import TEMPORAL_EVENTS, TemporalEventData
@@ -4358,13 +4359,7 @@ class AdminBreakdownResponse(BaseModel):
     cached_at: Optional[str] = None
 
 
-_ADMIN_ERAS = [
-    ("fox",         2002, 2005),
-    ("calderon",    2006, 2011),
-    ("pena_nieto",  2012, 2017),
-    ("amlo",        2018, 2024),
-    ("sheinbaum",   2025, 2030),
-]
+_ADMIN_ERAS = [(a.key, a.year_min, a.year_max) for a in ADMINISTRATIONS]
 
 _admin_breakdown_cache = SimpleCache()
 _admin_breakdown_lock = threading.Lock()

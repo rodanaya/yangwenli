@@ -634,6 +634,26 @@ export const vendorApi = {
   },
 
   /**
+   * Get vendor's spending categories (Atlas scope 2 § categorías pivot, Sep 2026)
+   */
+  async getCategories(vendorId: number): Promise<{
+    vendor_id: number
+    total_contracts: number
+    categories: Array<{
+      category_id: number
+      code: string
+      name_es: string
+      name_en: string
+      contracts: number
+      total_amount_mxn: number
+      share_of_vendor_value: number
+    }>
+  }> {
+    const { data } = await api.get(`/vendors/${vendorId}/categories`)
+    return data
+  },
+
+  /**
    * Search vendors by name
    */
   async search(query: string, limit = 10): Promise<VendorListResponse> {
@@ -3731,12 +3751,16 @@ export const atlasApi = {
     code: string
     limit?: number
     cursor?: number
+    /** Sexenio key (fox|calderon|pena_nieto|amlo|sheinbaum) — restricts to
+     *  vendors with >=1 contract during that period. Omit for all-time. */
+    period?: string
   }): Promise<AtlasClusterVendorsResponse> {
     const q = buildQueryParams({
       lens: params.lens,
       code: params.code,
       limit: params.limit ?? 50,
       ...(params.cursor !== undefined ? { cursor: params.cursor } : {}),
+      ...(params.period ? { period: params.period } : {}),
     })
     const { data } = await api.get<AtlasClusterVendorsResponse>(`/atlas/cluster-vendors?${q}`)
     return data
@@ -3744,9 +3768,12 @@ export const atlasApi = {
 
   /**
    * Live per-cluster aggregates for the faithful-encoding Observatory scatter.
-   * All-time (not year-sliced); patterns + sectors only. Returns [] for other lenses.
+   * All-time (not year-sliced) by default; patterns + sectors + categories.
+   * Pass `period` (fox|calderon|pena_nieto|amlo|sheinbaum) to scope vendor
+   * cohort membership to a presidential sexenio — the response then carries
+   * `period` + an honest `note` about what the numbers mean.
    */
-  async getClusterStats(lens: string): Promise<{
+  async getClusterStats(lens: string, period?: string): Promise<{
     lens: string
     clusters: Array<{
       code: string
@@ -3757,8 +3784,11 @@ export const atlasApi = {
       high_risk_rate: number
       total_value_mxn: number
     }>
+    period?: string
+    note?: string
   }> {
-    const { data } = await api.get(`/atlas/cluster-stats?lens=${encodeURIComponent(lens)}`)
+    const q = period ? `&period=${encodeURIComponent(period)}` : ''
+    const { data } = await api.get(`/atlas/cluster-stats?lens=${encodeURIComponent(lens)}${q}`)
     return data
   },
 

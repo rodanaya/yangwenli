@@ -29,8 +29,8 @@ export function CartaColofon({ lang, totalContracts }: CartaColofonProps) {
     clauseI,
     {
       roman: '(ii)',
-      en: 'Two plates are computed live (patterns and sectors); two are archival (categories and terms): hand-curated aggregates, live computation pending. Each plate declares which it is, on its tab and in its caption.',
-      es: 'Dos láminas se calculan en vivo (patrones y sectores); dos son de archivo (categorías y sexenios): agregados curados a mano, pendientes de cómputo en vivo. Cada lámina lo declara en su pestaña y en su pie.',
+      en: 'All three plates compute live from the register (patterns, sectors, categories). No plate carries curated stand-ins; each declares its provenance on its tab and in its caption.',
+      es: 'Las tres láminas se calculan en vivo del padrón (patrones, sectores, categorías). Ninguna lleva sustitutos curados; cada una declara su procedencia en su pestaña y en su pie.',
     },
     {
       roman: '(iii)',

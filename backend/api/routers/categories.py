@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Query, HTTPException
 
 from ..dependencies import get_db
+from ..administrations import ADMINISTRATIONS
 
 logger = logging.getLogger(__name__)
 
@@ -425,11 +426,13 @@ def get_category_subcategories(category_id: int):
 def get_categories_sexenio():
     """Return category spending grouped by Mexican presidential administration."""
     admins = [
-        {"name": "Fox",        "years": "2001–06", "year_min": 2001, "year_max": 2006},
-        {"name": "Calderón",   "years": "2007–12", "year_min": 2007, "year_max": 2012},
-        {"name": "Peña Nieto", "years": "2013–18", "year_min": 2013, "year_max": 2018},
-        {"name": "AMLO",       "years": "2019–24", "year_min": 2019, "year_max": 2024},
-        {"name": "Sheinbaum",  "years": "2025–",   "year_min": 2025, "year_max": 2099},
+        {
+            "name": a.short_es,
+            "years": f"{a.year_min}–{a.year_max % 100:02d}",
+            "year_min": a.year_min,
+            "year_max": a.year_max,
+        }
+        for a in ADMINISTRATIONS
     ]
 
     with get_db() as conn:

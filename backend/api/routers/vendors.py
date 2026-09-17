@@ -49,6 +49,8 @@ from ..models.vendor import (
     VendorRiskProfile,
     VendorInstitutionItem,
     VendorInstitutionListResponse,
+    VendorCategoryItem,
+    VendorCategoriesResponse,
     VendorRelatedItem,
     VendorRelatedListResponse,
     VendorTopItem,
@@ -1361,6 +1363,59 @@ def get_vendor_institutions(
             vendor_name=vendor["name"],
             data=institutions,
             total=total,
+        )
+
+
+@router.get("/{vendor_id:int}/categories", response_model=VendorCategoriesResponse)
+def get_vendor_categories(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """
+    Get procurement categories a vendor sells into.
+
+    Returns categories ranked by contract value, with each category's share
+    of the vendor's total contract value.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM vendors WHERE id = ?", (vendor_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        cursor.execute("""
+            SELECT
+                cat.id as category_id, cat.code, cat.name_es, cat.name_en,
+                COUNT(c.id) as contracts,
+                COALESCE(SUM(c.amount_mxn), 0) as total_amount_mxn
+            FROM contracts c
+            JOIN categories cat ON c.category_id = cat.id
+            WHERE c.vendor_id = ? AND COALESCE(c.amount_mxn, 0) <= ?
+            GROUP BY cat.id, cat.code, cat.name_es, cat.name_en
+            ORDER BY total_amount_mxn DESC
+        """, (vendor_id, MAX_CONTRACT_VALUE))
+        rows = cursor.fetchall()
+
+        total_contracts = sum(row["contracts"] for row in rows)
+        vendor_total_value = sum(row["total_amount_mxn"] for row in rows) or 0.0
+
+        categories = [
+            VendorCategoryItem(
+                category_id=row["category_id"],
+                code=row["code"],
+                name_es=row["name_es"],
+                name_en=row["name_en"],
+                contracts=row["contracts"],
+                total_amount_mxn=row["total_amount_mxn"],
+                share_of_vendor_value=round(row["total_amount_mxn"] / vendor_total_value, 4) if vendor_total_value > 0 else 0.0,
+            )
+            for row in rows
+        ]
+
+        return VendorCategoriesResponse(
+            vendor_id=vendor_id,
+            total_contracts=total_contracts,
+            categories=categories,
         )
 
 

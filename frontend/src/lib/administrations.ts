@@ -5,8 +5,11 @@
  * ContractDetail.tsx, CategoryProfile.tsx, SectorProfile.tsx, CaseDetail.tsx
  * (4 files, slightly different accent handling and year ranges).
  *
- * Year boundaries are inclusive on the upper end. A contract signed in 2018
- * resolves to AMLO (started Dec 2018) — same convention used by every page.
+ * Year boundaries are inclusive on both ends and non-overlapping. A contract
+ * signed in 2018 resolves to Pena Nieto, not AMLO: Mexican federal terms
+ * start 1 December, so 11 of the transition year's 12 months are still the
+ * outgoing administration. Same outgoing-president convention as the
+ * backend's canonical table (backend/api/administrations.py).
  */
 
 export type AdministrationKey = 'fox' | 'calderon' | 'epn' | 'amlo' | 'sheinbaum'
@@ -25,10 +28,10 @@ export interface Administration {
 
 export const ADMINISTRATIONS: Administration[] = [
   { key: 'fox',       short: 'Fox',       long: 'Vicente Fox',          yearStart: 2000, yearEnd: 2006 },
-  { key: 'calderon',  short: 'Calderon',  long: 'Felipe Calderón',      yearStart: 2006, yearEnd: 2012 },
-  { key: 'epn',       short: 'Pena Nieto', long: 'Enrique Peña Nieto',  yearStart: 2012, yearEnd: 2018 },
-  { key: 'amlo',      short: 'AMLO',      long: 'Andrés Manuel López Obrador', yearStart: 2018, yearEnd: 2024 },
-  { key: 'sheinbaum', short: 'Sheinbaum', long: 'Claudia Sheinbaum',    yearStart: 2024, yearEnd: 2030 },
+  { key: 'calderon',  short: 'Calderon',  long: 'Felipe Calderón',      yearStart: 2007, yearEnd: 2012 },
+  { key: 'epn',       short: 'Pena Nieto', long: 'Enrique Peña Nieto',  yearStart: 2013, yearEnd: 2018 },
+  { key: 'amlo',      short: 'AMLO',      long: 'Andrés Manuel López Obrador', yearStart: 2019, yearEnd: 2024 },
+  { key: 'sheinbaum', short: 'Sheinbaum', long: 'Claudia Sheinbaum',    yearStart: 2025, yearEnd: 2030 },
 ]
 
 /** Display order — chronological. Used by sexenio matrices and admin filters. */
@@ -104,4 +107,25 @@ export function getAdministrationByYear(
     if (year >= a.yearStart && year <= a.yearEnd) return a
   }
   return undefined
+}
+
+/** The backend's `period=` query vocabulary (atlas cluster-stats /
+ *  cluster-vendors, etc.) differs from AdministrationKey for one term:
+ *  Peña Nieto is `pena_nieto` there, `epn` here. Map explicitly at the API
+ *  boundary — never string-compare the two directly. */
+export const PERIOD_API_KEY: Record<AdministrationKey, string> = {
+  fox: 'fox',
+  calderon: 'calderon',
+  epn: 'pena_nieto',
+  amlo: 'amlo',
+  sheinbaum: 'sheinbaum',
+}
+
+/** Reverse lookup: an API period key (e.g. from `?period=` in the URL) to
+ *  its Administration record. Returns undefined for null/invalid keys. */
+export function getAdministrationByPeriodKey(
+  periodKey: string | null | undefined
+): Administration | undefined {
+  if (!periodKey) return undefined
+  return ADMINISTRATIONS.find((a) => PERIOD_API_KEY[a.key] === periodKey)
 }

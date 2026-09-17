@@ -22,7 +22,7 @@
  * (atlas-density). The full set covers ~80% of federal spend by category.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -30,18 +30,18 @@ import { useQuery } from '@tanstack/react-query'
 import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, BookOpen, Square, RotateCcw, SkipForward, FileText } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { ATLAS_STORIES, type Story, type StoryChapter } from '@/lib/atlas-stories'
-import { analysisApi, atlasApi } from '@/api/client'
+import { analysisApi, atlasApi, type AtlasClusterVendorItem } from '@/api/client'
 import type { RiskDistribution, YearOverYearChange } from '@/api/types'
 import {
   ConcentrationConstellation,
   buildPatternMeta,
   buildSectorMeta,
-  buildSexenioMeta,
   type ConstellationMode,
   type ConstellationRiskRow,
   type ClusterMeta,
 } from '@/components/charts/ConcentrationConstellation'
-import { formatNumber, cn } from '@/lib/utils'
+import { formatNumber, formatDualCurrency, cn } from '@/lib/utils'
+import { PERIOD_API_KEY, ADMIN_DISPLAY_ACCENTED, getAdministrationByPeriodKey } from '@/lib/administrations'
 // atlas-C-P1: three-pane investigator console shell
 import { AtlasContextProvider, useAtlasState, useAtlasDispatch, type AtlasState } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
@@ -77,7 +77,10 @@ import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
 //   "Open dossier" navigates to /patterns/:code (subpage).
 import { GalaxyDimmer } from '@/components/atlas/GalaxyDimmer'
 import { SpotlightCard } from '@/components/atlas/SpotlightCard'
-import { ObservatoryScatter } from '@/components/atlas/ObservatoryScatter'
+import { PadronBand } from '@/components/atlas/PadronBand'
+import { CohortRegister } from '@/components/atlas/CohortRegister'
+import { VendorPivots } from '@/components/atlas/VendorPivots'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
@@ -121,7 +124,7 @@ interface VendorLookup {
   displayName: string             // canonical display name
   pattern: string                 // P1..P7
   sector: string                  // 12-sector code
-  category: string                // category code (matches buildAtlasCategoriesMeta)
+  category: string                // real DB category code (no curated categories meta exists)
   blurb: { en: string; es: string }
 }
 
@@ -253,57 +256,6 @@ const YEAR_SNAPSHOTS: YearSnapshot[] = [
 // 6×6-ish field so they distribute without overlap. T1 weighting is calibrated
 // against ARIA pattern memberships per category.
 // ─────────────────────────────────────────────────────────────────────────────
-function buildAtlasCategoriesMeta(isEs: boolean): ClusterMeta[] {
-  return [
-    // Health (top-left cluster)
-    { code: 'medicamentos',   label: isEs ? 'Medicamentos' : 'Pharmaceuticals',     desc: isEs ? '1.1B MXN · IMSS captura · Grupo Farmacos cartel' : '1.1B MXN · IMSS capture · Grupo Farmacos cartel',          color: '#dc2626', vendors: 8200,  t1: 42, highRiskPct: 0.55, fx: 0.10, fy: 0.16 },
-    { code: 'equipo_medico',  label: isEs ? 'Equipo Médico' : 'Medical Equipment',  desc: isEs ? '380B MXN · IMSS/ISSSTE · sobreprecio histórico' : '380B MXN · IMSS/ISSSTE · historical overpricing',           color: '#dc2626', vendors: 4500,  t1: 22, highRiskPct: 0.52, fx: 0.20, fy: 0.10 },
-    { code: 'consumibles',    label: isEs ? 'Consumibles Médicos' : 'Medical Consumables', desc: isEs ? '180B MXN · suturas, gasas, jeringas' : '180B MXN · sutures, gauze, syringes',                          color: '#dc2626', vendors: 6100,  t1: 14, highRiskPct: 0.48, fx: 0.32, fy: 0.10 },
-    { code: 'serv_salud',     label: isEs ? 'Servicios de Salud' : 'Health Services', desc: isEs ? '160B MXN · subrogación, traslados' : '160B MXN · subcontracting, transfers',                                color: '#dc2626', vendors: 1900,  t1: 9,  highRiskPct: 0.43, fx: 0.42, fy: 0.06 },
-
-    // Energy (top-center)
-    { code: 'combustibles',   label: isEs ? 'Combustibles' : 'Fuel & Energy',       desc: isEs ? '980B MXN · PEMEX/CFE · monopolio estructural' : '980B MXN · PEMEX/CFE · structural monopoly',                color: '#eab308', vendors: 1400,  t1: 18, highRiskPct: 0.42, fx: 0.55, fy: 0.10 },
-    { code: 'serv_petroleros', label: isEs ? 'Servicios Petroleros' : 'Oil Services', desc: isEs ? '420B MXN · Cotemar · 100% T1' : '420B MXN · Cotemar · 100% T1',                                              color: '#eab308', vendors: 280,   t1: 21, highRiskPct: 0.78, fx: 0.66, fy: 0.06 },
-    { code: 'electricidad',   label: isEs ? 'Equipo Eléctrico' : 'Electrical Equipment', desc: isEs ? '210B MXN · transformadores, cables' : '210B MXN · transformers, cables',                                  color: '#eab308', vendors: 950,   t1: 8,  highRiskPct: 0.40, fx: 0.76, fy: 0.10 },
-    { code: 'energias_renov', label: isEs ? 'Energías Renovables' : 'Renewable Energy', desc: isEs ? '85B MXN · solar, eólica · alto crecimiento' : '85B MXN · solar, wind · high growth',                       color: '#eab308', vendors: 380,   t1: 4,  highRiskPct: 0.35, fx: 0.86, fy: 0.06 },
-
-    // Tech (top-right)
-    { code: 'tic',            label: isEs ? 'Tecnología (TIC)' : 'IT Services',     desc: isEs ? '620B MXN · Toka, Mainbit · monopolios documentados' : '620B MXN · Toka, Mainbit · documented monopolies',     color: '#8b5cf6', vendors: 3100,  t1: 29, highRiskPct: 0.68, fx: 0.92, fy: 0.20 },
-    { code: 'telecom',        label: isEs ? 'Telecomunicaciones' : 'Telecommunications', desc: isEs ? '210B MXN · enlaces, internet, datos' : '210B MXN · links, internet, data',                                color: '#8b5cf6', vendors: 950,   t1: 9,  highRiskPct: 0.49, fx: 0.94, fy: 0.32 },
-    { code: 'software',       label: isEs ? 'Software y Licencias' : 'Software & Licensing', desc: isEs ? '95B MXN · ERP, ofimática, especializado' : '95B MXN · ERP, productivity, specialized',                color: '#8b5cf6', vendors: 1200,  t1: 6,  highRiskPct: 0.44, fx: 0.92, fy: 0.46 },
-
-    // Infrastructure (middle band)
-    { code: 'obra_publica',   label: isEs ? 'Obra Pública' : 'Public Works',        desc: isEs ? '870B MXN · SCT · fraude ejecución invisible' : '870B MXN · SCT · invisible execution fraud',                  color: '#ea580c', vendors: 6800,  t1: 36, highRiskPct: 0.51, fx: 0.16, fy: 0.32 },
-    { code: 'materiales',     label: isEs ? 'Materiales de Construcción' : 'Construction Materials', desc: isEs ? '320B MXN · cemento, acero, agregados' : '320B MXN · cement, steel, aggregates',                color: '#ea580c', vendors: 3200,  t1: 12, highRiskPct: 0.42, fx: 0.28, fy: 0.30 },
-    { code: 'vehiculos',      label: isEs ? 'Vehículos y Transporte' : 'Vehicles & Transport', desc: isEs ? '410B MXN · ambulancias, autobuses' : '410B MXN · ambulances, buses',                                color: '#ea580c', vendors: 2900,  t1: 14, highRiskPct: 0.46, fx: 0.40, fy: 0.34 },
-    { code: 'maquinaria',     label: isEs ? 'Maquinaria Pesada' : 'Heavy Machinery', desc: isEs ? '195B MXN · grúas, excavadoras, perforadoras' : '195B MXN · cranes, excavators, drills',                       color: '#ea580c', vendors: 720,   t1: 6,  highRiskPct: 0.39, fx: 0.51, fy: 0.30 },
-    { code: 'mantenimiento',  label: isEs ? 'Mantenimiento' : 'Maintenance Services', desc: isEs ? '275B MXN · servicios continuos, hidráulico' : '275B MXN · ongoing services, hydraulic',                       color: '#ea580c', vendors: 4100,  t1: 18, highRiskPct: 0.45, fx: 0.62, fy: 0.34 },
-    { code: 'agua',           label: isEs ? 'Agua y Drenaje' : 'Water & Sewerage',   desc: isEs ? '140B MXN · CONAGUA · contratos rotativos' : '140B MXN · CONAGUA · rotating contracts',                          color: '#10b981', vendors: 1100,  t1: 8,  highRiskPct: 0.51, fx: 0.74, fy: 0.30 },
-
-    // Government services (middle-right)
-    { code: 'serv_prof',      label: isEs ? 'Servicios Profesionales' : 'Professional Services', desc: isEs ? '540B MXN · Estafa Maestra origen' : '540B MXN · Estafa Maestra origin',                            color: '#be123c', vendors: 12000, t1: 31, highRiskPct: 0.59, fx: 0.85, fy: 0.62 },
-    { code: 'consultoria',    label: isEs ? 'Consultoría Jurídica' : 'Legal Consulting', desc: isEs ? '180B MXN · litigio, fiscal' : '180B MXN · litigation, fiscal',                                              color: '#be123c', vendors: 2400,  t1: 7,  highRiskPct: 0.44, fx: 0.92, fy: 0.74 },
-    { code: 'publicidad',     label: isEs ? 'Publicidad Oficial' : 'Official Publicity', desc: isEs ? '95B MXN · medios, propaganda' : '95B MXN · media, propaganda',                                              color: '#be123c', vendors: 1800,  t1: 9,  highRiskPct: 0.55, fx: 0.86, fy: 0.84 },
-    { code: 'imprenta',       label: isEs ? 'Imprenta' : 'Printing',                  desc: isEs ? '38B MXN · oficial, electoral' : '38B MXN · official, electoral',                                                color: '#be123c', vendors: 950,   t1: 4,  highRiskPct: 0.41, fx: 0.93, fy: 0.92 },
-
-    // Other / commercial
-    { code: 'vales',          label: isEs ? 'Vales y Monederos' : 'Vouchers & E-cards', desc: isEs ? '240B MXN · Edenred 96.7% · monopolio' : '240B MXN · Edenred 96.7% · monopoly',                              color: '#16a34a', vendors: 80,    t1: 6,  highRiskPct: 0.71, fx: 0.10, fy: 0.50 },
-    { code: 'seguros',        label: isEs ? 'Seguros' : 'Insurance',                  desc: isEs ? '125B MXN · de bienes, gastos médicos' : '125B MXN · property, medical',                                        color: '#16a34a', vendors: 240,   t1: 3,  highRiskPct: 0.32, fx: 0.20, fy: 0.50 },
-    { code: 'arrendamiento',  label: isEs ? 'Arrendamiento' : 'Leasing',              desc: isEs ? '180B MXN · vehicular, equipo TI' : '180B MXN · vehicle, IT equipment',                                          color: '#16a34a', vendors: 540,   t1: 5,  highRiskPct: 0.40, fx: 0.30, fy: 0.50 },
-    { code: 'limpieza',       label: isEs ? 'Limpieza y Vigilancia' : 'Cleaning & Security', desc: isEs ? '180B MXN · servicios bajo escrutinio' : '180B MXN · low-scrutiny services',                              color: '#64748b', vendors: 5600,  t1: 11, highRiskPct: 0.43, fx: 0.40, fy: 0.50 },
-    { code: 'papeleria',      label: isEs ? 'Papelería y Oficina' : 'Office Supplies', desc: isEs ? '95B MXN · alta volumen, baja revisión' : '95B MXN · high volume, low scrutiny',                                color: '#64748b', vendors: 7200,  t1: 8,  highRiskPct: 0.38, fx: 0.50, fy: 0.50 },
-    { code: 'mobiliario',     label: isEs ? 'Mobiliario' : 'Furniture',               desc: isEs ? '52B MXN · escolar, oficina, hospital' : '52B MXN · school, office, hospital',                                  color: '#64748b', vendors: 1900,  t1: 4,  highRiskPct: 0.35, fx: 0.60, fy: 0.50 },
-    { code: 'uniformes',      label: isEs ? 'Uniformes y Textiles' : 'Uniforms & Textiles', desc: isEs ? '68B MXN · escolar, militar, médico' : '68B MXN · school, military, medical',                              color: '#64748b', vendors: 1450,  t1: 5,  highRiskPct: 0.37, fx: 0.70, fy: 0.50 },
-
-    // Bottom row — agriculture / education
-    { code: 'alimentos',      label: isEs ? 'Alimentos' : 'Food & Distribution',     desc: isEs ? '290B MXN · Segalmex · MX$15B desviados' : '290B MXN · Segalmex · MX$15B diverted',                              color: '#22c55e', vendors: 1800,  t1: 17, highRiskPct: 0.66, fx: 0.10, fy: 0.84 },
-    { code: 'agric_insumos',  label: isEs ? 'Insumos Agrícolas' : 'Agricultural Inputs', desc: isEs ? '110B MXN · fertilizantes, semillas' : '110B MXN · fertilizers, seeds',                                      color: '#22c55e', vendors: 920,   t1: 6,  highRiskPct: 0.46, fx: 0.22, fy: 0.86 },
-    { code: 'libros',         label: isEs ? 'Libros y Textos' : 'Textbooks',         desc: isEs ? '78B MXN · SEP · concentración alta' : '78B MXN · SEP · high concentration',                                    color: '#3b82f6', vendors: 380,   t1: 5,  highRiskPct: 0.49, fx: 0.36, fy: 0.86 },
-    { code: 'becas',          label: isEs ? 'Becas y Subsidios' : 'Scholarships & Subsidies', desc: isEs ? '210B MXN · transferencias directas' : '210B MXN · direct transfers',                                  color: '#3b82f6', vendors: 220,   t1: 2,  highRiskPct: 0.28, fx: 0.50, fy: 0.86 },
-    { code: 'capacitacion',   label: isEs ? 'Capacitación' : 'Training Services',    desc: isEs ? '54B MXN · talleres, certificación' : '54B MXN · workshops, certification',                                     color: '#3b82f6', vendors: 1600,  t1: 3,  highRiskPct: 0.34, fx: 0.62, fy: 0.86 },
-  ]
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Build risk-distribution rows from a year snapshot.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -567,6 +519,25 @@ interface CanvasAtlasViewProps {
   onClusterClickBridge: (code: string) => void
   riskFloor: 'all' | 'medium' | 'high' | 'critical'
   namedVendors: NamedVendorDot[]
+  /** Scope 1 (Sep 2026): in-page cohort register. State lives in Atlas() —
+   *  not here — because `key={constellationKey}` remounts this component on
+   *  every lens change, which would otherwise re-read a stale scope/code
+   *  pair from the URL for the new lens. */
+  scope: 'padron' | 'cohorte' | 'proveedor'
+  cohortCode: string | null
+  onCohortSelect: (code: string) => void
+  onCohortExit: () => void
+  onCohortLoaded: (info: { code: string; label: string; loaded: number; total: number }) => void
+  /** Scope 2 (Sep 2026): a vendor's short card + relation pivots, opened
+   *  from a CohortRegister row. Same reasoning as scope 1 for living in
+   *  Atlas() rather than here. */
+  vendorId: number | null
+  vendorRow: AtlasClusterVendorItem | null
+  onOpenVendor: (vendor: AtlasClusterVendorItem) => void
+  onVendorExit: () => void
+  onVendorLoaded: (info: { vendorId: number; label: string; institutions: number; coBidders: number; categories: number }) => void
+  /** Sexenio global time filter (Sep 2026) — API vocabulary. */
+  period: string | null
 }
 
 function CanvasAtlasView({
@@ -577,6 +548,17 @@ function CanvasAtlasView({
   onClusterClickBridge,
   riskFloor,
   namedVendors,
+  scope,
+  cohortCode,
+  onCohortSelect,
+  onCohortExit,
+  onCohortLoaded,
+  vendorId,
+  vendorRow,
+  onOpenVendor,
+  onVendorExit,
+  onVendorLoaded,
+  period,
 }: CanvasAtlasViewProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -591,10 +573,10 @@ function CanvasAtlasView({
   const useFaithfulObservatory = stageParams.get('legacy') !== '1'
   // Stage 2: live per-cluster aggregates for the faithful scatter (patterns +
   // sectors). Falls back to the static meta while loading / for other lenses.
-  const { data: clusterStats } = useQuery({
-    queryKey: ['atlas-cluster-stats', mode],
-    queryFn: () => atlasApi.getClusterStats(mode),
-    enabled: useFaithfulObservatory && (mode === 'patterns' || mode === 'sectors'),
+  const { data: clusterStats, isLoading: clusterStatsLoading } = useQuery({
+    queryKey: ['atlas-cluster-stats', mode, period],
+    queryFn: () => atlasApi.getClusterStats(mode, period ?? undefined),
+    enabled: useFaithfulObservatory && (mode === 'patterns' || mode === 'sectors' || mode === 'categories'),
     staleTime: 10 * 60 * 1000,
   })
   const flyToRef = useRef<FlyToClusterFn | null>(null)
@@ -1196,26 +1178,57 @@ function CanvasAtlasView({
         vendors: c.vendors,
         t1: c.t1,
         highRiskPct: c.high_risk_rate,
+        totalValueMxn: c.total_value_mxn,
       }))
     }
-    return activeMeta.map((m) => ({
-      code: m.code, label: m.label, vendors: m.vendors, t1: m.t1, highRiskPct: m.highRiskPct,
-    }))
-  }, [clusterStats, activeMeta, lang])
+    // Static meta carries no value, so the band cannot draw it. Live data only.
+    return []
+  }, [clusterStats, lang])
 
-  // Faithful Observatory: a bubble click opens the cluster's dossier
-  // (overview → dossier IA) instead of in-page semantic zoom. Mirrors the
-  // existing SpotlightCard onOpenDossier routing.
-  const handleScatterNav = (code: string) => {
-    if (mode === 'patterns' || /^P\d$/.test(code)) {
-      navigate(`/patterns/${encodeURIComponent(code)}`)
-    } else if (mode === 'sectors') {
-      const s = SECTORS.find((x) => x.code === code)
-      navigate(s ? `/sectors/${s.id}` : `/aria?pattern=${encodeURIComponent(code)}`)
-    } else {
-      navigate(`/aria?pattern=${encodeURIComponent(code)}`)
+  // Sexenio filter (Sep 2026): resolved once, reused by padronSaldo's
+  // "durante X (years)" suffix and the empty-cohort notice above.
+  const periodAdmin = useMemo(() => getAdministrationByPeriodKey(period), [period])
+
+  // § EL SALDO — computed only from what the API returns. high_risk_rate is a
+  // share of VENDORS, so no peso figure is derived from it: money and heat
+  // stay separate numbers.
+  const padronSaldo = useMemo(() => {
+    if (scatterClusters.length === 0) return null
+    const total = scatterClusters.reduce((acc, c) => acc + c.totalValueMxn, 0)
+    // patterns/sectors assign each vendor to ONE cohort, so the sum is a real
+    // headcount; categories are many-to-many and summing would double-count.
+    const vendors = mode === 'categories' ? null : scatterClusters.reduce((acc, c) => acc + c.vendors, 0)
+    const widest = [...scatterClusters].sort((a, b) => b.totalValueMxn - a.totalValueMxn)[0]
+    const hottest = [...scatterClusters].sort((a, b) => b.highRiskPct - a.highRiskPct)[0]
+    return {
+      total,
+      vendors,
+      widest,
+      hottest,
+      n: scatterClusters.length,
+      widestShare: total > 0 ? (widest.totalValueMxn / total) * 100 : 0,
     }
-  }
+  }, [scatterClusters])
+
+  // Scope 1 (Sep 2026): a cohort slice now opens the in-page register
+  // (onCohortSelect, owned by Atlas()) instead of navigating out to
+  // /patterns or /sectors — PadronBand's onSelect wires directly to it.
+  // Escape backs out to scope 0, mirroring the zoom-exit listener below but
+  // scoped to this orthogonal piece of state (faithful-scatter only, never
+  // set while the legacy canvas engine is active).
+  useEffect(() => {
+    if (scope !== 'cohorte' && scope !== 'proveedor') return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return
+      // Scope 2 escapes back to scope 1 (the cohort), not all the way home.
+      if (scope === 'proveedor') onVendorExit()
+      else onCohortExit()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [scope, onCohortExit, onVendorExit])
 
   // Field click in the canvas wrapper (background) escapes zoom.
   // The CanvasConstellation engine handles dot/cluster clicks itself;
@@ -1232,14 +1245,130 @@ function CanvasAtlasView({
       }
     >
       {useFaithfulObservatory ? (
-        <ObservatoryScatter
-          clusters={scatterClusters}
-          lens={mode}
-          lang={lang}
-          onOpenDossier={handleScatterNav}
-          onVendorClick={(id) => navigate(`/vendors/${id}`)}
-          spotlightCode={pinnedCode}
-        />
+        scatterClusters.length === 0 && !clusterStatsLoading ? (
+          <p
+            className="font-mono text-[12px] text-text-muted py-10 text-center"
+            style={{ letterSpacing: '0.08em' }}
+          >
+            {period ? (
+              lang === 'es'
+                ? `Sin datos para ${ADMIN_DISPLAY_ACCENTED[getAdministrationByPeriodKey(period)?.key ?? 'fox']} en esta lente.`
+                : `No data for ${ADMIN_DISPLAY_ACCENTED[getAdministrationByPeriodKey(period)?.key ?? 'fox']} in this lens.`
+            ) : (
+              lang === 'es' ? 'Sin datos en vivo para esta lente todavía.' : 'No live data for this lens yet.'
+            )}
+          </p>
+        ) : scope === 'proveedor' && cohortCode && vendorId ? (
+          <VendorPivots
+            lens={mode}
+            code={cohortCode}
+            cohortLabel={scatterClusters.find((c) => c.code === cohortCode)?.label ?? cohortCode}
+            lensLabel={lensLabel}
+            vendorId={vendorId}
+            vendorRow={vendorRow}
+            lang={lang}
+            onGoHome={onCohortExit}
+            onExitToCohort={onVendorExit}
+            onVendorLoaded={onVendorLoaded}
+            period={period}
+          />
+        ) : scope === 'cohorte' && cohortCode ? (
+          <CohortRegister
+            lens={mode}
+            code={cohortCode}
+            label={scatterClusters.find((c) => c.code === cohortCode)?.label ?? cohortCode}
+            lensLabel={lensLabel}
+            lang={lang}
+            onGoHome={onCohortExit}
+            onLoaded={(loaded, total) =>
+              onCohortLoaded({
+                code: cohortCode,
+                label: scatterClusters.find((c) => c.code === cohortCode)?.label ?? cohortCode,
+                loaded,
+                total,
+              })
+            }
+            onOpenVendor={onOpenVendor}
+            period={period}
+          />
+        ) : (
+        <>
+          {padronSaldo && (
+            <div className="mb-3">
+              <p
+                className="font-mono"
+                style={{ fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+              >
+                {lang === 'es' ? '§ EL SALDO' : '§ THE BALANCE'}
+              </p>
+              <h2
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontWeight: 700,
+                  fontSize: 'clamp(1.1rem, 2vw, 1.45rem)',
+                  lineHeight: 1.3,
+                  color: 'var(--color-text-primary)',
+                  margin: 0,
+                }}
+              >
+                {lang === 'es' ? (
+                  <>
+                    {padronSaldo.n} cohortes suman{' '}
+                    <strong style={{ color: 'var(--color-accent)' }}>{formatDualCurrency(padronSaldo.total)}</strong>
+                    {padronSaldo.vendors != null ? <>{' '}entre {formatNumber(padronSaldo.vendors)} proveedores</> : null}. El dinero está en {padronSaldo.widest.label}
+                    {' '}({padronSaldo.widestShare.toFixed(0)}% de la banda); el calor en {padronSaldo.hottest.label}, con
+                    {' '}{(padronSaldo.hottest.highRiskPct * 100).toFixed(0)}% de sus {formatNumber(padronSaldo.hottest.vendors)}
+                    {' '}proveedores en alto o crítico
+                    {period && periodAdmin ? <>, durante {ADMIN_DISPLAY_ACCENTED[periodAdmin.key]} ({periodAdmin.yearStart}–{periodAdmin.yearEnd}).</> : '.'}
+                  </>
+                ) : (
+                  <>
+                    {padronSaldo.n} cohorts hold{' '}
+                    <strong style={{ color: 'var(--color-accent)' }}>{formatDualCurrency(padronSaldo.total)}</strong>
+                    {padronSaldo.vendors != null ? <>{' '}across {formatNumber(padronSaldo.vendors)} vendors</> : null}. The money sits in {padronSaldo.widest.label}
+                    {' '}({padronSaldo.widestShare.toFixed(0)}% of the band); the heat in {padronSaldo.hottest.label}, with
+                    {' '}{(padronSaldo.hottest.highRiskPct * 100).toFixed(0)}% of its {formatNumber(padronSaldo.hottest.vendors)}
+                    {' '}vendors high or critical
+                    {period && periodAdmin ? <>, during {ADMIN_DISPLAY_ACCENTED[periodAdmin.key]} ({periodAdmin.yearStart}–{periodAdmin.yearEnd}).</> : '.'}
+                  </>
+                )}
+              </h2>
+            </div>
+          )}
+          <PadronBand
+            clusters={scatterClusters}
+            lens={mode}
+            lang={lang}
+            onSelect={onCohortSelect}
+            spotlightCode={pinnedCode}
+          />
+          {/* Rule #1: entity mentions route via EntityIdentityChip. The SVG
+              slices are the picture; these chips are the navigation. */}
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5">
+            {[...scatterClusters]
+              .sort((a, b) => b.totalValueMxn - a.totalValueMxn)
+              .map((c) => {
+                const sector = mode === 'sectors' ? SECTORS.find((sec) => sec.code === c.code) : undefined
+                if (mode === 'sectors' && !sector) return null
+                return (
+                  // fullName makes the chip `w-full`; the inline-flex wrapper
+                  // shrinks that to content width so the legend stays one row.
+                  <span key={c.code} className="inline-flex max-w-full">
+                    <EntityIdentityChip
+                      type={mode === 'sectors' ? 'sector' : 'pattern'}
+                      id={mode === 'sectors' && sector ? sector.id : c.code}
+                      name={c.label}
+                      size="sm"
+                      hideIcon
+                      fullName
+                      sectorCode={mode === 'sectors' ? c.code : null}
+                    />
+                  </span>
+                )
+              })}
+          </div>
+        </>
+        )
       ) : (
       <>
       {isZoomed && zoomedMeta && (
@@ -1411,6 +1540,16 @@ interface AtlasUrlSyncProps {
   initialZoomRef: React.RefObject<string | null>
   /** Ref containing initial vendor-id selection parsed from URL at mount time */
   initialSelectRef: React.RefObject<string[]>
+  /** Scope 1 (Sep 2026): owned by Atlas(), passed through so this writer's
+   *  from-scratch URLSearchParams doesn't evict scope/code 250ms after any
+   *  other tracked field changes (e.g. risk floor) while a cohort is open. */
+  scope: 'padron' | 'cohorte' | 'proveedor'
+  cohortCode: string | null
+  /** Scope 2 (Sep 2026): same eviction-guard reasoning as cohortCode. */
+  vendorId: number | null
+  /** Sexenio filter (Sep 2026): same eviction-guard reasoning — owned by
+   *  Atlas(), threaded through so this writer doesn't evict it. */
+  period: string | null
 }
 
 function AtlasUrlSync({
@@ -1422,6 +1561,10 @@ function AtlasUrlSync({
   yearIndexB,
   initialZoomRef,
   initialSelectRef,
+  scope,
+  cohortCode,
+  vendorId,
+  period,
 }: AtlasUrlSyncProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -1492,11 +1635,22 @@ function AtlasUrlSync({
       // faithful-scatter engine they explicitly opted out of.
       const legacyParam = searchParams.get('legacy')
       if (legacyParam) params.set('legacy', legacyParam)
+      // Scope 1/2 (Sep 2026): shareable cohort-register / vendor-pivots deep link.
+      if (scope === 'proveedor' && cohortCode && vendorId) {
+        params.set('scope', 'proveedor')
+        params.set('code', cohortCode)
+        params.set('vendor', String(vendorId))
+      } else if (scope === 'cohorte' && cohortCode) {
+        params.set('scope', 'cohorte')
+        params.set('code', cohortCode)
+      }
+      // Sexenio filter (Sep 2026): shareable, orthogonal to scope.
+      if (period) params.set('period', period)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, yearIndex, pinnedCode, riskFloor, compareMode, yearIndexB, zoomedCode, selectionIds.join(','), setSearchParams])
+  }, [mode, yearIndex, pinnedCode, riskFloor, compareMode, yearIndexB, zoomedCode, selectionIds.join(','), scope, cohortCode, vendorId, period, setSearchParams])
 
   return null
 }
@@ -1638,7 +1792,7 @@ export default function Atlas() {
   const [mode, setMode] = useState<ConstellationMode>(() => {
     const p = new URLSearchParams(window.location.search)
     const l = p.get('lens') as ConstellationMode | null
-    return (l && ['patterns', 'sectors', 'categories', 'sexenios'].includes(l)) ? l : 'patterns'
+    return (l && ['patterns', 'sectors', 'categories'].includes(l)) ? l : 'patterns'
   })
   const [yearIndex, setYearIndex] = useState<number>(() => {
     const p = new URLSearchParams(window.location.search)
@@ -1680,6 +1834,51 @@ export default function Atlas() {
     const f = p.get('floor')
     return (f && ['all', 'medium', 'high', 'critical'].includes(f)) ? f as 'all' | 'medium' | 'high' | 'critical' : 'all'
   })
+  // Sexenio global time filter (Sep 2026) — API vocabulary
+  // (fox|calderon|pena_nieto|amlo|sheinbaum), validated against
+  // PERIOD_API_KEY. Orthogonal to lens/scope: changing it does NOT reset
+  // atlasScope/cohortCode/vendorId.
+  const [period, setPeriod] = useState<string | null>(() => {
+    const p = new URLSearchParams(window.location.search)
+    const per = p.get('period')
+    const valid = new Set(Object.values(PERIOD_API_KEY))
+    return per && valid.has(per) ? per : null
+  })
+  // Scope 1 (Sep 2026): in-page cohort register for the faithful scatter.
+  // Lives here (not in CanvasAtlasView, which is remounted via
+  // key={constellationKey} on every lens change) so a lens switch can
+  // reliably reset it before the remount reads the URL for the new lens.
+  const [atlasScope, setAtlasScope] = useState<'padron' | 'cohorte' | 'proveedor'>(() => {
+    const p = new URLSearchParams(window.location.search)
+    const s = p.get('scope')
+    if (s === 'proveedor' && p.get('code') && p.get('vendor')) return 'proveedor'
+    if (s === 'cohorte' && p.get('code')) return 'cohorte'
+    return 'padron'
+  })
+  const [cohortCode, setCohortCode] = useState<string | null>(() => {
+    const p = new URLSearchParams(window.location.search)
+    const s = p.get('scope')
+    return s === 'cohorte' || s === 'proveedor' ? p.get('code') : null
+  })
+  // Caption-only cache (label + loaded/total) reported up by CohortRegister
+  // via CanvasAtlasView; null falls back to the default padron caption.
+  const [cohortScopeInfo, setCohortScopeInfo] = useState<
+    { code: string; label: string; loaded: number; total: number } | null
+  >(null)
+  // Scope 2 (Sep 2026): the vendor short card + relation pivots opened from
+  // a CohortRegister row. vendorId parses from the URL on a hard reload;
+  // vendorRow (the AtlasClusterVendorItem clicked) is click-time-only —
+  // VendorPivots re-derives it from the cached cohort-vendors page when null.
+  const [vendorId, setVendorId] = useState<number | null>(() => {
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('scope') !== 'proveedor') return null
+    const n = Number(p.get('vendor'))
+    return Number.isFinite(n) && n > 0 ? n : null
+  })
+  const [vendorRow, setVendorRow] = useState<AtlasClusterVendorItem | null>(null)
+  const [vendorScopeInfo, setVendorScopeInfo] = useState<
+    { vendorId: number; label: string; institutions: number; coBidders: number; categories: number } | null
+  >(null)
   // Compare mode — when true, render a second constellation card with its own year
   const [compareMode, setCompareMode] = useState<boolean>(false)
   // Year B defaults to a contrasting year vs year A — Peña 2014 vs COVID 2020
@@ -1692,6 +1891,24 @@ export default function Atlas() {
   // consumed by AtlasUrlSync (which lives inside the context provider).
   const initialZoomRef = useRef<string | null>(null)
   const initialSelectRef = useRef<string[]>([])
+
+  // Scope 1: changing lens exits the cohort register. useLayoutEffect (not
+  // useEffect) so this resolves before the browser paints — CanvasAtlasView
+  // remounts in the same commit as the mode change (key={constellationKey}),
+  // and without this the new instance would render one frame with the old
+  // cohort code against the new lens.
+  const prevModeForScopeRef = useRef(mode)
+  useLayoutEffect(() => {
+    if (prevModeForScopeRef.current !== mode) {
+      setAtlasScope('padron')
+      setCohortCode(null)
+      setCohortScopeInfo(null)
+      setVendorId(null)
+      setVendorRow(null)
+      setVendorScopeInfo(null)
+      prevModeForScopeRef.current = mode
+    }
+  }, [mode])
 
   // Auto-play loop — advance year every 1.6s
   useEffect(() => {
@@ -1769,7 +1986,7 @@ export default function Atlas() {
     const compare = searchParams.get('compare')
     const floor = searchParams.get('floor') as typeof riskFloor | null
 
-    if (lens && ['patterns', 'sectors', 'categories', 'sexenios'].includes(lens)) {
+    if (lens && ['patterns', 'sectors', 'categories'].includes(lens)) {
       setMode(lens)
     }
     if (year) {
@@ -1838,10 +2055,21 @@ export default function Atlas() {
       // 2026-08-16: preserve legacy flag (see same fix in the other URL writer above)
       const legacyParam = searchParams.get('legacy')
       if (legacyParam) params.set('legacy', legacyParam)
+      // Scope 1/2 (Sep 2026): shareable cohort-register / vendor-pivots deep link.
+      if (atlasScope === 'proveedor' && cohortCode && vendorId) {
+        params.set('scope', 'proveedor')
+        params.set('code', cohortCode)
+        params.set('vendor', String(vendorId))
+      } else if (atlasScope === 'cohorte' && cohortCode) {
+        params.set('scope', 'cohorte')
+        params.set('code', cohortCode)
+      }
+      // Sexenio filter (Sep 2026): shareable, orthogonal to scope.
+      if (period) params.set('period', period)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
-  }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, setSearchParams])
+  }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, atlasScope, cohortCode, vendorId, period, setSearchParams])
 
   // V5: first-visit auto-tour. Launch "The Pharmaceutical Cartel" automatically
   // the first time a user lands on /atlas with no URL state. Subsequent visits
@@ -1978,12 +2206,6 @@ export default function Atlas() {
   const snapshot = effectiveSnapshot(yearIndex)
   const rows = useMemo(() => applyRiskFloor(snapshotToRows(snapshot)), [snapshot, riskFloor])
 
-  // Atlas-density category meta (32 entries) — only used in categories mode
-  const atlasMeta: ClusterMeta[] | undefined = useMemo(() => {
-    if (mode !== 'categories') return undefined
-    return buildAtlasCategoriesMeta(lang === 'es')
-  }, [mode, lang])
-
   // Fallback rows from /stats/dashboard/fast risk_distribution (already
   // fetched above for yearly_trends — reuse the same query).
   const fallbackRows: ConstellationRiskRow[] = useMemo(() => {
@@ -2010,13 +2232,14 @@ export default function Atlas() {
   // AtlasZoomLayer to look up attractor coords for semantic zoom.
   // Mirrors the activeMeta logic inside ConcentrationConstellation.tsx.
   const activeConstellationMeta: ClusterMeta[] = useMemo(() => {
-    if (atlasMeta && atlasMeta.length > 0) return atlasMeta
     const isEs = lang === 'es'
     if (mode === 'sectors')    return buildSectorMeta(isEs)
-    if (mode === 'sexenios')   return buildSexenioMeta(isEs)
-    if (mode === 'categories') return buildAtlasCategoriesMeta(isEs)
+    // Categories has no curated meta. The hand-typed table that used to live
+    // here rendered 33 invented cohorts with made-up counts and positions;
+    // the lens now shows live data only (empty until the backend serves it).
+    if (mode === 'categories') return []
     return buildPatternMeta(isEs)
-  }, [mode, lang, atlasMeta])
+  }, [mode, lang])
 
   // omega-N-FIX2: named outliers ONLY when a cluster is selected.
   // Macro view stays clean (anonymous dots only); zoom into a cluster to
@@ -2051,9 +2274,20 @@ export default function Atlas() {
   // §7 «La Carta del Cielo» — honest plate caption for the faithful scatter.
   // Kills PlateFrame's default "constellation of N contracts, year YYYY" (three
   // lies: it's a cohort scatter, N is illustrative, year is meaningless all-time).
-  // Live lenses stamp "en vivo"; archival lenses (curated aggregates) say so.
+  // Live lenses stamp "en vivo"; lenses without live data say so and draw nothing.
+  // Same query key as CanvasAtlasView's — React Query dedupes, so this costs
+  // no extra request. Needed because the static meta is [] for categories
+  // (step 00) and the caption must count what is actually drawn.
+  const { data: liveClusterStats } = useQuery({
+    queryKey: ['atlas-cluster-stats', mode, period],
+    queryFn: () => atlasApi.getClusterStats(mode, period ?? undefined),
+    enabled: faithfulObservatory && (mode === 'patterns' || mode === 'sectors' || mode === 'categories'),
+    staleTime: 10 * 60 * 1000,
+  })
+  const liveClusterCount = liveClusterStats?.clusters.length ?? 0
+
   const cartaCaption = useMemo(() => {
-    const K = activeConstellationMeta.length
+    const K = faithfulObservatory ? liveClusterCount : activeConstellationMeta.length
     const folioLetter: Record<ConstellationMode, string> = {
       patterns: 'a', sectors: 'b', categories: 'c', sexenios: 'd',
     }
@@ -2063,20 +2297,47 @@ export default function Atlas() {
       categories: { en: 'spending categories',     es: 'categorías de gasto' },
       sexenios:   { en: 'presidential terms',      es: 'sexenios presidenciales' },
     }
-    const isLive = mode === 'patterns' || mode === 'sectors'
+    const isLive = mode === 'patterns' || mode === 'sectors' || mode === 'categories'
     const letter = folioLetter[mode]
     const lensLabel = lensLabelMap[mode][lang]
-    if (lang === 'en') {
-      const provenance = isLive
-        ? 'Live aggregates from the register · data cut 2025·09·28.'
-        : 'Archival plate: curated aggregates, live computation pending · data cut 2025·09·28.'
-      return `Plate IX·${letter} — ${K} bodies: each a vendor cohort (${lensLabel}), placed by scale (x, log) and high-risk rate (y); area is the count of priority files (T1). ${provenance}`
+    // Sexenio filter (Sep 2026): honest note appended to scopes 0 and 1 only
+    // (scope 2 carries its own one-line honesty caveat in VendorPivots
+    // instead, since a lifetime vendor card can't be period-scoped).
+    // Prefers the API's `note` (period-scoped queries only); falls back to
+    // the same meaning so the caption isn't blank if `note` is absent.
+    const periodNote = period
+      ? (liveClusterStats?.note ?? (lang === 'en'
+          ? "Vendor counts include vendors with at least one contract during this period. The risk rate reflects each vendor's lifetime risk indicator — the model is not re-run per period."
+          : 'El recuento de proveedores incluye a quienes tuvieron al menos un contrato durante este periodo. La tasa de riesgo refleja el indicador de riesgo de por vida de cada proveedor — el modelo no se vuelve a correr por periodo.'))
+      : ''
+    // Scope 2: vendor-pivots caption, only once VendorPivots has reported in
+    // for THIS vendor (same staleness guard as scope 1 below).
+    if (atlasScope === 'proveedor' && cohortCode && vendorId && vendorScopeInfo && vendorScopeInfo.vendorId === vendorId) {
+      const { label, institutions, coBidders, categories } = vendorScopeInfo
+      return lang === 'en'
+        ? `Plate IX·${letter}·${cohortCode} — ${label}: ${institutions} institutions, ${coBidders} co-bidders, ${categories} categories; amount = lifetime contracted value. Live aggregates from the register.`
+        : `Lámina IX·${letter}·${cohortCode} — ${label}: ${institutions} instituciones, ${coBidders} co-licitantes, ${categories} categorías; monto = valor contratado de por vida. Agregados en vivo del padrón.`
     }
-    const provenance = isLive
-      ? 'Agregados en vivo del padrón · corte de datos 28·09·2025.'
-      : 'Lámina de archivo: agregados curados, cómputo en vivo pendiente · corte de datos 28·09·2025.'
-    return `Lámina IX·${letter} — ${K} cuerpos: cada uno una cohorte de proveedores (${lensLabel}), situada por escala (x, log) y tasa de alto riesgo (y); el área es la cuenta de expedientes prioritarios (T1). ${provenance}`
-  }, [mode, lang, activeConstellationMeta])
+    // Scope 1: register caption, only once CohortRegister has reported in
+    // for THIS cohort (guards against a stale label/count from the
+    // previously viewed cohort while the new one is still loading).
+    if (atlasScope === 'cohorte' && cohortCode && cohortScopeInfo && cohortScopeInfo.code === cohortCode) {
+      const { label, loaded, total } = cohortScopeInfo
+      return lang === 'en'
+        ? `Plate IX·${letter}·${cohortCode} — register of ${loaded} of ${total} vendors in ${label}, ranked by risk indicator; amount = lifetime contracted value. Live aggregates from the register.${periodNote ? ` ${periodNote}` : ''}`
+        : `Lámina IX·${letter}·${cohortCode} — registro de ${loaded} de ${total} proveedores de ${label}, ordenados por indicador de riesgo; monto = valor contratado de por vida. Agregados en vivo del padrón.${periodNote ? ` ${periodNote}` : ''}`
+    }
+    if (lang === 'en') {
+      if (!isLive || K === 0) {
+        return `Plate IX·${letter} — no live data for ${lensLabel} yet. Nothing is drawn until the register serves it; this plate carries no curated stand-ins · data cut 2025·09·28.`
+      }
+      return `Plate IX·${letter} — the whole band is what ${K} ${lensLabel} contracted; each slice's width is its value, and the hatch rises to the share of its vendors in the high or critical band — a vendor rate, not a peso share. Red line = that rate. Live aggregates from the register · data cut 2025·09·28.${periodNote ? ` ${periodNote}` : ''}`
+    }
+    if (!isLive || K === 0) {
+      return `Lámina IX·${letter} — sin datos en vivo para ${lensLabel} todavía. No se dibuja nada hasta que el padrón los sirva; esta lámina no lleva sustitutos curados · corte de datos 28·09·2025.`
+    }
+    return `Lámina IX·${letter} — la banda completa es lo que contrataron ${K} ${lensLabel}; el ancho de cada rebanada es su valor, y el achurado sube hasta la parte de sus proveedores en alto o crítico — una tasa de proveedores, no de pesos. Línea roja = esa tasa. Agregados en vivo del padrón · corte de datos 28·09·2025.${periodNote ? ` ${periodNote}` : ''}`
+  }, [mode, lang, activeConstellationMeta, faithfulObservatory, liveClusterCount, atlasScope, cohortCode, cohortScopeInfo, vendorId, vendorScopeInfo, period, liveClusterStats])
 
   // ─── atlas-C-P1: bridge callbacks for left rail ──────────────────────────
   // The left rail dispatches into AtlasContext AND calls these bridge
@@ -2090,7 +2351,6 @@ export default function Atlas() {
     // Returns the cluster code so the rail can auto-zoom into it (M-OBS P5).
     const matches = searchKnownVendors(query)
     if (!matches[0]) return null
-    if (mode === 'sexenios') setMode('patterns')
     const code = vendorToClusterCode(matches[0], mode === 'sexenios' ? 'patterns' : mode)
     setPinnedCode(code)
     setFoundVendor(matches[0])
@@ -2142,6 +2402,10 @@ export default function Atlas() {
         yearIndexB={yearIndexB}
         initialZoomRef={initialZoomRef}
         initialSelectRef={initialSelectRef}
+        scope={atlasScope}
+        cohortCode={cohortCode}
+        vendorId={vendorId}
+        period={period}
       />
       {/* omega-N N2: story-chart binding — headless, renders null.
           Wires active chapter's pinnedCode to zoom dispatch + highlight state.
@@ -2206,6 +2470,8 @@ export default function Atlas() {
           mode={mode}
           setMode={setMode}
           onStoriesOpen={() => setStoriesMenuOpen(true)}
+          period={period}
+          setPeriod={setPeriod}
         />
       ) : (
         <AtlasToolbar
@@ -2702,6 +2968,41 @@ export default function Atlas() {
             onClusterClickBridge={handleClusterClick}
             riskFloor={riskFloor}
             namedVendors={namedVendors}
+            scope={atlasScope}
+            cohortCode={cohortCode}
+            onCohortSelect={(code) => {
+              setAtlasScope('cohorte')
+              setCohortCode(code)
+              setCohortScopeInfo(null)
+              setVendorId(null)
+              setVendorRow(null)
+              setVendorScopeInfo(null)
+            }}
+            onCohortExit={() => {
+              setAtlasScope('padron')
+              setCohortCode(null)
+              setCohortScopeInfo(null)
+              setVendorId(null)
+              setVendorRow(null)
+              setVendorScopeInfo(null)
+            }}
+            onCohortLoaded={setCohortScopeInfo}
+            vendorId={vendorId}
+            vendorRow={vendorRow}
+            onOpenVendor={(vendor) => {
+              setAtlasScope('proveedor')
+              setVendorId(vendor.vendor_id)
+              setVendorRow(vendor)
+              setVendorScopeInfo(null)
+            }}
+            onVendorExit={() => {
+              setAtlasScope('cohorte')
+              setVendorId(null)
+              setVendorRow(null)
+              setVendorScopeInfo(null)
+            }}
+            onVendorLoaded={setVendorScopeInfo}
+            period={period}
           />
         ) : (
           <AtlasZoomLayer
@@ -2709,7 +3010,6 @@ export default function Atlas() {
             mode={mode}
             rows={rows.length > 0 ? rows : fallbackRows}
             totalContracts={totalContractsForYear}
-            metaOverride={atlasMeta}
             /* Seed depends ONLY on mode — dots stay in place across years
                so CSS transitions can morph their fill-opacity smoothly as the
                critical/high/medium/low pcts shift per year. */
@@ -2767,7 +3067,6 @@ export default function Atlas() {
                 rows={rowsB}
                 totalContracts={totalContractsB}
                 mode={mode}
-                metaOverride={atlasMeta}
                 /* Different seed than canvas A so the two views don't share
                    dot positions even at identical years — but stable across
                    year changes within compare mode. */
