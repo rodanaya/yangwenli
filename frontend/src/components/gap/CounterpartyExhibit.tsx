@@ -27,7 +27,7 @@ export function CounterpartyExhibit({ youngCount, efosCount, lang }: {
   const es = lang === 'es'
   return (
     <div>
-      <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-4">
+      <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-4">
         {es ? 'LO QUE EL EXPEDIENTE PUEDE NOMBRAR — Y LO QUE NO' : 'WHAT THE FILE CAN NAME — AND WHAT IT CAN’T'}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

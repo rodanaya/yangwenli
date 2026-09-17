@@ -20,7 +20,7 @@ export function BuyersLedger({ items, lang, onPick }: {
   const es = lang === 'es'
   return (
     <div>
-      <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-3">
+      <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-3">
         {es ? 'LOS COMPRADORES · MAYOR CONCENTRACIÓN DE ALERTAS' : 'THE BUYERS · HIGHEST ALERT CONCENTRATION'}
       </div>
       <div className="divide-y divide-border">

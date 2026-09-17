@@ -49,7 +49,7 @@ const TOTAL_DAYS = 90
 const VW = 720
 const VH = 300
 const PAD_L = 46
-const PAD_R = 96
+const PAD_R = 108 // 96 → 108: at 10.5px the "random = 0.5" caption overran the viewBox right edge
 const PLOT_W = VW - PAD_L - PAD_R
 const CHART_TOP = 42 // y-pixel for AUC=1.0
 const CHART_BOTTOM = 214 // y-pixel for AUC=0.5
@@ -153,9 +153,12 @@ export default function CalibrationRecord({ className }: { className?: string })
             strokeDasharray="1 3"
             opacity={0.5}
           />
+          {/* Inside the wash band, not above it: at CHART_TOP − 8 this label,
+              the v5.2 overlay label and the "AUC (test)" axis caption all
+              printed on the same two rows and overlapped. */}
           <text
             x={(xPos(v40.day) + xPos(v51.day)) / 2}
-            y={CHART_TOP - 8}
+            y={CHART_TOP + 14}
             textAnchor="middle"
             fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
@@ -178,7 +181,8 @@ export default function CalibrationRecord({ className }: { className?: string })
 
           {/* random-baseline dashed rule at AUC = 0.5 */}
           <line x1={PAD_L} y1={yPos(0.5)} x2={xPos(TOTAL_DAYS)} y2={yPos(0.5)} stroke="var(--color-text-muted)" strokeWidth={1} strokeDasharray="2 3" opacity={0.6} />
-          <text x={xPos(TOTAL_DAYS) + 4} y={yPos(0.5) + 3} fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
+          {/* above its own rule — below it, the caption ran into the v0.8.5 axis label */}
+          <text x={xPos(TOTAL_DAYS) + 4} y={yPos(0.5) - 5} fontSize={13} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
             {lang === 'en' ? 'random = 0.5' : 'azar = 0.5'}
           </text>
 
@@ -190,15 +194,18 @@ export default function CalibrationRecord({ className }: { className?: string })
           {/* v5.2 overlay flag — dashed vertical rule at its date position */}
           <line x1={xPos(v52.day)} y1={CHART_TOP} x2={xPos(v52.day)} y2={CHART_BOTTOM} stroke="var(--color-text-secondary)" strokeWidth={1} strokeDasharray="3 2" opacity={0.55} />
           <g className="hidden sm:block">
+            {/* At the foot of its own dashed rule, reading away from it. The
+                "alters no scores" clause already appears in the service
+                register below, so the label is shortened here. */}
             <text
-              x={xPos(v52.day)}
-              y={CHART_TOP - 8}
-              textAnchor="middle"
+              x={xPos(v52.day) + 6}
+              y={CHART_BOTTOM - 6}
+              textAnchor="start"
               fontSize={13}
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-secondary)"
             >
-              {lang === 'en' ? 'v5.2 overlay — explanations only; alters no scores' : 'capa v5.2 — solo explicaciones; no altera puntuaciones'}
+              {lang === 'en' ? 'v5.2 overlay — explanations only' : 'capa v5.2 — solo explicaciones'}
             </text>
           </g>
 
@@ -210,6 +217,14 @@ export default function CalibrationRecord({ className }: { className?: string })
             const cx = xPos(e.day)
             const cy = yPos(e.auc!)
             const isActive = e.kind === 'active'
+            // v3.3 / v4.0 / v5.0 land 6 days apart, so their three identical
+            // "Feb 2026" dates printed as one run-on string and the version
+            // labels touched. The cluster gets a single shared date below, and
+            // the outer two version labels splay away from v4.0.
+            const clustered = e.day < 20
+            const anchor: 'start' | 'middle' | 'end' =
+              e.version === 'v3.3' ? 'end' : e.version === 'v5.0' ? 'start' : 'middle'
+            const dx = anchor === 'end' ? 2 : anchor === 'start' ? -2 : 0
             return (
               <g key={e.version}>
                 <rect
@@ -224,7 +239,7 @@ export default function CalibrationRecord({ className }: { className?: string })
                     x={cx}
                     y={cy - 12}
                     textAnchor="middle"
-                    fontSize={8}
+                    fontSize={10.5}
                     fontWeight={700}
                     letterSpacing="0.12em"
                     fontFamily="var(--font-family-mono, monospace)"
@@ -235,9 +250,9 @@ export default function CalibrationRecord({ className }: { className?: string })
                 )}
                 {/* version + date label below axis */}
                 <text
-                  x={cx}
+                  x={cx + dx}
                   y={CHART_BOTTOM + 18}
-                  textAnchor="middle"
+                  textAnchor={anchor}
                   fontSize={13}
                   fontWeight={isActive ? 700 : 500}
                   fontFamily="var(--font-family-mono, monospace)"
@@ -245,19 +260,33 @@ export default function CalibrationRecord({ className }: { className?: string })
                 >
                   {e.version}
                 </text>
-                <text
-                  x={cx}
-                  y={CHART_BOTTOM + 30}
-                  textAnchor="middle"
-                  fontSize={8}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fill="var(--color-text-muted)"
-                >
-                  {e.dateLabel[lang]}
-                </text>
+                {!clustered && (
+                  <text
+                    x={cx}
+                    y={CHART_BOTTOM + 36}
+                    textAnchor="middle"
+                    fontSize={10.5}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fill="var(--color-text-muted)"
+                  >
+                    {e.dateLabel[lang]}
+                  </text>
+                )}
               </g>
             )
           })}
+
+          {/* one shared date under the v3.3–v5.0 cluster */}
+          <text
+            x={xPos(v40.day)}
+            y={CHART_BOTTOM + 36}
+            textAnchor="middle"
+            fontSize={10.5}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="var(--color-text-muted)"
+          >
+            {v40.dateLabel[lang]}
+          </text>
 
           {/* v3.3 honesty tag */}
           <g className="hidden sm:block">
@@ -265,7 +294,7 @@ export default function CalibrationRecord({ className }: { className?: string })
               x={xPos(v33.day)}
               y={yPos(v33.auc!) + 18}
               textAnchor="start"
-              fontSize={8.5}
+              fontSize={10.5}
               fontStyle="normal"
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
@@ -341,7 +370,7 @@ export default function CalibrationRecord({ className }: { className?: string })
                   {isOverlay && (
                     <span
                       className="ml-2 font-mono uppercase align-middle"
-                      style={{ fontSize: '8.5px', letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
+                      style={{ fontSize: '10.5px', letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
                     >
                       {t('evolution.overlay')}
                     </span>

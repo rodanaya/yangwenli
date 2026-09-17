@@ -60,7 +60,7 @@ export function ExceptionCatalog({ items, daCount, lang }: {
 
   return (
     <div>
-      <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-1">
+      <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-1">
         {es ? 'PIEZA CENTRAL · EL CATÁLOGO DE EXCEPCIONES' : 'CENTERPIECE · THE EXCEPTION CATALOG'}
       </div>
       <h2 className="font-serif text-2xl text-text-primary mb-5">

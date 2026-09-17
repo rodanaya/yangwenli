@@ -67,7 +67,7 @@ const CORRUPTION_CASES = [
   { name: 'La Estafa Maestra', type: 'Ghost companies', contracts: '10', detection: '90.0%', highPlus: '0%', avgScore: '0.179' },
   { name: 'Grupo Higa / Casa Blanca', type: 'Conflict of interest', contracts: '3', detection: '100%', highPlus: '33.3%', avgScore: '0.359' },
   { name: 'Oceanografia PEMEX Fraud', type: 'Procurement fraud', contracts: '2', detection: '50.0%', highPlus: '0%', avgScore: '0.152' },
-  { name: 'PEMEX Emilio Lozoya', type: 'Bribery', contracts: '0*', detection: '--', highPlus: '--', avgScore: '--' },
+  { name: 'PEMEX Emilio Lozoya', type: 'Bribery', contracts: '0', detection: '--', highPlus: '--', avgScore: '--' },
   { name: 'ISSSTE Ambulance Leasing Fraud', type: 'Overpricing', contracts: '603', detection: '--', highPlus: '--', avgScore: '--' },
   { name: 'Decoaro Ghost Cleaning Company', type: 'Ghost companies', contracts: '46', detection: '--', highPlus: '--', avgScore: '--' },
   { name: 'CONAGUA Ghost Contractor Rotation', type: 'Ghost companies', contracts: '29', detection: '--', highPlus: '--', avgScore: '--' },
@@ -76,6 +76,13 @@ const CORRUPTION_CASES = [
   { name: 'Tren Maya Direct Award Irregularities', type: 'Procurement fraud', contracts: '--', detection: '--', highPlus: '--', avgScore: '--' },
   { name: 'SAT EFOS Art. 69-B Ghost Network', type: 'Ghost companies', contracts: '122', detection: '41.8%', highPlus: '27.9%', avgScore: '0.283' },
 ] as const
+
+// Seven of the 22 foundation cases carry no detection figure yet. Left in the
+// table they printed 23 em-dash cells — which reads as broken data, not as an
+// honest gap. They keep their place on the page as a demoted register below the
+// table, so the footnote's "22 foundation cases" claim stays true.
+const SCORED_CASES = CORRUPTION_CASES.filter((c) => c.detection !== '--')
+const UNSCORED_CASES = CORRUPTION_CASES.filter((c) => c.detection === '--')
 
 const DATA_STRUCTURES = [
   { structure: 'A', years: '2002-2010', qualityKey: 'A', rfc: '0.1%',  descKey: 'A' },
@@ -404,9 +411,11 @@ export function Methodology() {
             >
             <div className="space-y-4">
               <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[12px]">
-                § Modelo activo v0.8.5 · AUC 0.785 · HR 11.01%
+                {lang === 'es'
+                  ? '§ Modelo activo v0.8.5 · AUC 0.785 · HR 11.01%'
+                  : '§ Active model v0.8.5 · AUC 0.785 · HR 11.01%'}
               </p>
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {t('body.overview.p1Start')}<strong className="text-text-primary">{t('body.overview.p1StatisticalIndicator')}</strong>{' '}
                 <Mono>S(features)</Mono>{t('body.overview.p1End')}
               </p>
@@ -418,7 +427,7 @@ export function Methodology() {
                 <Formula>
                   {t('body.overview.formulaExpr')}
                 </Formula>
-                <p className="text-xs text-text-muted">
+                <p className="text-[13px] text-text-muted">
                   {t('body.overview.formulaDescStart')}<strong>{t('body.overview.formulaDescStrong')}</strong>{t('body.overview.formulaDescEnd')}
                 </p>
               </div>
@@ -432,7 +441,7 @@ export function Methodology() {
                   <RiskScoreDisclaimer />
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs" role="table" aria-label="Risk level thresholds">
+                  <table className="w-full text-xs" role="table" aria-label={t('body.overview.riskThresholdsLabel')}>
                     <thead>
                       <tr className="border-b border-border/50">
                         <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColLevel')}</th>
@@ -475,7 +484,7 @@ export function Methodology() {
                 </div>
               </div>
 
-              <p className="text-xs text-text-muted">
+              <p className="text-[13px] text-text-muted">
                 {t('body.overview.highRiskSummaryStart')}<strong className="text-text-secondary">{t('body.overview.highRiskSummaryValue')}</strong>{t('body.overview.highRiskSummaryEnd')}
               </p>
             </div>
@@ -489,7 +498,7 @@ export function Methodology() {
               dek={{ en: 'Eighteen features entered the model. Twelve carry weight — for or against. Six were regularized to exactly zero.', es: 'Dieciocho características entraron al modelo. Doce cargan peso — a favor o en contra. Seis fueron reguladas a exactamente cero.' }}
             >
               <div className="space-y-6">
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {t('body.features.p1')}
               </p>
                 <BalanzaLedger />
@@ -506,7 +515,7 @@ export function Methodology() {
                 <p className="text-sm font-bold text-text-primary">
                   {t('body.findings.finding1Title')}
                 </p>
-                <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                <p className="text-[13px] text-text-muted mt-1 leading-relaxed">
                   {t('body.findings.finding1Body')}
                 </p>
               </div>
@@ -522,21 +531,21 @@ export function Methodology() {
                 <div className="mt-2 space-y-2">
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">1.</span>
-                    <p className="text-xs text-text-secondary leading-relaxed">
+                    <p className="text-[13px] text-text-secondary leading-relaxed">
                       <strong className="text-text-primary">{t('body.findings.finding2Item1Strong')}</strong>{' '}
                       <Mono>{t('body.findings.finding2Item1Mono')}</Mono>{t('body.findings.finding2Item1End')}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">2.</span>
-                    <p className="text-xs text-text-secondary leading-relaxed">
+                    <p className="text-[13px] text-text-secondary leading-relaxed">
                       <strong className="text-text-primary">{t('body.findings.finding2Item2Strong')}</strong>{' '}
                       <Mono>{t('body.findings.finding2Item2Mono')}</Mono>{t('body.findings.finding2Item2End')}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">3.</span>
-                    <p className="text-xs text-text-secondary leading-relaxed">
+                    <p className="text-[13px] text-text-secondary leading-relaxed">
                       <strong className="text-text-primary">{t('body.findings.finding2Item3Strong')}</strong>{' '}
                       <Mono>{t('body.findings.finding2Item3Mono')}</Mono>{t('body.findings.finding2Item3End')}
                     </p>
@@ -549,13 +558,13 @@ export function Methodology() {
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('body.findings.finding3Label')}
                 </p>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   <strong className="text-text-primary">{t('body.findings.finding3BodyStrong')}</strong>{t('body.findings.finding3BodyEnd')}
                 </p>
               </div>
 
               <div className="p-3 rounded-md border border-risk-high/20 bg-risk-high/5">
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   <strong className="text-text-primary">{t('body.findings.finding4Strong')}</strong>{t('body.findings.finding4End')}
                 </p>
               </div>
@@ -570,7 +579,7 @@ export function Methodology() {
                   defaultOpen={false}
                 >
             <div className="space-y-3">
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {t('body.riskEvidence.p1')}
               </p>
               <RiskFactorTable />
@@ -591,7 +600,7 @@ export function Methodology() {
               <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[12px]">
                 {t('sectionKickers.validationKicker')}
               </p>
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {t('body.validation.p1Start')}<strong className="text-text-primary">{t('body.validation.p1Strong')}</strong>{t('body.validation.p1End')}
               </p>
 
@@ -609,7 +618,7 @@ export function Methodology() {
                     </tr>
                   </thead>
                   <tbody>
-                    {CORRUPTION_CASES.map((c) => (
+                    {SCORED_CASES.map((c) => (
                       <tr key={c.name} className="border-b border-border/20">
                         <td className="py-2 pr-2 text-text-primary font-medium max-w-[200px]">
                           <span className="truncate block">{c.name}</span>
@@ -632,7 +641,28 @@ export function Methodology() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-text-muted">
+
+              {/* Documented, not yet scored — the rows that carried no metrics */}
+              {UNSCORED_CASES.length > 0 && (
+                <div>
+                  <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[12px] mb-1.5">
+                    §{' '}
+                    {lang === 'es'
+                      ? `Documentados, aún sin calificar (${UNSCORED_CASES.length})`
+                      : `Documented, not yet scored (${UNSCORED_CASES.length})`}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {UNSCORED_CASES.map((c) => (
+                      <li key={c.name} className="text-[12px] text-text-muted leading-snug">
+                        {c.name} · {t(`corruptionTypes.${c.type}`, c.type)}
+                        {c.contracts !== '--' && ` · ${c.contracts}`}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <p className="text-[13px] text-text-muted">
                 {t('body.validation.footnote')}
               </p>
 
@@ -654,7 +684,7 @@ export function Methodology() {
                 ))}
               </div>
 
-              <p className="text-xs text-text-secondary">
+              <p className="text-[13px] text-text-secondary">
                 {t('body.validation.technicalNote')}
               </p>
             </div>
@@ -678,7 +708,7 @@ export function Methodology() {
                     {lang === 'es' ? 'Tres segundas opiniones independientes' : 'Three independent second opinions'}
                   </h3>
             <div className="space-y-4">
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {t('body.v52layer.p1Start')}<strong className="text-text-primary">{t('body.v52layer.p1Strong')}</strong>{t('body.v52layer.p1End')}
               </p>
 
@@ -723,7 +753,7 @@ export function Methodology() {
                         </div>
                         <span className="text-[12px] font-mono text-text-muted">{t(`body.v52layer.${item.badgeKey}`)}</span>
                       </div>
-                      <p className="text-xs text-text-secondary leading-relaxed">{t(`body.v52layer.${item.bodyKey}`)}</p>
+                      <p className="text-[13px] text-text-secondary leading-relaxed">{t(`body.v52layer.${item.bodyKey}`)}</p>
                       <p className="text-[12px] text-text-muted font-mono border-t border-border/30 pt-1.5">
                         {t('body.v52layer.whereToFind')} {t(`body.v52layer.${item.whereKey}`)}
                       </p>
@@ -752,12 +782,12 @@ export function Methodology() {
                 <p className="text-xs font-semibold text-text-primary">
                   {t('body.v52layer.aiConfirmedTitle')}
                 </p>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('body.v52layer.aiConfirmedStart')}<strong className="text-text-primary">{t('body.v52layer.aiConfirmedStrong')}</strong>{t('body.v52layer.aiConfirmedEnd')}
                 </p>
               </div>
 
-              <p className="text-xs text-text-muted">
+              <p className="text-[13px] text-text-muted">
                 {t('body.v52layer.noteStart')}<code className="font-mono bg-border/20 px-1 py-0.5 rounded">{t('body.v52layer.noteCode')}</code>{t('body.v52layer.noteEnd')}
               </p>
             </div>
@@ -773,7 +803,7 @@ export function Methodology() {
               dek={{ en: 'Where the record comes from, what its four eras can and cannot support, and the day the source went dark.', es: 'De dónde viene el registro, qué soportan y qué no sus cuatro épocas, y el día en que la fuente se apagó.' }}
             >
             <div className="space-y-4">
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {t('body.dataSources.p1Start')}<strong className="text-text-primary">{t('body.dataSources.p1Strong')}</strong>{t('body.dataSources.p1End')}
               </p>
 
@@ -828,10 +858,10 @@ export function Methodology() {
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-accent mb-1">
                   {t('body.dataSources.horizonLabel')}
                 </p>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('body.dataSources.horizonBodyStart')}<strong className="text-text-primary">{t('body.dataSources.horizonBodyStrong')}</strong>{t('body.dataSources.horizonBodyEnd')}
                 </p>
-                <p className="text-xs text-text-muted mt-2">
+                <p className="text-[13px] text-text-muted mt-2">
                   {t('body.dataSources.horizonNote')}
                 </p>
               </div>
@@ -841,7 +871,7 @@ export function Methodology() {
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-risk-critical mb-1">
                   {t('body.dataSources.amountValidationLabel')}
                 </p>
-                <div className="space-y-1 text-xs text-text-secondary">
+                <div className="space-y-1 text-[13px] text-text-secondary">
                   <p>
                     <strong className="text-text-primary">{t('body.dataSources.rejectStrong')}</strong>{t('body.dataSources.rejectEnd')}
                   </p>
@@ -849,7 +879,7 @@ export function Methodology() {
                     <strong className="text-text-primary">{t('body.dataSources.flagStrong')}</strong>{t('body.dataSources.flagEnd')}
                   </p>
                 </div>
-                <p className="text-xs text-text-muted mt-2">
+                <p className="text-[13px] text-text-muted mt-2">
                   {t('body.dataSources.context')}
                 </p>
               </div>
@@ -885,7 +915,7 @@ export function Methodology() {
                   <AlertTriangle className="h-3.5 w-3.5 text-risk-medium shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
                     <p className="text-xs font-medium text-text-primary">{t(`body.limitations.${item.titleKey}`)}</p>
-                    <p className="text-xs text-text-muted leading-relaxed mt-0.5">{t(`body.limitations.${item.textKey}`)}</p>
+                    <p className="text-[13px] text-text-muted leading-relaxed mt-0.5">{t(`body.limitations.${item.textKey}`)}</p>
                   </div>
                 </div>
               ))}
@@ -893,7 +923,7 @@ export function Methodology() {
 
                 <div id="limitations-detail" className="scroll-mt-24">
             <div className="space-y-6">
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {t('limitations.intro')}
               </p>
 
@@ -951,7 +981,7 @@ export function Methodology() {
 
               {/* Interpretive guidance */}
               <div className="p-3 rounded-md bg-border/10 border border-border/40">
-                <p className="text-xs text-text-muted leading-relaxed">
+                <p className="text-[13px] text-text-muted leading-relaxed">
                   <span className="font-medium text-text-primary">{t('limitations.interpretationLabel')}</span>
                   {t('limitations.interpretationBody')}
                 </p>
@@ -976,7 +1006,7 @@ export function Methodology() {
                 {t('tiers.kicker')}
               </span>
             </div>
-            <p className="text-xs text-text-muted mt-1">
+            <p className="text-[13px] text-text-muted mt-1">
               {t('tiers.intro')}
             </p>
           </div>
@@ -991,7 +1021,7 @@ export function Methodology() {
                     {t('tiers.tierITitle')}
                   </h3>
                 </div>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('tiers.tierIBody')}
                 </p>
                 <div className="space-y-1">
@@ -1004,7 +1034,7 @@ export function Methodology() {
                 </div>
                 <div className="pt-2 border-t border-risk-critical/15">
                   <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
-                  <p className="text-xs text-risk-critical">{t('tiers.tierISay')}</p>
+                  <p className="text-[13px] text-risk-critical">{t('tiers.tierISay')}</p>
                 </div>
               </div>
 
@@ -1016,7 +1046,7 @@ export function Methodology() {
                     {t('tiers.tierIITitle')}
                   </h3>
                 </div>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('tiers.tierIIBody')}
                 </p>
                 <div className="space-y-1">
@@ -1029,7 +1059,7 @@ export function Methodology() {
                 </div>
                 <div className="pt-2 border-t border-risk-high/15">
                   <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
-                  <p className="text-xs text-risk-high">{t('tiers.tierIISay')}</p>
+                  <p className="text-[13px] text-risk-high">{t('tiers.tierIISay')}</p>
                 </div>
               </div>
 
@@ -1041,7 +1071,7 @@ export function Methodology() {
                     {t('tiers.tierIIITitle')}
                   </h3>
                 </div>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('tiers.tierIIIBodyStart')}
                   <strong className="text-text-primary">{t('tiers.tierIIIBodyStrong')}</strong>
                 </p>
@@ -1055,14 +1085,14 @@ export function Methodology() {
                 </div>
                 <div className="pt-2 border-t border-border/30">
                   <p className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
-                  <p className="text-xs text-text-secondary">{t('tiers.tierIIISay')}</p>
+                  <p className="text-[13px] text-text-secondary">{t('tiers.tierIIISay')}</p>
                 </div>
               </div>
 
             </div>
 
             <div className="mt-4 p-3 rounded-md bg-border/10 border border-border/30">
-              <p className="text-xs text-text-muted leading-relaxed">
+              <p className="text-[13px] text-text-muted leading-relaxed">
                 <span className="font-semibold text-text-secondary">{t('tiers.criticalRuleLabel')} </span>
                 {t('tiers.criticalRuleBody')}
               </p>
@@ -1082,13 +1112,13 @@ export function Methodology() {
               {/* Z-scores */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.zScoreTitle')}</p>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('body.methods.zScoreP1')}
                 </p>
                 <Formula>
                   {t('body.methods.zScoreFormula')}
                 </Formula>
-                <p className="text-xs text-text-muted">
+                <p className="text-[13px] text-text-muted">
                   {t('body.methods.zScoreNote')}
                 </p>
               </div>
@@ -1096,13 +1126,13 @@ export function Methodology() {
               {/* Mahalanobis */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.mahalanobisTitle')}</p>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('body.methods.mahalanobisP1')}
                 </p>
                 <Formula>
                   {t('body.methods.mahalanobisFormula')}
                 </Formula>
-                <p className="text-xs text-text-muted">
+                <p className="text-[13px] text-text-muted">
                   {t('body.methods.mahalanobisNote')}
                 </p>
               </div>
@@ -1110,10 +1140,10 @@ export function Methodology() {
               {/* Logistic Regression */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.logisticTitle')}</p>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('body.methods.logisticP1')}
                 </p>
-                <p className="text-xs text-text-muted mt-1">
+                <p className="text-[13px] text-text-muted mt-1">
                   {t('body.methods.logisticNote')}
                 </p>
               </div>
@@ -1121,10 +1151,10 @@ export function Methodology() {
               {/* PU Learning */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.puTitle')}</p>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('body.methods.puP1Start')}<Mono>S(x) = P(labeled=1|x) / c</Mono>
                 </p>
-                <p className="text-xs text-text-muted mt-1">
+                <p className="text-[13px] text-text-muted mt-1">
                   {t('body.methods.puNote')}
                 </p>
               </div>
@@ -1132,7 +1162,7 @@ export function Methodology() {
               {/* Bootstrap CIs */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.bootstrapTitle')}</p>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-[13px] text-text-secondary leading-relaxed">
                   {t('body.methods.bootstrapP1')}
                 </p>
               </div>
@@ -1146,7 +1176,7 @@ export function Methodology() {
               defaultOpen={false}
             >
               <div className="space-y-4">
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[13px] text-text-secondary leading-relaxed">
                 {t('body.v33section.p1Start')}<strong className="text-text-primary">{t('body.v33section.p1Strong')}</strong>{t('body.v33section.p1End')}<Mono>{t('body.v33section.p1Mono')}</Mono>{t('body.v33section.p1MonoEnd')}
               </p>
 
@@ -1161,7 +1191,7 @@ export function Methodology() {
                   ))}
                 </div>
 
-              <p className="text-xs text-text-muted">
+              <p className="text-[13px] text-text-muted">
                 {t('body.v33section.bonusFactors')}
               </p>
 
@@ -1218,7 +1248,7 @@ export function Methodology() {
                     {i + 1}.
                   </span>
                   <div>
-                    <p className="text-xs text-text-secondary">
+                    <p className="text-[13px] text-text-secondary">
                       <span className="text-text-primary font-medium">{ref.authors}</span>
                       {' '}({ref.year}).{' '}
                       <em>{ref.title}</em>.
@@ -1226,7 +1256,7 @@ export function Methodology() {
                   </div>
                 </div>
               ))}
-              <p className="text-xs text-text-muted pt-2">
+              <p className="text-[13px] text-text-muted pt-2">
                 {t('body.references.footer')}
               </p>
             </div>

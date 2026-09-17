@@ -1,5 +1,6 @@
 /**
- * BlackoutTimeline — «La Línea del Registro» (gap redesign, 2026-07-03).
+ * BlackoutTimeline — «La Línea del Registro» (gap redesign, 2026-07-03;
+ * re-cut as HTML/CSS for PARALLAX Day 2 § Change 2, 2026-09-17).
  *
  * The blackout drawn, not narrated (Reuters «Time of Evidence» mechanic): the
  * official-feed track is a solid rule that runs 2002 → 28 Sep 2025 and STOPS DEAD;
@@ -7,53 +8,170 @@
  * open-ended to the right. The void is the chart — no linear axis, no year ticks
  * between the break points (this is a diagram, not a scale). Fixed data, no API.
  * No italics (Jul-3 legibility standard).
+ *
+ * Why this is no longer an SVG: the labels used to live inside a 900×128 viewBox,
+ * so they scaled WITH it — `fontSize="9"` renders at ≈3.5px once the plate is
+ * ~330px wide (390 viewport), far below the Day-1 10px legibility floor. HTML owns
+ * the glyphs now and SVG owns nothing: every label is a real 11px mono text node at
+ * every width, while the rules are borders and the geometry stays percentage-based.
+ *
+ * Layout: the dated annotations sit on the rule at `lg` and above, and become a
+ * legend under the tracks below it. `lg` (not `sm`) because the two upper
+ * annotations are ~170–195px wide at 11px and are anchored at 44% / 62% — they
+ * only clear each other, and the ochre recovery line only clears the right edge,
+ * once the plate interior is ≥ ~930px (lg viewport = 1024 − 32 page gutter −
+ * 56 PlateFrame padding = 936). The abolition annotation additionally gets its own
+ * row above the death annotation, with a longer leader tick, so the pair cannot
+ * intersect at any width where the on-rule layout renders.
  */
 import { formatNumber } from '@/lib/utils'
 
+// Percentage anchors — the same break points the SVG used (x0 = 0, xBreak = 62%,
+// the abolition tick at 44%, the open end at 97%).
+const ABOLISHED = 44
+const BREAK = 62
+const END = 97
+
+// Geometry, in px, on a 128px-tall stage (mirrors the old y1 = 44 / y2 = 96).
+const TRACK_1_Y = 44
+const TRACK_2_Y = 96
+
+const LABEL = 'font-mono text-[11px]'
+const PINNED = `${LABEL} absolute whitespace-nowrap leading-none`
+
 export function BlackoutTimeline({ totalContracts, lang }: { totalContracts: number; lang: 'en' | 'es' }) {
   const es = lang === 'es'
-  const W = 900, H = 128
-  const x0 = 40, xBreak = W * 0.62, xEnd = W - 30
-  const y1 = 44, y2 = 96
+  const total = formatNumber(totalContracts)
   const ochre = 'var(--color-accent)'
   const muted = 'var(--color-text-muted)'
-  const total = formatNumber(totalContracts)
+
+  const officialName = es ? 'REGISTRO OFICIAL' : 'OFFICIAL RECORD'
+  const recoveredName = es ? 'RECUPERADO POR RUBLI' : 'RECOVERED BY RUBLI'
+  const startAnnotation = '2002 · CompraNet'
+  const abolishedAnnotation = es ? 'ABR 2025 · abolido por ley' : 'APR 2025 · abolished by law'
+  const deathAnnotation = es ? '28 SEP 2025 · último registro' : 'SEP 28 2025 · last record'
+  const recoveredAnnotation = es
+    ? `29 SEP 2025 → · ${total} adjudicaciones · OCR`
+    : `SEP 29 2025 → · ${total} awards · OCR`
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" className="block"
+    <div
+      role="img"
       aria-label={es
         ? `Línea de tiempo: el feed oficial de CompraNet corre de 2002 al 28 de septiembre de 2025 y termina; una línea punteada muestra ${total} adjudicaciones recuperadas por RUBLI después.`
-        : `Timeline: the official CompraNet feed runs 2002 to September 28 2025 and ends; a dashed line shows ${total} awards recovered by RUBLI afterward.`}>
-      {/* Track 1 — official record, dies at the break */}
-      <text x={x0} y={y1 - 14} fontSize="9.5" letterSpacing="1.6" fill={muted} fontFamily="ui-monospace, monospace">
-        {es ? 'REGISTRO OFICIAL' : 'OFFICIAL RECORD'}
-      </text>
-      <line x1={x0} y1={y1} x2={xBreak} y2={y1} stroke={muted} strokeWidth="2" />
-      <circle cx={x0} cy={y1} r="3" fill={muted} />
-      {/* the death mark */}
-      <line x1={xBreak - 6} y1={y1 - 7} x2={xBreak + 6} y2={y1 + 7} stroke={muted} strokeWidth="1.6" />
-      <line x1={xBreak - 6} y1={y1 + 7} x2={xBreak + 6} y2={y1 - 7} stroke={muted} strokeWidth="1.6" />
-      {/* start + break annotations */}
-      <text x={x0} y={y1 + 18} fontSize="9.5" fill={muted} fontFamily="ui-monospace, monospace">2002 · CompraNet</text>
-      <line x1={W * 0.44} y1={y1} x2={W * 0.44} y2={y1 - 9} stroke={muted} strokeWidth="1" />
-      <text x={W * 0.44} y={y1 - 13} fontSize="9" fill={muted} fontFamily="ui-monospace, monospace" textAnchor="middle">
-        {es ? 'ABR 2025 · abolido por ley' : 'APR 2025 · abolished by law'}
-      </text>
-      <text x={xBreak} y={y1 - 13} fontSize="9" fill={muted} fontFamily="ui-monospace, monospace" textAnchor="middle">
-        {es ? '28 SEP 2025 · último registro' : 'SEP 28 2025 · last record'}
-      </text>
+        : `Timeline: the official CompraNet feed runs 2002 to September 28 2025 and ends; a dashed line shows ${total} awards recovered by RUBLI afterward.`}
+    >
+      {/* ── the diagram ───────────────────────────────────────────────── */}
+      <div aria-hidden="true" className="relative h-[112px] lg:h-[128px]">
+        {/* row A — the abolition annotation and its leader tick (on-rule only) */}
+        <span
+          className={`${PINNED} hidden lg:block`}
+          style={{ top: 2, left: `${ABOLISHED}%`, transform: 'translateX(-50%)', color: muted }}
+        >
+          {abolishedAnnotation}
+        </span>
+        <span
+          aria-hidden="true"
+          className="absolute hidden lg:block"
+          style={{ top: 18, left: `${ABOLISHED}%`, width: 1, height: TRACK_1_Y - 18, background: muted, opacity: 0.6 }}
+        />
 
-      {/* Track 2 — recovered, picks up where track 1 died, open-ended */}
-      <text x={x0} y={y2 - 14} fontSize="9.5" letterSpacing="1.6" fill={ochre} fontFamily="ui-monospace, monospace">
-        {es ? 'RECUPERADO POR RUBLI' : 'RECOVERED BY RUBLI'}
-      </text>
-      <line x1={xBreak} y1={y2} x2={xEnd - 10} y2={y2} stroke={ochre} strokeWidth="2" strokeDasharray="5 5" />
-      {/* connector from the death to the recovered track */}
-      <line x1={xBreak} y1={y1 + 8} x2={xBreak} y2={y2} stroke={ochre} strokeWidth="1" strokeDasharray="2 3" opacity="0.6" />
-      {/* arrowhead */}
-      <path d={`M ${xEnd - 12} ${y2 - 4} L ${xEnd} ${y2} L ${xEnd - 12} ${y2 + 4}`} fill="none" stroke={ochre} strokeWidth="2" />
-      <text x={xBreak} y={y2 + 18} fontSize="9.5" fill={ochre} fontFamily="ui-monospace, monospace">
-        {es ? `29 SEP 2025 → · ${total} adjudicaciones · OCR` : `SEP 29 2025 → · ${total} awards · OCR`}
-      </text>
-    </svg>
+        {/* row B — the track-1 name, and the death annotation over the break.
+            At 20 (not 26) it clears the 17px death glyph centred on the rule. */}
+        <span className={PINNED} style={{ top: 20, left: 0, letterSpacing: '0.16em', color: muted }}>
+          {officialName}
+        </span>
+        <span
+          className={`${PINNED} hidden lg:block`}
+          style={{ top: 20, left: `${BREAK}%`, transform: 'translateX(-50%)', color: muted }}
+        >
+          {deathAnnotation}
+        </span>
+
+        {/* track 1 — the official record, a solid rule that stops dead */}
+        <span
+          aria-hidden="true"
+          className="absolute"
+          style={{ top: TRACK_1_Y, left: 0, width: `${BREAK}%`, borderTop: `2px solid ${muted}` }}
+        />
+        <span
+          aria-hidden="true"
+          className="absolute rounded-full"
+          style={{ top: TRACK_1_Y - 2, left: 0, width: 6, height: 6, background: muted }}
+        />
+        {/* the death mark — two crossed rules, not a glyph: at 11px the mono ×
+            reads as a typo, and this beat is the whole point of the plate */}
+        {[45, -45].map((deg) => (
+          <span
+            key={deg}
+            aria-hidden="true"
+            className="absolute"
+            style={{
+              top: TRACK_1_Y,
+              left: `${BREAK}%`,
+              width: 19,
+              height: 1.6,
+              background: muted,
+              transform: `translate(-50%, -50%) rotate(${deg}deg)`,
+            }}
+          />
+        ))}
+        <span className={PINNED} style={{ top: TRACK_1_Y + 10, left: 0, color: muted }}>
+          {startAnnotation}
+        </span>
+
+        {/* the connector — from the death down to the recovered track */}
+        <span
+          aria-hidden="true"
+          className="absolute"
+          style={{
+            top: TRACK_1_Y + 9,
+            left: `${BREAK}%`,
+            height: TRACK_2_Y - TRACK_1_Y - 9,
+            borderLeft: `1px dashed ${ochre}`,
+            opacity: 0.6,
+          }}
+        />
+
+        {/* track 2 — recovered, picks up where track 1 died, open-ended */}
+        <span className={PINNED} style={{ top: TRACK_2_Y - 22, left: 0, letterSpacing: '0.16em', color: ochre }}>
+          {recoveredName}
+        </span>
+        <span
+          aria-hidden="true"
+          className="absolute"
+          style={{ top: TRACK_2_Y, left: `${BREAK}%`, width: `${END - BREAK}%`, borderTop: `2px dashed ${ochre}` }}
+        />
+        <span
+          aria-hidden="true"
+          className="absolute font-mono leading-none"
+          style={{
+            top: TRACK_2_Y,
+            left: `${END}%`,
+            transform: 'translate(-30%, -50%)',
+            fontSize: 17,
+            color: ochre,
+          }}
+        >
+          →
+        </span>
+        <span
+          className={`${PINNED} hidden lg:block`}
+          style={{ top: TRACK_2_Y + 10, left: `${BREAK}%`, color: ochre }}
+        >
+          {recoveredAnnotation}
+        </span>
+      </div>
+
+      {/* ── below lg: the three break annotations that leave the rule become a
+            legend, so nothing can overlap and nothing overflows the plate.
+            `startAnnotation` is not here — it stays pinned at left:0, where it
+            fits at every width. ── */}
+      <ul aria-hidden="true" className={`${LABEL} lg:hidden mt-1 space-y-1 leading-snug`}>
+        <li style={{ color: muted }}>{abolishedAnnotation}</li>
+        <li style={{ color: muted }}>{deathAnnotation}</li>
+        <li style={{ color: ochre }}>{recoveredAnnotation}</li>
+      </ul>
+    </div>
   )
 }

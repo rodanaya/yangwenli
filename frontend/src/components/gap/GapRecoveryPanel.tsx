@@ -85,7 +85,7 @@ export function GapRecoveryPanel({ isEs, variant = 'full', className }: GapRecov
           <ArrowRight className="h-3.5 w-3.5 text-text-muted transition-transform group-hover:translate-x-0.5" />
         </div>
         <div className="grid grid-cols-3 gap-3">{stats}</div>
-        <div className="mt-2.5 font-mono text-[8.5px] tracking-wide text-text-muted/70">{tierTag}</div>
+        <div className="mt-2.5 font-mono text-[10px] tracking-wide text-text-muted/70">{tierTag}</div>
       </Link>
     )
   }

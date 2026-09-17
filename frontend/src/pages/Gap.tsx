@@ -9,11 +9,12 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { slideUp } from '@/lib/animations'
 import {
+  ArrowRight,
   ChevronLeft,
   ChevronRight,
   Search,
@@ -64,7 +65,7 @@ function RiskLevelPill({ level, lang }: { level: string; lang: string }) {
   return (
     <span
       className={cn(
-        'text-[9px] font-mono tracking-wide px-1.5 py-0.5 rounded border',
+        'text-[10.5px] font-mono tracking-wide px-1.5 py-0.5 rounded border',
         isLow && 'text-text-muted border-border'
       )}
       style={!isLow && color ? { color, borderColor: color } : undefined}
@@ -93,7 +94,7 @@ function GradeBlock({ summary, lang }: { summary: GapSummaryResponse; lang: stri
     <div className="border border-border rounded-sm bg-surface p-5 space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono mb-1">
+          <div className="text-[10.5px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono mb-1">
             {lang === 'es'
               ? 'Indicador de banderas estructurales'
               : 'Structural red-flag indicator'}
@@ -189,7 +190,7 @@ function SectorBar({ items, lang, onPick }: { items: GapSummaryResponse['by_sect
   const leaderPct = leader && totalAll > 0 ? Math.round((leader.count / totalAll) * 100) : 0
   return (
     <div>
-      <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-3">
+      <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-3">
         {es ? 'LOS SECTORES · POR PROCEDIMIENTOS' : 'SECTORS · BY PROCEDURES'}
       </div>
       <div className="divide-y divide-border">
@@ -223,11 +224,28 @@ function SectorBar({ items, lang, onPick }: { items: GapSummaryResponse['by_sect
   )
 }
 
+// ─── empty cell ───────────────────────────────────────────────────────────────
+
+/**
+ * The register is read off scanned award PDFs, so a cell can be genuinely
+ * empty. A bare em-dash is unreadable to a screen reader and ambiguous to a
+ * sighted reader — it says the same nothing as a blank. This names the gap.
+ */
+function EmptyCell({ lang, className }: { lang: string; className?: string }) {
+  const label =
+    lang === 'es' ? 'No recuperado del PDF de fallo' : 'Not recovered from the award PDF'
+  return (
+    <span className={cn('text-text-muted font-mono', className)} title={label} aria-label={label}>
+      —
+    </span>
+  )
+}
+
 // ─── amount badge ─────────────────────────────────────────────────────────────
 
 function AmountCell({ item, lang }: { item: GapContractItem; lang: string }) {
   if (!item.amount_best && item.amount_source === 'none') {
-    return <span className="text-text-muted font-mono text-xs">—</span>
+    return <EmptyCell lang={lang} className="text-xs" />
   }
 
   const amount = item.amount_best ?? 0
@@ -237,7 +255,7 @@ function AmountCell({ item, lang }: { item: GapContractItem; lang: string }) {
       <span className="font-mono text-sm tabular-nums">{formatCompactMXN(amount)}</span>
       {item.amount_source === 'estimated' && (
         <span
-          className="ml-1 text-[9px] font-mono tracking-wide px-1 py-0.5 rounded border"
+          className="ml-1 text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border"
           style={{ color: RISK_COLORS.medium, borderColor: RISK_COLORS.medium, opacity: 0.8 }}
           title={
             lang === 'es'
@@ -250,7 +268,7 @@ function AmountCell({ item, lang }: { item: GapContractItem; lang: string }) {
       )}
       {item.amount_source === 'fallo_ocr' && (
         <span
-          className="ml-1 text-[9px] font-mono tracking-wide px-1 py-0.5 rounded border border-border text-text-muted"
+          className="ml-1 text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border border-border text-text-muted"
           title={
             lang === 'es'
               ? 'Monto recuperado mediante OCR del PDF de fallo'
@@ -273,7 +291,7 @@ function FlagChips({ item, lang }: { item: GapContractItem; lang: string }) {
     chips.push(
       <span
         key="da"
-        className="text-[9px] font-mono tracking-wide px-1 py-0.5 rounded border"
+        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border"
         style={{ color: RISK_COLORS.critical, borderColor: RISK_COLORS.critical }}
         title={lang === 'es' ? 'Adjudicación directa' : 'Direct award (no-bid)'}
       >
@@ -285,7 +303,7 @@ function FlagChips({ item, lang }: { item: GapContractItem; lang: string }) {
     chips.push(
       <span
         key="young"
-        className="text-[9px] font-mono tracking-wide px-1 py-0.5 rounded border"
+        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border"
         style={{ color: RISK_COLORS.medium, borderColor: RISK_COLORS.medium }}
         title={lang === 'es' ? 'Empresa <3 años' : 'Company <3 years old'}
       >
@@ -297,7 +315,7 @@ function FlagChips({ item, lang }: { item: GapContractItem; lang: string }) {
     chips.push(
       <span
         key="efos"
-        className="text-[9px] font-mono tracking-wide px-1 py-0.5 rounded border"
+        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border"
         style={{ color: RISK_COLORS.high, borderColor: RISK_COLORS.high }}
         title={lang === 'es' ? 'EFOS — SAT lista de emisores de facturas falsas' : 'EFOS — SAT tax-fraud register flag'}
       >
@@ -323,29 +341,47 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-sm border border-border">
-      <table className="w-full text-sm min-w-[860px]">
+    <div>
+      <p className="sm:hidden mb-1.5 font-mono text-[11px] text-text-muted">
+        {lang === 'es'
+          ? '← desliza para ver más columnas →'
+          : '← scroll for more columns →'}
+      </p>
+      <div className="overflow-x-auto overscroll-x-contain rounded-sm border border-border">
+      <table
+        className="w-full text-sm min-w-[860px]"
+        aria-label={
+          lang === 'es'
+            ? 'Registro de adjudicaciones recuperadas'
+            : 'Recovered awards register'
+        }
+      >
+        <caption className="sr-only">
+          {lang === 'es'
+            ? 'Registro de adjudicaciones recuperadas'
+            : 'Recovered awards register'}
+        </caption>
         <thead>
           <tr className="border-b border-border bg-surface-2">
-            <th className="text-left px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[5%]">
+            <th scope="col" className="text-left px-3 py-2 text-[10.5px] font-mono tracking-widest text-text-muted uppercase w-[5%]">
               {lang === 'es' ? 'Nivel' : 'Level'}
             </th>
-            <th className="text-left px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[27%]">
+            <th scope="col" className="text-left px-3 py-2 text-[10.5px] font-mono tracking-widest text-text-muted uppercase w-[27%]">
               {lang === 'es' ? 'Título' : 'Title'}
             </th>
-            <th className="text-left px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[12%]">
+            <th scope="col" className="text-left px-3 py-2 text-[10.5px] font-mono tracking-widest text-text-muted uppercase w-[12%]">
               {lang === 'es' ? 'Institución' : 'Institution'}
             </th>
-            <th className="text-left px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[16%]">
+            <th scope="col" className="text-left px-3 py-2 text-[10.5px] font-mono tracking-widest text-text-muted uppercase w-[16%]">
               {lang === 'es' ? 'Proveedor (OCR)' : 'Vendor (OCR)'}
             </th>
-            <th className="text-right px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[11%]">
+            <th scope="col" className="text-right px-3 py-2 text-[10.5px] font-mono tracking-widest text-text-muted uppercase w-[11%]">
               {lang === 'es' ? 'Monto' : 'Amount'}
             </th>
-            <th className="text-left px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[12%]">
+            <th scope="col" className="text-left px-3 py-2 text-[10.5px] font-mono tracking-widest text-text-muted uppercase w-[12%]">
               {lang === 'es' ? 'Excepción' : 'Exception'}
             </th>
-            <th className="text-left px-3 py-2 text-[9px] font-mono tracking-widest text-text-muted uppercase w-[17%]">
+            <th scope="col" className="text-left px-3 py-2 text-[10.5px] font-mono tracking-widest text-text-muted uppercase w-[17%]">
               {lang === 'es' ? 'Alertas' : 'Flags'}
             </th>
           </tr>
@@ -363,12 +399,15 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
                 {item.risk_level ? (
                   <RiskLevelPill level={item.risk_level} lang={lang} />
                 ) : (
-                  <span className="text-text-muted font-mono text-[10px]">—</span>
+                  <EmptyCell lang={lang} className="text-[10.5px]" />
                 )}
               </td>
               <td className="px-3 py-2.5 align-top">
-                <div className="font-medium text-text-primary leading-snug text-xs">
-                  {item.title || <span className="text-text-muted">—</span>}
+                <div
+                  className="font-medium text-text-primary leading-snug text-xs line-clamp-3"
+                  title={item.title || undefined}
+                >
+                  {item.title || <EmptyCell lang={lang} />}
                 </div>
                 {item.publication_date && (
                   <div className="text-[10px] text-text-muted font-mono mt-0.5">
@@ -378,15 +417,15 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
               </td>
               <td className="px-3 py-2.5 align-top">
                 <div className="text-xs font-mono text-text-secondary">
-                  {item.institution_siglas || item.institution || '—'}
+                  {item.institution_siglas || item.institution || <EmptyCell lang={lang} />}
                 </div>
               </td>
               <td className="px-3 py-2.5 align-top">
-                <div className="text-xs text-text-secondary leading-snug">
+                <div className="text-xs text-text-secondary leading-snug line-clamp-3">
                   {item.vendor ? (
                     formatVendorName(item.vendor, 999)
                   ) : (
-                    <span className="text-text-muted font-mono">—</span>
+                    <EmptyCell lang={lang} />
                   )}
                 </div>
                 {item.vendor_rfc && (
@@ -400,7 +439,7 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
               </td>
               <td className="px-3 py-2.5 align-top">
                 <div className="text-[10px] text-text-muted font-mono leading-snug">
-                  {item.exception_article || '—'}
+                  {item.exception_article || <EmptyCell lang={lang} />}
                 </div>
               </td>
               <td className="px-3 py-2.5 align-top">
@@ -410,7 +449,99 @@ function Register({ items, lang }: { items: GapContractItem[]; lang: string }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
+  )
+}
+
+// ─── La Coda · § ADÓNDE IR ────────────────────────────────────────────────────
+//
+// El Apagón had zero internal links: the buyers are siglas-only filter buttons
+// and the page ended on its colophon, so a reader who finished it had nowhere
+// to go. Charter C3 exit ramp, same shape as MethodologyCoda. These are
+// section-level surfaces, not concrete entity instances, so styled mono CTAs
+// are the correct primitive (an EntityIdentityChip would imply a specific
+// institution row this recovered file cannot reliably name).
+
+function GapCoda({ lang }: { lang: 'en' | 'es' }) {
+  const isEs = lang === 'es'
+
+  const ramps: { to: string; label: string; sub: string; title: string }[] = [
+    {
+      to: '/methodology#data-sources',
+      label: isEs ? 'La cadena de custodia' : 'Chain of custody',
+      sub: isEs
+        ? 'Por qué el registro se congeló el 28 de septiembre de 2025'
+        : 'Why the record froze on 28 September 2025',
+      title: isEs
+        ? 'Ver la cadena de custodia de los datos en la metodología'
+        : 'See the data chain of custody in the methodology',
+    },
+    {
+      to: '/administrations',
+      label: isEs ? 'Sexenios' : 'Administrations',
+      sub: isEs
+        ? 'El sexenio de Sheinbaum, donde caen estas adjudicaciones'
+        : 'The Sheinbaum term, where these awards fall',
+      title: isEs
+        ? 'Comparar los sexenios federales'
+        : 'Compare the federal administrations',
+    },
+    {
+      to: '/institutions',
+      label: isEs ? 'Instituciones' : 'Institutions',
+      sub: isEs
+        ? 'El historial calificado de los compradores antes del apagón'
+        : "The buyers' scored history before the blackout",
+      title: isEs
+        ? 'Ver el ranking de instituciones compradoras'
+        : 'See the buying-institution ranking',
+    },
+  ]
+
+  return (
+    <section
+      aria-label={isEs ? 'Adónde ir' : 'Where to go next'}
+      className="mt-10 pt-5"
+      style={{ borderTop: '1px solid var(--color-accent)' }}
+    >
+      <p
+        className="font-mono mb-1.5 text-accent"
+        style={{
+          fontSize: 12,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          fontWeight: 700,
+        }}
+      >
+        § · {isEs ? 'ADÓNDE IR' : 'WHERE TO GO NEXT'}
+      </p>
+      <p className="text-xs text-text-muted mb-4" style={{ lineHeight: 1.55 }}>
+        {isEs
+          ? 'El Apagón es un expediente parcial. Lleva a los compradores a su historial calificado.'
+          : 'The Blackout is a partial file. Take the buyers back to their scored history.'}
+      </p>
+
+      <div className="grid gap-2.5 sm:grid-cols-3">
+        {ramps.map((r) => (
+          <Link
+            key={r.to}
+            to={r.to}
+            title={r.title}
+            className="group flex flex-col gap-1 rounded-sm border border-accent/20 bg-accent/[0.04] px-3 py-2.5 hover:bg-accent/10 hover:border-accent/40 transition-colors"
+          >
+            <span className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.1em] text-accent text-[13px] font-bold">
+              {r.label}
+              <ArrowRight
+                className="h-3 w-3 shrink-0 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </span>
+            <span className="text-[13px] text-text-muted leading-snug">{r.sub}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -638,9 +769,9 @@ export default function Gap() {
         )}
         {summary && !summaryLoading && (
           <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted font-mono pt-1">
-            <span className="opacity-60">{lang === 'es' ? 'Ventana:' : 'Window:'} {summary.data_window}</span>
-            <span className="opacity-40">·</span>
-            <span className="opacity-60">{lang === 'es' ? 'Fuente:' : 'Source:'} {summary.source}</span>
+            <span>{lang === 'es' ? 'Ventana:' : 'Window:'} {summary.data_window}</span>
+            <span>·</span>
+            <span>{lang === 'es' ? 'Fuente:' : 'Source:'} {summary.source}</span>
           </div>
         )}
       </div>
@@ -681,17 +812,17 @@ export default function Gap() {
       {summary && summary.available && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="border-l-2 pl-4" style={{ borderColor: 'var(--color-text-muted)' }}>
-            <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'PROCEDIMIENTOS RECUPERADOS' : 'PROCEDURES RECOVERED'}</div>
+            <div className="text-[10.5px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'PROCEDIMIENTOS RECUPERADOS' : 'PROCEDURES RECOVERED'}</div>
             <div className="font-serif text-text-primary tabular-nums" style={{ fontWeight: 500, fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1 }}>{formatNumber(summary.total_contracts)}</div>
             <div className="mt-1.5 text-[12px] text-text-secondary leading-snug">{lang === 'es' ? 'posteriores al 28 sep 2025 · fuera del registro público' : 'after Sep 28 2025 · outside the public record'}</div>
           </div>
           <div className="border-l-2 pl-4" style={{ borderColor: RISK_COLORS.critical }}>
-            <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'SIN CONCURSO' : 'NO CONTEST'}</div>
+            <div className="text-[10.5px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'SIN CONCURSO' : 'NO CONTEST'}</div>
             <div className="font-serif tabular-nums" style={{ color: RISK_COLORS.critical, fontWeight: 500, fontSize: 'clamp(28px,4vw,44px)', lineHeight: 1 }}>{summary.direct_award_pct.toFixed(1)}%</div>
             <div className="mt-1.5 text-[12px] text-text-secondary leading-snug">{formatNumber(summary.direct_award_count)} {lang === 'es' ? 'adjud. directas · referencia OCDE: rutina <30%, emergencia 20–40%' : 'direct awards · OECD reference: routine <30%, emergency 20–40%'}</div>
           </div>
           <div className="border-l-2 pl-4" style={{ borderColor: 'var(--color-text-muted)' }}>
-            <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'VALOR MEJOR DISPONIBLE' : 'BEST AVAILABLE VALUE'}</div>
+            <div className="text-[10.5px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">{lang === 'es' ? 'VALOR MEJOR DISPONIBLE' : 'BEST AVAILABLE VALUE'}</div>
             <div className="font-serif text-text-primary tabular-nums" style={{ fontWeight: 500, fontSize: 'clamp(22px,3vw,34px)', lineHeight: 1.05 }}>{formatDualCurrency(summary.best_available_sum_mxn)}</div>
             <div className="mt-1.5 text-[12px] text-text-secondary leading-snug">{formatNumber(summary.recovered_count)} {lang === 'es' ? `montos reales por OCR (${formatDualCurrency(summary.recovered_sum_mxn)}); el resto estimado o no revelado` : `real amounts via OCR (${formatDualCurrency(summary.recovered_sum_mxn)}); the rest estimated or undisclosed`}</div>
           </div>
@@ -735,7 +866,7 @@ export default function Gap() {
       {/* ── ACT VII · Muestra del registro ── */}
       <div id="registro" className="space-y-4 scroll-mt-8">
         <div>
-          <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-1">
+          <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-1">
             {lang === 'es' ? 'MUESTRA · EL REGISTRO RECUPERADO' : 'SAMPLE · THE RECOVERED RECORD'}
           </div>
           <h2 className="font-serif text-2xl text-text-primary">
@@ -753,6 +884,9 @@ export default function Gap() {
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
             <input
               type="text"
+              name="q"
+              autoComplete="off"
+              spellCheck={false}
               value={inputQ}
               onChange={(e) => setInputQ(e.target.value)}
               placeholder={lang === 'es' ? 'Buscar título o proveedor…' : 'Search title or vendor…'}
@@ -896,9 +1030,12 @@ export default function Gap() {
         )}
       </div>
 
+      {/* ── La Coda · § ADÓNDE IR ── */}
+      <GapCoda lang={L} />
+
       {/* ── Fe de recuperación (colophon) ── */}
       <div className="border-t border-border pt-4 text-xs text-text-muted font-mono space-y-1">
-        <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-text-secondary mb-1">
+        <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-text-secondary mb-1">
           {lang === 'es' ? 'FE DE RECUPERACIÓN' : 'RECOVERY COLOPHON'}
         </div>
         {summary && (
