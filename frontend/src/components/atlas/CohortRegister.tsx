@@ -59,7 +59,7 @@ export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, o
 
   const firstPage = useQuery({
     queryKey: ['atlas-cohort-vendors', lens, code, period],
-    queryFn: () => atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, period: period ?? undefined }),
+    queryFn: () => atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, period: period ?? undefined, sort: 'value' }),
     enabled: !!lens && !!code,
     staleTime: 5 * 60 * 1000,
   })
@@ -92,7 +92,7 @@ export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, o
     setLoadingMore(true)
     setMoreError(false)
     try {
-      const res = await atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, cursor: nextCursor, period: period ?? undefined })
+      const res = await atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, cursor: nextCursor, period: period ?? undefined, sort: 'value' })
       setMorePages((p) => [...p, res.vendors])
       setNextCursor(res.next_cursor)
     } catch {

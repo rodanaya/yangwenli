@@ -429,12 +429,13 @@ def get_cluster_vendors(
     code: str = Query(..., description="Cluster code, e.g. P5, salud, cat_medications"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0, description="Offset for page-based pagination (ignored when cursor is set)"),
-    cursor: Optional[float] = Query(None, description="Keyset cursor: last seen risk_score. Returns vendors with risk_score < cursor."),
+    cursor: Optional[float] = Query(None, description="Keyset cursor: last seen sort key (risk_score for sort=risk, total_amount_mxn for sort=value). Returns vendors with key < cursor."),
     period: Optional[str] = Query(
         None,
         description="Sexenio key to restrict to vendors with >=1 contract during that period "
                      "(fox|calderon|pena_nieto|amlo|sheinbaum). Omit for all-time.",
     ),
+    sort: str = Query("risk", pattern="^(risk|value)$", description="risk = avg_risk_score DESC (default); value = total contracted MXN DESC — the Atlas cohort register."),
     conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """Return top vendors associated with a constellation cluster.
@@ -467,11 +468,11 @@ def get_cluster_vendors(
         period_years = (adm.year_min, adm.year_max)
 
     if lens == "patterns":
-        return _query_patterns(conn, code, limit, offset, cursor, period_years)
+        return _query_patterns(conn, code, limit, offset, cursor, period_years, sort)
     if lens == "sectors":
-        return _query_sectors(conn, code, limit, offset, cursor, period_years)
+        return _query_sectors(conn, code, limit, offset, cursor, period_years, sort)
     if lens == "categories":
-        return _query_categories(conn, code, limit, offset, cursor, period_years)
+        return _query_categories(conn, code, limit, offset, cursor, period_years, sort)
     # lens == "terms"
     return _query_terms(conn, code)
 
@@ -583,27 +584,33 @@ def _base_vendor_select() -> str:
     """
 
 
+# Keyset pagination needs the cursor column and ORDER BY to agree. vendor_stats is
+# LEFT JOINed, so the value key is COALESCEd: NULL would otherwise sort last but
+# never satisfy `< cursor`, stranding those vendors on no page.
+_SORT_KEY = {
+    "risk": "aq.avg_risk_score",
+    "value": "COALESCE(vs.total_value_mxn, 0)",
+}
+_ORDER_SQL = {
+    "risk": "ORDER BY aq.avg_risk_score DESC, vs.total_value_mxn DESC",
+    "value": "ORDER BY COALESCE(vs.total_value_mxn, 0) DESC, aq.avg_risk_score DESC",
+}
+
+
 def _apply_cursor_or_offset(
     where_clauses: list[str],
     params: list,
     cursor: Optional[float],
-    offset: int,
-    limit: int,
+    sort: str = "risk",
 ) -> tuple[str, list]:
-    """Append ORDER BY and LIMIT/OFFSET (or keyset cursor) to query fragments."""
+    """Append the keyset cursor clause (if any) and build the WHERE fragment."""
     if cursor is not None:
-        where_clauses.append("aq.avg_risk_score < ?")
+        where_clauses.append(f"{_SORT_KEY[sort]} < ?")
         params.append(cursor)
 
     where_sql = ""
     if where_clauses:
         where_sql = "WHERE " + " AND ".join(where_clauses)
-
-    order_sql = "ORDER BY aq.avg_risk_score DESC, vs.total_value_mxn DESC"
-    limit_sql = f"LIMIT {limit}"
-
-    if cursor is None:
-        limit_sql += f" OFFSET {offset}"
 
     return where_sql, params
 
@@ -653,11 +660,13 @@ def _build_vendor_items(rows: list[sqlite3.Row]) -> list[VendorClusterItem]:
     return items
 
 
-def _compute_next_cursor(rows: list[sqlite3.Row], limit: int) -> Optional[float]:
-    """Return the risk_score of the last row if a full page was returned."""
+def _compute_next_cursor(rows: list[sqlite3.Row], limit: int, sort: str = "risk") -> Optional[float]:
+    """Return the sort key of the last row if a full page was returned."""
     if len(rows) < limit:
         return None
     last = dict(rows[-1])
+    if sort == "value":
+        return last.get("total_amount_mxn") or 0.0
     return last.get("risk_score")
 
 
@@ -681,6 +690,7 @@ def _query_patterns(
     offset: int,
     cursor: Optional[float],
     period_years: Optional[tuple[int, int]] = None,
+    sort: str = "risk",
 ) -> ClusterVendorsResponse:
     label_es, label_en = _PATTERN_LABELS.get(code, (code, code))
 
@@ -699,18 +709,18 @@ def _query_patterns(
             "EXISTS (SELECT 1 FROM contracts ct WHERE ct.vendor_id = aq.vendor_id AND ct.contract_year BETWEEN ? AND ?)"
         )
         params += list(period_years)
-    where_sql, params = _apply_cursor_or_offset(where_clauses, params, cursor, offset, limit)
+    where_sql, params = _apply_cursor_or_offset(where_clauses, params, cursor, sort)
 
     sql = f"""
         {_base_vendor_select()}
         {where_sql}
-        ORDER BY aq.avg_risk_score DESC, vs.total_value_mxn DESC
+        {_ORDER_SQL[sort]}
         LIMIT {limit}{"" if cursor is not None else f" OFFSET {offset}"}
     """
 
     rows = conn.execute(sql, params).fetchall()
     vendors = _build_vendor_items(rows)
-    next_cursor = _compute_next_cursor(rows, limit)
+    next_cursor = _compute_next_cursor(rows, limit, sort)
 
     return ClusterVendorsResponse(
         lens="patterns",
@@ -734,6 +744,7 @@ def _query_sectors(
     offset: int,
     cursor: Optional[float],
     period_years: Optional[tuple[int, int]] = None,
+    sort: str = "risk",
 ) -> ClusterVendorsResponse:
     # Resolve sector labels from DB
     sector_row = conn.execute(
@@ -771,18 +782,18 @@ def _query_sectors(
             "EXISTS (SELECT 1 FROM contracts ct WHERE ct.vendor_id = aq.vendor_id AND ct.contract_year BETWEEN ? AND ?)"
         )
         params += list(period_years)
-    where_sql, params = _apply_cursor_or_offset(where_clauses, params, cursor, offset, limit)
+    where_sql, params = _apply_cursor_or_offset(where_clauses, params, cursor, sort)
 
     sql = f"""
         {_base_vendor_select()}
         {where_sql}
-        ORDER BY aq.avg_risk_score DESC, vs.total_value_mxn DESC
+        {_ORDER_SQL[sort]}
         LIMIT {limit}{"" if cursor is not None else f" OFFSET {offset}"}
     """
 
     rows = conn.execute(sql, params).fetchall()
     vendors = _build_vendor_items(rows)
-    next_cursor = _compute_next_cursor(rows, limit)
+    next_cursor = _compute_next_cursor(rows, limit, sort)
 
     return ClusterVendorsResponse(
         lens="sectors",
@@ -806,6 +817,7 @@ def _query_categories(
     offset: int,
     cursor: Optional[float],
     period_years: Optional[tuple[int, int]] = None,
+    sort: str = "risk",
 ) -> ClusterVendorsResponse:
     # Resolve category from code
     cat_row = conn.execute(
@@ -846,7 +858,7 @@ def _query_categories(
     cursor_clause = ""
     cursor_params: list = []
     if cursor is not None:
-        cursor_clause = "AND aq.avg_risk_score < ?"
+        cursor_clause = f"AND {_SORT_KEY[sort]} < ?"
         cursor_params = [cursor]
 
     offset_clause = "" if cursor is not None else f"OFFSET {offset}"
@@ -878,14 +890,14 @@ def _query_categories(
         LEFT JOIN sectors s ON s.id = aq.primary_sector_id
         LEFT JOIN ghost_confidence_scores gcs ON gcs.vendor_id = aq.vendor_id
         WHERE 1=1 {cursor_clause}
-        ORDER BY aq.avg_risk_score DESC, vs.total_value_mxn DESC
+        {_ORDER_SQL[sort]}
         LIMIT {limit} {offset_clause}
     """
 
     params = [cat_id] + period_params + cursor_params
     rows = conn.execute(sql, params).fetchall()
     vendors = _build_vendor_items(rows)
-    next_cursor = _compute_next_cursor(rows, limit)
+    next_cursor = _compute_next_cursor(rows, limit, sort)
 
     return ClusterVendorsResponse(
         lens="categories",

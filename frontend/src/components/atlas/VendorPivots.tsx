@@ -99,7 +99,7 @@ export function VendorPivots({
   // unmounts, (b) the vendorRow fallback after a hard reload.
   const cohortVendors = useQuery({
     queryKey: ['atlas-cohort-vendors', lens, code, period],
-    queryFn: () => atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, period: period ?? undefined }),
+    queryFn: () => atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, period: period ?? undefined, sort: 'value' }),
     enabled: !!lens && !!code,
     staleTime: 5 * 60 * 1000,
   })
