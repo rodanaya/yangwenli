@@ -20,6 +20,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { formatCompactMXN } from '@/lib/utils'
 import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
+import { ADMIN_DISPLAY_ACCENTED, getAdministrationByPeriodKey } from '@/lib/administrations'
 
 const MONO = "'IBM Plex Mono', monospace"
 const PAGE_LIMIT = 50
@@ -36,6 +37,8 @@ interface Props {
    *  vendor's short card + relation pivots in-page instead of navigating
    *  out to the dossier — the chip stays the way out. */
   onOpenVendor?: (vendor: AtlasClusterVendorItem) => void
+  /** Sexenio global time filter (Sep 2026) — API vocabulary. */
+  period: string | null
 }
 
 function primaryPatternOf(v: AtlasClusterVendorItem): string {
@@ -49,18 +52,20 @@ function primaryPatternOf(v: AtlasClusterVendorItem): string {
   return best ?? ''
 }
 
-export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, onLoaded, onOpenVendor }: Props) {
+export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, onLoaded, onOpenVendor, period }: Props) {
   const isEs = lang === 'es'
   const location = useLocation()
+  const periodAdmin = useMemo(() => getAdministrationByPeriodKey(period), [period])
 
   const firstPage = useQuery({
-    queryKey: ['atlas-cohort-vendors', lens, code],
-    queryFn: () => atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT }),
+    queryKey: ['atlas-cohort-vendors', lens, code, period],
+    queryFn: () => atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, period: period ?? undefined }),
     enabled: !!lens && !!code,
     staleTime: 5 * 60 * 1000,
   })
 
-  // Accumulated pages beyond the first — reset whenever the cohort changes.
+  // Accumulated pages beyond the first — reset whenever the cohort (or the
+  // sexenio filter, which changes the underlying vendor set) changes.
   const [morePages, setMorePages] = useState<AtlasClusterVendorItem[][]>([])
   const [nextCursor, setNextCursor] = useState<number | null | undefined>(undefined)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -70,7 +75,7 @@ export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, o
     setMorePages([])
     setNextCursor(undefined)
     setMoreError(false)
-  }, [lens, code])
+  }, [lens, code, period])
 
   useEffect(() => {
     if (firstPage.data && nextCursor === undefined) setNextCursor(firstPage.data.next_cursor)
@@ -87,7 +92,7 @@ export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, o
     setLoadingMore(true)
     setMoreError(false)
     try {
-      const res = await atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, cursor: nextCursor })
+      const res = await atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, cursor: nextCursor, period: period ?? undefined })
       setMorePages((p) => [...p, res.vendors])
       setNextCursor(res.next_cursor)
     } catch {
@@ -168,13 +173,15 @@ export function CohortRegister({ lens, code, label, lensLabel, lang, onGoHome, o
               >
                 {isEs ? (
                   <>
-                    Los primeros {saldo.n} (de {total.toLocaleString('es-MX')} en la cohorte) se llevan{' '}
+                    Los primeros {saldo.n} (de {total.toLocaleString('es-MX')} en la cohorte
+                    {period && periodAdmin ? <> durante {ADMIN_DISPLAY_ACCENTED[periodAdmin.key]}</> : null}) se llevan{' '}
                     <strong style={{ color: 'var(--color-accent)' }}>{saldo.share.toFixed(0)}%</strong>
                     {' '}del dinero de esta página; {saldo.critical} traen indicador crítico.
                   </>
                 ) : (
                   <>
-                    The first {saldo.n} (of {total.toLocaleString('en-US')} in the cohort) take{' '}
+                    The first {saldo.n} (of {total.toLocaleString('en-US')} in the cohort
+                    {period && periodAdmin ? <> during {ADMIN_DISPLAY_ACCENTED[periodAdmin.key]}</> : null}) take{' '}
                     <strong style={{ color: 'var(--color-accent)' }}>{saldo.share.toFixed(0)}%</strong>
                     {' '}of this page's money; {saldo.critical} carry a critical indicator.
                   </>

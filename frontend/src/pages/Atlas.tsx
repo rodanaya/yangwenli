@@ -41,6 +41,7 @@ import {
   type ClusterMeta,
 } from '@/components/charts/ConcentrationConstellation'
 import { formatNumber, formatDualCurrency, cn } from '@/lib/utils'
+import { PERIOD_API_KEY, ADMIN_DISPLAY_ACCENTED, getAdministrationByPeriodKey } from '@/lib/administrations'
 // atlas-C-P1: three-pane investigator console shell
 import { AtlasContextProvider, useAtlasState, useAtlasDispatch, type AtlasState } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
@@ -535,6 +536,8 @@ interface CanvasAtlasViewProps {
   onOpenVendor: (vendor: AtlasClusterVendorItem) => void
   onVendorExit: () => void
   onVendorLoaded: (info: { vendorId: number; label: string; institutions: number; coBidders: number; categories: number }) => void
+  /** Sexenio global time filter (Sep 2026) — API vocabulary. */
+  period: string | null
 }
 
 function CanvasAtlasView({
@@ -555,6 +558,7 @@ function CanvasAtlasView({
   onOpenVendor,
   onVendorExit,
   onVendorLoaded,
+  period,
 }: CanvasAtlasViewProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -570,8 +574,8 @@ function CanvasAtlasView({
   // Stage 2: live per-cluster aggregates for the faithful scatter (patterns +
   // sectors). Falls back to the static meta while loading / for other lenses.
   const { data: clusterStats, isLoading: clusterStatsLoading } = useQuery({
-    queryKey: ['atlas-cluster-stats', mode],
-    queryFn: () => atlasApi.getClusterStats(mode),
+    queryKey: ['atlas-cluster-stats', mode, period],
+    queryFn: () => atlasApi.getClusterStats(mode, period ?? undefined),
     enabled: useFaithfulObservatory && (mode === 'patterns' || mode === 'sectors' || mode === 'categories'),
     staleTime: 10 * 60 * 1000,
   })
@@ -1181,6 +1185,10 @@ function CanvasAtlasView({
     return []
   }, [clusterStats, lang])
 
+  // Sexenio filter (Sep 2026): resolved once, reused by padronSaldo's
+  // "durante X (years)" suffix and the empty-cohort notice above.
+  const periodAdmin = useMemo(() => getAdministrationByPeriodKey(period), [period])
+
   // § EL SALDO — computed only from what the API returns. high_risk_rate is a
   // share of VENDORS, so no peso figure is derived from it: money and heat
   // stay separate numbers.
@@ -1242,7 +1250,13 @@ function CanvasAtlasView({
             className="font-mono text-[12px] text-text-muted py-10 text-center"
             style={{ letterSpacing: '0.08em' }}
           >
-            {lang === 'es' ? 'Sin datos en vivo para esta lente todavía.' : 'No live data for this lens yet.'}
+            {period ? (
+              lang === 'es'
+                ? `Sin datos para ${ADMIN_DISPLAY_ACCENTED[getAdministrationByPeriodKey(period)?.key ?? 'fox']} en esta lente.`
+                : `No data for ${ADMIN_DISPLAY_ACCENTED[getAdministrationByPeriodKey(period)?.key ?? 'fox']} in this lens.`
+            ) : (
+              lang === 'es' ? 'Sin datos en vivo para esta lente todavía.' : 'No live data for this lens yet.'
+            )}
           </p>
         ) : scope === 'proveedor' && cohortCode && vendorId ? (
           <VendorPivots
@@ -1256,6 +1270,7 @@ function CanvasAtlasView({
             onGoHome={onCohortExit}
             onExitToCohort={onVendorExit}
             onVendorLoaded={onVendorLoaded}
+            period={period}
           />
         ) : scope === 'cohorte' && cohortCode ? (
           <CohortRegister
@@ -1274,6 +1289,7 @@ function CanvasAtlasView({
               })
             }
             onOpenVendor={onOpenVendor}
+            period={period}
           />
         ) : (
         <>
@@ -1302,7 +1318,8 @@ function CanvasAtlasView({
                     {padronSaldo.vendors != null ? <>{' '}entre {formatNumber(padronSaldo.vendors)} proveedores</> : null}. El dinero está en {padronSaldo.widest.label}
                     {' '}({padronSaldo.widestShare.toFixed(0)}% de la banda); el calor en {padronSaldo.hottest.label}, con
                     {' '}{(padronSaldo.hottest.highRiskPct * 100).toFixed(0)}% de sus {formatNumber(padronSaldo.hottest.vendors)}
-                    {' '}proveedores en alto o crítico.
+                    {' '}proveedores en alto o crítico
+                    {period && periodAdmin ? <>, durante {ADMIN_DISPLAY_ACCENTED[periodAdmin.key]} ({periodAdmin.yearStart}–{periodAdmin.yearEnd}).</> : '.'}
                   </>
                 ) : (
                   <>
@@ -1311,7 +1328,8 @@ function CanvasAtlasView({
                     {padronSaldo.vendors != null ? <>{' '}across {formatNumber(padronSaldo.vendors)} vendors</> : null}. The money sits in {padronSaldo.widest.label}
                     {' '}({padronSaldo.widestShare.toFixed(0)}% of the band); the heat in {padronSaldo.hottest.label}, with
                     {' '}{(padronSaldo.hottest.highRiskPct * 100).toFixed(0)}% of its {formatNumber(padronSaldo.hottest.vendors)}
-                    {' '}vendors high or critical.
+                    {' '}vendors high or critical
+                    {period && periodAdmin ? <>, during {ADMIN_DISPLAY_ACCENTED[periodAdmin.key]} ({periodAdmin.yearStart}–{periodAdmin.yearEnd}).</> : '.'}
                   </>
                 )}
               </h2>
@@ -1529,6 +1547,9 @@ interface AtlasUrlSyncProps {
   cohortCode: string | null
   /** Scope 2 (Sep 2026): same eviction-guard reasoning as cohortCode. */
   vendorId: number | null
+  /** Sexenio filter (Sep 2026): same eviction-guard reasoning — owned by
+   *  Atlas(), threaded through so this writer doesn't evict it. */
+  period: string | null
 }
 
 function AtlasUrlSync({
@@ -1543,6 +1564,7 @@ function AtlasUrlSync({
   scope,
   cohortCode,
   vendorId,
+  period,
 }: AtlasUrlSyncProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -1622,11 +1644,13 @@ function AtlasUrlSync({
         params.set('scope', 'cohorte')
         params.set('code', cohortCode)
       }
+      // Sexenio filter (Sep 2026): shareable, orthogonal to scope.
+      if (period) params.set('period', period)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, yearIndex, pinnedCode, riskFloor, compareMode, yearIndexB, zoomedCode, selectionIds.join(','), scope, cohortCode, vendorId, setSearchParams])
+  }, [mode, yearIndex, pinnedCode, riskFloor, compareMode, yearIndexB, zoomedCode, selectionIds.join(','), scope, cohortCode, vendorId, period, setSearchParams])
 
   return null
 }
@@ -1809,6 +1833,16 @@ export default function Atlas() {
     const p = new URLSearchParams(window.location.search)
     const f = p.get('floor')
     return (f && ['all', 'medium', 'high', 'critical'].includes(f)) ? f as 'all' | 'medium' | 'high' | 'critical' : 'all'
+  })
+  // Sexenio global time filter (Sep 2026) — API vocabulary
+  // (fox|calderon|pena_nieto|amlo|sheinbaum), validated against
+  // PERIOD_API_KEY. Orthogonal to lens/scope: changing it does NOT reset
+  // atlasScope/cohortCode/vendorId.
+  const [period, setPeriod] = useState<string | null>(() => {
+    const p = new URLSearchParams(window.location.search)
+    const per = p.get('period')
+    const valid = new Set(Object.values(PERIOD_API_KEY))
+    return per && valid.has(per) ? per : null
   })
   // Scope 1 (Sep 2026): in-page cohort register for the faithful scatter.
   // Lives here (not in CanvasAtlasView, which is remounted via
@@ -2030,10 +2064,12 @@ export default function Atlas() {
         params.set('scope', 'cohorte')
         params.set('code', cohortCode)
       }
+      // Sexenio filter (Sep 2026): shareable, orthogonal to scope.
+      if (period) params.set('period', period)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
-  }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, atlasScope, cohortCode, vendorId, setSearchParams])
+  }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, atlasScope, cohortCode, vendorId, period, setSearchParams])
 
   // V5: first-visit auto-tour. Launch "The Pharmaceutical Cartel" automatically
   // the first time a user lands on /atlas with no URL state. Subsequent visits
@@ -2243,8 +2279,8 @@ export default function Atlas() {
   // no extra request. Needed because the static meta is [] for categories
   // (step 00) and the caption must count what is actually drawn.
   const { data: liveClusterStats } = useQuery({
-    queryKey: ['atlas-cluster-stats', mode],
-    queryFn: () => atlasApi.getClusterStats(mode),
+    queryKey: ['atlas-cluster-stats', mode, period],
+    queryFn: () => atlasApi.getClusterStats(mode, period ?? undefined),
     enabled: faithfulObservatory && (mode === 'patterns' || mode === 'sectors' || mode === 'categories'),
     staleTime: 10 * 60 * 1000,
   })
@@ -2264,6 +2300,16 @@ export default function Atlas() {
     const isLive = mode === 'patterns' || mode === 'sectors' || mode === 'categories'
     const letter = folioLetter[mode]
     const lensLabel = lensLabelMap[mode][lang]
+    // Sexenio filter (Sep 2026): honest note appended to scopes 0 and 1 only
+    // (scope 2 carries its own one-line honesty caveat in VendorPivots
+    // instead, since a lifetime vendor card can't be period-scoped).
+    // Prefers the API's `note` (period-scoped queries only); falls back to
+    // the same meaning so the caption isn't blank if `note` is absent.
+    const periodNote = period
+      ? (liveClusterStats?.note ?? (lang === 'en'
+          ? "Vendor counts include vendors with at least one contract during this period. The risk rate reflects each vendor's lifetime risk indicator — the model is not re-run per period."
+          : 'El recuento de proveedores incluye a quienes tuvieron al menos un contrato durante este periodo. La tasa de riesgo refleja el indicador de riesgo de por vida de cada proveedor — el modelo no se vuelve a correr por periodo.'))
+      : ''
     // Scope 2: vendor-pivots caption, only once VendorPivots has reported in
     // for THIS vendor (same staleness guard as scope 1 below).
     if (atlasScope === 'proveedor' && cohortCode && vendorId && vendorScopeInfo && vendorScopeInfo.vendorId === vendorId) {
@@ -2278,20 +2324,20 @@ export default function Atlas() {
     if (atlasScope === 'cohorte' && cohortCode && cohortScopeInfo && cohortScopeInfo.code === cohortCode) {
       const { label, loaded, total } = cohortScopeInfo
       return lang === 'en'
-        ? `Plate IX·${letter}·${cohortCode} — register of ${loaded} of ${total} vendors in ${label}, ranked by risk indicator; amount = lifetime contracted value. Live aggregates from the register.`
-        : `Lámina IX·${letter}·${cohortCode} — registro de ${loaded} de ${total} proveedores de ${label}, ordenados por indicador de riesgo; monto = valor contratado de por vida. Agregados en vivo del padrón.`
+        ? `Plate IX·${letter}·${cohortCode} — register of ${loaded} of ${total} vendors in ${label}, ranked by risk indicator; amount = lifetime contracted value. Live aggregates from the register.${periodNote ? ` ${periodNote}` : ''}`
+        : `Lámina IX·${letter}·${cohortCode} — registro de ${loaded} de ${total} proveedores de ${label}, ordenados por indicador de riesgo; monto = valor contratado de por vida. Agregados en vivo del padrón.${periodNote ? ` ${periodNote}` : ''}`
     }
     if (lang === 'en') {
       if (!isLive || K === 0) {
         return `Plate IX·${letter} — no live data for ${lensLabel} yet. Nothing is drawn until the register serves it; this plate carries no curated stand-ins · data cut 2025·09·28.`
       }
-      return `Plate IX·${letter} — the whole band is what ${K} ${lensLabel} contracted; each slice's width is its value, and the hatch rises to the share of its vendors in the high or critical band — a vendor rate, not a peso share. Red line = that rate. Live aggregates from the register · data cut 2025·09·28.`
+      return `Plate IX·${letter} — the whole band is what ${K} ${lensLabel} contracted; each slice's width is its value, and the hatch rises to the share of its vendors in the high or critical band — a vendor rate, not a peso share. Red line = that rate. Live aggregates from the register · data cut 2025·09·28.${periodNote ? ` ${periodNote}` : ''}`
     }
     if (!isLive || K === 0) {
       return `Lámina IX·${letter} — sin datos en vivo para ${lensLabel} todavía. No se dibuja nada hasta que el padrón los sirva; esta lámina no lleva sustitutos curados · corte de datos 28·09·2025.`
     }
-    return `Lámina IX·${letter} — la banda completa es lo que contrataron ${K} ${lensLabel}; el ancho de cada rebanada es su valor, y el achurado sube hasta la parte de sus proveedores en alto o crítico — una tasa de proveedores, no de pesos. Línea roja = esa tasa. Agregados en vivo del padrón · corte de datos 28·09·2025.`
-  }, [mode, lang, activeConstellationMeta, faithfulObservatory, liveClusterCount, atlasScope, cohortCode, cohortScopeInfo, vendorId, vendorScopeInfo])
+    return `Lámina IX·${letter} — la banda completa es lo que contrataron ${K} ${lensLabel}; el ancho de cada rebanada es su valor, y el achurado sube hasta la parte de sus proveedores en alto o crítico — una tasa de proveedores, no de pesos. Línea roja = esa tasa. Agregados en vivo del padrón · corte de datos 28·09·2025.${periodNote ? ` ${periodNote}` : ''}`
+  }, [mode, lang, activeConstellationMeta, faithfulObservatory, liveClusterCount, atlasScope, cohortCode, cohortScopeInfo, vendorId, vendorScopeInfo, period, liveClusterStats])
 
   // ─── atlas-C-P1: bridge callbacks for left rail ──────────────────────────
   // The left rail dispatches into AtlasContext AND calls these bridge
@@ -2359,6 +2405,7 @@ export default function Atlas() {
         scope={atlasScope}
         cohortCode={cohortCode}
         vendorId={vendorId}
+        period={period}
       />
       {/* omega-N N2: story-chart binding — headless, renders null.
           Wires active chapter's pinnedCode to zoom dispatch + highlight state.
@@ -2423,6 +2470,8 @@ export default function Atlas() {
           mode={mode}
           setMode={setMode}
           onStoriesOpen={() => setStoriesMenuOpen(true)}
+          period={period}
+          setPeriod={setPeriod}
         />
       ) : (
         <AtlasToolbar
@@ -2953,6 +3002,7 @@ export default function Atlas() {
               setVendorScopeInfo(null)
             }}
             onVendorLoaded={setVendorScopeInfo}
+            period={period}
           />
         ) : (
           <AtlasZoomLayer

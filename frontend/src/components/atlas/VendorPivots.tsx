@@ -44,6 +44,11 @@ interface Props {
   lang: 'en' | 'es'
   onGoHome: () => void
   onExitToCohort: () => void
+  /** Sexenio global time filter (Sep 2026) — API vocabulary. Only used to
+   *  keep the cohort-vendors query key in sync with CohortRegister's cache;
+   *  this panel's own figures are always lifetime (see § SEXENIOS below,
+   *  and the honesty line under the short card). */
+  period: string | null
   onVendorLoaded?: (info: {
     vendorId: number
     label: string
@@ -83,7 +88,7 @@ function PivotKicker({ children }: { children: React.ReactNode }) {
 }
 
 export function VendorPivots({
-  lens, code, cohortLabel, lensLabel, vendorId, vendorRow, lang, onGoHome, onExitToCohort, onVendorLoaded,
+  lens, code, cohortLabel, lensLabel, vendorId, vendorRow, lang, onGoHome, onExitToCohort, period, onVendorLoaded,
 }: Props) {
   const isEs = lang === 'es'
   const location = useLocation()
@@ -93,8 +98,8 @@ export function VendorPivots({
   // Also doubles as: (a) the sibling-list source once CohortRegister
   // unmounts, (b) the vendorRow fallback after a hard reload.
   const cohortVendors = useQuery({
-    queryKey: ['atlas-cohort-vendors', lens, code],
-    queryFn: () => atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT }),
+    queryKey: ['atlas-cohort-vendors', lens, code, period],
+    queryFn: () => atlasApi.getClusterVendors({ lens, code, limit: PAGE_LIMIT, period: period ?? undefined }),
     enabled: !!lens && !!code,
     staleTime: 5 * 60 * 1000,
   })
@@ -264,6 +269,16 @@ export function VendorPivots({
             {' · '}
             {row.primary_sector_name}
             {patternCode && <> · {patternCode}</>}
+          </p>
+        )}
+
+        {/* Sexenio filter (Sep 2026): this card is always lifetime — say so
+            when a period is active, rather than silently ignoring it. */}
+        {period && (
+          <p className="font-mono mb-5" style={{ fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+            {isEs
+              ? 'Ficha de por vida — el filtro de sexenio no aplica aquí; ver § SEXENIOS abajo.'
+              : 'Lifetime card — the sexenio filter does not apply here; see § ADMINISTRATIONS below.'}
           </p>
         )}
 

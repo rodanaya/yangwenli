@@ -108,3 +108,24 @@ export function getAdministrationByYear(
   }
   return undefined
 }
+
+/** The backend's `period=` query vocabulary (atlas cluster-stats /
+ *  cluster-vendors, etc.) differs from AdministrationKey for one term:
+ *  Peña Nieto is `pena_nieto` there, `epn` here. Map explicitly at the API
+ *  boundary — never string-compare the two directly. */
+export const PERIOD_API_KEY: Record<AdministrationKey, string> = {
+  fox: 'fox',
+  calderon: 'calderon',
+  epn: 'pena_nieto',
+  amlo: 'amlo',
+  sheinbaum: 'sheinbaum',
+}
+
+/** Reverse lookup: an API period key (e.g. from `?period=` in the URL) to
+ *  its Administration record. Returns undefined for null/invalid keys. */
+export function getAdministrationByPeriodKey(
+  periodKey: string | null | undefined
+): Administration | undefined {
+  if (!periodKey) return undefined
+  return ADMINISTRATIONS.find((a) => PERIOD_API_KEY[a.key] === periodKey)
+}

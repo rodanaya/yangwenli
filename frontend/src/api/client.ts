@@ -3751,12 +3751,16 @@ export const atlasApi = {
     code: string
     limit?: number
     cursor?: number
+    /** Sexenio key (fox|calderon|pena_nieto|amlo|sheinbaum) — restricts to
+     *  vendors with >=1 contract during that period. Omit for all-time. */
+    period?: string
   }): Promise<AtlasClusterVendorsResponse> {
     const q = buildQueryParams({
       lens: params.lens,
       code: params.code,
       limit: params.limit ?? 50,
       ...(params.cursor !== undefined ? { cursor: params.cursor } : {}),
+      ...(params.period ? { period: params.period } : {}),
     })
     const { data } = await api.get<AtlasClusterVendorsResponse>(`/atlas/cluster-vendors?${q}`)
     return data
@@ -3764,9 +3768,12 @@ export const atlasApi = {
 
   /**
    * Live per-cluster aggregates for the faithful-encoding Observatory scatter.
-   * All-time (not year-sliced); patterns + sectors only. Returns [] for other lenses.
+   * All-time (not year-sliced) by default; patterns + sectors + categories.
+   * Pass `period` (fox|calderon|pena_nieto|amlo|sheinbaum) to scope vendor
+   * cohort membership to a presidential sexenio — the response then carries
+   * `period` + an honest `note` about what the numbers mean.
    */
-  async getClusterStats(lens: string): Promise<{
+  async getClusterStats(lens: string, period?: string): Promise<{
     lens: string
     clusters: Array<{
       code: string
@@ -3777,8 +3784,11 @@ export const atlasApi = {
       high_risk_rate: number
       total_value_mxn: number
     }>
+    period?: string
+    note?: string
   }> {
-    const { data } = await api.get(`/atlas/cluster-stats?lens=${encodeURIComponent(lens)}`)
+    const q = period ? `&period=${encodeURIComponent(period)}` : ''
+    const { data } = await api.get(`/atlas/cluster-stats?lens=${encodeURIComponent(lens)}${q}`)
     return data
   },
 
