@@ -303,3 +303,33 @@ class TestClusterVendorsPeriod:
     def test_invalid_period_returns_422(self, client):
         r = _get(client, lens="patterns", code="P5", period="not_a_sexenio")
         assert r.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# sort=value — the Atlas cohort register is ranked by money, not risk
+# ---------------------------------------------------------------------------
+
+class TestClusterVendorsSortValue:
+    def test_value_sort_is_amount_desc(self, client):
+        data = _get(client, lens="patterns", code="P5", limit=20, sort="value").json()
+        amounts = [(v["total_amount_mxn"] or 0) for v in data["vendors"]]
+        assert amounts == sorted(amounts, reverse=True)
+        assert amounts[0] > 0
+
+    def test_value_cursor_continues_below_last_amount(self, client):
+        first = _get(client, lens="sectors", code="salud", limit=5, sort="value").json()
+        assert first["next_cursor"] is not None
+        assert first["next_cursor"] == (first["vendors"][-1]["total_amount_mxn"] or 0)
+        second = _get(client, lens="sectors", code="salud", limit=5, sort="value", cursor=first["next_cursor"]).json()
+        first_ids = {v["vendor_id"] for v in first["vendors"]}
+        assert all(v["vendor_id"] not in first_ids for v in second["vendors"])
+        assert all((v["total_amount_mxn"] or 0) <= first["next_cursor"] for v in second["vendors"])
+
+    def test_value_sort_categories(self, client):
+        data = _get(client, lens="categories", code="cat_medications", limit=10, sort="value").json()
+        amounts = [(v["total_amount_mxn"] or 0) for v in data["vendors"]]
+        assert amounts == sorted(amounts, reverse=True)
+
+    def test_unknown_sort_returns_422(self, client):
+        r = _get(client, lens="patterns", code="P5", sort="alphabet")
+        assert r.status_code == 422

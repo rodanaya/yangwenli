@@ -3754,6 +3754,9 @@ export const atlasApi = {
     /** Sexenio key (fox|calderon|pena_nieto|amlo|sheinbaum) — restricts to
      *  vendors with >=1 contract during that period. Omit for all-time. */
     period?: string
+    /** risk (API default) or value — the Atlas cohort register ranks by money.
+     *  `cursor` is the last row's sort key, so keep `sort` fixed across pages. */
+    sort?: 'risk' | 'value'
   }): Promise<AtlasClusterVendorsResponse> {
     const q = buildQueryParams({
       lens: params.lens,
@@ -3761,6 +3764,7 @@ export const atlasApi = {
       limit: params.limit ?? 50,
       ...(params.cursor !== undefined ? { cursor: params.cursor } : {}),
       ...(params.period ? { period: params.period } : {}),
+      ...(params.sort ? { sort: params.sort } : {}),
     })
     const { data } = await api.get<AtlasClusterVendorsResponse>(`/atlas/cluster-vendors?${q}`)
     return data
