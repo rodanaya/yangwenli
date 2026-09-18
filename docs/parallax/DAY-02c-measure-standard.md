@@ -46,7 +46,7 @@ main :where(table, .text-center, [style*="text-align: center"]) :where(p, li, dd
 
 Dev-server census after the rule (same 18 routes, 1440): every route's p/li max = 68ch (the estimator reads it as 86 because it assumes 0.5em glyphs); medians 65–86 on the estimator, i.e. 52–68 real ch. Alignment counts unchanged except `/dashboard` justify 1 → 0. Screens checked: `/methodology` Part I/II/V, `/dashboard` hero, `/cases`, `/gap`, `/stories/the-ghost-army`, `/vendors/29277` — no broken layout, tables and tiles intact.
 
-Gates: tsc 0 · build OK · lint:tokens PASS (new rule live). Shipped: _(filled at deploy)_.
+Gates: tsc 0 · build OK · lint:tokens PASS (new rule live). Shipped 2026-09-18: commits `e181c3eb`+`e3330678` (BUILD_ID `2026-09-18-parallax-d2c-measure`), VPS HEAD `e3330678`, stylesheet `index-DfgWZ2Z5.css` carries `max-width:68ch`; prod census after deploy: every route's running-text max = 68ch, `/dashboard` justify 1 → 0, alignment otherwise unchanged.
 
 ## Backlog
 
