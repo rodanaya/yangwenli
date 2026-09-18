@@ -26,7 +26,7 @@ import { Link } from 'react-router-dom'
 import { intersectionApi, type IntersectionVendor } from '@/api/client'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { formatNumber } from '@/lib/utils'
+import { cn, formatNumber } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
 import { useQuery } from '@tanstack/react-query'
 
@@ -125,7 +125,7 @@ function Swatch({ fill, color }: { fill: BandFill; color: string }) {
   )
 }
 
-export function TwoWorldsExhibit() {
+export function TwoWorldsExhibit({ className }: { className?: string }) {
   const { i18n } = useTranslation()
   const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const { data } = useQuery({
@@ -236,7 +236,7 @@ export function TwoWorldsExhibit() {
   const underLabelStyle = { fontFamily: MONO, fontSize: '11px', whiteSpace: 'nowrap' } as const
 
   return (
-    <section id="two-worlds" className="scroll-mt-20">
+    <section id="two-worlds" className={cn('scroll-mt-20', className)}>
       <PlateFrame
         lang={lang}
         folio="III·c"

@@ -1023,3 +1023,15 @@ main :where(h2, h3) { max-width: 44ch; text-wrap: balance; }
 main :where(table, .text-center, [style*="text-align: center"]) :where(p, li, dd, dt, h1, h2, h3) {
   max-width: none;
 }
+
+/* Labels are not paragraphs (PARALLAX D2d § Change 1, 2026-09-18).
+   The 68ch rule above caught single-line editorial furniture as if it were
+   running text: on /methodology the masthead eyebrow
+   "RUBLI · EL DICTAMEN · MODEL v0.8.5 · RUN CAL-v8-…" and every clause kicker
+   wrapped onto a second line at 1440. Eyebrows, kickers, datelines, bylines and
+   editorial-labels are meant to read as one unbroken line regardless of length,
+   so they are exempt. Same `:where()` zero specificity as the D2c block and
+   later in the cascade, so this wins on the labels and nothing else. */
+main :where(.uppercase, .text-kicker, .text-byline, .lede-dateline, .editorial-label, [style*="text-transform: uppercase"]) {
+  max-width: none;
+}

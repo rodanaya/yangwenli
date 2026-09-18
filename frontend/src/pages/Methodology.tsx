@@ -385,7 +385,17 @@ export function Methodology() {
         className="pointer-events-none absolute inset-0 z-0 print:hidden"
         style={{ backgroundImage: 'url(\"data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22140%22%20height=%22140%22%3E%3Cfilter%20id=%22dg%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23dg)%22/%3E%3C/svg%3E\")', opacity: 0.045, mixBlendMode: 'multiply' }}
       />
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-[1]">
+      {/* El Dictamen reading frame (PARALLAX D2d § Change 2). 210px index rail
+          + 40px gap + 760px figure width = 1010. The clause column below caps
+          at 640 so every box is as wide as its text; the plates overhang to
+          760, 120px past the text column's right edge.
+          The figure bleed is gated at 1300px, not at `lg`: a plate starts at
+          the column's left edge, so its right edge lands 1034px from the
+          container's left. Below ~1300 the container is narrower than that and
+          the plates were measurably clipped (at 1024 they ran 106px past the
+          container and lost their right-hand axis labels). Under 1300 they
+          simply fill the 640 column and scroll inside their own D2b frame. */}
+      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-[1]">
         {/* Breadcrumb up-link (Charter C0 spine) */}
         <Link
           to="/"
@@ -400,7 +410,7 @@ export function Methodology() {
 
         <div className="mt-8 lg:grid lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-10">
           <IndiceRail clauses={DICTAMEN_CLAUSES} />
-          <div className="space-y-12 min-w-0">
+          <div className="space-y-12 min-w-0 lg:max-w-[640px]">
             {/* PARTE I — EL INSTRUMENTO */}
             <ClauseSection
               id="overview"
@@ -415,7 +425,7 @@ export function Methodology() {
                   ? '§ Modelo activo v0.8.5 · AUC 0.785 · HR 11.01%'
                   : '§ Active model v0.8.5 · AUC 0.785 · HR 11.01%'}
               </p>
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-[15px] text-text-secondary leading-relaxed">
                 {t('body.overview.p1Start')}<strong className="text-text-primary">{t('body.overview.p1StatisticalIndicator')}</strong>{' '}
                 <Mono>S(features)</Mono>{t('body.overview.p1End')}
               </p>
@@ -427,7 +437,7 @@ export function Methodology() {
                 <Formula>
                   {t('body.overview.formulaExpr')}
                 </Formula>
-                <p className="text-[13px] text-text-muted">
+                <p className="text-[15px] text-text-muted">
                   {t('body.overview.formulaDescStart')}<strong>{t('body.overview.formulaDescStrong')}</strong>{t('body.overview.formulaDescEnd')}
                 </p>
               </div>
@@ -484,7 +494,7 @@ export function Methodology() {
                 </div>
               </div>
 
-              <p className="text-[13px] text-text-muted">
+              <p className="text-[15px] text-text-muted">
                 {t('body.overview.highRiskSummaryStart')}<strong className="text-text-secondary">{t('body.overview.highRiskSummaryValue')}</strong>{t('body.overview.highRiskSummaryEnd')}
               </p>
             </div>
@@ -498,10 +508,10 @@ export function Methodology() {
               dek={{ en: 'Eighteen features entered the model. Twelve carry weight — for or against. Six were regularized to exactly zero.', es: 'Dieciocho características entraron al modelo. Doce cargan peso — a favor o en contra. Seis fueron reguladas a exactamente cero.' }}
             >
               <div className="space-y-6">
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-[15px] text-text-secondary leading-relaxed">
                 {t('body.features.p1')}
               </p>
-                <BalanzaLedger />
+                <BalanzaLedger className="min-[1300px]:w-[760px] min-[1300px]:max-w-none" />
 
                 {/* Key findings — editorial notes */}
                 <div id="findings" className="scroll-mt-24">
@@ -515,7 +525,7 @@ export function Methodology() {
                 <p className="text-sm font-bold text-text-primary">
                   {t('body.findings.finding1Title')}
                 </p>
-                <p className="text-[13px] text-text-muted mt-1 leading-relaxed">
+                <p className="text-[15px] text-text-muted mt-1 leading-relaxed">
                   {t('body.findings.finding1Body')}
                 </p>
               </div>
@@ -531,21 +541,21 @@ export function Methodology() {
                 <div className="mt-2 space-y-2">
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">1.</span>
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
+                    <p className="text-[15px] text-text-secondary leading-relaxed">
                       <strong className="text-text-primary">{t('body.findings.finding2Item1Strong')}</strong>{' '}
                       <Mono>{t('body.findings.finding2Item1Mono')}</Mono>{t('body.findings.finding2Item1End')}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">2.</span>
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
+                    <p className="text-[15px] text-text-secondary leading-relaxed">
                       <strong className="text-text-primary">{t('body.findings.finding2Item2Strong')}</strong>{' '}
                       <Mono>{t('body.findings.finding2Item2Mono')}</Mono>{t('body.findings.finding2Item2End')}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <span className="text-xs text-text-muted shrink-0 w-2">3.</span>
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
+                    <p className="text-[15px] text-text-secondary leading-relaxed">
                       <strong className="text-text-primary">{t('body.findings.finding2Item3Strong')}</strong>{' '}
                       <Mono>{t('body.findings.finding2Item3Mono')}</Mono>{t('body.findings.finding2Item3End')}
                     </p>
@@ -558,13 +568,13 @@ export function Methodology() {
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('body.findings.finding3Label')}
                 </p>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   <strong className="text-text-primary">{t('body.findings.finding3BodyStrong')}</strong>{t('body.findings.finding3BodyEnd')}
                 </p>
               </div>
 
               <div className="p-3 rounded-md border border-risk-high/20 bg-risk-high/5">
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   <strong className="text-text-primary">{t('body.findings.finding4Strong')}</strong>{t('body.findings.finding4End')}
                 </p>
               </div>
@@ -579,7 +589,7 @@ export function Methodology() {
                   defaultOpen={false}
                 >
             <div className="space-y-3">
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-[15px] text-text-secondary leading-relaxed">
                 {t('body.riskEvidence.p1')}
               </p>
               <RiskFactorTable />
@@ -600,7 +610,7 @@ export function Methodology() {
               <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[12px]">
                 {t('sectionKickers.validationKicker')}
               </p>
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-[15px] text-text-secondary leading-relaxed">
                 {t('body.validation.p1Start')}<strong className="text-text-primary">{t('body.validation.p1Strong')}</strong>{t('body.validation.p1End')}
               </p>
 
@@ -662,7 +672,7 @@ export function Methodology() {
                 </div>
               )}
 
-              <p className="text-[13px] text-text-muted">
+              <p className="text-[15px] text-text-muted">
                 {t('body.validation.footnote')}
               </p>
 
@@ -684,14 +694,14 @@ export function Methodology() {
                 ))}
               </div>
 
-              <p className="text-[13px] text-text-secondary">
+              <p className="text-[15px] text-text-secondary">
                 {t('body.validation.technicalNote')}
               </p>
             </div>
 
-                <CalibrationRecord />
+                <CalibrationRecord className="min-[1300px]:w-[760px] min-[1300px]:max-w-none" />
 
-                <TwoWorldsExhibit />
+                <TwoWorldsExhibit className="min-[1300px]:w-[760px] min-[1300px]:max-w-none" />
 
                 {/* Sub-clause III·b — cross-model checks */}
                 <div id="v52-layer" className="scroll-mt-24 space-y-3 pt-2">
@@ -708,12 +718,16 @@ export function Methodology() {
                     {lang === 'es' ? 'Tres segundas opiniones independientes' : 'Three independent second opinions'}
                   </h3>
             <div className="space-y-4">
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-[15px] text-text-secondary leading-relaxed">
                 {t('body.v52layer.p1Start')}<strong className="text-text-primary">{t('body.v52layer.p1Strong')}</strong>{t('body.v52layer.p1End')}
               </p>
 
-              {/* Three pillars */}
-              <div className="grid gap-3 sm:grid-cols-3">
+              {/* Three pillars. PARALLAX D2d: a 3-up card grid cannot live on
+                  the 640 measure — each cell would be ~180px, i.e. three words
+                  a line. It bleeds to the 760 figure width like a plate, and
+                  its card bodies stay at 13px; the 15px clause measure is for
+                  the reading column, not for a 220px cell. */}
+              <div className="grid gap-3 sm:grid-cols-3 min-[1300px]:w-[760px] min-[1300px]:max-w-none">
                 {[
                   {
                     titleKey: 'shapeTitle',
@@ -782,12 +796,12 @@ export function Methodology() {
                 <p className="text-xs font-semibold text-text-primary">
                   {t('body.v52layer.aiConfirmedTitle')}
                 </p>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   {t('body.v52layer.aiConfirmedStart')}<strong className="text-text-primary">{t('body.v52layer.aiConfirmedStrong')}</strong>{t('body.v52layer.aiConfirmedEnd')}
                 </p>
               </div>
 
-              <p className="text-[13px] text-text-muted">
+              <p className="text-[15px] text-text-muted">
                 {t('body.v52layer.noteStart')}<code className="font-mono bg-border/20 px-1 py-0.5 rounded">{t('body.v52layer.noteCode')}</code>{t('body.v52layer.noteEnd')}
               </p>
             </div>
@@ -803,7 +817,7 @@ export function Methodology() {
               dek={{ en: 'Where the record comes from, what its four eras can and cannot support, and the day the source went dark.', es: 'De dónde viene el registro, qué soportan y qué no sus cuatro épocas, y el día en que la fuente se apagó.' }}
             >
             <div className="space-y-4">
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-[15px] text-text-secondary leading-relaxed">
                 {t('body.dataSources.p1Start')}<strong className="text-text-primary">{t('body.dataSources.p1Strong')}</strong>{t('body.dataSources.p1End')}
               </p>
 
@@ -858,10 +872,10 @@ export function Methodology() {
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-accent mb-1">
                   {t('body.dataSources.horizonLabel')}
                 </p>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   {t('body.dataSources.horizonBodyStart')}<strong className="text-text-primary">{t('body.dataSources.horizonBodyStrong')}</strong>{t('body.dataSources.horizonBodyEnd')}
                 </p>
-                <p className="text-[13px] text-text-muted mt-2">
+                <p className="text-[15px] text-text-muted mt-2">
                   {t('body.dataSources.horizonNote')}
                 </p>
               </div>
@@ -871,7 +885,7 @@ export function Methodology() {
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-risk-critical mb-1">
                   {t('body.dataSources.amountValidationLabel')}
                 </p>
-                <div className="space-y-1 text-[13px] text-text-secondary">
+                <div className="space-y-1 text-[15px] text-text-secondary">
                   <p>
                     <strong className="text-text-primary">{t('body.dataSources.rejectStrong')}</strong>{t('body.dataSources.rejectEnd')}
                   </p>
@@ -879,7 +893,7 @@ export function Methodology() {
                     <strong className="text-text-primary">{t('body.dataSources.flagStrong')}</strong>{t('body.dataSources.flagEnd')}
                   </p>
                 </div>
-                <p className="text-[13px] text-text-muted mt-2">
+                <p className="text-[15px] text-text-muted mt-2">
                   {t('body.dataSources.context')}
                 </p>
               </div>
@@ -915,7 +929,7 @@ export function Methodology() {
                   <AlertTriangle className="h-3.5 w-3.5 text-risk-medium shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
                     <p className="text-xs font-medium text-text-primary">{t(`body.limitations.${item.titleKey}`)}</p>
-                    <p className="text-[13px] text-text-muted leading-relaxed mt-0.5">{t(`body.limitations.${item.textKey}`)}</p>
+                    <p className="text-[15px] text-text-muted leading-relaxed mt-0.5">{t(`body.limitations.${item.textKey}`)}</p>
                   </div>
                 </div>
               ))}
@@ -923,7 +937,7 @@ export function Methodology() {
 
                 <div id="limitations-detail" className="scroll-mt-24">
             <div className="space-y-6">
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-[15px] text-text-secondary leading-relaxed">
                 {t('limitations.intro')}
               </p>
 
@@ -981,7 +995,7 @@ export function Methodology() {
 
               {/* Interpretive guidance */}
               <div className="p-3 rounded-md bg-border/10 border border-border/40">
-                <p className="text-[13px] text-text-muted leading-relaxed">
+                <p className="text-[15px] text-text-muted leading-relaxed">
                   <span className="font-medium text-text-primary">{t('limitations.interpretationLabel')}</span>
                   {t('limitations.interpretationBody')}
                 </p>
@@ -998,7 +1012,11 @@ export function Methodology() {
               title={{ en: 'Evidentiary weight', es: 'El valor probatorio' }}
               dek={{ en: 'Three tiers of certainty, and the exact language each one licenses.', es: 'Tres niveles de certeza, y el lenguaje exacto que cada uno autoriza.' }}
             >
-        <div className="fern-card">
+        {/* The confidence-tier exhibit is a 3-up comparison, not running prose:
+            on the 640 measure each tier would be a ~155px cell. It bleeds to
+            the 760 figure width like a plate (PARALLAX D2d), and the tier
+            bodies keep 13px for the same reason as the III·b pillars. */}
+        <div className="fern-card min-[1300px]:w-[760px] min-[1300px]:max-w-none">
           <div className="px-6 pt-5 pb-4">
             <div className="flex items-center gap-2 mb-1">
               <Shield className="h-4 w-4 text-accent" aria-hidden="true" />
@@ -1006,7 +1024,7 @@ export function Methodology() {
                 {t('tiers.kicker')}
               </span>
             </div>
-            <p className="text-[13px] text-text-muted mt-1">
+            <p className="text-[15px] text-text-muted mt-1">
               {t('tiers.intro')}
             </p>
           </div>
@@ -1092,7 +1110,7 @@ export function Methodology() {
             </div>
 
             <div className="mt-4 p-3 rounded-md bg-border/10 border border-border/30">
-              <p className="text-[13px] text-text-muted leading-relaxed">
+              <p className="text-[15px] text-text-muted leading-relaxed">
                 <span className="font-semibold text-text-secondary">{t('tiers.criticalRuleLabel')} </span>
                 {t('tiers.criticalRuleBody')}
               </p>
@@ -1112,13 +1130,13 @@ export function Methodology() {
               {/* Z-scores */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.zScoreTitle')}</p>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   {t('body.methods.zScoreP1')}
                 </p>
                 <Formula>
                   {t('body.methods.zScoreFormula')}
                 </Formula>
-                <p className="text-[13px] text-text-muted">
+                <p className="text-[15px] text-text-muted">
                   {t('body.methods.zScoreNote')}
                 </p>
               </div>
@@ -1126,13 +1144,13 @@ export function Methodology() {
               {/* Mahalanobis */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.mahalanobisTitle')}</p>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   {t('body.methods.mahalanobisP1')}
                 </p>
                 <Formula>
                   {t('body.methods.mahalanobisFormula')}
                 </Formula>
-                <p className="text-[13px] text-text-muted">
+                <p className="text-[15px] text-text-muted">
                   {t('body.methods.mahalanobisNote')}
                 </p>
               </div>
@@ -1140,10 +1158,10 @@ export function Methodology() {
               {/* Logistic Regression */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.logisticTitle')}</p>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   {t('body.methods.logisticP1')}
                 </p>
-                <p className="text-[13px] text-text-muted mt-1">
+                <p className="text-[15px] text-text-muted mt-1">
                   {t('body.methods.logisticNote')}
                 </p>
               </div>
@@ -1151,10 +1169,10 @@ export function Methodology() {
               {/* PU Learning */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.puTitle')}</p>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   {t('body.methods.puP1Start')}<Mono>S(x) = P(labeled=1|x) / c</Mono>
                 </p>
-                <p className="text-[13px] text-text-muted mt-1">
+                <p className="text-[15px] text-text-muted mt-1">
                   {t('body.methods.puNote')}
                 </p>
               </div>
@@ -1162,7 +1180,7 @@ export function Methodology() {
               {/* Bootstrap CIs */}
               <div>
                 <p className="text-xs font-semibold text-text-primary mb-1">{t('body.methods.bootstrapTitle')}</p>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
+                <p className="text-[15px] text-text-secondary leading-relaxed">
                   {t('body.methods.bootstrapP1')}
                 </p>
               </div>
@@ -1176,7 +1194,7 @@ export function Methodology() {
               defaultOpen={false}
             >
               <div className="space-y-4">
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-[15px] text-text-secondary leading-relaxed">
                 {t('body.v33section.p1Start')}<strong className="text-text-primary">{t('body.v33section.p1Strong')}</strong>{t('body.v33section.p1End')}<Mono>{t('body.v33section.p1Mono')}</Mono>{t('body.v33section.p1MonoEnd')}
               </p>
 
@@ -1191,7 +1209,7 @@ export function Methodology() {
                   ))}
                 </div>
 
-              <p className="text-[13px] text-text-muted">
+              <p className="text-[15px] text-text-muted">
                 {t('body.v33section.bonusFactors')}
               </p>
 
@@ -1248,7 +1266,7 @@ export function Methodology() {
                     {i + 1}.
                   </span>
                   <div>
-                    <p className="text-[13px] text-text-secondary">
+                    <p className="text-[15px] text-text-secondary">
                       <span className="text-text-primary font-medium">{ref.authors}</span>
                       {' '}({ref.year}).{' '}
                       <em>{ref.title}</em>.
@@ -1256,7 +1274,7 @@ export function Methodology() {
                   </div>
                 </div>
               ))}
-              <p className="text-[13px] text-text-muted pt-2">
+              <p className="text-[15px] text-text-muted pt-2">
                 {t('body.references.footer')}
               </p>
             </div>
