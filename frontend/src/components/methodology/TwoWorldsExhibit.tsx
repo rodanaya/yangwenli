@@ -20,7 +20,7 @@
  * Spec: docs/parallax/DAY-02b-methodology-plates.md § Change 3.
  */
 
-import { useId } from 'react'
+import { useId, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { intersectionApi, type IntersectionVendor } from '@/api/client'
@@ -231,6 +231,7 @@ export function TwoWorldsExhibit() {
   ]
 
   const emptyTitle = lang === 'es' ? 'Sin proveedores en esta zona' : 'No vendors in this zone'
+  const ghostLabel = `${n(ghost)} ${lang === 'es' ? 'huella fantasma' : 'ghost signature'} · P2/P3`
   const rowLabelStyle = { fontFamily: MONO, fontSize: '11px', letterSpacing: '0.12em' } as const
   const underLabelStyle = { fontFamily: MONO, fontSize: '11px', whiteSpace: 'nowrap' } as const
 
@@ -280,19 +281,19 @@ export function TwoWorldsExhibit() {
               ]}
             />
           </div>
-          {/* under-labels, positioned by % — the ghost label hangs off its own
-              right edge because the segment is too narrow to sit under. */}
-          <div className="relative mt-1.5" style={{ height: 15 }}>
-            <span className="absolute left-0 top-0 text-text-muted" style={underLabelStyle}>
+          {/* under-labels — one line, outer two fixed, middle takes the slack
+              and truncates. Anchoring the middle to its own segment edge left
+              "46" orphaned on a line of its own at 390. (D2b § judge) */}
+          <div className="mt-1.5 flex items-baseline justify-between gap-2 text-text-muted">
+            <span className="whitespace-nowrap" style={underLabelStyle}>
               {n(modelOnlyOther)} {lang === 'es' ? 'solo el modelo' : 'model only'}
             </span>
-            <span className="absolute top-0 text-right text-text-muted" style={{ ...underLabelStyle, right: `${pOverlap}%` }}>
-              {n(ghost)} {lang === 'es' ? 'huella fantasma' : 'ghost signature'}
-              <span className="hidden sm:inline"> · P2/P3</span>
+            <span className="min-w-0 flex-1 truncate text-right" style={underLabelStyle} title={ghostLabel}>
+              {ghostLabel}
             </span>
-          </div>
-          <div className="text-right tabular-nums" style={{ ...underLabelStyle, color: C_OVERLAP }}>
-            {n(overlap)}
+            <span className="whitespace-nowrap tabular-nums" style={{ ...underLabelStyle, color: C_OVERLAP }}>
+              {n(overlap)}
+            </span>
           </div>
 
           {/* ROW B — the state's list, at row A's scale: a 3.4% stub */}
@@ -315,8 +316,10 @@ export function TwoWorldsExhibit() {
             </div>
           </div>
 
-          {/* leader — from the stub's left edge down to the lens's left edge */}
-          <svg viewBox="0 0 100 10" preserveAspectRatio="none" style={{ width: '100%', height: 22, display: 'block' }} aria-hidden="true">
+          {/* leader — from the stub's left edge down to the lens's left edge.
+              Only at ≥ sm: below it the lens is full width, so there is no
+              left edge to point at. (D2b § judge) */}
+          <svg viewBox="0 0 100 10" preserveAspectRatio="none" className="hidden sm:block" style={{ width: '100%', height: 22 }} aria-hidden="true">
             <line
               x1={100 - stubPct}
               y1={0}
@@ -329,11 +332,13 @@ export function TwoWorldsExhibit() {
             />
           </svg>
 
-          {/* LENS — the same stub, magnified ten times */}
-          <div className="flex justify-end">
+          {/* LENS — the same stub, magnified ten times. Below sm it goes full
+              width: at 34% of a 390 viewport the box is ~100px and its captions
+              wrap to one word per line. (D2b § judge) */}
+          <div className="mt-4 flex justify-end sm:mt-0">
             <div
-              className="p-3"
-              style={{ width: `${lensPct}%`, minWidth: 0, border: '1px solid var(--color-border)' }}
+              className="w-full max-w-full p-3 sm:w-[var(--lens-w)]"
+              style={{ '--lens-w': `${lensPct}%`, minWidth: 0, border: '1px solid var(--color-border)' } as CSSProperties}
             >
               <p className="uppercase text-text-muted" style={{ fontFamily: MONO, fontSize: '10.5px', letterSpacing: '0.12em' }}>
                 {lang === 'es' ? `DETALLE ×10 · los ${n(officialRecord)} del Estado, ampliados` : `DETALLE ×10 · the state's ${n(officialRecord)}, magnified`}
