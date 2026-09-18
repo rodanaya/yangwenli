@@ -115,4 +115,6 @@ Structural fixes the figures forced: `<main>` `overflow-x: hidden` made it a scr
 
 Seven `figure[role=img]`, each 760 on the text axis at 1440; one lazy chunk + one API request for all five figures; 0 sub-10px, 0 overflow, 0 console errors, bilingual audit clean. Gates: tsc 0 · build OK · lint:tokens PASS.
 
-Commits: `e6a51551` STEP 0 (GradeBlock extracted) · `950efa06` figures + refresh · `00bd33fc` judge fix · BUILD_ID `2026-09-18-story-d1-el-vacio`.
+Commits: `e6a51551` STEP 0 (GradeBlock extracted) · `950efa06` figures + refresh · `00bd33fc` judge fix · docs + BUILD_ID `d6a90d5b` (`2026-09-18-story-d1-el-vacio`).
+
+Deployed 2026-09-18 14:59Z via `deploy-safe.sh` (`[deploy] done`, VPS HEAD `d6a90d5b`). Entry bundle `index-CeyJAWSN.js` → `index-Cr91clQH.js`; BUILD_ID string 1 hit in the served entry chunk; health `db_connected: true`, 3,058,286 contracts. Live probe on `/stories/el-vacio` at 1440: 7 `figure[role=img]`; rendered text contains the live `total_contracts`, `direct_award_count`, `recovered_count`, `young_vendor_count`; the old "69,516" is absent; 0 page/console errors.
