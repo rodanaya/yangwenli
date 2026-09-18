@@ -14450,3 +14450,39 @@ Findings: **None detected.** All grep matches were false positives: code comment
 
 ### Overall: WARN
 Network policy blocks all outbound HTTPS to rubli.xyz (sixth consecutive blocked run). HTTP and API checks cannot execute from this environment. Local bilingual scan passed cleanly. **Action required**: migrate this health-check to a GitHub Actions workflow with an unrestricted runner to actually verify the live site.
+
+---
+## Visual Review — 2026-09-18T00:00:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (connect_rejected — egress proxy) | ✗ |
+| https://rubli.xyz/atlas | BLOCKED (connect_rejected — egress proxy) | ✗ |
+| https://rubli.xyz/aria | BLOCKED (connect_rejected — egress proxy) | ✗ |
+| https://rubli.xyz/sectors | BLOCKED (connect_rejected — egress proxy) | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED (connect_rejected — egress proxy) | ✗ |
+| https://rubli.xyz/cases | BLOCKED (connect_rejected — egress proxy) | ✗ |
+| https://rubli.xyz/methodology | BLOCKED (connect_rejected — egress proxy) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (connect_rejected — egress proxy) | ✗ |
+
+> **Note**: Proxy returned `connect_rejected` (403 gateway policy denial) for all requests to `rubli.xyz:443`. **Seventh consecutive blocked run** — this is a persistent environment network policy restriction, not a site-down condition.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (network policy) | ✗ |
+| /api/v1/cases | BLOCKED (network policy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (network policy) | ✗ |
+| /api/v1/sectors | BLOCKED (network policy) | ✗ |
+
+### Bilingual Gaps
+Grepped `frontend/src/pages/` and `frontend/src/components/` for:
+- Raw i18n key leaks (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*` pattern)
+- Hardcoded `Generate Report` / `Generar Reporte`
+- Hardcoded `SIGN IN` / `INICIAR SESIÓN`
+
+Findings: **None detected.** All regex matches were false positives: code-level object property accesses (`PATTERN_CHIP[item.primary_pattern]`, `TIER_STYLES.Excelente.color`, `PATTERN_COLORS.P5`), JSX type annotations, bibliography citations, and properly bilingual ternary expressions. No bare hardcoded UI strings found.
+
+### Overall: WARN
+Network policy blocks all outbound HTTPS to rubli.xyz (seventh consecutive blocked run). HTTP and API checks cannot execute from this environment. Local bilingual scan passed cleanly. **Action required**: migrate this health-check to a GitHub Actions workflow with an unrestricted runner to actually verify the live site.
