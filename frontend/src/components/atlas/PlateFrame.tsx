@@ -186,13 +186,25 @@ export function PlateFrame({
       >
         <span style={{ fontStyle: 'normal', fontWeight: 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
           <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·{folio}</span>
-          <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
-          <span>{contextLabelText}</span>
+          {/* Context label follows the date stamp's precedent below: hidden
+              under 480px rather than ellipsed. The header has no height budget,
+              so it cannot wrap, and `text-overflow: ellipsis` here was cutting
+              49px off "Expediente de recuperación" on three /gap plates at 390.
+              English fits at that width, which is why it never showed.
+              Separator and label hide together — a dangling "·" is worse than
+              neither. */}
+          <span className="hidden min-[480px]:inline" style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+          <span className="hidden min-[480px]:inline">{contextLabelText}</span>
         </span>
-        {/* Date stamp is archival flavor — hidden below 480px so the folio +
+        {/* Date stamp is archival flavor — hidden below 700px so the folio +
             context label keeps the full width on a phone (it otherwise wrapped
-            to a 2nd line and overprinted the chart's top readout strip). */}
-        <span className="hidden min-[480px]:inline" style={{ whiteSpace: 'nowrap', flexShrink: 0, paddingLeft: 8 }}>
+            to a 2nd line and overprinted the chart's top readout strip).
+            The threshold moved up from 480: at 480 the stamp and the
+            context label both returned, and in Spanish the two together need
+            ~500px of a ~420px row, so the label was cut by up to 130px on
+            /gap and /methodology. Between 480 and 700 the label wins — it
+            names the plate, the stamp only dates it. */}
+        <span className="hidden min-[700px]:inline" style={{ whiteSpace: 'nowrap', flexShrink: 0, paddingLeft: 8 }}>
           <span style={{ opacity: 0.55 }}>{lang === 'en' ? 'Indexed' : 'Indexado'} </span>
           <span style={{ fontWeight: 500 }}>{dateStamp}</span>
         </span>
