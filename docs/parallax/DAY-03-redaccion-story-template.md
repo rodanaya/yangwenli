@@ -134,4 +134,6 @@ Executor deviations accepted: the scale floor is computed per renderer from its 
 
 Gates: `tsc -p tsconfig.app.json` 0 errors · `npm run build` clean (no `stories/charts` chunks) · `lint:tokens` PASS · 0 console errors on the audited routes.
 
-Commits: `a03afc8a` STEP 0 · `154c67b8` Changes 1–8 · `2360fe23` judge fix · BUILD_ID `2026-09-18-parallax-d3-redaccion`.
+Commits: `a03afc8a` STEP 0 · `154c67b8` Changes 1–8 · `2360fe23` judge fix · docs `a1e29f19` · BUILD_ID `52971873` (`2026-09-18-parallax-d3-redaccion`).
+
+Deployed 2026-09-18 11:58Z via `deploy-safe.sh` (`[deploy] done`, VPS HEAD `52971873`). Entry bundle `index-pEemEF4r.js` → `index-D8bJdIcU.js`; BUILD_ID string 1 hit in the served entry chunk; health `db_connected: true`, 3,058,286 contracts. Prod probe (`audit3.mjs https://rubli.xyz prod`, 1440 + 390, EN + ES, 0 page/console errors): `/journalists` sub10 0 · italic 0 · pItalic 0 · nested `a a` 0 · 23 links; stories sub10 0 · svg<10 0 · stale 0 (the one ES "abril de 2026" hit is prose fact in el-ejercito-fantasma, not a dateline) · width set {640, 760, 1010} · banner slack 40 · nav label opacity 0, dot column 1405 vs frame right 1337 · `[role=banner]` in main 0 · figure counts 13/4/3 unchanged; clipped SVG glyphs 0 at 1440 and 0 at 390 across the 13 stories.
