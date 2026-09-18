@@ -708,6 +708,241 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
 
 
 # ---------------------------------------------------------------------------
+# GET /aria/patterns/{code}/institutions
+# ---------------------------------------------------------------------------
+
+_PATTERN_GROUP_CACHE = "aria_pattern_groups"
+
+#: ARIA's seven pattern codes and their names, matching the typology the
+#: frontend prints. A code outside this map is a 404, not an empty result —
+#: a figure that silently draws nothing for a typo is worse than one that says
+#: the pattern does not exist.
+_PATTERN_LABELS: dict[str, tuple[str, str]] = {
+    "P1": ("Institutional monopoly", "Monopolio institucional"),
+    "P2": ("Ghost company", "Empresa fantasma"),
+    "P3": ("Intermediary", "Intermediario"),
+    "P4": ("Sham bidding", "Licitación ficticia"),
+    "P5": ("Systematic overpricing", "Sobreprecio sistemático"),
+    "P6": ("Institutional capture", "Captura institucional"),
+    "P7": ("Collusion network", "Red de colusión"),
+}
+
+#: group → (key column, label column). Both are fixed identifiers chosen by a
+#: validated enum, never interpolated from raw input.
+_GROUP_COLUMNS: dict[str, tuple[str, str]] = {
+    "institution": ("top_institution", "top_institution"),
+    "sector": ("primary_sector_id", "primary_sector_name"),
+}
+
+
+def _resolve_institution_ids(
+    conn: sqlite3.Connection, siglas: list[str]
+) -> dict[str, dict]:
+    """
+    Map each `aria_queue.top_institution` acronym to a real institution row.
+
+    `top_institution` is a siglas string, not a foreign key, and several
+    registrations can share one acronym — PEMEX alone has three (corporate
+    1201, Refinación 314, Exploración 311), so the queue's "PEMEX" collapses
+    all of them. The busiest registration is the one an entity chip should
+    open; the caller says so in its annotation rather than pretending the
+    acronym resolved cleanly.
+    """
+    if not siglas:
+        return {}
+    placeholders = ",".join("?" for _ in siglas)
+    rows = conn.execute(
+        f"""
+        SELECT siglas, id, name, COALESCE(total_contracts, 0) AS total_contracts
+        FROM institutions
+        WHERE siglas IN ({placeholders})
+        ORDER BY COALESCE(total_contracts, 0) DESC
+        """,
+        siglas,
+    ).fetchall()
+    best: dict[str, dict] = {}
+    for r in rows:
+        # Ordered by contracts desc, so the first row for an acronym wins.
+        best.setdefault(
+            r["siglas"], {"institution_id": r["id"], "institution_name": r["name"]}
+        )
+    return best
+
+
+def _pattern_top_vendors(
+    conn: sqlite3.Connection, code: str, key_col: str, keys: list, per_row: int
+) -> dict:
+    """
+    The `per_row` largest vendors in each returned group, in ONE scan.
+
+    Twelve `ORDER BY … LIMIT n` queries would be twelve passes over a 248K-row
+    table; a single ROW_NUMBER() partition is one. SQLite has had window
+    functions since 3.25 and this build runs 3.45.
+    """
+    if not keys or per_row <= 0:
+        return {}
+    placeholders = ",".join("?" for _ in keys)
+    rows = conn.execute(
+        f"""
+        SELECT gkey, vendor_id, vendor_name, total_value_mxn, total_contracts,
+               top_institution_ratio, ips_tier, in_ground_truth, avg_risk_score,
+               COALESCE(review_status, 'pending') AS review_status
+        FROM (
+            SELECT {key_col} AS gkey, vendor_id, vendor_name, total_value_mxn,
+                   total_contracts, top_institution_ratio, ips_tier,
+                   in_ground_truth, avg_risk_score, review_status,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY {key_col} ORDER BY total_value_mxn DESC
+                   ) AS rn
+            FROM aria_queue
+            WHERE primary_pattern = ? AND {key_col} IN ({placeholders})
+        )
+        WHERE rn <= ?
+        ORDER BY gkey, total_value_mxn DESC
+        """,
+        [code, *keys, per_row],
+    ).fetchall()
+    out: dict = {}
+    for r in rows:
+        d = _row_to_dict(r)
+        gkey = d.pop("gkey")
+        _bool_fields(d, "in_ground_truth")
+        out.setdefault(gkey, []).append(d)
+    return out
+
+
+@router.get("/patterns/{code}/institutions")
+def get_pattern_institutions(
+    code: str,
+    limit: int = Query(12, ge=1, le=50, description="Groups to return, by value desc"),
+    group: str = Query(
+        "institution",
+        description="Group the pattern's vendors by their top institution or their primary sector",
+    ),
+    vendors: int = Query(
+        0, ge=0, le=10, description="Largest vendors to inline per group (0 = none)"
+    ),
+    conn: sqlite3.Connection = Depends(get_db_dep),
+):
+    """
+    Where one ARIA pattern concentrates: its vendors grouped by the institution
+    they contract with most, or by their primary sector.
+
+    Read the direction carefully. `aria_queue.top_institution` is the buyer a
+    flagged VENDOR sends most of its own contracting to, so a row's
+    `total_value_mxn` is the lifetime federal contracting of the vendors
+    anchored at that buyer — NOT the share of that buyer's budget that is
+    captured. `flagged_value_mxn` gives the honest denominator for a share:
+    everything ARIA flags, under any pattern, in the same group.
+    """
+    code = (code or "").upper()
+    if code not in _PATTERN_LABELS:
+        raise HTTPException(status_code=404, detail=f"Unknown ARIA pattern '{code}'")
+    if group not in _GROUP_COLUMNS:
+        raise HTTPException(
+            status_code=400, detail="group must be 'institution' or 'sector'"
+        )
+
+    label_en, label_es = _PATTERN_LABELS[code]
+    cache_key = f"{code}:{group}:{limit}:{vendors}"
+    cached = app_cache.get(_PATTERN_GROUP_CACHE, cache_key)
+    if cached is not None:
+        return cached
+
+    empty = {
+        "code": code,
+        "label_en": label_en,
+        "label_es": label_es,
+        "group": group,
+        "cohort": None,
+        "rows": [],
+    }
+    if not _table_exists(conn, "aria_queue"):
+        return {**empty, "message": "ARIA pipeline has not been run yet."}
+
+    key_col, label_col = _GROUP_COLUMNS[group]
+
+    cohort_row = conn.execute(
+        """
+        SELECT COUNT(*) AS total_vendors,
+               COALESCE(SUM(total_value_mxn), 0) AS total_value_mxn,
+               SUM(CASE WHEN in_ground_truth = 1 THEN 1 ELSE 0 END) AS in_ground_truth,
+               SUM(CASE WHEN review_status IS NOT NULL AND review_status <> 'pending'
+                        THEN 1 ELSE 0 END) AS reviewed,
+               SUM(CASE WHEN review_status = 'confirmed' THEN 1 ELSE 0 END) AS confirmed,
+               SUM(CASE WHEN ips_tier = 1 THEN 1 ELSE 0 END) AS tier1,
+               SUM(CASE WHEN ips_tier = 2 THEN 1 ELSE 0 END) AS tier2,
+               SUM(CASE WHEN ips_tier = 3 THEN 1 ELSE 0 END) AS tier3,
+               SUM(CASE WHEN ips_tier = 4 THEN 1 ELSE 0 END) AS tier4
+        FROM aria_queue
+        WHERE primary_pattern = ?
+        """,
+        (code,),
+    ).fetchone()
+    cohort = _row_to_dict(cohort_row) if cohort_row else {}
+    if not cohort.get("total_vendors"):
+        return {**empty, "cohort": cohort or None}
+
+    # One pass: the pattern's own count and value per group, alongside the
+    # all-patterns flagged totals that make a share statement checkable.
+    group_rows = conn.execute(
+        f"""
+        SELECT {key_col} AS gkey,
+               {label_col} AS glabel,
+               SUM(CASE WHEN primary_pattern = ? THEN 1 ELSE 0 END) AS vendor_count,
+               COALESCE(SUM(CASE WHEN primary_pattern = ? THEN total_value_mxn ELSE 0 END), 0)
+                   AS total_value_mxn,
+               COUNT(*) AS flagged_vendor_count,
+               COALESCE(SUM(total_value_mxn), 0) AS flagged_value_mxn
+        FROM aria_queue
+        WHERE primary_pattern IS NOT NULL AND {key_col} IS NOT NULL
+        GROUP BY {key_col}, {label_col}
+        HAVING vendor_count > 0
+        ORDER BY total_value_mxn DESC
+        LIMIT ?
+        """,
+        (code, code, limit),
+    ).fetchall()
+
+    rows = [_row_to_dict(r) for r in group_rows]
+    keys = [r["gkey"] for r in rows]
+
+    if group == "institution":
+        resolved = _resolve_institution_ids(conn, [str(k) for k in keys])
+        for r in rows:
+            match = resolved.get(str(r["gkey"]), {})
+            r["institution_id"] = match.get("institution_id")
+            r["institution_name"] = match.get("institution_name")
+            r["sector_id"] = None
+    else:
+        for r in rows:
+            r["institution_id"] = None
+            r["institution_name"] = None
+            r["sector_id"] = int(r["gkey"]) if r["gkey"] is not None else None
+
+    # Attach by the ORIGINAL key value, before stringifying it for the wire —
+    # a sector's partition key is an integer and would not match "3".
+    by_key = _pattern_top_vendors(conn, code, key_col, keys, vendors)
+    for r, k in zip(rows, keys):
+        r["vendors"] = by_key.get(k, [])
+        r["key"] = str(k)
+        r["label"] = str(r["glabel"]) if r["glabel"] is not None else str(k)
+        r.pop("gkey", None)
+        r.pop("glabel", None)
+
+    result = {
+        "code": code,
+        "label_en": label_en,
+        "label_es": label_es,
+        "group": group,
+        "cohort": cohort,
+        "rows": rows,
+    }
+    app_cache.set(_PATTERN_GROUP_CACHE, cache_key, result, maxsize=32, ttl=600)
+    return result
+
+
+# ---------------------------------------------------------------------------
 # GET /aria/gt-updates
 # ---------------------------------------------------------------------------
 
