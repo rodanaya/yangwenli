@@ -77,4 +77,15 @@ Caption (PlateFrame): EN "Plate III·c — the two lists drawn to one scale. The
 
 ## Result
 
-_(filled at SHIP)_
+Built by Opus executor `parallax-day02b`; judged by Fable on `_parallax_shots/day02/after-2b/` (tw-desk, tw-mob, m-balanza, m-calibration). One judge rejection (lens 102px wide at 390 → full width below `sm`, row-A under-labels on one line) fixed in `a0bde80b`.
+
+| Check | Before | After |
+|---|---|---|
+| Plate II / III·a rendered text at 1440 | ≈18.8px | 11.6–13.7px (svg capped 760px, min 660px, scrolls inside the frame) |
+| Plate II colliding text pairs | 2 (heads at the spine, annotations over rows) + `+0.558` clipped | 0, nothing escapes the viewBox, no "…" |
+| Two Worlds encoding | Venn, model area 5× state (data 29×) | linear ledger, row A 90.03 / 9.27 / 0.70 % = payload exactly; lens 34.21% at 1440, 100% at 390 |
+| Two Worlds hypertext | 1 link | 9 `EntityIdentityChip`s (top 3 per zone) + ARIA link |
+| `<circle>` / `svg text` in `#two-worlds` | Venn circles + 14 svg texts | 0 / 0 |
+| Leaf text < 10.5px in the section | — | 0 |
+
+Deviations accepted: `minWidth` 660 (not 600) to keep 11px heads ≥ 10px; Plate II axis caption moved to `AXIS_Y + 20`; `getSummary(3)` for three vendors per zone (worlds counts unchanged); executor committed the brief with the code. Gates: tsc 0 · build OK · lint:tokens PASS. Commits `0c133bb8` + `a0bde80b` on `c214448e`; BUILD_ID `2026-09-18-parallax-d2b-plates`. Bundle + prod probe appended at deploy.
