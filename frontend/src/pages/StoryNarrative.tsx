@@ -568,7 +568,7 @@ function ChapterDivider({
     const totalSpan = eras.reduce((s, e) => s + e.span, 0)
     const youAreHere = 'amlo'
     return (
-      <div className="my-12 max-w-[760px] mx-auto px-4" aria-hidden="true">
+      <div className="my-12 max-w-[760px] mx-auto px-4 sm:px-0" aria-hidden="true">
         <div className="flex items-center justify-between mb-1.5">
           <span
             className="text-[13px] font-mono uppercase tracking-[0.18em]"
@@ -685,10 +685,13 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       </div>
 
       <ScrollReveal>
-        <div className="max-w-[760px] mx-auto px-4 sm:px-6 pt-16 pb-10 relative">
-          {/* Massive watermark numeral */}
+        <div className="max-w-[640px] mx-auto px-4 sm:px-0 pt-16 pb-10 relative">
+          {/* Massive watermark numeral. The title block narrowed to the 640
+              axis, so on wide screens the numeral moves back out to keep the
+              visual position it had in the old 760 block — aria-hidden
+              decoration at 7% opacity, safe to overhang the column. */}
           <span
-            className="absolute -top-2 right-2 sm:right-8 select-none pointer-events-none font-extrabold leading-none"
+            className="absolute -top-2 right-2 sm:right-8 lg:-right-24 select-none pointer-events-none font-extrabold leading-none"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
               fontSize: 'clamp(80px, 22vw, 360px)',
@@ -792,55 +795,54 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
         color={accentColor}
       />
 
-      {/* Two-column layout on desktop: prose + breakout pullquote.
-          isolate creates a stacking context so the sticky aside's z-index
-          is scoped inside the grid — the chart below (z-20) stays on top. */}
-      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6 isolate">
-        {/* Body column */}
-        <div className="lg:col-span-7 lg:col-start-1">
-          {chapter.prose.map((paragraph, i) => {
-            const sourceCount = chapter.sources?.length ?? 0
-            // Paragraph N → source ref [N] when chapter has at least that
-            // many citations. Falls back silently when sources are absent.
-            const sourceRef = sourceCount > 0 ? Math.min(i + 1, sourceCount) : 0
-            return (
-              <ScrollReveal key={i} delay={i * 60}>
-                <p
-                  className={cn(
-                    'text-text-primary leading-[1.75] mb-5 text-[17px]',
-                    i === 0 && 'feature-dropcap',
-                  )}
-                  style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
-                >
-                  {paragraph}
-                  {sourceRef > 0 && (
-                    <sup className="font-mono text-text-muted text-[12px] ml-0.5 align-super tabular-nums">
-                      [{sourceRef}]
-                    </sup>
-                  )}
-                </p>
-              </ScrollReveal>
-            )
-          })}
-          {chapter.sources && chapter.sources.length > 0 && (
-            <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
-          )}
-        </div>
-
-        {/* Sidebar pullquote — sticky on desktop, breaks out of grid */}
-        {chapter.pullquote && (
-          <aside className="lg:col-span-5 lg:col-start-8">
-            <ScrollReveal className="lg:sticky lg:top-24">
-              {renderPullquote(chapter, story, '', isFirst, 'feature')}
+      {/* Single measure. The old 12-column grid put feature prose 145px left
+          of every other chapter's text; a 640 column inside that grid would
+          leave the aside 129px wide, so the aside is gone and the pullquote
+          runs in flow below the prose — same axis, same measure. */}
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0">
+        {chapter.prose.map((paragraph, i) => {
+          const sourceCount = chapter.sources?.length ?? 0
+          // Paragraph N → source ref [N] when chapter has at least that
+          // many citations. Falls back silently when sources are absent.
+          const sourceRef = sourceCount > 0 ? Math.min(i + 1, sourceCount) : 0
+          return (
+            <ScrollReveal key={i} delay={i * 60}>
+              <p
+                className={cn(
+                  'text-text-primary leading-[1.75] mb-5 text-[17px]',
+                  i === 0 && 'feature-dropcap',
+                )}
+                style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+              >
+                {paragraph}
+                {sourceRef > 0 && (
+                  <sup className="font-mono text-text-muted text-[12px] ml-0.5 align-super tabular-nums">
+                    [{sourceRef}]
+                  </sup>
+                )}
+              </p>
             </ScrollReveal>
-          </aside>
+          )
+        })}
+        {chapter.sources && chapter.sources.length > 0 && (
+          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
         )}
       </div>
 
-      {/* Chart spans full editorial width below the grid — z-20 ensures it
-          renders above the isolated grid's stacking context */}
+      {/* Pullquote in flow on the text axis — the 'feature' role (and the
+          'ledger' variant the first feature chapter gets) is unchanged; only
+          the sticky sidebar it used to sit in is gone. */}
+      {chapter.pullquote && (
+        <div className="max-w-[640px] mx-auto px-4 sm:px-0 my-10">
+          <ScrollReveal>
+            {renderPullquote(chapter, story, '', isFirst, 'feature')}
+          </ScrollReveal>
+        </div>
+      )}
+
+      {/* Chart in the 760 figure box — 60px of overhang each side of the text */}
       {chapter.chartConfig && (
-        <div className="max-w-[760px] mx-auto px-4 sm:px-6 mt-8 relative z-20">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-0 mt-8">
           {renderChartBlock(chapter, '', lang)}
         </div>
       )}
@@ -887,8 +889,9 @@ function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: 
         )}
       </div>
 
-      {/* Chart breakout — wider than prose */}
-      <div className="max-w-[760px] mx-auto px-4 sm:px-6">
+      {/* Chart breakout — the 760 figure box at axis−60. The gradient frame IS
+          the box; the chart inside it sits within the frame's own padding. */}
+      <div className="max-w-[760px] mx-auto px-4 sm:px-0">
         <ScrollReveal>
           <div
             className="rounded-lg p-1 sm:p-2"
@@ -960,7 +963,7 @@ function QuoteSpotlightChapter({ chapter, story, accentColor }: ChapterRenderPro
       {chapter.pullquote && (
         <ScrollReveal>
           <figure
-            className="max-w-[760px] mx-auto px-4 sm:px-6 my-10"
+            className="max-w-[760px] mx-auto px-4 sm:px-0 my-10"
             aria-label={t('storyType.pullquote', 'Pull quote')}
           >
             <div
@@ -1225,7 +1228,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       />
 
       <ScrollReveal>
-        <div className="max-w-[760px] mx-auto px-4 sm:px-6 pt-12 pb-6">
+        <div className="max-w-[640px] mx-auto px-4 sm:px-0 pt-12 pb-6">
           <p
             className="text-[12px] uppercase tracking-[0.22em] font-bold mb-4"
             style={{ color: accentColor }}
@@ -1266,7 +1269,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       </div>
 
       {chapter.pullquote && (
-        <div className="max-w-[760px] mx-auto px-4 sm:px-6 mt-10">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-0 mt-10">
           <ScrollReveal>
             {renderPullquote(chapter, story, '', false, 'closing')}
           </ScrollReveal>
@@ -1274,7 +1277,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       )}
 
       {chapter.chartConfig && (
-        <div className="max-w-[760px] mx-auto px-4 sm:px-6 mt-10">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-0 mt-10">
           {renderChartBlock(chapter, '', lang)}
         </div>
       )}
@@ -1436,7 +1439,16 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
         }}
       />
 
-      <div className="relative z-10 max-w-[760px] mx-auto px-4 sm:px-6 py-12 md:py-20">
+      {/* The hero title block sits on the 640 text axis, not in its own 760
+          column — headline, deck, byline and kickers share one left edge with
+          every body paragraph below them. The outer 1010 container repeats the
+          chapters container verbatim (`max-w-[1010px] px-2 sm:px-4`): the hero
+          lives outside it, and matching it by hand instead put the hero 8px
+          left of the prose on phones. Two identical chains guarantee one edge
+          at every width, not just the ones we measured. The children below
+          keep their original indentation — this wrapper is the only new nesting. */}
+      <div className="relative z-10 max-w-[1010px] mx-auto px-2 sm:px-4">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0 py-12 md:py-20">
         {/* Outlet + type badges */}
         <motion.div
           variants={fadeIn}
@@ -1478,7 +1490,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           variants={fadeIn}
           initial="initial"
           animate="animate"
-          className="text-text-secondary leading-[1.55] max-w-[640px] mb-8"
+          className="text-text-secondary leading-[1.55] mb-8"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontSize: 'clamp(1.05rem, 1.5vw, 1.25rem)',
@@ -1652,6 +1664,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           style={{ backgroundColor: accentColor }}
         />
       </div>
+      </div>
     </header>
   )
 }
@@ -1778,7 +1791,7 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
 
   return (
     <ScrollReveal>
-      <div className="max-w-[760px] mx-auto px-4 sm:px-6 my-10">
+      <div className="max-w-[760px] mx-auto px-4 sm:px-0 my-10">
         <div
           className="rounded-sm border border-border bg-background-elevated px-6 py-5"
           style={{ borderLeft: `3px solid ${accentColor}` }}
@@ -2234,20 +2247,25 @@ export default function StoryNarrative() {
         </Act>
       </div>
 
-      {/* ── DRAMATIS PERSONAE — named subjects with dossier links ── */}
+      {/* ── DRAMATIS PERSONAE — named subjects with dossier links ──
+          Wrapped in the same 1010 container as the chapters so its 760 box
+          lands on the prose edge on phones; on desktop both are centred and
+          the wrapper changes nothing. */}
       {story.entities && story.entities.length > 0 && (
-        <DramatisPersonaeSection story={story} accentColor={accentColor} />
+        <div className="max-w-[1010px] mx-auto px-2 sm:px-4">
+          <DramatisPersonaeSection story={story} accentColor={accentColor} />
+        </div>
       )}
 
       {/* ── ACT II: THE METHODOLOGY ── */}
-      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 pt-8">
+      <div className="max-w-[1010px] mx-auto px-2 sm:px-4 pt-8">
         <Act number="II" label={t('story.actMethodology', 'THE METHODOLOGY')} className="space-y-4">
           <MethodologySection story={story} />
         </Act>
       </div>
 
       {/* ── ACT III: FURTHER INQUIRY ── */}
-      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 pt-8">
+      <div className="max-w-[1010px] mx-auto px-2 sm:px-4 pt-8">
         <Act number="III" label={t('story.actFurtherInquiry', 'FURTHER INQUIRY')} className="space-y-4">
           <ShareBar story={story} />
           <ObservatoryTrailerCTA longformSlug={story.slug} lang={lang} />
@@ -2256,7 +2274,7 @@ export default function StoryNarrative() {
       </div>
 
       {/* ── ACT IV: RELATED DOSSIERS ── */}
-      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 pt-8">
+      <div className="max-w-[1010px] mx-auto px-2 sm:px-4 pt-8">
         <Act number="IV" label={t('story.actRelatedDossiers', 'RELATED DOSSIERS')} className="space-y-4">
           <RelatedSection story={story} />
         </Act>

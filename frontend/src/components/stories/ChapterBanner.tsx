@@ -23,7 +23,7 @@ export default function ChapterBanner({
   const paddedNumber = String(number).padStart(2, '0')
 
   return (
-    <ScrollReveal className={cn('my-12 max-w-[760px] mx-auto', className)}>
+    <ScrollReveal className={cn('my-12 max-w-[760px] mx-auto px-4 sm:px-0', className)}>
       {/* The band is a figure-width block, not a full-bleed one. No wrapper
           role="heading": the inner <h2> IS the heading. The old wrapper role
           swallowed the subtitle and era pill into the heading's accessible
@@ -34,15 +34,19 @@ export default function ChapterBanner({
       >
         {/* Large background number */}
         <span
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-[10rem] md:text-[14rem] font-bold leading-none select-none pointer-events-none"
+          className="absolute left-4 lg:left-6 top-1/2 -translate-y-1/2 text-[10rem] md:text-[14rem] font-bold leading-none select-none pointer-events-none"
           style={{ color, opacity: 0.06, fontFamily: "'Playfair Display', Georgia, serif" }}
           aria-hidden="true"
         >
           {paddedNumber}
         </span>
 
-        {/* Content */}
-        <div className="relative z-10 flex items-center justify-between px-6 md:px-10 py-8 md:py-12">
+        {/* Content sits in its own 640 column, centred inside the band exactly
+            as the body prose is centred in the 1010 frame. That is what puts
+            the heading on the text axis — a fixed pl-[60px] only worked while
+            the band was a full 760, and below lg the band collapses onto the
+            text width, where any padding pushed the heading off the axis. */}
+        <div className="relative z-10 flex items-center justify-between max-w-[640px] mx-auto py-8 md:py-12">
           <div className="space-y-2">
             <p
               className="text-[13px] uppercase tracking-[0.2em] font-semibold"
