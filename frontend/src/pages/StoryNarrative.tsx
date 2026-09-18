@@ -7,7 +7,7 @@
  */
 
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight, FileText } from 'lucide-react'
@@ -46,6 +46,7 @@ import { Act } from '@/components/layout/Act'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 // ---------------------------------------------------------------------------
 // Inline chart map — type string → component
@@ -65,6 +66,33 @@ const INLINE_CHART_MAP: Record<string, InlineChartComponent> = {
   'editorial-threshold':      EditorialThreshold,
   'editorial-thermometer':    EditorialThermometer,
   'editorial-cleveland-pair': EditorialClevelandPair,
+}
+
+// ---------------------------------------------------------------------------
+// Live figures — API-backed plates (STORY_DAYS principle 2).
+//
+// One lazy chunk for all five `el-vacio` figures: they always render on the
+// same page and share one `/gap/summary` query, so five chunks would be five
+// requests for one story. The chunk is only fetched on a story that declares
+// `chartConfig.live`.
+// ---------------------------------------------------------------------------
+
+const LiveGapFigure = lazy(() => import('@/components/stories/live/GapFigures'))
+
+/** Suspense fallback — holds the ChartCard's shape while the chunk loads. */
+function LiveFigureSkeleton({ lang }: { lang: 'en' | 'es' }) {
+  return (
+    <div
+      role="status"
+      aria-label={lang === 'es' ? 'Cargando la figura en vivo' : 'Loading the live figure'}
+      className="w-full h-[320px] my-8 bg-background-card motion-safe:animate-pulse"
+      style={{
+        border: '1px solid var(--color-border)',
+        borderLeft: '3px solid var(--color-accent)',
+        borderRadius: 2,
+      }}
+    />
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -179,7 +207,12 @@ function pickChapterVariant(
   if (index === 0) return 'hero'
   if (index === total - 1) return 'closing'
   const proseLen = chapter.prose?.length ?? 0
-  const hasChart = !!chapter.chartConfig
+  // A live figure added to an existing chapter must not re-flow it: the layout
+  // a chapter was authored into is part of the story's rhythm, and SD-01 adds
+  // live plates to chapters that were laid out before the plates existed. Only
+  // a typed chart — the shape the variants were tuned against — moves a
+  // chapter between variants.
+  const hasChart = !!chapter.chartConfig && chapter.chartConfig.type !== 'live'
   const hasQuote = !!chapter.pullquote
   // Chapter centered on chart (brief text + chart, no quote)
   if (hasChart && !hasQuote && proseLen <= 2) return 'data-spotlight'
@@ -194,13 +227,15 @@ function pickChapterVariant(
 
 // ── Render helpers (shared across variants) ───────────────────────────────
 
-function renderChartBlock(
+/** The typed inline figure only — `renderChartBlock` adds the live one around it. */
+function renderTypedChartBlock(
   chapter: StoryChapterDef,
   className = 'my-8',
   lang: 'en' | 'es' = 'en',
 ) {
   if (!chapter.chartConfig) return null
   const cfg = chapter.chartConfig
+  if (cfg.type === 'live') return null
   // Multi-series and network charts have their own data shapes — dispatch
   // before the InlineChartMap which only handles StoryInlineChartData.
   // Both the title and `lang` go through: these three branches used to pass
@@ -277,6 +312,44 @@ function renderChartBlock(
         {cfg.title}
       </div>
     </ScrollReveal>
+  )
+}
+
+/**
+ * A chapter's figures: the live plate (when `chartConfig.live` is set) and the
+ * typed inline chart (when `chartConfig.data` is set). A chapter may carry both
+ * — SD-01 ch3 opens with its typed procedure bar and closes with the live
+ * exception catalog (`liveAfter`), while ch4 leads with the live buyers ledger
+ * and follows with the typed roster.
+ */
+function renderChartBlock(
+  chapter: StoryChapterDef,
+  className = 'my-8',
+  lang: 'en' | 'es' = 'en',
+  stage?: number,
+) {
+  const cfg = chapter.chartConfig
+  if (!cfg) return null
+  const typed = renderTypedChartBlock(chapter, className, lang)
+  if (!cfg.live) return typed
+  const live = (
+    <ScrollReveal className={className}>
+      <Suspense fallback={<LiveFigureSkeleton lang={lang} />}>
+        <LiveGapFigure kind={cfg.live} lang={lang} stage={stage} />
+      </Suspense>
+    </ScrollReveal>
+  )
+  if (!typed) return live
+  return cfg.liveAfter ? (
+    <>
+      {typed}
+      {live}
+    </>
+  ) : (
+    <>
+      {live}
+      {typed}
+    </>
   )
 }
 
@@ -661,10 +734,102 @@ function ChapterDivider({
 
 // ── Variant: HERO (chapter 1) ─────────────────────────────────────────────
 
+/**
+ * useProseStage — drive a figure's beat from which paragraph the reader is on.
+ *
+ * The scrolly mechanic STORY_DAYS asks for, in the single reading column: the
+ * figure sticks at the top of the chapter and steps as each paragraph crosses
+ * the middle 20% of the viewport. `-40% 0px -40%` is that band.
+ *
+ * `enabled` is false below `lg`, where the figure is not sticky and stepping a
+ * drawing the reader has already scrolled past would be noise: the caller pins
+ * the last beat instead.
+ *
+ * Kept local to this page for Day 1. If a second story needs the same mechanic
+ * it earns `components/stories/live/StickyStepFigure.tsx`; one caller does not.
+ */
+function useProseStage(count: number, enabled: boolean, maxStage: number) {
+  const [stage, setStage] = useState(enabled ? 0 : maxStage)
+  const nodes = useRef<(HTMLElement | null)[]>([])
+
+  const register = useCallback((el: HTMLElement | null, i: number) => {
+    nodes.current[i] = el
+  }, [])
+
+  useEffect(() => {
+    if (!enabled) {
+      setStage(maxStage)
+      return
+    }
+    const els = nodes.current.slice(0, count).filter(Boolean) as HTMLElement[]
+    if (!els.length || typeof IntersectionObserver === 'undefined') {
+      setStage(maxStage)
+      return
+    }
+    const visible = new Set<number>()
+    // Nothing in the band: either the chapter is still below the reader (beat
+    // 0) or they have scrolled past it, in which case the drawing stays
+    // finished rather than snapping back to blank.
+    const settleOutOfBand = () => {
+      if (visible.size) return
+      const first = els[0].getBoundingClientRect()
+      setStage(first.top > window.innerHeight * 0.6 ? 0 : maxStage)
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const i = els.indexOf(e.target as HTMLElement)
+          if (i < 0) continue
+          if (e.isIntersecting) visible.add(i)
+          else visible.delete(i)
+        }
+        if (visible.size) setStage(Math.min(Math.max(...visible) + 1, maxStage))
+        else settleOutOfBand()
+      },
+      { rootMargin: '-40% 0px -40% 0px' },
+    )
+    els.forEach((el) => io.observe(el))
+
+    // A jump — a chapter-nav anchor, a restored scroll position, back-to-top —
+    // can move the reader from past the chapter to above it without any
+    // observed paragraph crossing the band, so the observer never fires and
+    // the beat would stay stale. This settles it. While a paragraph IS in the
+    // band, which is the whole time the chapter is being read, it costs one
+    // Set lookup and reads no layout.
+    let raf = 0
+    const onScroll = () => {
+      if (visible.size || raf) return
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        settleOutOfBand()
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      io.disconnect()
+      window.removeEventListener('scroll', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [enabled, count, maxStage])
+
+  return { stage, register }
+}
+
+const BLACKOUT_MAX_STAGE = 3
+
 function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
   const { t, i18n } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const paddedNumber = String(chapter.number).padStart(2, '0')
+  // SD-01 F1 — the blackout diagram is drawn in beats as the hero's prose
+  // scrolls past it. Every other hero keeps the figure-below-prose flow.
+  const isScrolly = chapter.chartConfig?.live === 'gap-blackout'
+  const narrow = useIsMobile(1023)
+  const { stage, register } = useProseStage(
+    chapter.prose.length,
+    isScrolly && !narrow,
+    BLACKOUT_MAX_STAGE,
+  )
   return (
     <section
       id={`chapter-${chapter.id}`}
@@ -734,40 +899,59 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         </div>
       </ScrollReveal>
 
-      {/* Lede paragraph with drop cap + remaining body */}
-      <div className="max-w-[640px] mx-auto px-4 sm:px-0">
-        {chapter.prose.map((paragraph, i) => (
-          <ScrollReveal key={i} delay={i * 60}>
-            <p
-              className={cn(
-                'text-text-primary leading-[1.75] mb-6',
-                i === 0 ? 'text-[19px] hero-dropcap' : 'text-[17px] text-text-secondary',
-              )}
-              style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
-            >
-              {paragraph}
-            </p>
-          </ScrollReveal>
-        ))}
-
-        {chapter.sources && chapter.sources.length > 0 && (
-          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
+      {/* The scrolly puts the figure ABOVE the prose and sticks it there, so
+          the two share one positioning context; every other hero keeps the
+          figure-after-prose flow. */}
+      <div className={isScrolly ? 'relative' : undefined}>
+        {isScrolly && (
+          <div
+            data-stage={stage}
+            // `py-2` is load-bearing, not spacing: without padding the figure's
+            // own vertical margin collapses through this div, so the margin
+            // band sits OUTSIDE the background box and the prose scrolls
+            // visibly through it while the figure is stuck.
+            className="max-w-[760px] mx-auto px-4 sm:px-0 py-2 bg-background lg:sticky lg:top-24 lg:z-10"
+          >
+            {renderChartBlock(chapter, '', lang, stage)}
+          </div>
         )}
 
-        {/* Hero stat callout — if pullquote exists, render it as a hero-sized
-            breakout below the lede. */}
-        {chapter.pullquote && (
-          <ScrollReveal className="my-10">
-            {renderPullquote(chapter, story, '', false, 'hero')}
-          </ScrollReveal>
-        )}
+        {/* Lede paragraph with drop cap + remaining body */}
+        <div className="max-w-[640px] mx-auto px-4 sm:px-0">
+          {chapter.prose.map((paragraph, i) => (
+            <ScrollReveal key={i} delay={i * 60}>
+              <p
+                ref={isScrolly ? (el) => register(el, i) : undefined}
+                className={cn(
+                  'text-text-primary leading-[1.75] mb-6',
+                  i === 0 ? 'text-[19px] hero-dropcap' : 'text-[17px] text-text-secondary',
+                )}
+                style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+              >
+                {paragraph}
+              </p>
+            </ScrollReveal>
+          ))}
+
+          {chapter.sources && chapter.sources.length > 0 && (
+            <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
+          )}
+
+          {/* Hero stat callout — if pullquote exists, render it as a hero-sized
+              breakout below the lede. */}
+          {chapter.pullquote && (
+            <ScrollReveal className="my-10">
+              {renderPullquote(chapter, story, '', false, 'hero')}
+            </ScrollReveal>
+          )}
+        </div>
       </div>
 
       {/* Chart, if any — its own 760 figure column, centered on the same axis
           as the 640 text above it. Was a negative-margin bleed out of the
           prose div, which made the hero the one chapter whose figure width
           depended on the text column instead of the frame. */}
-      {chapter.chartConfig && (
+      {chapter.chartConfig && !isScrolly && (
         <div className="max-w-[760px] mx-auto px-4 sm:px-0 my-10">
           {renderChartBlock(chapter, '', lang)}
         </div>
@@ -1268,6 +1452,16 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         )}
       </div>
 
+      {/* A live closing figure leads: it is the evidence the verdict quote then
+          reads off, so the reader sees the distribution before the number that
+          summarises it. A typed closing figure keeps the quote-first order the
+          two stories that have one were laid out with. */}
+      {chapter.chartConfig?.type === 'live' && (
+        <div className="max-w-[760px] mx-auto px-4 sm:px-0 mt-10">
+          {renderChartBlock(chapter, '', lang)}
+        </div>
+      )}
+
       {chapter.pullquote && (
         <div className="max-w-[760px] mx-auto px-4 sm:px-0 mt-10">
           <ScrollReveal>
@@ -1276,7 +1470,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         </div>
       )}
 
-      {chapter.chartConfig && (
+      {chapter.chartConfig && chapter.chartConfig.type !== 'live' && (
         <div className="max-w-[760px] mx-auto px-4 sm:px-0 mt-10">
           {renderChartBlock(chapter, '', lang)}
         </div>

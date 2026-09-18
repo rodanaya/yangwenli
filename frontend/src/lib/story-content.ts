@@ -89,6 +89,16 @@ export interface StoryChapterDef {
       | 'editorial-cleveland-pair' // P2 ClevelandPairChart
       | 'inline-roster' // n-ejercito ch3 — roster list of named ghost vendors
       | 'inline-timeline' // n-ejercito ch4 — detection-pipeline timeline
+      | 'live' // SD-01 el-vacio — the figure is an API-backed plate, see `live`
+    /**
+     * An API-backed figure rendered from a live endpoint instead of the typed
+     * `data` payload (STORY_DAYS principle 2). `renderChartBlock` lazy-loads
+     * the matching component; a chapter may carry BOTH this and a typed chart,
+     * in which case `liveAfter` decides the order.
+     */
+    live?: 'gap-blackout' | 'gap-funnel' | 'gap-exceptions' | 'gap-buyers' | 'gap-grade'
+    /** Render the live figure AFTER the typed one (default: before). */
+    liveAfter?: boolean
     highlight?: string
     title: string
     /** Optional Spanish translation of `title`. */
@@ -429,25 +439,25 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI Investigative Data Unit',
     status: 'solo_datos',
     estimatedMinutes: 9,
-    headline: "A Government Erased Its Own Procurement Record. We Rebuilt 69,516 Contracts It Stopped Publishing.",
-    headline_es: "Un gobierno borró su propio registro de compras. Reconstruimos los 69,516 contratos que dejó de publicar.",
+    headline: "A Government Erased Its Own Procurement Record. We Rebuilt 94,899 Contracts It Stopped Publishing.",
+    headline_es: "Un gobierno borró su propio registro de compras. Reconstruimos los 94,899 contratos que dejó de publicar.",
     subheadline:
-      "In a single year, Mexico dismantled the transparency apparatus it spent two decades building — and the spending never paused. By reverse-engineering the successor portal that replaced CompraNet, RUBLI rebuilt 69,516 awards that fell out of the public record. Four in five were handed out with no competition. Three in four don't disclose what they cost. Among the few we could read off the scans: a 3.15-billion-peso no-bid award to Pfizer.",
+      "In a single year, Mexico dismantled the transparency apparatus it spent two decades building — and the spending never paused. By reverse-engineering the successor portal that replaced CompraNet, RUBLI rebuilt 94,899 awards that fell out of the public record. Four in five were handed out with no competition. Three in four don't disclose what they cost. Among the few we could read off the scans: a 3.15-billion-peso no-bid award to Pfizer.",
     subheadline_es:
-      "En un solo año, México desmanteló el aparato de transparencia que tardó dos décadas en construir — y el gasto nunca se detuvo. Al hacer ingeniería inversa del portal que reemplazó a CompraNet, RUBLI reconstruyó 69,516 adjudicaciones que se cayeron del registro público. Cuatro de cada cinco se entregaron sin competencia. Tres de cada cuatro no revelan cuánto costaron. Entre las pocas que pudimos leer en los escaneos: una adjudicación directa de 3,150 millones de pesos a Pfizer.",
+      "En un solo año, México desmanteló el aparato de transparencia que tardó dos décadas en construir — y el gasto nunca se detuvo. Al hacer ingeniería inversa del portal que reemplazó a CompraNet, RUBLI reconstruyó 94,899 adjudicaciones que se cayeron del registro público. Cuatro de cada cinco se entregaron sin competencia. Tres de cada cuatro no revelan cuánto costaron. Entre las pocas que pudimos leer en los escaneos: una adjudicación directa de 3,150 millones de pesos a Pfizer.",
     leadStat: {
-      value: '69,516',
+      value: '94,899',
       label: "awards the government stopped publishing",
       label_es: "adjudicaciones que el gobierno dejó de publicar",
-      sublabel: "78.7% with no competition",
-      sublabel_es: "78.7% sin competencia",
+      sublabel: "78.4% with no competition",
+      sublabel_es: "78.4% sin competencia",
       color: '#b45309',
     },
     kickerStats: [
       {
         prefix: "The feed went dark, and behind it sat",
         prefix_es: "El flujo se apagó, y detrás había",
-        value: '69,516',
+        value: '94,899',
         suffix: "awards no one could see.",
         suffix_es: "adjudicaciones que nadie podía ver.",
         tone: 'data',
@@ -455,7 +465,7 @@ export const STORIES: StoryDef[] = [
       {
         prefix: "Of those,",
         prefix_es: "De ellas,",
-        value: '78.7%',
+        value: '78.4%',
         suffix: "were direct awards — no bid, no competition.",
         suffix_es: "fueron adjudicación directa — sin licitación, sin competencia.",
         tone: 'critical',
@@ -463,7 +473,7 @@ export const STORIES: StoryDef[] = [
       {
         prefix: "And",
         prefix_es: "Y el",
-        value: '76%',
+        value: '76.4%',
         suffix: "never disclose what they cost at all.",
         suffix_es: "nunca revela cuánto costó.",
         tone: 'muted',
@@ -481,14 +491,14 @@ export const STORIES: StoryDef[] = [
       'Cross-reference every recovered vendor RFC against SAT\'s 69-B (EFOS) blacklist once the long-tail OCR completes — the shell companies hide in the small contracts, not the billion-peso tier.',
       'Investigate the cluster of companies incorporated less than three years before winning nine-figure awards (e.g. SLYCOM, incorporated December 2023, awarded ~880 million pesos).',
       'Request the written justificación de excepción for the agencies that lean hardest on discretionary sole-source grounds (Art. 54 fr. I/II/III), led by INDAABIN and BIRMEX.',
-      'Audit Alimentación para el Bienestar — the single largest buyer in the gap with 12,018 procedures — against its predecessor Segalmex\'s documented fraud history.',
+      'Audit Alimentación para el Bienestar — the single largest buyer in the gap with 17,306 procedures — against its predecessor Segalmex\'s documented fraud history.',
     ],
     nextSteps_es: [
       'Solicitar vía Transparencia para el Pueblo los expedientes de adjudicación sin testar de los contratos sin licitación de mayor valor — empezando por la adjudicación de 3,150 MDP a Pfizer–BIRMEX (Art. 54 fr. XII).',
       'Cruzar cada RFC de proveedor recuperado contra la lista 69-B (EFOS) del SAT cuando termine el OCR de la cola larga — las empresas fachada se esconden en los contratos pequeños, no en los de miles de millones.',
       'Investigar el grupo de empresas constituidas menos de tres años antes de ganar adjudicaciones de nueve cifras (p. ej. SLYCOM, constituida en diciembre de 2023, adjudicada ~880 MDP).',
       'Solicitar la justificación de excepción por escrito de las dependencias que más recurren a causales discrecionales de proveedor único (Art. 54 fr. I/II/III), encabezadas por INDAABIN y BIRMEX.',
-      'Auditar a Alimentación para el Bienestar — el mayor comprador del vacío con 12,018 procedimientos — frente al historial documentado de fraude de su antecesor Segalmex.',
+      'Auditar a Alimentación para el Bienestar — el mayor comprador del vacío con 17,306 procedimientos — frente al historial documentado de fraude de su antecesor Segalmex.',
     ],
     chapters: [
       {
@@ -508,6 +518,13 @@ export const STORIES: StoryDef[] = [
           "Lo que lo reemplazó no fue un sistema mejor sino uno más silencioso. ComprasMX, operado por la nueva Secretaría Anticorrupción, libera los contratos como lo haría un archivero: una carpeta a la vez, detrás de un portal, sin exportación masiva. Los grandes compradores — los institutos de salud, las agencias de bienestar, las fuerzas armadas — aparecen en fragmentos o no aparecen.",
           "Los contratos no se detuvieron. Solo el registro. Los datos no se clasificaron ni se borraron; se dispersaron en suficientes lugares como para que nadie sostenga la imagen completa de una vez — lo que, para el público que intenta seguir el dinero, es lo mismo que si no existieran. Todo lo que México compró después del 28 de septiembre se volvió incognoscible por diseño. Esta historia trata de leerlo de todos modos.",
         ],
+        chartConfig: {
+          type: 'live',
+          live: 'gap-blackout',
+          chartId: 'gap-blackout',
+          title: 'Twenty-three years of record, then silence',
+          title_es: 'Veintitrés años de registro, luego silencio',
+        },
         pullquote: {
           quote: "The contracts didn't stop. Only the record did — scattered across enough places that no one can hold the whole picture at once.",
           quote_es: "Los contratos no se detuvieron. Solo el registro — disperso en suficientes lugares como para que nadie sostenga la imagen completa de una vez.",
@@ -525,18 +542,25 @@ export const STORIES: StoryDef[] = [
         subtitle_es: "El portal sucesor protegía cada petición con una firma — y esa firma pudo reproducirse",
         prose: [
           "A portal that shows you one contract at a time is not the same as a portal that hides them. ComprasMX guarded every request with a cryptographic signature meant to keep automated tools out. That signature turned out to be a self-contained scheme — no human-verification gate behind it — and it could be reproduced. Once it was, the whole catalogue became queryable again, exactly as the old bulk file used to be.",
-          "The recovery ran in two passes. The first enumerated every awarded procedure published after the freeze: 69,516 of them, complete with who bought what, by which method, when, and under which legal exception. The second went after the part the portal buries hardest — the winning vendor and the price — which survive only inside scanned award documents, images rather than text. Optical character recognition pulled those back off the page, one notification of award at a time.",
+          "The recovery ran in two passes. The first enumerated every awarded procedure published after the freeze: 94,899 of them, complete with who bought what, by which method, when, and under which legal exception. The second went after the part the portal buries hardest — the winning vendor and the price — which survive only inside scanned award documents, images rather than text. Optical character recognition pulled those back off the page, one notification of award at a time.",
           "None of this is privileged. Every figure here was published by the Mexican state in 2025 and 2026 — just in a form built to defeat anyone reading it whole. Reassembled, it is the closest thing that exists to a record of what Mexico has bought since the lights went out.",
         ],
         prose_es: [
           "Un portal que te muestra un contrato a la vez no es lo mismo que un portal que los esconde. ComprasMX protegía cada petición con una firma criptográfica pensada para dejar fuera a las herramientas automatizadas. Esa firma resultó ser un esquema autocontenido — sin verificación humana detrás — y pudo reproducirse. Una vez hecho, todo el catálogo volvió a ser consultable, igual que el viejo archivo masivo.",
-          "La recuperación corrió en dos etapas. La primera enumeró cada procedimiento adjudicado publicado tras el congelamiento: 69,516, con quién compró qué, por qué método, cuándo y bajo qué excepción legal. La segunda fue por lo que el portal más entierra — el proveedor ganador y el precio — que sobreviven solo dentro de documentos de adjudicación escaneados, imágenes en lugar de texto. El reconocimiento óptico de caracteres los sacó de la página, una notificación de adjudicación a la vez.",
+          "La recuperación corrió en dos etapas. La primera enumeró cada procedimiento adjudicado publicado tras el congelamiento: 94,899, con quién compró qué, por qué método, cuándo y bajo qué excepción legal. La segunda fue por lo que el portal más entierra — el proveedor ganador y el precio — que sobreviven solo dentro de documentos de adjudicación escaneados, imágenes en lugar de texto. El reconocimiento óptico de caracteres los sacó de la página, una notificación de adjudicación a la vez.",
           "Nada de esto es información privilegiada. Cada cifra aquí fue publicada por el Estado mexicano en 2025 y 2026 — solo que en una forma hecha para vencer a quien la leyera completa. Reensamblada, es lo más parecido que existe a un registro de lo que México ha comprado desde que se apagaron las luces.",
         ],
+        chartConfig: {
+          type: 'live',
+          live: 'gap-funnel',
+          chartId: 'gap-funnel',
+          title: 'The recovery, in three cuts',
+          title_es: 'La recuperación, en tres cortes',
+        },
         pullquote: {
           quote: "Every figure here was published by the Mexican state — just in a form built to defeat anyone reading it whole.",
           quote_es: "Cada cifra aquí fue publicada por el Estado mexicano — solo que en una forma hecha para vencer a quien la leyera completa.",
-          stat: '69,516',
+          stat: '94,899',
           statLabel: "awards reassembled from the successor portal",
           statLabel_es: "adjudicaciones reensambladas del portal sucesor",
         },
@@ -549,51 +573,45 @@ export const STORIES: StoryDef[] = [
         subtitle: "The recovered record runs on direct awards — and stays silent on what most of them cost",
         subtitle_es: "El registro recuperado funciona con adjudicación directa — y calla cuánto cuestan casi todas",
         prose: [
-          "Of the 69,516 awards, 54,714 went out with no public tender and no rival bids: adjudicación directa, 78.7 percent. The OECD treats direct award as an exception that should sit in the low single digits to low tens of a percent even under emergency conditions. Four in five is not an exception regime. It is the default, and the chart below shows how lopsided it is — public tender, invitation-to-three, and framework agreements together account for barely one award in five.",
-          "Then there is the silence on cost. Three of every four awards disclose no amount at all — not a final price, not even an estimate. The state records that it bought something, from someone, and declines to say for how much. About 21,000 of these awards cite the low-value threshold (Art. 55), legitimate small purchases that sit below the bidding floor. But the discretionary sole-source grounds — Art. 54, fractions I through XIV — carry the big-ticket contracts, the ones worth hundreds of millions where competition was simply waived.",
+          "Of the 94,899 awards, 74,435 went out with no public tender and no rival bids: adjudicación directa, 78.4 percent. The OECD treats direct award as an exception that should sit in the low single digits to low tens of a percent even under emergency conditions. Four in five is not an exception regime. It is the default, and the chart below shows how lopsided it is — public tender, invitation-to-three, and framework agreements together account for barely one award in five.",
+          "Then there is the silence on cost. Three of every four awards disclose no amount at all — not a final price, not even an estimate. The state records that it bought something, from someone, and declines to say for how much. About 30,000 of these awards cite the low-value threshold (Art. 55), legitimate small purchases that sit below the bidding floor. But the discretionary sole-source grounds — Art. 54, fractions I through XIV — carry the big-ticket contracts, the ones worth hundreds of millions where competition was simply waived.",
           "No rival bids to lose, no public number to be measured against: this is a procurement system running in the dark, by design.",
         ],
         prose_es: [
-          "De las 69,516 adjudicaciones, 54,714 salieron sin licitación pública y sin ofertas rivales: adjudicación directa, 78.7 por ciento. La OCDE trata la adjudicación directa como una excepción que debería ubicarse en cifras bajas de un dígito a decenas bajas de por ciento, incluso en condiciones de emergencia. Cuatro de cada cinco no es un régimen de excepción. Es la regla, y la gráfica de abajo muestra qué tan desbalanceado está — licitación pública, invitación a tres y acuerdos marco juntos apenas suman una de cada cinco adjudicaciones.",
-          "Luego está el silencio sobre el costo. Tres de cada cuatro adjudicaciones no revelan monto alguno — ni precio final, ni siquiera un estimado. El Estado registra que compró algo, a alguien, y se niega a decir por cuánto. Unas 21,000 de estas adjudicaciones citan el umbral de bajo monto (Art. 55), compras pequeñas legítimas que están por debajo del piso de licitación. Pero las causales discrecionales de proveedor único — Art. 54, fracciones I a XIV — cargan los contratos de gran valor, los de cientos de millones donde simplemente se renunció a la competencia.",
+          "De las 94,899 adjudicaciones, 74,435 salieron sin licitación pública y sin ofertas rivales: adjudicación directa, 78.4 por ciento. La OCDE trata la adjudicación directa como una excepción que debería ubicarse en cifras bajas de un dígito a decenas bajas de por ciento, incluso en condiciones de emergencia. Cuatro de cada cinco no es un régimen de excepción. Es la regla, y la gráfica de abajo muestra qué tan desbalanceado está — licitación pública, invitación a tres y acuerdos marco juntos apenas suman una de cada cinco adjudicaciones.",
+          "Luego está el silencio sobre el costo. Tres de cada cuatro adjudicaciones no revelan monto alguno — ni precio final, ni siquiera un estimado. El Estado registra que compró algo, a alguien, y se niega a decir por cuánto. Unas 30,000 de estas adjudicaciones citan el umbral de bajo monto (Art. 55), compras pequeñas legítimas que están por debajo del piso de licitación. Pero las causales discrecionales de proveedor único — Art. 54, fracciones I a XIV — cargan los contratos de gran valor, los de cientos de millones donde simplemente se renunció a la competencia.",
           "Sin ofertas rivales que perder, sin un número público contra el cual medirse: este es un sistema de contratación operando en la oscuridad, por diseño.",
         ],
         chartConfig: {
           type: 'inline-bar',
-          title: 'How the 69,516 awards were handed out',
-          title_es: 'Cómo se entregaron las 69,516 adjudicaciones',
+          title: 'How the 94,899 awards were handed out',
+          title_es: 'Cómo se entregaron las 94,899 adjudicaciones',
           chartId: 'gap-procedure-types',
           highlight: 'Adjudicación directa',
+          // Both rows come straight out of /gap/summary: `direct_award_count`
+          // and `total_contracts − direct_award_count`. The endpoint publishes
+          // no per-procedure-type breakdown, so the competitive side stays a
+          // single honest row rather than a split this cut cannot support.
+          live: 'gap-exceptions',
+          liveAfter: true,
           data: {
             points: [
               {
                 label: 'Adjudicación directa',
                 label_en: 'Direct award (no bid)',
-                value: 54714,
-                annotation: '78.7% — NO COMPETITION',
-                annotation_es: '78.7% — SIN COMPETENCIA',
+                value: 74435,
+                annotation: '78.4% — NO COMPETITION',
+                annotation_es: '78.4% — SIN COMPETENCIA',
                 highlight: true,
               },
               {
-                label: 'Licitación pública',
-                label_en: 'Public tender',
-                value: 8507,
-                annotation: '12.2%',
-                annotation_es: '12.2%',
-              },
-              {
-                label: 'Invitación a 3',
-                label_en: 'Invitation to three',
-                value: 5282,
-                annotation: '7.6%',
-                annotation_es: '7.6%',
-              },
-              {
-                label: 'Acuerdo marco',
-                label_en: 'Framework agreement',
-                value: 1013,
-                annotation: '1.5%',
-                annotation_es: '1.5%',
+                // Kept inside the label column's measure — the three routes are
+                // named in the row annotation and again in the caption.
+                label: 'Vías competidas',
+                label_en: 'Competitive routes',
+                value: 20464,
+                annotation: '21.6% — PUBLIC TENDER + INVITATION TO 3 + FRAMEWORK',
+                annotation_es: '21.6% — LICITACIÓN + INVITACIÓN A 3 + ACUERDO MARCO',
               },
             ],
             unit: 'contracts',
@@ -601,15 +619,15 @@ export const STORIES: StoryDef[] = [
             referenceLine: { value: 0.15, label: 'OECD ~15%', label_es: 'OCDE ~15%' },
             stamp: { en: 'RECOVERED · OCR', es: 'RECUPERADO · OCR' },
             annotation:
-              'Procedure type for all 69,516 awards recovered after the Sep 28 2025 freeze. Direct award — no public tender — accounts for 78.7%, against an OECD norm in the low tens of a percent even for emergencies.',
+              'Procedure type for all 94,899 awards recovered after the Sep 28 2025 freeze. Direct award — no public tender — accounts for 78.4%, against an OECD norm in the low tens of a percent even for emergencies. Every competitive route combined takes the remaining 20,464.',
             annotation_es:
-              'Tipo de procedimiento para las 69,516 adjudicaciones recuperadas tras el congelamiento del 28 de sep 2025. La adjudicación directa — sin licitación pública — representa el 78.7%, frente a una norma OCDE de decenas bajas de por ciento incluso para emergencias.',
+              'Tipo de procedimiento para las 94,899 adjudicaciones recuperadas tras el congelamiento del 28 de sep 2025. La adjudicación directa — sin licitación pública — representa el 78.4%, frente a una norma OCDE de decenas bajas de por ciento incluso para emergencias. Todas las vías competidas juntas se llevan las 20,464 restantes.',
           },
         },
         pullquote: {
           quote: "The state records that it bought something, from someone, and declines to say for how much.",
           quote_es: "El Estado registra que compró algo, a alguien, y se niega a decir por cuánto.",
-          stat: '76%',
+          stat: '76.4%',
           statLabel: "of awards disclose no amount at all",
           statLabel_es: "de las adjudicaciones no revelan monto alguno",
         },
@@ -619,23 +637,24 @@ export const STORIES: StoryDef[] = [
         number: 4,
         title: "What the Scans Were Hiding",
         title_es: "Lo que los Escaneos Ocultaban",
-        subtitle: "Read off the images: $65.5 billion in no-bid awards, a 3.15-billion-peso contract to Pfizer, and a company born months before it won",
-        subtitle_es: "Leído de las imágenes: 65,500 millones en adjudicaciones directas, un contrato de 3,150 MDP a Pfizer, y una empresa nacida meses antes de ganar",
+        subtitle: "Read off the images: $92.9 billion in no-bid awards, a 3.15-billion-peso contract to Pfizer, and a company born months before it won",
+        subtitle_es: "Leído de las imágenes: 92,900 millones en adjudicaciones directas, un contrato de 3,150 MDP a Pfizer, y una empresa nacida meses antes de ganar",
         prose: [
-          "From roughly ten thousand of the largest no-bid contracts, optical recognition pulled 65.5 billion pesos in real, named amounts that appeared nowhere in the structured record. The single largest is a 3.15-billion-peso award to Pfizer, signed by BIRMEX — the state vaccine distributor — under the discretionary sole-source ground Art. 54 fr. XII. Behind it: 2.9 billion pesos to a firm called Serprosep through IMSS-Bienestar, and 2.4 billion for medical equipment through ISSSTE. Each handed out with no competition.",
+          "From more than twenty-two thousand of the largest no-bid contracts, optical recognition pulled 92.9 billion pesos in real, named amounts that appeared nowhere in the structured record. The largest whose winner the scans name is a 3.15-billion-peso award to Pfizer, signed by BIRMEX — the state vaccine distributor — under the discretionary sole-source ground Art. 54 fr. XII. Behind it: 2.9 billion pesos to a firm called Serprosep through IMSS-Bienestar, and 2.4 billion for medical equipment through ISSSTE. Each handed out with no competition.",
           "Some winners had barely existed before they won. SLYCOM, a company whose incorporation date is encoded — as Mexican tax IDs are — into its RFC, was founded in December 2023 and awarded roughly 880 million pesos within two years. A firm incorporated months before landing a nine-figure federal contract is the textbook signature of a ghost vendor — a flag for further reporting, not a verdict. The recovered record is dotted with them.",
           "These are the contracts the freeze was hiding in practice. Not because anyone classified them — most are nominally public — but because reading them meant defeating a signature, downloading an image, and running it through character recognition. The price of transparency had become a technical barrier most reporters cannot clear.",
         ],
         prose_es: [
-          "De alrededor de diez mil de los contratos sin licitación más grandes, el reconocimiento óptico recuperó 65,500 millones de pesos en montos reales y nombrados que no aparecían en ninguna parte del registro estructurado. El más grande es una adjudicación de 3,150 MDP a Pfizer, firmada por BIRMEX — el distribuidor estatal de vacunas — bajo la causal discrecional de proveedor único Art. 54 fr. XII. Detrás: 2,900 MDP a una empresa llamada Serprosep vía IMSS-Bienestar, y 2,400 MDP por equipo médico vía ISSSTE. Cada una entregada sin competencia.",
+          "De más de veintidós mil de los contratos sin licitación más grandes, el reconocimiento óptico recuperó 92,900 millones de pesos en montos reales y nombrados que no aparecían en ninguna parte del registro estructurado. La mayor cuyo ganador nombran los escaneos es una adjudicación de 3,150 MDP a Pfizer, firmada por BIRMEX — el distribuidor estatal de vacunas — bajo la causal discrecional de proveedor único Art. 54 fr. XII. Detrás: 2,900 MDP a una empresa llamada Serprosep vía IMSS-Bienestar, y 2,400 MDP por equipo médico vía ISSSTE. Cada una entregada sin competencia.",
           "Algunos ganadores apenas habían existido antes de ganar. SLYCOM, una empresa cuya fecha de constitución está codificada — como ocurre con los RFC mexicanos — en su propio RFC, fue fundada en diciembre de 2023 y adjudicada con unos 880 MDP en menos de dos años. Una empresa constituida meses antes de aterrizar un contrato federal de nueve cifras coincide con la firma de manual de un proveedor fantasma; es una bandera para seguir reporteando, no un veredicto, y el registro recuperado está salpicado de ellas.",
           "Estos son los contratos que el congelamiento ocultaba en la práctica. No porque alguien los clasificara — la mayoría son nominalmente públicos — sino porque leerlos exigía vencer una firma, descargar una imagen, y pasarla por reconocimiento de caracteres. El precio de la transparencia se había vuelto una barrera técnica que la mayoría de los reporteros no puede superar.",
         ],
         chartConfig: {
           type: 'inline-roster',
-          title: 'The biggest no-bid awards, recovered from scanned PDFs',
-          title_es: 'Las mayores adjudicaciones directas, recuperadas de PDFs escaneados',
+          title: 'The biggest no-bid awards whose winner the scans name',
+          title_es: 'Las mayores adjudicaciones directas cuyo ganador nombran los escaneos',
           chartId: 'gap-top-recovered',
+          live: 'gap-buyers',
           data: {
             points: [
               {
@@ -668,22 +687,22 @@ export const STORIES: StoryDef[] = [
             unit: 'MDP',
             stamp: { en: 'RECOVERED · OCR', es: 'RECUPERADO · OCR' },
             annotation:
-              'Top no-bid awards by amount, recovered off scanned award documents via OCR — figures that appear in no structured public dataset. $65.5B MXN was recovered across the ~10,000 highest-value direct awards.',
+              'Top no-bid awards by amount, recovered off scanned award documents via OCR — figures that appear in no structured public dataset. One larger award sits above these — 3,462 MDP through IMSS under Art. 54 fr. VIII — but the scan does not resolve who won it. $92.9B MXN was recovered across 22,438 awards.',
             annotation_es:
-              'Mayores adjudicaciones directas por monto, recuperadas de documentos de adjudicación escaneados vía OCR — cifras que no aparecen en ningún conjunto de datos público estructurado. Se recuperaron 65,500 MDP en las ~10,000 adjudicaciones directas de mayor valor.',
+              'Mayores adjudicaciones directas por monto, recuperadas de documentos de adjudicación escaneados vía OCR — cifras que no aparecen en ningún conjunto de datos público estructurado. Por encima de estas hay una mayor — 3,462 MDP vía IMSS bajo el Art. 54 fr. VIII — pero el escaneo no resuelve quién la ganó. Se recuperaron 92,877 MDP en 22,438 adjudicaciones.',
           },
         },
         pullquote: {
           quote: "A 3.15-billion-peso award to Pfizer, handed out with no competition, recovered only by reading it off an image.",
           quote_es: "Una adjudicación de 3,150 MDP a Pfizer, entregada sin competencia, recuperada solo al leerla de una imagen.",
-          stat: '65.5B',
+          stat: '92.9B MXN',
           statLabel: "pesos in no-bid awards recovered off scanned PDFs",
           statLabel_es: "pesos en adjudicaciones directas recuperados de PDFs escaneados",
-          // 8,414 of 69,516 awards had the amount read off a scan
-          barValue: 0.121,
+          // 22,438 of 94,899 awards had the amount read off a scan
+          barValue: 0.236,
           vizTemplate: 'mass-sliver',
-          barLabel: '8.4K of 69.5K direct awards · amount read off scans',
-          barLabel_es: '8.4K de 69.5K adjudicaciones directas · monto leído de escaneos',
+          barLabel: '22.4K of 94.9K awards · amount read off scans',
+          barLabel_es: '22.4K de 94.9K adjudicaciones · monto leído de escaneos',
         },
       },
       {
@@ -694,21 +713,28 @@ export const STORIES: StoryDef[] = [
         subtitle: "Where the state stopped grading itself, an outside record can",
         subtitle_es: "Donde el Estado dejó de calificarse, un registro externo puede hacerlo",
         prose: [
-          "A list of recovered contracts is not yet an accountability tool. So RUBLI assigns each of the 69,516 awards a structural red-flag grade — exactly that, not a probability of corruption. It cannot be the platform's trained risk model, because post-freeze data lacks the features that model needs. Instead it weighs what can be observed: absence of competition, absence of a disclosed price, a discretionary sole-source justification, a ghost or blacklisted vendor, single-vendor concentration, and contract size. Routine low-value purchases score low, so the flag means something when it is raised.",
-          "Graded that way, 13.5 percent of the recovered awards land in the high-alert band, and a handful reach critical — a figure that will only grow as the long-tail recovery surfaces more young and blacklisted vendors. The grade also names the agencies that lean hardest into the dark: INDAABIN, the federal real-estate and appraisal institute, and BIRMEX, the distributor that signed the Pfizer contract, carry the highest average red-flag scores among large buyers.",
+          "A list of recovered contracts is not yet an accountability tool. So RUBLI assigns each of the 94,899 awards a structural red-flag grade — exactly that, not a probability of corruption. It cannot be the platform's trained risk model, because post-freeze data lacks the features that model needs. Instead it weighs what can be observed: absence of competition, absence of a disclosed price, a discretionary sole-source justification, a ghost or blacklisted vendor, single-vendor concentration, and contract size. Routine low-value purchases score low, so the flag means something when it is raised.",
+          "Graded that way, 14.9 percent of the recovered awards land in the high-alert band, and a handful reach critical — a figure that will only grow as the long-tail recovery surfaces more young and blacklisted vendors. The grade also names the agencies that lean hardest into the dark: INDAABIN, the federal real-estate and appraisal institute, and BIRMEX, the distributor that signed the Pfizer contract, carry two of the four highest average red-flag scores among large buyers.",
           "This is the whole point. The apparatus Mexico spent twenty years building was dismantled in a single year, and the spending did not pause for it. Where the government stopped publishing, stopped pricing, and stopped grading its own no-bid awards, an outside record can do all three — not to replace the state's accountability, but to refuse to let its absence be the end of the story.",
         ],
         prose_es: [
-          "Una lista de contratos recuperados todavía no es una herramienta de rendición de cuentas. Por eso RUBLI asigna a cada una de las 69,516 adjudicaciones una calificación estructural de banderas — etiquetada honestamente como tal, no como una probabilidad de corrupción. No puede ser el modelo de riesgo entrenado de la plataforma, porque los datos posteriores al congelamiento carecen de las variables que ese modelo necesita. En cambio, pondera lo observable: ausencia de competencia, ausencia de un precio revelado, una justificación discrecional de proveedor único, un proveedor fantasma o en lista negra, concentración en un solo proveedor, y el tamaño del contrato. Las compras rutinarias de bajo monto califican bajo, de modo que la bandera significa algo cuando se levanta.",
-          "Calificadas así, el 13.5 por ciento de las adjudicaciones recuperadas caen en la banda de alerta alta, y un puñado llegan a crítico — una cifra que solo crecerá conforme la recuperación de la cola larga revele más proveedores jóvenes y en lista negra. La calificación también nombra a las dependencias que más se inclinan hacia la oscuridad: INDAABIN, el instituto federal de bienes nacionales y avalúos, y BIRMEX, el distribuidor que firmó el contrato con Pfizer, cargan los promedios de banderas más altos entre los grandes compradores.",
+          "Una lista de contratos recuperados todavía no es una herramienta de rendición de cuentas. Por eso RUBLI asigna a cada una de las 94,899 adjudicaciones una calificación estructural de banderas — etiquetada honestamente como tal, no como una probabilidad de corrupción. No puede ser el modelo de riesgo entrenado de la plataforma, porque los datos posteriores al congelamiento carecen de las variables que ese modelo necesita. En cambio, pondera lo observable: ausencia de competencia, ausencia de un precio revelado, una justificación discrecional de proveedor único, un proveedor fantasma o en lista negra, concentración en un solo proveedor, y el tamaño del contrato. Las compras rutinarias de bajo monto califican bajo, de modo que la bandera significa algo cuando se levanta.",
+          "Calificadas así, el 14.9 por ciento de las adjudicaciones recuperadas caen en la banda de alerta alta, y un puñado llegan a crítico — una cifra que solo crecerá conforme la recuperación de la cola larga revele más proveedores jóvenes y en lista negra. La calificación también nombra a las dependencias que más se inclinan hacia la oscuridad: INDAABIN, el instituto federal de bienes nacionales y avalúos, y BIRMEX, el distribuidor que firmó el contrato con Pfizer, cargan dos de los cuatro promedios de banderas más altos entre los grandes compradores.",
           "Este es todo el punto. El aparato que México tardó veinte años en construir fue desmantelado en un solo año, y el gasto no se detuvo por ello. Donde el gobierno dejó de publicar, dejó de poner precio y dejó de calificar sus propias adjudicaciones directas, un registro externo puede hacer las tres cosas — no para reemplazar la rendición de cuentas del Estado, sino para negarse a que su ausencia sea el final de la historia.",
         ],
+        chartConfig: {
+          type: 'live',
+          live: 'gap-grade',
+          chartId: 'gap-grade',
+          title: 'The dark, graded',
+          title_es: 'La oscuridad, calificada',
+        },
         pullquote: {
           quote: "Where the government stopped publishing, stopped pricing, and stopped grading its own no-bid awards, an outside record can do all three.",
           quote_es: "Donde el gobierno dejó de publicar, dejó de poner precio y dejó de calificar sus propias adjudicaciones directas, un registro externo puede hacer las tres cosas.",
-          stat: '13.5%',
-          statLabel: "of recovered awards land in the high-alert band",
-          statLabel_es: "de las adjudicaciones recuperadas caen en la banda de alerta alta",
+          stat: '14.9%',
+          statLabel: "of recovered awards carry high or critical structural flags",
+          statLabel_es: "de las adjudicaciones recuperadas con banderas estructurales altas o críticas",
         },
       },
     ],

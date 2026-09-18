@@ -107,8 +107,31 @@ export function MainLayout() {
             on the main column clips any per-page widget that exceeds the viewport
             without affecting per-card overflow-x-auto regions (charts, tables) that
             need their own horizontal scroll. Page-level horizontal scroll is the
-            actual UX bug — local widget scroll is intentional. */}
-        <main id="main-content" className="flex-1 px-3 sm:px-5 py-5 pb-20 md:pb-5 overflow-x-hidden" tabIndex={-1}>
+            actual UX bug — local widget scroll is intentional.
+
+            2026-09-18 (SD-01 § F1): `overflow-x: hidden` forces the other axis to
+            `auto`, which makes this <main> a scroll container — and a scroll
+            container swallows every `position: sticky` inside it, because sticky
+            binds to its nearest scrolling ancestor and this one never scrolls.
+            `overflow-x: clip` clips identically WITHOUT establishing one, so the
+            story chapters' stepped figure can stick.
+
+            Scoped to `/stories/*` from `lg` up, deliberately. Lifting it
+            site-wide also wakes four rails that were authored as sticky and have
+            been inert for as long as this guard has existed (case docket,
+            contract aside, network index, methodology index) — the methodology
+            index reads correctly, but the /contracts table head pins at `top-0`
+            and lands half-hidden behind the fixed site header, because none of
+            them was ever tuned against a header offset. Widening this belongs
+            with that tuning, not with a story day. */}
+        <main
+          id="main-content"
+          className={cn(
+            'flex-1 px-3 sm:px-5 py-5 pb-20 md:pb-5 overflow-x-hidden',
+            location.pathname.startsWith('/stories/') && 'lg:overflow-x-clip',
+          )}
+          tabIndex={-1}
+        >
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={location.pathname}

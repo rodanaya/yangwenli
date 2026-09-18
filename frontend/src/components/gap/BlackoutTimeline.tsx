@@ -39,9 +39,31 @@ const TRACK_2_Y = 96
 const LABEL = 'font-mono text-[11px]'
 const PINNED = `${LABEL} absolute whitespace-nowrap leading-none`
 
-export function BlackoutTimeline({ totalContracts, lang }: { totalContracts: number; lang: 'en' | 'es' }) {
+// Story Day 1 § F1: the plate can be drawn in four beats so the el-vacio hero
+// can step it as the reader scrolls. `/gap` passes nothing and gets stage 3 —
+// today's full drawing — so the page is unchanged.
+//   0 the official track alone · 1 + the abolition tick · 2 + the death mark
+//   3 + the recovery track
+// Staged elements fade rather than mount, so nothing reflows between beats and
+// the absolute anchors stay put. Reduced motion drops the fade, not the beat.
+const STEP = 'transition-opacity duration-[400ms] ease-out motion-reduce:transition-none'
+const on = (visible: boolean) => ({ opacity: visible ? 1 : 0 })
+
+export function BlackoutTimeline({
+  totalContracts,
+  lang,
+  stage = 3,
+}: {
+  totalContracts: number
+  lang: 'en' | 'es'
+  /** 0–3. Defaults to the full drawing. */
+  stage?: number
+}) {
   const es = lang === 'es'
   const total = formatNumber(totalContracts)
+  const showAbolition = stage >= 1
+  const showDeath = stage >= 2
+  const showRecovery = stage >= 3
   const ochre = 'var(--color-accent)'
   const muted = 'var(--color-text-muted)'
 
@@ -65,15 +87,15 @@ export function BlackoutTimeline({ totalContracts, lang }: { totalContracts: num
       <div aria-hidden="true" className="relative h-[112px] lg:h-[128px]">
         {/* row A — the abolition annotation and its leader tick (on-rule only) */}
         <span
-          className={`${PINNED} hidden lg:block`}
-          style={{ top: 2, left: `${ABOLISHED}%`, transform: 'translateX(-50%)', color: muted }}
+          className={`${PINNED} ${STEP} hidden lg:block`}
+          style={{ top: 2, left: `${ABOLISHED}%`, transform: 'translateX(-50%)', color: muted, ...on(showAbolition) }}
         >
           {abolishedAnnotation}
         </span>
         <span
           aria-hidden="true"
-          className="absolute hidden lg:block"
-          style={{ top: 18, left: `${ABOLISHED}%`, width: 1, height: TRACK_1_Y - 18, background: muted, opacity: 0.6 }}
+          className={`absolute ${STEP} hidden lg:block`}
+          style={{ top: 18, left: `${ABOLISHED}%`, width: 1, height: TRACK_1_Y - 18, background: muted, opacity: showAbolition ? 0.6 : 0 }}
         />
 
         {/* row B — the track-1 name, and the death annotation over the break.
@@ -82,8 +104,8 @@ export function BlackoutTimeline({ totalContracts, lang }: { totalContracts: num
           {officialName}
         </span>
         <span
-          className={`${PINNED} hidden lg:block`}
-          style={{ top: 20, left: `${BREAK}%`, transform: 'translateX(-50%)', color: muted }}
+          className={`${PINNED} ${STEP} hidden lg:block`}
+          style={{ top: 20, left: `${BREAK}%`, transform: 'translateX(-50%)', color: muted, ...on(showDeath) }}
         >
           {deathAnnotation}
         </span>
@@ -105,7 +127,7 @@ export function BlackoutTimeline({ totalContracts, lang }: { totalContracts: num
           <span
             key={deg}
             aria-hidden="true"
-            className="absolute"
+            className={`absolute ${STEP}`}
             style={{
               top: TRACK_1_Y,
               left: `${BREAK}%`,
@@ -113,6 +135,7 @@ export function BlackoutTimeline({ totalContracts, lang }: { totalContracts: num
               height: 1.6,
               background: muted,
               transform: `translate(-50%, -50%) rotate(${deg}deg)`,
+              ...on(showDeath),
             }}
           />
         ))}
@@ -123,41 +146,45 @@ export function BlackoutTimeline({ totalContracts, lang }: { totalContracts: num
         {/* the connector — from the death down to the recovered track */}
         <span
           aria-hidden="true"
-          className="absolute"
+          className={`absolute ${STEP}`}
           style={{
             top: TRACK_1_Y + 9,
             left: `${BREAK}%`,
             height: TRACK_2_Y - TRACK_1_Y - 9,
             borderLeft: `1px dashed ${ochre}`,
-            opacity: 0.6,
+            opacity: showRecovery ? 0.6 : 0,
           }}
         />
 
         {/* track 2 — recovered, picks up where track 1 died, open-ended */}
-        <span className={PINNED} style={{ top: TRACK_2_Y - 22, left: 0, letterSpacing: '0.16em', color: ochre }}>
+        <span
+          className={`${PINNED} ${STEP}`}
+          style={{ top: TRACK_2_Y - 22, left: 0, letterSpacing: '0.16em', color: ochre, ...on(showRecovery) }}
+        >
           {recoveredName}
         </span>
         <span
           aria-hidden="true"
-          className="absolute"
-          style={{ top: TRACK_2_Y, left: `${BREAK}%`, width: `${END - BREAK}%`, borderTop: `2px dashed ${ochre}` }}
+          className={`absolute ${STEP}`}
+          style={{ top: TRACK_2_Y, left: `${BREAK}%`, width: `${END - BREAK}%`, borderTop: `2px dashed ${ochre}`, ...on(showRecovery) }}
         />
         <span
           aria-hidden="true"
-          className="absolute font-mono leading-none"
+          className={`absolute font-mono leading-none ${STEP}`}
           style={{
             top: TRACK_2_Y,
             left: `${END}%`,
             transform: 'translate(-30%, -50%)',
             fontSize: 17,
             color: ochre,
+            ...on(showRecovery),
           }}
         >
           →
         </span>
         <span
-          className={`${PINNED} hidden lg:block`}
-          style={{ top: TRACK_2_Y + 10, left: `${BREAK}%`, color: ochre }}
+          className={`${PINNED} ${STEP} hidden lg:block`}
+          style={{ top: TRACK_2_Y + 10, left: `${BREAK}%`, color: ochre, ...on(showRecovery) }}
         >
           {recoveredAnnotation}
         </span>
@@ -168,9 +195,9 @@ export function BlackoutTimeline({ totalContracts, lang }: { totalContracts: num
             `startAnnotation` is not here — it stays pinned at left:0, where it
             fits at every width. ── */}
       <ul aria-hidden="true" className={`${LABEL} lg:hidden mt-1 space-y-1 leading-snug`}>
-        <li style={{ color: muted }}>{abolishedAnnotation}</li>
-        <li style={{ color: muted }}>{deathAnnotation}</li>
-        <li style={{ color: ochre }}>{recoveredAnnotation}</li>
+        <li className={STEP} style={{ color: muted, ...on(showAbolition) }}>{abolishedAnnotation}</li>
+        <li className={STEP} style={{ color: muted, ...on(showDeath) }}>{deathAnnotation}</li>
+        <li className={STEP} style={{ color: ochre, ...on(showRecovery) }}>{recoveredAnnotation}</li>
       </ul>
     </div>
   )

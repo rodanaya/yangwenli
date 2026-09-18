@@ -41,8 +41,11 @@ function toneColor(tone: Tone, lead: boolean): string {
   return '#71717a' // zinc — threshold + unverified are deliberately de-alarmed (Bible §3.10, no green)
 }
 
-export function ExceptionCatalog({ items, daCount, lang }: {
+export function ExceptionCatalog({ items, daCount, lang, heading = true }: {
   items: GapSummaryResponse['by_exception_article']; daCount: number; lang: 'en' | 'es'
+  /** Set false when an outer card (the el-vacio story's ChartCard) already
+   *  supplies the eyebrow and the title, so the plate doesn't stack two. */
+  heading?: boolean
 }) {
   if (!items.length || daCount <= 0) return null
   const es = lang === 'es'
@@ -60,12 +63,16 @@ export function ExceptionCatalog({ items, daCount, lang }: {
 
   return (
     <div>
-      <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-1">
-        {es ? 'PIEZA CENTRAL · EL CATÁLOGO DE EXCEPCIONES' : 'CENTERPIECE · THE EXCEPTION CATALOG'}
-      </div>
-      <h2 className="font-serif text-2xl text-text-primary mb-5">
-        {es ? 'La puerta legal de cada adjudicación sin concurso' : 'The legal door of every no-bid award'}
-      </h2>
+      {heading && (
+        <>
+          <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-text-muted font-mono mb-1">
+            {es ? 'PIEZA CENTRAL · EL CATÁLOGO DE EXCEPCIONES' : 'CENTERPIECE · THE EXCEPTION CATALOG'}
+          </div>
+          <h2 className="font-serif text-2xl text-text-primary mb-5">
+            {es ? 'La puerta legal de cada adjudicación sin concurso' : 'The legal door of every no-bid award'}
+          </h2>
+        </>
+      )}
 
       {/* promoted lead entry */}
       <div className="border-t-2 pt-4 mb-5" style={{ borderColor: toneColor(leadTone.tone, true) }}>
@@ -95,7 +102,17 @@ export function ExceptionCatalog({ items, daCount, lang }: {
               <div className="font-mono text-[13.5px] text-text-primary tabular-nums">{it.article || (es ? 'No especificado' : 'Unspecified')}</div>
               <div className="hidden sm:block text-[13px] text-text-secondary leading-tight">{es ? tn.glossEs : tn.glossEn}</div>
               <div className="flex items-center gap-2 justify-self-end">
-                <DotBar value={it.count} max={daCount} dots={22} color={c} ariaLabel={`${it.article}: ${pct}%`} />
+                {/* The 22-dot strip is ~198px of fixed width and the count
+                    column another 96 — together wider than the ~200px this
+                    row gets at 390, which clipped the trailing "(23.6%)" off
+                    every row (on /gap since the plate shipped, and again in
+                    the el-vacio story that now renders the same catalog).
+                    Below `sm` the strip drops and the count — the actual
+                    quantity — survives; the lead entry above keeps its own
+                    full-width strip at every size. */}
+                <span className="hidden sm:block">
+                  <DotBar value={it.count} max={daCount} dots={22} color={c} ariaLabel={`${it.article}: ${pct}%`} />
+                </span>
                 <span className="font-mono text-xs tabular-nums text-text-muted w-24 text-right">
                   {it.count.toLocaleString()} <span className="text-text-on-dark-muted">({pct}%)</span>
                 </span>

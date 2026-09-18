@@ -14,7 +14,14 @@ import type { GapSummaryResponse } from '@/api/types'
 import { RISK_COLORS } from '@/lib/constants'
 import { cn, formatNumber } from '@/lib/utils'
 
-export function GradeBlock({ summary, lang }: { summary: GapSummaryResponse; lang: string }) {
+export function GradeBlock({ summary, lang, bare = false }: {
+  summary: GapSummaryResponse
+  lang: string
+  /** Set true when an outer card (the el-vacio story's ChartCard) already
+   *  supplies the frame and the title — drops the border, the padding and the
+   *  header row so the plate isn't a box inside a box with two headings. */
+  bare?: boolean
+}) {
   const { by_risk_level, grade_methodology } = summary
   const total =
     by_risk_level.critical + by_risk_level.high + by_risk_level.medium + by_risk_level.low
@@ -28,22 +35,24 @@ export function GradeBlock({ summary, lang }: { summary: GapSummaryResponse; lan
   ]
 
   return (
-    <div className="border border-border rounded-sm bg-surface p-5 space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[10.5px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono mb-1">
-            {lang === 'es'
-              ? 'Indicador de banderas estructurales'
-              : 'Structural red-flag indicator'}
+    <div className={bare ? 'space-y-4' : 'border border-border rounded-sm bg-surface p-5 space-y-4'}>
+      {!bare && (
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-[10.5px] font-bold tracking-[0.22em] uppercase text-text-muted font-mono mb-1">
+              {lang === 'es'
+                ? 'Indicador de banderas estructurales'
+                : 'Structural red-flag indicator'}
+            </div>
+            <div className="font-serif text-lg font-bold text-text-primary">
+              {lang === 'es'
+                ? 'Nivel de alerta estructural'
+                : 'Structural alert grade'}
+            </div>
           </div>
-          <div className="font-serif text-lg font-bold text-text-primary">
-            {lang === 'es'
-              ? 'Nivel de alerta estructural'
-              : 'Structural alert grade'}
-          </div>
+          <ShieldAlert className="w-6 h-6 shrink-0 text-text-muted mt-1" />
         </div>
-        <ShieldAlert className="w-6 h-6 shrink-0 text-text-muted mt-1" />
-      </div>
+      )}
 
       {/* distribution bar */}
       <div className="space-y-1.5">
