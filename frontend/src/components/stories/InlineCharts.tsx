@@ -227,6 +227,16 @@ export function useMeasuredWidth<T extends HTMLElement = HTMLDivElement>() {
 
 const GLYPH_FLOOR_PX = 10.5
 
+// Advance width of one glyph in the mono stack, as a fraction of fontSize.
+// Gutters sized from a hard-coded guess get outgrown the moment a label or a
+// delta annotation gets longer, and the surplus is clipped at the viewBox
+// edge with no warning — the Day 3 judge found three such plots. Size the
+// gutter from the copy instead.
+const MONO_ADVANCE = 0.6
+function monoTextW(text: string | undefined, fontSize: number): number {
+  return (text?.length ?? 0) * fontSize * MONO_ADVANCE
+}
+
 export function ScrollSvgFrame({
   minW,
   minGlyph,
@@ -798,6 +808,16 @@ export function InlineBarChart({
   const W = Math.max(300, Math.min(regMeasured, 620))
   const hasAnno = data.points.some((p) => p.annotation)
   const rowH = hasAnno ? 54 : 36
+  // Row annotations render at x=0 in mono 13, so they need W units of room.
+  // This register adapts its viewBox to the measured width, which is the
+  // right default — but at 390 W collapses to 300 and a long annotation
+  // ("2 contracts · PEMEX engineering …") ran 155px past the edge. Only when
+  // the copy genuinely needs more than the narrow floor does the card get a
+  // scroll floor; every shorter register keeps adapting as before.
+  const regAnnoW = hasAnno
+    ? Math.ceil(Math.max(0, ...data.points.map((p) => monoTextW(annoFor(p), 13)))) + 6
+    : 0
+  const regScrollMinW = regAnnoW > 300 ? Math.min(620, regAnnoW) : undefined
   const refs = [data.referenceLine, data.referenceLine2].filter(
     (r): r is NonNullable<typeof r> => !!r,
   )
@@ -831,6 +851,8 @@ export function InlineBarChart({
       annotation={cardAnnotation}
       stamp={data.stamp}
       lang={lang}
+      scrollMinW={regScrollMinW}
+      scrollMinGlyph={10.5}
     >
       <div ref={regWrapRef} className="w-full">
       <svg
@@ -1735,7 +1757,14 @@ export function InlineMultiLine({
   const H = 280
   // Right padding leaves room for end-of-line vendor labels (rendered at
   // plotX(lastIdx)+4) — without this they get truncated at the SVG edge.
-  const PAD = { top: 24, right: 88, bottom: 60, left: 50 }
+  // 88 was a guess sized for short vendor names; "AMLO baseline (pre-2019)"
+  // needs 183 and ran 84px past the viewBox. Size the gutter from the actual
+  // series names so it can never be outgrown, keeping W at 720 (the plot
+  // narrows instead, so the scale and the scroll floor do not move).
+  const endLabelGutter = Math.ceil(
+    Math.max(0, ...series.map((s) => monoTextW(lang === 'es' ? (s.name_es ?? s.name) : s.name, 12))),
+  ) + 10
+  const PAD = { top: 24, right: Math.max(88, endLabelGutter), bottom: 60, left: 50 }
   const plotW = W - PAD.left - PAD.right
   const plotH = H - PAD.top - PAD.bottom
 
@@ -3095,9 +3124,17 @@ export function InlineStackedBar({
     // 2026-05-25: bumped 130 → 170 to fit "Infraestructura" (143px) and
     // "Medio Ambiente" (134px) — sexenio mirror chart sector center column.
     const LABEL_W_M = 170
-    const HALF_W_M = 200
-    const VALUE_W_M = 84
-    const W_M = VALUE_W_M + HALF_W_M + LABEL_W_M + HALF_W_M + VALUE_W_M
+    // The viewBox width is held CONSTANT at 738. Both the desktop scale and
+    // the ScrollSvgFrame legibility floor derive from it, and growing it
+    // would push the floor past the 688px this plot gets inside a 760 figure
+    // — the chart would start scrolling on desktop. So the right gutter is
+    // widened out of the bar halves instead: the value column takes what the
+    // widest delta annotation needs, the two halves split the remainder, and
+    // both bars rescale together so the mirror comparison stays honest.
+    const W_M = 738
+    const mirrorAnnoW = Math.max(0, ...rows.map((r) => monoTextW(rowAnnotation(r), 13)))
+    const VALUE_W_M = Math.max(84, Math.ceil(mirrorAnnoW) + 10)
+    const HALF_W_M = Math.floor((W_M - LABEL_W_M - 2 * VALUE_W_M) / 2)
     const H_M = rows.length * (ROW_H_M + ROW_GAP_M) + 28
 
     const maxBoth = Math.max(
