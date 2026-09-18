@@ -104,7 +104,11 @@ function SectorBar({ items, lang, onPick }: { items: GapSummaryResponse['by_sect
             <button key={item.sector_id} onClick={() => onPick(item.sector_id)}
               className="w-full grid grid-cols-[1fr_auto] items-center gap-x-3 py-2 text-left cursor-pointer hover:bg-surface-2 transition-colors"
               aria-label={es ? `Filtrar el registro por ${label}` : `Filter the register by ${label}`}>
-              <span className="text-[12.5px] font-medium truncate" style={{ color: textColor }}>{label}</span>
+              {/* Wraps, never truncates: at 390 the 1fr track leaves ~120px and
+                  `truncate` was cutting "Infrastructure" by 16px and
+                  "Technology" by 4px. A sector name is a name — STORY_DAYS
+                  principle 7 — so it takes a second line instead. */}
+              <span className="text-[12.5px] font-medium" style={{ color: textColor }}>{label}</span>
               <span className="flex items-center gap-2 justify-self-end">
                 <DotBar value={item.count} max={totalAll} dots={22} color={color} ariaLabel={`${label}: ${share.toFixed(0)}%`} />
                 <span className="font-mono text-xs tabular-nums text-text-muted w-20 text-right">{formatNumber(item.count)} <span className="text-text-on-dark-muted">({share.toFixed(0)}%)</span></span>

@@ -218,48 +218,60 @@ function ThresholdViz({ value, color, revealed, label, lang }: VizProps) {
   const valuePct = v * 100
   const thresholdPct = parseThreshold(label) * 100
   const limitLabel = lang === 'es' ? 'LÍMITE' : 'CEILING'
+  // The limit caption used to hang below the bar on `bottom: -16` and centre on
+  // its tick with a flat `translateX(-50%)`. Both leaked: the negative bottom
+  // put it outside the 28px box, and at a low threshold (8%) half its width sat
+  // left of the origin — 7px outside the figure at 390. It now has its own flow
+  // row, and the shift scales with the anchor: 0% at the left edge, −50% in the
+  // middle, −100% at the right. left = a·W − a·c and right = a·W + c(1−a), so
+  // for any anchor in [0,1] and any caption narrower than the bar it stays in.
+  const anchor = Math.max(0, Math.min(100, thresholdPct))
   return (
-    <div className="relative" style={{ height: 28 }}>
-      <div
-        className="absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-sm"
-        style={{ height: 12, background: 'var(--color-border)', opacity: 0.55 }}
-      />
-      <div
-        className="absolute top-1/2 left-0 -translate-y-1/2 origin-left rounded-sm"
-        style={{
-          height: 12,
-          width: `${valuePct}%`,
-          background: color,
-          opacity: revealed ? 0.9 : 0,
-          transform: `translateY(-50%) scaleX(${revealed ? 1 : 0})`,
-          transition: 'transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) 200ms, opacity 400ms',
-        }}
-      />
-      <div
-        className="absolute inset-y-0"
-        style={{
-          left: `${thresholdPct}%`,
-          width: 1.5,
-          background: 'var(--color-text-primary)',
-          opacity: revealed ? 0.7 : 0,
-          transition: 'opacity 500ms ease-out 600ms',
-        }}
-      />
-      <div
-        className="absolute font-mono uppercase"
-        style={{
-          left: `${thresholdPct}%`,
-          bottom: -16,
-          transform: 'translateX(-50%)',
-          fontSize: 10,
-          letterSpacing: '0.18em',
-          color: 'var(--color-text-muted)',
-          opacity: revealed ? 1 : 0,
-          transition: 'opacity 400ms ease-out 800ms',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {limitLabel} · {Math.round(thresholdPct)}%
+    <div>
+      <div className="relative" style={{ height: 28 }}>
+        <div
+          className="absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-sm"
+          style={{ height: 12, background: 'var(--color-border)', opacity: 0.55 }}
+        />
+        <div
+          className="absolute top-1/2 left-0 -translate-y-1/2 origin-left rounded-sm"
+          style={{
+            height: 12,
+            width: `${valuePct}%`,
+            background: color,
+            opacity: revealed ? 0.9 : 0,
+            transform: `translateY(-50%) scaleX(${revealed ? 1 : 0})`,
+            transition: 'transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) 200ms, opacity 400ms',
+          }}
+        />
+        <div
+          className="absolute inset-y-0"
+          style={{
+            left: `${thresholdPct}%`,
+            width: 1.5,
+            background: 'var(--color-text-primary)',
+            opacity: revealed ? 0.7 : 0,
+            transition: 'opacity 500ms ease-out 600ms',
+          }}
+        />
+      </div>
+      <div className="relative" style={{ height: 14, marginTop: 2 }}>
+        <div
+          className="absolute font-mono uppercase"
+          style={{
+            left: `${anchor}%`,
+            top: 0,
+            transform: `translateX(-${anchor}%)`,
+            fontSize: 10,
+            letterSpacing: '0.18em',
+            color: 'var(--color-text-muted)',
+            opacity: revealed ? 1 : 0,
+            transition: 'opacity 400ms ease-out 800ms',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {limitLabel} · {Math.round(thresholdPct)}%
+        </div>
       </div>
     </div>
   )
