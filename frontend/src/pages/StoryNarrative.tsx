@@ -15,6 +15,7 @@ import { getStoryBySlug, getRelatedStories, localizeChapter, localizeStory } fro
 import type { StoryChapterDef, StoryChartLive, StoryDef, StoryStatus } from '@/lib/story-content'
 import type { GapFigureKind } from '@/components/stories/live/GapFigures'
 import type { EmergencyFigureKind } from '@/components/stories/live/EmergencyFigures'
+import type { VoucherFigureKind } from '@/components/stories/live/VoucherFigures'
 import { StickyStepFrame, useProseStage } from '@/components/stories/live/StickyStepFigure'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { OutletBadge } from '@/components/stories/OutletBadge'
@@ -82,6 +83,7 @@ const INLINE_CHART_MAP: Record<string, InlineChartComponent> = {
 
 const LiveGapFigure = lazy(() => import('@/components/stories/live/GapFigures'))
 const LiveEmergencyFigure = lazy(() => import('@/components/stories/live/EmergencyFigures'))
+const LiveVoucherFigure = lazy(() => import('@/components/stories/live/VoucherFigures'))
 
 /** Route a `chartConfig.live` kind to the story family that owns it. */
 function LiveFigure({
@@ -95,6 +97,9 @@ function LiveFigure({
 }) {
   if (kind.startsWith('covid-')) {
     return <LiveEmergencyFigure kind={kind as EmergencyFigureKind} lang={lang} stage={stage} />
+  }
+  if (kind.startsWith('vales-')) {
+    return <LiveVoucherFigure kind={kind as VoucherFigureKind} lang={lang} stage={stage} />
   }
   return <LiveGapFigure kind={kind as GapFigureKind} lang={lang} stage={stage} />
 }

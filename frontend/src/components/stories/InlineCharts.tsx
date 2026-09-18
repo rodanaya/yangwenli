@@ -331,7 +331,12 @@ export function ChartCard({
       aria-label={title}
     >
       <div
-        className="flex items-center justify-between px-5 pt-4 pb-2 font-mono uppercase"
+        // `flex-wrap` is the zero-clip guard (STORY_DAYS principle 7): this row
+        // has no room to give, so a long eyebrow pushed the stamp and the
+        // version tag past the card's `overflow-hidden` edge and cut them —
+        // SD-03's "FIGURE IV · FIVE ADMINISTRATIONS" lost 6px of "v0.8.5" at
+        // 390. Wrapping costs nothing at any width where the row already fits.
+        className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 pt-4 pb-2 font-mono uppercase"
         style={{
           fontSize: 13,
           letterSpacing: '0.18em',

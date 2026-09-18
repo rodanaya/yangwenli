@@ -437,6 +437,11 @@ export type StoryChartLive =
   | 'covid-hemoser-calendar'
   | 'covid-ratchet'
   | 'covid-sectors'
+  // SD-03 `el-cartel-de-los-vales` — vendor detail, risk-timeline, ARIA queue
+  | 'vales-stream'
+  | 'vales-doors'
+  | 'vales-roster'
+  | 'vales-sexenios'
 
 /** ARIA pattern codes from the queue typology (P1–P7). */
 export type AriaPattern = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
@@ -5737,7 +5742,12 @@ export const STORIES: StoryDef[] = [
     ],
   },
 
-  // === STORY 12: Inside the Closed Room: The 240-Billion-Peso Market Three Firms Keep Sealed ===
+  // === STORY 12: Five voucher issuers, a closed market, and a lead that keeps
+  // changing hands. Rewritten SD-03 (2026-09-18) from /vendors/:id,
+  // /vendors/:id/risk-timeline and /aria/queue/:id — the previous version's
+  // 240B market, 96.7% Edenred direct-award rate, 2,210 / 2,868 single-bid
+  // counts and "P5 · VOUCHER CARTEL" label had no source in the register.
+  // See docs/story-days/SD-03-el-cartel-de-los-vales.md.
   {
     slug: 'el-cartel-de-los-vales',
     outlet: 'investigative',
@@ -5746,125 +5756,91 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI Unidad de Análisis de Datos',
     status: 'auditado',
     estimatedMinutes: 8,
-    headline: "Three Firms, 240 Billion Pesos, and a Voucher Market That Never Opens",
+    headline: "Five Firms, a Closed Market, and a Winner That Keeps Changing",
     headline_es:
-      "Tres empresas, 240 mil millones de pesos y un mercado de vales que nunca se abre",
+      "Cinco empresas, un mercado cerrado y un ganador que no deja de cambiar",
     subheadline:
-      "Mexico's entire federal voucher market — 240 billion pesos for food, fuel, and welfare cards — routes to just three vendors: Edenred, Efectivale, and Sodexo. All three win more than 88 percent of their contracts by direct award, against an OECD ceiling of 30. When tenders are held, a single firm shows up — 2,868 times. Five administrations and three parties have governed Mexico in that span. None broke the oligopoly. RUBLI flags this as a market-structure pattern, not proven fraud — but the outcome is the same either way.",
+      "Mexico's federal payment-card contracts run through five issuers: Toka, Edenred, Efectivale, Si Vale and Sodexo. Between 2001 and 2025 they took 142.6 billion pesos across 10,786 contracts, and 96.4 percent of those contracts arrived by one of two routes no rival could contest — a direct award, or a tender that drew a single bidder. What the register does not show is a fixed cast. The firm taking the most money changed three times in five administrations, and the largest of them today, Toka, has no federal contract on file before 2013. ARIA files all five under systematic overpricing: a reading of market structure, not a finding of fraud.",
     subheadline_es:
-      "Todo el mercado federal de vales de México — 240 mil millones de pesos para tarjetas de despensa, gasolina y bienestar — desemboca en apenas tres proveedores: Edenred, Efectivale y Sodexo. Las tres ganan más del 88 por ciento de sus contratos por adjudicación directa, contra un techo OCDE del 30. Cuando hay licitación, se presenta una sola empresa — 2,868 veces. Cinco administraciones y tres partidos han gobernado en ese lapso. Ninguno rompió el oligopolio. RUBLI marca esto como un patrón de estructura de mercado, no como fraude probado — pero el resultado es el mismo en ambos casos.",
+      "Los contratos federales de tarjetas de pago en México pasan por cinco emisoras: Toka, Edenred, Efectivale, Si Vale y Sodexo. Entre 2001 y 2025 se llevaron 142.6 mil millones de pesos en 10,786 contratos, y el 96.4 por ciento de esos contratos entró por una de dos rutas que ningún competidor podía disputar: la adjudicación directa o una licitación a la que se presentó un solo postor. Lo que el registro no muestra es un reparto fijo. La empresa que se lleva más dinero cambió tres veces en cinco administraciones, y la más grande de hoy, Toka, no tiene un solo contrato federal antes de 2013. ARIA clasifica a las cinco bajo sobreprecio sistemático: una lectura de estructura de mercado, no una acusación de fraude.",
     leadStat: {
-      value: '96.7%',
-      label: "Edenred direct-award rate",
-      label_es: "Tasa de adjudicación directa de Edenred",
-      sublabel: "2,210 contracts · every one entered through IMSS direct award",
-      sublabel_es: "2,210 contratos · todos entraron por adjudicación directa del IMSS",
+      value: '96.4%',
+      label: "of the five issuers' contracts skipped an open contest",
+      label_es: "de los contratos de las cinco emisoras no pasaron por un concurso abierto",
+      sublabel: "10,786 contracts · direct award or a single-bidder tender · 2001–2025",
+      sublabel_es: "10,786 contratos · adjudicación directa o licitación de un solo postor · 2001–2025",
       color: '#dc2626',
     },
     kickerStats: [
       {
-          suffix_es: "MXN, en manos de 3 proveedores.",
-        prefix: "",
-        value: '240 mil M',
-        suffix: "MXN, held by 3 vendors.",
+        prefix: "Five voucher issuers hold",
+        prefix_es: "Cinco emisoras de vales concentran",
+        value: '142.6B MXN',
+        suffix: "in federal contracts.",
+        suffix_es: "en contratos federales.",
         tone: 'data',
       },
       {
-          suffix_es: "licitaciones con un solo postor.",
-          prefix_es: "Efectivale ganó",
-        prefix: "Efectivale won",
-        value: '2,210',
-        suffix: "tenders with a single bidder.",
+        prefix: "Toka has led every complete year since",
+        prefix_es: "Toka encabeza cada año completo desde",
+        value: '2019',
+        suffix: "— and holds no contract before 2013.",
+        suffix_es: "— y no tiene contrato alguno antes de 2013.",
         tone: 'critical',
       },
       {
-          suffix_es: "de sus contratos no pasan por competencia.",
-          prefix_es: "Edenred:",
-        prefix: "Edenred:",
-        value: '96.7%',
-        suffix: "of its contracts skip competition.",
+        prefix: "The lead changed hands",
+        prefix_es: "El liderazgo cambió de manos",
+        value: '3',
+        suffix: "times in five administrations.",
+        suffix_es: "veces en cinco administraciones.",
         tone: 'critical',
       },
     ],
     lensTags: {
-      patterns: ['P5', 'P1'],
+      patterns: ['P5'],
       sectors: ['hacienda'],
-      years: [2018, 2019, 2020, 2021, 2022, 2023],
+      years: [2013, 2016, 2019, 2020, 2022, 2024],
     },
     chapters: [
       {
         id: 'ch1',
         number: 1,
-        title: "Three Names Hold the Entire Market",
-        title_es: "Tres nombres acaparan todo el mercado",
-        subtitle: "A 240-billion-peso federal market with three permanent winners",
-        subtitle_es: "Un mercado federal de 240 mil millones con tres ganadores permanentes",
+        title: "Five Names, and the Biggest Is the Newest",
+        title_es: "Cinco nombres, y el más grande es el más nuevo",
+        subtitle: "142.6 billion pesos of federal card contracts, 2001 to 2025",
+        subtitle_es: "142.6 mil millones de pesos en contratos federales de tarjetas, de 2001 a 2025",
         prose: [
-          "Every federal voucher peso in Mexico — 240 billion of them, for food, fuel, school supplies, and welfare transfers — flows to three vendors: Edenred (formerly Accor Services), Efectivale, and Sodexo. The money fans out to millions of beneficiaries, but the procurement that decides who issues the cards almost never leaves those three hands.",
-          "The size is not the scandal — a market can be large and still be open. The award rate is. Edenred wins 96.7 percent of its federal contracts by direct award — 2,210 contracts, every one of them entered through IMSS direct award, with no tender to win or lose. Efectivale's direct-award rate is 92.4 percent; Sodexo's is 88.1. All three sit above 88 against an OECD ceiling of 30, the line past which a market has stopped competing.",
-          "RUBLI reads this as a P5 institutional-concentration signature: a handful of vendors holding an entire sector's procurement through a mix of direct award and nominally competitive tenders. The roster below ranks the three by direct-award rate against that 30 percent ceiling.",
-          "No shell company drains this budget line. These are real multinationals with real operations. The market did not close because someone hid a theft — it closed because it was allowed to consolidate past the point where competition was possible, and the procurement rules bent to fit the result.",
+          "Federal money for food vouchers, fuel cards and welfare transfers reaches the people it is meant for through a payment card, and the contracts to issue those cards land with five firms. Two of them were there first. Efectivale and Sodexo hold every peso in this register before 2010, and for eight years nobody else appears on the chart at all.",
+          "Edenred arrives in 2010 and Si Vale with it, and the lead starts moving between them. Then, in 2013, a fifth firm appears that no account of this market has included: Toka Internacional, which holds no federal contract before that year and now holds more than any of the others — 51.8 billion pesos across 1,944 contracts.",
+          "Toka has led every complete year since 2019. The register does not show it winning that position in a contest: 66.4 percent of its contracts came from tenders in which it was the only firm to appear. The firms it passed did not lose the market. They gave up a place inside it.",
+          "Read as each year's share rather than each year's total, the shape is plainer. The names at the top rotate, and what everyone outside these five holds is not on the chart at all — the federal classification has no voucher category to measure it against. RUBLI tracks these five issuers. It does not draw a boundary the data refuses to draw.",
         ],
         prose_es: [
-          "Cada peso federal de vales en México — 240 mil millones de ellos, para despensa, gasolina, útiles escolares y transferencias de bienestar — va a parar a tres proveedores: Edenred (antes Accor Services), Efectivale y Sodexo. El dinero se reparte entre millones de beneficiarios, pero la contratación que decide quién emite las tarjetas casi nunca sale de esas tres manos.",
-          "El tamaño no es el escándalo. Un mercado federal puede ser grande y aun así estar abierto; 240 mil millones de pesos no tienen nada de excepcional por sí solos. Lo excepcional es cómo se adjudican los contratos. Edenred gana el 96.7 por ciento de sus contratos federales por adjudicación directa — 2,210 contratos, todos entrados por adjudicación directa del IMSS, sin licitación que ganar o perder. La tasa de Efectivale es del 92.4 por ciento; la de Sodexo, del 88.1. Las tres por encima del 88 frente a un techo OCDE del 30, la raya tras la cual un mercado dejó de competir.",
-          "RUBLI lee esto como una firma P5 de concentración institucional: un puñado de proveedores reteniendo toda la contratación de un sector mediante una mezcla de adjudicación directa y licitaciones nominalmente competitivas. El registro siguiente ordena a las tres por tasa de adjudicación directa frente a ese techo del 30 por ciento.",
-          "Aquí no hay empresa fantasma vaciando una partida. Son multinacionales reales con operaciones reales. El mercado no se cerró porque alguien ocultara un robo — se cerró porque se le permitió consolidarse más allá del punto donde la competencia era posible, y las reglas de contratación se doblaron para encajar con el resultado.",
+          "El dinero federal para despensa, gasolina y transferencias de bienestar llega a su destinatario por medio de una tarjeta de pago, y los contratos para emitirla caen en cinco empresas. Dos de ellas estuvieron primero: Efectivale y Sodexo se quedan con cada peso del registro anterior a 2010, y durante ocho años nadie más aparece en la gráfica.",
+          "Edenred entra en 2010 y Si Vale con ella, y el liderazgo empieza a moverse entre las dos. Luego, en 2013, aparece una quinta empresa que ningún relato de este mercado había incluido: Toka Internacional, que no tiene contrato federal antes de ese año y hoy tiene más que cualquiera de las otras — 51.8 mil millones de pesos en 1,944 contratos.",
+          "Toka encabeza cada año completo desde 2019. El registro no la muestra ganando ese lugar en un concurso: el 66.4 por ciento de sus contratos salió de licitaciones en las que fue la única empresa que se presentó. Las firmas a las que rebasó no perdieron el mercado. Cedieron un lugar dentro de él.",
+          "Leída como reparto de cada año y no como monto, la figura es más clara. Los nombres de arriba rotan, y lo que tienen los que no son estas cinco no está en la gráfica: la clasificación federal no tiene una categoría de vales contra la cual medirlo. RUBLI sigue a estas cinco emisoras. No traza una frontera que los datos se niegan a trazar.",
         ],
         chartConfig: {
-          type: 'inline-roster',
-          title: 'The seating chart of the closed room — top 3 by direct-award rate',
-          title_es:
-            'La distribución de asientos del cuarto cerrado — top 3 por tasa de adjudicación directa',
-          chartId: 'vales-da-rate',
-          data: {
-            points: [
-              {
-                label: 'Edenred México',
-                value: 96.7,
-                highlight: true,
-                annotation: 'P5 · VOUCHER CARTEL · 2,210 CONTRACTS',
-                annotation_es: 'P5 · CÁRTEL DE VALES · 2,210 CONTRATOS',
-              },
-              {
-                label: 'Efectivale',
-                value: 92.4,
-                highlight: true,
-                annotation: 'P5 · VOUCHER CARTEL · 2,210 SINGLE-BID · 19.6B',
-                annotation_es: 'P5 · CÁRTEL DE VALES · 2,210 OFERTA ÚNICA · 19.6 MIL M',
-              },
-              {
-                label: 'Sodexo Mexico',
-                value: 88.1,
-                highlight: true,
-                annotation: 'P5 · VOUCHER CARTEL · 658 SINGLE-BID · 5.2B',
-                annotation_es: 'P5 · CÁRTEL DE VALES · 658 OFERTA ÚNICA · 5.2 MIL M',
-              },
-            ],
-            unit: '% DA',
-            referenceLine: {
-              value: 30,
-              label: 'OECD ceiling',
-              label_es: 'techo OCDE',
-            },
-            annotation:
-              'All three above 88% direct-award. OECD ceiling for direct award: 30%. The voucher market has no competitive check.',
-            annotation_es:
-              'Las tres por encima del 88% de adjudicación directa. Techo OCDE para adjudicación directa: 30%. El mercado de vales carece de control competitivo.',
-          },
+          type: 'live',
+          live: 'vales-stream',
+          scrolly: true,
+          title: 'Annual value by issuer, stacked — with a share lens',
+          title_es: 'Valor anual por emisora, apilado — con lente de reparto',
         },
         pullquote: {
           quote:
-            "The 240 billion pesos are not the scandal. The award rate is. A market can be large and still be open — this one is neither.",
+            "The register does not show a market held still by a fixed set of names. It shows a queue, with a different firm at the front of it every few years.",
           quote_es:
-            "Los 240 mil millones de pesos no son el escándalo. La forma de adjudicar lo es. Un mercado puede ser grande y aun así estar abierto — este no es ninguna de las dos cosas.",
-          stat: '240B MXN',
-          statLabel: "Voucher sector · total federal spend · 3 vendors",
-          statLabel_es: "Sector vales · gasto federal total · 3 proveedores",
+            "El registro no muestra un mercado sostenido por un elenco fijo de nombres. Muestra una fila, y cada pocos años otra empresa al frente.",
+          stat: '142.6B MXN',
+          statLabel: "Five issuers · federal contracts · 2001–2025",
+          statLabel_es: "Cinco emisoras · contratos federales · 2001–2025",
         },
         sources: [
-          'RUBLI ARIA pipeline. Patrón P5 concentración. Sector hacienda (vales). 2002–2025.',
-          'COMPRANET registros de contratos. Categoría: vales_despensa, monedero_electronico. 2002–2025.',
+          'RUBLI. /vendors/:id y /vendors/:id/risk-timeline — cinco emisoras de vales, 2001–2025. Efectivale suma sus tres registros (45016, 64, 3403).',
+          'RUBLI. /categories/summary — 72 categorías activas, ninguna de vales: el tamaño del mercado completo no es medible aquí.',
         ],
       },
       {
@@ -5872,79 +5848,147 @@ export const STORIES: StoryDef[] = [
         number: 2,
         title: "Two Ways to Keep Competition Out",
         title_es: "Dos formas de dejar fuera a la competencia",
-        subtitle: "The direct-award bypass, then the single-bidder tender",
+        subtitle: "The direct award, the empty tender, and which firm prefers which",
         subtitle_es:
-          "El atajo de adjudicación directa, luego la licitación de un solo postor",
+          "La adjudicación directa, la licitación vacía, y quién prefiere cuál",
         prose: [
-          "Two mechanisms keep the room closed, and they work in sequence. The first is the bypass: Edenred's 96.7 percent direct-award rate means the competitive process almost never opens — 2,210 contracts, every one awarded through IMSS direct award. When the buyer can skip the open tender, the question of who else might have competed never arises. The bypass is blunt, visible, and entirely legal.",
-          "The second mechanism is quieter. When a tender is held, one firm shows up. Efectivale won 2,210 single-bid competitions; Sodexo won 658 more — 2,868 nominally competitive tenders that drew exactly one bidder. RUBLI defines the flag precisely: is_single_bid fires when procedure_type is not direct_award and vendor_count_per_procedure equals 1. These are competitive procedures on paper — a published notice, a formal process under Mexican law — whose outcome is settled the moment only one firm appears. The competition is performed for the record.",
-          "The mechanics are well documented in procurement: specifications written around an incumbent's payment network or card format, timelines too short for anyone without advance notice, distribution requirements drawn to favor the firm already inside. RUBLI cannot say which one produced any single result — only the aggregate, and the aggregate is what no open market produces by chance.",
-          "The money carried through that second lock is real: Efectivale's single-bid contracts total 19.6 billion pesos, Sodexo's 5.2 billion. P5 flags this structure; it does not assert that any one tender was rigged.",
+          "Two routes carry almost everything these five firms hold. The first is the direct award: no tender is called, and the buyer names the supplier. The second is a tender that is called, published and formally run, and draws exactly one bidder. RUBLI's flag is precise — is_single_bid fires when the procedure is not a direct award and exactly one vendor appears against it. Between them, the two routes account for 96.4 percent of the five firms' 10,786 contracts.",
+          "The direct award is the route this story used to put at its centre, and the vendor record does not carry that reading. Edenred's direct-award rate is 39.8 percent across 2,898 contracts; its single-bidder rate is 57.9. The bypass is not the main door here. The empty tender is.",
+          "Four of the five lean the same way. Toka takes 66.4 percent of its contracts from single-bidder tenders against 30.6 percent by direct award; Efectivale 59.5 against 36.4; Sodexo 54.7 against 37.9. Only Si Vale inverts it — 61.6 percent direct award against 36.6 single-bidder — and Si Vale holds the fewest contracts of the five.",
+          "One caution the data imposes on itself: CompraNet did not record the award procedure before 2010, so across the part of Efectivale's and Sodexo's record that predates it, a direct award cannot be distinguished from anything else. Their direct-award shares below are floors, not measurements. For Toka, Edenred and Si Vale, whose records begin in 2010 or later, the split is what the register says it is.",
         ],
         prose_es: [
-          "El mercado permanece cerrado mediante dos mecanismos que funcionan en secuencia. El primero es el atajo. La tasa de adjudicación directa del 96.7 por ciento de Edenred significa que el proceso competitivo casi nunca se abre — 2,210 contratos, todos adjudicados por adjudicación directa del IMSS. Cuando el comprador puede saltarse la licitación abierta, la pregunta de quién más habría competido nunca surge. El atajo es burdo, visible y enteramente legal.",
-          "El segundo mecanismo es más silencioso. Cuando se celebra una licitación, se presenta una sola empresa. Efectivale ganó 2,210 competencias de oferta única; Sodexo ganó 658 más — 2,868 licitaciones nominalmente competitivas que atrajeron a exactamente un postor. RUBLI define la bandera con precisión: is_single_bid se activa cuando procedure_type no es direct_award y vendor_count_per_procedure es igual a 1. Son procedimientos competitivos en papel — una convocatoria publicada, un proceso formal bajo la ley mexicana — cuyo resultado queda zanjado en el momento en que sólo una empresa aparece. La competencia se actúa para el expediente.",
-          "La mecánica está bien documentada en contratación: especificaciones redactadas alrededor de la red de pago o el formato de tarjeta de un incumbente, plazos demasiado cortos para quien no tiene información anticipada, requisitos de distribución trazados para favorecer a la empresa que ya está dentro. RUBLI no puede decir cuál produjo cada resultado individual — sólo el agregado, y el agregado es lo que ningún mercado abierto produce por azar.",
-          "El dinero que pasa por esa segunda cerradura es real: los contratos de oferta única de Efectivale suman 19.6 mil millones de pesos, los de Sodexo 5.2 mil millones. P5 marca esta estructura; no afirma que alguna licitación concreta haya sido amañada.",
+          "Dos rutas cargan con casi todo lo que tienen estas cinco empresas. La primera es la adjudicación directa: no se convoca licitación y el comprador nombra al proveedor. La segunda es una licitación que sí se convoca, se publica y se corre formalmente, y a la que se presenta exactamente un postor. La bandera de RUBLI es precisa: is_single_bid se activa cuando el procedimiento no es adjudicación directa y aparece una sola empresa. Entre las dos rutas suman el 96.4 por ciento de los 10,786 contratos de las cinco.",
+          "La adjudicación directa es la ruta que este reportaje solía poner en el centro, y el registro del proveedor no sostiene esa lectura. La tasa de adjudicación directa de Edenred es del 39.8 por ciento en 2,898 contratos; su tasa de oferta única es del 57.9. El atajo no es la puerta principal aquí. La licitación vacía sí.",
+          "Cuatro de las cinco se inclinan igual. Toka saca el 66.4 por ciento de sus contratos de licitaciones con un solo postor, contra un 30.6 por ciento por adjudicación directa; Efectivale, 59.5 contra 36.4; Sodexo, 54.7 contra 37.9. Sólo Si Vale lo invierte — 61.6 por ciento de adjudicación directa contra 36.6 de oferta única — y Si Vale es la que menos contratos tiene de las cinco.",
+          "Una advertencia que los propios datos imponen: CompraNet no anotaba el tipo de procedimiento antes de 2010, así que en la parte del registro de Efectivale y de Sodexo anterior a esa fecha, una adjudicación directa no se distingue de nada más. Sus porcentajes de adjudicación directa aquí abajo son pisos, no mediciones. Para Toka, Edenred y Si Vale, cuyos registros empiezan en 2010 o después, el reparto es el que dice el registro.",
         ],
+        chartConfig: {
+          type: 'live',
+          live: 'vales-doors',
+          live2: 'vales-roster',
+          title: 'Direct award against single-bidder tender, per firm',
+          title_es: 'Adjudicación directa frente a licitación de un solo postor, por empresa',
+        },
         pullquote: {
           quote:
-            "2,210 competitive tenders, 2,210 times a single bidder appeared. At some point 'competitive procedure' is a ritual performed for the record.",
+            "A tender was published, a process was run, and one firm turned up. That is 6,236 of these 10,786 contracts.",
           quote_es:
-            "2,210 licitaciones competitivas, 2,210 veces apareció un solo postor. En algún punto 'procedimiento competitivo' es un ritual actuado para el expediente.",
-          stat: '2,210',
-          statLabel: "Single-bid wins · Efectivale · all federal procurement",
-          statLabel_es: "Victorias oferta única · Efectivale · toda la contratación federal",
+            "Se publicó una convocatoria, se corrió un proceso y se presentó una sola empresa. Eso son 6,236 de estos 10,786 contratos.",
+          stat: '66.4%',
+          statLabel: "Toka · contracts won from tenders with a single bidder",
+          statLabel_es: "Toka · contratos ganados en licitaciones con un solo postor",
         },
         sources: [
-          'RUBLI. Análisis oferta única. Bandera is_single_bid: procedure_type != direct_award AND vendor_count_per_procedure = 1.',
-          'COMPRANET registros de contratos. Efectivale. 2010–2024.',
+          'RUBLI. Bandera is_single_bid: procedure_type != direct_award AND vendor_count_per_procedure = 1.',
+          'RUBLI. /vendors/:id — direct_award_count y single_bid_count de las cinco emisoras, 2001–2025.',
         ],
       },
       {
         id: 'ch3',
         number: 3,
-        title: "Five Governments Bought From the Same Three Firms",
-        title_es: "Cinco gobiernos compraron a las mismas tres empresas",
-        subtitle: "Why the oligopoly outlasts every change of administration",
-        subtitle_es: "Por qué el oligopolio sobrevive a cada cambio de administración",
+        title: "Five Governments, Three Handoffs, One Door",
+        title_es: "Cinco gobiernos, tres relevos, una sola puerta",
+        subtitle: "The occupant changes; the way in never does",
+        subtitle_es: "Cambia el ocupante; la forma de entrar nunca",
         prose: [
-          "The clearest proof the lock is structural is that it outlasts everyone. Fox, Calderón, Peña Nieto, AMLO, Sheinbaum — five administrations and three political parties have governed Mexico, and every one of them bought vouchers from the same three vendors. No oligopoly tied to a single sexenio survives the next election. This one predates every government on the list.",
-          "The reason is infrastructure. Welfare vouchers are a natural monopoly masked as a market. The point-of-sale network, the beneficiary databases, the card-issuance systems all demand massive upfront investment, and once built they create lock-in no single tender can undo. The incumbent has already paid for the entry cost; a challenger would have to absorb it while also winning the contract that would justify the spend. Entry is irrational, so no one enters, so the same three names stay.",
-          "RUBLI has no evidence that these firms commit fraud in the legal sense. P5 is a market-structure flag, not a fraud flag — the distinction is real. But it does not soften the result, because the result is identical either way: 240 billion pesos, five administrations, three vendors, no competitive check on any of it.",
-          "The fix for this market exists — procurement redesign, not a prosecution. No government has reached for it.",
+          "Five administrations and three parties have governed Mexico across this record, and the claim that all of them bought from the same firms does not hold. Efectivale led under Fox and under Calderón. Si Vale led under Peña Nieto. Toka led under López Obrador, taking 64.9 percent of everything the five firms were awarded in that term. The lead changed hands three times.",
+          "What did not change is the way in. Every one of these firms, under every one of these governments, arrived through the same two routes, and 96.4 percent of the contracts between them came through one or the other. A change of occupant is visible in the register. A change of method is not.",
+          "The explanation always offered for this market's closure is infrastructure: the point-of-sale network, the beneficiary databases and the card-issuance systems cost more to build than any single contract can justify, so no challenger enters. That account fits a market with fixed occupants. It fits this one less well — because a challenger did enter. Toka appeared in 2013 and led within six years, and the door it came through was the one that was supposed to be shut.",
+          "RUBLI has no evidence that any of these firms committed fraud in the legal sense. ARIA files all five under P5, systematic overpricing, which is a pricing indicator rather than a finding of collusion; its collusion-network pattern, P7, never rises above 0.5 confidence for any of them. Four of the five sit at Tier 1 of the investigation queue and four are already documented cases. What this market needs is a procurement redesign, not a prosecution. No government on the list has reached for it.",
         ],
         prose_es: [
-          "La prueba más clara de que la cerradura es estructural es que sobrevive a todos. Fox, Calderón, Peña Nieto, AMLO, Sheinbaum — cinco administraciones y tres partidos políticos han gobernado México, y cada uno de ellos compró vales a los mismos tres proveedores. Ningún oligopolio atado a un solo sexenio sobrevive a la siguiente elección. Este antecede a cada gobierno de la lista.",
-          "La razón es la infraestructura. Los vales de bienestar son un monopolio natural disfrazado de mercado. La red de puntos de venta, las bases de datos de beneficiarios, los sistemas de emisión de tarjetas exigen una enorme inversión inicial, y una vez construidos crean una dependencia que ninguna licitación individual puede deshacer. El incumbente ya pagó el costo de entrada; un retador tendría que absorberlo mientras gana el contrato que justificaría el gasto. La entrada es irracional, así que nadie entra, así que se quedan los mismos tres nombres.",
-          "RUBLI no tiene evidencia de que estas empresas cometan fraude en el sentido legal. P5 es una bandera de estructura de mercado, no de fraude — la distinción es real. Pero no suaviza el resultado, porque el resultado es idéntico en ambos casos: 240 mil millones de pesos, cinco administraciones, tres proveedores, sin ningún control competitivo sobre nada de ello.",
-          "La llave para reabrir este mercado existe — es rediseñar la contratación, no una acusación penal. Ningún gobierno la ha girado.",
+          "Cinco administraciones y tres partidos han gobernado México a lo largo de este registro, y la afirmación de que todos le compraron a las mismas empresas no se sostiene. Efectivale encabezó con Fox y con Calderón. Si Vale encabezó con Peña Nieto. Toka encabezó con López Obrador, y se llevó el 64.9 por ciento de todo lo adjudicado a las cinco en ese sexenio. El liderazgo cambió de manos tres veces.",
+          "Lo que no cambió es la forma de entrar. Cada una de estas empresas, bajo cada uno de estos gobiernos, llegó por las mismas dos rutas, y el 96.4 por ciento de los contratos entre todas ellas entró por una o por la otra. El cambio de ocupante se ve en el registro. El cambio de método, no.",
+          "La explicación que siempre se ofrece para el cierre de este mercado es la infraestructura: la red de puntos de venta, las bases de datos de beneficiarios y los sistemas de emisión de tarjetas cuestan más de lo que un solo contrato justifica, así que ningún retador entra. Ese relato encaja con un mercado de ocupantes fijos. Con este encaja menos — porque sí entró un retador. Toka apareció en 2013 y encabezaba seis años después, y la puerta por la que entró es la que se suponía cerrada.",
+          "RUBLI no tiene evidencia de que ninguna de estas empresas haya cometido fraude en el sentido legal. ARIA clasifica a las cinco bajo P5, sobreprecio sistemático, que es un indicador de precio y no una acusación de colusión; su patrón de red de colusión, el P7, no rebasa 0.5 de confianza en ninguna de ellas. Cuatro de las cinco están en el nivel 1 de la cola de investigación y cuatro ya son casos documentados. Lo que este mercado necesita es un rediseño de la contratación, no una acusación penal. Ningún gobierno de la lista lo ha intentado.",
         ],
+        chartConfig: {
+          type: 'live',
+          live: 'vales-sexenios',
+          title: 'Share of the five-firm total, by administration',
+          title_es: 'Reparto del total de las cinco, por sexenio',
+        },
         pullquote: {
           quote:
-            "Fox, Calderón, Peña Nieto, AMLO, Sheinbaum. Five administrations, three parties, the same three companies. The key exists — no government has turned it.",
+            "Toka entered in 2013 and led by 2019. It did not force the market open — it walked in through the same door as everyone already inside.",
           quote_es:
-            "Fox, Calderón, Peña Nieto, AMLO, Sheinbaum. Cinco administraciones, tres partidos, las mismas tres empresas. La llave existe — ningún gobierno la ha girado.",
-          stat: '5',
-          statLabel: "Consecutive administrations without breaking the voucher oligopoly",
-          statLabel_es: "Administraciones consecutivas sin romper el oligopolio de vales",
+            "Toka entró en 2013 y para 2019 encabezaba. No abrió el mercado — entró por la misma puerta que todos los que ya estaban dentro.",
+          stat: '3',
+          statLabel: "Changes of leader across five administrations",
+          statLabel_es: "Cambios de líder en cinco administraciones",
         },
         sources: [
-          'RUBLI ARIA pipeline. Patrón P5. Sector hacienda. 2002–2025.',
-          'IMCO. (2023). "Competitividad en compras gubernamentales." Sector vales.',
+          'RUBLI. /vendors/:id/risk-timeline agregado por sexenio con lib/administrations.ts (el año de transición se atribuye al gobierno saliente).',
+          'RUBLI ARIA. /aria/queue/:id — nivel IPS, ground truth, patrón primario y confianzas P1–P7.',
           'OCDE. (2022). "Integridad en las contrataciones públicas de México."',
         ],
       },
     ],
     nextSteps: [
-      'Investigar si los contratos con Edenred y Efectivale contienen cláusulas de exclusividad que estructuralmente cierran la puerta a la competencia.',
-      'Cruzar los montos de contratos de vales contra el número de beneficiarios de programas sociales — ¿el costo por beneficiario ha aumentado en términos reales desde 2010?',
-      'Verificar si algún funcionario que aprobó contratos de vales trabaja ahora para Edenred, Efectivale o Sodexo (puerta giratoria).',
+      'Reconstruct Toka’s single-bidder tenders between 2019 and 2024 — who called them, on what timeline, against what specifications. 66.4% of its contracts came out of them.',
+      'Trace what happened to Sodexo, which has no federal contract after 2024, and to Si Vale, whose share of the last term rounds to zero: exit from the market, or a change of registration?',
+      'Confirm against the commercial register that Efectivale’s three vendor records (45016, 64, 3403) are one company, and why the 2002–2010 one carries no award procedure.',
+      'Cross the awarded amounts against the number of social-programme beneficiaries — has the cost per beneficiary risen in real terms since 2010?',
+      'Check whether any official who approved these contracts now works for one of the five issuers (revolving door).',
     ],
     nextSteps_es: [
-      'Investigar si los contratos con Edenred y Efectivale contienen cláusulas de exclusividad que estructuralmente cierran la puerta a la competencia.',
-      'Cruzar los montos de contratos de vales contra el número de beneficiarios de programas sociales — ¿el costo por beneficiario ha aumentado en términos reales desde 2010?',
-      'Verificar si algún funcionario que aprobó contratos de vales trabaja ahora para Edenred, Efectivale o Sodexo (puerta giratoria).',
+      'Reconstruir las licitaciones de un solo postor de Toka entre 2019 y 2024: quién convocó, con qué plazo y con qué especificaciones — 66.4% de sus contratos salieron de ahí.',
+      'Rastrear qué pasó con Sodexo, que no tiene contrato federal después de 2024, y con Si Vale, que cae a 0.0% del reparto en el último sexenio: ¿salida del mercado o cambio de registro?',
+      'Confirmar si los tres registros de Efectivale (45016, 64, 3403) son la misma empresa ante el registro mercantil, y por qué el de 2002–2010 no trae tipo de procedimiento.',
+      'Cruzar los montos contra el número de beneficiarios de programas sociales — ¿el costo por beneficiario subió en términos reales desde 2010?',
+      'Verificar si algún funcionario que aprobó estos contratos trabaja hoy para alguna de las cinco emisoras (puerta giratoria).',
+    ],
+    // Ordered by lifetime value. `riskScore` and `ariaTier` are the chip
+    // registration's own — never a sibling entity's: Efectivale's 2002–2010
+    // registration (64) is the Tier-1 ground-truth case, and 45016, the one
+    // still trading and the one this chip opens, is Tier 2.
+    entities: [
+      {
+        type: 'vendor',
+        id: 102627,
+        name: 'TOKA INTERNACIONAL S A P I DE CV',
+        riskScore: 0.9882,
+        ariaTier: 1,
+        role: 'Largest of the five · 51.8B MXN · has led every complete year since 2019',
+        role_es: 'La más grande de las cinco · 51.8 mil M MXN · encabeza cada año completo desde 2019',
+      },
+      {
+        type: 'vendor',
+        id: 44372,
+        name: 'EDENRED MEXICO SA DE CV',
+        riskScore: 0.9284,
+        ariaTier: 1,
+        role: 'Second by value · 38.6B MXN · 57.9% of its contracts from single-bidder tenders',
+        role_es: 'Segunda por valor · 38.6 mil M MXN · 57.9% de sus contratos en licitaciones de un solo postor',
+      },
+      {
+        type: 'vendor',
+        id: 45016,
+        name: 'EFECTIVALE S DE RL DE CV',
+        riskScore: 0.9421,
+        ariaTier: 2,
+        role: 'Three registrations, one firm · 27.6B MXN · first in the record, 2001',
+        role_es: 'Tres registros, una empresa · 27.6 mil M MXN · la primera del registro, 2001',
+      },
+      {
+        type: 'vendor',
+        id: 44362,
+        name: 'SI VALE MEXICO SA DE CV',
+        riskScore: 0.6821,
+        ariaTier: 1,
+        role: 'The only one of the five that leans on direct award · 61.6%',
+        role_es: 'La única de las cinco que se apoya en la adjudicación directa · 61.6%',
+      },
+      {
+        type: 'vendor',
+        id: 474,
+        name: 'SODEXO MOTIVATION SOLUTIONS MÉXICO, S.A. DE C.V.',
+        riskScore: 0.9073,
+        ariaTier: 1,
+        role: 'Smallest by value · 8.7B MXN · no federal contract after 2024',
+        role_es: 'La más pequeña por valor · 8.7 mil M MXN · sin contrato federal después de 2024',
+      },
     ],
   },
 ]
