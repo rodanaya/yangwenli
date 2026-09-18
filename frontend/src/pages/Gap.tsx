@@ -65,7 +65,7 @@ function RiskLevelPill({ level, lang }: { level: string; lang: string }) {
   return (
     <span
       className={cn(
-        'text-[10.5px] font-mono tracking-wide px-1.5 py-0.5 rounded border',
+        'text-[10.5px] font-mono tracking-wide px-1.5 py-0.5 rounded border whitespace-nowrap',
         isLow && 'text-text-muted border-border'
       )}
       style={!isLow && color ? { color, borderColor: color } : undefined}
@@ -252,31 +252,38 @@ function AmountCell({ item, lang }: { item: GapContractItem; lang: string }) {
 
   return (
     <div className="text-right">
-      <span className="font-mono text-sm tabular-nums">{formatCompactMXN(amount)}</span>
+      {/* The amount owns its line; the provenance badge sits under it. Inline,
+          the badge pushed "294.2M MXN" into a wrap and then took a third line
+          of its own once the chips grew to 10.5px. */}
+      <span className="font-mono text-sm tabular-nums whitespace-nowrap">{formatCompactMXN(amount)}</span>
       {item.amount_source === 'estimated' && (
-        <span
-          className="ml-1 text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border"
-          style={{ color: RISK_COLORS.medium, borderColor: RISK_COLORS.medium, opacity: 0.8 }}
-          title={
-            lang === 'es'
-              ? 'Monto estimado — no recuperado del PDF de fallo'
-              : 'Estimated — not recovered from award PDF'
-          }
-        >
-          EST
-        </span>
+        <div className="mt-0.5">
+          <span
+            className="inline-block text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border whitespace-nowrap"
+            style={{ color: RISK_COLORS.medium, borderColor: RISK_COLORS.medium, opacity: 0.8 }}
+            title={
+              lang === 'es'
+                ? 'Monto estimado — no recuperado del PDF de fallo'
+                : 'Estimated — not recovered from award PDF'
+            }
+          >
+            EST
+          </span>
+        </div>
       )}
       {item.amount_source === 'fallo_ocr' && (
-        <span
-          className="ml-1 text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border border-border text-text-muted"
-          title={
-            lang === 'es'
-              ? 'Monto recuperado mediante OCR del PDF de fallo'
-              : 'Amount recovered via OCR of award PDF'
-          }
-        >
-          OCR
-        </span>
+        <div className="mt-0.5">
+          <span
+            className="inline-block text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border border-border text-text-muted whitespace-nowrap"
+            title={
+              lang === 'es'
+                ? 'Monto recuperado mediante OCR del PDF de fallo'
+                : 'Amount recovered via OCR of award PDF'
+            }
+          >
+            OCR
+          </span>
+        </div>
       )}
     </div>
   )
@@ -291,7 +298,7 @@ function FlagChips({ item, lang }: { item: GapContractItem; lang: string }) {
     chips.push(
       <span
         key="da"
-        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border"
+        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border whitespace-nowrap"
         style={{ color: RISK_COLORS.critical, borderColor: RISK_COLORS.critical }}
         title={lang === 'es' ? 'Adjudicación directa' : 'Direct award (no-bid)'}
       >
@@ -303,7 +310,7 @@ function FlagChips({ item, lang }: { item: GapContractItem; lang: string }) {
     chips.push(
       <span
         key="young"
-        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border"
+        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border whitespace-nowrap"
         style={{ color: RISK_COLORS.medium, borderColor: RISK_COLORS.medium }}
         title={lang === 'es' ? 'Empresa <3 años' : 'Company <3 years old'}
       >
@@ -315,7 +322,7 @@ function FlagChips({ item, lang }: { item: GapContractItem; lang: string }) {
     chips.push(
       <span
         key="efos"
-        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border"
+        className="text-[10.5px] font-mono tracking-wide px-1 py-0.5 rounded border whitespace-nowrap"
         style={{ color: RISK_COLORS.high, borderColor: RISK_COLORS.high }}
         title={lang === 'es' ? 'EFOS — SAT lista de emisores de facturas falsas' : 'EFOS — SAT tax-fraud register flag'}
       >

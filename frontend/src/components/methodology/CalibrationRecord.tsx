@@ -153,20 +153,25 @@ export default function CalibrationRecord({ className }: { className?: string })
             strokeDasharray="1 3"
             opacity={0.5}
           />
-          {/* Inside the wash band, not above it: at CHART_TOP − 8 this label,
-              the v5.2 overlay label and the "AUC (test)" axis caption all
-              printed on the same two rows and overlapped. */}
+          {/* Two lines, left-anchored on the band, in its empty lower half.
+              Above the chart it collided with the v5.2 and "AUC (test)"
+              captions; centred inside the band at CHART_TOP + 14 it overlaid
+              the step line and its vertices, and one centred line was wider
+              than the plate so it clipped past the svg's left edge. */}
           <text
-            x={(xPos(v40.day) + xPos(v51.day)) / 2}
-            y={CHART_TOP + 14}
-            textAnchor="middle"
+            textAnchor="start"
             fontSize={13}
             fontFamily="var(--font-family-mono, monospace)"
             letterSpacing="0.02em"
             fill={OCHRE}
             opacity={0.85}
           >
-            {lang === 'en' ? 'pre-stratification era — AUCs not comparable' : 'época pre-estratificación — AUCs no comparables'}
+            <tspan x={xPos(v40.day)} y={CHART_BOTTOM - 46}>
+              {lang === 'en' ? 'pre-stratification era' : 'época pre-estratificación'}
+            </tspan>
+            <tspan x={xPos(v40.day)} y={CHART_BOTTOM - 32}>
+              {lang === 'en' ? 'AUCs not comparable' : 'AUCs no comparables'}
+            </tspan>
           </text>
 
           {/* gridlines */}
