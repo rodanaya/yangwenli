@@ -94,3 +94,25 @@ Plumbing:
 - Crops: each of the five chapters' figures at 1440 and 390, plus the F1 sticky state mid-scroll, into `_parallax_shots/story-days/sd01/after/`. Read them.
 - Commits: `refactor(gap § SD-01 § F5 STEP 0): extract GradeBlock` first; then `feat(stories § SD-01 el-vacio): live /gap figures — blackout scrolly, recovery funnel, exception catalog, buyers + counterparty, structural grade; numbers refreshed to the live cut` with the before → after number list in the body, citing `docs/story-days/SD-01-el-vacio.md`. Trailer `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. No BUILD_ID bump, push or deploy — Fable judges first.
 - Report: per-figure PASS/FAIL with the API-vs-rendered numbers, the number-refresh list, gate outputs, commit hashes, crop list.
+
+## Result
+
+Built by Opus executor `story-day01`; judged by Fable on `_parallax_shots/story-days/sd01/after/` (five chapters × 1440/390 + the sticky mid-scroll state).
+
+| Figure | Rendered = `/gap/summary` at build |
+|---|---|
+| F1 blackout scrolly (ch1) | 94,899; stages 0→1→2→3 as the three paragraphs cross mid-viewport, sticky at lg+, stage 3 / not sticky at 390 |
+| F2 recovery funnel (ch2) | 94,899 / 74,435 / 22,438 · anchor 92.9B MXN (ES 92,877 MDP) |
+| F3 exception catalog (ch3) | 8 articles, Art. 55 = 30,354 (40.8% of direct awards) |
+| F4 buyers + counterparty (ch4) | 10 ledger rows, 99 young vendors, 0 EFOS; click → `/gap?q=<siglas>` |
+| F5 structural grade (ch5) | 14.9% high+critical; 81 / 14,023 / 41,153 / 39,642 |
+| typed procedure bar (ch3) | 78.4% direct award; competitive routes = one honest row (20,464) because the endpoint has no per-type split |
+| typed roster (ch4) | 4 rows re-verified live; a 3,462 MDP IMSS award outranks Pfizer but its winner is unresolved — prose now says "the largest whose winner the scans name" |
+
+Number refresh (EN + ES + `/journalists` card): 69,516 → 94,899 · 54,714 → 74,435 · 78.7% → 78.4% · 65.5B → 92.9B MXN · 76% → 76.4% · ~21,000 Art. 55 → ~30,000 · 13.5% → 14.9% · 8.4K of 69.5K → 22.4K of 94.9K · 12,018 APB → 17,306 · "roughly ten thousand" → "more than twenty-two thousand" · INDAABIN/BIRMEX "highest" → "two of the four highest". Probe greps every old number in both locales: none.
+
+Structural fixes the figures forced: `<main>` `overflow-x: hidden` made it a scroll container that swallowed every `position: sticky` → `lg:overflow-x-clip` scoped to `/stories/*` (site-wide lift would wake four untuned rails — backlog); ExceptionCatalog and BuyersLedger drop their dot strips below `sm` so counts and siglas read in full at 390 (also fixes `/gap` on phones). Judge rejection → `00bd33fc` (siglas truncated to one character at 390; 50 row assertions now pass on story + `/gap`).
+
+Seven `figure[role=img]`, each 760 on the text axis at 1440; one lazy chunk + one API request for all five figures; 0 sub-10px, 0 overflow, 0 console errors, bilingual audit clean. Gates: tsc 0 · build OK · lint:tokens PASS.
+
+Commits: `e6a51551` STEP 0 (GradeBlock extracted) · `950efa06` figures + refresh · `00bd33fc` judge fix · BUILD_ID `2026-09-18-story-d1-el-vacio`.

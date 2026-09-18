@@ -28,7 +28,7 @@
 
 | Day | Story | Ch | Figures now | Plan | Status |
 |---|---|---|---|---|---|
-| 1 | `el-vacio` | 5 | 2 | live `/gap` plates: blackout scrolly · recovery funnel · exception catalog · buyers ledger + counterparty · structural grade; number refresh to the live cut | 🔨 |
+| 1 | `el-vacio` | 5 | 2 → 7 | live `/gap` plates: blackout scrolly · recovery funnel · exception catalog · buyers ledger + counterparty · structural grade; number refresh to the live cut (69,516 → 94,899 …) · `e6a51551`+`950efa06`+`00bd33fc`, BUILD_ID `2026-09-18-story-d1-el-vacio` — `docs/story-days/SD-01-el-vacio.md` | ✅ Sep 18 |
 | 2 | `el-ano-de-la-emergencia` | 3 | 1 | 2020 same-day-award calendar heatmap with the decree marked · monthly DA rate scrolly · HEMOSER award strip · emergency spend treemap | ⬜ |
 | 3 | `el-cartel-de-los-vales` | 3 | 1 | 2002–2025 market-share stream of the three vendors with tenure bands · single-bid waffle · live vendor chips | ⬜ |
 | 4 | `captura-institucional` | 5 | 2 | `/captura` La Línea trajectories (IMSS · CFE · PEMEX) · capture funnel · money sledgehammer | ⬜ |
