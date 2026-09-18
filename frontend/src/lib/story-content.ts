@@ -5523,8 +5523,8 @@ export const STORIES: StoryDef[] = [
     outlet: 'investigative',
     type: 'case',
     era: 'amlo',
-    headline: "The Ratchet",
-    headline_es: "El trinquete",
+    headline: "The Ratchet: Competition Never Came Back",
+    headline_es: "El Trinquete: La Competencia Nunca Regresó",
     subheadline:
       "One emergency decree on March 30, 2020 suspended Mexico's competitive-bidding rules overnight. The direct-award rate barely moved — it was already 77.8%. What the emergency changed was permanent: every year since has been more direct than any year before it.",
     subheadline_es:
@@ -5618,9 +5618,9 @@ export const STORIES: StoryDef[] = [
         title: "The Day the Rule Vanished",
         title_es: "El día que la regla desapareció",
         subtitle:
-          "March 30, 2020 — competition suspended, and who walked through the gap",
+          "March 30, 2020 — the rule suspended, and what the numbers did next",
         subtitle_es:
-          "30 de marzo de 2020 — competencia suspendida, y quién pasó por la brecha",
+          "30 de marzo de 2020 — la regla suspendida, y lo que hicieron los números después",
         prose: [
           "On March 30, 2020, the federal government declared a national health emergency, and the tripwire was cut. The Ley de Adquisiciones' competitive-bidding requirements were suspended for COVID procurement; any agency could now award contracts directly, with no process and no justification. The rule that had forced an explanation simply stopped applying.",
           "What came through the gap was not what the headlines promised. RUBLI records 158,309 federal contracts in 2020 — eighteen percent fewer than 2019, not more. The direct-award rate barely registered the decree at all: 78.1%, against 77.8% the year before, a difference of about 460 contracts. What did change was the money. Federal buyers awarded 509 billion pesos in 2020 against 352 billion in 2019, a 45% rise on a shrinking contract count.",

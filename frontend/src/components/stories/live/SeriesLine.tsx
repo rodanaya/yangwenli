@@ -296,9 +296,15 @@ export function SeriesLine({
         {markers.map((m, i) => {
           if (shown <= m.afterIndex + 1) return null
           const mx = (x(m.afterIndex) + x(m.afterIndex + 1)) / 2
-          // Flip the caption to the left of its rule once the rule is past the
-          // middle, so a marker near the end never runs off the plot.
-          const flip = mx > PAD.l + innerW * 0.55
+          // Side is chosen from the caption's measured width, not from where
+          // the marker falls: a fixed "flip past the middle" rule sent the
+          // Spanish caption 2px outside the figure at 390, because "30 mar 2020
+          // · decreto" is longer than its English twin. Right if it fits, else
+          // left if it fits, else pinned to the edge — it can never overflow.
+          // 0.08em of tracking rides on every glyph, so it is part of the width.
+          const capW = m.label.length * AXIS_FS * (MONO_ADVANCE + 0.08)
+          const fitsRight = mx + 6 + capW <= w - 2
+          const fitsLeft = mx - 6 - capW >= 2
           return (
             <span
               key={`marker-label-${i}`}
@@ -307,8 +313,9 @@ export function SeriesLine({
                 fontSize: AXIS_FS,
                 letterSpacing: '0.08em',
                 color: 'var(--color-accent)',
-                left: flip ? undefined : mx + 5,
-                right: flip ? w - mx + 5 : undefined,
+                left: fitsRight ? mx + 6 : fitsLeft ? undefined : 2,
+                right: !fitsRight && fitsLeft ? w - mx + 6 : undefined,
+                maxWidth: w - 4,
                 top: 4,
               }}
             >

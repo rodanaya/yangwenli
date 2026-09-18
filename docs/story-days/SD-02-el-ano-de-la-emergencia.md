@@ -129,3 +129,63 @@ Judge fixes taken during the build, from reading the crops: reference-rule capti
 Gates: tsc 0 · `npm run build` OK · `lint:tokens` PASS (82 pre-existing warnings, none in the new files). Backend untouched. Reviews: bilingual audit clean (every string paired; `SeriesLine` and `StickyStepFigure` take all copy as props and hold none); React review — parallel `useQueries` for the three monthly years and the two sector cuts, per-figure `enabled` so a figure fetches only its own endpoint, shared query keys with `RiskCalendarHeatmap` and `/sectors`, one lazy chunk, no inline component definitions, passive scroll listener.
 
 Crops in `_parallax_shots/story-days/sd02/after/`: `f1`–`f5` × 1440/390, `ch1`–`ch3` × 1440/390, `f2-sticky-mid-1440.png`, `dramatis` × 1440/390.
+
+### Judge amendment (headline + card + clip census)
+
+Figures and fact refresh approved; one editorial rejection — the `/journalists`
+card still promised "2020: The Year Competition Stopped" for a story whose
+headline had become "The Ratchet". Both now carry one claim:
+
+| Surface | Was | Now |
+|---|---|---|
+| story `headline` | "The Ratchet" | "The Ratchet: Competition Never Came Back" |
+| story `headline_es` | "El trinquete" | "El Trinquete: La Competencia Nunca Regresó" |
+| card `headline` | "2020: The Year Competition Stopped" | same as the story h1 |
+| card `headline_es` | "2020: El Año en que la Competencia se Detuvo" | same as the story h1 |
+| card `sub` | "COVID decree · 78.1% direct award" | "Post-emergency floor 79.1% · above every pre-2020 year" |
+| card `sub_es` | (absent) | "Piso post-emergencia 79.1% · por encima de todo año pre-2020" |
+| ch2 `subtitle` | "March 30, 2020 — competition suspended, and who walked through the gap" | "March 30, 2020 — the rule suspended, and what the numbers did next" |
+| ch2 `subtitle_es` | "…y quién pasó por la brecha" | "…y lo que hicieron los números después" |
+
+The ch2 subtitle changed because the chapter no longer answers "who walked
+through the gap" — it shows that the money did not move through the gap at all.
+The ch2 title ("The Day the Rule Vanished") is unchanged: the decree did suspend
+the requirement, and the chapter's point is that the numbers ignored it. A sweep
+of the story block for surviving spike language found none — the only hits on
+"spike"/"pico" are the sentences that deny it, and the only "87" is the comment
+recording why the typed chart was retired.
+
+`sub`/`sub_es` are set as asked, but note the front page does not print `sub`,
+`amount` or `contracts` for a non-lead card — only the headline and the brief
+render. The refresh is therefore checked on the brief and the headline.
+
+Probe additions: the story h1 is compared to the `/journalists` card headline in
+both languages, the h1 must match /ratchet|trinquete/, and the retired copy
+("competition stopped" / "competencia se detuvo") must be absent from both
+surfaces. F2's title ("competition was supposed to stop" / "debía detenerse") is
+deliberately not matched by either pattern.
+
+**Clip census** (STORY_DAYS principle 7, added mid-build) at 1440 / 1280 / 1024 /
+390, EN and ES: **0 clipped text nodes** on this story after two structural
+fixes it caught.
+
+- F3's five-biggest-days buyer column was still truncating at 1440 — 249px of
+  ISSSTE's name and 169px of Perinatología's. The name now takes its own line at
+  every width instead of sharing a flex track. The earlier `sm`-only stacking
+  had fixed the 390 case and left the desktop one.
+- F2's decree caption escaped the figure box by 2px at 390 in Spanish only:
+  "30 mar 2020 · decreto" is longer than its English twin, and the side was
+  picked by a fixed "flip past the middle" rule. It is now picked from the
+  caption's measured width — right if it fits, else left if it fits, else pinned
+  to the edge — so no string length can overflow it.
+- F5's sector label dropped `truncate` and wraps instead.
+
+Every remaining census hit on this story is `sr-only` screen-reader text, which
+principle 7 excludes. `/stories/el-vacio` and `/journalists` were censused too
+(this day touched `StoryNarrative.tsx`, which every story renders through): no
+new hits. One pre-existing Spanish-only hit on `el-vacio` at 1440 is
+`StoryCard.tsx`'s deliberate `line-clamp-2` on a related-story teaser — not
+this day's, left alone.
+
+Re-verified: sd02 probe ALL PASS, sd01 probe ALL PASS, tsc 0, build OK,
+lint:tokens PASS.

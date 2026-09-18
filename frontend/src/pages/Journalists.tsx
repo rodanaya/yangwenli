@@ -114,9 +114,10 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'el-ano-de-la-emergencia',
-    headline: '2020: The Year Competition Stopped',
-    headline_es: '2020: El Año en que la Competencia se Detuvo',
-    sub: 'COVID decree · 78.1% direct award',
+    headline: 'The Ratchet: Competition Never Came Back',
+    headline_es: 'El Trinquete: La Competencia Nunca Regresó',
+    sub: 'Post-emergency floor 79.1% · above every pre-2020 year',
+    sub_es: 'Piso post-emergencia 79.1% · por encima de todo año pre-2020',
     type: 'procurement_fraud',
     status: 'reporteado',
     amount: 4.5,

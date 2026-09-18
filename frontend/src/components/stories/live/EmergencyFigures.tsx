@@ -548,24 +548,22 @@ function Calendar({
         </p>
         <ol className="mt-1">
           {topDays.map(([iso, d]) => (
-            // The buyer is the point of this row, so below `sm` it takes its own
-            // line rather than a 7-character ellipsis: at 390 the four columns
-            // together leave it ~50px, which is what truncated INSTITUTO
-            // MEXICANO DEL SEGURO SOCIAL to "Instit…" on the first pass.
+            // The buyer gets its own line at every width. Sharing the row cost
+            // it an ellipsis twice: "Instit…" at 390 with four columns fighting
+            // over ~50px, and still 249px of ISSSTE's name cut at 1440 because
+            // `truncate` clips whatever the flex track cannot hold. STORY_DAYS
+            // principle 7 — a name is never truncated; it is given a line.
             <li key={iso} className="border-b border-border py-1" style={{ fontSize: 12 }}>
               <div className="flex items-baseline gap-3">
                 <span className="font-mono tabular-nums text-text-primary whitespace-nowrap">{iso}</span>
-                <span className="hidden sm:block font-mono text-text-muted truncate flex-1 min-w-0" title={d.buyer}>
-                  {d.buyer}
-                </span>
-                <span className="font-mono tabular-nums text-text-muted whitespace-nowrap ml-auto sm:ml-0">
+                <span className="font-mono tabular-nums text-text-muted whitespace-nowrap ml-auto">
                   {d.n} {es ? (d.n === 1 ? 'adj.' : 'adjs.') : d.n === 1 ? 'award' : 'awards'}
                 </span>
                 <span className="font-mono tabular-nums text-text-primary whitespace-nowrap">
                   {formatCompactMXN(d.sum)}
                 </span>
               </div>
-              <span className="sm:hidden block font-mono text-text-muted leading-snug">{d.buyer}</span>
+              <span className="block font-mono text-text-muted leading-snug">{d.buyer}</span>
             </li>
           ))}
         </ol>
@@ -746,7 +744,10 @@ function Dumbbell({
               className="border-b border-border py-2 sm:grid sm:items-center"
               style={{ gridTemplateColumns: '120px 1fr 148px', columnGap: 10 }}
             >
-              <span className="block text-text-primary truncate" style={{ fontSize: 13 }} title={r.name}>
+              {/* Wraps rather than truncates — the sector name is a name
+                  (STORY_DAYS principle 7), and a 120px track is narrower than
+                  "Infraestructura" once the page is zoomed. */}
+              <span className="block text-text-primary" style={{ fontSize: 13 }}>
                 {r.name}
               </span>
               <div className="relative my-1.5 sm:my-0" style={{ height: 14 }}>
