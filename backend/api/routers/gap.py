@@ -23,6 +23,12 @@ def _has_table(db: sqlite3.Connection) -> bool:
     return db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='gap_contracts'").fetchone() is not None
 
 
+def _data_window(db: sqlite3.Connection) -> str:
+    r = db.execute("""SELECT MIN(substr(publication_date,1,10)), MAX(substr(publication_date,1,10))
+        FROM gap_contracts WHERE publication_date IS NOT NULL""").fetchone()
+    return f"{r[0]} .. {r[1]}" if r and r[0] else ""
+
+
 @router.get("/summary")
 def gap_summary(db: sqlite3.Connection = Depends(get_db_dep)) -> Dict[str, Any]:
     if not _has_table(db):
@@ -74,7 +80,7 @@ def gap_summary(db: sqlite3.Connection = Depends(get_db_dep)) -> Dict[str, Any]:
             "(Art.54 fr.I/II/III/V/VII), ghost vendor (<3yr), SAT 69-B (EFOS), vendor "
             "concentration, and magnitude. Art.55 low-value threshold scores lower."
         ),
-        "data_window": "2025-09-28 .. 2026-06",
+        "data_window": _data_window(db),
         "source": "ComprasMX (post-CompraNet) — staging, not scored",
     }
 
