@@ -109,13 +109,20 @@ export function HatchBar({ value, max, color, height = 8 }: HatchBarProps) {
 // ── Ledger geometry (SVG coordinates) ───────────────────────────────────────
 const FIELD_W = 720
 const GUTTER_W = 152
-const HALF_W = (FIELD_W - GUTTER_W) / 2
+// PARALLAX D2b § Change 2: reserve room right of the widest charge bar for its
+// terminal value. Without it +0.558 ran past the viewBox edge and was clipped.
+const VALUE_PAD = 60
+const HALF_W = (FIELD_W - GUTTER_W - VALUE_PAD) / 2
 const SPINE_X = GUTTER_W + HALF_W
 const ROW_H = 26
 const FIELD_TOP = 40
 const FIELD_BOTTOM = FIELD_TOP + NONZERO.length * ROW_H
 const AXIS_Y = FIELD_BOTTOM + 26
-const MORGUE_TOP = AXIS_Y + 34
+// The axis caption sits 20 below the tick row (6 more than before): at 13px the
+// two text boxes overlapped by ~2px once the spine moved left and the "0" tick
+// landed inside the caption's span. The morgue follows it down. (D2b § Change 2)
+const AXIS_CAPTION_Y = AXIS_Y + 20
+const MORGUE_TOP = AXIS_Y + 44
 const MORGUE_ROW_H = 18
 const MORGUE_BOTTOM = MORGUE_TOP + ZEROED.length * MORGUE_ROW_H + 10
 const SVG_H = MORGUE_BOTTOM + 16
@@ -128,8 +135,11 @@ function xFor(beta: number): number {
 // Ticks for the symmetric axis −0.60…+0.60, labeled at the spec'd intervals.
 const AXIS_TICKS = [-0.4, -0.2, 0, 0.2, 0.4]
 
-// Margin annotation anchors — desktop only.
-const ANNOTATIONS: Array<{ key: string; en: string; es: string; morgue?: boolean }> = [
+// Reading key — the three editorial notes on the ledger.
+// PARALLAX D2b § Change 2: these were SVG margin annotations on leader lines;
+// they printed over the row 0/1 labels and had to be truncated with "…". They
+// now render as HTML under the chart, where the full sentence fits.
+const ANNOTATIONS: Array<{ key: string; en: string; es: string }> = [
   {
     key: 'priceVolatility',
     en: 'Strongest signal: vendors whose contract sizes swing wildly.',
@@ -142,9 +152,8 @@ const ANNOTATIONS: Array<{ key: string; en: string; es: string; morgue?: boolean
   },
   {
     key: 'singleBid',
-    en: 'Single bidding — the classic OECD red flag — carries zero weight in this ground truth.',
-    es: 'La licitación única — la bandera roja clásica de la OCDE — pesa cero en esta verdad fundamental.',
-    morgue: true,
+    en: 'the classic OECD red flag — carries zero weight in this ground truth.',
+    es: 'la bandera roja clásica de la OCDE — pesa cero en esta verdad fundamental.',
   },
 ]
 
@@ -176,7 +185,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
       ? 'Diverging ledger of the 18 model coefficients: positive values raise the risk indicator, negative values lower it'
       : 'Libro de cargos y descargos: los 18 coeficientes del modelo; valores positivos elevan el indicador de riesgo, negativos lo reducen'
 
-  const annotationByKey = (key: string) => ANNOTATIONS.find((a) => a.key === key)
+  const readingKeyLabel = lang === 'en' ? '§ READING THE LEDGER' : '§ CÓMO LEER EL LIBRO'
 
   return (
     <div className={className}>
@@ -213,12 +222,18 @@ export function BalanzaLedger({ className }: { className?: string }) {
         </div>
 
         <figure aria-label={ariaLabel}>
-          <svg
-            viewBox={`0 0 ${FIELD_W} ${SVG_H}`}
-            className="w-full h-auto"
-            role="img"
-            aria-label={ariaLabel}
-          >
+          {/* PARALLAX D2b § Change 1: cap the rendered scale. At `w-full` inside
+              a 1440 viewport the plate stretched to ~1040px, so a 13px viewBox
+              unit printed at ~18.8px. Capped at 760 the same unit stays ≤13.7px;
+              below the 660 floor the plate scrolls inside its frame rather than
+              shrinking the type under the 10px legibility floor. */}
+          <div className="overflow-x-auto overscroll-x-contain">
+            <svg
+              viewBox={`0 0 ${FIELD_W} ${SVG_H}`}
+              style={{ width: '100%', maxWidth: 760, minWidth: 660, height: 'auto' }}
+              role="img"
+              aria-label={ariaLabel}
+            >
             <defs>
               <pattern
                 id="balanza-charge-hatch"
@@ -242,27 +257,30 @@ export function BalanzaLedger({ className }: { className?: string }) {
               </pattern>
             </defs>
 
-            {/* Column heads */}
+            {/* Column heads — anchored to the spine, reading outward. Anchored
+                to the field edges they ran toward each other and met at the
+                spine; at 13px they also outgrew the plate. (D2b § Change 2) */}
             <text
-              x={GUTTER_W}
+              x={SPINE_X - 8}
               y={20}
               fill={INK_SECONDARY}
-              fontSize={13}
-              fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-              fontWeight={600}
-              letterSpacing="0.14em"
-            >
-              {colLeft}
-            </text>
-            <text
-              x={FIELD_W}
-              y={20}
-              fill={CHARGE_COLOR}
-              fontSize={13}
+              fontSize={11}
               fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
               fontWeight={600}
               letterSpacing="0.14em"
               textAnchor="end"
+            >
+              {colLeft}
+            </text>
+            <text
+              x={SPINE_X + 8}
+              y={20}
+              fill={CHARGE_COLOR}
+              fontSize={11}
+              fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
+              fontWeight={600}
+              letterSpacing="0.14em"
+              textAnchor="start"
             >
               {colRight}
             </text>
@@ -289,7 +307,6 @@ export function BalanzaLedger({ className }: { className?: string }) {
               const fill = isPositive ? 'url(#balanza-charge-hatch)' : 'url(#balanza-defense-hatch)'
               const strokeColor = isPositive ? CHARGE_COLOR : INK_SECONDARY
               const label = t(`featureNames.${c.key}`)
-              const annotation = annotationByKey(c.key)
               return (
                 <g key={c.key}>
                   {/* row rule */}
@@ -344,36 +361,6 @@ export function BalanzaLedger({ className }: { className?: string }) {
                   >
                     {formatBeta(c.beta)}
                   </text>
-                  {/* margin annotation — desktop only */}
-                  {annotation && (
-                    <g className="hidden sm:block">
-                      <line
-                        x1={isPositive ? x + 46 : x - 46}
-                        y1={rowMidY}
-                        x2={isPositive ? FIELD_W - 4 : 4}
-                        y2={rowY - 8}
-                        stroke="var(--color-border)"
-                        strokeWidth={0.75}
-                      />
-                      <text
-                        x={isPositive ? FIELD_W - 4 : 4}
-                        y={rowY - 12}
-                        fill="var(--color-text-secondary)"
-                        fontSize={12.5}
-                        fontStyle="normal"
-                        fontFamily='"EB Garamond", Georgia, serif'
-                        textAnchor={isPositive ? 'end' : 'start'}
-                      >
-                        <tspan x={isPositive ? FIELD_W - 4 : 4} dy={0}>
-                          {(lang === 'en' ? annotation.en : annotation.es).length > 58
-                            ? `${(lang === 'en' ? annotation.en : annotation.es).slice(0, 58)}…`
-                            : lang === 'en'
-                              ? annotation.en
-                              : annotation.es}
-                        </tspan>
-                      </text>
-                    </g>
-                  )}
                 </g>
               )
             })}
@@ -401,7 +388,7 @@ export function BalanzaLedger({ className }: { className?: string }) {
             })}
             <text
               x={FIELD_W / 2}
-              y={AXIS_Y + 14}
+              y={AXIS_CAPTION_Y}
               fill="var(--color-text-muted)"
               fontSize={13}
               fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
@@ -426,7 +413,6 @@ export function BalanzaLedger({ className }: { className?: string }) {
             {ZEROED.map((c, i) => {
               const rowY = MORGUE_TOP + 10 + i * MORGUE_ROW_H
               const label = t(`featureNames.${c.key}`)
-              const annotation = annotationByKey(c.key)
               return (
                 <g key={c.key}>
                   <text
@@ -450,34 +436,53 @@ export function BalanzaLedger({ className }: { className?: string }) {
                   >
                     β = 0.000
                   </text>
-                  {annotation?.morgue && (
-                    <g className="hidden sm:block">
-                      <line
-                        x1={SPINE_X + 46}
-                        y1={rowY}
-                        x2={FIELD_W - 4}
-                        y2={rowY - 10}
-                        stroke="var(--color-border)"
-                        strokeWidth={0.75}
-                      />
-                      <text
-                        x={FIELD_W - 4}
-                        y={rowY - 14}
-                        fill="var(--color-text-secondary)"
-                        fontSize={12.5}
-                        fontStyle="normal"
-                        fontFamily='"EB Garamond", Georgia, serif'
-                        textAnchor="end"
-                      >
-                        {lang === 'en' ? annotation.en : annotation.es}
-                      </text>
-                    </g>
-                  )}
                 </g>
               )
             })}
-          </svg>
+            </svg>
+          </div>
         </figure>
+
+        {/* Reading key — the three editorial notes, in HTML where the full
+            sentence fits. (D2b § Change 2) */}
+        <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+          <p
+            className="text-text-muted"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '11px',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {readingKeyLabel}
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {ANNOTATIONS.map((a) => (
+              <li
+                key={a.key}
+                className="text-text-secondary"
+                style={{
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  fontStyle: 'normal',
+                  fontSize: '13.5px',
+                  lineHeight: 1.45,
+                }}
+              >
+                <span
+                  className="text-text-primary"
+                  style={{
+                    fontFamily: '"JetBrains Mono", "IBM Plex Mono", monospace',
+                    fontSize: '12px',
+                  }}
+                >
+                  {t(`featureNames.${a.key}`)} —{' '}
+                </span>
+                {lang === 'en' ? a.en : a.es}
+              </li>
+            ))}
+          </ul>
+        </div>
 
         {/* Footer note — existing key, verbatim, both locales */}
         <p

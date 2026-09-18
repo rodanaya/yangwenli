@@ -125,15 +125,21 @@ export default function CalibrationRecord({ className }: { className?: string })
             : 'Las primeras versiones registraron AUC de hasta 0.960 — inflado por información filtrada entre entrenamiento y prueba: proveedores y ventanas temporales compartidos entre ambos lados. v0.6.5 estratificó la división; v0.8.5 recalibró. El número honesto es 0.785.'}
         </p>
 
-        {/* ── Step chart ──────────────────────────────────────────────── */}
-        <svg
-          viewBox={`0 0 ${VW} ${VH}`}
-          width="100%"
-          className="h-auto"
-          role="img"
-          aria-label={ariaLabel}
-          style={{ overflow: 'visible' }}
-        >
+        {/* ── Step chart ──────────────────────────────────────────────────
+            PARALLAX D2b § Change 1: cap the rendered scale. Stretched to the
+            full 1440 plate interior a 13px viewBox unit printed at ~18.8px;
+            capped at 760 it stays ≤13.7px, and below the 660 floor the plate
+            scrolls inside its frame instead of shrinking the type under 10px.
+            The wrapper's padding-top holds the leakage annotation, which the
+            svg paints ~12px above the viewBox — an overflow-x scroll container
+            would otherwise clip it. */}
+        <div className="overflow-x-auto overscroll-x-contain" style={{ paddingTop: 16 }}>
+          <svg
+            viewBox={`0 0 ${VW} ${VH}`}
+            role="img"
+            aria-label={ariaLabel}
+            style={{ width: '100%', maxWidth: 760, minWidth: 660, height: 'auto', overflow: 'visible' }}
+          >
           {/* pre-stratification wash — spans v4.0 to v5.1 */}
           <rect
             x={xPos(v40.day)}
@@ -244,7 +250,7 @@ export default function CalibrationRecord({ className }: { className?: string })
                     x={cx}
                     y={cy - 12}
                     textAnchor="middle"
-                    fontSize={10.5}
+                    fontSize={12}
                     fontWeight={700}
                     letterSpacing="0.12em"
                     fontFamily="var(--font-family-mono, monospace)"
@@ -270,7 +276,7 @@ export default function CalibrationRecord({ className }: { className?: string })
                     x={cx}
                     y={CHART_BOTTOM + 36}
                     textAnchor="middle"
-                    fontSize={10.5}
+                    fontSize={12}
                     fontFamily="var(--font-family-mono, monospace)"
                     fill="var(--color-text-muted)"
                   >
@@ -286,7 +292,7 @@ export default function CalibrationRecord({ className }: { className?: string })
             x={xPos(v40.day)}
             y={CHART_BOTTOM + 36}
             textAnchor="middle"
-            fontSize={10.5}
+            fontSize={12}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
           >
@@ -299,7 +305,7 @@ export default function CalibrationRecord({ className }: { className?: string })
               x={xPos(v33.day)}
               y={yPos(v33.auc!) + 18}
               textAnchor="start"
-              fontSize={10.5}
+              fontSize={12}
               fontStyle="normal"
               fontFamily="var(--font-family-mono, monospace)"
               fill="var(--color-text-muted)"
@@ -341,7 +347,8 @@ export default function CalibrationRecord({ className }: { className?: string })
               </p>
             </foreignObject>
           </g>
-        </svg>
+          </svg>
+        </div>
 
         {/* ── Service register ────────────────────────────────────────── */}
         <div className="mt-6 border-t pt-2" style={{ borderColor: 'var(--color-border)' }}>
