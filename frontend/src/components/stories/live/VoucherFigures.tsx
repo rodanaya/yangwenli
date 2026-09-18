@@ -126,9 +126,12 @@ function Unavailable({
  */
 function FirmLegend({ firms, lang }: { firms: FirmStats[]; lang: 'en' | 'es' }) {
   return (
+    // Each entry wraps as one unit: a swatch, its firm and its total are one
+    // fact, and the row broke between the name and the number before this
+    // (STORY_DAYS.md § 7).
     <ul className="flex flex-wrap gap-x-4 gap-y-1 pt-3">
       {firms.map((f) => (
-        <li key={f.firm.key} className="flex items-baseline gap-1.5">
+        <li key={f.firm.key} className="flex items-baseline gap-1.5 whitespace-nowrap">
           <span
             aria-hidden="true"
             className="inline-block shrink-0"
@@ -501,16 +504,28 @@ function Stream({ firms, lang, stage = 3 }: { firms: FirmStats[]; lang: 'en' | '
 
         <FirmLegend firms={firms} lang={lang} />
 
+        {/* One term per unit — the list used to break between a president's
+            name and their years (STORY_DAYS.md § 7). */}
         <p className="pt-2 font-mono text-text-muted" style={{ fontSize: 11, lineHeight: 1.6 }}>
           {ADMINISTRATIONS.filter((a) => years.some((yr) => yr >= a.yearStart && yr <= a.yearEnd))
-            .map((a) => {
+            .map((a, i) => {
               const span = years.filter((yr) => yr >= a.yearStart && yr <= a.yearEnd)
               const lo = Math.min(...span)
               const hi = Math.max(...span)
               const name = es ? ADMIN_DISPLAY_ACCENTED[a.key] : ADMIN_DISPLAY[a.key]
-              return `${name} ${lo}${hi === lo ? '' : `–${String(hi).slice(2)}`}`
-            })
-            .join(' · ')}
+              // The separator stays OUTSIDE the nowrap span. Inside it, the
+              // items become one unbreakable run with no break opportunity
+              // between them, and the line overflows instead of wrapping.
+              return (
+                <span key={a.key}>
+                  {i > 0 ? ' · ' : ''}
+                  <span className="whitespace-nowrap">
+                    {name} {lo}
+                    {hi === lo ? '' : `–${String(hi).slice(2)}`}
+                  </span>
+                </span>
+              )
+            })}
         </p>
       </div>
     </ChartCard>
@@ -632,17 +647,21 @@ function Doors({ firms, lang }: { firms: FirmStats[]; lang: 'en' | 'es' }) {
               <span style={{ color: EMPHASIS }}>{pct(r.singleBidPct)}</span>
             </span>
 
-            {/* No `whitespace-nowrap` here: "1,944 contracts · 51.8B MXN" is
-                wider than any track this column can be given, and in Spanish
-                wider still. Held on one line it ran past the card's
-                `overflow-hidden` edge and lost the last glyph of the currency.
-                It wraps instead (STORY_DAYS principle 7). */}
+            {/* Two facts, each unbreakable, with a break opportunity between
+                them. Held on one line the pair ran past the card's
+                `overflow-hidden` edge and lost the currency's last glyph; left
+                fully breakable it split "51.8B" from "MXN". So the line wraps,
+                but only between the count and the amount (STORY_DAYS § 7:
+                a number never breaks across lines). */}
             <span
               className="font-mono tabular-nums text-text-muted block sm:col-start-3 sm:text-right"
               style={{ fontSize: 11 }}
             >
-              {formatNumber(r.contracts)} {es ? 'contratos' : 'contracts'} {'· '}
-              {formatCompactMXN(r.value)}
+              <span className="whitespace-nowrap">
+                {formatNumber(r.contracts)} {es ? 'contratos' : 'contracts'}
+              </span>
+              {' · '}
+              <span className="whitespace-nowrap">{formatCompactMXN(r.value)}</span>
             </span>
           </div>
         ))}
@@ -869,23 +888,33 @@ function Sexenios({ firms, lang }: { firms: FirmStats[]; lang: 'en' | 'es' }) {
                   share that only appears above some width is a share the
                   reader cannot check. Here every one of them prints, the
                   leader first, and the line wraps instead of clipping. */}
+              {/* Each firm-and-share pair wraps as one unit; the line used to
+                  break between a firm's name and its percentage
+                  (STORY_DAYS.md § 7). */}
               <p className="pt-1 font-mono text-text-muted" style={{ fontSize: 11, lineHeight: 1.6 }}>
-                <span className="uppercase" style={{ letterSpacing: '0.08em' }}>
-                  {es ? 'Líder ' : 'Leader '}
-                </span>
-                <span style={{ color: t.leader?.firm.color, opacity: t.leader?.firm.opacity ?? 1 }}>
-                  {t.leader?.firm.label ?? '—'}
-                </span>{' '}
-                <span className="tabular-nums text-text-primary">
-                  {pct(t.shares.find((s) => s.firm.firm.key === t.leader?.firm.key)?.pct ?? 0)}
+                <span className="whitespace-nowrap">
+                  <span className="uppercase" style={{ letterSpacing: '0.08em' }}>
+                    {es ? 'Líder ' : 'Leader '}
+                  </span>
+                  <span style={{ color: t.leader?.firm.color, opacity: t.leader?.firm.opacity ?? 1 }}>
+                    {t.leader?.firm.label ?? '—'}
+                  </span>{' '}
+                  <span className="tabular-nums text-text-primary">
+                    {pct(t.shares.find((s) => s.firm.firm.key === t.leader?.firm.key)?.pct ?? 0)}
+                  </span>
                 </span>
                 {t.shares
                   .filter((s) => s.pct >= 0.05 && s.firm.firm.key !== t.leader?.firm.key)
                   .sort((a, b) => b.pct - a.pct)
                   .map((s) => (
+                    // Separator outside the nowrap span — inside it there is no
+                    // break opportunity between items and the line overflows
+                    // the card instead of wrapping.
                     <span key={s.firm.firm.key}>
                       {' · '}
-                      {s.firm.firm.label} <span className="tabular-nums">{pct(s.pct)}</span>
+                      <span className="whitespace-nowrap">
+                        {s.firm.firm.label} <span className="tabular-nums">{pct(s.pct)}</span>
+                      </span>
                     </span>
                   ))}
               </p>

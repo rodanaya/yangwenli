@@ -526,18 +526,40 @@ function Calendar({
           </div>
         ))}
 
+        {/* One fact per unbreakable segment, separators between them
+            (STORY_DAYS § 7: a number never breaks across lines). As one
+            template string the browser was free to split "4.5B" from "MXN"
+            and a percentage from its noun. The buyer's name is the one segment
+            allowed to wrap — it is a name, not a number, and it is long. */}
         <p className="mt-3 font-mono text-text-secondary" style={{ fontSize: 12, lineHeight: 1.6 }}>
-          {es
-            ? `${formatNumber(rows.length)} adjudicaciones en ${days.size} días · ${formatCompactMXN(sum)} · ${pct(daShare)} por adjudicación directa, que llevan ${pct(sum ? (100 * daValue) / sum : 0)} del dinero · principal comprador: ${topBuyer ? `${topBuyer[0]} (${pct(sum ? (100 * topBuyer[1]) / sum : 0)} del monto)` : '—'}`
-            : `${formatNumber(rows.length)} awards on ${days.size} days · ${formatCompactMXN(sum)} · ${pct(daShare)} direct award, carrying ${pct(sum ? (100 * daValue) / sum : 0)} of the money · top buyer: ${topBuyer ? `${topBuyer[0]} (${pct(sum ? (100 * topBuyer[1]) / sum : 0)} of value)` : '—'}`}
-          {!complete && (
-            <>
-              {' · '}
-              {es
-                ? `mostrando ${rows.length} de ${total} adjudicaciones`
-                : `showing ${rows.length} of ${total} awards`}
-            </>
-          )}
+          {[
+            es
+              ? `${formatNumber(rows.length)} adjudicaciones en ${days.size} días`
+              : `${formatNumber(rows.length)} awards on ${days.size} days`,
+            formatCompactMXN(sum),
+            es
+              ? `${pct(daShare)} por adjudicación directa, que llevan ${pct(sum ? (100 * daValue) / sum : 0)} del dinero`
+              : `${pct(daShare)} direct award, carrying ${pct(sum ? (100 * daValue) / sum : 0)} of the money`,
+            ...(complete
+              ? []
+              : [
+                  es
+                    ? `mostrando ${rows.length} de ${total} adjudicaciones`
+                    : `showing ${rows.length} of ${total} awards`,
+                ]),
+          ].map((seg, i) => (
+            <span key={seg}>
+              {i > 0 ? ' · ' : ''}
+              <span className="whitespace-nowrap">{seg}</span>
+            </span>
+          ))}
+          {' · '}
+          <span>
+            {es ? 'principal comprador: ' : 'top buyer: '}
+            {topBuyer
+              ? `${topBuyer[0]} (${pct(sum ? (100 * topBuyer[1]) / sum : 0)}${es ? ' del monto' : ' of value'})`
+              : '—'}
+          </span>
         </p>
 
         <p

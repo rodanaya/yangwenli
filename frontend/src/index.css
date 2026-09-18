@@ -1036,6 +1036,20 @@ main :where(.uppercase, .text-kicker, .text-byline, .lede-dateline, .editorial-l
   max-width: none;
 }
 
+/* A chart caption is not running text (STORY_DAYS.md § 7, 2026-09-18).
+   User, second complaint the same night: "Again with the text not properly
+   formatted below the graphic." The D2c measure above is expressed in `ch`, so
+   applied to a 12.5px mono caption it resolves to roughly 490px — inside a
+   712px card interior that is a narrow ragged column sitting under a full-width
+   chart, with the figure's own white space to its right. A caption belongs to
+   its figure and spans the figure's interior; the 68ch measure is for prose a
+   reader reads line after line, not for text that annotates a drawing directly
+   above it. Same zero-specificity `:where()` and later in the cascade, so it
+   wins inside a figure and changes nothing outside one. */
+main figure :where(p, figcaption, li, dd) {
+  max-width: none;
+}
+
 /* Chapter anchors clear the sticky story bar (PARALLAX
    docs/parallax/DAY-03-redaccion-story-template.md § Change 5, 2026-09-18).
    ChapterNav links jump to #chapter-*, which without this lands the chapter

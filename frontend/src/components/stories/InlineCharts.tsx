@@ -378,10 +378,16 @@ export function ChartCard({
         </h3>
       </figcaption>
 
+      {/* Anchor row. The number never breaks: "142.6B MXN" was splitting across
+          two lines beside its label, which reads as two numbers. It is one
+          token, so it gets `whitespace-nowrap` and the label yields instead —
+          `basis-full` drops the label to its own line under the value rather
+          than letting it set two ragged lines in a narrow column beside it
+          (STORY_DAYS.md § 7). */}
       {anchor && (
-        <div className="px-5 pt-1 pb-3 flex items-baseline gap-3">
+        <div className="px-5 pt-1 pb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span
-            className="tabular-nums"
+            className="tabular-nums whitespace-nowrap"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
               fontStyle: 'normal',
@@ -395,11 +401,13 @@ export function ChartCard({
             {anchor.value}
           </span>
           <span
-            className="font-mono uppercase"
+            className="font-mono uppercase min-w-0 flex-1 basis-full sm:basis-auto"
             style={{
               fontSize: 13,
               letterSpacing: '0.16em',
+              lineHeight: 1.45,
               color: 'var(--color-text-muted)',
+              textWrap: 'pretty',
             }}
           >
             {anchor.label}
@@ -416,10 +424,21 @@ export function ChartCard({
           children
         )}
       </div>
+      {/* The annotation spans the card interior. It was inheriting the site
+          measure (68ch), which on 12px mono resolves to ~490px inside a 712px
+          card — a narrow ragged block with the figure's white space beside it.
+          `hyphens: none` because a broken word in a mono caption reads as a
+          data error. */}
       {annotation && (
         <p
-          className="px-5 pb-4 pt-1 font-mono leading-[1.55]"
-          style={{ fontSize: 12, color: 'var(--color-text-muted)' }}
+          className="w-full px-5 pb-4 pt-1 font-mono"
+          style={{
+            fontSize: 12.5,
+            lineHeight: 1.55,
+            color: 'var(--color-text-muted)',
+            textWrap: 'pretty',
+            hyphens: 'none',
+          }}
         >
           {annotation}
         </p>
