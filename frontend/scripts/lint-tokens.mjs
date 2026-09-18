@@ -84,6 +84,14 @@ const PATTERNS = [
     regex: "(fill|stroke|stopColor)=[\"']#[0-9a-fA-F]{3,6}",
     severity: 'warn',
   },
+  // Measure directive (PARALLAX D2c, 2026-09-18): running text is left /
+  // ragged-right site-wide. Justified text opened word gaps on the dashboard
+  // hero (Day-1 sweep) and is the one alignment the census found out of step.
+  {
+    name: 'Justified text (text-justify / textAlign: justify) — measure directive: left, ragged-right only',
+    regex: "text-justify|textAlign:\\s*['\"]justify",
+    severity: 'fail',
+  },
   // Hardcoded dark-mode hex — render as black bullets on cream.
   {
     name: 'Hardcoded #2d2926 (dark empty-dot fill)',

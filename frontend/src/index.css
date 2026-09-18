@@ -1002,3 +1002,24 @@
 main:has(.page-footer) + footer {
   display: none;
 }
+
+/* Measure directive (PARALLAX D2c, 2026-09-18): one line length, site-wide.
+   Prod census at 1440 (18 routes): running text with no cap stretched to
+   122–188 characters per line (median on /methodology 122ch, 60% of
+   paragraphs over 80ch) while capped paragraphs stopped at 46–68ch — the
+   "sometimes the box stretches, sometimes it doesn't" flaw. This sets ONE
+   measure for every block of running text and one for headlines, in `ch`
+   so it scales with each font. `:where()` keeps specificity at zero, so any
+   explicit `max-w-*` utility or inline `maxWidth` still wins — the rule only
+   reaches text nobody bounded. Table cells and centered tiles keep their
+   boxes. Alignment is left / ragged-right everywhere (justify is banned by
+   lint:tokens); `text-wrap` trims orphans on the ragged edge. */
+main :where(p, li, dd, dt, figcaption, blockquote) {
+  max-width: 68ch;
+  text-wrap: pretty;
+}
+main :where(h1) { max-width: 32ch; text-wrap: balance; }
+main :where(h2, h3) { max-width: 44ch; text-wrap: balance; }
+main :where(table, .text-center, [style*="text-align: center"]) :where(p, li, dd, dt, h1, h2, h3) {
+  max-width: none;
+}

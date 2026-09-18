@@ -273,14 +273,11 @@ export default function Executive() {
           </div>
 
           {/* Headline — EB Garamond 500, ochre/red normal-weight accents.
-              md:text-justify flushes lines 1..n-1 to both column edges so the
-              ragged right gutter is gone on desktop (the natural last line stays
-              left). A max-width cap can't fix the gutter — the text is
-              left-aligned, so trimming the box doesn't move the text; only
-              justify fills it. Scoped to md+ to avoid stretched word-spacing
-              ("rivers") on narrow mobile lines, where it stays balanced-ragged. */}
+              Left / ragged-right with text-balance, like every headline on the
+              site (PARALLAX D2c measure directive: justified text is banned —
+              it opened word gaps on desktop, flagged in the Day-1 sweep). */}
           <h1
-            className="text-[36px] sm:text-[52px] md:text-[64px] leading-[0.98] text-text-primary mb-4 text-balance md:text-justify"
+            className="text-[36px] sm:text-[52px] md:text-[64px] leading-[0.98] text-text-primary mb-4 text-balance"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'normal',

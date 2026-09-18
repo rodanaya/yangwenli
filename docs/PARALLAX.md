@@ -38,6 +38,7 @@ Not used: `performance-engineer`/`observability-engineer` (backend perf is a sep
 - The element the user loves stays the default (`feedback_keep_loved_element_prominent`). Every day file has a **Keep** list written before the **Change** list.
 - CLAUDE.md hard rules 1–8 (EntityIdentityChip, risk thresholds, formatVendorName, no green for low, Spanish kickers, currency helper by surface).
 - Dot-grid is banned in stories. No italic anywhere (site-wide sweep Jul 3).
+- **One measure (Day 2c, Sep 18)**: running text 68ch, h1 32ch, h2/h3 44ch, left/ragged-right, `text-wrap` pretty/balance, justified text banned by lint. Set once in `index.css`; day files never add per-page widths for prose — see `docs/parallax/DAY-02c-measure-standard.md`.
 - Max **8 changes per day**. If the audit finds more, the rest go to the backlog at the bottom of this file.
 - `/atlas` is **off-limits** until `atlas/molde-editorial` (9 local commits) is pushed, merged and deployed. See ACTIVE_WORK.
 
