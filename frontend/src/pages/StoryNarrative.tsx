@@ -121,15 +121,19 @@ function parseLeadStat(value: string): { numeric: number; prefix: string; suffix
 // Chapter sources — collapsible citation footnote
 // ---------------------------------------------------------------------------
 
-function ChapterSources({ sources }: { sources: string[] }) {
+function ChapterSources({ sources, chapterId }: { sources: string[]; chapterId: string }) {
   const [open, setOpen] = useState(false)
   const { t } = useTranslation('common')
+  // aria-controls names the list the toggle opens; without it a screen-reader
+  // user hears "expanded" with no way to know what expanded.
+  const listId = `sources-${chapterId}`
   return (
     <div className="mt-8 mb-2">
       <button
         onClick={() => setOpen((o) => !o)}
         className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors group"
         aria-expanded={open}
+        aria-controls={listId}
       >
         <FileText className="h-3 w-3 group-hover:text-text-secondary" aria-hidden="true" />
         <span className="font-mono">{open ? '−' : '+'}</span>
@@ -137,7 +141,7 @@ function ChapterSources({ sources }: { sources: string[] }) {
         <span className="text-text-primary">&mdash; {open ? t('story.collapse') : t('story.viewCitations')}</span>
       </button>
       {open && (
-        <ol className="mt-3 space-y-1.5 border-l-2 border-border pl-4">
+        <ol id={listId} className="mt-3 space-y-1.5 border-l-2 border-border pl-4">
           {sources.map((s, i) => (
             <li key={i} className="text-[13px] text-text-muted font-mono leading-relaxed">
               <span className="text-text-primary mr-2 select-none">[{i + 1}]</span>
@@ -199,24 +203,29 @@ function renderChartBlock(
   const cfg = chapter.chartConfig
   // Multi-series and network charts have their own data shapes — dispatch
   // before the InlineChartMap which only handles StoryInlineChartData.
+  // Both the title and `lang` go through: these three branches used to pass
+  // the English title and, for multi-line and network, no language at all, so
+  // a Spanish reader got English chart titles, axis labels and annotations on
+  // charts whose renderers already had the Spanish strings.
+  const chartTitle = lang === 'es' ? (cfg.title_es ?? cfg.title) : cfg.title
   if (cfg.type === 'inline-multi-line' && cfg.multiSeries) {
     return (
       <ScrollReveal className={className}>
-        <InlineMultiLine data={cfg.multiSeries} title={cfg.title} />
+        <InlineMultiLine data={cfg.multiSeries} title={chartTitle} lang={lang} />
       </ScrollReveal>
     )
   }
   if (cfg.type === 'inline-network' && cfg.network) {
     return (
       <ScrollReveal className={className}>
-        <InlineNetwork data={cfg.network} title={cfg.title} />
+        <InlineNetwork data={cfg.network} title={chartTitle} lang={lang} />
       </ScrollReveal>
     )
   }
   if (cfg.type === 'inline-stacked-bar' && cfg.stacked) {
     return (
       <ScrollReveal className={className}>
-        <InlineStackedBar data={cfg.stacked} title={cfg.title} lang={lang} />
+        <InlineStackedBar data={cfg.stacked} title={chartTitle} lang={lang} />
       </ScrollReveal>
     )
   }
@@ -559,7 +568,7 @@ function ChapterDivider({
     const totalSpan = eras.reduce((s, e) => s + e.span, 0)
     const youAreHere = 'amlo'
     return (
-      <div className="my-12 max-w-3xl mx-auto px-4" aria-hidden="true">
+      <div className="my-12 max-w-[760px] mx-auto px-4" aria-hidden="true">
         <div className="flex items-center justify-between mb-1.5">
           <span
             className="text-[13px] font-mono uppercase tracking-[0.18em]"
@@ -676,7 +685,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       </div>
 
       <ScrollReveal>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-10 relative">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6 pt-16 pb-10 relative">
           {/* Massive watermark numeral */}
           <span
             className="absolute -top-2 right-2 sm:right-8 select-none pointer-events-none font-extrabold leading-none"
@@ -715,7 +724,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
           </h2>
 
           {chapter.subtitle && (
-            <p className="text-lg sm:text-xl text-text-secondary leading-[1.5] mb-10 text-pretty max-w-3xl">
+            <p className="text-lg sm:text-xl text-text-secondary leading-[1.5] mb-10 text-pretty max-w-[640px]">
               {chapter.subtitle}
             </p>
           )}
@@ -723,7 +732,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       </ScrollReveal>
 
       {/* Lede paragraph with drop cap + remaining body */}
-      <div className="max-w-prose mx-auto px-4 sm:px-0">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
             <p
@@ -739,7 +748,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         ))}
 
         {chapter.sources && chapter.sources.length > 0 && (
-          <ChapterSources sources={chapter.sources} />
+          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
         )}
 
         {/* Hero stat callout — if pullquote exists, render it as a hero-sized
@@ -749,14 +758,17 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
             {renderPullquote(chapter, story, '', false, 'hero')}
           </ScrollReveal>
         )}
-
-        {/* Chart, if any — wider than text column */}
-        {chapter.chartConfig && (
-          <div className="my-10 -mx-4 sm:mx-[-10%] md:mx-[-15%]">
-            {renderChartBlock(chapter, '', lang)}
-          </div>
-        )}
       </div>
+
+      {/* Chart, if any — its own 760 figure column, centered on the same axis
+          as the 640 text above it. Was a negative-margin bleed out of the
+          prose div, which made the hero the one chapter whose figure width
+          depended on the text column instead of the frame. */}
+      {chapter.chartConfig && (
+        <div className="max-w-[760px] mx-auto px-4 sm:px-0 my-10">
+          {renderChartBlock(chapter, '', lang)}
+        </div>
+      )}
     </section>
   )
 }
@@ -783,7 +795,7 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
       {/* Two-column layout on desktop: prose + breakout pullquote.
           isolate creates a stacking context so the sticky aside's z-index
           is scoped inside the grid — the chart below (z-20) stays on top. */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6 isolate">
+      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6 isolate">
         {/* Body column */}
         <div className="lg:col-span-7 lg:col-start-1">
           {chapter.prose.map((paragraph, i) => {
@@ -811,7 +823,7 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
             )
           })}
           {chapter.sources && chapter.sources.length > 0 && (
-            <ChapterSources sources={chapter.sources} />
+            <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
           )}
         </div>
 
@@ -828,7 +840,7 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
       {/* Chart spans full editorial width below the grid — z-20 ensures it
           renders above the isolated grid's stacking context */}
       {chapter.chartConfig && (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-8 relative z-20">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6 mt-8 relative z-20">
           {renderChartBlock(chapter, '', lang)}
         </div>
       )}
@@ -856,7 +868,7 @@ function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: 
       />
 
       {/* Brief lede in normal column */}
-      <div className="max-w-prose mx-auto px-4 sm:px-0 mb-8">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0 mb-8">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
             <p
@@ -871,12 +883,12 @@ function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: 
           </ScrollReveal>
         ))}
         {chapter.sources && chapter.sources.length > 0 && (
-          <ChapterSources sources={chapter.sources} />
+          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
         )}
       </div>
 
       {/* Chart breakout — wider than prose */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="max-w-[760px] mx-auto px-4 sm:px-6">
         <ScrollReveal>
           <div
             className="rounded-lg p-1 sm:p-2"
@@ -892,7 +904,7 @@ function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: 
 
       {/* Optional pullquote at bottom */}
       {chapter.pullquote && (
-        <div className="max-w-prose mx-auto px-4 sm:px-0 mt-10">
+        <div className="max-w-[640px] mx-auto px-4 sm:px-0 mt-10">
           <ScrollReveal>
             {renderPullquote(chapter, story, '', isFirst, 'data-spotlight')}
           </ScrollReveal>
@@ -900,7 +912,7 @@ function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: 
       )}
 
       {/* Connect to live Atlas — readers can manipulate the data themselves */}
-      <div className="max-w-prose mx-auto px-4 sm:px-0">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0">
         <AtlasLink
           accentColor={accentColor}
           lens="patterns"
@@ -934,7 +946,7 @@ function QuoteSpotlightChapter({ chapter, story, accentColor }: ChapterRenderPro
       />
 
       {/* Brief context */}
-      <div className="max-w-prose mx-auto px-4 sm:px-0 mb-10">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0 mb-10">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
             <p className="text-text-primary leading-[1.75] mb-5 text-[17px]">
@@ -948,7 +960,7 @@ function QuoteSpotlightChapter({ chapter, story, accentColor }: ChapterRenderPro
       {chapter.pullquote && (
         <ScrollReveal>
           <figure
-            className="max-w-4xl mx-auto px-4 sm:px-6 my-10"
+            className="max-w-[760px] mx-auto px-4 sm:px-6 my-10"
             aria-label={t('storyType.pullquote', 'Pull quote')}
           >
             <div
@@ -999,8 +1011,8 @@ function QuoteSpotlightChapter({ chapter, story, accentColor }: ChapterRenderPro
 
       {/* Source citations remain available */}
       {chapter.sources && chapter.sources.length > 0 && (
-        <div className="max-w-prose mx-auto px-4 sm:px-0">
-          <ChapterSources sources={chapter.sources} />
+        <div className="max-w-[640px] mx-auto px-4 sm:px-0">
+          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
         </div>
       )}
     </section>
@@ -1018,7 +1030,7 @@ function ConnectiveChapter({ chapter, story, accentColor }: ChapterRenderProps) 
       className="mb-16"
     >
       {/* Smaller chapter marker, no big banner */}
-      <div className="max-w-prose mx-auto px-4 sm:px-0 mb-6">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0 mb-6">
         <ScrollReveal>
           <div className="flex items-baseline gap-3 mb-2">
             <span
@@ -1043,7 +1055,7 @@ function ConnectiveChapter({ chapter, story, accentColor }: ChapterRenderProps) 
       </div>
 
       {/* Narrow column for connective tissue */}
-      <div className="max-w-[55ch] mx-auto px-4 sm:px-0">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
             <p className="text-text-secondary leading-[1.75] mb-5 text-[17px]">
@@ -1052,7 +1064,7 @@ function ConnectiveChapter({ chapter, story, accentColor }: ChapterRenderProps) 
           </ScrollReveal>
         ))}
         {chapter.sources && chapter.sources.length > 0 && (
-          <ChapterSources sources={chapter.sources} />
+          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
         )}
       </div>
     </section>
@@ -1153,7 +1165,7 @@ function ClosingCoda({ story, accentColor, lang }: {
 }) {
   const chips = buildCodaChips(story, lang)
   return (
-    <div className="max-w-prose mx-auto px-4 sm:px-0">
+    <div className="max-w-[640px] mx-auto px-4 sm:px-0">
       {/* § · ADÓNDE IR kicker */}
       <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-4 mt-6">
         § · {lang === 'es' ? 'ADÓNDE IR' : 'WHERE TO GO NEXT'}
@@ -1213,7 +1225,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       />
 
       <ScrollReveal>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-6">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6 pt-12 pb-6">
           <p
             className="text-[12px] uppercase tracking-[0.22em] font-bold mb-4"
             style={{ color: accentColor }}
@@ -1234,7 +1246,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         </div>
       </ScrollReveal>
 
-      <div className="max-w-prose mx-auto px-4 sm:px-0">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
             <p
@@ -1249,12 +1261,12 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
           </ScrollReveal>
         ))}
         {chapter.sources && chapter.sources.length > 0 && (
-          <ChapterSources sources={chapter.sources} />
+          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
         )}
       </div>
 
       {chapter.pullquote && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-10">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6 mt-10">
           <ScrollReveal>
             {renderPullquote(chapter, story, '', false, 'closing')}
           </ScrollReveal>
@@ -1262,7 +1274,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
       )}
 
       {chapter.chartConfig && (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-10">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6 mt-10">
           {renderChartBlock(chapter, '', lang)}
         </div>
       )}
@@ -1293,7 +1305,7 @@ function StandardChapter({ chapter, story, accentColor, isFirst = false }: Chapt
         color={accentColor}
       />
 
-      <div className="max-w-prose mx-auto px-4 sm:px-0">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-0">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
             <p
@@ -1309,16 +1321,25 @@ function StandardChapter({ chapter, story, accentColor, isFirst = false }: Chapt
         ))}
 
         {chapter.sources && chapter.sources.length > 0 && (
-          <ChapterSources sources={chapter.sources} />
+          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
         )}
+      </div>
 
-        {chapter.chartConfig && renderChartBlock(chapter, 'my-8', lang)}
-        {chapter.pullquote && (
+      {/* Chart in the 760 figure column — overhangs the 640 text by 60px a
+          side, the same overhang every other variant's figure gets. */}
+      {chapter.chartConfig && (
+        <div className="max-w-[760px] mx-auto px-4 sm:px-0">
+          {renderChartBlock(chapter, 'my-8', lang)}
+        </div>
+      )}
+
+      {chapter.pullquote && (
+        <div className="max-w-[640px] mx-auto px-4 sm:px-0">
           <div className="my-10">
             <ScrollReveal>{renderPullquote(chapter, story, '', isFirst, 'standard')}</ScrollReveal>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   )
 }
@@ -1407,7 +1428,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
   const parsed = parseLeadStat(localizedValue)
 
   return (
-    <header className="relative bg-background overflow-hidden border-b border-border" role="banner">
+    <header className="relative bg-background overflow-hidden border-b border-border">
       <div
         className="absolute inset-0 opacity-[0.04]"
         style={{
@@ -1415,7 +1436,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
         }}
       />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-20">
+      <div className="relative z-10 max-w-[760px] mx-auto px-4 sm:px-6 py-12 md:py-20">
         {/* Outlet + type badges */}
         <motion.div
           variants={fadeIn}
@@ -1457,7 +1478,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           variants={fadeIn}
           initial="initial"
           animate="animate"
-          className="text-text-secondary leading-[1.55] max-w-2xl mb-8"
+          className="text-text-secondary leading-[1.55] max-w-[640px] mb-8"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontSize: 'clamp(1.05rem, 1.5vw, 1.25rem)',
@@ -1496,19 +1517,18 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
               ? story.chapters.length === 1 ? 'capítulo' : 'capítulos'
               : story.chapters.length === 1 ? 'chapter' : 'chapters'}
           </span>
-          {/* Analysis-as-of timestamp — editorial honesty about freshness.
-              These pieces are not "live" — the underlying analysis was
-              performed on a frozen snapshot of COMPRANET data. The
-              timestamp matches the most recent v0.8.5 model rescore +
-              ARIA pipeline run (March 25 2026). */}
+          {/* Standing dateline — the front page's, not a build date. These
+              pieces are static analyses of the COMPRANET record, and the
+              record itself froze on 28 Sep 2025; what the reader needs is the
+              data cut, which does not move when we rescore. */}
           <span className="w-px h-4 bg-background-elevated" aria-hidden="true" />
           <span
-            className="text-[13px] text-text-muted font-mono"
+            className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted tabular-nums"
             title={lang === 'en'
-              ? 'Stories are static analyses of a COMPRANET snapshot dated through this period. Live data updates in the Atlas and ARIA queue, not in the story body.'
-              : 'Las historias son análisis estáticos de un corte de CompraNet hasta esta fecha. Los datos en vivo se actualizan en el Atlas y la cola ARIA, no en el cuerpo del artículo.'}
+              ? 'Stories are static analyses of the COMPRANET record, which froze on 28 Sep 2025. Live data updates in the Atlas and the ARIA queue, not in the story body.'
+              : 'Las historias son análisis estáticos del registro de CompraNet, congelado el 28 de septiembre de 2025. Los datos en vivo se actualizan en El Atlas y en la cola ARIA, no en el cuerpo del artículo.'}
           >
-            {lang === 'en' ? 'Analysis as of May 2026' : 'Análisis a mayo de 2026'}
+            {lang === 'en' ? 'DATA CUT 2025·09·28' : 'CORTE DE DATOS 28·09·2025'}
           </span>
         </motion.div>
 
@@ -1550,6 +1570,11 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                   <span
                     className="tabular-nums leading-none"
                     style={{
+                      // .tabular-nums pins font-family to the mono stack
+                      // (index.css:193) unless an inline family overrides it.
+                      // The leadStat fallback below already overrides; without
+                      // this the two hero paths render in different typefaces.
+                      fontFamily: "'Playfair Display', Georgia, serif",
                       fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
                       fontStyle: 'normal',
                       fontWeight: 800,
@@ -1662,17 +1687,17 @@ function ChapterNav({
             aria-label={`${t('storyType.chapter', 'Chapter')} ${ch.number}: ${chapterTitle}`}
             aria-current={isActive ? 'step' : undefined}
           >
-            <span
-              className={cn(
-                'transition-opacity text-xs whitespace-nowrap pr-2',
-                isActive ? 'opacity-100 text-text-secondary' : 'opacity-0 group-hover:opacity-100 text-text-secondary'
-              )}
-            >
+            {/* The label is hover/focus-only, including for the active
+                chapter: the nav is fixed in the margin and the active label
+                printed over the feature aside and the closing column at 1440.
+                aria-current + aria-label above keep the active chapter
+                announced, so nothing is lost for assistive tech. */}
+            <span className="transition-opacity text-xs whitespace-nowrap pr-2 text-text-secondary opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100">
               {chapterTitle}
             </span>
             <span
               className={cn(
-                'w-2.5 h-2.5 rounded-full border-2 transition-all',
+                'w-2.5 h-2.5 rounded-full border-2 transition-[transform,background-color]',
                 isActive ? 'scale-125' : 'group-hover:scale-110'
               )}
               style={{
@@ -1684,6 +1709,56 @@ function ChapterNav({
         )
       })}
     </nav>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ReadingProgress — the sticky story bar.
+//
+// It owns the scroll listener and the percentage state. That state used to
+// live on the StoryNarrative root, so every scroll frame re-rendered the whole
+// story tree — every chapter, every chart — to move a 2px bar. Keeping it here
+// means a scroll re-renders this bar and nothing else. Mount it with
+// key={slug} so a story change resets the percentage.
+// ---------------------------------------------------------------------------
+
+function ReadingProgress({ accentColor }: { accentColor: string }) {
+  const { t } = useTranslation('common')
+  const [scrollPct, setScrollPct] = useState(0)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const el = document.documentElement
+      const total = el.scrollHeight - el.clientHeight
+      setScrollPct(total > 0 ? Math.min(100, (el.scrollTop / total) * 100) : 0)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  return (
+    <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
+      {/* Progress bar — only the width animates; transition-all also animated
+          the background-color token swap on theme change. */}
+      <div
+        className="absolute bottom-0 left-0 h-[2px] transition-[width] duration-100"
+        style={{ width: `${scrollPct}%`, backgroundColor: accentColor }}
+        aria-hidden="true"
+      />
+      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
+        <Link
+          to="/journalists"
+          className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+          {t('story.allStories')}
+        </Link>
+        <span className="text-[12px] text-text-muted font-mono tabular-nums">
+          {Math.round(scrollPct)}%
+        </span>
+      </div>
+    </div>
   )
 }
 
@@ -1703,7 +1778,7 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
 
   return (
     <ScrollReveal>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 my-10">
+      <div className="max-w-[760px] mx-auto px-4 sm:px-6 my-10">
         <div
           className="rounded-sm border border-border bg-background-elevated px-6 py-5"
           style={{ borderLeft: `3px solid ${accentColor}` }}
@@ -1833,7 +1908,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
   return (
     <ScrollReveal>
       <section
-        className="max-w-prose mx-auto px-4 sm:px-0 my-16 py-8 border-t border-border"
+        className="max-w-[640px] mx-auto px-4 sm:px-0 my-16 py-8 border-t border-border"
         aria-label={t('story.methodology')}
       >
         {/* Investigation status badge */}
@@ -1917,7 +1992,7 @@ function RelatedSection({ story }: { story: StoryDef }) {
   return (
     <ScrollReveal>
       <section
-        className="max-w-5xl mx-auto px-4 sm:px-6 my-16"
+        className="max-w-[1010px] mx-auto px-4 sm:px-6 my-16"
         aria-label={t('story.investigateMore')}
       >
         <h3
@@ -1978,7 +2053,7 @@ function PlatformLinks({ story }: { story: StoryDef }) {
 
   return (
     <ScrollReveal>
-      <section className="max-w-prose mx-auto px-4 sm:px-0 my-12">
+      <section className="max-w-[640px] mx-auto px-4 sm:px-0 my-12">
         <h3
           className="text-lg font-bold text-text-secondary mb-4"
           style={{ fontFamily: 'var(--font-family-serif)' }}
@@ -2028,7 +2103,7 @@ function ShareBar({ story }: { story: StoryDef }) {
   }
 
   return (
-    <div className="max-w-prose mx-auto px-4 sm:px-0 my-8">
+    <div className="max-w-[640px] mx-auto px-4 sm:px-0 my-8">
       <button
         onClick={handleShare}
         className="inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-full border border-border text-text-secondary hover:text-text-secondary hover:border-border transition-colors"
@@ -2049,7 +2124,6 @@ export default function StoryNarrative() {
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
-  const [scrollPct, setScrollPct] = useState(0)
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
 
   const story = slug ? getStoryBySlug(slug) : undefined
@@ -2057,21 +2131,8 @@ export default function StoryNarrative() {
   // Scroll to top on slug change
   useEffect(() => {
     window.scrollTo({ top: 0 })
-    setScrollPct(0)
     setActiveChapterId(null)
   }, [slug])
-
-  // Reading progress bar
-  useEffect(() => {
-    if (!story) return
-    const onScroll = () => {
-      const el = document.documentElement
-      const total = el.scrollHeight - el.clientHeight
-      setScrollPct(total > 0 ? Math.min(100, (el.scrollTop / total) * 100) : 0)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [story])
 
   // Active chapter tracking via IntersectionObserver
   useEffect(() => {
@@ -2138,27 +2199,9 @@ export default function StoryNarrative() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sticky header: back link + reading progress */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
-        {/* Progress bar */}
-        <div
-          className="absolute bottom-0 left-0 h-[2px] transition-all duration-100"
-          style={{ width: `${scrollPct}%`, backgroundColor: accentColor }}
-          aria-hidden="true"
-        />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
-          <Link
-            to="/journalists"
-            className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            {t('story.allStories')}
-          </Link>
-          <span className="text-[12px] text-text-muted font-mono tabular-nums">
-            {Math.round(scrollPct)}%
-          </span>
-        </div>
-      </div>
+      {/* Sticky header: back link + reading progress. key={slug} resets the
+          percentage when the reader moves to another story. */}
+      <ReadingProgress key={slug} accentColor={accentColor} />
 
       {/* Hero — editorial lede with outlet badge + lead stat */}
       <StoryHero story={story} accentColor={accentColor} />
@@ -2168,7 +2211,7 @@ export default function StoryNarrative() {
 
       {/* ── ACT I: THE INVESTIGATION ── */}
       {/* Wider container so hero/feature/data-spotlight variants can breakout */}
-      <div className="relative max-w-6xl mx-auto px-2 sm:px-4 pt-6">
+      <div className="relative max-w-[1010px] mx-auto px-2 sm:px-4 pt-6">
         <Act number="I" label={t('story.actInvestigation', 'THE INVESTIGATION')} className="space-y-0">
           {story.chapters.map((chapter, idx) => {
             const variant = pickChapterVariant(chapter, idx, story.chapters.length)
@@ -2197,14 +2240,14 @@ export default function StoryNarrative() {
       )}
 
       {/* ── ACT II: THE METHODOLOGY ── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 pt-8">
         <Act number="II" label={t('story.actMethodology', 'THE METHODOLOGY')} className="space-y-4">
           <MethodologySection story={story} />
         </Act>
       </div>
 
       {/* ── ACT III: FURTHER INQUIRY ── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 pt-8">
         <Act number="III" label={t('story.actFurtherInquiry', 'FURTHER INQUIRY')} className="space-y-4">
           <ShareBar story={story} />
           <ObservatoryTrailerCTA longformSlug={story.slug} lang={lang} />
@@ -2213,7 +2256,7 @@ export default function StoryNarrative() {
       </div>
 
       {/* ── ACT IV: RELATED DOSSIERS ── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
+      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 pt-8">
         <Act number="IV" label={t('story.actRelatedDossiers', 'RELATED DOSSIERS')} className="space-y-4">
           <RelatedSection story={story} />
         </Act>

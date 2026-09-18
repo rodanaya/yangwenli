@@ -30,8 +30,11 @@ export interface PlanaStory {
 
 // ---------------------------------------------------------------------------
 // PlanaTourBadge — surfaces the matching Atlas tour (revived; renders nothing
-// unless the slug binds a longform tour). Nested inside the story <Link>, so it
-// stops propagation — same working pattern the shipped page uses.
+// unless the slug binds a longform tour). It is a SIBLING of the headline's
+// stretched story link, never a descendant of it — an <a> inside an <a> is
+// invalid HTML and gives assistive tech a link it cannot reach. Call sites
+// pass `relative z-10` so the badge sits above the stretched link's ::after
+// overlay and takes its own clicks without needing stopPropagation.
 // ---------------------------------------------------------------------------
 
 export function PlanaTourBadge({
@@ -50,7 +53,6 @@ export function PlanaTourBadge({
   return (
     <Link
       to={`/atlas?story=${tour.id}`}
-      onClick={(e) => e.stopPropagation()}
       className={`inline-flex items-center gap-1.5 px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] rounded-sm border transition-opacity hover:opacity-80${className ? ' ' + className : ''}`}
       style={{ borderColor: `${accent}55`, color: accent, background: `${accent}0d` }}
       aria-label={
@@ -77,10 +79,10 @@ export function AgateRubric({ story }: { story: PlanaStory }) {
       ? 'text-text-primary font-bold'
       : story.statusRank === 'reported'
         ? 'text-text-secondary font-normal'
-        : 'text-text-muted italic'
+        : 'text-text-muted'
   const dot = <span className="text-text-muted opacity-40" aria-hidden="true">·</span>
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] font-mono uppercase tracking-[0.14em] tabular-nums">
+    <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10.5px] font-mono uppercase tracking-[0.14em] tabular-nums">
       <span className={statusCls}>{story.statusLabel}</span>
       {dot}
       <span className="text-text-muted">{story.eraLabel}</span>

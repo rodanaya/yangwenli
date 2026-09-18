@@ -58,7 +58,7 @@ export function PlanaMasthead({ lang, counts }: { lang: 'en' | 'es'; counts: Cou
       </div>
 
       {/* Edition line — pulse + RUBLI at left, standing-edition dateline at right */}
-      <div className="flex items-center justify-between gap-3 mb-3 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
+      <div className="flex items-center justify-between gap-3 mb-3 text-[10.5px] font-mono uppercase tracking-[0.18em] text-text-muted">
         <span className="inline-flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
           <span className="font-bold tracking-[0.2em] text-text-secondary">RUBLI</span>
@@ -88,7 +88,6 @@ export function PlanaMasthead({ lang, counts }: { lang: 'en' | 'es'; counts: Cou
         className="mt-4 text-text-secondary"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
           fontWeight: 500,
           fontSize: 'clamp(17px, 1.5vw, 20px)',
           lineHeight: 1.5,
@@ -96,7 +95,7 @@ export function PlanaMasthead({ lang, counts }: { lang: 'en' | 'es'; counts: Cou
         }}
       >
         {thesisLead}
-        <span style={{ color: 'var(--color-accent)', fontStyle: 'normal' }}>{thesisAccent}</span>
+        <span style={{ color: 'var(--color-accent)' }}>{thesisAccent}</span>
         {thesisTail}
       </p>
 

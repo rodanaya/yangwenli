@@ -134,6 +134,8 @@
     "actReturnToIndex": "VOLVER AL ÍNDICE",
     "notFoundSubtitle": "La investigación solicitada no pudo encontrarse.",
     "viewCitations": "ver citas",
+    "sources_one": "{{count}} fuente",
+    "sources_other": "{{count}} fuentes",
     "collapse": "cerrar"
   },
   "welcome": {

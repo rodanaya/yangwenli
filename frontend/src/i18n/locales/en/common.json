@@ -125,6 +125,8 @@
     "actReturnToIndex": "RETURN TO INDEX",
     "notFoundSubtitle": "The requested investigation could not be located.",
     "viewCitations": "view citations",
+    "sources_one": "{{count}} source",
+    "sources_other": "{{count}} sources",
     "collapse": "collapse"
   },
   "welcome": {

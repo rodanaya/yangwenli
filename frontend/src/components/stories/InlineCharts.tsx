@@ -19,7 +19,7 @@
  * the anchor.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Building2 } from 'lucide-react'
 import type {
@@ -203,6 +203,69 @@ export function useMeasuredWidth<T extends HTMLElement = HTMLDivElement>() {
 }
 
 // ---------------------------------------------------------------------------
+// ScrollSvgFrame — the legibility floor for a fixed-viewBox plot.
+//
+// A plot whose composition is built from fixed pixel lanes (label column, dot
+// area, value column) cannot be redrawn at 290px, which is what a 390px phone
+// leaves inside the figure column. With `className="w-full"` the browser
+// scales the whole viewBox down instead, and a 13px SVG label lands on screen
+// at 4–6px — the Day 3 audit counted 272 such glyphs across the 13 stories.
+//
+// The floor is a SCALE floor, not a width floor. Pinning the plot at its full
+// viewBox width would make the two widest plots (the 738px mirror and the
+// 720px multi-line) overflow the 688px they get inside a 760 figure and clip
+// their right-hand values on desktop — a composition change where none was
+// wanted. What has to hold is only that the smallest glyph stays legible, so
+// the frame computes the narrowest width at which `minGlyph` still lands at
+// 10.5px on screen and scrolls below that. Every desktop width clears it, so
+// desktop stays pixel-identical to the shipped crops; a phone scrolls, the
+// fallback established on the /gap register.
+//
+// The frame is focusable while it scrolls: a scrollable region has to be
+// reachable without a pointer (WCAG 2.1.1).
+// ---------------------------------------------------------------------------
+
+const GLYPH_FLOOR_PX = 10.5
+
+export function ScrollSvgFrame({
+  minW,
+  minGlyph,
+  label,
+  lang = 'en',
+  children,
+}: {
+  /** The plot's viewBox width — 1 viewBox unit renders as 1px at this width. */
+  minW: number
+  /** Smallest fontSize any <text> in the plot declares. */
+  minGlyph: number
+  label?: string
+  lang?: 'en' | 'es'
+  children: ReactNode
+}) {
+  const { ref, width } = useMeasuredWidth<HTMLDivElement>()
+  const floor = Math.ceil((minW * GLYPH_FLOOR_PX) / minGlyph)
+  const scrolls = width > 0 && width < floor
+  return (
+    <>
+      {scrolls ? (
+        <p className="sm:hidden text-[11px] font-mono text-text-muted mb-1">
+          {lang === 'es' ? '← desliza para ver más →' : '← scroll for more →'}
+        </p>
+      ) : null}
+      <div
+        ref={ref}
+        className="w-full overflow-x-auto overscroll-x-contain"
+        tabIndex={scrolls ? 0 : undefined}
+        role={scrolls ? 'group' : undefined}
+        aria-label={scrolls ? label : undefined}
+      >
+        <div style={{ width: Math.max(width, floor) }}>{children}</div>
+      </div>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Card chrome — eyebrow + serif title + optional anchor stat (matches
 // the dashboard tile rhythm).
 // ---------------------------------------------------------------------------
@@ -214,6 +277,8 @@ export function ChartCard({
   annotation,
   stamp,
   lang,
+  scrollMinW,
+  scrollMinGlyph,
   children,
 }: {
   title: string
@@ -225,8 +290,16 @@ export function ChartCard({
    *  Inspired by Ordnance Survey / ProPublica document-reader provenance.
    *  0px cost when absent — 8 other call sites untouched. */
   stamp?: { en: string; es: string }
-  /** Required only when stamp is present; otherwise eyebrow is EN only. */
+  /** Required when stamp or scrollMinW is present; otherwise eyebrow is EN only. */
   lang?: 'en' | 'es'
+  /** viewBox width of a fixed-lane plot. Below the width at which its
+   *  smallest glyph would drop under 10.5px the card body scrolls instead of
+   *  scaling the viewBox down into 4px glyphs — see ScrollSvgFrame. Omit for
+   *  plots whose glyphs are flow HTML or whose layout already derives from
+   *  the measured width. Requires scrollMinGlyph. */
+  scrollMinW?: number
+  /** Smallest fontSize any <text> in that plot declares. */
+  scrollMinGlyph?: number
   children: React.ReactNode
 }) {
   // Translate structural eyebrow text per language. Numeric tokens
@@ -261,7 +334,7 @@ export function ChartCard({
             <span
               aria-label={stampText}
               style={{
-                fontSize: 8.5,
+                fontSize: 10.5,
                 letterSpacing: '0.18em',
                 color: 'var(--color-text-muted)',
                 borderLeft: `1px solid ${ANCHOR_COLOR}`,
@@ -319,7 +392,15 @@ export function ChartCard({
         </div>
       )}
 
-      <div className="px-3 pb-2">{children}</div>
+      <div className="px-3 pb-2">
+        {scrollMinW && scrollMinGlyph ? (
+          <ScrollSvgFrame minW={scrollMinW} minGlyph={scrollMinGlyph} label={title} lang={lang}>
+            {children}
+          </ScrollSvgFrame>
+        ) : (
+          children
+        )}
+      </div>
       {annotation && (
         <p
           className="px-5 pb-4 pt-1 font-mono leading-[1.55]"
@@ -627,6 +708,8 @@ export function InlineBarChart({
         annotation={cardAnnotation}
         stamp={data.stamp}
         lang={lang}
+        scrollMinW={domSvgW}
+        scrollMinGlyph={10.5}
       >
         <svg
           viewBox={`0 0 ${domSvgW} ${DOM_SVG_H}`}
@@ -664,7 +747,7 @@ export function InlineBarChart({
 
           {/* OECD cap label — ABOVE the rule, clear of the stacked rows below */}
           {ruleX !== null && domRefLabel && (
-            <text x={ruleX + 3} y={TOP - 6} fontSize={8.5}
+            <text x={ruleX + 3} y={TOP - 6} fontSize={10.5}
               fontFamily="var(--font-family-mono, monospace)" fill={ANCHOR_COLOR} opacity={0.9}>
               {domRefLabel}
             </text>
@@ -973,6 +1056,9 @@ export function InlineLineChart({
       eyebrow={`TIME SERIES · ${pts.length} POINTS`}
       anchor={pickAnchor(pts, data.unit, mainColor, lang)}
       annotation={lineAnnotation}
+      scrollMinW={W}
+      scrollMinGlyph={12}
+      lang={lang}
     >
       {lineYLabel && (
         <div className="text-[13px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
@@ -1152,6 +1238,9 @@ export function InlineAreaChart({
       eyebrow={`AREA · ${pts.length} POINTS`}
       anchor={pickAnchor(pts, data.unit, mainColor, lang)}
       annotation={areaAnnotation}
+      scrollMinW={W}
+      scrollMinGlyph={12}
+      lang={lang}
     >
       {areaYLabel && (
         <div className="text-[13px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
@@ -1305,6 +1394,9 @@ export function InlineSpikeChart({
           : undefined
       }
       annotation={cardAnnotation}
+      scrollMinW={W}
+      scrollMinGlyph={12}
+      lang={lang}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -1659,6 +1751,9 @@ export function InlineMultiLine({
       title={title}
       eyebrow={`MULTI-SERIES · ${series.length} VENDORS`}
       annotation={annotation}
+      scrollMinW={W}
+      scrollMinGlyph={12}
+      lang={lang}
     >
       {yLabel && (
         <div className="text-[13px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
@@ -1914,6 +2009,9 @@ export function InlineNetwork({
       eyebrow={`NETWORK · ${nodes.length} NODES · ${edges.length} TIES`}
       anchor={anchor}
       annotation={annotation}
+      scrollMinW={W}
+      scrollMinGlyph={12}
+      lang={lang}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -2595,6 +2693,9 @@ export function ClevelandPairChart({
         eyebrow={`EXCESS · ${eSorted.length} ROWS · BASELINE ${ePt?.value2 ?? 11}%`}
         anchor={eAnchor}
         annotation={cardAnnotation}
+        scrollMinW={E_TOTAL_W}
+        scrollMinGlyph={11}
+        lang={lang}
       >
         <svg
           viewBox={`0 0 ${E_TOTAL_W} ${eTotalH}`}
@@ -2781,6 +2882,9 @@ export function ClevelandPairChart({
         eyebrow={lang === 'es' ? `PORCIÓN DEL TOTAL · ${sorted.length} FILAS` : `SHARE OF TOTAL · ${sorted.length} ROWS`}
         anchor={anchor}
         annotation={cardAnnotation}
+        scrollMinW={RW}
+        scrollMinGlyph={11}
+        lang={lang}
       >
         <svg viewBox={`0 0 ${RW} ${rSvgH}`} preserveAspectRatio="xMinYMin meet" className="w-full" aria-hidden="true">
           {/* Header strip: 0 · aggregate tick · 100% = track denominator */}
@@ -2829,6 +2933,9 @@ export function ClevelandPairChart({
       eyebrow="CLEVELAND · PAIR"
       anchor={anchor}
       annotation={cardAnnotation}
+      scrollMinW={TOTAL_W}
+      scrollMinGlyph={11}
+      lang={lang}
     >
       <svg
         viewBox={`0 0 ${TOTAL_W} ${totalSvgH}`}
@@ -3009,6 +3116,9 @@ export function InlineStackedBar({
         eyebrow={`MIRROR · ${rows.length} ROWS`}
         anchor={cardAnchor}
         annotation={cardAnnotation}
+        scrollMinW={W_M}
+        scrollMinGlyph={11.5}
+        lang={lang}
       >
         <svg
           viewBox={`0 0 ${W_M} ${H_M}`}
@@ -3183,6 +3293,9 @@ export function InlineStackedBar({
       eyebrow={`SHARE · ${rows.length} ROWS`}
       anchor={cardAnchor}
       annotation={cardAnnotation}
+      scrollMinW={W}
+      scrollMinGlyph={11.5}
+      lang={lang}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}

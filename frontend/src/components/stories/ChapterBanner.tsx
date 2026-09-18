@@ -23,13 +23,14 @@ export default function ChapterBanner({
   const paddedNumber = String(number).padStart(2, '0')
 
   return (
-    <ScrollReveal className={cn('my-12', className)}>
+    <ScrollReveal className={cn('my-12 max-w-[760px] mx-auto', className)}>
+      {/* The band is a figure-width block, not a full-bleed one. No wrapper
+          role="heading": the inner <h2> IS the heading. The old wrapper role
+          swallowed the subtitle and era pill into the heading's accessible
+          name and left the real h2 presentational. */}
       <div
         className="relative w-full bg-background overflow-hidden rounded-lg"
         style={{ borderTop: `2px solid ${color}` }}
-        role="heading"
-        aria-level={2}
-        aria-label={`${t('storyType.chapter', 'Chapter')} ${paddedNumber}: ${title}`}
       >
         {/* Large background number */}
         <span
@@ -49,7 +50,10 @@ export default function ChapterBanner({
             >
               {t('storyType.chapter', 'Chapter')} {paddedNumber}
             </p>
-            <h2 className="text-2xl md:text-4xl font-bold text-text-primary leading-tight max-w-2xl">
+            <h2
+              className="text-2xl md:text-4xl font-bold text-text-primary leading-tight max-w-2xl"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
               {title}
             </h2>
             {subtitle && (

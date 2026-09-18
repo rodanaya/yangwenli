@@ -6,7 +6,9 @@
 // section-color left rules, Playfair headlines, agate rubrics. Ordered by the
 // status ladder (advanced cases first, raw data leads last) so the rubric reads
 // top-to-bottom — an ORDER, not an invented taxonomy (no sub-headers). Every
-// row is a whole-card <Link> to /stories/:slug; nothing is a chart.
+// row is an <article> whose headline carries a stretched <Link> covering the
+// card, so the whole row stays clickable without nesting one <a> in another;
+// nothing is a chart.
 // ---------------------------------------------------------------------------
 
 import { Link } from 'react-router-dom'
@@ -36,17 +38,16 @@ export function PlanaDesk({
       <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-7">{kicker}</div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
         {stories.map((s) => (
-          <Link
+          <article
             key={s.slug}
-            to={`/stories/${s.slug}`}
-            className="group block"
+            className="group relative block"
             style={{ borderLeft: `3px solid ${s.color}`, paddingLeft: '16px' }}
           >
             <div className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] mb-2" style={{ color: s.color }}>
               {s.typeLabel}
             </div>
             <h3
-              className="text-text-primary group-hover:underline decoration-1 underline-offset-[4px]"
+              className="text-text-primary"
               style={{
                 fontFamily: '"Playfair Display", Georgia, serif',
                 fontSize: '20px',
@@ -55,7 +56,12 @@ export function PlanaDesk({
                 letterSpacing: '-0.01em',
               }}
             >
-              {s.headline}
+              <Link
+                to={`/stories/${s.slug}`}
+                className="group-hover:underline decoration-1 underline-offset-[4px] after:absolute after:inset-0 after:content-['']"
+              >
+                {s.headline}
+              </Link>
             </h3>
             <p
               className="mt-2 text-text-secondary line-clamp-3"
@@ -64,8 +70,8 @@ export function PlanaDesk({
               {s.brief}
             </p>
             <AgateRubric story={s} />
-            <PlanaTourBadge slug={s.slug} accent={s.color} lang={lang} className="mt-3" />
-          </Link>
+            <PlanaTourBadge slug={s.slug} accent={s.color} lang={lang} className="mt-3 relative z-10" />
+          </article>
         ))}
       </div>
     </section>

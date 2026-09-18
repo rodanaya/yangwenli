@@ -67,7 +67,7 @@ export function PlanaColofon({
             </span>
             <p
               className="text-text-secondary"
-              style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: '13px', lineHeight: 1.55 }}
+              style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: '15px', lineHeight: 1.55 }}
             >
               {c.body}
             </p>

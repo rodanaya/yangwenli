@@ -1035,3 +1035,11 @@ main :where(table, .text-center, [style*="text-align: center"]) :where(p, li, dd
 main :where(.uppercase, .text-kicker, .text-byline, .lede-dateline, .editorial-label, [style*="text-transform: uppercase"]) {
   max-width: none;
 }
+
+/* Chapter anchors clear the sticky story bar (PARALLAX
+   docs/parallax/DAY-03-redaccion-story-template.md § Change 5, 2026-09-18).
+   ChapterNav links jump to #chapter-*, which without this lands the chapter
+   banner underneath the sticky reading-progress header. */
+main :where([id^="chapter-"]) {
+  scroll-margin-top: 7rem;
+}
