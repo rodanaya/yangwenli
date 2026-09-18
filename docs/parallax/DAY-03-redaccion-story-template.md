@@ -109,3 +109,29 @@ Day 2d mechanic, no rail: **frame 1010 · text 640 · figures 760**, all centere
 - Look at your own after-crops before reporting: the story must read as one centered column with figures overhanging 60px each side, no half-empty boxes, no label printed over the column; the front page must look identical apart from upright colophon text and slightly larger agate.
 - Commits (cite this file): first `chore(stories § PARALLAX D3 § Change 0 STEP 0): remove dead lazy chart registry (41 components, 6,982 lines) + KeyFactsStrip`; then `feat(journalists+stories § PARALLAX D3): reading frame 1010/640/760, honest dateline, 10px floor, italics out, valid card links, chapter nav, legible SVG at 390, landmarks` with a body listing `docs/parallax/DAY-03-redaccion-story-template.md § Change 1–8`. Trailer `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Do **not** bump BUILD_ID, push, or deploy — Fable judges first.
 - Report back: per-change PASS/FAIL with probe numbers (sub10, italic/pItalic, nested anchors, stale, width set, banner slack, nav geometry, 390 SVG count per story, landmarks, link resolution), gate outputs, commit hashes, and the after-crop list.
+
+## Result
+
+Built by Opus executors `parallax-day03` (STEP 0 + Changes 1–4, most of 7; died on a session limit mid-edit, tree left tsc-clean) and `parallax-day03-b` (Changes 5–8, ReadingProgress, probes, judge fix). Judged by Fable on `_parallax_shots/day03/after/crops/` (48 crops, 1440 + 390) against the before set.
+
+| Check | Before | After |
+|---|---|---|
+| `/journalists` sub-10px leaves | 45 (9px) | 0 |
+| `/journalists` live italics (leaves + `p`) | 5 | 0 |
+| `/journalists` nested `a a` | 3 | 0 (stretched-link `<article>`; brief click, headline click and tour badge all verified) |
+| story centered widths at 1440 | {656, 768, 896, 1024, 1152} | {640, 760, 1010} on all 13 stories |
+| ChapterBanner slack (box − text) | 274–719px | 40px |
+| hero dateline | "Analysis as of May 2026" | `DATA CUT 2025·09·28` / `CORTE DE DATOS 28·09·2025`; kicker numerals Playfair |
+| ChapterNav | active label printed over the column | label opacity 0 without hover; dot column left 1405 vs frame right 1337 at 1440; `aria-current` kept; anchors land 112px down under the 44px sticky bar |
+| SVG glyphs < 10px at 390 (13 stories) | 272 | 0 (`ScrollSvgFrame`: viewBox floored on glyph scale, scroll inside the frame + `sm:hidden` hint; 17 frames scroll at 390, 0 at 1440) |
+| SVG annotations clipped by their svg box | 2 at 1440 (mirror `+47% vs Peña`), 8 at 390 | 0 / 0 (judge fix `2360fe23`: gutters sized from the copy via `monoTextW`) |
+| `main [role=banner]` / `[role=heading]` wrapping an h2 | 1 / per chapter | 0 / 0; `aria-controls` on every sources toggle; 35 internal hrefs resolve |
+| chapter re-renders per scroll | whole tree per frame | 0 (`ReadingProgress` owns `scrollPct`) |
+| dead code | 41 lazy chart components, 6,982 lines, never reached | removed (`a03afc8a`); per-story `figure` counts unchanged |
+| footers (visible) | 1 (DOM 2, colophon hidden by Day 1 `:has`) | unchanged |
+
+Executor deviations accepted: the scale floor is computed per renderer from its smallest glyph rather than pinning the viewBox (pinning clipped the 738px mirror inside a 688px plot); the mirror ledger's value column now takes what the widest delta needs and both bar halves rescale together (caption's "identical scale" still true); the multi-line end-label gutter derives from series names. Bilingual audit surfaced a pre-existing gap — `story.sources` was missing from both locale files so every citation toggle rendered the raw key — fixed (`"2 sources"` / `"2 fuentes"`), and three chart branches now receive the localized title + `lang`.
+
+Gates: `tsc -p tsconfig.app.json` 0 errors · `npm run build` clean (no `stories/charts` chunks) · `lint:tokens` PASS · 0 console errors on the audited routes.
+
+Commits: `a03afc8a` STEP 0 · `154c67b8` Changes 1–8 · `2360fe23` judge fix · BUILD_ID `2026-09-18-parallax-d3-redaccion`.
