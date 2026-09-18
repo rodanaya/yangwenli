@@ -7,7 +7,7 @@
  */
 
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Suspense, lazy, useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight, FileText } from 'lucide-react'
@@ -22,9 +22,6 @@ import { StoryCard } from '@/components/stories/StoryCard'
 import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
 import { slideUp, fadeIn, staggerContainer } from '@/lib/animations'
 import { cn, localizeAmount } from '@/lib/utils'
-// Story charts are lazy-loaded — see CHART_REGISTRY below. Each story
-// page only renders ONE chart component, so eagerly importing all 41
-// would balloon the StoryNarrative page chunk for no benefit.
 import {
   InlineDotGrid,
   InlineBarChart,
@@ -41,6 +38,8 @@ import {
   AnnotatedThermometer as EditorialThermometer,
   ClevelandPairChart as EditorialClevelandPair,
 } from '@/components/stories/InlineCharts'
+import VendorPriceTrajectory from '@/components/stories/VendorPriceTrajectory'
+import VennConvergence from '@/components/stories/VennConvergence'
 import type { StoryInlineChartData } from '@/lib/story-content'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
@@ -66,103 +65,6 @@ const INLINE_CHART_MAP: Record<string, InlineChartComponent> = {
   'editorial-threshold':      EditorialThreshold,
   'editorial-thermometer':    EditorialThermometer,
   'editorial-cleveland-pair': EditorialClevelandPair,
-}
-
-// ---------------------------------------------------------------------------
-// Chart registry — maps chartId to component
-// ---------------------------------------------------------------------------
-
-const lazyChart = (loader: () => Promise<{ [key: string]: React.ComponentType }>, name: string) =>
-  lazy(() => loader().then((m) => ({ default: m[name] })))
-
-const CHART_REGISTRY: Record<string, React.ComponentType> = {
-  'da-rate-trend': lazyChart(() => import('@/components/stories/charts/DaRateTrendChart'), 'DaRateTrendChart'),
-  'da-by-sector': lazyChart(() => import('@/components/stories/charts/DaBySectorChart'), 'DaBySectorChart'),
-  'amlo-era-comparison': lazyChart(() => import('@/components/stories/charts/AmloEraComparisonChart'), 'AmloEraComparisonChart'),
-  'covid-emergency': lazyChart(() => import('@/components/stories/charts/CovidEmergencyChart'), 'CovidEmergencyChart'),
-  'monthly-spending': lazyChart(() => import('@/components/stories/charts/MonthlySpendingChart'), 'MonthlySpendingChart'),
-  'risk-by-sector': lazyChart(() => import('@/components/stories/charts/RiskBySectorChart'), 'RiskBySectorChart'),
-  'vendor-concentration': lazyChart(() => import('@/components/stories/charts/VendorConcentrationChart'), 'VendorConcentrationChart'),
-  'threshold-splitting': lazyChart(() => import('@/components/stories/charts/ThresholdSplittingChart'), 'ThresholdSplittingChart'),
-  'sexenio-comparison': lazyChart(() => import('@/components/stories/charts/SexenioComparisonChart'), 'SexenioComparisonChart'),
-  'temporal-risk': lazyChart(() => import('@/components/stories/charts/StoryTemporalRiskChart'), 'StoryTemporalRiskChart'),
-  'sector-risk-heatmap': lazyChart(() => import('@/components/stories/charts/StorySectorRiskHeatmap'), 'StorySectorRiskHeatmap'),
-  'seasonality-calendar': lazyChart(() => import('@/components/stories/charts/StorySeasonalityCalendar'), 'StorySeasonalityCalendar'),
-  'money-sankey': lazyChart(() => import('@/components/stories/charts/StoryMoneySankeyChart'), 'StoryMoneySankeyChart'),
-  'admin-sunburst': lazyChart(() => import('@/components/stories/charts/StoryAdminSunburst'), 'StoryAdminSunburst'),
-  'sector-paradox': lazyChart(() => import('@/components/stories/charts/StorySectorParadox'), 'StorySectorParadox'),
-  'risk-pyramid': lazyChart(() => import('@/components/stories/charts/StoryRiskPyramid'), 'StoryRiskPyramid'),
-  'administration-fingerprints': lazyChart(() => import('@/components/stories/charts/StoryAdminFingerprints'), 'StoryAdminFingerprints'),
-  'sector-risk-trends': lazyChart(() => import('@/components/stories/charts/StorySectorRiskTrends'), 'StorySectorRiskTrends'),
-  'racing-bar': lazyChart(() => import('@/components/stories/charts/StoryRacingBar'), 'StoryRacingBar'),
-  'risk-calendar': lazyChart(() => import('@/components/stories/charts/StoryRiskCalendar'), 'StoryRiskCalendar'),
-  'community-bubbles': lazyChart(() => import('@/components/stories/charts/StoryCommunityBubbles'), 'StoryCommunityBubbles'),
-  'procedure-breakdown': lazyChart(() => import('@/components/stories/charts/StoryProcedureBreakdown'), 'StoryProcedureBreakdown'),
-  'vendor-fingerprint': lazyChart(() => import('@/components/stories/charts/StoryVendorFingerprint'), 'StoryVendorFingerprint'),
-  'story-cuarta-adj': lazyChart(() => import('@/components/stories/charts/StoryCuartaAdjudicacion'), 'StoryCuartaAdjudicacion'),
-  'story-granero-vacio': lazyChart(() => import('@/components/stories/charts/StoryGraneroVacio'), 'StoryGraneroVacio'),
-  'story-nuevos-ricos': lazyChart(() => import('@/components/stories/charts/StoryNuevosRicos'), 'StoryNuevosRicos'),
-  'story-hemoser': lazyChart(() => import('@/components/stories/charts/StoryHemoserSplitting'), 'StoryHemoserSplitting'),
-  'story-austeridad': lazyChart(() => import('@/components/stories/charts/StoryAusteridadChart'), 'StoryAusteridadChart'),
-  'story-cero-competencia': lazyChart(() => import('@/components/stories/charts/StoryCeroCompetenciaChart'), 'StoryCeroCompetenciaChart'),
-  'story-triangulo-farmaceutico': lazyChart(() => import('@/components/stories/charts/StoryTrianguloFarmaceutico'), 'StoryTrianguloFarmaceutico'),
-  'story-avalancha-diciembre': lazyChart(() => import('@/components/stories/charts/StoryAvalanchaDiciembre'), 'StoryAvalanchaDiciembre'),
-  'story-cartel-corazon': lazyChart(() => import('@/components/stories/charts/StoryCartelCorazon'), 'StoryCartelCorazon'),
-  'story-red-fantasma': lazyChart(() => import('@/components/stories/charts/StoryRedFantasma'), 'StoryRedFantasma'),
-  'story-infraestructura': lazyChart(() => import('@/components/stories/charts/StoryInfraestructura'), 'StoryInfraestructura'),
-  'story-sixsigma-hacienda': lazyChart(() => import('@/components/stories/charts/StorySixSigmaHacienda'), 'StorySixSigmaHacienda'),
-  'story-oceanografia': lazyChart(() => import('@/components/stories/charts/StoryOceanografia'), 'StoryOceanografia'),
-  'story-sexenio-sexenio': lazyChart(() => import('@/components/stories/charts/StorySexenioASexenio'), 'StorySexenioASexenio'),
-  'story-casa-contratos': lazyChart(() => import('@/components/stories/charts/StoryCasaContratos'), 'StoryCasaContratos'),
-  'story-ano-sin-excusas': lazyChart(() => import('@/components/stories/charts/StoryAnoSinExcusas'), 'StoryAnoSinExcusas'),
-  'story-insabi': lazyChart(() => import('@/components/stories/charts/StoryInsabi'), 'StoryInsabi'),
-  'story-tren-maya': lazyChart(() => import('@/components/stories/charts/StoryTrenMaya'), 'StoryTrenMaya'),
-  // ---------------------------------------------------------------------------
-  // Editorial sector chart components — n-P1 (2026-05-04)
-  // These 5 components are self-fetching: CompetitionSlopeChart fetches
-  // directly; the other 4 are wrapped in story-specific adapters in
-  // EditorialSectorStoryCharts.tsx that call sectorApi/categoriesApi
-  // internally. Story chapters only need chartConfig.type — no data payload.
-  // ---------------------------------------------------------------------------
-  'editorial-slope':    lazyChart(() => import('@/components/sectors/CompetitionSlopeChart'), 'CompetitionSlopeChart'),
-  'editorial-treemap':  lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'SectorTreemapStory'),
-  'editorial-beeswarm': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'RiskSpendBeeswarmStory'),
-  'editorial-swimlane': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'CategorySwimlaneStory'),
-  'editorial-dumbbell': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'CategoryDumbbellStory'),
-  // ---------------------------------------------------------------------------
-  // Volatilidad story — n-P3 (2026-05-04)
-  // Self-contained illustrative charts, no live API calls.
-  // ---------------------------------------------------------------------------
-  'vendor-price-trajectory': lazyChart(() => import('@/components/stories/VendorPriceTrajectory'), 'VendorPriceTrajectory'),
-  'venn-convergence':        lazyChart(() => import('@/components/stories/VennConvergence'), 'VennConvergence'),
-}
-
-// Fallback map: chapter.chartConfig.type → chartId when no chartId is specified
-const TYPE_TO_CHART_ID: Record<string, string> = {
-  'da-trend':    'da-rate-trend',
-  'sector-bar':  'da-by-sector',
-  'comparison':  'amlo-era-comparison',
-  'year-bar':    'monthly-spending',
-  'vendor-list': 'vendor-concentration',
-  'radar':       'administration-fingerprints',
-  'fingerprint': 'vendor-fingerprint',
-  'trends':      'sector-risk-trends',
-  'calendar':    'risk-calendar',
-  'network':     'community-bubbles',
-  'pyramid':     'risk-pyramid',
-  'scatter':     'sector-paradox',
-  'sunburst':    'admin-sunburst',
-  'racing':      'racing-bar',
-  'breakdown':   'procedure-breakdown',
-  // n-P1 editorial sector chart types (self-fetching)
-  'editorial-slope':    'editorial-slope',
-  'editorial-treemap':  'editorial-treemap',
-  'editorial-beeswarm': 'editorial-beeswarm',
-  'editorial-swimlane': 'editorial-swimlane',
-  'editorial-dumbbell': 'editorial-dumbbell',
-  // n-P3 volatilidad charts (illustrative, self-contained)
-  'vendor-price-trajectory': 'vendor-price-trajectory',
-  'venn-convergence':        'venn-convergence',
 }
 
 // ---------------------------------------------------------------------------
@@ -286,59 +188,6 @@ function pickChapterVariant(
   return 'standard'
 }
 
-// ── Chart skeleton — fixed-height shimmer placeholder for lazy charts ─────
-//
-// The 41 story charts in CHART_REGISTRY are lazy-loaded; until their chunk
-// resolves the chapter showed a bare title box with NO reserved height, so
-// the prose below jumped when the chart finally mounted. This skeleton
-// reserves a chart-sized block (~320px, the typical story-chart plot height)
-// with a subtle pulse so chapters read on first paint with zero layout shift.
-//
-// The pulse uses Tailwind's `animate-pulse`; the global
-// `@media (prefers-reduced-motion: reduce)` rule in index.css already pins
-// every animation-duration to 0.01ms, so reduced-motion readers get a static
-// placeholder for free — no per-element motion-reduce class needed.
-
-const CHART_SKELETON_HEIGHT = 320
-
-function ChartSkeleton({ title, lang }: { title: string; lang: 'en' | 'es' }) {
-  const loadingLabel = lang === 'es'
-    ? `Cargando gráfico: ${title}`
-    : `Loading chart: ${title}`
-  // Deterministic bar heights so the shimmer reads as a chart silhouette,
-  // not a flat block — stable across renders (no Math.random repaint flicker).
-  const bars = [0.42, 0.68, 0.55, 0.82, 0.6, 0.95, 0.7, 0.5, 0.78, 0.62, 0.88, 0.45]
-  return (
-    <div
-      role="status"
-      aria-busy="true"
-      aria-label={loadingLabel}
-      className="bg-background-card border border-border rounded-sm overflow-hidden animate-pulse"
-      style={{ height: CHART_SKELETON_HEIGHT }}
-    >
-      {/* Title strip */}
-      <div className="px-5 pt-5">
-        <div className="h-2.5 w-24 rounded-full bg-background-elevated mb-2.5" />
-        <div className="h-3.5 w-2/3 max-w-xs rounded-sm bg-background-elevated" />
-      </div>
-      {/* Plot silhouette — baseline + faint bar columns */}
-      <div className="relative px-5 mt-6" style={{ height: CHART_SKELETON_HEIGHT - 110 }}>
-        <div className="absolute inset-x-5 bottom-0 h-px bg-border" aria-hidden="true" />
-        <div className="flex h-full items-end gap-2">
-          {bars.map((h, i) => (
-            <div
-              key={i}
-              className="flex-1 rounded-t-sm bg-background-elevated"
-              style={{ height: `${h * 100}%` }}
-            />
-          ))}
-        </div>
-      </div>
-      <span className="sr-only">{loadingLabel}</span>
-    </div>
-  )
-}
-
 // ── Render helpers (shared across variants) ───────────────────────────────
 
 function renderChartBlock(
@@ -371,6 +220,24 @@ function renderChartBlock(
       </ScrollReveal>
     )
   }
+  // Volatilidad story — two self-contained illustrative charts that carry no
+  // data payload in story-content.ts. They used to resolve through the lazy
+  // CHART_REGISTRY, which rendered them prop-less and so pinned them to their
+  // Spanish default on the English page; dispatching here passes `lang`.
+  if (cfg.type === 'vendor-price-trajectory') {
+    return (
+      <ScrollReveal className={className}>
+        <VendorPriceTrajectory lang={lang} />
+      </ScrollReveal>
+    )
+  }
+  if (cfg.type === 'venn-convergence') {
+    return (
+      <ScrollReveal className={className}>
+        <VennConvergence lang={lang} />
+      </ScrollReveal>
+    )
+  }
   if (cfg.data) {
     const InlineChart = INLINE_CHART_MAP[cfg.type]
     return (
@@ -389,23 +256,17 @@ function renderChartBlock(
       </ScrollReveal>
     )
   }
-  const chartId = cfg.chartId || TYPE_TO_CHART_ID[cfg.type]
-  const ChartComponent = chartId ? CHART_REGISTRY[chartId] : undefined
+  // No inline renderer matched — keep the labelled placeholder so the chapter
+  // still announces the figure it was meant to carry.
   return (
     <ScrollReveal className={className}>
-      {ChartComponent ? (
-        <Suspense fallback={<ChartSkeleton title={cfg.title} lang={lang} />}>
-          <ChartComponent />
-        </Suspense>
-      ) : (
-        <div
-          className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
-          role="img"
-          aria-label={cfg.title}
-        >
-          {cfg.title}
-        </div>
-      )}
+      <div
+        className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
+        role="img"
+        aria-label={cfg.title}
+      >
+        {cfg.title}
+      </div>
     </ScrollReveal>
   )
 }
@@ -550,53 +411,6 @@ function HeroArtwork({ accentColor, variant = 'cluster' }: { accentColor: string
         </g>
       ))}
     </svg>
-  )
-}
-
-// ── KeyFactsStrip — inline mini-infographic, 3 facts in a row.
-//   A visual breakout that summarizes the chapter's key numbers. Designed
-//   to appear MID-CHAPTER as a moment of revelation (vs the existing
-//   pullquote which is more text+stat). ─────────────────────────────────
-
-export function KeyFactsStrip({ accentColor, facts }: {
-  accentColor: string
-  facts: Array<{ value: string; label: string; sublabel?: string }>
-}) {
-  return (
-    <ScrollReveal className="my-10">
-      <div
-        className="rounded-lg overflow-hidden"
-        style={{
-          border: `1px solid var(--color-border)`,
-          background: `linear-gradient(135deg, ${accentColor}06, transparent 70%)`,
-        }}
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
-          {facts.map((f, i) => (
-            <div key={i} className="px-5 py-5 sm:py-6">
-              <div
-                className="font-extrabold tabular-nums leading-[0.95] tracking-[-0.02em] mb-1"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  color: accentColor,
-                  fontSize: 'clamp(28px, 4vw, 36px)',
-                }}
-              >
-                {f.value}
-              </div>
-              <div className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted mb-0.5">
-                {f.label}
-              </div>
-              {f.sublabel && (
-                <div className="text-[13px] text-text-secondary leading-[1.45]">
-                  {f.sublabel}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </ScrollReveal>
   )
 }
 
