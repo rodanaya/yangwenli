@@ -29,9 +29,17 @@ export function BuyersLedger({ items, lang, onPick }: {
             className="w-full grid grid-cols-[1.4rem_1fr_auto] items-center gap-x-3 py-2 text-left cursor-pointer hover:bg-surface-2 transition-colors"
             aria-label={es ? `Filtrar el registro por ${inst.siglas}` : `Filter the register by ${inst.siglas}`}>
             <span className="font-mono text-[11px] text-text-muted tabular-nums text-right">{i + 1}</span>
-            <span className="font-mono text-[14px] font-semibold text-text-primary truncate">{inst.siglas}</span>
+            {/* The siglas ARE the ranking — a truncated one ranks nothing. The
+                22-dot strip beside them is ~198px of fixed width, which at 390
+                left this 1fr column about one character wide and `truncate`
+                cut every row to "I…" / "A…" / "B…". The strip drops below `sm`
+                and the code reads in full; the score and the count, the two
+                quantities, stay at every width. */}
+            <span className="font-mono text-[14px] font-semibold text-text-primary whitespace-nowrap">{inst.siglas}</span>
             <span className="flex items-center gap-2 justify-self-end">
-              <DotBar value={inst.avg_score} max={100} dots={22} color={RISK_COLORS.high} ariaLabel={`${inst.siglas}: ${inst.avg_score}`} />
+              <span className="hidden sm:block">
+                <DotBar value={inst.avg_score} max={100} dots={22} color={RISK_COLORS.high} ariaLabel={`${inst.siglas}: ${inst.avg_score}`} />
+              </span>
               <span className="font-mono text-xs tabular-nums" style={{ color: RISK_COLORS.high }}>{inst.avg_score.toFixed(1)}</span>
               <span className="font-mono text-[10px] text-text-muted w-14 text-right">({formatNumber(inst.count)})</span>
             </span>
