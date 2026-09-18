@@ -7,12 +7,15 @@
  */
 
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react'
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight, FileText } from 'lucide-react'
 import { getStoryBySlug, getRelatedStories, localizeChapter, localizeStory } from '@/lib/story-content'
-import type { StoryChapterDef, StoryDef, StoryStatus } from '@/lib/story-content'
+import type { StoryChapterDef, StoryChartLive, StoryDef, StoryStatus } from '@/lib/story-content'
+import type { GapFigureKind } from '@/components/stories/live/GapFigures'
+import type { EmergencyFigureKind } from '@/components/stories/live/EmergencyFigures'
+import { StickyStepFrame, useProseStage } from '@/components/stories/live/StickyStepFigure'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { OutletBadge } from '@/components/stories/OutletBadge'
 import ChapterBanner from '@/components/stories/ChapterBanner'
@@ -71,13 +74,30 @@ const INLINE_CHART_MAP: Record<string, InlineChartComponent> = {
 // ---------------------------------------------------------------------------
 // Live figures — API-backed plates (STORY_DAYS principle 2).
 //
-// One lazy chunk for all five `el-vacio` figures: they always render on the
-// same page and share one `/gap/summary` query, so five chunks would be five
-// requests for one story. The chunk is only fetched on a story that declares
-// `chartConfig.live`.
+// One lazy chunk PER STORY, not per figure: a story's figures always render on
+// the same page and share their queries, so a chunk each would be N requests
+// for one page. A chunk is only fetched by a story that declares a `live` kind
+// from its family — an `el-vacio` reader never downloads SD-02's figures.
 // ---------------------------------------------------------------------------
 
 const LiveGapFigure = lazy(() => import('@/components/stories/live/GapFigures'))
+const LiveEmergencyFigure = lazy(() => import('@/components/stories/live/EmergencyFigures'))
+
+/** Route a `chartConfig.live` kind to the story family that owns it. */
+function LiveFigure({
+  kind,
+  lang,
+  stage,
+}: {
+  kind: NonNullable<StoryChartLive>
+  lang: 'en' | 'es'
+  stage?: number
+}) {
+  if (kind.startsWith('covid-')) {
+    return <LiveEmergencyFigure kind={kind as EmergencyFigureKind} lang={lang} stage={stage} />
+  }
+  return <LiveGapFigure kind={kind as GapFigureKind} lang={lang} stage={stage} />
+}
 
 /** Suspense fallback — holds the ChartCard's shape while the chunk loads. */
 function LiveFigureSkeleton({ lang }: { lang: 'en' | 'es' }) {
@@ -316,39 +336,48 @@ function renderTypedChartBlock(
 }
 
 /**
- * A chapter's figures: the live plate (when `chartConfig.live` is set) and the
- * typed inline chart (when `chartConfig.data` is set). A chapter may carry both
- * — SD-01 ch3 opens with its typed procedure bar and closes with the live
- * exception catalog (`liveAfter`), while ch4 leads with the live buyers ledger
- * and follows with the typed roster.
+ * A chapter's figures: up to two live plates (`chartConfig.live` and `live2`)
+ * and the typed inline chart (when `chartConfig.data` is set). A chapter may
+ * carry all three — SD-01 ch3 opens with its typed procedure bar and closes
+ * with the live exception catalog (`liveAfter`), while SD-02 ch2 and ch3 each
+ * carry two live figures and no typed one.
+ *
+ * `live2` always renders last: it is the chapter's second exhibit, so it reads
+ * after both the first plate and whatever typed figure sits between them.
  */
 function renderChartBlock(
   chapter: StoryChapterDef,
   className = 'my-8',
   lang: 'en' | 'es' = 'en',
   stage?: number,
+  /**
+   * `primary` is the first live plate alone — what a scrolly chapter pins in
+   * its sticky frame; `secondary` is everything that follows it, rendered in
+   * normal flow below the prose. Omitted, the chapter renders all of it.
+   */
+  only?: 'primary' | 'secondary',
 ) {
   const cfg = chapter.chartConfig
   if (!cfg) return null
-  const typed = renderTypedChartBlock(chapter, className, lang)
-  if (!cfg.live) return typed
-  const live = (
-    <ScrollReveal className={className}>
+  const plate = (kind: NonNullable<StoryChartLive>, withStage: boolean) => (
+    <ScrollReveal key={kind} className={className}>
       <Suspense fallback={<LiveFigureSkeleton lang={lang} />}>
-        <LiveGapFigure kind={cfg.live} lang={lang} stage={stage} />
+        <LiveFigure kind={kind} lang={lang} stage={withStage ? stage : undefined} />
       </Suspense>
     </ScrollReveal>
   )
-  if (!typed) return live
-  return cfg.liveAfter ? (
+  const live = cfg.live ? plate(cfg.live, true) : null
+  if (only === 'primary') return live
+  const typed = renderTypedChartBlock(chapter, className, lang)
+  const second = cfg.live2 ? plate(cfg.live2, false) : null
+  if (only === 'secondary') return second
+  if (!live) return typed
+  if (!typed && !second) return live
+  return (
     <>
-      {typed}
-      {live}
-    </>
-  ) : (
-    <>
-      {live}
-      {typed}
+      {cfg.liveAfter ? typed : live}
+      {cfg.liveAfter ? live : typed}
+      {second}
     </>
   )
 }
@@ -732,90 +761,10 @@ function ChapterDivider({
   )
 }
 
-// ── Variant: HERO (chapter 1) ─────────────────────────────────────────────
+// ── Variant: HERO (chapter 1) ─────────────────────────────────
 
-/**
- * useProseStage — drive a figure's beat from which paragraph the reader is on.
- *
- * The scrolly mechanic STORY_DAYS asks for, in the single reading column: the
- * figure sticks at the top of the chapter and steps as each paragraph crosses
- * the middle 20% of the viewport. `-40% 0px -40%` is that band.
- *
- * `enabled` is false below `lg`, where the figure is not sticky and stepping a
- * drawing the reader has already scrolled past would be noise: the caller pins
- * the last beat instead.
- *
- * Kept local to this page for Day 1. If a second story needs the same mechanic
- * it earns `components/stories/live/StickyStepFigure.tsx`; one caller does not.
- */
-function useProseStage(count: number, enabled: boolean, maxStage: number) {
-  const [stage, setStage] = useState(enabled ? 0 : maxStage)
-  const nodes = useRef<(HTMLElement | null)[]>([])
-
-  const register = useCallback((el: HTMLElement | null, i: number) => {
-    nodes.current[i] = el
-  }, [])
-
-  useEffect(() => {
-    if (!enabled) {
-      setStage(maxStage)
-      return
-    }
-    const els = nodes.current.slice(0, count).filter(Boolean) as HTMLElement[]
-    if (!els.length || typeof IntersectionObserver === 'undefined') {
-      setStage(maxStage)
-      return
-    }
-    const visible = new Set<number>()
-    // Nothing in the band: either the chapter is still below the reader (beat
-    // 0) or they have scrolled past it, in which case the drawing stays
-    // finished rather than snapping back to blank.
-    const settleOutOfBand = () => {
-      if (visible.size) return
-      const first = els[0].getBoundingClientRect()
-      setStage(first.top > window.innerHeight * 0.6 ? 0 : maxStage)
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          const i = els.indexOf(e.target as HTMLElement)
-          if (i < 0) continue
-          if (e.isIntersecting) visible.add(i)
-          else visible.delete(i)
-        }
-        if (visible.size) setStage(Math.min(Math.max(...visible) + 1, maxStage))
-        else settleOutOfBand()
-      },
-      { rootMargin: '-40% 0px -40% 0px' },
-    )
-    els.forEach((el) => io.observe(el))
-
-    // A jump — a chapter-nav anchor, a restored scroll position, back-to-top —
-    // can move the reader from past the chapter to above it without any
-    // observed paragraph crossing the band, so the observer never fires and
-    // the beat would stay stale. This settles it. While a paragraph IS in the
-    // band, which is the whole time the chapter is being read, it costs one
-    // Set lookup and reads no layout.
-    let raf = 0
-    const onScroll = () => {
-      if (visible.size || raf) return
-      raf = requestAnimationFrame(() => {
-        raf = 0
-        settleOutOfBand()
-      })
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      io.disconnect()
-      window.removeEventListener('scroll', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [enabled, count, maxStage])
-
-  return { stage, register }
-}
-
-const BLACKOUT_MAX_STAGE = 3
+/** Both stepped figures shipped so far draw in four beats (0–3). */
+const STEP_MAX_STAGE = 3
 
 function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
   const { t, i18n } = useTranslation('common')
@@ -823,13 +772,16 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
   const paddedNumber = String(chapter.number).padStart(2, '0')
   // SD-01 F1 — the blackout diagram is drawn in beats as the hero's prose
   // scrolls past it. Every other hero keeps the figure-below-prose flow.
-  const isScrolly = chapter.chartConfig?.live === 'gap-blackout'
+  const isScrolly = chapter.chartConfig?.scrolly === true
   const narrow = useIsMobile(1023)
   const { stage, register } = useProseStage(
     chapter.prose.length,
     isScrolly && !narrow,
-    BLACKOUT_MAX_STAGE,
+    STEP_MAX_STAGE,
   )
+  // A scrolly chapter pinned its first plate above the prose; what is left for
+  // the figure column below is only its second exhibit, which may be nothing.
+  const belowProse = renderChartBlock(chapter, '', lang, undefined, isScrolly ? 'secondary' : undefined)
   return (
     <section
       id={`chapter-${chapter.id}`}
@@ -904,16 +856,9 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
           figure-after-prose flow. */}
       <div className={isScrolly ? 'relative' : undefined}>
         {isScrolly && (
-          <div
-            data-stage={stage}
-            // `py-2` is load-bearing, not spacing: without padding the figure's
-            // own vertical margin collapses through this div, so the margin
-            // band sits OUTSIDE the background box and the prose scrolls
-            // visibly through it while the figure is stuck.
-            className="max-w-[760px] mx-auto px-4 sm:px-0 py-2 bg-background lg:sticky lg:top-24 lg:z-10"
-          >
-            {renderChartBlock(chapter, '', lang, stage)}
-          </div>
+          <StickyStepFrame stage={stage}>
+            {renderChartBlock(chapter, '', lang, stage, 'primary')}
+          </StickyStepFrame>
         )}
 
         {/* Lede paragraph with drop cap + remaining body */}
@@ -951,10 +896,8 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
           as the 640 text above it. Was a negative-margin bleed out of the
           prose div, which made the hero the one chapter whose figure width
           depended on the text column instead of the frame. */}
-      {chapter.chartConfig && !isScrolly && (
-        <div className="max-w-[760px] mx-auto px-4 sm:px-0 my-10">
-          {renderChartBlock(chapter, '', lang)}
-        </div>
+      {belowProse && (
+        <div className="max-w-[760px] mx-auto px-4 sm:px-0 my-10">{belowProse}</div>
       )}
     </section>
   )
@@ -1488,6 +1431,16 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 function StandardChapter({ chapter, story, accentColor, isFirst = false }: ChapterRenderProps) {
   const { t, i18n } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  // SD-02 F2 — a `standard` chapter can carry the stepped figure too: it goes
+  // above the prose and sticks there, exactly as the hero's does.
+  const isScrolly = chapter.chartConfig?.scrolly === true
+  const narrow = useIsMobile(1023)
+  const { stage, register } = useProseStage(
+    chapter.prose.length,
+    isScrolly && !narrow,
+    STEP_MAX_STAGE,
+  )
+  const belowProse = renderChartBlock(chapter, 'my-8', lang, undefined, isScrolly ? 'secondary' : undefined)
   return (
     <section
       id={`chapter-${chapter.id}`}
@@ -1502,33 +1455,40 @@ function StandardChapter({ chapter, story, accentColor, isFirst = false }: Chapt
         color={accentColor}
       />
 
-      <div className="max-w-[640px] mx-auto px-4 sm:px-0">
-        {chapter.prose.map((paragraph, i) => (
-          <ScrollReveal key={i} delay={i * 60}>
-            <p
-              className={cn(
-                'text-text-primary leading-[1.75] mb-5 text-[17px]',
-                i === 0 && 'feature-dropcap',
-              )}
-              style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
-            >
-              {paragraph}
-            </p>
-          </ScrollReveal>
-        ))}
-
-        {chapter.sources && chapter.sources.length > 0 && (
-          <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
+      <div className={isScrolly ? 'relative' : undefined}>
+        {isScrolly && (
+          <StickyStepFrame stage={stage}>
+            {renderChartBlock(chapter, '', lang, stage, 'primary')}
+          </StickyStepFrame>
         )}
+
+        <div className="max-w-[640px] mx-auto px-4 sm:px-0">
+          {chapter.prose.map((paragraph, i) => (
+            <ScrollReveal key={i} delay={i * 60}>
+              <p
+                ref={isScrolly ? (el) => register(el, i) : undefined}
+                className={cn(
+                  'text-text-primary leading-[1.75] mb-5 text-[17px]',
+                  i === 0 && 'feature-dropcap',
+                )}
+                style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+              >
+                {paragraph}
+              </p>
+            </ScrollReveal>
+          ))}
+
+          {chapter.sources && chapter.sources.length > 0 && (
+            <ChapterSources sources={chapter.sources} chapterId={chapter.id} />
+          )}
+        </div>
       </div>
 
       {/* Chart in the 760 figure column — overhangs the 640 text by 60px a
-          side, the same overhang every other variant's figure gets. */}
-      {chapter.chartConfig && (
-        <div className="max-w-[760px] mx-auto px-4 sm:px-0">
-          {renderChartBlock(chapter, 'my-8', lang)}
-        </div>
-      )}
+          side, the same overhang every other variant's figure gets. A scrolly
+          chapter already rendered its first plate above the prose; only its
+          `live2` exhibit lands here. */}
+      {belowProse && <div className="max-w-[760px] mx-auto px-4 sm:px-0">{belowProse}</div>}
 
       {chapter.pullquote && (
         <div className="max-w-[640px] mx-auto px-4 sm:px-0">

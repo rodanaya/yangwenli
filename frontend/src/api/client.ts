@@ -327,10 +327,13 @@ function buildQueryParams(params: Record<string, unknown>): URLSearchParams {
 
 export const sectorApi = {
   /**
-   * Get all sectors with statistics
+   * Get all sectors with statistics.
+   * `year` restricts every statistic to contracts awarded in that year — the
+   * router already accepts it; SD-02 F5 compares 2019 against 2020 with it.
    */
-  async getAll(): Promise<SectorListResponse> {
-    const { data } = await api.get<SectorListResponse>('/sectors')
+  async getAll(params: { year?: number } = {}): Promise<SectorListResponse> {
+    const qs = params.year ? `?year=${params.year}` : ''
+    const { data } = await api.get<SectorListResponse>(`/sectors${qs}`)
     return data
   },
 

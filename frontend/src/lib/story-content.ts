@@ -96,9 +96,21 @@ export interface StoryChapterDef {
      * the matching component; a chapter may carry BOTH this and a typed chart,
      * in which case `liveAfter` decides the order.
      */
-    live?: 'gap-blackout' | 'gap-funnel' | 'gap-exceptions' | 'gap-buyers' | 'gap-grade'
+    live?: StoryChartLive
+    /**
+     * A chapter's second live exhibit, always rendered last. SD-02 ch2 pairs
+     * the 36-month line with HEMOSER's award calendar; ch3 pairs the ratchet
+     * with the sector dumbbell.
+     */
+    live2?: StoryChartLive
     /** Render the live figure AFTER the typed one (default: before). */
     liveAfter?: boolean
+    /**
+     * Step `live` as the chapter's paragraphs cross mid-viewport, with the
+     * figure pinned above them at `lg` (`StickyStepFigure`). `live2` and any
+     * typed figure stay in normal flow below the prose.
+     */
+    scrolly?: boolean
     highlight?: string
     title: string
     /** Optional Spanish translation of `title`. */
@@ -407,6 +419,25 @@ export interface StoryDef {
   }>
 }
 
+/**
+ * The API-backed figures a chapter can ask for, one family per story day.
+ * `StoryNarrative` routes the prefix to the lazy chunk that owns it.
+ */
+export type StoryChartLive =
+  // SD-01 `el-vacio` — /gap/summary
+  | 'gap-blackout'
+  | 'gap-funnel'
+  | 'gap-exceptions'
+  | 'gap-buyers'
+  | 'gap-grade'
+  // SD-02 `el-ano-de-la-emergencia` — year-over-year, monthly-breakdown,
+  // vendor contracts, sectors-by-year
+  | 'covid-floor'
+  | 'covid-months'
+  | 'covid-hemoser-calendar'
+  | 'covid-ratchet'
+  | 'covid-sectors'
+
 /** ARIA pattern codes from the queue typology (P1–P7). */
 export type AriaPattern = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
 
@@ -521,6 +552,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'live',
           live: 'gap-blackout',
+          scrolly: true,
           chartId: 'gap-blackout',
           title: 'Twenty-three years of record, then silence',
           title_es: 'Veintitrés años de registro, luego silencio',
@@ -5494,48 +5526,48 @@ export const STORIES: StoryDef[] = [
     headline: "The Ratchet",
     headline_es: "El trinquete",
     subheadline:
-      "One emergency decree on March 30, 2020 suspended Mexico's competitive-bidding rules overnight. Direct awards jumped from 72.3% to 87%, ghost-pattern vendors collected billions in same-day contracts — and four years later the rate has never come back down.",
+      "One emergency decree on March 30, 2020 suspended Mexico's competitive-bidding rules overnight. The direct-award rate barely moved — it was already 77.8%. What the emergency changed was permanent: every year since has been more direct than any year before it.",
     subheadline_es:
-      "Un decreto de emergencia, el 30 de marzo de 2020, suspendió de un día para otro las reglas de licitación competitiva en México. La adjudicación directa saltó del 72.3% al 87%, proveedores con patrón de empresa fantasma cobraron miles de millones en contratos del mismo día — y cuatro años después la tasa nunca ha vuelto a bajar.",
+      "Un decreto de emergencia, el 30 de marzo de 2020, suspendió de un día para otro las reglas de licitación competitiva en México. La tasa de adjudicación directa apenas se movió: ya estaba en 77.8%. Lo que la emergencia cambió fue permanente: cada año desde entonces ha sido más directo que cualquier año anterior.",
     byline: 'RUBLI Unidad de Análisis de Datos',
     estimatedMinutes: 10,
     status: 'reporteado',
     leadStat: {
-      value: '87%',
-      label: "direct-award rate · 2020 · the rupture year",
-      label_es: "tasa de adjudicación directa · 2020 · el año de la ruptura",
-      sublabel: "up from 72.3% the year before — and it never reset",
-      sublabel_es: "arriba del 72.3% del año anterior — y nunca se reinició",
+      value: '79.1%',
+      label: "the lowest direct-award year since the emergency · 2022",
+      label_es: "el año menos directo desde la emergencia · 2022",
+      sublabel: "higher than every year CompraNet recorded before the pandemic",
+      sublabel_es: "más alto que cualquier año que CompraNet registró antes de la pandemia",
       color: '#dc2626',
     },
     kickerStats: [
       {
         prefix: "In 2019, competition still won",
         prefix_es: "En 2019, la competencia todavía ganaba en",
-        value: '27.7%',
+        value: '22.2%',
         suffix: "of contracts.",
         suffix_es: "de los contratos.",
         tone: 'muted',
       },
       {
-        prefix: "In 2020, that collapsed to just",
-        prefix_es: "En 2020 eso se desplomó a apenas",
-        value: '13%',
-        suffix: "— one contract in eight.",
-        suffix_es: "— un contrato de cada ocho.",
+        prefix: "In 2020 that barely moved, to",
+        prefix_es: "En 2020 eso apenas se movió, a",
+        value: '21.9%',
+        suffix: "— while awarded value rose 44%.",
+        suffix_es: "— mientras el monto adjudicado subía 44%.",
         tone: 'critical',
       },
       {
-        prefix: "HEMOSER, a ghost-pattern vendor, took",
-        prefix_es: "HEMOSER, proveedor con patrón fantasma, se llevó",
-        value: '17.2B',
-        suffix: "from IMSS in same-day awards.",
-        suffix_es: "del IMSS en adjudicaciones del mismo día.",
+        prefix: "HEMOSER, a confirmed case in RUBLI's ground truth, booked",
+        prefix_es: "HEMOSER, caso confirmado en el ground truth de RUBLI, facturó",
+        value: '4.5B MXN',
+        suffix: "in 2020 — 97% of it from IMSS.",
+        suffix_es: "en 2020 — el 97% del IMSS.",
         tone: 'data',
       },
     ],
     lensTags: {
-      patterns: ['P2', 'P5'],
+      patterns: ['P5', 'P7'],
       sectors: ['salud'],
       years: [2020, 2021],
     },
@@ -5550,13 +5582,13 @@ export const STORIES: StoryDef[] = [
         subtitle_es:
           "Ya era poco competitivo — pero cada atajo aún tenía que quedar por escrito",
         prose: [
-          "Mexican federal procurement was rigged against competition long before COVID. In 2019, 72.3% of federal contracts were handed out as direct awards, no bidding. That was not a bad year. Across five administrations and 23 years, the direct-award floor has never dropped below 60%. The OECD considers 15-20% the ceiling for a competitive system. By that yardstick, the entire Mexican record is an outlier.",
-          "But the pre-COVID system had one thing the post-COVID system lost: a tripwire. The Ley de Adquisiciones requires competitive bidding by default and treats direct award as the exception — one that demands a written justification. A purchasing officer who wanted to skip the bidding still had to put on paper why. In 2019, 27.7% of contracts were competitive. A minority, but a defended one: every direct award stood on the record as a documented departure from the rule.",
+          "Mexican federal procurement was rigged against competition long before COVID. In 2019, 77.8% of federal contracts were handed out as direct awards, no bidding. That was not a bad year — it was the normal one, and the highest of a decade that had climbed almost without interruption. CompraNet only began recording the award procedure in 2010; across every year it does record, the direct-award rate has never dropped below 60.1%. The OECD considers 15-20% the ceiling for a competitive system. By that yardstick, the entire Mexican record is an outlier.",
+          "But the pre-COVID system had one thing the post-COVID system lost: a tripwire. The Ley de Adquisiciones requires competitive bidding by default and treats direct award as the exception — one that demands a written justification. A purchasing officer who wanted to skip the bidding still had to put on paper why. In 2019, 22.2% of contracts were competitive. A minority, but a defended one: every direct award stood on the record as a documented departure from the rule.",
           "That distinction is the whole story: the system was strained, not open. What kept it from tipping over was procedural, not statistical — the obligation to explain. What happened in 2020 was not the corruption of something clean. It was the removal of the one thing holding a tilted system in place.",
         ],
         prose_es: [
-          "La contratación federal mexicana estaba amañada contra la competencia mucho antes del COVID. En 2019, el 72.3% de los contratos federales se entregaron por adjudicación directa, sin licitar. No fue un mal año: a lo largo de cinco administraciones y 23 años, el piso de adjudicación directa nunca ha bajado del 60%. La OCDE considera que el 15-20% es el tope para un sistema competitivo. Con esa vara, todo el expediente mexicano es un caso atípico.",
-          "Pero el sistema pre-COVID tenía algo que el sistema post-COVID perdió: un cable trampa. La Ley de Adquisiciones exige licitación competitiva por defecto y trata la adjudicación directa como la excepción — una que obliga a justificarse por escrito. El funcionario de compras que quisiera saltarse la licitación todavía tenía que poner en papel por qué. En 2019, el 27.7% de los contratos fueron competitivos. Una minoría, pero defendida: cada adjudicación directa quedaba en el registro como una desviación documentada de la regla.",
+          "La contratación federal mexicana estaba amañada contra la competencia mucho antes del COVID. En 2019, el 77.8% de los contratos federales se entregaron por adjudicación directa, sin licitar. No fue un mal año: fue el año normal, y el más alto de una década que había subido casi sin interrupción. CompraNet apenas empezó a registrar el tipo de procedimiento en 2010; en todos los años que sí registra, la tasa de adjudicación directa nunca ha bajado del 60.1%. La OCDE considera que el 15-20% es el tope para un sistema competitivo. Con esa vara, todo el expediente mexicano es un caso atípico.",
+          "Pero el sistema pre-COVID tenía algo que el sistema post-COVID perdió: un cable trampa. La Ley de Adquisiciones exige licitación competitiva por defecto y trata la adjudicación directa como la excepción — una que obliga a justificarse por escrito. El funcionario de compras que quisiera saltarse la licitación todavía tenía que poner en papel por qué. En 2019, el 22.2% de los contratos fueron competitivos. Una minoría, pero defendida: cada adjudicación directa quedaba en el registro como una desviación documentada de la regla.",
           "Esa distinción es toda la historia. El sistema estaba tensionado, no abierto. Lo que evitaba que se desbordara era procesal, no estadístico: la obligación de explicar. Lo que pasó en 2020 no fue la corrupción de algo limpio. Fue la eliminación de lo único que sostenía en su lugar a un sistema ya inclinado.",
         ],
         pullquote: {
@@ -5564,13 +5596,20 @@ export const STORIES: StoryDef[] = [
             "The pre-COVID system was non-competitive, but it carried a tripwire: every direct award was an exception that had to be justified.",
           quote_es:
             "El sistema pre-COVID era poco competitivo, pero llevaba un cable trampa: cada adjudicación directa era una excepción que tenía que justificarse.",
-          stat: '72.3%',
+          stat: '77.8%',
           statLabel: "Direct-award rate · 2019 · the before-state baseline",
           statLabel_es: "Tasa de adjudicación directa · 2019 · línea base del estado anterior",
         },
+        chartConfig: {
+          type: 'live',
+          live: 'covid-floor',
+          chartId: 'covid-floor',
+          title: 'The years above the line',
+          title_es: 'Los años por encima de la línea',
+        },
         sources: [
           'OCDE. (2022). Government at a Glance. Benchmarks competitividad de compras.',
-          'RUBLI v0.8.5. Módulo year-over-year. Tasas adjudicación directa 2015–2024.',
+          'RUBLI v0.8.5. Módulo year-over-year. Tasas de adjudicación directa 2010–2024; las estructuras 2002–2009 de CompraNet no traen tipo de procedimiento.',
         ],
       },
       {
@@ -5584,30 +5623,41 @@ export const STORIES: StoryDef[] = [
           "30 de marzo de 2020 — competencia suspendida, y quién pasó por la brecha",
         prose: [
           "On March 30, 2020, the federal government declared a national health emergency, and the tripwire was cut. The Ley de Adquisiciones' competitive-bidding requirements were suspended for COVID procurement; any agency could now award contracts directly, with no process and no justification. The rule that had forced an explanation simply stopped applying.",
-          "The volume that came through the gap was staggering. RUBLI records 215,000 contracts in 2020 — the highest single-year count of the AMLO administration, up 23% on the year before. Of those, 87% were direct awards, against 72.3% in 2019. That 14.7-point jump across 215,000 contracts is roughly 31,000 contracts that would have required competition under the old rule. In plain terms: in 2020, only one contract in eight was competitive. The other seven were awarded at a desk.",
-          "Emergency speed is not automatically corruption — the early pandemic was a real supply shock, and speed can beat process. The question is who the suspension let move. One of the biggest winners was HEMOSER, a vendor that matches the P2 ghost-company signature in RUBLI's ARIA pipeline. HEMOSER took MX$17.2 billion from IMSS during the emergency, much of it in same-day awards: the contract signed the same day the request was filed.",
-          "Same-day is the forensic tell. Even with bidding suspended, a real purchase still checks credentials, capacity, and price. A same-day award skips all of it — the vendor was chosen before the paperwork began. And HEMOSER is not alone. The P2 pipeline flags 6,118 vendors nationally carrying the same signature: minimal physical footprint, revenue concentrated in one institution, volatile pricing. The model identifies behavior resembling fraud; it does not prove it. But that is exactly the behavior the lifted rule made room for.",
+          "What came through the gap was not what the headlines promised. RUBLI records 158,309 federal contracts in 2020 — eighteen percent fewer than 2019, not more. The direct-award rate barely registered the decree at all: 78.1%, against 77.8% the year before, a difference of about 460 contracts. What did change was the money. Federal buyers awarded 509 billion pesos in 2020 against 352 billion in 2019, a 45% rise on a shrinking contract count.",
+          "That is the shape of the year, and it is not the one the emergency was blamed for. The suspension did not throw a door open. The door was already open — 2019 handed out more than three contracts in four without a tender — and what the decree removed was the written justification behind each one. Fewer contracts, far more money, and no paper trail explaining the choice.",
+          "Emergency speed is not automatically corruption — the early pandemic was a real supply shock, and speed can beat process. The question is who the suspension let move. One name that keeps surfacing is HEMOSER, a health-supplies vendor sitting in Tier 2 of RUBLI's ARIA queue with a review status of confirmed corrupt and a place in the platform's ground-truth set. In 2020 it booked MX$4.48 billion across 54 awards — 97% of that money from IMSS, against MX$89 million the year before.",
+          "The pattern inside that year is stranger than the emergency story allows. Forty-six of HEMOSER's 54 awards were direct — 85% of them — and those 46 carry under 5% of its money. The two awards that carry 95% of it went through public tenders, in August, months after the decree; RUBLI's model scores both at the top of its scale. The suspension is not where this vendor's money moved. RUBLI's records carry the award date, not the date the request was filed, so the same-day count that ARIA reads is a model feature and not something the calendar below can draw. What the calendar does show is concentration: a single award on 13 August is 71% of HEMOSER's entire year.",
         ],
         prose_es: [
           "El 30 de marzo de 2020, el gobierno federal declaró emergencia sanitaria nacional, y el cable trampa se cortó. Los requisitos de licitación competitiva de la Ley de Adquisiciones quedaron suspendidos para las compras COVID; cualquier dependencia podía ahora adjudicar contratos directamente, sin proceso y sin justificación. La regla que obligaba a explicar simplemente dejó de aplicar.",
-          "El volumen que pasó por la brecha fue brutal. RUBLI registra 215,000 contratos en 2020 — el mayor conteo anual de la administración de AMLO, un 23% por encima del año previo. De ellos, el 87% fueron adjudicaciones directas, contra 72.3% en 2019. Ese salto de 14.7 puntos sobre 215,000 contratos equivale a unos 31,000 contratos que bajo la regla anterior habrían requerido competencia. En claro: en 2020, solo un contrato de cada ocho fue competitivo. Los otros siete se adjudicaron en un escritorio.",
-          "La velocidad de emergencia no es corrupción automática — los primeros meses de la pandemia fueron un choque de oferta real, y la velocidad puede ganarle al proceso. La pregunta es a quién dejó moverse la suspensión. Uno de los mayores ganadores fue HEMOSER, proveedor que coincide con la firma P2 de empresa fantasma en el flujo ARIA de RUBLI. HEMOSER se llevó MX$17.2 mil millones del IMSS durante la emergencia, buena parte en adjudicaciones del mismo día: el contrato firmado el mismo día en que se registró la solicitud.",
-          "El mismo día es el indicio forense. Aun con la licitación suspendida, una compra real todavía verifica credenciales, capacidad y precio. Una adjudicación del mismo día se salta todo eso — el proveedor fue elegido antes de que empezara el papeleo. Y HEMOSER no está solo. El flujo P2 señala 6,118 proveedores a nivel nacional con la misma firma: huella física mínima, ingresos concentrados en una sola institución, precios volátiles. El modelo identifica conductas que se parecen al fraude; no lo demuestra. Pero esa es exactamente la conducta a la que la regla eliminada le abrió espacio.",
+          "Lo que pasó por la brecha no fue lo que prometieron los titulares. RUBLI registra 158,309 contratos federales en 2020 — un 18% menos que en 2019, no más. La tasa de adjudicación directa apenas registró el decreto: 78.1%, contra 77.8% el año anterior, una diferencia de unos 460 contratos. Lo que sí cambió fue el dinero. Las dependencias federales adjudicaron 509 mil millones de pesos en 2020 contra 352 mil millones en 2019, un alza del 45% sobre un conteo de contratos a la baja.",
+          "Esa es la forma del año, y no es la que se le achacó a la emergencia. La suspensión no abrió una puerta de golpe. La puerta ya estaba abierta — en 2019 más de tres de cada cuatro contratos se entregaron sin licitar — y lo que el decreto quitó fue la justificación escrita detrás de cada uno. Menos contratos, mucho más dinero, y ningún rastro en papel que explique la elección.",
+          "La velocidad de emergencia no es corrupción automática — los primeros meses de la pandemia fueron un choque de oferta real, y la velocidad puede ganarle al proceso. La pregunta es a quién dejó moverse la suspensión. Un nombre que reaparece es HEMOSER, proveedor de insumos de salud que está en el Tier 2 de la cola ARIA de RUBLI, con estatus de revisión de corrupción confirmada y un lugar en el conjunto de ground truth de la plataforma. En 2020 facturó MX$4.48 mil millones en 54 adjudicaciones — el 97% de ese dinero del IMSS, contra MX$89 millones el año anterior.",
+          "El patrón dentro de ese año es más extraño de lo que admite el relato de la emergencia. Cuarenta y seis de las 54 adjudicaciones de HEMOSER fueron directas — el 85% — y esas 46 llevan menos del 5% de su dinero. Las dos adjudicaciones que llevan el 95% restante salieron por licitación pública, en agosto, meses después del decreto; el modelo de RUBLI califica ambas en el tope de su escala. La suspensión no es por donde se movió el dinero de este proveedor. Los registros de RUBLI traen la fecha de adjudicación, no la de la solicitud, así que el conteo de \"mismo día\" que lee ARIA es un rasgo del modelo y no algo que el calendario de abajo pueda dibujar. Lo que el calendario sí muestra es concentración: una sola adjudicación del 13 de agosto es el 71% de todo el año de HEMOSER.",
         ],
+        chartConfig: {
+          type: 'live',
+          live: 'covid-months',
+          live2: 'covid-hemoser-calendar',
+          scrolly: true,
+          chartId: 'covid-months',
+          title: 'The month competition was supposed to stop',
+          title_es: 'El mes en que la competencia debía detenerse',
+        },
         pullquote: {
           quote:
-            "A same-day award means the vendor was selected before the paperwork started. There is no other explanation.",
+            "Eighty-five percent of HEMOSER's 2020 awards were direct. They carry under five percent of its money. The rest arrived through public tenders.",
           quote_es:
-            "Una adjudicación del mismo día significa que el proveedor fue seleccionado antes de que comenzara el papeleo. No hay otra explicación.",
-          stat: 'MX$17.2B',
-          statLabel: "HEMOSER COVID contracts · IMSS · same-day awards",
-          statLabel_es: "Contratos COVID HEMOSER · IMSS · adjudicaciones mismo día",
+            "El 85% de las adjudicaciones de HEMOSER en 2020 fueron directas. Llevan menos del 5% de su dinero. El resto llegó por licitación pública.",
+          stat: '4.5B MXN',
+          statLabel: "HEMOSER · 54 awards in 2020 · 97% from IMSS",
+          statLabel_es: "HEMOSER · 54 adjudicaciones en 2020 · 97% del IMSS",
         },
         sources: [
           'Diario Oficial de la Federación. "Acuerdo por el que se declara como emergencia sanitaria." 30 marzo 2020.',
-          'RUBLI v0.8.5. Módulo year-over-year. 215,000 contratos — 2020.',
-          'RUBLI ARIA pipeline. Patrón P2 (empresa fantasma). 6,118 proveedores señalados.',
-          'COMPRANET registros de contratos. Proveedor HEMOSER. 2019–2021 contratos con IMSS.',
+          'RUBLI v0.8.5. Módulo year-over-year y monthly-breakdown. 158,309 contratos — 2020.',
+          'RUBLI ARIA pipeline. HEMOSER: IPS tier 2, patrón primario P7, estatus de revisión corrupción confirmada.',
+          'COMPRANET registros de contratos. Proveedor HEMOSER (id 6038). Adjudicaciones 2020.',
         ],
       },
       {
@@ -5620,107 +5670,43 @@ export const STORIES: StoryDef[] = [
         subtitle_es:
           "La emergencia terminó en 2021. La tasa no.",
         prose: [
-          "The COVID emergency was lifted in 2021. The direct-award rate should have fallen back toward its pre-COVID floor. It didn't. It was 81.2% in 2021, 79.4% in 2022, then climbed back to 82.2% in 2023 and 80.1% in 2024 — every post-emergency year higher than the 79.4% trough. Emergency procurement, it turns out, is a ratchet: it moves in one direction and locks.",
-          "The chart makes the rupture impossible to miss. The line sits near a pre-COVID baseline of 71.2% — a five-year average of 72.7% — spikes to 87 in 2020, then settles onto a post-emergency floor that never drops below 79.4%, a full 7 points above the old average. Two reference lines frame the fault: the 87% ratchet window above, the 71.2% baseline below. Read across them and the year-by-year line stops being a trend. It becomes a before-and-after.",
-          "The verdict is structural, and it spans five administrations and 23 years. Each one inherits its predecessor's direct-award rate; none has delivered a sustained cut; the floor has never fallen below 60% against an OECD target of 15-20%. By that measure, 2020 is not an anomaly. It is the cleanest reading the data offers of a system whose default is non-competition.",
+          "The COVID emergency was lifted in 2021. The direct-award rate should have fallen back toward its pre-COVID level. It didn't. It was 80.0% in 2021, 79.1% in 2022, then climbed to 82.2% in 2023 and settled at 79.4% in 2024 — and the lowest of those four years is higher than every single year CompraNet has ever recorded. Emergency procurement, it turns out, is a ratchet: it moves in one direction and locks.",
+          "The chart makes the shift impossible to miss — though not where you would expect it. The line sits on a 2015–2019 average of 75.8%, barely flinches in 2020 at 78.1%, and then steps onto a post-emergency floor of 79.1% it has not broken since. The rupture is not the spike; there was no spike. It is the step: 3.3 points above the old average at its lowest, 6.4 at its highest, with no year returning to the pre-pandemic band.",
+          "The verdict is structural, and it spans three administrations and every year CompraNet records the procedure for. The rate has climbed from 62.7% in 2010 to the low eighties; no administration has delivered a sustained cut; the floor has never fallen below 60% against an OECD target of 15-20%. By that measure, 2020 is not an anomaly. It is the hinge in a curve that was already bending — and the second figure shows where the hinge actually turned, in one sector rather than across the board.",
           "The emergency did not corrupt the system. It removed the one requirement — justification — that held the non-competitive default in check, and the requirement never came back. The line in time was crossed in one direction only.",
         ],
         prose_es: [
-          "La emergencia COVID se levantó en 2021. La tasa de adjudicación directa debió regresar hacia su piso pre-COVID. No lo hizo. Fue del 81.2% en 2021, del 79.4% en 2022, y luego volvió a subir al 82.2% en 2023 y al 80.1% en 2024 — cada año post-emergencia por encima del mínimo de 79.4%. La contratación de emergencia, resulta, es un trinquete: se mueve en una sola dirección y se traba.",
-          "La gráfica hace imposible no ver la ruptura. La línea se mantiene cerca de una línea base pre-COVID de 71.2% — un promedio de cinco años de 72.7% — salta a 87 en 2020, y luego se asienta en un piso post-emergencia que nunca baja del 79.4%, 7 puntos completos sobre el promedio anterior. Dos líneas de referencia enmarcan la falla: la ventana del trinquete del 87% arriba, la línea base del 71.2% abajo. Si se leen juntas, la línea año a año deja de ser una tendencia. Se vuelve un antes y un después.",
-          "Es un veredicto estructural que abarca cinco administraciones y 23 años. Cada una hereda la tasa de adjudicación directa de su predecesora; ninguna ha logrado un recorte sostenido; el piso nunca ha bajado del 60% contra un objetivo OCDE de 15-20%. Con esa medida, 2020 no es una anomalía. Es la lectura más limpia que ofrecen los datos de un sistema cuyo default es la no-competencia.",
+          "La emergencia COVID se levantó en 2021. La tasa de adjudicación directa debió regresar hacia su nivel pre-COVID. No lo hizo. Fue del 80.0% en 2021, del 79.1% en 2022, luego subió al 82.2% en 2023 y se quedó en 79.4% en 2024 — y el más bajo de esos cuatro años está por encima de cualquier año que CompraNet haya registrado. La contratación de emergencia, resulta, es un trinquete: se mueve en una sola dirección y se traba.",
+          "La gráfica hace imposible no ver el cambio — aunque no donde uno lo esperaría. La línea se apoya en un promedio 2015–2019 de 75.8%, apenas se inmuta en 2020 con 78.1%, y luego sube un escalón a un piso post-emergencia de 79.1% que no ha roto desde entonces. La ruptura no es el pico; no hubo pico. Es el escalón: 3.3 puntos sobre el promedio anterior en su punto más bajo, 6.4 en el más alto, sin que ningún año regrese a la banda pre-pandemia.",
+          "Es un veredicto estructural que abarca tres administraciones y todos los años de los que CompraNet registra el procedimiento. La tasa subió del 62.7% en 2010 a los ochenta y tantos; ninguna administración ha logrado un recorte sostenido; el piso nunca ha bajado del 60% contra un objetivo OCDE de 15-20%. Con esa medida, 2020 no es una anomalía. Es la bisagra de una curva que ya venía doblándose — y la segunda figura muestra dónde giró de verdad esa bisagra: en un sector, no en todos.",
           "La emergencia no corrompió el sistema. Eliminó el único requisito — la justificación — que mantenía a raya el default no-competitivo, y el requisito nunca regresó. La línea en el tiempo se cruzó en una sola dirección.",
         ],
+        // The typed `inline-line` this chapter carried (chartId
+        // 'covid-da-rate-annual') is retired: its 2015-2024 points were hand
+        // authored and every one of them disagreed with /analysis/year-over-year
+        // — 2019 at 72.3 against 77.8, 2020 at 87 against 78.1. The live series
+        // replaces it, and the sector dumbbell follows as the chapter's second
+        // exhibit.
         chartConfig: {
-          type: 'inline-line',
-          title: 'The Line in Time · Direct-Award Rate, Annual 2015–2024',
-          title_es: 'La línea en el tiempo · Tasa de adjudicación directa, anual 2015–2024',
-          chartId: 'covid-da-rate-annual',
-          data: {
-            points: [
-              {
-                label: '2015',
-                value: 71.2,
-              },
-              {
-                label: '2016',
-                value: 72.1,
-              },
-              {
-                label: '2017',
-                value: 73.5,
-              },
-              {
-                label: '2018',
-                value: 74.2,
-              },
-              {
-                label: '2019',
-                value: 72.3,
-                annotation: 'pre-COVID floor',
-                annotation_es: 'piso pre-COVID',
-              },
-              {
-                label: '2020',
-                value: 87,
-                highlight: true,
-                annotation: 'COVID peak · +14pp vs baseline',
-                annotation_es: 'pico COVID · +14pp vs base',
-              },
-              {
-                label: '2021',
-                value: 81.2,
-                highlight: true,
-              },
-              {
-                label: '2022',
-                value: 79.4,
-                highlight: true,
-                annotation: 'post-COVID trough — still +7pp',
-                annotation_es: 'mínimo post-COVID — aún +7pp',
-              },
-              {
-                label: '2023',
-                value: 82.2,
-                highlight: true,
-              },
-              {
-                label: '2024',
-                value: 80.1,
-                highlight: true,
-              },
-            ],
-            maxValue: 90,
-            yMin: 60,
-            unit: '%',
-            referenceLine: {
-              value: 79.4,
-              label: '79.4%',
-              label_es: '79.4%',
-              color: '#dc2626',
-            },
-            referenceLine2: {
-              value: 72.7,
-              label: '72.7%',
-              label_es: '72.7%',
-            },
-            annotation:
-              'Upper red line = the post-COVID floor (79.4%, never breached downward since 2020). Lower line = the pre-COVID baseline (72.7%, five-year average). The 2020 spike never resets — the floor settles ~7pp above the pre-COVID average.',
-            annotation_es:
-              'Línea roja superior = el piso post-COVID (79.4%, nunca rebasado a la baja desde 2020). Línea inferior = la línea base pre-COVID (72.7%, promedio de cinco años). El pico de 2020 no se reinicia — el piso queda ~7pp sobre el promedio pre-COVID.',
-          },
+          type: 'live',
+          live: 'covid-ratchet',
+          live2: 'covid-sectors',
+          chartId: 'covid-ratchet',
+          title: 'It never came back',
+          title_es: 'Nunca regresó',
         },
         pullquote: {
           quote:
             "Emergency procurement is a ratchet. The COVID year proved that removing a barrier to direct award does not create a path back.",
           quote_es:
             "La contratación de emergencia es un trinquete. El año COVID demostró que eliminar una barrera a la adjudicación directa no crea un camino de regreso.",
-          stat: '82.2%',
-          statLabel: "Direct award rate 2023 — above the 2021 post-COVID trough",
-          statLabel_es: "Tasa adjudicación directa 2023 — sobre el mínimo post-COVID de 2021",
+          stat: '79.1%',
+          statLabel: "The lowest post-emergency year — above every year on record before it",
+          statLabel_es: "El año post-emergencia más bajo — sobre cualquier año registrado antes",
         },
         sources: [
-          'RUBLI v0.8.5. Módulo year-over-year. Tasas adjudicación directa 2015–2024.',
+          'RUBLI v0.8.5. Módulo year-over-year. Tasas de adjudicación directa 2010–2024.',
+          'RUBLI v0.8.5. Endpoint /sectors con filtro de año. Adjudicación directa por sector, 2019 y 2020.',
           'OCDE. (2022). Government at a Glance. Benchmarks competitividad de compras.',
           'IMCO. (2021). "Índice de transparencia presupuestaria." Adjudicación directa post-COVID.',
         ],
@@ -5728,17 +5714,27 @@ export const STORIES: StoryDef[] = [
     ],
     nextSteps: [
       "Cross-reference the contracts awarded directly during the COVID emergency against the SAT's EFOS blacklist — how many of those vendors appear on the fiscal blacklist?",
-      'Map the increase by agency: which secretariats posted the largest jumps in direct award during 2020?',
-      'Check whether the 6,118 P2 vendors active in 2020 filed tax declarations consistent with the amounts collected from IMSS.',
+      'Map the increase by agency: only Salud and Otros got more direct in 2020 — which IMSS and ISSSTE units inside Salud account for the +3.3 points?',
+      'Obtain the tender files for the two August 2020 public tenders that carry 95% of HEMOSER\'s year — how many bidders did each attract?',
     ],
     nextSteps_es: [
       'Cruzar los contratos adjudicados directamente durante la emergencia COVID con el listado EFOS del SAT — ¿cuántos de esos proveedores están en la lista negra fiscal?',
-      'Analizar la distribución por dependencia: ¿qué secretarías tuvieron los mayores incrementos en adjudicación directa durante 2020?',
-      'Investigar si los 6,118 proveedores P2 que operaron en 2020 presentaron declaraciones fiscales consistentes con los montos cobrados al IMSS.',
+      'Analizar la distribución por dependencia: sólo Salud y Otros se volvieron más directos en 2020 — ¿qué unidades del IMSS y del ISSSTE dentro de Salud explican esos +3.3 puntos?',
+      'Obtener los expedientes de las dos licitaciones públicas de agosto de 2020 que concentran el 95% del año de HEMOSER — ¿cuántos licitantes atrajo cada una?',
     ],
     caseIds: [],
     relatedSlugs: [],
-    entities: [],
+    entities: [
+      {
+        type: 'vendor',
+        id: 6038,
+        name: 'HEMOSER, S.A. DE C.V.',
+        riskScore: 0.4988,
+        ariaTier: 2,
+        role: 'Health-supplies vendor · 54 awards in 2020, 97% from IMSS',
+        role_es: 'Proveedor de insumos de salud · 54 adjudicaciones en 2020, 97% del IMSS',
+      },
+    ],
   },
 
   // === STORY 12: Inside the Closed Room: The 240-Billion-Peso Market Three Firms Keep Sealed ===
