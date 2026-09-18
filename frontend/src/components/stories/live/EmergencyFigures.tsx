@@ -532,25 +532,38 @@ function Calendar({
             and a percentage from its noun. The buyer's name is the one segment
             allowed to wrap — it is a name, not a number, and it is long. */}
         <p className="mt-3 font-mono text-text-secondary" style={{ fontSize: 12, lineHeight: 1.6 }}>
-          {[
-            es
-              ? `${formatNumber(rows.length)} adjudicaciones en ${days.size} días`
-              : `${formatNumber(rows.length)} awards on ${days.size} days`,
-            formatCompactMXN(sum),
-            es
-              ? `${pct(daShare)} por adjudicación directa, que llevan ${pct(sum ? (100 * daValue) / sum : 0)} del dinero`
-              : `${pct(daShare)} direct award, carrying ${pct(sum ? (100 * daValue) / sum : 0)} of the money`,
+          {([
+            // `nowrap` is only for segments that would split a value from its
+            // unit. A percentage is a single token and cannot break, so the
+            // clause carrying two of them stays wrappable — held unbreakable it
+            // was wider than a 390px card and overflowed by 123px in Spanish.
+            [
+              es
+                ? `${formatNumber(rows.length)} adjudicaciones en ${days.size} días`
+                : `${formatNumber(rows.length)} awards on ${days.size} days`,
+              true,
+            ],
+            [formatCompactMXN(sum), true],
+            [
+              es
+                ? `${pct(daShare)} por adjudicación directa, que llevan ${pct(sum ? (100 * daValue) / sum : 0)} del dinero`
+                : `${pct(daShare)} direct award, carrying ${pct(sum ? (100 * daValue) / sum : 0)} of the money`,
+              false,
+            ],
             ...(complete
               ? []
               : [
-                  es
-                    ? `mostrando ${rows.length} de ${total} adjudicaciones`
-                    : `showing ${rows.length} of ${total} awards`,
+                  [
+                    es
+                      ? `mostrando ${rows.length} de ${total} adjudicaciones`
+                      : `showing ${rows.length} of ${total} awards`,
+                    true,
+                  ] as [string, boolean],
                 ]),
-          ].map((seg, i) => (
+          ] as Array<[string, boolean]>).map(([seg, nowrap], i) => (
             <span key={seg}>
               {i > 0 ? ' · ' : ''}
-              <span className="whitespace-nowrap">{seg}</span>
+              <span className={nowrap ? 'whitespace-nowrap' : undefined}>{seg}</span>
             </span>
           ))}
           {' · '}

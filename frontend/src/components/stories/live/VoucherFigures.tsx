@@ -759,11 +759,14 @@ function Roster({
                 className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 font-mono tabular-nums text-text-muted"
                 style={{ fontSize: 11.5, paddingLeft: 26 }}
               >
-                <span className="text-text-primary">{formatCompactMXN(f.value)}</span>
-                <span>
+                {/* Each cell is one unbreakable unit. A flex item still wraps
+                    its own text, so "51.8B MXN" could split its value from its
+                    unit (STORY_DAYS.md § 7: an amount never breaks). */}
+                <span className="text-text-primary whitespace-nowrap">{formatCompactMXN(f.value)}</span>
+                <span className="whitespace-nowrap">
                   {formatNumber(f.contracts)} {es ? 'contratos' : 'contracts'}
                 </span>
-                <span>
+                <span className="whitespace-nowrap">
                   {f.firstYear}
                   {'–'}
                   {f.lastYear}
@@ -855,12 +858,16 @@ function Sexenios({ firms, lang }: { firms: FirmStats[]; lang: 'en' | 'es' }) {
                 <span className="text-text-primary" style={{ fontSize: 13 }}>
                   {name}
                 </span>
-                <span className="font-mono tabular-nums text-text-muted" style={{ fontSize: 11 }}>
+                <span className="font-mono tabular-nums text-text-muted whitespace-nowrap" style={{ fontSize: 11 }}>
                   {lo}
                   {hi === lo ? '' : `–${hi}`}
                   {hi === partial ? (es ? ' · parcial' : ' · partial') : ''}
                 </span>
-                <span className="font-mono tabular-nums text-text-muted ml-auto" style={{ fontSize: 11 }}>
+                {/* The term's total never splits its unit onto a second line. */}
+                <span
+                  className="font-mono tabular-nums text-text-muted ml-auto whitespace-nowrap"
+                  style={{ fontSize: 11 }}
+                >
                   {formatCompactMXN(t.total)}
                 </span>
               </div>

@@ -186,6 +186,11 @@ function Funnel({ s, lang }: { s: GapSummaryResponse; lang: 'en' | 'es' }) {
   const es = lang === 'es'
   const c = chromeFor('gap-funnel', es)
   const recovered = formatCompactMXN(s.recovered_sum_mxn)
+  // The funnel takes its step labels as plain strings, so the amount inside one
+  // cannot be wrapped in a nowrap span. Non-breaking spaces do the same job in
+  // one character: the line may break before the amount, never inside it
+  // (STORY_DAYS.md § 7).
+  const recoveredNb = recovered.replace(/ /g, ' ')
   return (
     <ChartCard
       eyebrow={c.eyebrow}
@@ -216,8 +221,8 @@ function Funnel({ s, lang }: { s: GapSummaryResponse; lang: 'en' | 'es' }) {
             {
               count: s.recovered_count,
               color: 'var(--color-risk-critical)',
-              labelEn: `with a price read off the scanned award notice by OCR — ${recovered}`,
-              labelEs: `con precio leído del fallo escaneado por OCR — ${recovered}`,
+              labelEn: `with a price read off the scanned award notice by OCR — ${recoveredNb}`,
+              labelEs: `con precio leído del fallo escaneado por OCR — ${recoveredNb}`,
             },
           ]}
         />
