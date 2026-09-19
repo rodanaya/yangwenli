@@ -14522,3 +14522,36 @@ Findings: **None detected.** All regex matches were false positives: code-level 
 
 ### Overall: WARN
 Network policy blocks all outbound HTTPS to rubli.xyz (eighth consecutive blocked run). HTTP and API checks cannot execute from this environment. Local bilingual scan: PASS. **Action required**: migrate this health-check to a GitHub Actions scheduled workflow with an unrestricted runner to verify the live site.
+
+---
+## Visual Review — 2026-09-19T00:24:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (proxy 403) | ✗ |
+| https://rubli.xyz/atlas | 000 (proxy 403) | ✗ |
+| https://rubli.xyz/aria | 000 (proxy 403) | ✗ |
+| https://rubli.xyz/sectors | 000 (proxy 403) | ✗ |
+| https://rubli.xyz/sectors/salud | 000 (proxy 403) | ✗ |
+| https://rubli.xyz/cases | 000 (proxy 403) | ✗ |
+| https://rubli.xyz/methodology | 000 (proxy 403) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (proxy 403) | ✗ |
+
+> **Note**: Proxy returned `connect_rejected` (403 gateway policy denial) for all requests to `rubli.xyz:443`. **Ninth consecutive blocked run** — persistent environment network policy restriction, not a site-down condition.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (network policy) | ✗ |
+| /api/v1/cases | BLOCKED (network policy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (network policy) | ✗ |
+| /api/v1/sectors | BLOCKED (network policy) | ✗ |
+
+### Bilingual Gaps
+- **Raw i18n key leaks**: None detected — all grep hits are TypeScript comments, data-constant property accesses, bibliographic strings, and properly-guarded bilingual ternaries
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+
+### Overall: WARN
+**Persistent blocker (ninth consecutive run)**: HTTP and API health checks remain unverifiable — all blocked by egress proxy policy on rubli.xyz:443. Bilingual gap scan (local): PASS. **Action required**: migrate these checks to a GitHub Actions scheduled workflow with direct internet access.
