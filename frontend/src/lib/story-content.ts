@@ -1193,9 +1193,9 @@ export const STORIES: StoryDef[] = [
         tone: 'critical',
       },
       {
-        value: '~5%',
-        suffix: "estimated audit coverage where risk is highest",
-        suffix_es: "cobertura de auditoría estimada donde el riesgo es mayor",
+        value: '84.8B MXN',
+        suffix: "the register's largest single contract — Operadora CICSA, 2017, scored 1.00",
+        suffix_es: "el contrato individual más grande del registro — Operadora CICSA, 2017, con indicador 1.00",
         tone: 'data',
       },
     ],
