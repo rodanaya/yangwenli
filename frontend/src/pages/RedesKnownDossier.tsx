@@ -161,8 +161,10 @@ function PatternMixBar({ c, isEs }: { c: CommunityIndexItem; isEs: boolean }) {
   const total = c.pattern_mix.reduce((s, m) => s + m.count, 0)
   if (total === 0) return null
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <div className="flex h-[3px] w-24 overflow-hidden rounded-full bg-border/40 shrink-0" aria-hidden="true">
+    <span className="block min-w-0">
+      {/* D4 § 3: the bar owns a full-width line, the key reads on the next
+          one — a 96px strip beside 8.5px truncated text cut both. */}
+      <span className="flex h-[4px] w-full overflow-hidden rounded-full bg-border/40" aria-hidden="true">
         {c.pattern_mix.map((m) => (
           <span
             key={m.pattern}
@@ -172,13 +174,13 @@ function PatternMixBar({ c, isEs }: { c: CommunityIndexItem; isEs: boolean }) {
             }}
           />
         ))}
-      </div>
-      <span className="truncate text-[8.5px] font-mono text-text-muted/60">
+      </span>
+      <span className="mt-1 block text-[10px] font-mono text-text-muted">
         {c.pattern_mix.map((m) => `${m.pattern} ${Math.round((m.count / total) * 100)}%`).join(' · ')}
         {' — '}
         {isEs ? `sobre ${c.labeled_count} clasificados` : `over ${c.labeled_count} labeled`}
       </span>
-    </div>
+    </span>
   )
 }
 
@@ -707,86 +709,83 @@ export default function RedesKnownDossier() {
                   </div>
                 )}
                 {!captureLoading && !captureError && (
-                  <div className="max-h-[72vh] overflow-y-auto pr-1 space-y-1" role="list">
+                  <ul className="max-h-[72vh] overflow-y-auto pr-1 space-y-1">
                     {sortedInstitutions.map((inst, rank) => {
                       const active = inst.institution_id === effectiveInst
                       const daHot = (inst.direct_award_pct ?? 0) > EU_DIRECT_AWARD_LIMIT * 100
                       const hhiHot = (inst.latest_hhi ?? 0) >= HHI_CONCENTRATED
                       return (
-                        <div
+                        <li
                           key={inst.institution_id}
-                          role="button"
-                          tabIndex={0}
-                          aria-pressed={active}
-                          onClick={() => selectInstitution(inst.institution_id)}
-                          onKeyDown={(ev) => {
-                            if (ev.key === 'Enter' || ev.key === ' ') {
-                              ev.preventDefault()
-                              selectInstitution(inst.institution_id)
-                            }
-                          }}
-                          className={cn(
-                            'w-full text-left rounded-sm border px-2.5 py-2 transition-colors cursor-pointer flex items-center gap-2',
-                            active
-                              ? 'border-accent/50 bg-accent/8'
-                              : 'border-border/60 bg-background-card hover:border-border-hover',
-                          )}
-                          style={active ? { boxShadow: 'inset 2px 0 0 var(--color-accent)' } : undefined}
+                          style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 96px' }}
                         >
-                          <WellDisc inst={inst} maxValue={maxInstValue} />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-baseline justify-between gap-2">
-                              <span className="min-w-0 flex items-baseline gap-1.5 text-[13px] font-mono font-bold text-text-primary">
-                                <span className="shrink-0 text-[12px] text-text-muted/60">{rank + 1}</span>
-                                {/* W1 — known buyers ("Instituto Mexicano del Seguro Social")
-                                    must stay recognizable: md (48) + 2-line clamp, full on hover. */}
-                                <span
-                                  className="min-w-0"
-                                  title={inst.name}
-                                  style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.25 }}
-                                >
-                                  {formatEntityName('institution', inst.name, 'full')}
+                          <button
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => selectInstitution(inst.institution_id)}
+                            className={cn(
+                              'w-full text-left rounded-sm border px-2.5 py-2 transition-colors flex items-center gap-2',
+                              'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
+                              active
+                                ? 'border-accent/50 bg-accent/8'
+                                : 'border-border/60 bg-background-card hover:border-border-hover',
+                            )}
+                            style={active ? { boxShadow: 'inset 2px 0 0 var(--color-accent)' } : undefined}
+                          >
+                            <WellDisc inst={inst} maxValue={maxInstValue} />
+                            <span className="block min-w-0 flex-1">
+                              <span className="flex items-baseline justify-between gap-2">
+                                <span className="min-w-0 flex items-baseline gap-1.5 text-[13px] font-mono font-bold text-text-primary">
+                                  <span className="shrink-0 text-[12px] text-text-muted/60">{rank + 1}</span>
+                                  {/* W1 — known buyers ("Instituto Mexicano del Seguro Social")
+                                      must stay recognizable. D4 § 3: no clamp, no title — the
+                                      name is the row's identity and wraps in full. */}
+                                  <span className="min-w-0" style={{ lineHeight: 1.25 }}>
+                                    {formatEntityName('institution', inst.name, 'full')}
+                                  </span>
+                                </span>
+                                <span className="shrink-0 text-[13px] font-mono font-bold text-text-primary">
+                                  {formatCompactMXN(inst.total_value_mxn)}
                                 </span>
                               </span>
-                              <span className="shrink-0 text-[13px] font-mono font-bold text-text-primary">
-                                {formatCompactMXN(inst.total_value_mxn)}
-                              </span>
-                            </div>
-                            <div className="mt-0.5 flex items-center gap-2.5 text-[13px] font-mono text-text-muted/70">
-                              <span>
-                                DA{' '}
-                                <span style={daHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
-                                  {inst.direct_award_pct != null ? `${Math.round(inst.direct_award_pct)}%` : '—'}
+                              <span className="mt-0.5 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[13px] font-mono text-text-muted/70">
+                                <span className="whitespace-nowrap">
+                                  DA{' '}
+                                  <span style={daHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
+                                    {inst.direct_award_pct != null ? `${Math.round(inst.direct_award_pct)}%` : '—'}
+                                  </span>
                                 </span>
-                              </span>
-                              <span>
-                                Top-1{' '}
-                                <span className={cn((inst.top1_share_pct ?? 0) >= 50 && 'text-accent font-bold')}>
-                                  {inst.top1_share_pct != null ? `${Math.round(inst.top1_share_pct)}%` : '—'}
+                                <span className="whitespace-nowrap">
+                                  Top-1{' '}
+                                  <span className={cn((inst.top1_share_pct ?? 0) >= 50 && 'text-accent font-bold')}>
+                                    {inst.top1_share_pct != null ? `${Math.round(inst.top1_share_pct)}%` : '—'}
+                                  </span>
                                 </span>
-                              </span>
-                              <span>
-                                HHI{' '}
-                                <span style={hhiHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
-                                  {inst.latest_hhi != null ? formatNumber(Math.round(inst.latest_hhi)) : '—'}
+                                <span className="whitespace-nowrap">
+                                  HHI{' '}
+                                  <span style={hhiHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
+                                    {inst.latest_hhi != null ? formatNumber(Math.round(inst.latest_hhi)) : '—'}
+                                  </span>
                                 </span>
+                                {inst.feeding_communities.length > 0 && (
+                                  <span className="whitespace-nowrap text-accent font-bold">
+                                    {inst.feeding_communities.length} {isEs ? 'clanes' : 'clans'}
+                                  </span>
+                                )}
                               </span>
-                              {inst.feeding_communities.length > 0 && (
-                                <span className="text-accent font-bold">
-                                  {inst.feeding_communities.length} {isEs ? 'clanes' : 'clans'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                            </span>
+                          </button>
+                        </li>
                       )
                     })}
                     {sortedInstitutions.length === 0 && (
-                      <p className="py-8 text-center text-[13px] font-mono text-text-muted/50">
-                        {isEs ? 'Sin instituciones para esta búsqueda' : 'No institutions match this search'}
-                      </p>
+                      <li>
+                        <p className="py-8 text-center text-[13px] font-mono text-text-muted/50">
+                          {isEs ? 'Sin instituciones para esta búsqueda' : 'No institutions match this search'}
+                        </p>
+                      </li>
                     )}
-                  </div>
+                  </ul>
                 )}
               </>
             )}
@@ -870,7 +869,7 @@ export default function RedesKnownDossier() {
               </div>
             )}
             {!indexLoading && !indexError && (
-              <div className="max-h-[72vh] overflow-y-auto pr-1 space-y-1" role="list">
+              <ul className="max-h-[72vh] overflow-y-auto pr-1 space-y-1">
                 {visible.map((c, rank) => {
                   const lbl = clusterLabel(c, isEs)
                   const active = c.community_id === effectiveComm
@@ -878,122 +877,126 @@ export default function RedesKnownDossier() {
                   const daHot = (c.da_rate ?? 0) > EU_DIRECT_AWARD_LIMIT
                   const verdict = getClusterVerdict(c, meshMedianRisk)
                   return (
-                    <div
+                    <li
                       key={c.community_id}
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={active}
-                      onClick={() => selectCommunity(c.community_id)}
-                      onKeyDown={(ev) => {
-                        if (ev.key === 'Enter' || ev.key === ' ') {
-                          ev.preventDefault()
-                          selectCommunity(c.community_id)
-                        }
-                      }}
-                      className={cn(
-                        'w-full text-left rounded-sm border px-3 py-2 transition-colors cursor-pointer',
-                        active
-                          ? 'border-accent/50 bg-accent/8'
-                          : 'border-border/60 bg-background-card hover:border-border-hover',
-                      )}
-                      style={active ? { boxShadow: 'inset 2px 0 0 var(--color-accent)' } : undefined}
+                      className="relative"
+                      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 96px' }}
                     >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="min-w-0 truncate">
-                          <span className="text-[12px] font-mono font-bold text-text-muted/60 mr-1.5">
-                            {rank + 1}
+                      <button
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => selectCommunity(c.community_id)}
+                        className={cn(
+                          'w-full text-left rounded-sm border px-3 py-2 transition-colors',
+                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
+                          active
+                            ? 'border-accent/50 bg-accent/8'
+                            : 'border-border/60 bg-background-card hover:border-border-hover',
+                        )}
+                        style={active ? { boxShadow: 'inset 2px 0 0 var(--color-accent)' } : undefined}
+                      >
+                        <span className="flex items-baseline justify-between gap-2 pr-7">
+                          <span className="min-w-0">
+                            <span className="text-[12px] font-mono font-bold text-text-muted/60 mr-1.5">
+                              {rank + 1}
+                            </span>
+                            <span
+                              aria-hidden="true"
+                              className="inline-block rounded-[1px] mr-1 align-middle"
+                              style={{ width: 6, height: 6, background: verdict.color }}
+                            />
+                            <span className="sr-only">{isEs ? verdict.label_es : verdict.label_en}. </span>
+                            <span className="text-[13px] font-mono font-bold text-text-primary">{lbl.code}</span>
                           </span>
-                          <span
-                            aria-hidden="true"
-                            className="inline-block rounded-[1px] mr-1 align-middle"
-                            style={{ width: 6, height: 6, background: verdict.color }}
-                            title={isEs ? verdict.label_es : verdict.label_en}
-                          />
-                          <span className="text-[13px] font-mono font-bold text-text-primary">{lbl.code}</span>
-                        </span>
-                        <span className="shrink-0 inline-flex items-center gap-1.5">
-                          <span className="text-[13px] font-mono font-bold text-text-primary">
+                          <span className="shrink-0 text-[13px] font-mono font-bold text-text-primary">
                             {formatCompactMXN(c.total_value_mxn)}
                           </span>
-                          <button
-                            type="button"
-                            onClick={(ev) => {
-                              ev.stopPropagation()
-                              togglePin(c.community_id)
-                            }}
-                            aria-label={
-                              pinned
-                                ? isEs ? `Desfijar ${lbl.code}` : `Unpin ${lbl.code}`
-                                : isEs ? `Fijar ${lbl.code}` : `Pin ${lbl.code}`
-                            }
-                            aria-pressed={pinned}
-                            className={cn(
-                              'p-0.5 rounded-sm transition-colors',
-                              pinned ? 'text-accent' : 'text-text-muted/30 hover:text-text-muted',
-                            )}
-                          >
-                            <Pin className="h-3 w-3" aria-hidden="true" fill={pinned ? 'currentColor' : 'none'} />
-                          </button>
                         </span>
-                      </div>
-                      {/* W1 — the hub firm IS the cluster's identity: own row, 2-line
-                          clamp (md=40 chars), full name on native hover. */}
-                      <span
-                        className="block mt-0.5 text-[12px] font-mono text-text-secondary"
-                        title={c.hub_vendor_name}
-                        style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.25 }}
+                        {/* W1 — the hub firm IS the cluster's identity: own row.
+                            D4 § 3: no clamp, no title — the name wraps in full. */}
+                        <span
+                          className="block mt-0.5 text-[12px] font-mono text-text-secondary"
+                          style={{ lineHeight: 1.25 }}
+                        >
+                          {lbl.orbit}
+                        </span>
+                        <span className="mt-1 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[13px] font-mono text-text-muted/70">
+                          <span className="whitespace-nowrap">
+                            {c.size.toLocaleString(isEs ? 'es-MX' : 'en-US')} {isEs ? 'actores' : 'actors'}
+                          </span>
+                          <span className="whitespace-nowrap">
+                            DA{' '}
+                            <span style={daHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
+                              {c.da_rate != null ? `${Math.round(c.da_rate * 100)}%` : '—'}
+                            </span>
+                          </span>
+                          <span className="whitespace-nowrap">
+                            {isEs ? 'PU' : 'SB'} {c.sb_rate != null ? `${Math.round(c.sb_rate * 100)}%` : '—'}
+                          </span>
+                          <span className="whitespace-nowrap">
+                            {isEs ? 'riesgo' : 'risk'}{' '}
+                            <span style={{ color: RISK_TEXT_COLORS[getRiskLevelFromScore(c.avg_risk)], fontWeight: 700 }}>
+                              {Math.round(c.avg_risk * 100)}%
+                            </span>
+                          </span>
+                          {c.gt_vendor_count > 0 && (
+                            <span className="whitespace-nowrap text-accent font-bold">{c.gt_vendor_count} GT</span>
+                          )}
+                          {c.sanctioned_count > 0 && (
+                            <span
+                              style={{ color: RISK_TEXT_COLORS.critical }}
+                              className="whitespace-nowrap inline-flex items-center gap-0.5 font-bold"
+                            >
+                              <ShieldAlert className="h-2.5 w-2.5" aria-hidden="true" />
+                              {c.sanctioned_count}
+                            </span>
+                          )}
+                        </span>
+                        <span className="block mt-1.5">
+                          <PatternMixBar c={c} isEs={isEs} />
+                        </span>
+                      </button>
+                      {/* Pin — a SIBLING of the selection button, never nested
+                          inside it (D4 § 3: no interactive inside interactive). */}
+                      <button
+                        type="button"
+                        onClick={() => togglePin(c.community_id)}
+                        aria-label={
+                          pinned
+                            ? isEs ? `Desfijar ${lbl.code}` : `Unpin ${lbl.code}`
+                            : isEs ? `Fijar ${lbl.code}` : `Pin ${lbl.code}`
+                        }
+                        aria-pressed={pinned}
+                        className={cn(
+                          'absolute right-1 top-1 inline-flex min-h-6 min-w-6 items-center justify-center rounded-sm transition-colors',
+                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
+                          pinned ? 'text-accent' : 'text-text-muted hover:text-text-secondary',
+                        )}
                       >
-                        {lbl.orbit}
-                      </span>
-                      <div className="mt-1 flex items-center gap-2.5 text-[13px] font-mono text-text-muted/70">
-                        <span>
-                          {c.size.toLocaleString(isEs ? 'es-MX' : 'en-US')} {isEs ? 'actores' : 'actors'}
-                        </span>
-                        <span>
-                          DA{' '}
-                          <span style={daHot ? { color: RISK_TEXT_COLORS.high, fontWeight: 700 } : undefined}>
-                            {c.da_rate != null ? `${Math.round(c.da_rate * 100)}%` : '—'}
-                          </span>
-                        </span>
-                        <span>
-                          {isEs ? 'PU' : 'SB'} {c.sb_rate != null ? `${Math.round(c.sb_rate * 100)}%` : '—'}
-                        </span>
-                        <span>
-                          {isEs ? 'riesgo' : 'risk'}{' '}
-                          <span style={{ color: RISK_TEXT_COLORS[getRiskLevelFromScore(c.avg_risk)], fontWeight: 700 }}>
-                            {Math.round(c.avg_risk * 100)}%
-                          </span>
-                        </span>
-                        {c.gt_vendor_count > 0 && (
-                          <span className="text-accent font-bold">{c.gt_vendor_count} GT</span>
-                        )}
-                        {c.sanctioned_count > 0 && (
-                          <span style={{ color: RISK_TEXT_COLORS.critical }} className="inline-flex items-center gap-0.5 font-bold">
-                            <ShieldAlert className="h-2.5 w-2.5" aria-hidden="true" />
-                            {c.sanctioned_count}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-1.5">
-                        <PatternMixBar c={c} isEs={isEs} />
-                      </div>
-                    </div>
+                        <Pin className="h-3 w-3" aria-hidden="true" fill={pinned ? 'currentColor' : 'none'} />
+                      </button>
+                    </li>
                   )
                 })}
                 {!showAll && filtered.length > 60 && (
-                  <button
-                    onClick={() => setShowAll(true)}
-                    className="w-full rounded-sm border border-border/60 px-3 py-2 text-[12px] font-mono uppercase tracking-wider text-text-muted hover:bg-border/20 transition-colors"
-                  >
-                    {isEs ? `Mostrar los ${filtered.length} cúmulos` : `Show all ${filtered.length} clusters`}
-                  </button>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setShowAll(true)}
+                      className="w-full rounded-sm border border-border/60 px-3 py-2 text-[12px] font-mono uppercase tracking-wider text-text-muted hover:bg-border/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                    >
+                      {isEs ? `Mostrar los ${filtered.length} cúmulos` : `Show all ${filtered.length} clusters`}
+                    </button>
+                  </li>
                 )}
                 {filtered.length === 0 && (
-                  <p className="py-8 text-center text-[13px] font-mono text-text-muted/50">
-                    {isEs ? 'Sin cúmulos para este filtro' : 'No clusters match this filter'}
-                  </p>
+                  <li>
+                    <p className="py-8 text-center text-[13px] font-mono text-text-muted/50">
+                      {isEs ? 'Sin cúmulos para este filtro' : 'No clusters match this filter'}
+                    </p>
+                  </li>
                 )}
-              </div>
+              </ul>
             )}
             </>
             )}
