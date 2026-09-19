@@ -263,12 +263,19 @@ def test_live_shape(client, base_url):
 
 
 def test_response_is_cached(client, base_url):
-    """Second call is served from the ten-minute cache, headers and all."""
+    """Second call is served from the in-process cache, with the edge header.
+
+    Two different caches, and they do not have to agree. `_AMOUNT_HIST_TTL`
+    (24 h) governs the in-process entry — the thing that saves the scan — and
+    is what `computed_at` below proves. The `Cache-Control` a client sees comes
+    from the `cache_headers` middleware in `api/main.py`, which overwrites
+    whatever the route set for every `/api/v1/analysis` path; 600 is that
+    middleware's number, not this endpoint's.
+    """
     url = f"{base_url}/analysis/amount-histogram?min=300000&max=320000&bucket=10000"
     first = client.get(url)
     assert first.status_code == 200
     second = client.get(url)
     assert second.status_code == 200
-    # A middleware appends `stale-while-revalidate`; the max-age is ours.
     assert (second.headers.get("cache-control") or "").startswith("public, max-age=600")
     assert second.json()["computed_at"] == first.json()["computed_at"]

@@ -5021,7 +5021,11 @@ def get_admin_breakdown_institutions(
 # =============================================================================
 
 _amount_hist_cache = SimpleCache()
-_AMOUNT_HIST_TTL = 600  # 10 minutes, as `monthly-breakdown`
+# 24 hours. The register is frozen at 2025-09-28 (CompraNet was abolished in
+# Apr 2025 and the bulk feed stopped), so this histogram cannot change between
+# deploys — and the warm scan of the band costs seconds. A short TTL only buys
+# re-paying that cost for an identical answer.
+_AMOUNT_HIST_TTL = 86400
 
 #: Buckets a single response may carry — bounds the payload and the fold.
 MAX_HISTOGRAM_BUCKETS = 200
