@@ -19,7 +19,7 @@
  *   - Keyboard: every node is focusable (tabIndex=0, Enter/Space
  *     selects) — the a11y gap flagged on Atlas bubbles.
  */
-import { memo, useId, useMemo, useRef, useState, useCallback, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { memo, useEffect, useId, useMemo, useRef, useState, useCallback, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import {
   forceSimulation,
   forceLink,
@@ -35,10 +35,21 @@ import { RISK_COLORS, RISK_TEXT_COLORS, PATTERN_COLORS, getRiskLevelFromScore } 
 import { formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 import type { EvidenceMark } from '@/lib/network/evidence'
+import { placeLabels, measureLabel, type LabelCandidate } from './plateLabels'
 
 const VIEW_W = 920
 const VIEW_H = 600
 const MARGIN = 36
+// D4 § 1 — HTML owns glyphs, SVG owns geometry. Labels are measured and drawn
+// in RENDERED px, so they never inherit the viewBox scale (at 390 that scale
+// was 0.33, which rendered a 9.5px callout at 3.2px).
+const LABEL_FS = 11
+const LABEL_LH = 13
+const LABEL_FAMILY = '"IBM Plex Mono", "JetBrains Mono", monospace'
+const LABEL_FONT = `${LABEL_FS}px ${LABEL_FAMILY}`
+const HALO_PAD = 4
+const TENT = 16
+const NARROW_PLATE = 640
 
 interface SimNode extends SimulationNodeDatum {
   id: number
@@ -92,7 +103,7 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
   // ------------------------------------------------------------------
   // Static force layout — recomputed only when the community changes.
   // ------------------------------------------------------------------
-  const { nodes, edges, labeled } = useMemo(() => {
+  const { nodes, edges } = useMemo(() => {
     const maxPr = Math.max(...data.nodes.map((n) => n.pagerank), 1e-9)
     const simNodes: SimNode[] = data.nodes.map((n) => ({
       id: n.vendor_id,
@@ -133,32 +144,7 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
       n.y = Math.max(MARGIN, Math.min(VIEW_H - MARGIN, n.y ?? VIEW_H / 2))
     })
 
-    // Named-outlier callouts (NYT Upshot, greedy non-overlap): top-5 by pagerank,
-    // each accepted only if its label box clears every already-placed box (AABB).
-    // x/y/r are final + clamped here, so placement is exact and runs once per
-    // community (no per-frame cost, no #301). Labels render 'sm' (24) so hub
-    // names read closer to full ("Nabors Perforaciones", not "Nabors Perfora…");
-    // the AABB pass silently drops any that would collide (no overlap, just
-    // fewer labels), and every actor's full name is in the roster below.
-    const CH_W = 6.2   // ~9.5px mono advance + 0.04em tracking + stroke halo
-    const LABEL_H = 13 // cap-height + the 3px paint-order stroke halo
-    const PAD = 2
-    const candidates = [...simNodes].sort((a, b) => b.node.pagerank - a.node.pagerank).slice(0, 5)
-    const placedBoxes: { x0: number; y0: number; x1: number; y1: number }[] = []
-    const labeledIds = new Set<number>()
-    for (const n of candidates) {
-      const txt = formatEntityName('vendor', n.node.name, 'sm')
-      const w = txt.length * CH_W
-      const cx = n.x as number
-      const cy = (n.y as number) - n.r - 6
-      const box = { x0: cx - w / 2 - PAD, y0: cy - LABEL_H, x1: cx + w / 2 + PAD, y1: cy + PAD }
-      const clear = placedBoxes.every((b) => box.x1 < b.x0 || box.x0 > b.x1 || box.y1 < b.y0 || box.y0 > b.y1)
-      if (clear) {
-        placedBoxes.push(box)
-        labeledIds.add(n.id)
-      }
-    }
-    return { nodes: simNodes, edges: simEdges as SimEdge[], labeled: labeledIds }
+    return { nodes: simNodes, edges: simEdges as SimEdge[] }
   }, [data])
 
   const activeId = hoverId ?? selectedVendorId
@@ -181,6 +167,114 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
 
   const hoverNode = hoverId != null ? nodes.find((n) => n.id === hoverId) : null
   const maxShared = Math.max(...edges.map((e) => e.shared), 1)
+
+  // ── Rendered geometry: the SVG scales with its viewBox, the glyphs do not.
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [plateW, setPlateW] = useState(0)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width
+      if (w && w > 0) setPlateW(w)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const [fontsReady, setFontsReady] = useState(
+    () => typeof document !== 'undefined' && document.fonts?.status === 'loaded',
+  )
+  useEffect(() => {
+    let alive = true
+    document.fonts?.ready.then(() => {
+      if (alive) setFontsReady(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+  // On a touch plate there is no hover, so the dossier card opens on tap:
+  // the node's onClick already selects it.
+  const [coarsePointer, setCoarsePointer] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(hover: none)')
+    if (!mq) return
+    setCoarsePointer(mq.matches)
+    const on = () => setCoarsePointer(mq.matches)
+    mq.addEventListener?.('change', on)
+    return () => mq.removeEventListener?.('change', on)
+  }, [])
+  const scale = plateW > 0 ? plateW / VIEW_W : 0
+  const plateH = VIEW_H * scale
+  const narrow = plateW > 0 && plateW < NARROW_PLATE
+
+  /** Evidence tents in rendered px — 16px squares with a 10px numeral. */
+  const tents = useMemo(() => {
+    if (scale <= 0 || !evidence || evidence.length === 0) return []
+    const out: { id: EvidenceMark['id']; ax: number; ay: number; x: number; y: number }[] = []
+    for (const m of evidence) {
+      let ax: number
+      let ay: number
+      if (m.edge) {
+        const na = nodes.find((n) => n.id === m.edge![0])
+        const nb = nodes.find((n) => n.id === m.edge![1])
+        if (!na || !nb) continue
+        ax = (((na.x ?? 0) + (nb.x ?? 0)) / 2) * scale
+        ay = (((na.y ?? 0) + (nb.y ?? 0)) / 2) * scale
+      } else {
+        const n = nodes.find((x) => x.id === m.vendorId)
+        if (!n) continue
+        ax = ((n.x ?? 0) + n.r * 0.7) * scale
+        ay = ((n.y ?? 0) - n.r * 0.7) * scale
+      }
+      out.push({
+        id: m.id,
+        ax,
+        ay,
+        x: Math.min(plateW - TENT - 2, Math.max(2, ax + 6)),
+        y: Math.max(2, ay - TENT - 6),
+      })
+    }
+    return out
+  }, [evidence, nodes, scale, plateW])
+
+  /** Hub callouts — top-5 pagerank (top-3 on a narrow plate), full names,
+   *  seated in rendered px. Placement waits for the first ResizeObserver tick
+   *  so there is no flash of mis-placed labels. */
+  const labels = useMemo(() => {
+    if (scale <= 0) return []
+    const cap = narrow ? 3 : 5
+    const maxW = narrow ? 120 : 160
+    const text = new Map<number, string>()
+    const candidates: LabelCandidate[] = [...nodes]
+      .sort((a, b) => b.node.pagerank - a.node.pagerank)
+      .slice(0, cap)
+      .map((n) => {
+        const t = formatEntityName('vendor', n.node.name, 'full')
+        text.set(n.id, t)
+        const m = measureLabel(t, LABEL_FONT, maxW - HALO_PAD, LABEL_LH)
+        return {
+          id: n.id,
+          x: (n.x ?? 0) * scale,
+          y: (n.y ?? 0) * scale,
+          width: m.width + HALO_PAD,
+          height: m.height + 4,
+          above: n.r * scale + 5,
+          below: n.r * scale + 5,
+        }
+      })
+    // The evidence tents are pinned to their marks, so they are obstacles:
+    // a hub name must never sit under a numbered tent.
+    const obstacles = tents.map((t) => ({ x0: t.x - 1, y0: t.y - 1, x1: t.x + TENT + 1, y1: t.y + TENT + 1 }))
+    return placeLabels(candidates, obstacles, { x0: 1, y0: 1, x1: plateW - 1, y1: plateH - 1 }).map((p) => ({
+      placed: p,
+      label: text.get(p.id as number) ?? '',
+    }))
+    // fontsReady re-runs the measurement once the web fonts land.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes, scale, plateW, plateH, narrow, tents, fontsReady])
+
+
 
   // ── Roving tabindex (D4 § 6) — the mesh is ONE tab stop; arrows walk the
   // vendors in pagerank order, Enter selects. The roster below stays the
@@ -239,7 +333,7 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
   )
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         className="w-full h-auto block"
@@ -315,87 +409,75 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
           })}
         </g>
 
-        {/* Hub callouts — top-5 pagerank, NYT Upshot named outliers */}
-        <g style={{ pointerEvents: 'none' }}>
-          {nodes
-            .filter((n) => labeled.has(n.id) && n.id !== hoverId)
-            .map((n) => (
-              <text
-                key={n.id}
-                x={n.x}
-                y={(n.y ?? 0) - n.r - 6}
-                textAnchor="middle"
-                style={{
-                  fontFamily: '"JetBrains Mono", monospace',
-                  fontSize: '9.5px',
-                  letterSpacing: '0.04em',
-                  fill: 'var(--color-text-secondary)',
-                  paintOrder: 'stroke',
-                  stroke: 'var(--color-background)',
-                  strokeWidth: 3,
-                }}
-              >
-                {formatEntityName('vendor', n.node.name, 'sm')}
-              </text>
-            ))}
-        </g>
-
         {/* Evidence marks (El Croquis §3.4) — numbered ochre tents pinned to
             the scene. Additive + default-off: renders nothing when `evidence`
             is undefined. Each mark reads from the memoized layout, so it
             re-resolves automatically per community. pointer-events off. */}
-        {evidence && evidence.length > 0 && (
+        {tents.length > 0 && scale > 0 && (
           <g style={{ pointerEvents: 'none' }}>
-            {evidence.map((m) => {
-              let ax: number
-              let ay: number
-              if (m.edge) {
-                const na = nodes.find((n) => n.id === m.edge![0])
-                const nb = nodes.find((n) => n.id === m.edge![1])
-                if (!na || !nb) return null
-                ax = ((na.x ?? 0) + (nb.x ?? 0)) / 2
-                ay = ((na.y ?? 0) + (nb.y ?? 0)) / 2
-              } else {
-                const n = nodes.find((x) => x.id === m.vendorId)
-                if (!n) return null
-                ax = (n.x ?? 0) + n.r * 0.7
-                ay = (n.y ?? 0) - n.r * 0.7
-              }
-              // Tent sits up-and-right of the anchor, clamped into the plate.
-              const tx = Math.min(VIEW_W - MARGIN - 11, ax + 6)
-              const ty = Math.max(MARGIN, ay - 16)
-              return (
-                <g key={m.id}>
-                  <line
-                    x1={ax}
-                    y1={ay}
-                    x2={tx + 5.5}
-                    y2={ty + 11}
-                    stroke="var(--color-accent)"
-                    strokeWidth={0.75}
-                    strokeOpacity={0.85}
-                  />
-                  <rect x={tx} y={ty} width={11} height={11} rx={1} fill="var(--color-accent)" />
-                  <text
-                    x={tx + 5.5}
-                    y={ty + 8.4}
-                    textAnchor="middle"
-                    style={{
-                      fontFamily: '"JetBrains Mono", monospace',
-                      fontSize: '7px',
-                      fontWeight: 700,
-                      letterSpacing: '0.02em',
-                      fill: 'var(--color-background)',
-                    }}
-                  >
-                    {m.id}
-                  </text>
-                </g>
-              )
-            })}
+            {tents.map((t) => (
+              <line
+                key={t.id}
+                x1={t.ax / scale}
+                y1={t.ay / scale}
+                x2={(t.x + TENT / 2) / scale}
+                y2={(t.y + TENT) / scale}
+                stroke="var(--color-accent)"
+                strokeWidth={0.75}
+                strokeOpacity={0.85}
+              />
+            ))}
           </g>
         )}
       </svg>
+
+      {/* Hub callouts — HTML, full names, seated by placeLabels in px. */}
+      {labels
+        .filter(({ placed }) => placed.id !== hoverId)
+        .map(({ placed, label }) => (
+          <span
+            key={`lbl-${placed.id}`}
+            className="pointer-events-none absolute text-text-secondary"
+            style={{
+              fontFamily: LABEL_FAMILY,
+              left: placed.box.x0,
+              top: placed.box.y0,
+              width: placed.box.x1 - placed.box.x0,
+              boxSizing: 'border-box',
+              padding: '1px 2px',
+              fontSize: LABEL_FS,
+              lineHeight: `${LABEL_LH}px`,
+              textAlign: placed.align === 'right' ? 'right' : placed.align === 'left' ? 'left' : 'center',
+              textWrap: 'balance',
+              background: 'color-mix(in srgb, var(--color-background) 85%, transparent)',
+            }}
+          >
+            {label}
+          </span>
+        ))}
+
+      {/* Evidence tents — 16px HTML squares, 10px numerals. */}
+      {tents.map((t) => (
+        <span
+          key={`tent-${t.id}`}
+          aria-hidden="true"
+          className="pointer-events-none absolute inline-flex items-center justify-center font-bold"
+          style={{
+            left: t.x,
+            top: t.y,
+            width: TENT,
+            height: TENT,
+            borderRadius: 1,
+            background: 'var(--color-accent)',
+            color: '#ffffff',
+            fontFamily: LABEL_FAMILY,
+            fontSize: 10,
+            lineHeight: 1,
+          }}
+        >
+          {t.id}
+        </span>
+      ))}
       <p id={descId} className="sr-only">
         {isEs
           ? 'Usa las flechas para moverte entre proveedores; Enter selecciona.'
@@ -489,10 +571,12 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
         </span>
       </div>
       {/* W3 — when the greedy pass withholds colliding callouts, say so:
-          the rest are one hover away. */}
-      {labeled.size < Math.min(5, data.nodes.length) && (
-        <p className="mt-1.5 text-[8.5px] font-mono text-text-muted">
-          {isEs ? 'pasa el cursor para leer el resto' : 'hover to read the rest'}
+          the rest are one hover (or one tap) away. */}
+      {labels.length < Math.min(narrow ? 3 : 5, nodes.length) && (
+        <p className="mt-1.5 text-[11px] font-mono text-text-muted">
+          {coarsePointer
+            ? isEs ? 'Toca un nodo para leerlo' : 'Tap a node to read it'
+            : isEs ? 'Pasa el cursor o enfoca un nodo para leer el resto' : 'Hover or focus a node to read the rest'}
         </p>
       )}
     </div>

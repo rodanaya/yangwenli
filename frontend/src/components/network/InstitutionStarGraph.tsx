@@ -12,16 +12,26 @@
  * intermediary web). Static layout (golden-angle orbit) — a printed
  * plate, not a simulation.
  */
-import { memo, useCallback, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { InstitutionStarResponse } from '@/api/client'
 import { RISK_COLORS, RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
+import { placeLabels, measureLabel, type LabelBox, type LabelCandidate } from './plateLabels'
 
 const VIEW_W = 920
 const VIEW_H = 600
 const CX = VIEW_W / 2
 const CY = VIEW_H / 2
+// D4 § 1 — HTML owns glyphs, SVG owns geometry (see CommunityForceGraph).
+const LABEL_FS = 11
+const LABEL_LH = 13
+const LABEL_FAMILY = '"IBM Plex Mono", "JetBrains Mono", monospace'
+const LABEL_FONT = `${LABEL_FS}px ${LABEL_FAMILY}`
+const CENTRE_FS = 12
+const CENTRE_FONT = `700 ${CENTRE_FS}px ${LABEL_FAMILY}`
+const HALO_PAD = 4
+const NARROW_PLATE = 640
 
 /** Categorical clan palette — archival, muted; NOT risk semantics.
  *  Distinct from RISK_COLORS / SECTOR_COLORS on purpose: clans are
@@ -89,7 +99,87 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
   }, [data])
 
   const hoverNode = hoverId != null ? placed.find((p) => p.v.vendor_id === hoverId) : null
+  const cardNode =
+    hoverNode ?? (selectedVendorId != null ? (placed.find((p) => p.v.vendor_id === selectedVendorId) ?? null) : null)
   const activeId = hoverId ?? selectedVendorId
+
+  // ── Rendered geometry — glyphs are HTML, so they never scale with viewBox.
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [plateW, setPlateW] = useState(0)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width
+      if (w && w > 0) setPlateW(w)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const [fontsReady, setFontsReady] = useState(
+    () => typeof document !== 'undefined' && document.fonts?.status === 'loaded',
+  )
+  useEffect(() => {
+    let alive = true
+    document.fonts?.ready.then(() => {
+      if (alive) setFontsReady(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+  const [coarsePointer, setCoarsePointer] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(hover: none)')
+    if (!mq) return
+    setCoarsePointer(mq.matches)
+    const on = () => setCoarsePointer(mq.matches)
+    mq.addEventListener?.('change', on)
+    return () => mq.removeEventListener?.('change', on)
+  }, [])
+  const scale = plateW > 0 ? plateW / VIEW_W : 0
+  const plateH = VIEW_H * scale
+  const narrow = plateW > 0 && plateW < NARROW_PLATE
+
+  /** The buyer's own name, centred under the hub — an obstacle for the
+   *  orbit callouts, never something they may sit on. */
+  const centreLabel = useMemo(() => {
+    if (scale <= 0) return null
+    const text = formatEntityName('institution', data.name, 'full')
+    const maxW = Math.min(plateW - 24, narrow ? 200 : 320)
+    const m = measureLabel(text, CENTRE_FONT, maxW, CENTRE_FS + 3)
+    const x = CX * scale
+    const y = (CY + 36) * scale
+    const box: LabelBox = { x0: x - m.width / 2 - 2, y0: y, x1: x + m.width / 2 + 2, y1: y + m.height + 2 }
+    return { text, box }
+  }, [data.name, scale, plateW, narrow, fontsReady])
+
+  /** Top-5 by value (top-3 on a narrow plate), full names, rendered px. */
+  const labels = useMemo(() => {
+    if (scale <= 0) return []
+    const cap = narrow ? 3 : 5
+    const maxW = narrow ? 120 : 160
+    const text = new Map<number, string>()
+    const candidates: LabelCandidate[] = placed.slice(0, cap).map((p) => {
+      const t = formatEntityName('vendor', p.v.vendor_name, 'full')
+      text.set(p.v.vendor_id, t)
+      const m = measureLabel(t, LABEL_FONT, maxW - HALO_PAD, LABEL_LH)
+      return {
+        id: p.v.vendor_id,
+        x: p.x * scale,
+        y: p.y * scale,
+        width: m.width + HALO_PAD,
+        height: m.height + 4,
+        above: p.r * scale + 6,
+        below: p.r * scale + 6,
+      }
+    })
+    const obstacles = centreLabel ? [centreLabel.box] : []
+    return placeLabels(candidates, obstacles, { x0: 1, y0: 1, x1: plateW - 1, y1: plateH - 1 }).map((p) => ({
+      placed: p,
+      label: text.get(p.id as number) ?? '',
+    }))
+  }, [placed, scale, plateW, plateH, narrow, centreLabel, fontsReady])
 
   // ── Roving tabindex (D4 § 6) — one tab stop for the whole siege; arrows walk
   // the orbit in value order (the order it is drawn in), Enter selects.
@@ -146,7 +236,7 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
   )
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         className="w-full h-auto block"
@@ -178,23 +268,6 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
         <g>
           <circle cx={CX} cy={CY} r={30} fill="var(--color-background-card)" stroke="var(--color-accent)" strokeWidth={1.4} />
           <circle cx={CX} cy={CY} r={24} fill="none" stroke="var(--color-accent)" strokeWidth={0.5} strokeOpacity={0.5} strokeDasharray="3 3" />
-          <text
-            x={CX}
-            y={CY + 48}
-            textAnchor="middle"
-            style={{
-              fontFamily: '"JetBrains Mono", monospace',
-              fontSize: '12px',
-              fontWeight: 700,
-              letterSpacing: '0.06em',
-              fill: 'var(--color-text-primary)',
-              paintOrder: 'stroke',
-              stroke: 'var(--color-background)',
-              strokeWidth: 3,
-            }}
-          >
-            {formatEntityName('institution', data.name, 'sm')}
-          </text>
         </g>
 
         {/* Vendor orbit */}
@@ -236,44 +309,65 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
           })}
         </g>
 
-        {/* Top-5 named callouts */}
-        <g style={{ pointerEvents: 'none' }}>
-          {placed.slice(0, 5).map((p) =>
-            p.v.vendor_id === hoverId ? null : (
-              <text
-                key={p.v.vendor_id}
-                x={p.x}
-                y={p.y - p.r - 7}
-                textAnchor="middle"
-                style={{
-                  fontFamily: '"JetBrains Mono", monospace',
-                  fontSize: '9.5px',
-                  letterSpacing: '0.04em',
-                  fill: 'var(--color-text-secondary)',
-                  paintOrder: 'stroke',
-                  stroke: 'var(--color-background)',
-                  strokeWidth: 3,
-                }}
-              >
-                {formatEntityName('vendor', p.v.vendor_name, 'xs')}
-              </text>
-            ),
-          )}
-        </g>
       </svg>
+
+      {/* Buyer name + orbit callouts — HTML, full names, 11px/12px. */}
+      {centreLabel && (
+        <span
+          className="pointer-events-none absolute font-bold text-text-primary"
+          style={{
+            fontFamily: LABEL_FAMILY,
+            left: centreLabel.box.x0,
+            top: centreLabel.box.y0,
+            width: centreLabel.box.x1 - centreLabel.box.x0,
+            boxSizing: 'border-box',
+            padding: '1px 2px',
+            fontSize: CENTRE_FS,
+            lineHeight: `${CENTRE_FS + 3}px`,
+            textAlign: 'center',
+            textWrap: 'balance',
+            background: 'color-mix(in srgb, var(--color-background) 85%, transparent)',
+          }}
+        >
+          {centreLabel.text}
+        </span>
+      )}
+      {labels
+        .filter(({ placed: pl }) => pl.id !== hoverId)
+        .map(({ placed: pl, label }) => (
+          <span
+            key={`lbl-${pl.id}`}
+            className="pointer-events-none absolute text-text-secondary"
+            style={{
+              fontFamily: LABEL_FAMILY,
+              left: pl.box.x0,
+              top: pl.box.y0,
+              width: pl.box.x1 - pl.box.x0,
+              boxSizing: 'border-box',
+              padding: '1px 2px',
+              fontSize: LABEL_FS,
+              lineHeight: `${LABEL_LH}px`,
+              textAlign: pl.align === 'right' ? 'right' : pl.align === 'left' ? 'left' : 'center',
+              textWrap: 'balance',
+              background: 'color-mix(in srgb, var(--color-background) 85%, transparent)',
+            }}
+          >
+            {label}
+          </span>
+        ))}
       <p id={descId} className="sr-only">
         {isEs
           ? 'Usa las flechas para moverte entre proveedores; Enter selecciona.'
           : 'Use the arrow keys to move between vendors; Enter selects.'}
       </p>
 
-      {/* Hover dossier card */}
-      {hoverNode && (
+      {/* Dossier card — on a touch plate it follows the selected node. */}
+      {cardNode && (
         <div
           className="absolute z-10 pointer-events-none rounded-sm border border-border bg-background px-3 py-2.5 shadow-sm"
           style={{
-            left: `${Math.min(92, Math.max(2, (hoverNode.x / VIEW_W) * 100))}%`,
-            top: `${Math.min(86, Math.max(2, ((hoverNode.y + hoverNode.r + 12) / VIEW_H) * 100))}%`,
+            left: `${Math.min(92, Math.max(2, (cardNode.x / VIEW_W) * 100))}%`,
+            top: `${Math.min(86, Math.max(2, ((cardNode.y + cardNode.r + 12) / VIEW_H) * 100))}%`,
             transform: 'translateX(-50%)',
             maxWidth: 260,
             boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
@@ -283,22 +377,22 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
             className="text-[12.5px] text-text-primary leading-snug mb-1"
             style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 600 }}
           >
-            {formatEntityName('vendor', hoverNode.v.vendor_name, 'sm')}
+            {formatEntityName('vendor', cardNode.v.vendor_name, 'full')}
           </p>
           <div className="space-y-0.5 text-[12px] font-mono text-text-muted">
             <p>
-              {formatCompactMXN(hoverNode.v.total_value_mxn)} ·{' '}
-              {Math.round(hoverNode.share * 1000) / 10}% {isEs ? 'del gasto del comprador' : 'of buyer spend'}
+              {formatCompactMXN(cardNode.v.total_value_mxn)} ·{' '}
+              {Math.round(cardNode.share * 1000) / 10}% {isEs ? 'del gasto del comprador' : 'of buyer spend'}
             </p>
             <p>
               {isEs ? 'Indicador de riesgo' : 'Risk indicator'}{' '}
-              <span style={{ color: riskText(hoverNode.v.avg_risk_score), fontWeight: 700 }}>
-                {hoverNode.v.avg_risk_score != null ? `${Math.round(hoverNode.v.avg_risk_score * 100)}%` : '—'}
+              <span style={{ color: riskText(cardNode.v.avg_risk_score), fontWeight: 700 }}>
+                {cardNode.v.avg_risk_score != null ? `${Math.round(cardNode.v.avg_risk_score * 100)}%` : '—'}
               </span>
-              {hoverNode.v.community_id != null && (
-                <span> · {isEs ? 'clan' : 'clan'} C-{hoverNode.v.community_id}</span>
+              {cardNode.v.community_id != null && (
+                <span> · {isEs ? 'clan' : 'clan'} C-{cardNode.v.community_id}</span>
               )}
-              {hoverNode.v.is_sanctioned && (
+              {cardNode.v.is_sanctioned && (
                 <span style={{ color: RISK_TEXT_COLORS.critical }}> · {isEs ? 'SANCIONADO' : 'SANCTIONED'}</span>
               )}
             </p>
@@ -326,6 +420,13 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
         </span>
         <span>{isEs ? 'Grosor del rayo = participación en el gasto' : 'Spoke width = share of spend'}</span>
       </div>
+      {labels.length < Math.min(narrow ? 3 : 5, placed.length) && (
+        <p className="mt-1.5 text-[11px] font-mono text-text-muted">
+          {coarsePointer
+            ? isEs ? 'Toca un nodo para leerlo' : 'Tap a node to read it'
+            : isEs ? 'Pasa el cursor o enfoca un nodo para leer el resto' : 'Hover or focus a node to read the rest'}
+        </p>
+      )}
     </div>
   )
 })

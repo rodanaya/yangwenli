@@ -51,12 +51,16 @@ export function EvidenceIndex({ entries, onFocusVendor, lang }: EvidenceIndexPro
               <span
                 className="flex-shrink-0 flex items-center justify-center font-mono"
                 style={{
-                  width: 11,
-                  height: 11,
+                  // D4 § 1: same glyph as the plate's tent, so the index and
+                  // the plate read as one key (was 11px/8px against 16px/10px).
+                  width: 16,
+                  height: 16,
                   marginTop: 1,
+                  borderRadius: 1,
+                  fontWeight: 700,
                   background: 'var(--color-accent)',
                   color: '#ffffff',
-                  fontSize: 8,
+                  fontSize: 10,
                   lineHeight: 1,
                 }}
               >
