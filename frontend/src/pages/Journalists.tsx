@@ -161,17 +161,21 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'el-ejercito-fantasma',
-    headline: 'The Ghost Army: 6,118 Vendors That Vanish',
-    headline_es: 'El Ejército Fantasma: 6,118 Proveedores Que Desaparecen',
+    // Matches the story's own h1 (SD-06). The card and the page must not greet
+    // a reader with two different titles for the same investigation.
+    headline: 'The Man Who Won 370 Million Pesos and Disappeared',
+    headline_es: 'El Hombre Que Ganó 370 Millones de Pesos y Desapareció',
     sub: 'P2 ghost-company pattern',
     type: 'ghost_company',
     status: 'reporteado',
-    amount: 0,
+    // Billions of pesos, as the renderer reads it — the P2 cohort's lifetime
+    // federal contracting, 39.6B.
+    amount: 39.6,
     era: 'cross',
     contracts: 0,
     yearSpan: '2002–2025',
-    brief: 'RUBLI identified 6,118 vendors matching ghost-company patterns across 23 years. They appear, win contracts, then vanish from the tax registry — only 0.7% are officially confirmed.',
-    brief_es: 'RUBLI identificó 6,118 proveedores con patrones de empresa fantasma en 23 años. Aparecen, ganan contratos y desaparecen del registro fiscal — solo el 0.7% está oficialmente confirmado.',
+    brief: "RUBLI identified 6,118 vendors matching ghost-company patterns across 23 years. They appear, win contracts, then vanish from the tax registry — 126 of them, 2.1%, carry SAT's definitive Article 69-B listing.",
+    brief_es: 'RUBLI identificó 6,118 proveedores con patrones de empresa fantasma en 23 años. Aparecen, ganan contratos y desaparecen del registro fiscal — 126 de ellos, el 2.1%, llevan el listado definitivo del SAT bajo el Artículo 69-B.',
   },
   {
     slug: 'el-gran-precio',

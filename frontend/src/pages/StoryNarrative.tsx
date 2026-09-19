@@ -18,6 +18,7 @@ import type { EmergencyFigureKind } from '@/components/stories/live/EmergencyFig
 import type { VoucherFigureKind } from '@/components/stories/live/VoucherFigures'
 import type { CaptureFigureKind } from '@/components/stories/live/CaptureFigures'
 import type { IntermediaryFigureKind } from '@/components/stories/live/IntermediaryFigures'
+import type { GhostFigureKind } from '@/components/stories/live/GhostFigures'
 import { StickyStepFrame, useProseStage } from '@/components/stories/live/StickyStepFigure'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { OutletBadge } from '@/components/stories/OutletBadge'
@@ -88,6 +89,7 @@ const LiveEmergencyFigure = lazy(() => import('@/components/stories/live/Emergen
 const LiveVoucherFigure = lazy(() => import('@/components/stories/live/VoucherFigures'))
 const LiveCaptureFigure = lazy(() => import('@/components/stories/live/CaptureFigures'))
 const LiveIntermediaryFigure = lazy(() => import('@/components/stories/live/IntermediaryFigures'))
+const LiveGhostFigure = lazy(() => import('@/components/stories/live/GhostFigures'))
 
 /** Route a `chartConfig.live` kind to the story family that owns it. */
 function LiveFigure({
@@ -110,6 +112,9 @@ function LiveFigure({
   }
   if (kind.startsWith('p3-')) {
     return <LiveIntermediaryFigure kind={kind as IntermediaryFigureKind} lang={lang} stage={stage} />
+  }
+  if (kind.startsWith('p2-')) {
+    return <LiveGhostFigure kind={kind as GhostFigureKind} lang={lang} stage={stage} />
   }
   return <LiveGapFigure kind={kind as GapFigureKind} lang={lang} stage={stage} />
 }

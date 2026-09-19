@@ -361,8 +361,8 @@ export interface StoryDef {
   /**
    * Optional per-story hero override. When present, StoryHero renders a 3-row
    * kicker-stat punchline INSTEAD of the default leadStat block. Use when the
-   * story is built around a comparison (e.g. SAT confirmed 42 / RUBLI flagged
-   * 6,118 / 6,076 still doing business).
+   * story is built around a comparison (e.g. SAT confirmed 126 / RUBLI flagged
+   * 6,118 / 5,992 still doing business).
    */
   kickerStats?: Array<{
     /** Optional verb prefix shown in muted serif before the number (e.g. "SAT confirmed") */
@@ -456,6 +456,13 @@ export type StoryChartLive =
   | 'p3-ticket'
   | 'p3-file'
   | 'p3-queue'
+  // SD-06 `el-ejercito-fantasma` — vendor risk timelines, the ghost-signal
+  // ranking, the EFOS-confirmed slice of the queue, and the P2 cohort block
+  | 'p2-lifecycle'
+  | 'p2-population'
+  | 'p2-signals'
+  | 'p2-match'
+  | 'p2-roster'
 
 /** ARIA pattern codes from the queue typology (P1–P7). */
 export type AriaPattern = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
@@ -802,15 +809,15 @@ export const STORIES: StoryDef[] = [
     headline: "The Man Who Won 370 Million Pesos and Disappeared",
     headline_es: "El Hombre Que Ganó 370 Millones de Pesos y Desapareció",
     subheadline:
-      "Emilio Carranza Obersohn is one person — not a company — holding two federal contracts worth roughly 370 million pesos, with no record before and none after. He is one of 6,118 vendors RUBLI's algorithm flags as matching ghost-company patterns across 23 years. Mexico's tax authority has officially confirmed 42 of them. The other 6,076 are still contracting with the government.",
+      "Emilio Carranza Obersohn is one person — not a company — holding two federal contracts worth roughly 370 million pesos, with no record before and none after. He is one of 6,118 vendors RUBLI's algorithm flags as matching ghost-company patterns across 23 years. Mexico's tax authority has officially confirmed 126 of them. The other 5,992 are still contracting with the government.",
     subheadline_es:
-      "Emilio Carranza Obersohn es una sola persona — no una empresa — con dos contratos federales por unos 370 millones de pesos, sin registro antes ni después. Es uno de los 6,118 proveedores que el algoritmo de RUBLI marca con patrón de empresa fantasma a lo largo de 23 años. La autoridad fiscal mexicana ha confirmado oficialmente a 42. Los otros 6,076 siguen contratando con el gobierno.",
+      "Emilio Carranza Obersohn es una sola persona — no una empresa — con dos contratos federales por unos 370 millones de pesos, sin registro antes ni después. Es uno de los 6,118 proveedores que el algoritmo de RUBLI marca con patrón de empresa fantasma a lo largo de 23 años. La autoridad fiscal mexicana ha confirmado oficialmente a 126. Los otros 5,992 siguen contratando con el gobierno.",
     leadStat: {
       value: '6,118',
       label: "vendors matching the same pattern",
       label_es: "proveedores con el mismo patrón",
-      sublabel: "0.7% officially confirmed",
-      sublabel_es: "0.7% confirmados oficialmente",
+      sublabel: "2.1% officially confirmed",
+      sublabel_es: "2.1% confirmados oficialmente",
       color: '#dc2626',
     },
     kickerStats: [
@@ -833,7 +840,7 @@ export const STORIES: StoryDef[] = [
       {
         prefix: "Official enforcement has confirmed only",
         prefix_es: "La autoridad fiscal solo ha confirmado a",
-        value: '42',
+        value: '126',
         suffix: "of them.",
         suffix_es: "de ellos.",
         tone: 'muted',
@@ -849,7 +856,7 @@ export const STORIES: StoryDef[] = [
       terms: ['fantasma', 'ghost', 'SAT', 'Art. 69-B'],
     },
     nextSteps: [
-      "File freedom-of-information requests to SFP for the complete vendor investigation queue — do any of RUBLI's 6,076 P2 vendors appear?",
+      "File freedom-of-information requests to SFP for the complete vendor investigation queue — do any of RUBLI's 5,992 unconfirmed P2 vendors appear?",
       'Cross-reference the top 50 P2-pattern vendors by value against RUPC (Registro Único de Proveedores y Contratistas) to verify business registration and physical address.',
       "Request SAT disclosure of the Art. 69-B investigation pipeline — how many vendors are currently in provisional status and how does the pipeline's priority ranking compare to RUBLI's?",
       'Interview procurement officials at the top five institutions that awarded contracts to the highest-value P2 vendors; request meeting records and bid evaluation documents.',
@@ -857,12 +864,62 @@ export const STORIES: StoryDef[] = [
       'Pursue criminal complaint under Art. 222 del Código Penal Federal (cohecho) for specific vendor-official pairs where RUBLI flags systematic repetition.',
     ],
     nextSteps_es: [
-      'Solicitar vía INAI a la SFP la cola completa de investigaciones de proveedores — ¿aparecen algunos de los 6,076 proveedores P2 de RUBLI?',
+      'Solicitar vía INAI a la SFP la cola completa de investigaciones de proveedores — ¿aparecen algunos de los 5,992 proveedores P2 sin confirmar de RUBLI?',
       'Cruzar los 50 proveedores P2 de mayor valor contra el RUPC para verificar registro mercantil y domicilio fiscal.',
       'Solicitar al SAT la divulgación del pipeline de investigación del Art. 69-B — ¿cuántos proveedores están en estatus provisional y cómo se compara la prioridad del SAT con la de RUBLI?',
       'Entrevistar a funcionarios de compras en las cinco instituciones que adjudicaron contratos a los proveedores P2 de mayor valor; solicitar actas de reunión y documentos de evaluación.',
       'Presentar solicitud de inteligencia financiera a la UIF para rastrear transacciones bancarias de los 20 contratistas personas físicas P2 de mayor valor.',
       'Interponer denuncia penal bajo el Art. 222 del Código Penal Federal (cohecho) para pares proveedor-funcionario donde RUBLI detecta repetición sistemática.',
+    ],
+    // SD-06: every one re-verified against /vendors?search= and its ARIA row.
+    // None carries a cleared disposition; between them they are the five
+    // largest vendors in the whole scored ghost cohort.
+    entities: [
+      {
+        type: 'vendor',
+        id: 65586,
+        name: 'Emilio Carranza Obersohn',
+        riskScore: 1.0,
+        ariaTier: 2,
+        role: 'The lede · 376.2 MDP, two contracts, 2011',
+        role_es: 'La entrada · 376.2 MDP, dos contratos, 2011',
+      },
+      {
+        type: 'vendor',
+        id: 54323,
+        name: 'Arturo Pueblita Fernández',
+        riskScore: 1.0,
+        ariaTier: 2,
+        role: 'Persona física · 374.1 MDP, two contracts',
+        role_es: 'Persona física · 374.1 MDP, dos contratos',
+      },
+      {
+        type: 'vendor',
+        id: 69019,
+        name: 'Valeria Fernández Díaz',
+        riskScore: 1.0,
+        ariaTier: 2,
+        role: 'Persona física · 373.0 MDP, two contracts',
+        role_es: 'Persona física · 373.0 MDP, dos contratos',
+      },
+      {
+        type: 'vendor',
+        id: 205012,
+        name: 'Rapiscan Systems, Inc.',
+        riskScore: 1.0,
+        ariaTier: 1,
+        role: 'Largest in the cohort · 2,509.0 MDP at SAT',
+        role_es: 'El mayor de la cohorte · 2,509.0 MDP en el SAT',
+      },
+      {
+        type: 'vendor',
+        id: 124418,
+        name: 'Apis Food BV',
+        riskScore: 1.0,
+        ariaTier: 1,
+        role: 'Confirmed on review · 732.3 MDP at LICONSA',
+        role_es: 'Confirmado en revisión · 732.3 MDP en LICONSA',
+      },
     ],
     chapters: [
       {
@@ -875,68 +932,25 @@ export const STORIES: StoryDef[] = [
         prose: [
           "Emilio Carranza Obersohn exists in the federal procurement record as a single line. He is a persona física — a physical person, not a company — and he holds two contracts worth approximately 370 million pesos, between 18 and 25 million US dollars. No contracting history precedes his name; none follows. His activity concentrates inside one institution across one year, and then it stops. One name, two contracts, 370 million pesos, and then nothing.",
           "He is not alone in that shape. Arturo Pueblita Fernández holds two contracts worth roughly 370 million pesos and then disappears from the record. Valeria Fernández Díaz repeats the line exactly: 370 million pesos, two contracts, a single person rather than a company, gone afterward. Three identical rows. Mexican law does let individuals win federal contracts, and legitimate cases exist — specialized consulting, artistic commissions, small local services — but none of them explains 370 million pesos awarded to a single named person.",
-          "RUBLI found Carranza with a lens that reads behavior, not names or domiciles. Its Pattern 2 (P2) algorithm weighs a sudden single-year appearance, contract values 10 to 50 times the sector median, no prior or subsequent activity, an RFC that resolves to nothing in the Registro Único de Proveedores y Contratistas, and bursts measured in weeks rather than years. That is why the chart below sets two foreign-domiciled companies — RAPISCAN SYSTEMS INC at 2,500 MDP, APIS FOOD BV at 732 MDP — beside three personas físicas, Carranza among them, each at 370 MDP. The algorithm flagged all five on conduct alone; on every axis, Carranza reads as a textbook match.",
+          "RUBLI found Carranza with a lens that reads behavior, not names or domiciles. Its Pattern 2 (P2) algorithm weighs a sudden single-year appearance, contract values 10 to 50 times the sector median, no prior or subsequent activity, an RFC that resolves to nothing in the Registro Único de Proveedores y Contratistas, and bursts measured in weeks rather than years. That is why the chart below sets two foreign-domiciled companies — RAPISCAN SYSTEMS INC at 2,509 MDP, APIS FOOD BV at 732 MDP — beside three personas físicas, Carranza among them, each between 373 and 376 MDP. The algorithm flagged all five on conduct alone; on every axis, Carranza reads as a textbook match.",
         ],
         prose_es: [
           "Emilio Carranza Obersohn aparece en el registro federal de contrataciones como una sola línea. Es una persona física — un individuo, no una empresa — y tiene dos contratos por aproximadamente 370 millones de pesos, entre 18 y 25 millones de dólares. No hay historial de contratación antes de su nombre; tampoco después. Su actividad se concentra en una sola institución durante un solo año, y luego se detiene. Un nombre, dos contratos, 370 millones de pesos, y después nada.",
           "No está solo en esa forma. Arturo Pueblita Fernández tiene dos contratos por unos 370 millones de pesos y después desaparece del registro. Valeria Fernández Díaz repite la línea idéntica: 370 millones de pesos, dos contratos, una persona y no una empresa, esfumada después. Tres renglones idénticos. La ley mexicana sí permite que personas físicas ganen contratos federales, y existen casos legítimos — consultoría especializada, comisiones artísticas, pequeños servicios locales — pero ninguno explica 370 millones de pesos adjudicados a una sola persona con nombre y apellido.",
-          "RUBLI encontró a Carranza con un lente que lee conducta, no nombres ni domicilios. Su algoritmo de Patrón 2 (P2) pondera una aparición súbita en un solo año, montos de 10 a 50 veces la mediana del sector, sin actividad previa ni posterior, un RFC que no resuelve a nada en el Registro Único de Proveedores y Contratistas, y ráfagas medidas en semanas y no en años. Por eso la gráfica coloca a dos empresas de domicilio extranjero — RAPISCAN SYSTEMS INC con 2,500 MDP, APIS FOOD BV con 732 MDP — junto a tres personas físicas, entre ellas Carranza, cada una en 370 MDP. El algoritmo marcó a las cinco solo por su conducta; en cada eje, Carranza encaja como caso de manual.",
+          "RUBLI encontró a Carranza con un lente que lee conducta, no nombres ni domicilios. Su algoritmo de Patrón 2 (P2) pondera una aparición súbita en un solo año, montos de 10 a 50 veces la mediana del sector, sin actividad previa ni posterior, un RFC que no resuelve a nada en el Registro Único de Proveedores y Contratistas, y ráfagas medidas en semanas y no en años. Por eso la gráfica coloca a dos empresas de domicilio extranjero — RAPISCAN SYSTEMS INC con 2,509 MDP, APIS FOOD BV con 732 MDP — junto a tres personas físicas, entre ellas Carranza, cada una entre 373 y 376 MDP. El algoritmo marcó a las cinco solo por su conducta; en cada eje, Carranza encaja como caso de manual.",
         ],
         chartConfig: {
-          type: 'inline-roster',
-          title: 'The roster Carranza belongs to: five named P2-pattern vendors',
-          title_es: 'El grupo al que pertenece Carranza: cinco proveedores P2 nombrados',
-          chartId: 'p2-named-vendors',
-          data: {
-            points: [
-              {
-                label: 'RAPISCAN SYSTEMS INC',
-                value: 2500,
-                annotation: 'US-INC · FOREIGN-DOMICILED · 2 CONTRACTS',
-                annotation_es: 'US-INC · DOMICILIO EXTRANJERO · 2 CONTRATOS',
-              },
-              {
-                label: 'APIS FOOD BV',
-                value: 732,
-                annotation: 'NL-BV · FOREIGN-DOMICILED · 3 CONTRACTS',
-                annotation_es: 'NL-BV · DOMICILIO EXTRANJERO · 3 CONTRATOS',
-              },
-              {
-                label: 'EMILIO CARRANZA OBERSOHN',
-                value: 370,
-                annotation: 'PERSONA FÍSICA · INDIVIDUAL CONTRACTOR · 2 CONTRACTS',
-                annotation_es: 'PERSONA FÍSICA · CONTRATISTA INDIVIDUAL · 2 CONTRATOS',
-                highlight: true,
-                color: '#dc2626',
-              },
-              {
-                label: 'ARTURO PUEBLITA FERNÁNDEZ',
-                value: 370,
-                annotation: 'PERSONA FÍSICA · INDIVIDUAL CONTRACTOR · 2 CONTRACTS',
-                annotation_es: 'PERSONA FÍSICA · CONTRATISTA INDIVIDUAL · 2 CONTRATOS',
-                highlight: true,
-                color: '#dc2626',
-              },
-              {
-                label: 'VALERIA FERNÁNDEZ DÍAZ',
-                value: 370,
-                annotation: 'PERSONA FÍSICA · INDIVIDUAL CONTRACTOR · 2 CONTRACTS',
-                annotation_es: 'PERSONA FÍSICA · CONTRATISTA INDIVIDUAL · 2 CONTRATOS',
-                highlight: true,
-                color: '#dc2626',
-              },
-            ],
-            unit: 'MDP',
-            referenceLine: {
-              value: 370,
-              label: 'persona floor',
-              label_es: 'piso personas',
-            },
-            annotation:
-              'Five named P2-pattern vendors, top by contract value. Rows 1–2 are foreign-domiciled incorporated entities; rows 3–5 are physical persons — not companies — each holding ≈370M-peso federal contracts and then disappearing from the procurement record entirely.',
-            annotation_es:
-              'Cinco proveedores P2 nombrados, principales por valor de contrato. Las filas 1–2 son entidades incorporadas con domicilio extranjero; las filas 3–5 son personas físicas — no empresas — cada una con contratos federales por ≈370 MDP, y luego desaparecen completamente del registro de contratación.',
-          },
+          // SD-06: the typed five-row roster is now two live plates. F1 draws
+          // each named vendor's whole contracting life against the 24-year
+          // record and steps with the prose; F5 is the wider live roster with
+          // every review disposition printed.
+          type: 'live',
+          live: 'p2-lifecycle',
+          scrolly: true,
+          live2: 'p2-roster',
+          chartId: 'p2-lifecycle',
+          title: 'Five contracting lives, drawn against the whole record',
+          title_es: 'Cinco vidas de contratación, sobre todo el registro',
         },
         pullquote: {
           quote:
@@ -961,26 +975,35 @@ export const STORIES: StoryDef[] = [
         subtitle: "From one anomaly to a population of 6,118",
         subtitle_es: "De una anomalía a una población de 6,118",
         prose: [
-          "Official enforcement has confirmed 42 of the 6,118 vendors that match the pattern — a detection rate of 0.7 percent, one in 145. Across the full 3,051,294 federal contracts from 2002 through 2025, RUBLI's P2 algorithm flagged those 6,118 vendors, representing 39.6 billion pesos in contract value; cross-checking them against Mexico's definitive ghost-company registry returns exactly 42 matches. The other 144 in every 145 are still under contract. That single ratio, not Carranza, is the scandal.",
-          "The benchmark behind it is Mexico's gold standard. The Servicio de Administración Tributaria (SAT) maintains the definitive list of confirmed ghost companies under Article 69-B of the Código Fiscal de la Federación — the EFOS registry. As of April 2026 it holds 13,960 entities and reaches back to 2014. The list took a decade to assemble, each case proven individually with simulated invoices and sworn testimony. Against RUBLI's live P2 field, that decade of work produces 42 matches.",
-          "The split is stark: 42 confirmed, 6,076 not. That is not proof every flagged vendor is a ghost — P2 classifies behavior, and some will prove legitimate, specialized or foreign suppliers, since foreign domicile is routine in Mexican contracting and never the signal. But fraud research holds that 20 to 40 percent of P2-type signatures correspond to actual fraud; applied to the 6,076, that implies 1,200 to 2,400 unrecognized ghost companies — roughly 1,200 as the structural floor — operating inside federal procurement right now. SAT has confirmed 42.",
+          "Official enforcement has confirmed 126 of the 6,118 vendors that match the pattern — a detection rate of 2.1 percent, one in 49. Across the 3,051,294 scored federal contracts from 2002 through 2025, RUBLI's P2 algorithm flagged those 6,118 vendors, representing 39.6 billion pesos in contract value; cross-checking them against Mexico's definitive ghost-company registry returns exactly 126 matches. The other 48 in every 49 are still under contract. That single ratio, not Carranza, is the scandal.",
+          "The benchmark behind it is Mexico's gold standard. The Servicio de Administración Tributaria (SAT) maintains the definitive list of confirmed ghost companies under Article 69-B of the Código Fiscal de la Federación — the EFOS registry. As of April 2026 it holds 13,960 entities and reaches back to 2014. The list took a decade to assemble, each case proven individually with simulated invoices and sworn testimony. Against RUBLI's live P2 field, that decade of work produces 126 matches.",
+          "The split is stark: 126 confirmed, 5,992 not. That is not proof every flagged vendor is a ghost — P2 classifies behavior, and some will prove legitimate, specialized or foreign suppliers, since foreign domicile is routine in Mexican contracting and never the signal. But fraud research holds that 20 to 40 percent of P2-type signatures correspond to actual fraud; applied to the 5,992, that implies 1,200 to 2,400 unrecognized ghost companies — roughly 1,200 as the structural floor — operating inside federal procurement right now. SAT has confirmed 126.",
         ],
         prose_es: [
-          "La autoridad fiscal ha confirmado a 42 de los 6,118 proveedores que coinciden con el patrón — una tasa de detección de 0.7 por ciento, uno de cada 145. Sobre el total de 3,051,294 contratos federales de 2002 a 2025, el algoritmo P2 de RUBLI marcó a esos 6,118 proveedores, que representan 39,600 millones de pesos en valor contratado; al cruzarlos contra el registro definitivo de empresas fantasma de México arroja exactamente 42 coincidencias. Los otros 144 de cada 145 siguen contratando. Ese solo cociente, no Carranza, es el escándalo.",
-          "El referente detrás es el estándar de oro de México. El Servicio de Administración Tributaria (SAT) mantiene la lista definitiva de empresas fantasma confirmadas bajo el Artículo 69-B del Código Fiscal de la Federación — el registro EFOS. A abril de 2026 reúne 13,960 entidades y se remonta a 2014. La lista tomó una década en armarse, cada caso probado uno por uno con facturas simuladas y testimonios bajo protesta. Frente al campo vivo de P2 de RUBLI, esa década de trabajo produce 42 coincidencias.",
-          "La división es contundente: 42 confirmados, 6,076 no. Eso no prueba que cada proveedor marcado sea una fantasma — P2 clasifica conducta, y algunos resultarán legítimos, proveedores especializados o extranjeros, porque el domicilio extranjero es rutina en la contratación mexicana y nunca es la señal. Pero la investigación sobre fraude sostiene que del 20 al 40 por ciento de las firmas tipo P2 corresponden a fraude real; aplicado a los 6,076, implica de 1,200 a 2,400 empresas fantasma no reconocidas — alrededor de 1,200 como piso estructural — operando dentro de la contratación federal ahora mismo. El SAT ha confirmado 42.",
+          "La autoridad fiscal ha confirmado a 126 de los 6,118 proveedores que coinciden con el patrón — una tasa de detección de 2.1 por ciento, uno de cada 49. Sobre los 3,051,294 contratos federales calificados de 2002 a 2025, el algoritmo P2 de RUBLI marcó a esos 6,118 proveedores, que representan 39,600 millones de pesos en valor contratado; al cruzarlos contra el registro definitivo de empresas fantasma de México arroja exactamente 126 coincidencias. Los otros 48 de cada 49 siguen contratando. Ese solo cociente, no Carranza, es el escándalo.",
+          "El referente detrás es el estándar de oro de México. El Servicio de Administración Tributaria (SAT) mantiene la lista definitiva de empresas fantasma confirmadas bajo el Artículo 69-B del Código Fiscal de la Federación — el registro EFOS. A abril de 2026 reúne 13,960 entidades y se remonta a 2014. La lista tomó una década en armarse, cada caso probado uno por uno con facturas simuladas y testimonios bajo protesta. Frente al campo vivo de P2 de RUBLI, esa década de trabajo produce 126 coincidencias.",
+          "La división es contundente: 126 confirmados, 5,992 no. Eso no prueba que cada proveedor marcado sea una fantasma — P2 clasifica conducta, y algunos resultarán legítimos, proveedores especializados o extranjeros, porque el domicilio extranjero es rutina en la contratación mexicana y nunca es la señal. Pero la investigación sobre fraude sostiene que del 20 al 40 por ciento de las firmas tipo P2 corresponden a fraude real; aplicado a los 5,992, implica de 1,200 a 2,400 empresas fantasma no reconocidas — alrededor de 1,200 como piso estructural — operando dentro de la contratación federal ahora mismo. El SAT ha confirmado 126.",
         ],
+        chartConfig: {
+          // SD-06 F2: the cohort as a distribution over lifetime value, never
+          // a grid tally of circles.
+          type: 'live',
+          live: 'p2-population',
+          chartId: 'p2-population',
+          title: 'A crowd of small vendors, and a tail with five names on it',
+          title_es: 'Una multitud de proveedores chicos, y una cola con cinco nombres',
+        },
         pullquote: {
           quote:
-            "One in 145 vendors the algorithm flags on the ghost pattern has been officially confirmed by SAT. The other 144 keep contracting with the government.",
+            "One in 49 vendors the algorithm flags on the ghost pattern has been officially confirmed by SAT. The other 48 keep contracting with the government.",
           quote_es:
-            "Uno de cada 145 proveedores que el algoritmo marca con el patrón fantasma ha sido confirmado oficialmente por el SAT. Los otros 144 siguen contratando con el gobierno.",
-          stat: '0.7%',
+            "Uno de cada 49 proveedores que el algoritmo marca con el patrón fantasma ha sido confirmado oficialmente por el SAT. Los otros 48 siguen contratando con el gobierno.",
+          stat: '2.1%',
           statLabel: "official detection rate against the P2 population",
           statLabel_es: "tasa de detección oficial frente a la población P2",
-          barValue: 0.007,
-          barLabel: '0.7% officially detected',
-          barLabel_es: '0.7% detectados oficialmente',
+          barValue: 0.0206,
+          barLabel: '2.1% officially detected',
+          barLabel_es: '2.1% detectados oficialmente',
           vizTemplate: 'mass-sliver',
         },
         sources: [
@@ -998,70 +1021,41 @@ export const STORIES: StoryDef[] = [
         subtitle: "Tax enforcement is retrospective; procurement fraud is prospective",
         subtitle_es: "La fiscalización mira al pasado; el fraude en contrataciones mira al futuro",
         prose: [
-          "SAT's fastest definitive listing takes six months; its worst case runs past three years. RUBLI's P2 runs in about two weeks. A vendor like Carranza can extract 370 million pesos and dissolve long before any official list reaches him — and he keeps contracting the entire time, because the definitive listing is the only trigger for procurement exclusion.",
-          "The procedure dictates the delay. Article 69-B requires SAT to prove, with simulated invoices and operational records, that an entity issued fiscal receipts without underlying economic activity — proof built from bank records, third-party testimony, and on-site visits. A provisional listing then publishes in the Diario Oficial de la Federación with a 30-day rebuttal period, and only after it expires does the definitive listing go live. The timeline below follows from that sequence: RUBLI's 0.5 months, SAT's best case at 6, the typical 12-to-18-month run charted at 15, and a worst case of 36 months or more when vendors litigate.",
+          "SAT's fastest definitive listing takes six months; its worst case runs past three years. RUBLI's last full pipeline run scored every vendor in the register in under five minutes. A vendor like Carranza can extract 370 million pesos and dissolve long before any official list reaches him — and he keeps contracting the entire time, because the definitive listing is the only trigger for procurement exclusion.",
+          "The procedure dictates the delay. Article 69-B requires SAT to prove, with simulated invoices and operational records, that an entity issued fiscal receipts without underlying economic activity — proof built from bank records, third-party testimony, and on-site visits. A provisional listing then publishes in the Diario Oficial de la Federación with a 30-day rebuttal period, and only after it expires does the definitive listing go live. That sequence is why the official clock runs in months and not in days: six at SAT's fastest, twelve to eighteen in the typical case, thirty-six or more when a vendor litigates.",
           "The OECD's 2023 Public Procurement Performance Report identified this same gap worldwide and recommended that procurement systems build independent behavioral red-flag detection in parallel — because tax enforcement is retrospective while procurement fraud is prospective. World Bank research on Eastern European procurement reached the identical conclusion in 2019. P2 is that recommendation operationalized: pattern-based, procurement-native, fast. It does not replace SAT; it adds the one thing tax enforcement cannot deliver at scale — speed.",
         ],
         prose_es: [
-          "El listado definitivo más rápido del SAT tarda seis meses; en el peor caso rebasa los tres años. El P2 de RUBLI corre en unas dos semanas. Un proveedor como Carranza puede extraer 370 millones de pesos y disolverse mucho antes de que cualquier lista oficial lo alcance — y sigue contratando todo ese tiempo, porque el listado definitivo es el único disparador de la exclusión en contrataciones.",
-          "El procedimiento dicta la demora. El Artículo 69-B obliga al SAT a probar, con facturas simuladas y registros operativos, que una entidad emitió comprobantes fiscales sin actividad económica real — prueba construida con estados de cuenta, testimonios de terceros y visitas en sitio. Luego se publica un listado provisional en el Diario Oficial de la Federación con un plazo de 30 días para desvirtuar, y solo cuando vence entra el listado definitivo. La línea de tiempo se desprende de esa secuencia: los 0.5 meses de RUBLI, el mejor caso del SAT en 6, el plazo típico de 12 a 18 meses graficado en 15, y un peor caso de 36 meses o más cuando los proveedores litigan.",
+          "El listado definitivo más rápido del SAT tarda seis meses; en el peor caso rebasa los tres años. La última corrida completa del pipeline de RUBLI puntuó a todo el padrón en menos de cinco minutos. Un proveedor como Carranza puede extraer 370 millones de pesos y disolverse mucho antes de que cualquier lista oficial lo alcance — y sigue contratando todo ese tiempo, porque el listado definitivo es el único disparador de la exclusión en contrataciones.",
+          "El procedimiento dicta la demora. El Artículo 69-B obliga al SAT a probar, con facturas simuladas y registros operativos, que una entidad emitió comprobantes fiscales sin actividad económica real — prueba construida con estados de cuenta, testimonios de terceros y visitas en sitio. Luego se publica un listado provisional en el Diario Oficial de la Federación con un plazo de 30 días para desvirtuar, y solo cuando vence entra el listado definitivo. Esa secuencia es la razón de que el reloj oficial corra en meses y no en días: seis en el mejor caso del SAT, de doce a dieciocho en el típico, treinta y seis o más cuando un proveedor litiga.",
           "El Reporte de Desempeño en Contrataciones Públicas 2023 de la OCDE identificó esta misma brecha en todo el mundo y recomendó que los sistemas de compra construyan en paralelo su propia detección de señales de alerta por conducta — porque la fiscalización mira al pasado mientras el fraude en contrataciones mira al futuro. La investigación del Banco Mundial sobre contrataciones en Europa del Este llegó a la misma conclusión en 2019. P2 es esa recomendación hecha operación: basada en patrones, nativa de la contratación, rápida. No reemplaza al SAT; aporta lo único que la fiscalización no puede entregar a escala — velocidad.",
         ],
         chartConfig: {
-          type: 'editorial-cleveland-pair',
-          title: 'Time to Definitive Listing — SAT vs RUBLI',
-          title_es: 'Tiempo hasta listado definitivo — SAT vs RUBLI',
-          chartId: 'sat-rubli-latency',
-          data: {
-            points: [
-              {
-                label: 'SAT · worst case',
-                label_es: 'SAT · peor caso',
-                value: 36,
-                value2: 0.5,
-                color: '#dc2626',
-                annotation: '36+ months (legal challenges)',
-                annotation_es: '36+ meses (impugnaciones)',
-              },
-              {
-                label: 'SAT · typical',
-                label_es: 'SAT · típico',
-                value: 15,
-                value2: 0.5,
-                color: '#a06820',
-                annotation: '12–18 months range',
-                annotation_es: 'rango 12–18 meses',
-              },
-              {
-                label: 'SAT · best case',
-                label_es: 'SAT · óptimo',
-                value: 6,
-                value2: 0.5,
-                color: '#71717a',
-                annotation: 'fastest definitive listing',
-                annotation_es: 'listado definitivo más rápido',
-              },
-            ],
-            unit: 'months',
-            annotation:
-              "Filled dot = SAT's Art. 69-B benchmark; open dot = RUBLI's own P2 pipeline run, a constant 0.5 months across all three rows. Even SAT's fastest listing (6mo) takes 12× longer than one ARIA run; the worst case (36mo) takes 72× longer. During SAT's window, flagged vendors keep contracting. Source: OECD 2023 Public Procurement Performance Report.",
-            annotation_es:
-              'Punto lleno = referente del SAT bajo el Art. 69-B; punto abierto = una corrida del pipeline P2 de RUBLI, constante en 0.5 meses en las tres filas. Incluso el listado más rápido del SAT (6 meses) tarda 12 veces más que una corrida de ARIA; el peor caso (36 meses) tarda 72 veces más. Durante la ventana del SAT, los proveedores marcados siguen contratando. Fuente: OCDE, Reporte de Desempeño en Contrataciones Públicas 2023.',
-          },
+          // SD-06 F3 replaces the typed SAT-vs-RUBLI Cleveland pair. The SAT
+          // side carried a source line; the RUBLI side — a flat "0.5 months"
+          // — carried none, and /aria/stats contradicts it: the last full run
+          // scored 248,944 vendors in 4 min 57 s. The live signal matrix
+          // carries the chapter instead, and prints the measured run.
+          type: 'live',
+          live: 'p2-signals',
+          chartId: 'p2-signals',
+          title: 'SAT has confirmed the smallest of them and none of the largest',
+          title_es: 'El SAT confirmó a los más chicos y a ninguno de los más grandes',
         },
         pullquote: {
           quote:
-            "SAT confirms a ghost company in six months at best and three years at worst. RUBLI's P2 flags the same behavior in two weeks.",
+            "SAT confirms a ghost company in six months at best and three years at worst. RUBLI's P2 flags the same behavior in a single pipeline run.",
           quote_es:
-            "El SAT confirma una empresa fantasma en seis meses en el mejor caso y tres años en el peor. El P2 de RUBLI marca la misma conducta en dos semanas.",
-          stat: "2 wks",
-          statLabel: "one P2 run, against SAT's 6-to-36-month wait",
-          statLabel_es: "una corrida de P2, frente a la espera de 6 a 36 meses del SAT",
+            "El SAT confirma una empresa fantasma en seis meses en el mejor caso y tres años en el peor. El P2 de RUBLI marca la misma conducta en una sola corrida del pipeline.",
+          stat: "4m 57s",
+          statLabel: "one ARIA run over 248,944 vendors, against SAT's 6-to-36-month wait",
+          statLabel_es: "una corrida de ARIA sobre 248,944 proveedores, frente a la espera de 6 a 36 meses del SAT",
         },
         sources: [
           'OECD. (2023). Public Procurement Performance Report. Organization for Economic Co-operation and Development.',
           'World Bank. (2019). Warning Signs of Fraud and Corruption in Procurement. Integrity Vice Presidency.',
           'Código Fiscal de la Federación, Art. 69-B. Procedimiento de operaciones simuladas.',
+          'RUBLI ARIA pipeline run d4e7b665, 3 May 2026 — 248,944 vendors scored in 4 min 57 s (/aria/stats).',
         ],
       },
       {
@@ -1073,14 +1067,23 @@ export const STORIES: StoryDef[] = [
         subtitle_es: "A la fachada se le nombra y se le excluye; el funcionario que firmó queda en el anonimato",
         prose: [
           "The shell has a name in the record — Emilio Carranza Obersohn. The official who signed his two contracts does not. A ghost company is a two-sided transaction: someone creates the shell, and someone inside the government signs the approval. The record names only the first half. Across the full 23-year dataset, the SFP sanctions database shows 1,954 vendor-level sanctions — a tiny fraction even of the 6,118 P2-flagged vendors — and names almost none of the approving officials. The chart's zero bar is that absence itself: 1,954 vendors sanctioned, almost none of the officials who approved them named or sanctioned.",
-          "RUBLI is silent on the signer by necessity: COMPRANET does not reliably link approving officials to specific contracts. That linkage lives in internal procurement-unit records and is not systematically published. The Secretaría de la Función Pública (SFP) holds the authority to audit those approvals and sanction officials; the 1,954 figure is what it has used. Even among the 42 confirmed EFOS vendors in the procurement records, public records show criminal prosecution for only a fraction; most receive fiscal sanctions and procurement exclusion, nothing more — and that asymmetry guarantees the next ghost faces no deterrent.",
-          "The unconfirmed 6,076 are ranked by ARIA's Integrated Priority Score, and the top 100 are the highest-yield targets; three checks completable in days — RUPC registration, a real physical address, and whether one procurement unit awarded multiple P2 vendors at once — can move a case to the UIF, which can subpoena bank records but lacks a pre-investigated pipeline. RUBLI cannot prosecute or sanction. It forces the question it cannot answer: of 6,118 vendors whose conduct mirrors documented ghost companies, which officials signed their contracts, and why were those officials never investigated?",
+          "RUBLI is silent on the signer by necessity: COMPRANET does not reliably link approving officials to specific contracts. That linkage lives in internal procurement-unit records and is not systematically published. The Secretaría de la Función Pública (SFP) holds the authority to audit those approvals and sanction officials; the 1,954 figure is what it has used. Even among the 126 confirmed EFOS vendors in the procurement records, public records show criminal prosecution for only a fraction; most receive fiscal sanctions and procurement exclusion, nothing more — and that asymmetry guarantees the next ghost faces no deterrent.",
+          "The unconfirmed 5,992 are ranked by ARIA's Integrated Priority Score, and the top 100 are the highest-yield targets; three checks completable in days — RUPC registration, a real physical address, and whether one procurement unit awarded multiple P2 vendors at once — can move a case to the UIF, which can subpoena bank records but lacks a pre-investigated pipeline. RUBLI cannot prosecute or sanction. It forces the question it cannot answer: of 6,118 vendors whose conduct mirrors documented ghost companies, which officials signed their contracts, and why were those officials never investigated?",
         ],
         prose_es: [
           "La fachada tiene nombre en el registro — Emilio Carranza Obersohn. El funcionario que firmó sus dos contratos, no. Una empresa fantasma es una transacción de dos partes: alguien crea la fachada y alguien dentro del gobierno firma la autorización. El registro nombra solo a la primera mitad. Sobre el total de 23 años de datos, la base de sanciones de la SFP muestra 1,954 sanciones a nivel de proveedor — una fracción mínima incluso de los 6,118 proveedores marcados por P2 — y casi no nombra a ninguno de los funcionarios que autorizaron. La barra en cero de la gráfica es esa ausencia misma: 1,954 proveedores sancionados, y casi ninguno de los funcionarios que los aprobaron nombrado o sancionado.",
-          "RUBLI calla sobre el firmante por necesidad: COMPRANET no liga de forma confiable a los funcionarios que autorizan con contratos específicos. Ese vínculo vive en registros internos de las unidades compradoras y no se publica de manera sistemática. La Secretaría de la Función Pública (SFP) tiene la facultad de auditar esas autorizaciones y sancionar funcionarios; la cifra de 1,954 es la que ha ejercido. Incluso entre los 42 proveedores EFOS confirmados que aparecen en los registros de contratación, los registros públicos muestran proceso penal solo para una fracción; la mayoría recibe sanciones fiscales y exclusión y nada más — y esa asimetría garantiza que el siguiente fantasma no enfrente disuasión alguna.",
-          "Los 6,076 sin confirmar están jerarquizados por el Índice de Prioridad Integrada de ARIA, y los primeros 100 son los blancos de mayor rendimiento; tres verificaciones realizables en días — registro en el RUPC, un domicilio físico real, y si una misma unidad compradora adjudicó a varios proveedores P2 a la vez — pueden llevar un caso a la UIF, que puede citar estados de cuenta pero carece de una línea de casos ya investigados. RUBLI no puede procesar ni sancionar. Obliga a la pregunta que no puede responder: de 6,118 proveedores cuya conducta refleja la de empresas fantasma documentadas, ¿qué funcionarios firmaron sus contratos, y por qué nunca se investigó a esos funcionarios?",
+          "RUBLI calla sobre el firmante por necesidad: COMPRANET no liga de forma confiable a los funcionarios que autorizan con contratos específicos. Ese vínculo vive en registros internos de las unidades compradoras y no se publica de manera sistemática. La Secretaría de la Función Pública (SFP) tiene la facultad de auditar esas autorizaciones y sancionar funcionarios; la cifra de 1,954 es la que ha ejercido. Incluso entre los 126 proveedores EFOS confirmados que aparecen en los registros de contratación, los registros públicos muestran proceso penal solo para una fracción; la mayoría recibe sanciones fiscales y exclusión y nada más — y esa asimetría garantiza que el siguiente fantasma no enfrente disuasión alguna.",
+          "Los 5,992 sin confirmar están jerarquizados por el Índice de Prioridad Integrada de ARIA, y los primeros 100 son los blancos de mayor rendimiento; tres verificaciones realizables en días — registro en el RUPC, un domicilio físico real, y si una misma unidad compradora adjudicó a varios proveedores P2 a la vez — pueden llevar un caso a la UIF, que puede citar estados de cuenta pero carece de una línea de casos ya investigados. RUBLI no puede procesar ni sancionar. Obliga a la pregunta que no puede responder: de 6,118 proveedores cuya conducta refleja la de empresas fantasma documentadas, ¿qué funcionarios firmaron sus contratos, y por qué nunca se investigó a esos funcionarios?",
         ],
+        chartConfig: {
+          // SD-06 F4: the Two-Worlds proportional ledger from /methodology,
+          // drawn for this cohort. Never a dot field.
+          type: 'live',
+          live: 'p2-match',
+          chartId: 'p2-match',
+          title: 'Two lists of ghosts, and the sliver where they meet',
+          title_es: 'Dos listas de fantasmas, y la astilla donde coinciden',
+        },
         pullquote: {
           quote:
             "A ghost company is a two-sided transaction. Mexico names the shell. Mexico does not name the official who signed.",

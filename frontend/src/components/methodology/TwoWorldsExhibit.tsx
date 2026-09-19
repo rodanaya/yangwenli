@@ -39,15 +39,21 @@ const C_OVERLAP = RISK_COLORS.high // amber — agreement
 // ── HatchBand — one ruled band of proportional hatch segments ───────────────
 // Same 45° engraving vocabulary as BalanzaLedger's HatchBar: `dense` is the
 // identical pattern at a heavier weight, `solid` is flat ink. No <circle>.
-type BandFill = 'hatch' | 'dense' | 'solid'
-interface BandSegment {
+export type BandFill = 'hatch' | 'dense' | 'solid'
+export interface BandSegment {
   /** width as a percentage of the band */
   pct: number
   fill: BandFill
   color: string
 }
 
-function HatchBand({ segments, height = 16 }: { segments: BandSegment[]; height?: number }) {
+/**
+ * Exported for SD-06's match ledger, which draws the same argument — two
+ * lists, one sliver of agreement — at story scale. The vocabulary has to be
+ * identical to the plate on /methodology or the reader meets two engravings
+ * of the same idea; a fork would guarantee they drift.
+ */
+export function HatchBand({ segments, height = 16 }: { segments: BandSegment[]; height?: number }) {
   const uid = useId().replace(/:/g, '')
   let cursor = 0
   const placed = segments.map((s, i) => {
