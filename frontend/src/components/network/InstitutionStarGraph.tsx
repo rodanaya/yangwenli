@@ -307,7 +307,7 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
       )}
 
       {/* Legend */}
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full border" style={{ borderColor: 'var(--color-accent)' }} />
           {isEs ? 'Comprador (centro)' : 'Buyer (center)'}

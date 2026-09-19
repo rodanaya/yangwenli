@@ -455,7 +455,7 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
       )}
 
       {/* Plate legend — mono micro-labels */}
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/70">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: RISK_COLORS.critical }} />
           {isEs ? 'Riesgo crítico' : 'Critical risk'}
@@ -491,7 +491,7 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
       {/* W3 — when the greedy pass withholds colliding callouts, say so:
           the rest are one hover away. */}
       {labeled.size < Math.min(5, data.nodes.length) && (
-        <p className="mt-1.5 text-[8.5px] font-mono text-text-muted/45">
+        <p className="mt-1.5 text-[8.5px] font-mono text-text-muted">
           {isEs ? 'pasa el cursor para leer el resto' : 'hover to read the rest'}
         </p>
       )}
