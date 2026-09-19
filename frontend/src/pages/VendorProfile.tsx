@@ -430,7 +430,7 @@ function ProvenanceFooter({ isEs }: { isEs: boolean }) {
     },
     {
       label: isEs ? 'Casos de corrupción' : 'Corruption cases',
-      note: isEs ? `${1427} casos verificados manualmente` : `${1427} manually verified cases`,
+      note: isEs ? `${1417} casos verificados manualmente` : `${1417} manually verified cases`,
     },
   ]
 
@@ -465,8 +465,8 @@ function ProvenanceFooter({ isEs }: { isEs: boolean }) {
       <div className="space-y-2.5 max-w-2xl">
         <p className="text-[13px] text-text-muted leading-relaxed">
           {isEs
-            ? `Modelo v0.8.5 · AUC 0.785 · entrenado sobre ${(1427).toLocaleString('es-MX')} casos confirmados. El indicador de riesgo es una señal estadística de similitud de patrones — no es una probabilidad de corrupción ni una conclusión legal.`
-            : `Model v0.8.5 · AUC 0.785 · trained on ${(1427).toLocaleString('en-US')} verified cases. The risk indicator is a statistical pattern-similarity signal — not a corruption probability or legal finding.`}
+            ? `Modelo v0.8.5 · AUC 0.785 · entrenado sobre ${(1417).toLocaleString('es-MX')} casos confirmados. El indicador de riesgo es una señal estadística de similitud de patrones — no es una probabilidad de corrupción ni una conclusión legal.`
+            : `Model v0.8.5 · AUC 0.785 · trained on ${(1417).toLocaleString('en-US')} verified cases. The risk indicator is a statistical pattern-similarity signal — not a corruption probability or legal finding.`}
         </p>
         <a
           href="/methodology"

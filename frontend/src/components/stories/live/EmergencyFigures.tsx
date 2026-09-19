@@ -182,7 +182,7 @@ function Floor({ rows, lang }: { rows: YearOverYearChange[]; lang: 'en' | 'es' }
               from: 15,
               to: 20,
               color: ACCENT,
-              label: es ? 'banda de la OCDE 15–20%' : 'OECD band 15–20%',
+              label: es ? 'línea UE 10%' : 'EU line 10%',
             },
           ]}
           rules={[

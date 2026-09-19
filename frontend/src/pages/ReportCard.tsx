@@ -236,7 +236,7 @@ function VerdictBlock({
       label: t('oecdSBLabel'),
       value: sbRate / 100,
       benchmark: 0.15,
-      benchmarkLabel: lang === 'es' ? 'techo OCDE 15%' : 'OECD 15% ceiling',
+      benchmarkLabel: lang === 'es' ? 'techo de calibración 15%' : 'calibration ceiling 15%',
     })
   }
   if (highRiskPct != null) {
@@ -638,7 +638,7 @@ function ReportCard() {
   const totalContracts: number | null = dashData?.overview?.total_contracts ?? national.total_contracts ?? null
 
   // Ground truth cases count — live from executive summary (audit 2026-05-12)
-  const GT_CASES_COUNT = executiveSummary?.ground_truth?.cases ?? 1427
+  const GT_CASES_COUNT = executiveSummary?.ground_truth?.cases ?? 1417
 
   return (
     <main className="min-h-screen bg-background">

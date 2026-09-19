@@ -114,8 +114,8 @@ export function GradeBlock({ summary, lang, bare = false }: {
         {grade_methodology
           ? grade_methodology
           : lang === 'es'
-          ? 'Este indicador refleja señales estructurales observables (sin licitación, monto no revelado, excepción de fuente única, proveedor EFOS, concentración, magnitud) — NO es el modelo de probabilidad de corrupción v0.8.5. Los datos post-horizonte carecen de las 18 características del modelo histórico.'
-          : 'This indicator reflects observable structural signals (no-bid, undisclosed amount, sole-source exception, EFOS vendor, concentration, magnitude) — NOT the v0.8.5 corruption-probability model. Post-horizon data lacks the 18 features of the historical model.'}
+          ? 'Este indicador refleja señales estructurales observables (sin licitación, monto no revelado, excepción de fuente única, proveedor EFOS, concentración, magnitud) — no es el modelo de riesgo v0.8.5. Los datos post-horizonte carecen de las 18 características del modelo histórico.'
+          : 'This indicator reflects observable structural signals (no-bid, undisclosed amount, sole-source exception, EFOS vendor, concentration, magnitude) — not the v0.8.5 risk model. Post-horizon data lacks the 18 features of the historical model.'}
       </div>
     </div>
   )
