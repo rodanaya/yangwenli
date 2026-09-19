@@ -38,6 +38,7 @@ import { ChartCard } from '@/components/stories/InlineCharts'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import {
   IMSS_SIGLAS,
   IMSS_VENDORS,
@@ -175,6 +176,26 @@ function ImssLedger({
   const vendors = row.vendors.slice(0, IMSS_VENDORS)
   const shown = vendors.reduce((s, v) => s + v.total_value_mxn, 0)
 
+  /**
+   * Register entries whose display name collides with another row's.
+   *
+   * BAXTER is filed twice in the padrón under spellings that differ only by
+   * the space after a comma, and `formatVendorName` — correctly — strips the
+   * legal suffix from both and returns "Baxter" for each. Neither row carries
+   * an RFC (structure A/B coverage is 0.1–15.7%), so the register cannot merge
+   * them and neither can this figure. Rather than print what reads as one
+   * supplier listed twice, the colliding rows carry the dossier number that
+   * tells them apart, and the annotation says why there are two.
+   */
+  const twinIds = (() => {
+    const byName = new Map<string, number[]>()
+    for (const v of vendors) {
+      const k = formatVendorName(v.vendor_name, 300)
+      byName.set(k, [...(byName.get(k) ?? []), v.vendor_id])
+    }
+    return new Set([...byName.values()].filter((ids) => ids.length > 1).flat())
+  })()
+
   // The buyer-side counter-reading. `monotonic_institution_ids` is the list of
   // buyers where one supplier climbed from under the floor to over the
   // ceiling; IMSS is not on it, and that absence is the figure's second half.
@@ -200,11 +221,19 @@ function ImssLedger({
               imssClimbs
                 ? 'el IMSS sí aparece entre los compradores donde un proveedor escaló del piso al techo.'
                 : `el IMSS no aparece entre los ${formatNumber(monotonic.length)} compradores donde un solo proveedor escaló del piso al techo — ningún proveedor domina al IMSS, son los proveedores los que dependen de él.`
+            }${
+              twinIds.size
+                ? ` Dos filas llevan el mismo nombre: están inscritas en el padrón con grafías que solo difieren en la puntuación, y ninguna de las dos trae RFC — la cobertura de RFC en los años en que se registraron va de 0.1% a 15.7% —, así que el padrón no puede fusionarlas y esta figura tampoco. Se distinguen por su número de registro, su valor y su número de contratos.`
+                : ''
             } Cifras en vivo de /aria/patterns/P6/institutions y /capture/landscape.`
           : `Each bar is one vendor’s dependence: the share of ITS OWN federal contracting that goes to IMSS. It is not the share of the IMSS budget that vendor takes — the arrow runs from supplier to buyer, and that is the direction the P6 pattern measures. The dashed rules are the floor (${floor}%) and ceiling (${ceil}%) of the /captura capture definition, read from the endpoint. These are the six largest by value of the ${formatNumber(row.vendor_count)} anchored at IMSS. Read the other way the finding reverses: ${
               imssClimbs
                 ? 'IMSS does appear among the buyers where one supplier climbed from the floor to the ceiling.'
                 : `IMSS is not among the ${formatNumber(monotonic.length)} buyers where a single supplier climbed from the floor to the ceiling — no vendor dominates IMSS; the vendors depend on it.`
+            }${
+              twinIds.size
+                ? ` Two rows carry the same name: they are filed in the padrón under spellings that differ only in punctuation, and neither one carries an RFC — coverage across the years they were registered runs from 0.1% to 15.7% — so the register cannot merge them and this figure will not either. They are told apart by their register number, their value and their contract count.`
+                : ''
             } Figures live from /aria/patterns/P6/institutions and /capture/landscape.`
       }
     >
@@ -234,6 +263,14 @@ function ImssLedger({
                       flags={v.in_ground_truth ? ['gt'] : undefined}
                       fullName
                     />
+                    {twinIds.has(v.vendor_id) && (
+                      <span
+                        className="mt-0.5 block font-mono tabular-nums whitespace-nowrap text-text-muted"
+                        style={{ fontSize: 11 }}
+                      >
+                        {es ? `Registro n.º ${v.vendor_id}` : `Register entry no. ${v.vendor_id}`}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -259,21 +296,25 @@ function ImssLedger({
                   )}
                 </div>
 
-                {clamped >= 2 && (
-                  <FactLine
-                    className="mt-1.5"
-                    style={{ paddingLeft: 26 }}
-                    items={[
+                {/* Value and contract count are NOT staged: they are what tells
+                    two register entries of the same name apart, so they belong
+                    on the row from the first beat. The dependence share stays
+                    the stage-2 reveal — the bar already carries it as length. */}
+                <FactLine
+                  className="mt-1.5"
+                  style={{ paddingLeft: 26 }}
+                  items={[
+                    clamped >= 2 ? (
                       <span style={{ color }}>
                         {pct1(ratio)} {es ? 'al IMSS' : 'to IMSS'}
-                      </span>,
-                      <span className="text-text-primary">{formatCompactMXN(v.total_value_mxn)}</span>,
-                      <>
-                        {formatNumber(v.total_contracts)} {es ? 'contratos' : 'contracts'}
-                      </>,
-                    ]}
-                  />
-                )}
+                      </span>
+                    ) : null,
+                    <span className="text-text-primary">{formatCompactMXN(v.total_value_mxn)}</span>,
+                    <>
+                      {formatNumber(v.total_contracts)} {es ? 'contratos' : 'contracts'}
+                    </>,
+                  ]}
+                />
               </li>
             )
           })}
@@ -302,10 +343,10 @@ function ImssLedger({
         <span className="sr-only">
           {es
             ? `Dependencia del IMSS de los seis proveedores P6 más grandes. ${vendors
-                .map((v) => `${v.vendor_name}: ${pct1((v.top_institution_ratio ?? 0) * 100)} de su contratación, ${formatCompactMXN(v.total_value_mxn)}`)
+                .map((v) => `${v.vendor_name}${twinIds.has(v.vendor_id) ? `, registro n.º ${v.vendor_id}` : ''}: ${pct1((v.top_institution_ratio ?? 0) * 100)} de su contratación, ${formatCompactMXN(v.total_value_mxn)}, ${formatNumber(v.total_contracts)} contratos`)
                 .join('. ')}.`
             : `IMSS dependence of the six largest P6 vendors. ${vendors
-                .map((v) => `${v.vendor_name}: ${pct1((v.top_institution_ratio ?? 0) * 100)} of its contracting, ${formatCompactMXN(v.total_value_mxn)}`)
+                .map((v) => `${v.vendor_name}${twinIds.has(v.vendor_id) ? `, register entry no. ${v.vendor_id}` : ''}: ${pct1((v.top_institution_ratio ?? 0) * 100)} of its contracting, ${formatCompactMXN(v.total_value_mxn)}, ${formatNumber(v.total_contracts)} contracts`)
                 .join('. ')}.`}
         </span>
       </div>
