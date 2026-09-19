@@ -147,17 +147,20 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'marea-de-adjudicaciones',
-    headline: 'The Direct-Award Tide: From 60% to 82%',
-    headline_es: 'La Marea de Adjudicaciones: del 60% al 82%',
-    sub: 'Every administration worse',
+    // Matches the story's own h1 (SD-09). The card and the page must not greet
+    // a reader with two different titles for the same investigation.
+    headline: 'The 82 Percent Rule',
+    headline_es: 'La regla del 82 por ciento',
+    sub: 'Every completed term worse',
     type: 'procurement_fraud',
     status: 'reporteado',
     amount: 0,
     era: 'cross',
-    contracts: 0,
-    yearSpan: '2010–2023',
-    brief: '82.2% of 2023 federal contracts were direct awards — no competition, no public tender. Every administration since 2010 has been worse than the one before it.',
-    brief_es: 'El 82.2% de los contratos federales de 2023 fueron adjudicaciones directas — sin competencia, sin licitación pública. Cada administración desde 2010 ha sido peor que la anterior.',
+    // Direct awards 2010–2024, as the renderer reads it.
+    contracts: 1935898,
+    yearSpan: '2010–2024',
+    brief: '82.18% of 2023 federal contracts were awarded without a contest — the highest of the 15 years COMPRANET codes procedure type. Each completed administration since 2010 has run higher than the last.',
+    brief_es: 'El 82.18% de los contratos federales de 2023 se adjudicó sin concurso — la lectura más alta de los 15 años que CompraNet codifica el tipo de procedimiento. Cada administración completa ha corrido más alto que la anterior.',
   },
   {
     slug: 'el-ejercito-fantasma',

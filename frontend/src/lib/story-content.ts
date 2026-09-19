@@ -475,6 +475,13 @@ export type StoryChartLive =
   | 'sb-sectors'
   | 'sb-vendors'
   | 'sb-count'
+  // SD-09 `marea-de-adjudicaciones` — the annual direct-award series rolled up
+  // per administration, zoomed on the emergency, and cut by sector
+  | 'da-terms'
+  | 'da-line'
+  | 'da-emergency'
+  | 'da-sectors'
+  | 'da-count'
 
 /** ARIA pattern codes from the queue typology (P1–P7). */
 export type AriaPattern = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
@@ -2816,18 +2823,18 @@ export const STORIES: StoryDef[] = [
     headline: "The 82 Percent Rule",
     headline_es: "La regla del 82 por ciento",
     subheadline:
-      "Mexico's federal government now awards 82 of every 100 contracts without competition. That share climbed for fourteen straight years — across four administrations, three parties, one pandemic — and never once fell below 60 percent. The OECD calls 30 percent the ceiling for a functioning system. Mexico runs at double to triple that ceiling every year RUBLI can measure. Non-competition is not the exception in Mexican procurement. It is the rule, four to one.",
+      "In 2023 Mexico's federal government awarded 82 of every 100 contracts without a contest — its highest reading on record. In 2024 it awarded 79. The rate has not fallen below 60 percent in the fifteen years COMPRANET has coded procedure type, across three administrations and three parties, and the pandemic barely moved it. The OECD describes roughly 30 percent as the ceiling for a functioning system. Mexico has run at double to triple that ceiling every year it can be measured. Non-competition is not the exception in Mexican procurement. It is the rule, four to one.",
     subheadline_es:
-      "El gobierno federal mexicano adjudica hoy 82 de cada 100 contratos sin competencia. Esa proporción subió catorce años seguidos — cuatro administraciones, tres partidos, una pandemia — y nunca bajó del 60 por ciento. La OCDE fija en 30 por ciento el techo de un sistema que funciona. México opera al doble o al triple de ese techo cada año que RUBLI puede medir. La no-competencia no es la excepción en la contratación mexicana. Es la regla, con razón de cuatro a uno.",
+      "En 2023 el gobierno federal mexicano adjudicó 82 de cada 100 contratos sin concurso — su lectura más alta registrada. En 2024 adjudicó 79. La tasa no baja del 60 por ciento en los quince años que CompraNet lleva codificando el tipo de procedimiento, a lo largo de tres administraciones y tres partidos, y la pandemia apenas la movió. La OCDE describe alrededor del 30 por ciento como el techo de un sistema que funciona. México opera al doble o al triple de ese techo cada año que puede medirse. La no-competencia no es la excepción en la contratación mexicana. Es la regla, con razón de cuatro a uno.",
     byline: 'RUBLI Data Analysis Unit',
     estimatedMinutes: 15,
     status: 'reporteado',
     leadStat: {
       value: '82.2%',
-      label: "the share of all federal contracts awarded without competition in 2023 — the high-water mark, across four administrations",
-      label_es: "la proporción de contratos federales adjudicados sin competencia en 2023 — la marea alta, en cuatro administraciones",
-      sublabel: "14 consecutive years above 60% — the OECD ceiling is 30%",
-      sublabel_es: "14 años consecutivos arriba del 60% — el techo OCDE es 30%",
+      label: "the share of all federal contracts awarded without a contest in 2023 — the high-water mark of the fifteen years the register can score",
+      label_es: "la proporción de contratos federales adjudicados sin concurso en 2023 — la marea alta de los quince años que el registro puede calificar",
+      sublabel: "15 consecutive years above 60% — the OECD ceiling is ~30%",
+      sublabel_es: "15 años consecutivos arriba del 60% — el techo OCDE es ~30%",
       color: '#ea580c',
     },
     kickerStats: [
@@ -2844,7 +2851,7 @@ export const STORIES: StoryDef[] = [
         tone: 'muted',
       },
       {
-        value: '14 yrs',
+        value: '15 yrs',
         suffix: "never once below 60%",
         suffix_es: "ni una sola vez bajo el 60%",
         tone: 'data',
@@ -2878,73 +2885,24 @@ export const STORIES: StoryDef[] = [
         number: 1,
         title: "Every Government Promised Competition. Every Government Used Less of It.",
         title_es: "Cada gobierno prometió competencia. Cada gobierno usó menos.",
-        subtitle: "Four administrations, one rising average",
-        subtitle_es: "Cuatro administraciones, un promedio en ascenso",
+        subtitle: "Three complete terms, one direction",
+        subtitle_es: "Tres mandatos completos, una dirección",
         prose: [
-          "Every Mexican government since 2010 promised procurement transparency. Every one awarded more contracts without competition than the last. The numbers do not bend to who governed. Calderón (2007-2012) ran an average direct-award rate of 42.3 percent across 481,450 contracts worth 191.6 billion pesos. Peña Nieto (2013-2018) jumped to 73.1 percent across 1.23 million contracts worth 852.5 billion pesos. AMLO (2019-2024) reached 79.4 percent across 1.05 million contracts worth 1.06 trillion pesos. Three parties, one direction.",
-          "Set those averages against the standard. The OECD's 2023 review of Mexican procurement puts the ceiling for direct-award usage in a well-functioning system at roughly 25 to 30 percent. That ceiling covers the legitimate cases: real emergencies, genuine sole-source contracts, small-value buys where running a tender costs more than it saves. Above 30 percent, the OECD treats direct adjudication as a structural indicator of procurement dysfunction.",
-          "Mexico does not approach that ceiling — it clears it by a factor of two or three, every administration, every year on record. What the OECD calls a sign of breakdown, Mexico treats as a floor. Sheinbaum's first months read 68.3 percent on 92,631 contracts, but that is a partial-year preview, not a reversal. (The Fox period is excluded: COMPRANET's Structure A coverage of the direct-award flag before 2010 is unreliable.) The rule in Mexican federal contracting is non-competition, by a ratio of roughly four to one.",
+          "Every Mexican government since 2010 promised procurement transparency. Every one that finished its term awarded a larger share of contracts without a contest than the one before it. The numbers do not bend to who governed. Calderón, across the three years of his term the register can score, ran a direct-award share of 61.90 percent over 328,845 contracts worth 1.08 trillion pesos. Peña Nieto reached 73.10 percent over 1,228,625 contracts worth 3.06 trillion. AMLO reached 79.41 percent over 1,050,552 contracts worth 2.76 trillion. Three parties, one direction.",
+          "Set those shares against the standard. The OECD's 2023 review of Mexican procurement puts the ceiling for direct-award usage in a well-functioning system at roughly 25 to 30 percent. That ceiling covers the legitimate cases: real emergencies, genuine sole-source contracts, small-value buys where running a tender costs more than it saves. Above 30 percent, the OECD treats direct adjudication as a structural indicator of procurement dysfunction. It is an external benchmark, not something RUBLI measures, and this story carries it as a citation rather than a finding.",
+          "Mexico does not approach that ceiling — it clears it by a factor of two or three, in every term and every year on record. What the OECD calls a sign of breakdown, Mexico treats as a floor. Sheinbaum's first months read 68.26 percent on 92,631 contracts, but that is nine months of a single year rather than a term: the federal feed froze on 28 September 2025. Fox does not appear at all, and Calderón enters only in 2010, because COMPRANET does not code procedure type before that year — Structure A records a direct-award rate of 0.0 percent for every year from 2002 to 2009. Averaging across that seam is what produced the 42.3 percent this story used to give Calderón: real direct awards divided by a span that includes three years the register scored at zero. Measured only where the register can see, the gap between the first complete term and the last is 17.5 points, not the 37.1 the old figure implied. The direction is the same. The rule in Mexican federal contracting is non-competition, by a ratio of roughly four to one.",
         ],
         prose_es: [
-          "Todo gobierno mexicano desde 2010 prometió transparencia en la contratación. Todos adjudicaron más contratos sin competencia que el anterior. Los números no se doblan ante quién gobierna. Calderón (2007-2012) corrió una tasa promedio de adjudicación directa de 42.3 por ciento en 481,450 contratos por 191.6 mil millones de pesos. Peña Nieto (2013-2018) saltó a 73.1 por ciento en 1.23 millones de contratos por 852.5 mil millones de pesos. AMLO (2019-2024) alcanzó 79.4 por ciento en 1.05 millones de contratos por 1.06 billones de pesos. Tres partidos, una sola dirección.",
-          "Pon esos promedios frente al estándar. La revisión de la OCDE de 2023 sobre la contratación mexicana ubica el techo del uso de adjudicación directa en un sistema que funciona bien en torno al 25 o 30 por ciento. Ese techo cubre los casos legítimos: emergencias reales, contratos genuinos de única fuente, compras de bajo valor donde licitar cuesta más de lo que ahorra. Por encima del 30 por ciento, la OCDE trata la adjudicación directa como un indicador estructural de disfunción.",
-          "México no se acerca a ese techo — lo rebasa por un factor de dos o tres, en cada administración, en cada año del registro. Lo que la OCDE llama señal de colapso, México lo trata como piso. Los primeros meses de Sheinbaum marcan 68.3 por ciento sobre 92,631 contratos, pero es una lectura parcial, no una reversión. (El periodo Fox queda excluido: la cobertura del indicador de adjudicación directa en la estructura A de CompraNet, antes de 2010, no es confiable.) La regla en la contratación federal mexicana es la no-competencia, con razón de aproximadamente cuatro a uno.",
+          "Todo gobierno mexicano desde 2010 prometió transparencia en la contratación. Todos los que terminaron su mandato adjudicaron sin concurso una proporción mayor de contratos que el anterior. Los números no se doblan ante quién gobierna. Calderón, en los tres años de su sexenio que el registro puede calificar, corrió una proporción de adjudicación directa de 61.90 por ciento sobre 328,845 contratos por 1.08 billones de pesos. Peña Nieto alcanzó 73.10 por ciento sobre 1,228,625 contratos por 3.06 billones. AMLO alcanzó 79.41 por ciento sobre 1,050,552 contratos por 2.76 billones. Tres partidos, una sola dirección.",
+          "Pon esas proporciones frente al estándar. La revisión de la OCDE de 2023 sobre la contratación mexicana ubica el techo del uso de adjudicación directa en un sistema que funciona bien en torno al 25 o 30 por ciento. Ese techo cubre los casos legítimos: emergencias reales, contratos genuinos de única fuente, compras de bajo valor donde licitar cuesta más de lo que ahorra. Por encima del 30 por ciento, la OCDE trata la adjudicación directa como un indicador estructural de disfunción. Es una referencia externa, no algo que RUBLI mida, y esta historia la carga como cita, no como hallazgo.",
+          "México no se acerca a ese techo — lo rebasa por un factor de dos o tres, en cada mandato y en cada año del registro. Lo que la OCDE llama señal de colapso, México lo trata como piso. Los primeros meses de Sheinbaum marcan 68.26 por ciento sobre 92,631 contratos, pero son nueve meses de un solo año, no un mandato: el feed federal se congeló el 28 de septiembre de 2025. Fox no aparece, y Calderón entra apenas en 2010, porque CompraNet no codifica el tipo de procedimiento antes de ese año — la Estructura A registra una tasa de adjudicación directa de 0.0 por ciento en todos los años de 2002 a 2009. Promediar sobre esa costura es lo que producía el 42.3 por ciento que esta historia le atribuía a Calderón: adjudicaciones directas reales divididas entre un periodo que incluye tres años calificados en cero. Medida sólo donde el registro alcanza a ver, la distancia entre el primer mandato completo y el último es de 17.5 puntos, no los 37.1 que sugería la cifra anterior. La dirección es la misma. La regla en la contratación federal mexicana es la no-competencia, con razón de aproximadamente cuatro a uno.",
         ],
         chartConfig: {
-          type: 'editorial-threshold',
-          title: 'The Water Line, Averaged per Administration',
-          title_es: 'La línea de marea, promediada por administración',
-          chartId: 'da-rate-by-admin',
-          data: {
-            points: [
-              {
-                label: 'Calderón',
-                value: 42.3,
-                color: '#3b82f6',
-                annotation: '481K contracts · 191.6B MXN',
-                annotation_es: '481K contratos · 191.6 mil M MXN',
-              },
-              {
-                label: 'Peña Nieto',
-                value: 73.1,
-                color: '#a06820',
-                annotation: '1.23M contracts · 852.5B MXN',
-                annotation_es: '1.23M contratos · 852.5 mil M MXN',
-              },
-              {
-                label: 'AMLO',
-                value: 79.4,
-                color: '#dc2626',
-                highlight: true,
-                annotation: '1.05M contracts · 1.06T MXN',
-                annotation_es: '1.05M contratos · 1.06 billones MXN',
-                delta: '+37.1pp vs Calderón',
-                delta_es: '+37.1pp vs Calderón',
-              },
-              {
-                label: 'Sheinbaum',
-                value: 68.3,
-                color: '#ea580c',
-                annotation: '92K contracts (partial term)',
-                annotation_es: '92K contratos (mandato parcial)',
-              },
-            ],
-            referenceLine: {
-              value: 30,
-              label: 'OECD ceiling ~30%',
-              label_es: 'Techo OCDE ~30%',
-              color: '#3b82f6',
-            },
-            unit: '%',
-            maxValue: 100,
-            connectDots: true,
-            yLabel: 'Average direct award rate (%)',
-            yLabel_es: 'Tasa promedio de adjudicación directa (%)',
-            annotation:
-              'Each administration since reliable data began has set a new ceiling. Fox (2001-2006) excluded — Structure A coverage of is_direct_award is unreliable. Sheinbaum reads as a partial-year preview.',
-            annotation_es:
-              'Cada administración desde el inicio de los datos confiables ha fijado un nuevo techo. Fox (2001-2006) excluido — la cobertura del indicador is_direct_award en la estructura A no es confiable. Sheinbaum es una lectura parcial.',
-          },
+          type: 'live',
+          live: 'da-terms',
+          scrolly: true,
+          title: 'The Water Line, per Administration',
+          title_es: 'La línea de marea, por administración',
         },
         pullquote: {
           quote:
@@ -2960,116 +2918,45 @@ export const STORIES: StoryDef[] = [
           vizTemplate: 'breach-ceiling',
         },
         sources: [
-          'RUBLI contracts table analysis, is_direct_award flag, 2010-2024. Queried April 2026.',
-          'RUBLI per-administration aggregation: GROUP BY admin (Fox 2001-06, Calderón 2007-12, Peña 2013-18, AMLO 2019-24, Sheinbaum 2025+). April 2026.',
-          'OECD. (2023). Public Procurement Performance Report: Mexico. Chapter 3.',
+          'RUBLI /analysis/year-over-year, direct_award_pct and contracts by year, 2010-2025. Queried September 2026.',
+          'RUBLI per-administration rollup: Σ direct awards ÷ Σ contracts over each term’s scoreable years, clipped to 2010 (Calderón 2010-12, Peña Nieto 2013-18, AMLO 2019-24, Sheinbaum 2025 partial). Fox excluded — no scoreable year.',
+          'OECD. (2023). Public Procurement Performance Report: Mexico. Chapter 3. External benchmark, not a RUBLI measurement.',
         ],
       },
       {
         id: 'ch2',
         number: 2,
-        title: "Fourteen Years, One Direction",
-        title_es: "Catorce años, una sola dirección",
-        subtitle: "The year-by-year ascent, 2010-2024",
-        subtitle_es: "El ascenso año por año, 2010-2024",
+        title: "Fifteen Years, One Direction",
+        title_es: "Quince años, una sola dirección",
+        subtitle: "The year-by-year record, 2010-2024",
+        subtitle_es: "El registro año por año, 2010-2024",
         prose: [
-          "The line starts in 2010 at 62.7 percent — already more than twice the OECD ceiling, and the earliest reliable mark in the COMPRANET archive. It barely stops climbing for the next thirteen years. After a slight dip to 60.0 percent in 2011, it resumes: 68.4 percent in 2013, 73.0 in 2015, 74.8 in 2016, 77.1 in 2017. Then 77.8 in 2019, 78.1 in 2020, 80.0 in 2021. A small recede to 79.1 in 2022 precedes the 82.2 percent peak of 2023, before settling at 79.3 in 2024.",
-          "This is a ratchet, not a policy. No single administration drove it; no single reform reversed it. The rate rose through every partisan transition in the record — the trend ignores who holds power. Mexico has stayed above 60 percent for the entire data period and above 75 percent since 2017, exceeding the OECD ceiling by two to three times every year in the dataset.",
-          "The gap between the 30 percent OECD line and the 60-plus percent Mexican floor is where competitive procurement used to live. The next chapters fill that gap: first the peak — which arrives not during the emergency everyone expects, but after it — then the vendors left standing where competition disappeared.",
+          "The line starts in 2010 at 62.70 percent — already more than twice the OECD ceiling, and the earliest reading the COMPRANET archive can produce. It does not climb every year: 2011, 2014, 2018, 2022 and 2024 each closed below the year before them. What it never does is come back down. After a dip to 60.05 percent in 2011 it resumes — 68.40 in 2013, 73.04 in 2015, 74.80 in 2016, 77.11 in 2017 — then 77.80 in 2019, 78.09 in 2020, 80.00 in 2021. A recede to 79.12 in 2022 precedes the 82.18 percent peak of 2023, and 2024 settles at 79.35.",
+          "This is a ratchet, not a policy. No single administration drove it; no single reform reversed it. The rate rose through both partisan transitions in the record — 60.52 to 68.40 when Peña Nieto took over, 76.21 to 77.80 when AMLO did — so the trend ignores who holds power. Mexico has stayed at or above 60 percent for every one of the fifteen years the register can score, and above 75 percent since 2017, exceeding the OECD ceiling by two to three times in each of them.",
+          "The gap between the 30 percent OECD line and the 60-plus percent Mexican floor is where competitive procurement used to live. The next chapters fill that gap: first the peak — which arrives not during the emergency everyone expects, but after it — then the sectors where the tide rose furthest.",
         ],
         prose_es: [
-          "La línea arranca en 2010 en 62.7 por ciento — ya más del doble del techo OCDE, y la marca confiable más temprana del archivo CompraNet. Casi no deja de subir durante los siguientes trece años. Tras una leve baja a 60.0 por ciento en 2011, se reanuda: 68.4 por ciento en 2013, 73.0 en 2015, 74.8 en 2016, 77.1 en 2017. Luego 77.8 en 2019, 78.1 en 2020, 80.0 en 2021. Una pequeña baja a 79.1 en 2022 antecede al pico de 82.2 por ciento de 2023, antes de asentarse en 79.3 en 2024.",
-          "Esto es un trinquete, no una política. Ninguna administración por sí sola lo impulsó; ninguna reforma por sí sola lo revirtió. La tasa subió a través de cada transición partidista del registro — la tendencia ignora quién tiene el poder. México se mantuvo por encima del 60 por ciento durante todo el periodo de datos y por encima del 75 por ciento desde 2017, excediendo el techo OCDE entre dos y tres veces cada año del conjunto.",
-          "La distancia entre la línea OCDE del 30 por ciento y el piso mexicano de más del 60 es donde solía vivir la contratación competitiva. Los capítulos siguientes llenan esa distancia: primero el pico — que llega no durante la emergencia que todos esperan, sino después de ella — y luego los proveedores que quedaron en pie donde la competencia desapareció.",
+          "La línea arranca en 2010 en 62.70 por ciento — ya más del doble del techo OCDE, y la lectura más temprana que el archivo CompraNet puede producir. No sube todos los años: 2011, 2014, 2018, 2022 y 2024 cerraron por debajo del año anterior. Lo que nunca hace es volver a bajar. Tras una caída a 60.05 por ciento en 2011 se reanuda — 68.40 en 2013, 73.04 en 2015, 74.80 en 2016, 77.11 en 2017 — luego 77.80 en 2019, 78.09 en 2020, 80.00 en 2021. Un retroceso a 79.12 en 2022 antecede al pico de 82.18 por ciento de 2023, y 2024 se asienta en 79.35.",
+          "Esto es un trinquete, no una política. Ninguna administración por sí sola lo impulsó; ninguna reforma por sí sola lo revirtió. La tasa subió en las dos transiciones partidistas del registro — de 60.52 a 68.40 cuando entró Peña Nieto, de 76.21 a 77.80 cuando entró AMLO — de modo que la tendencia ignora quién tiene el poder. México se mantuvo en 60 por ciento o más en cada uno de los quince años que el registro puede calificar, y arriba de 75 por ciento desde 2017, excediendo el techo OCDE entre dos y tres veces en todos ellos.",
+          "La distancia entre la línea OCDE del 30 por ciento y el piso mexicano de más del 60 es donde solía vivir la contratación competitiva. Los capítulos siguientes llenan esa distancia: primero el pico — que llega no durante la emergencia que todos esperan, sino después de ella — y luego los sectores donde la marea subió más.",
         ],
         chartConfig: {
-          type: 'inline-area',
-          title: 'The Tide Chart: Direct Award Rate by Year, 2010-2024',
+          type: 'live',
+          live: 'da-line',
+          title: 'The Tide Chart: Direct-Award Rate by Year, 2010-2024',
           title_es: 'La carta de marea: tasa de adjudicación directa por año, 2010-2024',
-          chartId: 'da-rate-trend',
-          data: {
-            points: [
-              {
-                label: '2010',
-                value: 62.7,
-              },
-              {
-                label: '2011',
-                value: 60,
-              },
-              {
-                label: '2013',
-                value: 68.4,
-              },
-              {
-                label: '2015',
-                value: 73,
-              },
-              {
-                label: '2016',
-                value: 74.8,
-              },
-              {
-                label: '2017',
-                value: 77.1,
-              },
-              {
-                label: '2019',
-                value: 77.8,
-              },
-              {
-                label: '2020',
-                value: 78.1,
-              },
-              {
-                label: '2021',
-                value: 80,
-                highlight: true,
-                annotation: '80%',
-              },
-              {
-                label: '2022',
-                value: 79.1,
-              },
-              {
-                label: '2023',
-                value: 82.2,
-                highlight: true,
-                annotation: 'peak 82.2%',
-                annotation_es: 'pico 82.2%',
-              },
-              {
-                label: '2024',
-                value: 79.3,
-              },
-            ],
-            referenceLine: {
-              value: 30,
-              label: 'OECD recommended ceiling ~30%',
-              label_es: 'Techo recomendado OCDE ~30%',
-              color: '#3b82f6',
-            },
-            unit: '%',
-            maxValue: 100,
-            yLabel: 'Direct award rate (%)',
-            yLabel_es: 'Tasa de adjudicación directa (%)',
-            annotation:
-              'Mexico exceeds OECD recommended ceiling by 2-3x every year in the dataset.',
-            annotation_es:
-              'México excede el techo recomendado OCDE entre 2 y 3 veces cada año del periodo.',
-          },
         },
         pullquote: {
           quote:
             "The OECD ceiling is 30 percent. Mexico's floor is 60 percent. The distance between them is where competitive procurement used to live.",
           quote_es:
             "El techo OCDE es del 30 por ciento. El piso mexicano es del 60. La distancia entre ambos es donde solía vivir la contratación competitiva.",
-          stat: '14 years',
-          statLabel: "consecutive years above a 60% direct-award rate",
-          statLabel_es: "años consecutivos con tasa de adjudicación directa por encima del 60%",
+          stat: '15',
+          statLabel: "consecutive years at or above a 60% direct-award rate, 2010–2024",
+          statLabel_es: "años consecutivos con tasa de adjudicación directa de 60% o más, 2010–2024",
         },
         sources: [
-          'RUBLI year-over-year direct award analysis, 2018-2022, April 2026.',
+          'RUBLI /analysis/year-over-year, direct_award_pct by year, 2010-2024. Queried September 2026.',
           'OECD. (2023). Public Procurement Performance Report: Mexico. Recommendation 3.',
         ],
       },
@@ -3081,59 +2968,20 @@ export const STORIES: StoryDef[] = [
         subtitle: "COVID barely moved the rate. The years that followed crested it.",
         subtitle_es: "La COVID apenas movió la tasa. Los años siguientes la coronaron.",
         prose: [
-          "Everyone expects 2020 — the COVID year — to be the surge, the moment emergency procurement broke the dam. It isn't. The pandemic moved the rate by 0.3 percentage points: 77.8 percent in 2019, before COVID, to 78.1 percent in 2020. The real swell came after the emergency ended. The three post-pandemic years added 4.1 points, cresting at 82.2 percent in 2023 — the highest rate in the 23 years RUBLI can analyze.",
+          "Everyone expects 2020 — the COVID year — to be the surge, the moment emergency procurement broke the dam. It isn't. The pandemic moved the rate by 0.3 percentage points: 77.80 percent in 2019, before COVID, to 78.09 percent in 2020, on the thinnest contract volume of the window. The real swell came after the emergency ended. The three years that followed added 4.1 points, cresting at 82.18 percent in 2023 — the highest of the fifteen years the register codes procedure type.",
           "The pandemic did not create Mexico's direct-award culture. It was an accelerant on a condition that already existed. The Ley de Adquisiciones, Art. 41, lists the legitimate grounds for skipping competition — emergencies, sole source, continuity with an existing contractor — with small-value contracts allowed under Art. 42 and open bidding the default under Art. 26. But when 82 percent of contracts invoke an exception, the statute's architecture is inverted. The exception is now the rule.",
-          "The 2023 peak is not an inheritance. It arrived after the AMLO administration centralized pharmaceutical buying under BIRMEX and INSABI — a reform framed explicitly as anti-corruption, meant to strip discretion from institutional buyers with vendor ties. Yet the centralized system that replaced them ran near-100 percent direct-award rates in 2020-2021, awarding enormous single-source contracts without competition. Centralization did not cure the dependency. It concentrated it: a thousand small direct awards became one national-scale one, justified on a single basis. The shape changed. The dependency did not.",
+          "The 2023 peak is not an inheritance, and it is not explained by the reform usually blamed for it. The AMLO administration centralized pharmaceutical buying under BIRMEX and INSABI, a change framed explicitly as anti-corruption and meant to strip discretion from institutional buyers with vendor ties. Across their whole records on the register, those two buyers award 71.13 percent and 57.81 percent of their contracts directly. Both are far above the OECD line. Both are also below the 79.41 percent their own administration averaged. Centralization did not produce the peak, and the register does not support the claim, made in earlier versions of this story, that the centralized buyers ran near-100 percent direct-award rates. Whatever lifted 2023 is spread across the register rather than concentrated in the two institutions built to replace the buyers they displaced. The next chapter shows where it is thickest.",
         ],
         prose_es: [
-          "Todos esperan que 2020 — el año de la COVID — sea la marejada, el momento en que la contratación de emergencia rompió el dique. No lo es. La pandemia movió la tasa 0.3 puntos porcentuales: 77.8 por ciento en 2019, antes de la COVID, a 78.1 por ciento en 2020. La verdadera crecida llegó después de que terminó la emergencia. Los tres años pospandemia sumaron 4.1 puntos, culminando en 82.2 por ciento en 2023 — la tasa más alta en los 23 años que RUBLI puede analizar.",
+          "Todos esperan que 2020 — el año de la COVID — sea la marejada, el momento en que la contratación de emergencia rompió el dique. No lo es. La pandemia movió la tasa 0.3 puntos porcentuales: 77.80 por ciento en 2019, antes de la COVID, a 78.09 por ciento en 2020, sobre el volumen de contratos más bajo de la ventana. La verdadera crecida llegó después de que terminó la emergencia. Los tres años siguientes sumaron 4.1 puntos, culminando en 82.18 por ciento en 2023 — la más alta de los quince años que el registro codifica el tipo de procedimiento.",
           "La pandemia no creó la cultura de adjudicación directa en México. Fue un acelerante sobre una condición que ya existía. La Ley de Adquisiciones, Art. 41, enumera los fundamentos legítimos para saltarse la competencia — emergencias, única fuente, continuidad con un contratista existente — con los contratos de bajo valor permitidos bajo el Art. 42 y la licitación abierta como regla bajo el Art. 26. Pero cuando el 82 por ciento de los contratos invoca una excepción, la arquitectura del estatuto se invierte. La excepción es ahora la regla.",
-          "El pico de 2023 no es una herencia. Llegó después de que la administración de AMLO centralizó la compra farmacéutica bajo BIRMEX e INSABI — una reforma planteada explícitamente como anticorrupción, pensada para quitar discreción a compradores institucionales con vínculos con proveedores. Sin embargo, el sistema centralizado que los reemplazó operó con tasas de adjudicación directa cercanas al 100 por ciento en 2020-2021, adjudicando enormes contratos de única fuente sin competencia. La centralización no curó la dependencia. La concentró: mil adjudicaciones directas pequeñas se volvieron una de escala nacional, justificada sobre una sola base. La forma cambió. La dependencia no.",
+          "El pico de 2023 no es una herencia, y tampoco lo explica la reforma a la que suele culparse. La administración de AMLO centralizó la compra farmacéutica bajo BIRMEX e INSABI, un cambio planteado explícitamente como anticorrupción y pensado para quitar discreción a compradores institucionales con vínculos con proveedores. En todo su registro, esos dos compradores adjudican de manera directa el 71.13 y el 57.81 por ciento de sus contratos. Ambos están muy por encima de la línea de la OCDE. Ambos están también por debajo del 79.41 por ciento que promedió su propia administración. La centralización no produjo el pico, y el registro no sostiene la afirmación, presente en versiones anteriores de esta historia, de que los compradores centralizados operaran con tasas cercanas al 100 por ciento. Lo que sea que levantó 2023 está repartido por el registro, no concentrado en las dos instituciones creadas para sustituir a los compradores que desplazaron. El siguiente capítulo muestra dónde es más denso.",
         ],
         chartConfig: {
-          type: 'editorial-threshold',
+          type: 'live',
+          live: 'da-emergency',
           title: 'The peak arrived after the emergency, not during it',
           title_es: 'El pico llegó después de la emergencia, no durante ella',
-          data: {
-            points: [
-              {
-                label: '2019 pre-COVID',
-                value: 77.8,
-                color: '#ea580c',
-                annotation: 'already at structural peak',
-                annotation_es: 'ya en el pico estructural',
-              },
-              {
-                label: '2020 COVID year',
-                value: 78.1,
-                color: '#ea580c',
-                annotation: '+0.3pp during pandemic',
-                annotation_es: '+0.3pp durante la pandemia',
-              },
-              {
-                label: '2023 post-COVID',
-                value: 82.2,
-                color: '#dc2626',
-                highlight: true,
-                annotation: '+4.1pp after pandemic ended',
-                annotation_es: '+4.1pp tras finalizar la pandemia',
-              },
-            ],
-            referenceLine: {
-              value: 30,
-              label: 'OECD recommended ceiling ~30%',
-              label_es: 'Techo recomendado OCDE ~30%',
-              color: '#3b82f6',
-            },
-            unit: '%',
-            maxValue: 100,
-            yLabel: 'Direct award rate (%)',
-            yLabel_es: 'Tasa de adjudicación directa (%)',
-            annotation:
-              'The trend was climbing before COVID and continued climbing after. The pandemic moved the rate +0.3pp; the three years that followed moved it +4.1pp more. The pandemic was an accelerant applied to a pre-existing structural condition — not the cause.',
-            annotation_es:
-              'La tendencia ya subía antes de la COVID y siguió subiendo después. La pandemia movió la tasa +0.3pp; los tres años siguientes la movieron +4.1pp adicionales. La pandemia fue un acelerante aplicado a una condición estructural preexistente — no la causa.',
-          },
         },
         pullquote: {
           quote:
@@ -3156,152 +3004,44 @@ export const STORIES: StoryDef[] = [
       {
         id: 'ch4',
         number: 4,
-        title: "The Vendors Who No Longer Have to Compete",
-        title_es: "Los proveedores que ya no tienen que competir",
+        title: "Where the Tide Rose Highest",
+        title_es: "Dónde subió más la marea",
         subtitle:
-          "Captive suppliers in the drowned zone — and a ~108B MXN annual cost",
+          "Ten of twelve sectors are less competitive than in 2010 — and health moved furthest",
         subtitle_es:
-          "Proveedores cautivos en la zona inundada — y un costo de ~108 mil MDP al año",
+          "Diez de doce sectores son menos competitivos que en 2010 — y salud se movió más",
         prose: [
-          "Non-competition has a price, and the OECD has measured it. A 2019 meta-analysis spanning 40 countries found that eliminating competition raises contract prices by 15 to 30 percent on average — 25 to 40 percent for infrastructure and specialized technical work. Apply the low end to Mexico: 2023 direct-award contracts totaled roughly 720 billion pesos in face value; a 15 percent premium puts the competitive distortion at about 108 billion pesos a year. That is roughly 40 percent of the federal education budget for that year, or 60 percent of the health-infrastructure budget. Summed across 23 years at OECD-typical premiums, the aggregate runs into the low trillions of pesos — an order-of-magnitude estimate, not a precise figure. RUBLI's own risk model corroborates the direction: direct-award contracts score significantly higher than competitive ones in the same sector-year.",
-          "Now name who occupies that ground. Among vendors with at least 50 contracts between 2010 and 2024 and a direct-award rate above 95 percent, three clusters emerge. The first is tech licensing — Microsoft Corporation at 10.87 billion pesos and 97.3 percent, Oracle México at 8.27 billion and 98.4 percent, IBM México at 8.02 billion and 95.4 percent, plus Microsoft Licensing GP at 6.66 billion (97.7 percent) and Microsoft México at 6.61 billion (99.6 percent). This cluster is largely defensible: proprietary software is genuinely sole-source.",
-          "The second cluster is harder to defend. Televisa at 7.07 billion and 99.7 percent, Estudios Azteca at 5.82 billion and 99.8 percent — 12.9 billion pesos in government media buys routed to the two dominant broadcasters without competition. The third is the welfare-staples apparatus behind DICONSA-LICONSA: Molinos Azteca at 7.62 billion (flour), Marcas Nestlé at 4.35 billion (dairy), Molinera de México at 2.87 billion (flour), and Fábrica de Jabón La Corona at 2.68 billion (hygiene) — 17.5 billion pesos across four staple producers, with Industrial Patrona at 3.87 billion (bulk) alongside, all at 99.7 percent or higher. Two outliers round it out: Aeroméxico at 5.31 billion (government travel) and CENEVAL at 3.66 billion (a government-owned exam body). A high direct-award rate is not proof of wrongdoing — some of these contracts are legitimately sole-source. But these are the names that no longer have to compete.",
+          "One national rate hides twelve different stories. Cut the register by sector at the first year it can be scored and at the year the rate peaked, and ten of the twelve sectors award a larger share of their contracts without a contest in 2023 than they did in 2010. The moves are not small. Health rises 46.9 points, from 36.80 percent to 83.70. Labor rises 28.5, Governance 27.2, Education 25.7, Infrastructure 25.2. Treasury, which was already high at 74.80 percent in 2010, ends at 91.10 — the highest rate any sector posts in 2023.",
+          "Health is the one to sit with. In 2010 it was among the most competitive sectors on the register: barely more than a third of its contracts skipped the contest, against a federal average of 62.70 percent that year. By 2023 it awards 83.70 percent of 81,031 contracts directly — above the national rate, and the largest single-sector shift anywhere in the data. This is the sector that buys medicine, vaccines and hospital equipment. It is also the sector the centralization described in the previous chapter was applied to. Whatever that reform was meant to do to discretion, the sector it landed on now holds less competition than in any year the register can compare it with.",
+          "Two sectors moved the other way, and neither is a recovery. Agriculture fell 3.3 points from 96.70 percent, which is close enough to the ceiling that there was nothing left to climb. Defense fell 9.5, from 63.70 to 54.20 — the only genuine retreat of the twelve, and it still awards more than half of its contracts without a contest. A high direct-award rate is not proof of wrongdoing: proprietary software, real emergencies and genuine sole-source supply all live inside that number, and the procurement literature that prices the loss puts the premium at roughly 15 to 30 percent as an average across markets, not as a verdict on any one contract. Nor can that premium be turned into a peso total here. The register publishes each year's total contract value but does not split it by procedure type, so the 720 billion pesos of 2023 direct awards this story used to claim — and the 108 billion premium built on top of it — have no source. The whole of 2023, every procedure type included, comes to 413 billion pesos. What the sector cut does mark is the ground where a challenge is impossible, because there was never a second bid to measure the first against.",
         ],
         prose_es: [
-          "La no-competencia tiene un precio, y la OCDE lo ha medido. Un meta-análisis de 2019 en 40 países encontró que eliminar la competencia incrementa los precios de contrato en promedio entre 15 y 30 por ciento — entre 25 y 40 por ciento en infraestructura y trabajo técnico especializado. Aplica el extremo bajo a México: los contratos por adjudicación directa de 2023 totalizaron unos 720 mil millones de pesos en valor nominal; una prima del 15 por ciento sitúa la distorsión competitiva en unos 108 mil millones de pesos al año. Eso es cerca del 40 por ciento del presupuesto federal de educación de ese año, o el 60 por ciento del presupuesto de infraestructura de salud. Sumado a lo largo de 23 años con primas típicas OCDE, el agregado se ubica en el bajo orden de los billones de pesos — una estimación de orden de magnitud, no una cifra precisa. El propio modelo de riesgo de RUBLI corrobora la dirección: los contratos por adjudicación directa califican significativamente más alto que los competitivos en el mismo sector-año.",
-          "Ahora, nombremos quién ocupa ese terreno. Entre los proveedores con al menos 50 contratos entre 2010 y 2024 y una tasa de adjudicación directa por encima del 95 por ciento, emergen tres bloques. El primero es de licencias tecnológicas — Microsoft Corporation con 10.87 mil millones de pesos y 97.3 por ciento, Oracle México con 8.27 mil millones y 98.4 por ciento, IBM México con 8.02 mil millones y 95.4 por ciento, más Microsoft Licensing GP con 6.66 mil millones (97.7 por ciento) y Microsoft México con 6.61 mil millones (99.6 por ciento). Este bloque es en buena medida defendible: el software propietario es genuinamente de única fuente.",
-          "El segundo bloque es más difícil de defender. Televisa con 7.07 mil millones y 99.7 por ciento, Estudios Azteca con 5.82 mil millones y 99.8 por ciento — 12.9 mil millones de pesos en gasto oficial en medios canalizados a las dos radiodifusoras dominantes sin competencia. El tercero es el aparato de bienes básicos detrás de DICONSA-LICONSA: Molinos Azteca con 7.62 mil millones (harina), Marcas Nestlé con 4.35 mil millones (lácteos), Molinera de México con 2.87 mil millones (harina) y Fábrica de Jabón La Corona con 2.68 mil millones (higiene) — 17.5 mil millones de pesos entre cuatro productores de canasta, con Industrial Patrona con 3.87 mil millones (insumos) al lado, todos en 99.7 por ciento o más. Dos casos atípicos lo completan: Aeroméxico con 5.31 mil millones (viajes oficiales) y CENEVAL con 3.66 mil millones (paraestatal de evaluación). Una tasa alta de adjudicación directa no es prueba de irregularidad — algunos de estos contratos son legítimamente de única fuente. Pero estos son los nombres que ya no tienen que competir.",
+          "Una sola tasa nacional esconde doce historias distintas. Corta el registro por sector en el primer año calificable y en el año del pico, y diez de los doce sectores adjudican sin concurso una proporción mayor de sus contratos en 2023 que en 2010. Los movimientos no son pequeños. Salud sube 46.9 puntos, de 36.80 por ciento a 83.70. Trabajo sube 28.5, Gobernación 27.2, Educación 25.7, Infraestructura 25.2. Hacienda, que ya estaba alta en 74.80 por ciento en 2010, termina en 91.10 — la tasa más alta que registra cualquier sector en 2023.",
+          "Salud es el caso para detenerse. En 2010 estaba entre los sectores más competitivos del registro: apenas algo más de un tercio de sus contratos se saltaba el concurso, frente a un promedio federal de 62.70 por ciento ese año. Para 2023 adjudica de manera directa el 83.70 por ciento de 81,031 contratos — por encima de la tasa nacional, y el mayor desplazamiento de un solo sector en todos los datos. Este es el sector que compra medicamentos, vacunas y equipo hospitalario. Es también el sector sobre el que se aplicó la centralización descrita en el capítulo anterior. Lo que sea que esa reforma pretendía hacerle a la discrecionalidad, el sector donde aterrizó tiene hoy menos competencia que en cualquier año con el que el registro pueda compararlo.",
+          "Dos sectores se movieron en sentido contrario, y ninguno es una recuperación. Agricultura bajó 3.3 puntos desde 96.70 por ciento, lo bastante cerca del techo como para que no quedara nada por subir. Defensa bajó 9.5, de 63.70 a 54.20 — el único retroceso genuino de los doce, y aun así adjudica más de la mitad de sus contratos sin concurso. Una tasa alta de adjudicación directa no es prueba de irregularidad: el software propietario, las emergencias reales y el suministro genuinamente de única fuente viven dentro de ese número, y la literatura de contratación que le pone precio a la pérdida ubica la prima en torno al 15 o 30 por ciento como promedio de mercado, no como veredicto sobre un contrato. Tampoco puede convertirse esa prima en un total en pesos aquí. El registro publica el valor total de cada año pero no lo separa por tipo de procedimiento, así que los 720 mil millones de pesos en adjudicaciones directas de 2023 que esta historia afirmaba — y la prima de 108 mil millones construida encima — no tienen fuente. Todo 2023, con cualquier tipo de procedimiento, suma 413 mil millones de pesos. Lo que sí marca el corte por sector es el terreno donde impugnar es imposible, porque nunca hubo una segunda oferta contra la cual medir la primera.",
         ],
         chartConfig: {
-          type: 'inline-bar',
-          title:
-            'Standing in the Drowned Zone: Top 14 Direct-Award-Only Vendors (≥95% DA, ≥50 contracts, 2010-2024)',
-          title_es:
-            'De pie en la zona inundada: top 14 proveedores solo por adjudicación directa (≥95% AD, ≥50 contratos, 2010-2024)',
-          chartId: 'da-only-vendors',
-          data: {
-            points: [
-              {
-                label: 'Microsoft Corporation',
-                value: 10.87,
-                color: '#a06820',
-                annotation: '97.3% DA · tech license',
-                annotation_es: '97.3% AD · licencia tech',
-              },
-              {
-                label: 'Oracle México',
-                value: 8.27,
-                color: '#a06820',
-                annotation: '98.4% DA · tech license',
-                annotation_es: '98.4% AD · licencia tech',
-              },
-              {
-                label: 'IBM México',
-                value: 8.02,
-                color: '#a06820',
-                annotation: '95.4% DA · tech license',
-                annotation_es: '95.4% AD · licencia tech',
-              },
-              {
-                label: 'Molinos Azteca',
-                value: 7.62,
-                color: '#64748b',
-                annotation: '99.9% DA · DICONSA flour',
-                annotation_es: '99.9% AD · harina DICONSA',
-              },
-              {
-                label: 'Televisa',
-                value: 7.07,
-                color: '#dc2626',
-                highlight: true,
-                annotation: '99.7% DA · gov media buy',
-                annotation_es: '99.7% AD · gasto en medios',
-              },
-              {
-                label: 'Microsoft Licensing GP',
-                value: 6.66,
-                color: '#a06820',
-                annotation: '97.7% DA · tech license',
-                annotation_es: '97.7% AD · licencia tech',
-              },
-              {
-                label: 'Microsoft México',
-                value: 6.61,
-                color: '#a06820',
-                annotation: '99.6% DA · tech license',
-                annotation_es: '99.6% AD · licencia tech',
-              },
-              {
-                label: 'Estudios Azteca',
-                value: 5.82,
-                color: '#dc2626',
-                highlight: true,
-                annotation: '99.8% DA · gov media buy',
-                annotation_es: '99.8% AD · gasto en medios',
-              },
-              {
-                label: 'Aeroméxico',
-                value: 5.31,
-                color: '#a06820',
-                annotation: '95.5% DA · gov travel',
-                annotation_es: '95.5% AD · viajes oficiales',
-              },
-              {
-                label: 'Marcas Nestlé',
-                value: 4.35,
-                color: '#64748b',
-                annotation: '99.9% DA · DICONSA dairy',
-                annotation_es: '99.9% AD · lácteos DICONSA',
-              },
-              {
-                label: 'Industrial Patrona',
-                value: 3.87,
-                color: '#64748b',
-                annotation: '99.7% DA · DICONSA bulk',
-                annotation_es: '99.7% AD · insumos DICONSA',
-              },
-              {
-                label: 'CENEVAL',
-                value: 3.66,
-                color: '#a06820',
-                annotation: '100% DA · gov-owned exam',
-                annotation_es: '100% AD · paraestatal',
-              },
-              {
-                label: 'Molinera de México',
-                value: 2.87,
-                color: '#64748b',
-                annotation: '100% DA · DICONSA flour',
-                annotation_es: '100% AD · harina DICONSA',
-              },
-              {
-                label: 'Fábrica de Jabón La Corona',
-                value: 2.68,
-                color: '#64748b',
-                annotation: '99.9% DA · DICONSA hygiene',
-                annotation_es: '99.9% AD · higiene DICONSA',
-              },
-            ],
-            unit: 'B MXN',
-            annotation:
-              'Three captive-supplier clusters emerge: tech licensing (amber, defensible as sole-source), broadcaster capture at Televisa and TV Azteca (red — 12.9B MXN routed to two broadcasters without competition), and DICONSA bulk-staples supply (slate — 17.5B MXN across four staple producers).',
-            annotation_es:
-              'Emergen tres bloques de proveedores cautivos: licencias tecnológicas (ámbar, defendibles como única fuente), captura de las radiodifusoras Televisa y TV Azteca (rojo — 12.9 mil millones de pesos canalizados a dos radiodifusoras sin competencia), y suministro de bienes básicos a DICONSA (pizarra — 17.5 mil millones de pesos entre cuatro productores de canasta).',
-          },
+          type: 'live',
+          live: 'da-sectors',
+          title: 'Direct-Award Rate by Sector, 2010 → 2023',
+          title_es: 'Tasa de adjudicación directa por sector, 2010 → 2023',
         },
         pullquote: {
           quote:
-            "A 15 percent competitive premium on 720 billion pesos in direct awards equals roughly 108 billion pesos a year — the cost of the competition that never happened.",
+            "In 2010 health was among the most competitive sectors the register holds. By 2023 it awards 83.7 percent of its contracts without a contest.",
           quote_es:
-            "Una prima competitiva del 15 por ciento sobre 720 mil millones de pesos en adjudicaciones directas equivale a unos 108 mil millones de pesos al año — el costo de la competencia que no hubo.",
-          stat: '~108B MXN',
-          statLabel: "estimated annual cost of the non-competitive procurement premium",
-          statLabel_es: "costo anual estimado de la prima por contratación no competitiva",
+            "En 2010 salud estaba entre los sectores más competitivos del registro. Para 2023 adjudica el 83.7 por ciento de sus contratos sin concurso.",
+          stat: '+46.9 pp',
+          statLabel: "health's rise in direct-award share, 2010 to 2023 — the largest of the twelve sectors",
+          statLabel_es: "el ascenso de salud en adjudicación directa, de 2010 a 2023 — el mayor de los doce sectores",
+          barValue: 0.837,
+          barLabel: "health's 2023 direct-award share",
+          barLabel_es: 'proporción de adjudicación directa de salud en 2023',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
+          'RUBLI /analysis/sector-year-breakdown, direct_award_pct by sector and year, 2010 and 2023. Queried September 2026. Its twelve sectors sum to the contract count /analysis/year-over-year reports for each year.',
           'Decarolis, F., & Giuffrida, L. (2019). Civil Servants and Cartels: The Revolving Door and Corruption in Procurement. American Economic Review.',
-          'SHCP. (2024). Presupuesto de Egresos de la Federación 2024 — sector breakdowns.',
-          'RUBLI vendor ranking by SUM(is_direct_award)/COUNT(*) ≥ 0.95 with COUNT(*) ≥ 50, 2010-2024. April 2026.',
         ],
       },
       {
@@ -3314,28 +3054,35 @@ export const STORIES: StoryDef[] = [
         prose: [
           "On paper, the controls exist. Every direct award under Art. 41 requires a written justification naming the specific legal basis — emergency, sole source, continuity — the vendor chosen, and the rationale. Those justifications are public under transparency law. The SFP is empowered to audit the pattern of justifications at each procurement unit. The ASF is empowered to review individual high-value direct awards under Art. 41 and Art. 42 during Cuenta Pública audits. Three layers of oversight, fully authorized.",
           "In practice, none of it operates at scale. Justification documents are published inconsistently. The SFP's pattern-audit function runs at a small fraction of its legal capacity. ASF reviews reach only a tiny share of high-value direct awards. The 82 percent rate is not what happens when a system tries to constrain direct awards and fails. It is what happens when a system accepts them as normal and builds no real constraint at all.",
-          "Three fixes are technically feasible today, and RUBLI's data makes each possible: publish Art. 41 justifications in machine-readable form; have the SFP run pattern-based audits of procurement units whose direct-award rates exceed sector norms; and monitor risk in real time, so a suspect award can be challenged before it executes, not after. CompraNet has the data architecture. RUBLI has the methodology. What is missing is the institutional will to run oversight against fourteen years of dependency. Until that changes, the cost — hundreds of billions of pesos a year — keeps being paid by the Mexican public.",
+          "Three fixes are technically feasible today, and RUBLI's data makes each possible: publish Art. 41 justifications in machine-readable form; have the SFP run pattern-based audits of procurement units whose direct-award rates exceed sector norms; and monitor risk in real time, so a suspect award can be challenged before it executes, not after. CompraNet has the data architecture. RUBLI has the methodology. What is missing is the institutional will to run oversight against fifteen years of dependency. The cost of that absence cannot be priced from this register — it publishes no value split by procedure type — but it can be counted. Between 2010 and 2024 the Mexican federal government awarded 1,935,898 contracts without a contest, 74.2 percent of everything it can be scored on, and not one of them had a competing offer to be measured against.",
         ],
         prose_es: [
           "En el papel, los controles existen. Cada adjudicación directa bajo el Art. 41 requiere una justificación escrita que nombre la base legal específica — emergencia, única fuente, continuidad — el proveedor elegido y la motivación. Esas justificaciones son públicas bajo la ley de transparencia. La SFP está facultada para auditar el patrón de justificaciones en cada unidad compradora. La ASF está facultada para revisar adjudicaciones directas individuales de alto valor bajo el Art. 41 y el Art. 42 durante las auditorías de la Cuenta Pública. Tres capas de fiscalización, plenamente autorizadas.",
           "En la práctica, ninguna opera a escala. Los documentos de justificación se publican de manera inconsistente. La función de auditoría por patrones de la SFP corre a una pequeña fracción de su capacidad legal. Las revisiones de la ASF alcanzan apenas una porción minúscula de las adjudicaciones directas de alto valor. La tasa de 82 por ciento no es lo que ocurre cuando un sistema intenta limitar las adjudicaciones directas y falla. Es lo que ocurre cuando un sistema las acepta como normales y no construye límite real alguno.",
-          "Tres remedios son técnicamente factibles hoy, y los datos de RUBLI hacen posible cada uno: publicar las justificaciones del Art. 41 en formato legible por máquina; que la SFP corra auditorías basadas en patrones a las unidades compradoras cuyas tasas de adjudicación directa excedan las normas sectoriales; y monitorear el riesgo en tiempo real, para que una adjudicación sospechosa pueda impugnarse antes de ejecutarse, no después. CompraNet tiene la arquitectura de datos. RUBLI tiene la metodología. Lo que falta es la voluntad institucional de operar la fiscalización contra catorce años de dependencia. Hasta que eso cambie, el costo — cientos de miles de millones de pesos al año — lo seguirá pagando el público mexicano.",
+          "Tres remedios son técnicamente factibles hoy, y los datos de RUBLI hacen posible cada uno: publicar las justificaciones del Art. 41 en formato legible por máquina; que la SFP corra auditorías basadas en patrones a las unidades compradoras cuyas tasas de adjudicación directa excedan las normas sectoriales; y monitorear el riesgo en tiempo real, para que una adjudicación sospechosa pueda impugnarse antes de ejecutarse, no después. CompraNet tiene la arquitectura de datos. RUBLI tiene la metodología. Lo que falta es la voluntad institucional de operar la fiscalización contra quince años de dependencia. El costo de esa ausencia no puede valuarse desde este registro — no publica el valor separado por tipo de procedimiento — pero sí puede contarse. Entre 2010 y 2024 el gobierno federal mexicano adjudicó 1,935,898 contratos sin concurso, el 74.2 por ciento de todo lo que puede calificarse, y ninguno de ellos tuvo una oferta rival contra la cual medirse.",
         ],
         pullquote: {
           quote:
             "Mexico built an oversight architecture in law and never built it in practice. The 82% direct-award rate is the visible shape of that absence.",
           quote_es:
             "México construyó una arquitectura de fiscalización en la ley y nunca la construyó en la práctica. La tasa de adjudicación directa del 82% es la forma visible de esa ausencia.",
-          stat: '~720B MXN',
-          statLabel: "2023 direct-award contracts by face value — 82% of all federal procurement",
-          statLabel_es: "contratos de adjudicación directa 2023 por valor nominal — 82% de toda la contratación federal",
-          barValue: 0.82,
-          barLabel: 'share of federal procurement in 2023',
-          barLabel_es: 'porción de la contratación federal en 2023',
+          stat: '1,935,898',
+          statLabel: "federal contracts awarded without a contest, 2010–2024 — 74.2% of everything the register can score",
+          statLabel_es: "contratos federales adjudicados sin concurso, 2010–2024 — el 74.2% de todo lo que el registro puede calificar",
+          barValue: 0.742,
+          barLabel: 'share of all scoreable federal contracts, 2010–2024',
+          barLabel_es: 'proporción de todos los contratos federales calificables, 2010–2024',
           vizTemplate: 'mosaic-tile',
+        },
+        chartConfig: {
+          type: 'live',
+          live: 'da-count',
+          title: 'Direct Awards by Year, as a Count',
+          title_es: 'Adjudicaciones directas por año, en número',
         },
         sources: [
           'Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público, Art. 41, Art. 42.',
+          'RUBLI /analysis/year-over-year — direct awards reconstructed as contracts × direct_award_pct per year, 2010-2024. Queried September 2026.',
           'OECD. (2023). Public Procurement Performance Report: Mexico. Recommendation 4.',
         ],
       },
