@@ -72,17 +72,20 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'captura-institucional',
-    headline: 'Inside Institutional Capture: 15,923 Vendors at Three Agencies',
-    headline_es: 'La Captura Institucional: 15,923 Proveedores en Tres Dependencias',
+    headline: 'The Suppliers Who Cannot Leave',
+    headline_es: 'Los proveedores que no pueden irse',
     sub: 'IMSS · CFE · PEMEX',
+    sub_es: 'IMSS · CFE · PEMEX',
     type: 'monopoly',
     status: 'auditado',
-    amount: 787,
+    amount: 1077,
     era: 'cross',
-    contracts: 530000,
+    // The buyer groups carry vendor counts and value, not a contract total —
+    // 0 is the card's "not applicable", and the renderer drops the line.
+    contracts: 0,
     yearSpan: '2002–2025',
-    brief: '15,923 vendors show behavioral capture signatures at IMSS, CFE, PEMEX, SCT and CONAGUA — nearly a trillion pesos of systematically captured federal contracting.',
-    brief_es: '15,923 proveedores muestran firmas de captura en IMSS, CFE, PEMEX, SCT y CONAGUA — casi un billón de pesos de contratación federal sistemáticamente capturada.',
+    brief: '15,939 companies send four fifths or more of everything they sell to a single government buyer; the average is 96%. At IMSS 3,468 of them hold 405.3 billion pesos between them — while no supplier comes close to dominating the institute in return.',
+    brief_es: '15,939 empresas le venden cuatro quintas partes o más de todo lo suyo a un solo comprador de gobierno; el promedio es 96%. En el IMSS, 3,468 de ellas acumulan 405.3 mil millones de pesos — mientras ningún proveedor se acerca a dominar al instituto a cambio.',
   },
   {
     slug: 'el-cartel-de-los-vales',

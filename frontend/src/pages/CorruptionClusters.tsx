@@ -306,8 +306,8 @@ function buildComplementaryTypologies(isEs: boolean): ComplementaryTypology[] {
         ? 'Proveedor anclado a una sola institución durante años — relación privilegiada estructural.'
         : 'Vendor anchored to a single institution over years — structural privileged relationship.',
       narrative: isEs
-        ? '15,923 proveedores con >80% de sus contratos de una sola institución. Es el patrón más extendido en ARIA — gran volumen, señal tenue individual.'
-        : '15,923 vendors with >80% of contracts from a single institution. The most widespread ARIA pattern — high volume, weak individual signal.',
+        ? '15,939 proveedores con >80% de sus contratos de una sola institución. Es el patrón más extendido en ARIA — gran volumen, señal tenue individual.'
+        : '15,939 vendors with >80% of contracts from a single institution. The most widespread ARIA pattern — high volume, weak individual signal.',
       color: '#78716c',
       stats: [
         { label: isEs ? 'Proveedores capturados' : 'Captured vendors',        value: 28,   max: 30,    unit: 'K' },

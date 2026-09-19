@@ -112,6 +112,7 @@ import type {
   AriaQueueItem,
   AriaStatsResponse,
   AriaQueueResponse,
+  AriaPatternGroupsResponse,
   StoryPackagesResponse,
   VendorSimilarCasesResponse,
   VendorNarrativeResponse,
@@ -3283,6 +3284,27 @@ export const ariaApi = {
       status: update.review_status,
       reviewer_name: update.reviewer_name,
     })
+    return data
+  },
+
+  /**
+   * Where one ARIA pattern concentrates — its vendors grouped by the buyer they
+   * contract with most (`group: 'institution'`, the default) or by their primary
+   * sector (`group: 'sector'`).
+   *
+   * Read the direction: a row's `total_value_mxn` is the lifetime contracting of
+   * the vendors ANCHORED at that buyer, not the captured share of that buyer's
+   * budget. `flagged_value_mxn` is the all-patterns denominator to take a share
+   * against. `vendors` inlines the group's largest, for the entity chips.
+   */
+  async getPatternGroups(
+    code: string,
+    params: { limit?: number; group?: 'institution' | 'sector'; vendors?: number } = {},
+  ): Promise<AriaPatternGroupsResponse> {
+    const q = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<AriaPatternGroupsResponse>(
+      `/aria/patterns/${encodeURIComponent(code)}/institutions?${q}`,
+    )
     return data
   },
 

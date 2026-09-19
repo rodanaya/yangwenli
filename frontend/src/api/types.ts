@@ -2661,6 +2661,66 @@ export interface AriaStatsResponse {
   t1_status_counts?: Record<string, number>
 }
 
+/**
+ * One vendor inside a pattern group (SD-04, `/aria/patterns/:code/institutions`
+ * with `vendors > 0`). `top_institution_ratio` is the share of the VENDOR's own
+ * contracting that sits at the group's buyer — the direction P6 measures.
+ */
+export interface AriaPatternVendor {
+  vendor_id: number
+  vendor_name: string
+  total_value_mxn: number
+  total_contracts: number
+  top_institution_ratio: number | null
+  ips_tier: number | null
+  in_ground_truth: boolean
+  avg_risk_score: number | null
+  review_status: string
+}
+
+/**
+ * A pattern's vendors grouped by their top buyer or their primary sector.
+ *
+ * `total_value_mxn` is this pattern's slice; `flagged_value_mxn` is everything
+ * ARIA flags in the same group under ANY pattern — the denominator a share has
+ * to be taken against. `institution_id` is null when the acronym in the queue
+ * resolves to no institution row, and null by construction in sector mode.
+ */
+export interface AriaPatternGroupRow {
+  key: string
+  label: string
+  institution_id: number | null
+  institution_name: string | null
+  sector_id: number | null
+  vendor_count: number
+  total_value_mxn: number
+  flagged_vendor_count: number
+  flagged_value_mxn: number
+  vendors: AriaPatternVendor[]
+}
+
+export interface AriaPatternCohort {
+  total_vendors: number
+  total_value_mxn: number
+  in_ground_truth: number
+  reviewed: number
+  confirmed: number
+  tier1: number
+  tier2: number
+  tier3: number
+  tier4: number
+}
+
+export interface AriaPatternGroupsResponse {
+  code: string
+  label_en: string
+  label_es: string
+  group: 'institution' | 'sector'
+  cohort: AriaPatternCohort | null
+  rows: AriaPatternGroupRow[]
+  message?: string
+}
+
 export interface AriaQueueResponse {
   data: AriaQueueItem[]
   pagination: PaginationMeta

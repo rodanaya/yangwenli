@@ -80,6 +80,34 @@ export function CaptureTrajectory({
     ? years
     : Array.from(new Set([minYear, peakYear, maxYear])).sort((a, b) => a - b)
 
+  /**
+   * Keep a centred mono callout inside the plot box (STORY_DAYS.md § 7).
+   *
+   * Both callouts anchor on a data year, and the year they anchor on is
+   * usually the newest one — a share that peaks at the end of the window is
+   * exactly what capture looks like. Centred on the last tick, the label ran
+   * ~45px past the viewBox and the browser clipped it at the svg edge.
+   * JetBrains Mono advances 0.6em per glyph, so half the label is known
+   * before layout and the anchor can be clamped instead of the text cut.
+   */
+  const clampX = (cx: number, text: string, fontSize: number) => {
+    const half = (text.length * fontSize * 0.6) / 2
+    const lo = PAD + half
+    const hi = W - PAD - half
+    // A label wider than the whole plot cannot be clamped into it; centre it
+    // and let the box grow around it rather than pinning it to one edge.
+    return lo > hi ? W / 2 : Math.min(Math.max(cx, lo), hi)
+  }
+  const crossLabel =
+    crossYear === null
+      ? ''
+      : isLead
+        ? lang === 'en'
+          ? `crossed 50% in ${crossYear}`
+          : `cruzó el 50% en ${crossYear}`
+        : `'${String(crossYear).slice(2)}`
+  const peakLabel = `▲ ${peakSharePct}% (${peakYear})`
+
   return (
     <svg
       width={W}
@@ -145,7 +173,7 @@ export function CaptureTrajectory({
       {/* crossing-year callout */}
       {crossYear !== null && (
         <text
-          x={x(crossYear)}
+          x={clampX(x(crossYear), crossLabel, isLead ? 10 : 9)}
           y={y(ceil) - 4}
           textAnchor="middle"
           fontSize={isLead ? 10 : 9}
@@ -153,20 +181,20 @@ export function CaptureTrajectory({
           fontWeight={700}
           fill={RED}
         >
-          {isLead ? (lang === 'en' ? `crossed 50% in ${crossYear}` : `cruzó el 50% en ${crossYear}`) : `'${String(crossYear).slice(2)}`}
+          {crossLabel}
         </text>
       )}
       {/* lead-only: peak marker on the line */}
       {isLead && (
         <text
-          x={x(peakYear)}
+          x={clampX(x(peakYear), peakLabel, 12)}
           y={y(peakSharePct) - 7}
           textAnchor="middle"
           fontSize={12}
           fontFamily="JetBrains Mono, monospace"
           fill="var(--color-text-secondary)"
         >
-          ▲ {peakSharePct}% ({peakYear})
+          {peakLabel}
         </text>
       )}
     </svg>
