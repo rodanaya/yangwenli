@@ -14,7 +14,7 @@
  *
  * Spec: network-la-trama-fable-2026-07-02-spec.md §3.2 · §4.1.
  */
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { CommunityIndexItem } from '@/api/client'
 import { RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN, formatDualCurrency, formatNumber } from '@/lib/utils'
@@ -53,7 +53,7 @@ interface PlacedMark extends CommunityIndexItem {
   color: string
 }
 
-export function MeshPlano({ communities, totalCommunities, selectedId, onSelect, lang }: MeshPlanoProps) {
+export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities, selectedId, onSelect, lang }: MeshPlanoProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(920)
   const [hoverId, setHoverId] = useState<number | null>(null)
@@ -450,4 +450,4 @@ export function MeshPlano({ communities, totalCommunities, selectedId, onSelect,
       </div>
     </PlateFrame>
   )
-}
+})

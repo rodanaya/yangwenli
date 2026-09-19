@@ -19,7 +19,7 @@
  *   - Keyboard: every node is focusable (tabIndex=0, Enter/Space
  *     selects) — the a11y gap flagged on Atlas bubbles.
  */
-import { useMemo, useState, useCallback } from 'react'
+import { memo, useMemo, useState, useCallback } from 'react'
 import {
   forceSimulation,
   forceLink,
@@ -79,7 +79,7 @@ function riskText(score: number | null): string {
   return RISK_TEXT_COLORS[getRiskLevelFromScore(score)]
 }
 
-export function CommunityForceGraph({
+export const CommunityForceGraph = memo(function CommunityForceGraph({
   data,
   lang,
   selectedVendorId = null,
@@ -437,4 +437,4 @@ export function CommunityForceGraph({
       )}
     </div>
   )
-}
+})

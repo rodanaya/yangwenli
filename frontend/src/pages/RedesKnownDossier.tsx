@@ -18,7 +18,7 @@
  * Lazy useState initializers read the URL synchronously on mount
  * (Atlas fix c240e4b3 — deep links must not reset).
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -217,6 +217,10 @@ export default function RedesKnownDossier() {
   const [linkCopied, setLinkCopied] = useState(false)
   const plateRef = useRef<HTMLDivElement | null>(null)
 
+  // PARALLAX D4 § Change 8 — typing must not redraw the mesh: the filter memos
+  // read the deferred query, so a keystroke re-renders the rail rows only.
+  const deferredQuery = useDeferredValue(query)
+
   const togglePin = (id: number) => {
     setPins((prev) => {
       const next = prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id].slice(-12)
@@ -296,8 +300,8 @@ export default function RedesKnownDossier() {
   const sortedInstitutions = useMemo(() => {
     if (!capture) return []
     let list = capture.institutions
-    if (query.trim() && lens === 'institutions') {
-      const q = query.trim().toLowerCase()
+    if (deferredQuery.trim() && lens === 'institutions') {
+      const q = deferredQuery.trim().toLowerCase()
       list = list.filter((i) => i.name.toLowerCase().includes(q))
     }
     const sorted = [...list]
@@ -315,7 +319,7 @@ export default function RedesKnownDossier() {
         sorted.sort((a, b) => b.total_value_mxn - a.total_value_mxn)
     }
     return sorted
-  }, [capture, instSort, query, lens])
+  }, [capture, instSort, deferredQuery, lens])
 
   const maxInstValue = useMemo(
     () => Math.max(...(capture?.institutions.map((i) => i.total_value_mxn) ?? [1]), 1),
@@ -343,8 +347,8 @@ export default function RedesKnownDossier() {
     if (patternFilter) {
       list = list.filter((c) => c.pattern_mix[0]?.pattern === patternFilter)
     }
-    if (query.trim()) {
-      const q = query.trim().toLowerCase()
+    if (deferredQuery.trim()) {
+      const q = deferredQuery.trim().toLowerCase()
       list = list.filter(
         (c) => c.hub_vendor_name.toLowerCase().includes(q) || `c-${c.community_id}`.includes(q),
       )
@@ -379,7 +383,7 @@ export default function RedesKnownDossier() {
       ]
     }
     return sorted
-  }, [index, patternFilter, query, sortBy, pins])
+  }, [index, patternFilter, deferredQuery, sortBy, pins])
 
   const visible = showAll ? filtered : filtered.slice(0, 60)
 
@@ -406,29 +410,54 @@ export default function RedesKnownDossier() {
       .slice(0, 4)
   }, [capture, effectiveComm])
 
-  // RUNG 2 early return AFTER all hooks (rules of hooks).
-  if (vendorId !== null && Number.isFinite(vendorId) && vendorId > 0) {
-    return <VendorNetworkView vendorId={vendorId} />
-  }
-
-  const selectCommunity = (id: number) => {
+  // Selection handlers — stable identities (PARALLAX D4 § Change 8): the
+  // memoized plates only re-render when their DATA changes, which a new
+  // callback on every keystroke would silently defeat.
+  const selectCommunity = useCallback((id: number) => {
     setCommId(id)
     setSelectedVendor(null)
     plateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  }, [])
 
-  const selectInstitution = (id: number) => {
+  const selectInstitution = useCallback((id: number) => {
     setInstId(id)
     setSelectedVendor(null)
     plateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  }, [])
 
   /** Cross-lens jump: a "feeding clan" chip opens that community's mesh. */
-  const jumpToClan = (cid: number) => {
+  const jumpToClan = useCallback((cid: number) => {
     setLens('clusters')
     setCommId(cid)
     setSelectedVendor(null)
     setQuery('')
+  }, [])
+
+  const viewVendorRing = useCallback(
+    (vid: number) => {
+      const next = new URLSearchParams(searchParams)
+      next.set('vendor', String(vid))
+      if (effectiveComm != null) next.set('comm', String(effectiveComm))
+      setSearchParams(next)
+    },
+    [searchParams, setSearchParams, effectiveComm],
+  )
+
+  const openBuyerSiege = useCallback((id: number) => {
+    setLens('institutions')
+    setInstId(id)
+    setSelectedVendor(null)
+    setQuery('')
+  }, [])
+
+  // Forensic evidence marks for the active knot (El Croquis §3.4/§3.5).
+  // Cheap (≤100 nodes); pins onto the graph + decoded by EvidenceIndex.
+  // Memoized: a fresh array every render would defeat the graph's memo().
+  const evidenceEntries = useMemo(() => (graph ? buildEvidenceMarks(graph) : []), [graph])
+
+  // RUNG 2 early return AFTER all hooks (rules of hooks).
+  if (vendorId !== null && Number.isFinite(vendorId) && vendorId > 0) {
+    return <VendorNetworkView vendorId={vendorId} />
   }
 
   const sortLabels: Record<SortKey, { en: string; es: string }> = {
@@ -439,10 +468,6 @@ export default function RedesKnownDossier() {
     sb: { en: 'Single bid', es: 'Prop. única' },
     gt: { en: 'GT cases', es: 'Casos GT' },
   }
-
-  // Forensic evidence marks for the active knot (El Croquis §3.4/§3.5).
-  // Cheap (≤100 nodes); pins onto the graph + decoded by EvidenceIndex.
-  const evidenceEntries = graph ? buildEvidenceMarks(graph) : []
 
   // W4 — one origin provider over the body tree so an actor opened to its vendor
   // dossier (RUNG-3) gets a "← Volver a La Trama" thread back to the exact cluster
@@ -1096,18 +1121,8 @@ export default function RedesKnownDossier() {
               meshMedianRisk={meshMedianRisk}
               besiegedBuyers={besiegedBuyers}
               selectedVendorId={selectedVendor}
-              onViewVendorRing={(vid) => {
-                const next = new URLSearchParams(searchParams)
-                next.set('vendor', String(vid))
-                if (effectiveComm != null) next.set('comm', String(effectiveComm))
-                setSearchParams(next)
-              }}
-              onOpenBuyerSiege={(instId) => {
-                setLens('institutions')
-                setInstId(instId)
-                setSelectedVendor(null)
-                setQuery('')
-              }}
+              onViewVendorRing={viewVendorRing}
+              onOpenBuyerSiege={openBuyerSiege}
               lang={lang}
             />
           </div>

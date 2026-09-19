@@ -14,7 +14,7 @@
  *
  * Spec: network-la-trama-fable-2026-07-02-spec.md §3.6 / §4.2.
  */
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   EU_DIRECT_AWARD_LIMIT,
@@ -121,7 +121,7 @@ interface ClusterActaProps {
   lang: 'en' | 'es'
 }
 
-export function ClusterActa({
+export const ClusterActa = memo(function ClusterActa({
   community,
   graph,
   meshMedianRisk,
@@ -381,4 +381,4 @@ export function ClusterActa({
       </div>
     </div>
   )
-}
+})

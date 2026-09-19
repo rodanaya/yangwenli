@@ -12,7 +12,7 @@
  * intermediary web). Static layout (golden-angle orbit) — a printed
  * plate, not a simulation.
  */
-import { useMemo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import type { InstitutionStarResponse } from '@/api/client'
 import { RISK_COLORS, RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
@@ -47,7 +47,7 @@ interface InstitutionStarGraphProps {
   onSelectVendor?: (vendorId: number | null) => void
 }
 
-export function InstitutionStarGraph({
+export const InstitutionStarGraph = memo(function InstitutionStarGraph({
   data,
   lang,
   selectedVendorId = null,
@@ -270,4 +270,4 @@ export function InstitutionStarGraph({
       </div>
     </div>
   )
-}
+})
