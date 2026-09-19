@@ -123,6 +123,8 @@ import type {
   GapSummaryResponse,
   GapContractsResponse,
   GapContractFilterParams,
+  AmountHistogramResponse,
+  AmountHistogramParams,
 } from './types'
 
 // Re-export types that were moved from client.ts to types.ts for backward compatibility
@@ -1172,6 +1174,22 @@ export const analysisApi = {
       `/analysis/year-over-year${paramStr ? `?${paramStr}` : ''}`
     )
     return data.data
+  },
+
+  /**
+   * Contract counts by amount bucket, with exact-value spikes called out.
+   *
+   * SD-07 — the four live figures of `/stories/el-umbral-de-los-300k`. The
+   * scan visits every contract in the band, so the server caches the answer
+   * for ten minutes; callers share one query key rather than one each.
+   */
+  async getAmountHistogram(params: AmountHistogramParams = {}): Promise<AmountHistogramResponse> {
+    const q = buildQueryParams(params as QueryParams)
+    const paramStr = q.toString()
+    const { data } = await api.get<AmountHistogramResponse>(
+      `/analysis/amount-histogram${paramStr ? `?${paramStr}` : ''}`,
+    )
+    return data
   },
 
   /**

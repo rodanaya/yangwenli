@@ -3041,3 +3041,66 @@ export interface GapContractsResponse {
   data: GapContractItem[]
   pagination: PaginationMeta
 }
+
+// ---------------------------------------------------------------------------
+// Amount histogram — SD-07 `/stories/el-umbral-de-los-300k`
+//
+// `GET /analysis/amount-histogram`. The band is half-open on both the request
+// and the buckets: a bucket spans `[from, to)`, and the last one is truncated
+// at `max` when the width does not divide the band.
+// ---------------------------------------------------------------------------
+
+export interface AmountHistogramBucket {
+  from: number
+  to: number
+  count: number
+  direct_award_count: number
+}
+
+/** One exact amount, against the counts 1,000 pesos either side of it. */
+export interface AmountHistogramExact {
+  amount: number
+  count: number
+  direct_award_count: number
+  neighbours: { minus_1000: number; plus_1000: number }
+}
+
+export interface AmountHistogramYear {
+  year: number
+  /** Contracts written at one of the `exact` amounts that year. */
+  exact_total: number
+  /** Contracts anywhere in the band that year — the denominator. */
+  contracts_in_range: number
+}
+
+export interface AmountHistogramInstitution {
+  institution_id: number
+  institution: string
+  exact_count: number
+  exact_direct_award_count: number
+  range_count: number
+}
+
+export interface AmountHistogramResponse {
+  min: number
+  max: number
+  bucket: number
+  buckets: AmountHistogramBucket[]
+  exact: AmountHistogramExact[]
+  by_year: AmountHistogramYear[]
+  top_institutions: AmountHistogramInstitution[]
+  total_contracts: number
+  total_in_range: number
+  computed_at: string
+}
+
+export interface AmountHistogramParams {
+  min?: number
+  max?: number
+  bucket?: number
+  /** Comma-separated exact amounts; defaults to `210000,250000,300000`. */
+  exact?: string
+  year_from?: number
+  year_to?: number
+  institution_id?: number
+}

@@ -4992,3 +4992,316 @@ def get_admin_breakdown_institutions(
     if response is not None:
         response.headers["Cache-Control"] = "public, max-age=3600"
     return result
+
+
+# =============================================================================
+# Amount histogram — SD-07 `/stories/el-umbral-de-los-300k`
+#
+# The story's argument is a shape: plot federal contracts by amount in a narrow
+# band and three buckets jut up through an otherwise clean downward slope, each
+# at a value where Mexican procurement law lets a buyer switch off competition.
+# The figures need the silhouette, the exact-value spikes against their
+# immediate neighbours, who stands on the line, and how the habit moves in time.
+#
+# `/analysis/threshold-gaming` cannot carry this: it reads
+# `contracts.is_threshold_gaming`, which the z-feature pipeline has never
+# populated, so it returns `total_flagged: 0`.
+#
+# ## Why one streamed pass and not four GROUP BYs
+#
+# `idx_c_amount` covers `amount_mxn` alone. A count per bucket is therefore
+# index-only and costs about a second; the moment a query also wants
+# `is_direct_award`, `contract_year` or `institution_id` it must visit the
+# table row, and the 200K-400K band holds ~387K of them. Four such statements
+# would pay that visit four times. One statement that selects the four columns
+# and lets Python fold them pays it once, and skips SQLite's temp b-tree for
+# the GROUP BY as well. The arithmetic is small, pure and unit-tested against
+# an in-memory fixture (`tests/test_amount_histogram.py`); the expensive part
+# is I/O either way.
+# =============================================================================
+
+_amount_hist_cache = SimpleCache()
+_AMOUNT_HIST_TTL = 600  # 10 minutes, as `monthly-breakdown`
+
+#: Buckets a single response may carry — bounds the payload and the fold.
+MAX_HISTOGRAM_BUCKETS = 200
+#: Exact amounts a caller may ask about at once. Twenty-five covers the whole
+#: 10,000-peso grid across a 200K band, which is the cut SD-07's F3 and F4 read;
+#: each one costs two equality probes on `idx_c_amount`, so the cap is about the
+#: payload, not the query.
+MAX_EXACT_AMOUNTS = 25
+#: The step to either side an exact amount is compared against.
+NEIGHBOUR_DELTA = 1000
+#: Institutions returned in `top_institutions`.
+TOP_INSTITUTIONS = 20
+
+
+def parse_exact_amounts(raw: str) -> List[int]:
+    """Parse the `exact` comma list into sorted, de-duplicated amounts.
+
+    Empty entries are skipped so `"210000,,250000"` and a trailing comma are
+    both accepted; anything that is not a non-negative integer is a 400, not a
+    silent drop, because a figure that quietly loses a threshold would print a
+    number the prose does not.
+    """
+    amounts: List[int] = []
+    for part in (raw or "").split(","):
+        token = part.strip()
+        if not token:
+            continue
+        try:
+            value = int(token)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"exact must be a comma-separated list of integers; got '{token}'",
+            )
+        if value < 0 or value > MAX_CONTRACT_VALUE:
+            raise HTTPException(
+                status_code=400,
+                detail=f"exact amount out of range: {value}",
+            )
+        if value not in amounts:
+            amounts.append(value)
+    if len(amounts) > MAX_EXACT_AMOUNTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"at most {MAX_EXACT_AMOUNTS} exact amounts",
+        )
+    return sorted(amounts)
+
+
+def _histogram_filters(
+    year_from: Optional[int],
+    year_to: Optional[int],
+    institution_id: Optional[int],
+) -> Tuple[str, List[Any]]:
+    """The optional filter tail shared by the band scan and the neighbour counts."""
+    sql = ""
+    params: List[Any] = []
+    if year_from is not None:
+        sql += " AND contract_year >= ?"
+        params.append(year_from)
+    if year_to is not None:
+        sql += " AND contract_year <= ?"
+        params.append(year_to)
+    if institution_id is not None:
+        sql += " AND institution_id = ?"
+        params.append(institution_id)
+    return sql, params
+
+
+def compute_amount_histogram(
+    conn: sqlite3.Connection,
+    *,
+    min_amount: int,
+    max_amount: int,
+    bucket: int,
+    exact: List[int],
+    year_from: Optional[int] = None,
+    year_to: Optional[int] = None,
+    institution_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Fold the `[min_amount, max_amount)` band into buckets, years and buyers.
+
+    Bucket `i` spans `[min_amount + i*bucket, min_amount + (i+1)*bucket)`; the
+    last one is truncated at `max_amount` when the width does not divide the
+    band. Every bucket in the range is emitted, including empty ones, so a
+    figure can draw a gap rather than close it.
+    """
+    bucket_count = -(-(max_amount - min_amount) // bucket)  # ceil
+    counts = [0] * bucket_count
+    da_counts = [0] * bucket_count
+    exact_set = set(exact)
+    has_contracts = table_exists(conn.cursor(), "contracts")
+    has_institutions = table_exists(conn.cursor(), "institutions")
+    exact_hits: Dict[int, List[int]] = {a: [0, 0] for a in exact}
+    per_year: Dict[int, List[int]] = {}
+    per_inst: Dict[int, List[int]] = {}
+    total_in_range = 0
+
+    filter_sql, filter_params = _histogram_filters(year_from, year_to, institution_id)
+    params: List[Any] = [min_amount, max_amount, MAX_CONTRACT_VALUE] + filter_params
+
+    # A deployment without the register (the default test run) gets a
+    # well-formed empty envelope rather than a 500; the figure then draws its
+    # own "unavailable" line instead of a number it cannot source.
+    cursor = (
+        conn.execute(
+            "SELECT amount_mxn, is_direct_award, contract_year, institution_id"
+            " FROM contracts"
+            " WHERE amount_mxn >= ? AND amount_mxn < ?"
+            "   AND COALESCE(amount_mxn, 0) <= ?" + filter_sql,
+            params,
+        )
+        if has_contracts
+        else []
+    )
+    for amount, direct_award, year, inst_id in cursor:
+        total_in_range += 1
+        is_da = direct_award == 1
+        index = int((amount - min_amount) // bucket)
+        if 0 <= index < bucket_count:
+            counts[index] += 1
+            if is_da:
+                da_counts[index] += 1
+        # `amount_mxn` is REAL in the register; an exact threshold is an integer
+        # value, so compare on the integer to avoid 210000.0 missing 210000.
+        is_exact = amount in exact_set or (
+            float(amount).is_integer() and int(amount) in exact_set
+        )
+        if is_exact:
+            slot = exact_hits[int(amount)]
+            slot[0] += 1
+            if is_da:
+                slot[1] += 1
+        if year is not None:
+            row = per_year.setdefault(int(year), [0, 0])
+            row[0] += 1
+            if is_exact:
+                row[1] += 1
+        if inst_id is not None:
+            row = per_inst.setdefault(int(inst_id), [0, 0, 0])
+            row[0] += 1
+            if is_exact:
+                row[1] += 1
+                if is_da:
+                    row[2] += 1
+
+    buckets = [
+        {
+            "from": min_amount + i * bucket,
+            "to": min(min_amount + (i + 1) * bucket, max_amount),
+            "count": counts[i],
+            "direct_award_count": da_counts[i],
+        }
+        for i in range(bucket_count)
+    ]
+
+    # Neighbours are equality probes on `idx_c_amount`; they sit outside the
+    # band for a threshold at its edge, so they cannot be read off the fold.
+    exact_out = []
+    for amount in exact:
+        neighbours = {}
+        for key, delta in (("minus_1000", -NEIGHBOUR_DELTA), ("plus_1000", NEIGHBOUR_DELTA)):
+            if not has_contracts:
+                neighbours[key] = 0
+                continue
+            probe = conn.execute(
+                "SELECT COUNT(*) FROM contracts WHERE amount_mxn = ?" + filter_sql,
+                [amount + delta] + filter_params,
+            ).fetchone()
+            neighbours[key] = int(probe[0] or 0)
+        hits = exact_hits[amount]
+        exact_out.append({
+            "amount": amount,
+            "count": hits[0],
+            "direct_award_count": hits[1],
+            "neighbours": neighbours,
+        })
+
+    by_year = [
+        {"year": year, "exact_total": row[1], "contracts_in_range": row[0]}
+        for year, row in sorted(per_year.items())
+    ]
+
+    ranked = sorted(
+        (kv for kv in per_inst.items() if kv[1][1] > 0),
+        key=lambda kv: (-kv[1][1], -kv[1][0], kv[0]),
+    )[:TOP_INSTITUTIONS]
+    names: Dict[int, str] = {}
+    if ranked and has_institutions:
+        ids = [iid for iid, _ in ranked]
+        placeholders = ",".join("?" * len(ids))
+        names = {
+            int(r[0]): r[1]
+            for r in conn.execute(
+                f"SELECT id, name FROM institutions WHERE id IN ({placeholders})", ids
+            )
+        }
+    top_institutions = [
+        {
+            "institution_id": iid,
+            "institution": names.get(iid) or f"#{iid}",
+            "exact_count": row[1],
+            "exact_direct_award_count": row[2],
+            "range_count": row[0],
+        }
+        for iid, row in ranked
+    ]
+
+    total_contracts = (
+        int(conn.execute("SELECT COUNT(*) FROM contracts").fetchone()[0] or 0)
+        if has_contracts
+        else 0
+    )
+
+    return {
+        "min": min_amount,
+        "max": max_amount,
+        "bucket": bucket,
+        "buckets": buckets,
+        "exact": exact_out,
+        "by_year": by_year,
+        "top_institutions": top_institutions,
+        "total_contracts": total_contracts,
+        "total_in_range": total_in_range,
+        "computed_at": datetime.utcnow().isoformat(),
+    }
+
+
+@router.get("/amount-histogram", tags=["analysis"])
+def get_amount_histogram(
+    response: Response,
+    min: int = Query(200000, ge=0, le=MAX_CONTRACT_VALUE, description="Band floor, inclusive"),
+    max: int = Query(400000, ge=1000, le=MAX_CONTRACT_VALUE, description="Band ceiling, exclusive"),
+    bucket: int = Query(10000, ge=1000, le=MAX_CONTRACT_VALUE, description="Bucket width in MXN"),
+    exact: str = Query("210000,250000,300000", max_length=200, description="Comma-separated exact amounts"),
+    year_from: Optional[int] = Query(None, ge=2002, le=2026),
+    year_to: Optional[int] = Query(None, ge=2002, le=2026),
+    institution_id: Optional[int] = Query(None, ge=1),
+):
+    """Contract counts by amount bucket, with exact-value spikes called out.
+
+    Feeds the four live figures of `/stories/el-umbral-de-los-300k`. The scan
+    is over `contracts` and costs one visit per row in the band, so the result
+    is cached for ten minutes.
+    """
+    if max <= min:
+        raise HTTPException(status_code=400, detail="max must be greater than min")
+    # Same ceil the fold uses, so a band that divides exactly into the cap is
+    # accepted: 200K-400K at 1,000 is 200 buckets, not 201.
+    if -(-(max - min) // bucket) > MAX_HISTOGRAM_BUCKETS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"bucket too small for the band: at most {MAX_HISTOGRAM_BUCKETS} buckets",
+        )
+    if year_from is not None and year_to is not None and year_to < year_from:
+        raise HTTPException(status_code=400, detail="year_to must not precede year_from")
+    exact_amounts = parse_exact_amounts(exact)
+
+    cache_key = f"{min}:{max}:{bucket}:{','.join(map(str, exact_amounts))}:{year_from}:{year_to}:{institution_id}"
+    cached = _amount_hist_cache.get(cache_key)
+    if cached is not None:
+        response.headers["Cache-Control"] = f"public, max-age={_AMOUNT_HIST_TTL}"
+        return cached
+
+    try:
+        with get_db() as conn:
+            result = compute_amount_histogram(
+                conn,
+                min_amount=min,
+                max_amount=max,
+                bucket=bucket,
+                exact=exact_amounts,
+                year_from=year_from,
+                year_to=year_to,
+                institution_id=institution_id,
+            )
+    except sqlite3.Error as exc:
+        logger.error("amount-histogram database error: %s", exc)
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+    _amount_hist_cache.set(cache_key, result, ttl_seconds=_AMOUNT_HIST_TTL)
+    response.headers["Cache-Control"] = f"public, max-age={_AMOUNT_HIST_TTL}"
+    return result
