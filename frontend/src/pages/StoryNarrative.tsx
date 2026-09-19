@@ -2167,6 +2167,25 @@ function MethodologySection({ story }: { story: StoryDef }) {
           </div>
         )}
 
+        {/* § · CORRECCIONES — the single home for every claim an earlier
+            edition made and this one withdraws. Same chrome as the chapter
+            sources list, so it reads as provenance rather than as argument. */}
+        {ls.corrections && ls.corrections.length > 0 && (
+          <div className="mt-8">
+            <p className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+              § · {lang === 'es' ? 'CORRECCIONES' : 'CORRECTIONS'}
+            </p>
+            <ol className="space-y-1.5 border-l-2 border-border pl-4">
+              {ls.corrections.map((c, i) => (
+                <li key={i} className="text-[12.5px] text-text-muted font-mono leading-relaxed">
+                  <span className="text-text-primary mr-2 select-none">[{i + 1}]</span>
+                  {c}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         <div className="flex gap-3 mt-6">
           <Link
             to="/methodology"

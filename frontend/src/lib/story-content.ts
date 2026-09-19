@@ -383,6 +383,16 @@ export interface StoryDef {
   nextSteps?: string[]
   nextSteps_es?: string[]
   /**
+   * Published corrections — one dated line each, newest first. This is the
+   * single home for every claim an earlier edition of the story made and this
+   * one withdraws. Chapters state the corrected fact and nothing about the
+   * edition that got it wrong; the retraction lives here, where readers look
+   * for it. Rendered at the foot of StoryNarrative beside the methodology
+   * block. Never delete an entry — corrections only accumulate.
+   */
+  corrections?: string[]
+  corrections_es?: string[]
+  /**
    * Cross-surface filter tags. These let Newsroom filter stories by ARIA
    * pattern / sector / year that match the active Observatory lens, and
    * let Observatory list "stories matching this view" for the current
@@ -948,6 +958,14 @@ export const STORIES: StoryDef[] = [
         role_es: 'Confirmado en revisión · 732.3 MDP en LICONSA',
       },
     ],
+    corrections: [
+      "2026-09-19 — An earlier edition of chapter four called a named individual's registration \"the shell\". The register supports calling it a flagged vendor; the story asserts nothing more about him.",
+      "2026-09-19 — An earlier edition closed chapter four with \"1,954 vendors sanctioned\" beside the 99 SFP matches named in the sentence before it. The 1,954 is the SFP's whole docket for 2002-2025; 99 is what matches the P2-flagged cohort.",
+    ],
+    corrections_es: [
+      "2026-09-19 — Una edición anterior del capítulo cuatro llamaba «la fachada» al registro de una persona con nombre. El registro sostiene llamarlo proveedor marcado; la historia no afirma nada más sobre él.",
+      "2026-09-19 — Una edición anterior cerraba el capítulo cuatro con «1,954 proveedores sancionados» junto a los 99 empates de la SFP nombrados en la frase anterior. Los 1,954 son el expediente completo de la SFP de 2002 a 2025; 99 es lo que empata con la población marcada por P2.",
+    ],
     chapters: [
       {
         id: 'ch1',
@@ -1181,6 +1199,14 @@ export const STORIES: StoryDef[] = [
         tone: 'data',
       },
     ],
+    corrections: [
+      "2026-09-19 — An earlier edition described Mantenimiento Express Marítimo, Urbanissa and Constructora Arhnos as single-contract vendors. ARIA files all three as false positives: Mantenimiento Express holds nine contracts at a mean indicator of 0.251, Urbanissa fifty-two.",
+      "2026-09-19 — An earlier edition printed an estimated audit-coverage rate of 5 percent above 5 billion pesos, and the 95 percent of contracts that followed from it. RUBLI cannot measure audit coverage; both figures are withdrawn.",
+    ],
+    corrections_es: [
+      "2026-09-19 — Una edición anterior describía a Mantenimiento Express Marítimo, Urbanissa y Constructora Arhnos como proveedores de un solo contrato. ARIA clasifica a los tres como falsos positivos: Mantenimiento Express tiene nueve contratos con un indicador medio de 0.251; Urbanissa, cincuenta y dos.",
+      "2026-09-19 — Una edición anterior imprimía una tasa estimada de cobertura de auditoría del 5 por ciento por encima de 5 mil millones de pesos, y el 95 por ciento de contratos que se seguía de ella. RUBLI no puede medir la cobertura de auditoría; ambas cifras quedan retiradas.",
+    ],
     chapters: [
       {
         id: 'ch1',
@@ -1336,13 +1362,13 @@ export const STORIES: StoryDef[] = [
         prose: [
           "Above 10 billion pesos sit 40 contracts, held by 33 vendors, every one scored high-risk, average score 0.962. Read that band with the register's own rule attached: RUBLI rejects any contract above 100 billion pesos as a data error and flags everything above 10 billion for manual review, so every contract in this tier is one the platform requires a human to verify before it counts as a finding. Reviewers have since cleared several of the largest. Cross the one-billion-peso line and the field thins to 795 contracts out of 3,051,294, worth 2.66 trillion pesos, held by just 466 vendors, about 0.15 percent of the active vendor universe. Above 5 billion: 112 contracts, 93 vendors. The mega-contract tier is not a market. It is a directory.",
           "The cast is not random. It clusters into five recognizable types: pharmaceutical distributors with multi-decade IMSS relationships — Grupo Fármacos, Maypo, PISA, DIMM, the concentration examined in The Invisible Monopoly; Tren Maya contractors awarded after 2019 — Operadora CICSA, ICA Constructora; Pemex and CFE infrastructure providers — Cotemar; military-construction operators such as Coconal; and card-and-voucher welfare operators such as TOKA Internacional. Several names that belong to this list by value do not belong to it by finding: ARIA has reviewed and cleared Dowell Schlumberger, ICA Fluor and Constructora Arhnos, and treats Repsol Exploración and Alstom Transport as structural-monopoly exceptions rather than risk cases.",
-          "The extremes are where the pattern breaks down. The three largest single-vendor totals in this band have all been reviewed and ruled out: ARIA files Mantenimiento Express Marítimo, Urbanissa and Constructora Arhnos as false positives, and the register does not support the single-contract structure this story used to attribute to them — Mantenimiento Express holds nine contracts, not one, at a mean indicator of 0.251; Urbanissa holds fifty-two. Above ten billion pesos, RUBLI's own data rules require every amount to be flagged for manual review before it is read as a finding. The mega-contract tier is where the model is least reliable, not most.",
+          "The extremes are where the pattern breaks down. The three largest single-vendor totals in this band have all been reviewed and ruled out: ARIA files Mantenimiento Express Marítimo, Urbanissa and Constructora Arhnos as false positives: Mantenimiento Express holds nine contracts at a mean indicator of 0.251, Urbanissa fifty-two. Above ten billion pesos, RUBLI's own data rules require every amount to be flagged for manual review before it is read as a finding. The mega-contract tier is where the model is least reliable, not most.",
           "These vendors match the pattern RUBLI flags — concentration, sole-source awards, perfect risk scores; the model classifies behavior, not proven crime. The chart below ranks the top 12 by pesos in contracts above one billion, each annotated with its contract count and score, with single-contract and perfect-score outliers marked. Together those 12 capture 618 billion pesos, 23 percent of the mega-contract universe. The four sectors that absorb 92 percent of all mega-pesos are the four with the longest documented corruption histories. No published oversight programme assigns dedicated teams to the four sectors that hold 92 percent of the mega-contract pesos.",
         ],
         prose_es: [
           "Por encima de 10 mil millones de pesos hay 40 contratos, en manos de 33 proveedores, todos calificados de alto riesgo, con promedio de 0.962. Lea esa banda con la regla del propio registro puesta al lado: RUBLI rechaza como error de captura cualquier contrato por encima de 100 mil millones de pesos y marca para revisión manual todo lo que pase de 10 mil millones, así que cada contrato de este nivel exige verificación humana antes de contar como hallazgo. Desde entonces los revisores han descartado a varios de los mayores. Cruce la línea de mil millones de pesos y el campo se reduce a 795 contratos de 3,051,294, con valor de 2.66 billones de pesos, en manos de solo 466 proveedores, alrededor del 0.15 por ciento del universo activo. Por encima de 5 mil millones: 112 contratos, 93 proveedores. El nivel de mega-contratos no es un mercado. Es un directorio.",
           "El reparto no es aleatorio. Se agrupa en cinco tipos reconocibles: distribuidoras farmacéuticas con relaciones de varias décadas con el IMSS — Grupo Fármacos, Maypo, PISA, DIMM, la concentración que examina El Monopolio Invisible; contratistas del Tren Maya adjudicados después de 2019 — Operadora CICSA, ICA Constructora; proveedores de infraestructura de Pemex y CFE como Cotemar; operadores de construcción militar como Coconal; y operadores de tarjetas y vales de bienestar como TOKA Internacional. Varios nombres que pertenecen a esta lista por monto no le pertenecen por hallazgo: ARIA revisó y descartó a Dowell Schlumberger, ICA Fluor y Constructora Arhnos, y trata a Repsol Exploración y Alstom Transport como excepciones de monopolio estructural y no como casos de riesgo.",
-          "En los extremos es donde el patrón se rompe. Los tres mayores totales por proveedor de esta banda ya fueron revisados y descartados: ARIA clasifica a Mantenimiento Express Marítimo, Urbanissa y Constructora Arhnos como falsos positivos, y el registro no sostiene la estructura de contrato único que esta historia les atribuía — Mantenimiento Express tiene nueve contratos, no uno, con un indicador medio de 0.251; Urbanissa tiene cincuenta y dos. Por encima de los diez mil millones de pesos, las propias reglas de datos de RUBLI obligan a marcar cada monto para revisión manual antes de leerlo como hallazgo. El nivel de los mega-contratos es donde el modelo es menos confiable, no el más.",
+          "En los extremos es donde el patrón se rompe. Los tres mayores totales por proveedor de esta banda ya fueron revisados y descartados: ARIA clasifica a Mantenimiento Express Marítimo, Urbanissa y Constructora Arhnos como falsos positivos: Mantenimiento Express tiene nueve contratos con un indicador medio de 0.251; Urbanissa, cincuenta y dos. Por encima de los diez mil millones de pesos, las propias reglas de datos de RUBLI obligan a marcar cada monto para revisión manual antes de leerlo como hallazgo. El nivel de los mega-contratos es donde el modelo es menos confiable, no el más.",
           "Estos proveedores coinciden con el patrón que RUBLI marca — concentración, adjudicaciones a proveedor único, calificaciones de riesgo perfectas; el modelo clasifica comportamiento, no delito probado. La gráfica de abajo ordena los 12 primeros por pesos en contratos por encima de mil millones, cada uno anotado con su número de contratos y su calificación, con los atípicos de un solo contrato y de calificación perfecta marcados. Juntos esos 12 capturan 618 mil millones de pesos, 23 por ciento del universo de mega-contratos. Los cuatro sectores que absorben el 92 por ciento de todos los mega-pesos son los cuatro con las historias de corrupción mejor documentadas. Ningún programa de fiscalización publicado asigna equipos dedicados a los cuatro sectores que concentran el 92 por ciento de los pesos en mega-contratos.",
         ],
         chartConfig: {
@@ -1622,14 +1648,14 @@ export const STORIES: StoryDef[] = [
             "Mexico audits its cleanest contracts the most and its riskiest contracts the least. The accountability gap grows with every peso of contract value.",
           quote_es:
             "México audita sus contratos más limpios con la mayor intensidad y los más riesgosos con la menor. La brecha de rendición de cuentas crece con cada peso contratado.",
-          stat: '95%',
+          stat: '0.962',
           statLabel: "average risk indicator across the 40 contracts above 10B MXN",
           statLabel_es:
             "indicador de riesgo promedio de los 40 contratos por encima de 10 mil millones",
-          barValue: 0.05,
+          barValue: 1,
           barLabel: 'every one of the 40 scored high-risk',
           barLabel_es: 'los 40, todos calificados de alto riesgo',
-          vizTemplate: 'mass-sliver',
+          vizTemplate: 'dot-ratio',
         },
         sources: [
           'Transparencia Mexicana. (2023). Índice Nacional de Corrupción y Buen Gobierno.',
@@ -2325,6 +2351,12 @@ export const STORIES: StoryDef[] = [
       'Mapear las tasas de oferta única por institución compradora para identificar las unidades de compra con peor desempeño y priorizar la auditoría.',
       'Realizar una investigación periodística sobre el pico de oferta única de 2014 (65.65% de los procedimientos competitivos) — ¿qué categoría de compra o institución específica impulsó esa cifra anual?',
     ],
+    corrections: [
+      "2026-09-19 — An earlier edition read the 2010 fall in single bidding as CompraNet's launch working. COMPRANET does not code procedure type before 2010, so the fall is the denominator changing rather than the market; chapter two now sets out the correction.",
+    ],
+    corrections_es: [
+      "2026-09-19 — Una edición anterior leía la caída de 2010 en la oferta única como el efecto del arranque de CompraNet. CompraNet no codifica el tipo de procedimiento antes de 2010, así que la caída es el denominador que cambia, no el mercado; el capítulo dos expone ahora la corrección.",
+    ],
     chapters: [
       {
         id: 'ch1',
@@ -2350,7 +2382,7 @@ export const STORIES: StoryDef[] = [
           live: 'sb-years',
           scrolly: true,
           title: 'Fifteen Years Above the Line: Single-Bid Rate 2010-2024',
-          title_es: 'Quince años arriba de la línea: tasa de oferta única 2010-2025',
+          title_es: 'Quince años arriba de la línea: tasa de oferta única 2010-2024',
           chartId: 'sb-years',
         },
         pullquote: {
@@ -2585,6 +2617,14 @@ export const STORIES: StoryDef[] = [
         suffix_es: "proveedores P3 + P6 que ningún revisor ha abierto",
         tone: 'critical',
       },
+    ],
+    corrections: [
+      "2026-09-19 — An earlier edition printed an implied overhead of 83 to 167 billion pesos, modelled at a 15 to 30 percent intermediation margin. The public record stops at the federal payment to the intermediary, so the margin cannot be measured and the range is withdrawn.",
+      "2026-09-19 — An earlier edition said the pattern's structural successors run \"seventy-three times\" La Estafa Maestra. That divides a 23-year stock by a two-year flow; the multiple is withdrawn.",
+    ],
+    corrections_es: [
+      "2026-09-19 — Una edición anterior imprimía un sobrecosto implícito de 83 a 167 mil millones de pesos, modelado con un margen de intermediación de 15 a 30 por ciento. El registro público se detiene en el pago federal al intermediario, así que el margen no puede medirse y el rango queda retirado.",
+      "2026-09-19 — Una edición anterior decía que los sucesores estructurales del patrón corren «setenta y tres veces» La Estafa Maestra. Eso divide un acumulado de 23 años entre un flujo de dos años; el múltiplo queda retirado.",
     ],
     chapters: [
       {
@@ -2886,6 +2926,16 @@ export const STORIES: StoryDef[] = [
       'Compilar un conjunto de datos de documentos de justificación del Art. 41 para 2023-2024 y codificar el fundamento legal citado para identificar las cláusulas de excepción más utilizadas.',
       'Entrevistar a ex auditores de la SFP que hayan trabajado en revisiones de patrones de adjudicación directa sobre las limitaciones institucionales que encontraron.',
     ],
+    corrections: [
+      "2026-09-19 — An earlier edition carried an OECD direct-award ceiling of 25 to 30 percent. That benchmark could not be traced to any published OECD instrument; the story now uses the EU Single Market Scoreboard's published 10 percent line.",
+      "2026-09-19 — An earlier edition gave Calderón a 42.3 percent direct-award rate by averaging across the 2010 seam, where Structure A codes every year from 2002 to 2009 at 0.0 percent. Measured only where the register codes procedure type, the gap between the first complete term and the last is 17.5 points, not 37.1.",
+      "2026-09-19 — An earlier edition said the centralized pharmaceutical buyers awarded directly at rates near 100 percent. Across their whole records BIRMEX and INSABI award 71.13 and 57.81 percent of their contracts directly, both below their own administration's 79.41 percent average.",
+    ],
+    corrections_es: [
+      "2026-09-19 — Una edición anterior cargaba un techo OCDE de adjudicación directa del 25 al 30 por ciento. Esa referencia no pudo rastrearse a ningún instrumento publicado de la OCDE; la historia usa ahora la línea publicada del 10 por ciento del Tablero del Mercado Único de la UE.",
+      "2026-09-19 — Una edición anterior le atribuía a Calderón una tasa de adjudicación directa de 42.3 por ciento al promediar sobre la costura de 2010, donde la Estructura A codifica en 0.0 por ciento todos los años de 2002 a 2009. Medida solo donde el registro codifica el tipo de procedimiento, la distancia entre el primer mandato completo y el último es de 17.5 puntos, no de 37.1.",
+      "2026-09-19 — Una edición anterior decía que los compradores farmacéuticos centralizados adjudicaban de manera directa a tasas cercanas al 100 por ciento. En todo su registro, BIRMEX e INSABI adjudican directamente el 71.13 y el 57.81 por ciento de sus contratos, ambos por debajo del 79.41 por ciento que promedió su propia administración.",
+    ],
     chapters: [
       {
         id: 'ch1',
@@ -2982,7 +3032,7 @@ export const STORIES: StoryDef[] = [
         prose_es: [
           "Todos esperan que 2020 — el año de la COVID — sea la marejada, el momento en que la contratación de emergencia rompió el dique. No lo es. La pandemia movió la tasa 0.3 puntos porcentuales: 77.80 por ciento en 2019, antes de la COVID, a 78.09 por ciento en 2020, sobre el volumen de contratos más bajo del periodo. La verdadera crecida llegó después de que terminó la emergencia. Los tres años siguientes sumaron 4.1 puntos, culminando en 82.18 por ciento en 2023 — la más alta de los quince años en que el registro codifica el tipo de procedimiento.",
           "La pandemia no creó la cultura de adjudicación directa en México. Fue un acelerante sobre una condición que ya existía. La Ley de Adquisiciones, Art. 41, enumera los fundamentos legítimos para saltarse la competencia — emergencias, única fuente, continuidad con un contratista existente — con los contratos de bajo valor permitidos bajo el Art. 42 y la licitación abierta como regla bajo el Art. 26. Pero cuando el 82 por ciento de los contratos invoca una excepción, la arquitectura del estatuto se invierte. La excepción es ahora la regla.",
-          "El pico de 2023 no es una herencia, y tampoco lo explica la reforma a la que suele culparse. La administración de AMLO centralizó la compra farmacéutica bajo BIRMEX e INSABI, un cambio planteado explícitamente como anticorrupción y pensado para quitar discrecionalidad a compradores institucionales ligados a proveedores. En todo su registro, esos dos compradores adjudican de manera directa el 71.13 y el 57.81 por ciento de sus contratos. Ambos están muy por encima de la línea del Tablero UE. Ambos están también por debajo del 79.41 por ciento que promedió su propia administración. La centralización no produjo el pico, y el registro no sostiene la afirmación, presente en versiones anteriores de esta historia, de que los compradores centralizados operaran con tasas cercanas al 100 por ciento. Lo que sea que levantó 2023 está repartido por el registro, no concentrado en las dos instituciones creadas para sustituir a los compradores que desplazaron. El siguiente capítulo muestra dónde es más denso.",
+          "El pico de 2023 no es una herencia, y tampoco lo explica la reforma a la que suele culparse. La administración de AMLO centralizó la compra farmacéutica bajo BIRMEX e INSABI, un cambio planteado explícitamente como anticorrupción y pensado para quitar discrecionalidad a compradores institucionales ligados a proveedores. En todo su registro, esos dos compradores adjudican de manera directa el 71.13 y el 57.81 por ciento de sus contratos. Ambos están muy por encima de la línea del Tablero UE. Ambos están también por debajo del 79.41 por ciento que promedió su propia administración. La centralización no produjo el pico. Lo que sea que levantó 2023 está repartido por el registro, no concentrado en las dos instituciones creadas para sustituir a los compradores que desplazaron. El siguiente capítulo muestra dónde es más denso.",
         ],
         chartConfig: {
           type: 'live',
@@ -3141,6 +3191,16 @@ export const STORIES: StoryDef[] = [
         tone: 'critical',
       },
     ],
+    corrections: [
+      "2026-09-19 — An earlier edition described SEDENA's rise as a straight line. The army's share of federal contracting fell in 2017 and again in 2022, and its contracted value fell in 2019 against 2018.",
+      "2026-09-19 — An earlier edition printed per-category high-risk percentages — food at 32.4 percent, pharmaceuticals at 22.4 — set against the model's 2-to-15-percent calibration band. The register publishes no high-risk rate per category per term; those figures are withdrawn.",
+      "2026-09-19 — An earlier edition printed a peso total for AMLO-era direct awards. The register publishes each year's total contracted value but does not split it by procedure type, so that figure cannot be rebuilt and is withdrawn.",
+    ],
+    corrections_es: [
+      "2026-09-19 — Una edición anterior describía el ascenso de la SEDENA como una línea recta. La participación del ejército en la contratación federal cayó en 2017 y otra vez en 2022, y su valor contratado cayó en 2019 frente a 2018.",
+      "2026-09-19 — Una edición anterior imprimía porcentajes de alto riesgo por partida — alimentos en 32.4 por ciento, medicamentos en 22.4 — contrastados con la banda de calibración de 2 a 15 por ciento del modelo. El registro no publica una tasa de alto riesgo por partida y por sexenio; esas cifras quedan retiradas.",
+      "2026-09-19 — Una edición anterior imprimía un total en pesos de las adjudicaciones directas del sexenio de AMLO. El registro publica el valor contratado total de cada año pero no lo separa por tipo de procedimiento, así que esa cifra no puede reconstruirse y queda retirada.",
+    ],
     chapters: [
       {
         id: 'ch1',
@@ -3156,7 +3216,7 @@ export const STORIES: StoryDef[] = [
           "Then the fifth column arrives and stops the pattern. RUBLI holds 92,631 contracts of Sheinbaum's account, flagged at 11.18 percent — the same reading as Peña Nieto's full six years, and below AMLO. It is the first term in the book that does not climb. It is also nine months of a single year, measured against terms of six, and the federal feed froze on 28 September 2025 before that year finished. A column that short cannot carry a verdict either way.",
         ],
         prose_es: [
-          "Asentados los cinco sexenios en el orden en que gobernaron, el libro mayor se lee solo. Fox: 7.50 por ciento de contratos marcados como de alto riesgo, 15,468 de 206,307. Calderón: 8.15 por ciento, 39,230 de 481,450. Peña Nieto: 11.18 por ciento, 137,344 de 1,228,625. AMLO: 12.53 por ciento, 131,643 de 1,050,552. Cuatro sexenios completos, cada uno más alto que el anterior, y la columna sube en una sola dirección.",
+          "Asentados los cinco sexenios en el orden en que gobernaron, el libro mayor se lee solo. Un contrato cuenta como de alto riesgo cuando el modelo de RUBLI lo califica en 0.40 o más en una escala de 0 a 1 — lo bastante cerca de los casos de corrupción documentada como para merecer una segunda mirada. Fox: 7.50 por ciento de contratos marcados como de alto riesgo, 15,468 de 206,307. Calderón: 8.15 por ciento, 39,230 de 481,450. Peña Nieto: 11.18 por ciento, 137,344 de 1,228,625. AMLO: 12.53 por ciento, 131,643 de 1,050,552. Cuatro sexenios completos, cada uno más alto que el anterior, y la columna sube en una sola dirección.",
           "El instrumento es políticamente ciego. El modelo v0.8.5 de RUBLI (AUC de prueba 0.785) no se calibró para ninguna administración. Se entrenó con 1,417 casos documentados de corrupción de varias presidencias y evalúa cada contrato por su parecido estructural con patrones conocidos de corrupción: concentración de proveedores, volatilidad de precios, concentración entre coparticipantes, membresía en redes, mecanismo de contratación. No tiene partido. Solo ve patrones, y los patrones apuntan hacia arriba.",
           "Cada sexenio se lee junto a su propia nota de auditoría. Fox gobernó con cobertura de Estructura A, donde CompraNet registra un RFC por cada mil contratos, así que el 7.50 por ciento es un piso y no una medición: el periodo está subregistrado y la tasa real es probablemente mayor. Calderón, Peña Nieto y AMLO caben todos dentro de la banda de 2 a 15 por ciento que RUBLI fija como meta de calibración para la proporción señalada (docs/RISK_METHODOLOGY_v6.md); ninguno de los cinco sexenios la rebasa. Lo que muestra el registro no es un rebase del umbral. Es una deriva de 5.0 puntos dentro de la banda, y va en un solo sentido.",
           "Entonces llega la quinta columna y rompe el patrón. RUBLI tiene 92,631 contratos de la cuenta de Sheinbaum, marcados al 11.18 por ciento — la misma lectura que los seis años completos de Peña Nieto, y por debajo de AMLO. Es el primer sexenio del libro que no sube. También son nueve meses de un solo año, medidos frente a mandatos de seis, y el flujo federal se congeló el 28 de septiembre de 2025 antes de que ese año terminara. Una columna tan corta no puede cargar un veredicto en ninguna dirección.",
@@ -3746,7 +3806,7 @@ export const STORIES: StoryDef[] = [
     subheadline_es:
       "22,263 contratos federales de 200 mil a 400 mil pesos están escritos sobre un múltiplo exacto de diez mil — una cifra que un mercado casi nunca produce por sí solo. Cada uno de esos veinte valores se levanta entre tres y veintinueve veces sobre la alfombra de mil pesos que lo rodea, y cuatro de cada cinco de esos contratos se entregaron sin competencia, contra siete de cada diez en la banda entera. El hábito llegó a su máximo en 2014 y desde entonces casi se dividió a la mitad. El Art. 17 de la ley de adquisiciones prohíbe dimensionar una compra para evadir un procedimiento; en veintitrés años de registro no ha producido un solo caso sistémico de fiscalización que alguien pueda señalar.",
     byline: 'RUBLI Data Analysis Unit',
-    estimatedMinutes: 14,
+    estimatedMinutes: 8,
     status: 'solo_datos',
     leadStat: {
       value: '22,263',
@@ -3802,6 +3862,12 @@ export const STORIES: StoryDef[] = [
       'Interponer denuncias penales bajo el Art. 17 de la LAASSP para unidades de compra específicas que muestren fraccionamiento sistemático de contratos en el mismo día, mismo proveedor, mismo valor umbral.',
       'Compilar una investigación periodística sobre los 10 casos más flagrantes de fraccionamiento de contratos en el mismo día identificados por el análisis z-score de RUBLI.',
     ],
+    corrections: [
+      "2026-09-19 — An earlier edition presented 300,000, 250,000 and 210,000 pesos as the band's sharpest spikes. 240,000 pesos is sharper: 1,568 contracts against a neighbourhood average of 54.",
+    ],
+    corrections_es: [
+      "2026-09-19 — Una edición anterior presentaba 300 mil, 250 mil y 210 mil pesos como los picos más agudos de la banda. El de 240 mil pesos es más agudo: 1,568 contratos frente a un promedio vecino de 54.",
+    ],
     chapters: [
       {
         id: 'ch1',
@@ -3813,13 +3879,13 @@ export const STORIES: StoryDef[] = [
         prose: [
           "There are 386,852 federal contracts written for between 200,000 and 400,000 pesos. Sorted into buckets ten thousand pesos wide, they come back unremarkable: the tallest bucket is the first, 30,441 contracts starting at 200,000, and from there the curve eases down to 11,700 in the last one. Larger contracts thin out. That is what the shape says, and for years it is all anyone read in it.",
           "Now cut the same band at a thousand pesos instead of ten thousand, and the smooth slope turns out to have teeth. The carpet underneath runs to a few dozen contracts per thousand-peso step. Standing out of it, at regular intervals, are twenty spikes — one at every multiple of ten thousand. At exactly 300,000 pesos sit 2,796 contracts. At 299,000, 236. At 301,000, 55. The spike is 19.2 times the average of its two neighbours.",
-          "Walk the comb. 250,000 pesos carries 2,404 contracts against a neighbourhood of 154, a factor of 15.6. 210,000 carries 1,613 against 125, a factor of 12.9. The sharpest tooth in the band is not one of the three this story was built on: 240,000 pesos holds 1,568 contracts where its neighbours hold an average of 54 — twenty-nine times over. Every round number is a spike, and the spikes are not small.",
+          "Walk the comb. 250,000 pesos carries 2,404 contracts against a neighbourhood of 154, a factor of 15.6. 210,000 carries 1,613 against 125, a factor of 12.9. The sharpest tooth in the band is not one of the three round numbers above: 240,000 pesos holds 1,568 contracts where its neighbours hold an average of 54 — twenty-nine times over. Every round number is a spike, and the spikes are not small.",
           "A vendor delivering 300,000 pesos of goods is no likelier to invoice exactly 300,000 than 299,000 or 301,000. Real prices spread out. A price that lands on a closed figure did not come from a market; it came from somebody choosing it. That choice is legal, common, and by itself proves nothing — until you look at how those contracts were awarded. Across the band, 70.8 percent of contracts are direct awards. On the round numbers, 81.5 percent are.",
         ],
         prose_es: [
           "Toma cada contrato federal escrito por entre 200 mil y 400 mil pesos — 386,852 en todo el registro — y ordénalos en intervalos de diez mil pesos de ancho. Lo que regresa no llama la atención. El intervalo más alto es el primero, 30,441 contratos a partir de 200 mil, y de ahí la curva baja suave hasta 11,700 en el último. Los contratos grandes escasean. Eso dice la forma, y durante años es todo lo que alguien leyó en ella.",
           "Ahora corta la misma banda a mil pesos en vez de diez mil, y la pendiente lisa resulta tener dientes. La alfombra de abajo se mueve en unas decenas de contratos por escalón de mil pesos. Levantándose de ella, a intervalos regulares, hay veinte picos — uno en cada múltiplo de diez mil. En exactamente 300 mil pesos se acumulan 2,796 contratos. En 299 mil, 236. En 301 mil, 55. El pico es 19.2 veces el promedio de sus dos vecinos.",
-          "Recorre el peine. 250 mil pesos carga 2,404 contratos frente a un entorno de 154, un factor de 15.6. 210 mil carga 1,613 frente a 125, un factor de 12.9. El diente más agudo de la banda no es ninguno de los tres sobre los que se construyó este relato: 240 mil pesos guarda 1,568 contratos donde sus vecinos guardan un promedio de 54 — veintinueve veces más. Cada número redondo es un pico, y los picos no son chicos.",
+          "Recorre el peine. 250 mil pesos carga 2,404 contratos frente a un entorno de 154, un factor de 15.6. 210 mil carga 1,613 frente a 125, un factor de 12.9. El diente más agudo de la banda no es ninguno de los tres números redondos anteriores: 240 mil pesos guarda 1,568 contratos donde sus vecinos guardan un promedio de 54 — veintinueve veces más. Cada número redondo es un pico, y los picos no son chicos.",
           "Un proveedor que entrega 300 mil pesos en bienes no tiene más probabilidad de facturar exactamente 300 mil que 299 mil o 301 mil. Los precios reales se reparten. Un precio que aterriza sobre una cifra cerrada no salió de un mercado; salió de que alguien lo eligió. Esa elección es legal, común, y por sí sola no prueba nada — hasta que miras cómo se adjudicaron esos contratos. En la banda entera, el 70.8 por ciento son adjudicaciones directas. Sobre los números redondos, el 81.5 por ciento.",
         ],
         chartConfig: {
@@ -3987,6 +4053,12 @@ export const STORIES: StoryDef[] = [
         suffix: ".",
         tone: 'muted',
       },
+    ],
+    corrections: [
+      "2026-09-19 — An earlier edition's dek said the model was handed \"eighteen ways to detect fraud\". The eighteen are candidate signals offered to v0.8.5 during calibration, not detection methods.",
+    ],
+    corrections_es: [
+      "2026-09-19 — El sumario de una edición anterior decía que al modelo se le dieron «dieciocho formas de detectar el fraude». Las dieciocho son señales candidatas ofrecidas a v0.8.5 durante la calibración, no métodos de detección.",
     ],
     chapters: [
       {
@@ -4487,6 +4559,12 @@ export const STORIES: StoryDef[] = [
       sectors: ['salud'],
       years: [2020, 2021],
     },
+    corrections: [
+      "2026-09-19 — An earlier edition read the April 2020 emergency decree as opening a surge of direct awards. The register holds 158,309 federal contracts in 2020, 18 percent fewer than 2019, at a direct-award rate of 78.1 percent against 77.8 the year before; what changed was the money, not the procedure mix.",
+    ],
+    corrections_es: [
+      "2026-09-19 — Una edición anterior leía el decreto de emergencia de abril de 2020 como la apertura de una ola de adjudicaciones directas. El registro guarda 158,309 contratos federales en 2020, 18 por ciento menos que en 2019, con una tasa de adjudicación directa de 78.1 por ciento frente a 77.8 el año anterior; lo que cambió fue el dinero, no la mezcla de procedimientos.",
+    ],
     chapters: [
       {
         id: 'ch1',
@@ -4595,7 +4673,7 @@ export const STORIES: StoryDef[] = [
         prose_es: [
           "La emergencia COVID se levantó en 2021. La tasa de adjudicación directa debió regresar hacia su nivel pre-COVID. No lo hizo. Fue del 80.0% en 2021, del 79.1% en 2022, luego subió al 82.2% en 2023 y se quedó en 79.4% en 2024 — y el más bajo de esos cuatro años está por encima de cualquier año que CompraNet haya registrado. La contratación de emergencia, resulta, es un trinquete: se mueve en una sola dirección y se traba.",
           "La gráfica hace imposible no ver el cambio — aunque no donde uno lo esperaría. La línea se apoya en un promedio 2015–2019 de 75.8%, apenas se inmuta en 2020 con 78.1%, y luego sube un escalón a un piso post-emergencia de 79.1% que no ha roto desde entonces. La ruptura no es el pico; no hubo pico. Es el escalón: 3.3 puntos sobre el promedio anterior en su punto más bajo, 6.4 en el más alto, sin que ningún año regrese a la banda pre-pandemia.",
-          "Es un veredicto estructural que abarca tres administraciones y todos los años en que CompraNet registra el procedimiento. La tasa subió del 62.7% en 2010 a los ochenta y tantos; ninguna administración ha logrado un recorte sostenido; el piso nunca ha bajado del 60%, frente a la línea del 10% del Tablero del Mercado Único de la UE. Con esa medida, 2020 no es una anomalía. Es la bisagra de una curva que ya venía doblándose — y la segunda figura muestra dónde giró de verdad esa bisagra: en un sector, no en todos.",
+          "Es un veredicto estructural que abarca tres administraciones y todos los años en que CompraNet registra el procedimiento. La tasa subió del 62.7% en 2010 a los ochenta y tantos, y ninguna administración ha logrado un recorte sostenido. Con esa medida, 2020 no es una anomalía. Es la bisagra de una curva que ya venía doblándose — y la segunda figura muestra dónde giró de verdad esa bisagra: en un sector, no en todos.",
           "La emergencia no corrompió el sistema. Eliminó el único requisito — la justificación — que mantenía a raya el default no-competitivo, y el requisito nunca regresó. La línea en el tiempo se cruzó en una sola dirección.",
         ],
         // The typed `inline-line` this chapter carried (chartId
@@ -5106,6 +5184,7 @@ export function localizeStory(
   leadStatLabel: string
   leadStatSublabel: string | undefined
   nextSteps: string[] | undefined
+  corrections: string[] | undefined
 } {
   return {
     headline: pickLang(story.headline, story.headline_es, lang) as string,
@@ -5113,6 +5192,7 @@ export function localizeStory(
     leadStatLabel: pickLang(story.leadStat.label, story.leadStat.label_es, lang) as string,
     leadStatSublabel: pickLang(story.leadStat.sublabel, story.leadStat.sublabel_es, lang),
     nextSteps: lang === 'es' ? (story.nextSteps_es ?? story.nextSteps) : story.nextSteps,
+    corrections: lang === 'es' ? (story.corrections_es ?? story.corrections) : story.corrections,
   }
 }
 
