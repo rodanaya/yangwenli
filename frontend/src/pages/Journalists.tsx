@@ -143,8 +143,8 @@ const INVESTIGATIONS: Investigation[] = [
     era: 'cross',
     contracts: 376324,
     yearSpan: '2010–2024',
-    brief: 'For 15 straight years, over 45% of Mexico\'s "competitive" procurement drew exactly one bidder — 376,000 contracts, peaking at 65.65% in 2014. The OECD flags anything above 15%.',
-    brief_es: 'Durante 15 años seguidos, más del 45% de la contratación "competitiva" de México atrajo exactamente un oferente — 376,000 contratos, con un pico de 65.65% en 2014. La OCDE marca todo lo que supere el 15%.',
+    brief: 'For 15 straight years, over 45% of Mexico\'s "competitive" procurement drew exactly one bidder — 376,000 contracts, peaking at 65.65% in 2014. The EU scoreboard rates anything above 20% unsatisfactory.',
+    brief_es: 'Durante 15 años seguidos, más del 45% de la contratación "competitiva" de México atrajo exactamente un oferente — 376,000 contratos, con un pico de 65.65% en 2014. El Tablero UE considera insatisfactorio todo lo que supere el 20%.',
   },
   {
     slug: 'marea-de-adjudicaciones',
