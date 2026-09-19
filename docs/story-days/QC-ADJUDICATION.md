@@ -1,0 +1,22 @@
+# QC panel — adjudication (Fable, 2026-09-19 ≈13:15 CET)
+
+Five read-only Opus panelists reported to `_parallax_shots/story-days/qc-{editor,facts,espanol,reader,legal}.md` (505 rewrites; merged in `qc-merged.json`). Accepted set: `D:/Python/_rw/qc-accepted.json` (**393**) · rejected: `D:/Python/_rw/qc-rejected.json` (112: 94 superseded by a higher-priority panel on the same field, 10 non-verbatim `old`, 6 Fable overrides, 2 banned phrases).
+
+## Rules applied
+1. `old` must be verbatim in `story-content.ts` (or the named live TSX) — 10 rejected.
+2. Banned phrases ("probability of corruption") — 2 rejected (reader).
+3. Same (slug, field_path, lang) from several panels → priority **legal > facts > español > editor > reader**; the rest superseded.
+4. Style panels may not introduce uncomputed numbers: rejected the editor's "18,242" stock-vs-flow multiple in `captura-institucional` ch4 (EN+ES, prose + pullquote) and the reader's rewrite of `el-cartel-de-los-vales` ch3 prose[3] that dropped the "P7 never above 0.5 confidence" caveat the legal panel praised. All Mexican unit conversions (X.X mil millones → X,XXX MDP; the "133.4 MDP" 1,000× chip errors) accepted.
+5. Fact rewrites accepted on endpoint evidence; Fable re-checked the load-bearing ones on prod: largest contract is OPERADORA CICSA 84.828B (2017, not a direct award), MANTENIMIENTO EXPRESS 69.936B is `is_direct_award: false`; ARHNOS, Mantenimiento Express, Urbanissa, ICA Fluor, Marhnos, Repsol Exploración, Dowell Schlumberger are ARIA `false_positive`, Alstom `skipped`, Maypo's main identity `needs_review`; Day 2/3/7/9/10 numbers reproduce to the decimal.
+6. GT training cases = **1,417** (CLAUDE.md § Risk Model) everywhere; register = **3,058,286** (`/health`), scored corpus = 3,051,294 — say which.
+
+## Systemic findings (applier tasks, not string rewrites)
+- **OECD citations.** "OECD (2023) Public Procurement Performance Report[: Mexico]" with chapter/recommendation numbers is cited ~11× across 6 stories and does not exist as described. The real paper is OECD (2023), *Public procurement performance: A framework for measuring efficiency, compliance and strategic goals*, OECD Public Governance Policy Papers No. 36 — a framework listing indicators (single-bidding among them) with **no numeric ceilings and no Mexico edition**. Every "OECD 15% / ~30% / 2–15%" threshold in prose, `sources`, live figures (`OECD_CEILING` constants, "× the OECD line" annotations) and `ClosingCoda` must change: single-bidder reference line → **EU Single Market Scoreboard, >20% unsatisfactory (≤10% satisfactory)**; direct-award reference line → **EU Single Market Scoreboard, ≥10% unsatisfactory (≤5% satisfactory)**; the high-risk 2–15% band → **"RUBLI's calibration target for the flagged share (2–15%)"** cited to `docs/RISK_METHODOLOGY_v6.md`, never to the OECD. Where a story cites the OECD paper as a general reference for measuring procurement performance, keep it with the correct title. Multiples printed as "N× the OECD threshold" are recomputed against the new line.
+- **False positives named as offenders.** `el-gran-precio` ch3 prose + chart, `el-sexenio-del-riesgo` entities (ARHNOS, Dowell, Alstom), `el-monopolio-invisible` "Principal suspect" roles, `la-ilusion-competitiva` "monopolist" roles — the accepted legal/facts rewrites carry the wording; the applier removes the FP vendors from the `el-gran-precio` chart data (or labels each with its review status) and never leaves a `false_positive` vendor as a suspect anywhere.
+- **Invented identifiers.** `PROC-2025-IMSS-CONS-MED` / `PROC-2025-IMSS-CLAVES` (`el-monopolio-invisible` ch5 + sources) — accepted facts rewrites remove them.
+- **`el-cartel-de-los-vales` slug** contains "cartel" for five firms the story clears — URL kept (shared links); rendered surfaces per the accepted rewrites; slug rename + redirect is backlog.
+- **Glossary**: ARIA and AUC are never expanded (9 and 13 stories) — accepted reader inserts cover first uses; the shared methodology footer gets one clause each.
+- **Figure captions ending in API paths** (~40) — move the path to a mono "Fuente / Source" line in the shared chrome once, not per figure.
+
+## Result
+(filled at ship)

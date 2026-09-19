@@ -59,7 +59,7 @@ ch1 `live: 'era-terms', scrolly: true`; ch2 `live: 'era-sectors'` (typed stacked
 
 Built by `story-day10` (report `_parallax_shots/story-days/sd10-report.md`, commit `0cdcc2c6`, `EraFigures.tsx` + `useEraData.ts`); judged by Fable on `sd10/after/` (f1-stage3 1440 EN, f2 1440 ES) against the morning recomputation in this brief — five term rates, sector ledger and SEDENA series all exact. Where the endpoint beat the brief: Sheinbaum 11.1800 vs Peña 11.1788 is "level with", not below. Unverifiable claims withdrawn rather than dated (per-category high-risk %, 1,063B DA value split, Segalmex 1,258 @ 1.000, TOKA 40.6B — the register contradicts both). Executor fixed F2's value column escaping the figure box (census catch) and the typed `ChapterDivider` era strip. Gates: tsc 0 · build OK · lint:tokens PASS · probe 3 consecutive clean runs (1440 + 390, EN + ES) · census 0/0 · Days 1–9 still step. Eight QC items logged in STORY_DAYS.
 
-Deployed 2026-09-19 ≈12:30 CET via `deploy-safe.sh`. Commits `0cdcc2c6` · docs · BUILD_ID `2026-09-19-story-d10-sexenio` (hash in STORY_DAYS row).
+Deployed 2026-09-19 ≈12:30 CET via `deploy-safe.sh`. Commits `0cdcc2c6` · docs · BUILD_ID `519c5168` (`2026-09-19-story-d10-sexenio`). Entry `index-mqWePAmI.js`; BUILD_ID string served; health OK; VPS HEAD `519c5168`.
 
 ## Build notes
 Branch `story/day-10-sexenio` off origin/main after Day 9 ships. Same rules as Days 1–9; report file `_parallax_shots/story-days/sd10-report.md`. Commit: `feat(stories § SD-10 el-sexenio-del-riesgo): live ledger figures — term bars scrolly, sector ledger, SEDENA share, category indicator, yearly line; ledger and SEDENA claims corrected`. Trailer `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. No BUILD_ID, push or deploy.
