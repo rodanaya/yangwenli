@@ -72,6 +72,13 @@ interface PlateFrameProps {
    * Default false — Atlas.tsx and CaptureCreep.tsx call sites render pixel-identical.
    */
   bleed?: boolean
+  /**
+   * PARALLAX D4 § Change 4: when true the figcaption drops its inline 64ch
+   * measure so the site rule (index.css:1049 — "captions span the figure")
+   * applies and the caption fills the plate instead of ragging down its left.
+   * Default false — every existing caller renders pixel-identical.
+   */
+  captionFull?: boolean
 }
 
 /** Plate caption — bilingual, lens-aware (atlas default). */
@@ -119,6 +126,7 @@ export function PlateFrame({
   contextLabel,
   minimal = false,
   bleed = false,
+  captionFull = false,
 }: PlateFrameProps) {
   // Use overrides when provided (non-atlas surfaces); fall back to atlas defaults.
   const folio = folioOverride ?? getAtlasFolioNumber(lens ?? 'patterns')
@@ -169,8 +177,8 @@ export function PlateFrame({
           Suppressed when `minimal` — Atlas surfaces its own masthead/toolbar. */}
       {!minimal && (<div
         className={bleed
-          ? 'absolute top-3 left-[23px] right-[23px] flex items-center justify-between pointer-events-none'
-          : 'absolute top-3 left-7 right-7 flex items-center justify-between pointer-events-none'
+          ? 'absolute top-3 left-[23px] right-[23px] flex min-w-0 items-center justify-between gap-2 pointer-events-none'
+          : 'absolute top-3 left-7 right-7 flex min-w-0 items-center justify-between gap-2 pointer-events-none'
         }
         style={{
           fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
@@ -184,7 +192,10 @@ export function PlateFrame({
           fontWeight: 400,
         }}
       >
-        <span style={{ fontStyle: 'normal', fontWeight: 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+        {/* D4 § 4: the label is sized by the PLATE, not the viewport. It wraps
+            rather than ellipsing — a cut context label was the /gap and
+            /methodology clip (+123px in Spanish at 1024). */}
+        <span className="flex-1 min-w-0" style={{ fontStyle: 'normal', fontWeight: 400 }}>
           <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·{folio}</span>
           {/* Context label follows the date stamp's precedent below: hidden
               under 480px rather than ellipsed. The header has no height budget,
@@ -224,7 +235,7 @@ export function PlateFrame({
           lineHeight: 1.45,
           color: 'var(--color-text-secondary, var(--color-text-muted))',
           letterSpacing: '0.005em',
-          maxWidth: '64ch',
+          ...(captionFull ? {} : { maxWidth: '64ch' }),
         }}
       >
         {caption}

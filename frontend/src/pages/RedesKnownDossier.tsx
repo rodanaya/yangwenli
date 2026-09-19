@@ -493,8 +493,10 @@ export default function RedesKnownDossier() {
       </svg>
 
       <div className="relative" style={{ zIndex: 1 }}>
-        {/* ── Hero ─────────────────────────────────────────────────── */}
-        <div className="border-b border-border/60 pb-8">
+        {/* ── Hero ─────────────────────────────────────────────────────
+            D4 § 4 — the reading frame: text axis 640, figure 760,
+            instrument 1152, all centred on one line. */}
+        <div className="mx-auto max-w-[640px] border-b border-border/60 pb-8">
           <div
             className="flex items-center gap-3 mb-4"
             style={{
@@ -568,7 +570,7 @@ export default function RedesKnownDossier() {
 
         {/* ── Plano general — the size≠signal inversion, made visible ─── */}
         {lens === 'clusters' && index && (
-          <div className="mt-8">
+          <div className="mt-8 mx-auto max-w-[760px]">
             <MeshPlano
               communities={index.communities}
               totalCommunities={index.total_communities}
@@ -580,9 +582,11 @@ export default function RedesKnownDossier() {
         )}
 
         {/* ── Instrument: index rail ←→ mesh plate ─────────────────── */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-[370px_1fr] gap-6 items-start">
+        {/* Two columns only at xl: at 1024 a 370px rail left the plate 380px
+            wide, so the mesh is full width above the rail instead. */}
+        <div className="mt-8 grid grid-cols-1 xl:grid-cols-[370px_1fr] gap-6 items-start">
           {/* RUNG 0 — index rail (two lenses) */}
-          <aside className="order-2 lg:order-1 lg:sticky lg:top-4">
+          <aside className="order-2 xl:order-1 xl:sticky xl:top-4">
             {/* Lens tabs — CÚMULOS (default) | INSTITUCIONES */}
             {/* D4 § 6 — the lens swaps rail AND plate and owns no panel, so it
                 is a toggle group, not a tablist. */}
@@ -1041,7 +1045,7 @@ export default function RedesKnownDossier() {
           </aside>
 
           {/* RUNG 1 — the mesh plate + dossier */}
-          <div ref={plateRef} className="order-1 lg:order-2 min-w-0 scroll-mt-4">
+          <div ref={plateRef} className="order-1 xl:order-2 min-w-0 scroll-mt-4">
             {lens === 'clusters' && graphLoading && (
               <div className="h-[540px] rounded-sm border border-border/40 bg-border/10 animate-pulse flex items-center justify-center">
                 <p className="text-[13px] font-mono text-text-muted">
@@ -1064,6 +1068,7 @@ export default function RedesKnownDossier() {
                 <PlateFrame
                   lang={lang}
                   folio="XIV·B"
+                  captionFull
                   contextLabel={{ en: "Detail plan · the knot's mesh", es: 'Plano de detalle · la trama del nudo' }}
                   caption={
                     isEs
@@ -1129,6 +1134,7 @@ export default function RedesKnownDossier() {
                 <PlateFrame
                   lang={lang}
                   folio="XIV"
+                  captionFull
                   contextLabel={{ en: 'The siege · institution capture web', es: 'El sitio · telaraña de captura' }}
                   caption={
                     isEs
@@ -1341,7 +1347,7 @@ export default function RedesKnownDossier() {
         )}
 
         {/* ── Methodology footer ───────────────────────────────────── */}
-        <div className="mt-8 rounded-sm border border-border bg-background-card px-5 py-4">
+        <div className="mt-8 mx-auto max-w-[640px] rounded-sm border border-border bg-background-card px-5 py-4">
           <h2 className="text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3">
             {isEs ? 'Fe de método' : 'Attestation of method'}
           </h2>

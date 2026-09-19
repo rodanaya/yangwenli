@@ -178,6 +178,7 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
       <PlateFrame
         folio="XIV·A"
         lang={lang}
+        captionFull
         contextLabel={{
           en: `Wide plan · the ${totalCommunities} clusters`,
           es: `Plano general · los ${totalCommunities} cúmulos`,
@@ -197,6 +198,7 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
     <PlateFrame
       folio="XIV·A"
       lang={lang}
+      captionFull
       contextLabel={{
         en: `Wide plan · the ${totalCommunities} clusters`,
         es: `Plano general · los ${totalCommunities} cúmulos`,
