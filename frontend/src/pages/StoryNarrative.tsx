@@ -22,6 +22,7 @@ import type { GhostFigureKind } from '@/components/stories/live/GhostFigures'
 import type { ThresholdFigureKind } from '@/components/stories/live/ThresholdFigures'
 import type { CompetitionFigureKind } from '@/components/stories/live/CompetitionFigures'
 import type { DirectAwardFigureKind } from '@/components/stories/live/DirectAwardFigures'
+import type { EraFigureKind } from '@/components/stories/live/EraFigures'
 import { StickyStepFrame, useProseStage } from '@/components/stories/live/StickyStepFigure'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { OutletBadge } from '@/components/stories/OutletBadge'
@@ -96,6 +97,7 @@ const LiveGhostFigure = lazy(() => import('@/components/stories/live/GhostFigure
 const LiveThresholdFigure = lazy(() => import('@/components/stories/live/ThresholdFigures'))
 const LiveCompetitionFigure = lazy(() => import('@/components/stories/live/CompetitionFigures'))
 const LiveDirectAwardFigure = lazy(() => import('@/components/stories/live/DirectAwardFigures'))
+const LiveEraFigure = lazy(() => import('@/components/stories/live/EraFigures'))
 
 /** Route a `chartConfig.live` kind to the story family that owns it. */
 function LiveFigure({
@@ -130,6 +132,9 @@ function LiveFigure({
   }
   if (kind.startsWith('da-')) {
     return <LiveDirectAwardFigure kind={kind as DirectAwardFigureKind} lang={lang} stage={stage} />
+  }
+  if (kind.startsWith('era-')) {
+    return <LiveEraFigure kind={kind as EraFigureKind} lang={lang} stage={stage} />
   }
   return <LiveGapFigure kind={kind as GapFigureKind} lang={lang} stage={stage} />
 }
@@ -686,9 +691,12 @@ function ChapterDivider({
   if (storySlug === SEXENIO_ERA_STRIP_STORY_SLUG) {
     // 4 administrations · width proportional to years governed · color by
     // RISK_COLORS bucket derived from the admin-era high-risk rate.
-    // Fox 7.5% → low (zinc), Calderón 8.2% → low, Peña 11.2% → medium,
-    // AMLO 12.6% → medium. Forces visual hierarchy so AMLO reads as the
+    // Fox 7.5% → low (zinc), Calderón 8.1% → low, Peña 11.2% → medium,
+    // AMLO 12.5% → medium. Forces visual hierarchy so AMLO reads as the
     // emphasized segment via the "you are here" tick + accent ring.
+    // Rates recomputed from /analysis/year-over-year on 2026-09-19 (SD-10);
+    // they are chrome, so they are typed here rather than queried — F1 and F5
+    // on the story itself draw the same five terms live.
     const eras: Array<{
       code: string
       label: string
@@ -697,10 +705,10 @@ function ChapterDivider({
       rate: number
       color: string
     }> = [
-      { code: 'fox',      label: 'Fox',      years: '00–06',                                     span: 6, rate: 7.5,  color: RISK_COLORS.low },
-      { code: 'calderon', label: 'Calderón', years: '06–12',                                     span: 6, rate: 8.2,  color: RISK_COLORS.low },
-      { code: 'pena',     label: 'Peña',     years: '12–18',                                     span: 6, rate: 11.2, color: RISK_COLORS.medium },
-      { code: 'amlo',     label: 'AMLO',     years: '18–24',                                     span: 6, rate: 12.6, color: RISK_COLORS.medium },
+      { code: 'fox',      label: 'Fox',      years: '02–06',                                     span: 5, rate: 7.5,  color: RISK_COLORS.low },
+      { code: 'calderon', label: 'Calderón', years: '07–12',                                     span: 6, rate: 8.1,  color: RISK_COLORS.low },
+      { code: 'pena',     label: 'Peña',     years: '13–18',                                     span: 6, rate: 11.2, color: RISK_COLORS.medium },
+      { code: 'amlo',     label: 'AMLO',     years: '19–24',                                     span: 6, rate: 12.5, color: RISK_COLORS.medium },
     ]
     const totalSpan = eras.reduce((s, e) => s + e.span, 0)
     const youAreHere = 'amlo'
