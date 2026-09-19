@@ -126,7 +126,7 @@
     "body": "12 sectors. 3.06 million contracts. MXN 9.88 trillion. The v0.8.5 model assigns risk scores to each contract using 18 statistical indicators calibrated against 748 documented corruption cases. Agriculture leads: 93.5% direct awards, 0.369 average risk.",
     "stat1Label": "DA in Agriculture · AMLO 2019-24",
     "stat2Label": "value at risk · health sector",
-    "stat3Label": "above OECD 25% limit"
+    "stat3Label": "above the EU 10% line"
   },
   "profile": {
     "backToSectors": "All Sectors",
@@ -190,9 +190,9 @@
     "competitionRate": "Competition Rate",
     "avgBidders": "Avg Bidders",
     "singleBidRate": "Single-Bid Rate",
-    "oecdCompetition": "OECD avg: 75%",
-    "oecdBidders": "OECD avg: 3+",
-    "oecdSingleBid": "OECD target: <20%"
+    "oecdCompetition": "Reference: 75% competitive",
+    "oecdBidders": "Reference: 3+ bidders",
+    "oecdSingleBid": "EU scoreboard: ≤20%"
   },
   "insight": {
     "elevatedRisk": {
@@ -259,12 +259,12 @@
     "avgRiskLeader": "avg risk — top sector",
     "totalContracted": "total contracted value",
     "ofTwelve": "of 12",
-    "sectorsExceedOECD": "sectors exceed OECD 25% limit",
+    "sectorsExceedOECD": "sectors exceed the EU 10% line",
     "competitionGapLabel": "Competition gap",
-    "directAwardVsOECD": "Direct award vs. OECD 25% limit",
+    "directAwardVsOECD": "Direct award vs. the EU 10% line",
     "tooltipDirectAward": "Direct award:",
-    "tooltipAboveOECD": "{{x}}x above OECD limit",
-    "tooltipWithinOECD": "Within OECD limit"
+    "tooltipAboveOECD": "{{x}}x above the EU line",
+    "tooltipWithinOECD": "Within the EU line"
   },
   "trendChart": {
     "eyebrow": "Temporal trend",
@@ -282,16 +282,16 @@
     "sectionAriaLabel": "Risk factor analysis by sector"
   },
   "slope": {
-    "dateline": "COMPETITION · A DECADE PAST THE OECD CEILING",
-    "title": "Ten years past the OECD ceiling",
-    "titleEn": "Ten years past the OECD ceiling",
-    "deck": "Direct-award % by sector, 2015–2025. The cyan dashed line is the OECD 25% ceiling. Sectors ending above are labeled in their sector color; those below are muted gray.",
-    "oecdLine": "OECD 25%",
+    "dateline": "COMPETITION · A DECADE PAST THE EU LINE",
+    "title": "Ten years past the EU line",
+    "titleEn": "Ten years past the EU line",
+    "deck": "Direct-award % by sector, 2015–2025. The cyan dashed line is the EU scoreboard's 10% direct-award line. Sectors ending above are labeled in their sector color; those below are muted gray.",
+    "oecdLine": "EU 10%",
     "covidBand": "COVID emergency",
     "belowCeiling": "+ {{count}} below ceiling",
-    "aboveCeiling": "sectors above OECD ceiling",
+    "aboveCeiling": "sectors above the EU line",
     "showAll": "Show all 12",
-    "showCrossers": "Only OECD crossers"
+    "showCrossers": "Only EU-line crossers"
   },
   "swimlane": {
     "kicker": "WHAT THE STATE BUYS · 12 LANES",
@@ -312,19 +312,19 @@
     "kicker": "Sector lede · {{sector}}",
     "leadsRisk": "leads in risk with",
     "avgRiskSuffix": "average risk",
-    "deck": "{{exceedingOECD}} of 12 sectors exceed the OECD 25% direct-award threshold. The leader combines {{topRiskPct}}% risk with {{topDaPct}}% of contracts awarded without competitive bidding.",
+    "deck": "{{exceedingOECD}} of 12 sectors exceed the EU scoreboard's 10% direct-award line. The leader combines {{topRiskPct}}% risk with {{topDaPct}}% of contracts awarded without competitive bidding.",
     "meta": {
       "leaderRisk": "Leading sector risk",
       "totalValue": "Total value 2002–2025",
       "contracts": "Contracts",
-      "sectorsBeyond": "Sectors > OECD 25%"
+      "sectorsBeyond": "Sectors > EU 10%"
     }
   },
   "treemap": {
     "kicker": "THE DISTRIBUTION · WHERE THE MONEY GOES",
     "headline": "Public spend is not uniform",
-    "deck": "Each rectangle is a sector. Area = total spend (MXN); color saturation = v0.8.5 risk indicator. Amber border marks sectors exceeding the OECD 25% direct-award ceiling.",
-    "oecdViolatorNote": "Amber border = exceeds OECD 25% ceiling",
+    "deck": "Each rectangle is a sector. Area = total spend (MXN); color saturation = v0.8.5 risk indicator. Amber border marks sectors above the EU scoreboard's 10% direct-award line.",
+    "oecdViolatorNote": "Amber border = above the EU 10% line",
     "saturationNote": "Saturation = risk indicator",
     "ariaLabel": "Sector spend distribution treemap",
     "segalmexCaveat": "Score inflated by Segalmex GT case — see Segalmex thread"
@@ -334,7 +334,7 @@
     "headline": "Where risk becomes expensive",
     "deck": "Each sector as a circle: risk on the horizontal, spend on the vertical, size = number of contracts. The upper-right quadrant — high risk, high spend — is where to look first.",
     "ariaLabel": "Bubble chart: risk × spend by sector",
-    "oecdRef": "OECD 25%",
+    "oecdRef": "EU 10%",
     "priority": "PRIORITY",
     "investigar": "Investigate →",
     "agriculturaNote": "Score inflated by Segalmex (GT case) — see /thread/segalmex",

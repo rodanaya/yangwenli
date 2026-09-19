@@ -50,7 +50,7 @@ import {
   SECTOR_TEXT_COLORS,
   RISK_COLORS,
   RISK_TEXT_COLORS,
-  OECD_DIRECT_AWARD_LIMIT,
+  EU_DIRECT_AWARD_LIMIT,
   getRiskLevelFromScore,
   getSectorName,
   SECTORS,
@@ -68,7 +68,7 @@ type SortKey = 'spend' | 'risk' | 'contracts' | 'direct_award'
 const SORT_KEYS: SortKey[] = ['spend', 'risk', 'contracts', 'direct_award']
 
 const ALL_SECTOR_CODES = SECTORS.map((s) => s.code)
-const DA_LIMIT_PCT = OECD_DIRECT_AWARD_LIMIT * 100 // 30
+const DA_LIMIT_PCT = EU_DIRECT_AWARD_LIMIT * 100 // 30
 // Sectors with a single active category — taxonomy expansion pending (S.10–S.12).
 const DAGGER_SECTOR_CODES = new Set(['educacion', 'gobernacion', 'trabajo'])
 

@@ -9,7 +9,7 @@
   },
   "riskLevel": {
     "title": "Risk Level",
-    "description": "Categorization based on risk score: Critical (>=0.60), High (>=0.40), Medium (>=0.25), Low (<0.25). These thresholds are aligned with OECD procurement benchmarks."
+    "description": "Categorization based on risk score: Critical (>=0.60), High (>=0.40), Medium (>=0.25), Low (<0.25). These thresholds are RUBLI's own, set in calibration (docs/RISK_METHODOLOGY_v6.md)."
   },
   "singleBid": {
     "title": "Single Bid",
@@ -85,7 +85,7 @@
   },
   "groundTruth": {
     "title": "Ground Truth",
-    "description": "Documented, verified corruption cases used to train and validate the model. We use 1,427 cases with ~1,554 vendors and ~288,000 contracts across all 12 sectors, including IMSS, Segalmex, Odebrecht, and more."
+    "description": "Documented, verified corruption cases used to train and validate the model. We use 1,417 cases with ~1,554 vendors and ~288,000 contracts across all 12 sectors, including IMSS, Segalmex, Odebrecht, and more."
   },
   "adPeriod": {
     "title": "Ad Period",

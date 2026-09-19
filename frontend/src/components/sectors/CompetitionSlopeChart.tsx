@@ -35,8 +35,8 @@ import type { SectorTrend } from '@/api/types'
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const YEARS = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
-const OECD_THRESHOLD = 25 // percent
-const OECD_CYAN = '#22d3ee'
+const EU_THRESHOLD = 10 // percent — EU Single Market Scoreboard direct-award line
+const REF_CYAN = '#22d3ee'
 const MUTED_GRAY = '#a1a1aa'
 
 // Chart layout
@@ -55,7 +55,7 @@ interface SectorLine {
   endDa: number
   /** DA% at 2015 (leftmost point, for delta calculation) */
   startDa: number
-  /** True if endDa > OECD_THRESHOLD — sector "crosses the ceiling" */
+  /** True if endDa > EU_THRESHOLD — sector "crosses the ceiling" */
   crossesCeiling: boolean
 }
 
@@ -204,7 +204,7 @@ export function CompetitionSlopeChart() {
         points,
         endDa,
         startDa,
-        crossesCeiling: endDa > OECD_THRESHOLD,
+        crossesCeiling: endDa > EU_THRESHOLD,
       }
     })
   }, [queries, i18n.language])
@@ -258,7 +258,7 @@ export function CompetitionSlopeChart() {
   // COVID band x positions
   const covidX1 = scaleX(2020)
   const covidX2 = scaleX(2021) + innerW / (YEARS.length - 1)
-  const oecdY = scaleY(OECD_THRESHOLD)
+  const oecdY = scaleY(EU_THRESHOLD)
 
   const handleHover = useCallback((id: number | null, tip: TooltipState | null) => {
     setHoveredId(id)
@@ -291,7 +291,7 @@ export function CompetitionSlopeChart() {
           className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-secondary transition-colors border border-border px-2.5 py-1 rounded-sm"
         >
           {showAll
-            ? isEs ? 'Solo los que cruzan OCDE' : 'Only OECD crossers'
+            ? isEs ? 'Solo los que cruzan la línea UE' : 'Only EU-line crossers'
             : isEs ? 'Mostrar todos los 12' : 'Show all 12'}
         </button>
       </div>
@@ -329,7 +329,7 @@ export function CompetitionSlopeChart() {
         {/* Y-axis gridlines + labels */}
         {yTicks.map((tick) => {
           const y = scaleY(tick)
-          const isOECD = tick === 25
+          const isRef = tick === EU_THRESHOLD
           return (
             <g key={tick}>
               <line
@@ -337,16 +337,16 @@ export function CompetitionSlopeChart() {
                 y1={y}
                 x2={MARGIN.left + innerW}
                 y2={y}
-                stroke={isOECD ? OECD_CYAN : 'var(--color-border)'}
-                strokeWidth={isOECD ? 1.2 : 0.5}
-                strokeDasharray={isOECD ? '4 3' : undefined}
-                strokeOpacity={isOECD ? 0.9 : 0.5}
+                stroke={isRef ? REF_CYAN : 'var(--color-border)'}
+                strokeWidth={isRef ? 1.2 : 0.5}
+                strokeDasharray={isRef ? '4 3' : undefined}
+                strokeOpacity={isRef ? 0.9 : 0.5}
               />
               <text
                 x={MARGIN.left - 6}
                 y={y}
                 dy={4}
-                fill={isOECD ? OECD_CYAN : 'var(--color-text-muted)'}
+                fill={isRef ? REF_CYAN : 'var(--color-text-muted)'}
                 fontSize={12}
                 fontFamily="var(--font-family-mono)"
                 textAnchor="end"
@@ -362,12 +362,12 @@ export function CompetitionSlopeChart() {
           x={MARGIN.left + innerW + 6}
           y={oecdY}
           dy={4}
-          fill={OECD_CYAN}
+          fill={REF_CYAN}
           fontSize={13}
           fontFamily="var(--font-family-mono)"
           textAnchor="start"
         >
-          {isEs ? 'OCDE 25%' : 'OECD 25%'}
+          {isEs ? `UE ${EU_THRESHOLD}%` : `EU ${EU_THRESHOLD}%`}
         </text>
 
         {/* X-axis ticks */}
@@ -478,7 +478,7 @@ export function CompetitionSlopeChart() {
         {belowCount > 0 && !showAll && (
           <text
             x={MARGIN.left + innerW + 10}
-            y={scaleY(OECD_THRESHOLD) + 28}
+            y={scaleY(EU_THRESHOLD) + 28}
             fill={MUTED_GRAY}
             fontSize={13}
             fontFamily="var(--font-family-mono)"
@@ -553,7 +553,7 @@ export function CompetitionSlopeChart() {
       {belowCount > 0 && (
         <p className="mt-2 text-[12px] font-mono text-text-muted">
           {isEs
-            ? `${belowCount} sectores bajo el techo OCDE (mostrados en gris)`
+            ? `${belowCount} sectores bajo la línea UE (mostrados en gris)`
             : `${belowCount} sectors below OECD ceiling (shown in gray)`}
         </p>
       )}

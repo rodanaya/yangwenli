@@ -274,6 +274,7 @@ function Stream({ firms, lang, stage = 3 }: { firms: FirmStats[]; lang: 'en' | '
 
   return (
     <ChartCard
+      source="/vendors/:id/risk-timeline"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -287,8 +288,8 @@ function Stream({ firms, lang, stage = 3 }: { firms: FirmStats[]; lang: 'en' | '
       }}
       annotation={
         es
-          ? `${stageNote} Valor adjudicado por año a cada emisora, ${years[0]}–${partial}. Efectivale aparece bajo tres registros (${VOUCHER_FIRMS[2].ids.join(', ')}) que aquí se suman como una sola empresa. ${partial} es un año parcial: el registro federal se congeló el 28 de septiembre de ${partial}, y ${years.includes(2004) ? '' : '2004 no tiene registro para ninguna de las cinco. '}Cifras en vivo de /vendors/:id/risk-timeline.`
-          : `${stageNote} Value awarded per year to each issuer, ${years[0]}–${partial}. Efectivale appears under three registrations (${VOUCHER_FIRMS[2].ids.join(', ')}), summed here as one firm. ${partial} is a partial year — the federal register froze on 28 September ${partial}${years.includes(2004) ? '' : ', and 2004 carries no record for any of the five'}. Figures live from /vendors/:id/risk-timeline.`
+          ? `${stageNote} Valor adjudicado por año a cada emisora, ${years[0]}–${partial}. Efectivale aparece bajo tres registros (${VOUCHER_FIRMS[2].ids.join(', ')}) que aquí se suman como una sola empresa. ${partial} es un año parcial: el registro federal se congeló el 28 de septiembre de ${partial}, y ${years.includes(2004) ? '' : '2004 no tiene registro para ninguna de las cinco. '}`
+          : `${stageNote} Value awarded per year to each issuer, ${years[0]}–${partial}. Efectivale appears under three registrations (${VOUCHER_FIRMS[2].ids.join(', ')}), summed here as one firm. ${partial} is a partial year — the federal register froze on 28 September ${partial}${years.includes(2004) ? '' : ', and 2004 carries no record for any of the five'}.`
       }
     >
       <div className="px-2">
@@ -555,6 +556,7 @@ function Doors({ firms, lang }: { firms: FirmStats[]; lang: 'en' | 'es' }) {
 
   return (
     <ChartCard
+      source="/vendors/:id"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -568,8 +570,8 @@ function Doors({ firms, lang }: { firms: FirmStats[]; lang: 'en' | 'es' }) {
       }}
       annotation={
         es
-          ? `Dos rutas, una fila por empresa, ordenadas por oferta única. Adjudicación directa: no hay licitación, el comprador escoge. Oferta única: sí hay licitación —convocatoria publicada, proceso formal— y se presenta una sola empresa. Entre las dos rutas suman ${pct(closedPct)} de los ${formatNumber(contracts)} contratos de las cinco. ${preRecord.length ? `Ojo con ${preRecord.join(' y ')}: parte de su registro es anterior a 2010, cuando CompraNet aún no anotaba el tipo de procedimiento, así que su adjudicación directa aparece subestimada y su oferta única sobrestimada. ` : ''}Cifras en vivo de /vendors/:id.`
-          : `Two routes, one row per firm, ordered by single-bidder share. Direct award: no tender, the buyer picks. Single bidder: there is a tender — a published notice, a formal process — and one firm turns up. Between them the two routes account for ${pct(closedPct)} of the five firms’ ${formatNumber(contracts)} contracts. ${preRecord.length ? `Read ${preRecord.join(' and ')} with care: part of their record predates 2010, when CompraNet did not yet note the award procedure, so their direct-award share is understated and their single-bidder share overstated. ` : ''}Figures live from /vendors/:id.`
+          ? `Dos rutas, una fila por empresa, ordenadas por oferta única. Adjudicación directa: no hay licitación, el comprador escoge. Oferta única: sí hay licitación —convocatoria publicada, proceso formal— y se presenta una sola empresa. Entre las dos rutas suman ${pct(closedPct)} de los ${formatNumber(contracts)} contratos de las cinco. ${preRecord.length ? `Ojo con ${preRecord.join(' y ')}: parte de su registro es anterior a 2010, cuando CompraNet aún no anotaba el tipo de procedimiento, así que su adjudicación directa aparece subestimada y su oferta única sobrestimada. ` : ''}`
+          : `Two routes, one row per firm, ordered by single-bidder share. Direct award: no tender, the buyer picks. Single bidder: there is a tender — a published notice, a formal process — and one firm turns up. Between them the two routes account for ${pct(closedPct)} of the five firms’ ${formatNumber(contracts)} contracts. ${preRecord.length ? `Read ${preRecord.join(' and ')} with care: part of their record predates 2010, when CompraNet did not yet note the award procedure, so their direct-award share is understated and their single-bidder share overstated. ` : ''}`
       }
     >
       <div className="px-2 pb-2">
@@ -712,6 +714,7 @@ function Roster({
 
   return (
     <ChartCard
+      source="/vendors/:id · /aria/queue/:id"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -725,8 +728,8 @@ function Roster({
       }}
       annotation={
         es
-          ? `Las cinco emisoras ordenadas por valor adjudicado. La insignia trae el nivel de ARIA, GT cuando la empresa ya es un caso documentado y la palabra del estatus sólo cuando la revisión está confirmada.${onePattern ? ` Las cinco comparten el mismo patrón primario, ${onePattern}: ${PATTERN_LABEL[onePattern]?.es ?? onePattern} — un indicador de precio, no una acusación de colusión.` : ''} Los totales de Efectivale suman sus tres registros; la ficha abre el que sigue contratando (${VOUCHER_FIRMS[2].chipId}), y el de 2002–2010 (64) es el que ARIA tiene en nivel 1 y en ground truth. ${resolved < firms.length ? `La cola de ARIA respondió por ${resolved} de las ${firms.length}: el denominador del ancla es lo que sí llegó. ` : ''}Cifras en vivo de /vendors/:id y /aria/queue/:id.`
-          : `The five issuers ordered by awarded value. The badge carries ARIA’s tier, GT where the firm is already a documented case, and the status word only where the review is confirmed.${onePattern ? ` All five share the same primary pattern, ${onePattern}: ${PATTERN_LABEL[onePattern]?.en ?? onePattern} — a pricing indicator, not a finding of collusion.` : ''} Efectivale’s totals sum its three registrations; the chip opens the one still trading (${VOUCHER_FIRMS[2].chipId}), and its 2002–2010 registration (64) is the one ARIA holds at Tier 1 and in ground truth. ${resolved < firms.length ? `ARIA’s queue answered for ${resolved} of the ${firms.length}; the anchor’s denominator is what came back. ` : ''}Figures live from /vendors/:id and /aria/queue/:id.`
+          ? `Las cinco emisoras ordenadas por valor adjudicado. La insignia trae el nivel de ARIA, GT cuando la empresa ya es un caso documentado y la palabra del estatus sólo cuando la revisión está confirmada.${onePattern ? ` Las cinco comparten el mismo patrón primario, ${onePattern}: ${PATTERN_LABEL[onePattern]?.es ?? onePattern} — un indicador de precio, no una acusación de colusión.` : ''} Los totales de Efectivale suman sus tres registros; la ficha abre el que sigue contratando (${VOUCHER_FIRMS[2].chipId}), y el de 2002–2010 (64) es el que ARIA tiene en nivel 1 y en ground truth. ${resolved < firms.length ? `La cola de ARIA respondió por ${resolved} de las ${firms.length}: el denominador del ancla es lo que sí llegó. ` : ''}`
+          : `The five issuers ordered by awarded value. The badge carries ARIA’s tier, GT where the firm is already a documented case, and the status word only where the review is confirmed.${onePattern ? ` All five share the same primary pattern, ${onePattern}: ${PATTERN_LABEL[onePattern]?.en ?? onePattern} — a pricing indicator, not a finding of collusion.` : ''} Efectivale’s totals sum its three registrations; the chip opens the one still trading (${VOUCHER_FIRMS[2].chipId}), and its 2002–2010 registration (64) is the one ARIA holds at Tier 1 and in ground truth. ${resolved < firms.length ? `ARIA’s queue answered for ${resolved} of the ${firms.length}; the anchor’s denominator is what came back. ` : ''}`
       }
     >
       <ol className="px-2 pb-2">
@@ -830,6 +833,7 @@ function Sexenios({ firms, lang }: { firms: FirmStats[]; lang: 'en' | 'es' }) {
 
   return (
     <ChartCard
+      source="/vendors/:id/risk-timeline"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -843,8 +847,8 @@ function Sexenios({ firms, lang }: { firms: FirmStats[]; lang: 'en' | 'es' }) {
       }}
       annotation={
         es
-          ? `Reparto del total de las cinco dentro de cada sexenio, con los años del término tal como los define lib/administrations.ts (el año de transición se atribuye al gobierno saliente, porque once de sus doce meses le pertenecen). La secuencia de líderes es ${sequence.join(' → ')}. El último sexenio sólo tiene ${partial}, y ${partial} es parcial: el registro se congeló el 28 de septiembre. Cifras en vivo de /vendors/:id/risk-timeline.`
-          : `Each term’s split of the five-firm total, with the term years as lib/administrations.ts defines them (a transition year is credited to the outgoing government, because eleven of its twelve months belong to it). The sequence of leaders runs ${sequence.join(' → ')}. The last term holds only ${partial}, and ${partial} is partial — the register froze on 28 September. Figures live from /vendors/:id/risk-timeline.`
+          ? `Reparto del total de las cinco dentro de cada sexenio, con los años del término tal como los define lib/administrations.ts (el año de transición se atribuye al gobierno saliente, porque once de sus doce meses le pertenecen). La secuencia de líderes es ${sequence.join(' → ')}. El último sexenio sólo tiene ${partial}, y ${partial} es parcial: el registro se congeló el 28 de septiembre.`
+          : `Each term’s split of the five-firm total, with the term years as lib/administrations.ts defines them (a transition year is credited to the outgoing government, because eleven of its twelve months belong to it). The sequence of leaders runs ${sequence.join(' → ')}. The last term holds only ${partial}, and ${partial} is partial — the register froze on 28 September.`
       }
     >
       <div className="px-2 pb-2">

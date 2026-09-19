@@ -331,8 +331,8 @@ function MethodologyProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           }}
         >
           {isEs
-            ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 (CAL-v8-202605020212) entrenado con 1,427 casos de corrupción documentados. La fuente federal se congeló el 28 de septiembre de 2025 tras la abolición de CompraNet; no existe reemplazo integral. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
-            : 'COMPRANET data 2002–2025. v0.8.5 risk model (CAL-v8-202605020212) trained on 1,427 documented corruption cases. The federal source froze on 28 September 2025 after CompraNet was abolished; no comprehensive replacement exists. Model signals are statistical indicators, not legal determinations.'}
+            ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 (CAL-v8-202605020212) entrenado con 1,417 casos de corrupción documentados. La fuente federal se congeló el 28 de septiembre de 2025 tras la abolición de CompraNet; no existe reemplazo integral. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
+            : 'COMPRANET data 2002–2025. v0.8.5 risk model (CAL-v8-202605020212) trained on 1,417 documented corruption cases. The federal source froze on 28 September 2025 after CompraNet was abolished; no comprehensive replacement exists. Model signals are statistical indicators, not legal determinations.'}
         </p>
         <p
           className="mt-3 font-mono"
@@ -601,9 +601,9 @@ export function Methodology() {
             <ClauseSection
               id="validation"
               numeral="III"
-              kicker={{ en: '§ 1,427 cases · 1,554 vendors · vendor-stratified hold-out', es: '§ 1,427 casos · 1,554 proveedores · retención estratificada por proveedor' }}
+              kicker={{ en: '§ 1,417 cases · 1,554 vendors · vendor-stratified hold-out', es: '§ 1,417 casos · 1,554 proveedores · retención estratificada por proveedor' }}
               title={{ en: 'The validation', es: 'La prueba' }}
-              dek={{ en: 'How the model performs against 1,427 documented cases — and why its headline number went down on purpose.', es: 'Cómo se desempeña el modelo frente a 1,427 casos documentados — y por qué su cifra principal bajó a propósito.' }}
+              dek={{ en: 'How the model performs against 1,417 documented cases — and why its headline number went down on purpose.', es: 'Cómo se desempeña el modelo frente a 1,417 casos documentados — y por qué su cifra principal bajó a propósito.' }}
             >
               <div className="space-y-6">
             <div className="space-y-4">

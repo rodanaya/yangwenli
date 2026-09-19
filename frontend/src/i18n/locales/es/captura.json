@@ -32,7 +32,7 @@
   "errorHint": "Intenta recargar la página. Si el problema persiste, es posible que el servicio esté temporalmente fuera de línea.",
   "whatIsCapture": {
     "label": "¿QUÉ ES LA CAPTURA INSTITUCIONAL?",
-    "body": "La captura institucional ocurre cuando un solo proveedor gana una porción tan grande de los contratos de una institución que efectivamente controla sus decisiones de compra. Según las directrices de la OCDE, cuando un proveedor acumula más del 30% del gasto total de contratación de una institución, es una señal de alerta significativa. Por encima del 50%, representa una dependencia casi total — un patrón asociado con colusión, contratos fantasma y corrupción sistémica.",
+    "body": "La captura institucional ocurre cuando un solo proveedor gana una porción tan grande de los contratos de una institución que efectivamente controla sus decisiones de compra. RUBLI trata una participación de proveedor superior al 30% del gasto total de contratación de una institución como bandera roja significativa; el umbral es de la plataforma, no un estándar internacional. Por encima del 50%, representa una dependencia casi total — un patrón asociado con colusión, contratos fantasma y corrupción sistémica.",
     "thresholds": {
       "total": "Captura Total — un proveedor controla >50% del gasto",
       "high": "Alto Riesgo — un proveedor tiene 30–50% del gasto",
@@ -87,7 +87,7 @@
   },
   "methodology": {
     "title": "Metodología",
-    "content": "Calculado sobre 3.05M contratos de contratación pública (2002–2025) con montos superiores a 100K MXN. El porcentaje de captura es la participación del proveedor en el gasto total de la institución a través de todos los tipos de contrato. Alta concentración (>30%) es un indicador de riesgo según las directrices de contratación de la OCDE. El color de la celda refleja la intensidad de la captura — el rojo más profundo indica mayor dependencia de un solo proveedor."
+    "content": "Calculado sobre 3.05M contratos de contratación pública (2002–2025) con montos superiores a 100K MXN. El porcentaje de captura es la participación del proveedor en el gasto total de la institución a través de todos los tipos de contrato. La alta concentración (>30%) es un indicador de riesgo de RUBLI, no un estándar internacional. El color de la celda refleja la intensidad de la captura — el rojo más profundo indica mayor dependencia de un solo proveedor."
   },
   "stats": {
     "capturedInstitutions": "INSTITUCIONES MOSTRADAS",

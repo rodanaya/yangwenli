@@ -55,7 +55,7 @@
       "avgAmount": "~{{value}} avg",
       "avgRisk": "Average Risk",
       "directAward": "Direct Award",
-      "oecd": "OECD: max 25%"
+      "oecd": "EU scoreboard: max 10%"
     },
     "sections": {
       "timeline": "Historical Trend",

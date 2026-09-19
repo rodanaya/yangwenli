@@ -6,7 +6,7 @@
     }
   },
   "competition.mexicoLabel": "Mexico",
-  "competition.oecdMin": "OECD minimum",
+  "competition.oecdMin": "EU scoreboard line",
   "competition.gapLabel": "Gap",
   "storyCarouselTitle": "The Story in Data",
   "pauseCarousel": "Pause",
@@ -19,7 +19,7 @@
     "daRecord": {
       "statLabel": "of contracts without competitive bidding — 2023",
       "headline": "The most opaque year in 23 years of data",
-      "body": "In the final full year of López Obrador's government, 82 of every 100 pesos in contracts went to companies that faced no competition — 3.3 times the OECD's recommended limit of 25%."
+      "body": "In the final full year of López Obrador's government, 82 of every 100 pesos in contracts went to companies that faced no competition — 8.2 times the 10% line the EU Single Market Scoreboard rates unsatisfactory."
     },
     "ghostCompanies": {
       "statLabel": "ghost companies identified post-2018",

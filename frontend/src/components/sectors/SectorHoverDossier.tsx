@@ -19,7 +19,7 @@ import { useQuery } from '@tanstack/react-query'
 import { sectorApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
-import { RISK_COLORS, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
+import { RISK_COLORS, EU_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { SectorTrajectoryPoint } from '@/api/types'
 import type { LedgerRow } from './ExposureLedger'
@@ -27,7 +27,7 @@ import { intensityColor, compactCount } from './ExposureLedger'
 import { ownSpendShare } from './confoundScales'
 
 // OECD direct-award ceiling as a percentage (0–100). Single source: constants.
-const OECD_DA_CEILING = OECD_DIRECT_AWARD_LIMIT * 100
+const EU_DA_LINE = EU_DIRECT_AWARD_LIMIT * 100
 
 // Direction of a risk trajectory — rising risk is the signal we tint amber.
 function trajectoryDirection(traj: SectorTrajectoryPoint[]): { glyph: string; rising: boolean } {
@@ -135,7 +135,7 @@ export function SectorDossierCard({
           className="font-mono shrink-0"
           style={{ fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
         >
-          DA · {isEs ? 'OCDE' : 'OECD'} ≤{OECD_DA_CEILING.toFixed(0)}%
+          DA · {isEs ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
         </span>
         <DABullet daPct={row.daPct} />
         <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>

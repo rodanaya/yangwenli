@@ -212,12 +212,18 @@ export const RISK_TEXT_COLORS = {
   low: '#71717a',       // zinc-500
 } as const
 
-// OECD procurement-integrity limits — the SINGLE source. Never retype these per
-// section (the 25%/30% same-metric contradiction on /vendors/:id came from doing
-// exactly that). Direct award ≤30%, single bid ≤10%; model high-risk baseline ~11%.
-// See docs/WEBSITE_STANDARDS.md anti-pattern A7.
-export const OECD_DIRECT_AWARD_LIMIT = 0.30
-export const OECD_SINGLE_BID_LIMIT = 0.10
+// Procurement-integrity reference lines — the SINGLE source. Never retype these
+// per section (the 25%/30% same-metric contradiction on /vendors/:id came from
+// doing exactly that). See docs/WEBSITE_STANDARDS.md anti-pattern A7.
+//
+// Both lines come from the European Commission's Single Market Scoreboard,
+// which publishes them with numbers: a direct-award share at or above 10% and a
+// single-bidder share above 20% are each rated unsatisfactory. The "OECD 25-30%
+// ceiling" these constants used to carry could not be traced to any published
+// OECD instrument (QC pass, Sep 2026) — the OECD's 2023 framework lists
+// indicators without stating thresholds.
+export const EU_DIRECT_AWARD_LIMIT = 0.10
+export const EU_SINGLE_BID_LIMIT = 0.20
 export const MODEL_HR_BASELINE = 0.11
 
 // Active risk model version (fallback — Dashboard fetches live from /analysis/model/metadata)

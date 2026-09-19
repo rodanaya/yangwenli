@@ -285,6 +285,7 @@ export function ChartCard({
   eyebrow,
   anchor,
   annotation,
+  source,
   stamp,
   lang,
   scrollMinW,
@@ -295,6 +296,11 @@ export function ChartCard({
   eyebrow?: string
   anchor?: { value: string; label: string; color?: string }
   annotation?: string
+  /** The endpoint(s) this figure reads, e.g. "/aria/patterns/P6/institutions".
+   *  Rendered once as a mono "Source / Fuente" line under the caption, so a
+   *  caption can open with what the picture shows instead of closing on a URL
+   *  (QC pass, Sep 2026). */
+  source?: string
   /** §D — opt-in provenance watermark. When present, renders a mono tag
    *  in the eyebrow row (right of eyebrow label, left of v0.8.5).
    *  Inspired by Ordnance Survey / ProPublica document-reader provenance.
@@ -441,6 +447,22 @@ export function ChartCard({
           }}
         >
           {annotation}
+        </p>
+      )}
+      {source && (
+        <p
+          className="w-full px-5 pb-4 font-mono"
+          style={{
+            fontSize: 11.5,
+            lineHeight: 1.5,
+            color: 'var(--color-text-muted)',
+            opacity: 0.85,
+            textWrap: 'pretty',
+            hyphens: 'none',
+          }}
+        >
+          {lang === 'es' ? 'Fuente: ' : 'Source: '}
+          {source}
         </p>
       )}
     </figure>

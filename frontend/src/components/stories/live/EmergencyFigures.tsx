@@ -153,6 +153,7 @@ function Floor({ rows, lang }: { rows: YearOverYearChange[]; lang: 'en' | 'es' }
 
   return (
     <ChartCard
+      source="/analysis/year-over-year"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -165,8 +166,8 @@ function Floor({ rows, lang }: { rows: YearOverYearChange[]; lang: 'en' | 'es' }
       }}
       annotation={
         es
-          ? `Los registros de CompraNet de 2002 a 2009 no traen el tipo de procedimiento, así que la serie de adjudicación directa empieza en ${first.year}. Desde entonces nunca ha bajado de ${pct(min.direct_award_pct)} (${min.year}). La OCDE considera que 15–20% es el tope de un sistema competitivo: la banda sombreada al pie. Cifras en vivo de /analysis/year-over-year.`
-          : `CompraNet's 2002–2009 records do not carry the award procedure, so the direct-award series begins in ${first.year}. It has never since fallen below ${pct(min.direct_award_pct)} (${min.year}). The OECD treats 15–20% as the ceiling of a competitive system — the shaded band at the foot. Figures live from /analysis/year-over-year.`
+          ? `Los registros de CompraNet de 2002 a 2009 no traen el tipo de procedimiento, así que la serie de adjudicación directa empieza en ${first.year}. Desde entonces nunca ha bajado de ${pct(min.direct_award_pct)} (${min.year}). La OCDE considera que 15–20% es el tope de un sistema competitivo: la banda sombreada al pie.`
+          : `CompraNet's 2002–2009 records do not carry the award procedure, so the direct-award series begins in ${first.year}. It has never since fallen below ${pct(min.direct_award_pct)} (${min.year}). The OECD treats 15–20% as the ceiling of a competitive system — the shaded band at the foot.`
       }
     >
       <div className="px-2 pt-6">
@@ -181,7 +182,7 @@ function Floor({ rows, lang }: { rows: YearOverYearChange[]; lang: 'en' | 'es' }
               from: 15,
               to: 20,
               color: ACCENT,
-              label: es ? 'banda OCDE 15–20%' : 'OECD band 15–20%',
+              label: es ? 'banda de la OCDE 15–20%' : 'OECD band 15–20%',
             },
           ]}
           rules={[
@@ -306,6 +307,7 @@ function MonthsFigure({
 
   return (
     <ChartCard
+      source="/analysis/monthly-breakdown"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -319,8 +321,8 @@ function MonthsFigure({
       }}
       annotation={
         es
-          ? `${stageNote} Adjudicación directa como porcentaje de los contratos del mes (Tasa) o monto adjudicado en el mes (Monto), enero 2019 – diciembre 2021. Cifras en vivo de /analysis/monthly-breakdown.`
-          : `${stageNote} Direct award as a share of the month's contracts (Rate), or the month's awarded value (Value), January 2019 – December 2021. Figures live from /analysis/monthly-breakdown.`
+          ? `${stageNote} Adjudicación directa como porcentaje de los contratos del mes (Tasa) o monto adjudicado en el mes (Monto), enero 2019 – diciembre 2021.`
+          : `${stageNote} Direct award as a share of the month's contracts (Rate), or the month's awarded value (Value), January 2019 – December 2021.`
       }
     >
       <div className="px-2">
@@ -446,6 +448,7 @@ function Calendar({
 
   return (
     <ChartCard
+      source="/vendors/${HEMOSER_ID}/contracts"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -457,8 +460,8 @@ function Calendar({
       }}
       annotation={
         es
-          ? `Una celda por día de 2020; se llena cuando HEMOSER tiene al menos una adjudicación con esa fecha de contrato. Rojo = todas las adjudicaciones de ese día fueron directas; gris = al menos una salió por licitación. La opacidad marca el monto del día en tres escalones: < ${formatCompactMXN(DAY_STEPS[0])} · ${formatCompactMXN(DAY_STEPS[0])}–${formatCompactMXN(DAY_STEPS[1])} · > ${formatCompactMXN(DAY_STEPS[1])}. Los registros traen la fecha de adjudicación, no la de solicitud: el conteo de "mismo día" es un rasgo del modelo (z_same_day_count) y no se dibuja aquí. Cifras en vivo de /vendors/${HEMOSER_ID}/contracts.`
-          : `One cell per day of 2020, filled when HEMOSER has at least one award carrying that contract date. Red = every award that day was direct; grey = at least one went through a tender. Opacity steps the day's total in three: < ${formatCompactMXN(DAY_STEPS[0])} · ${formatCompactMXN(DAY_STEPS[0])}–${formatCompactMXN(DAY_STEPS[1])} · > ${formatCompactMXN(DAY_STEPS[1])}. The records carry the award date, not the request date: the same-day count is a model feature (z_same_day_count) and is not drawn here. Figures live from /vendors/${HEMOSER_ID}/contracts.`
+          ? `Una celda por día de 2020; se llena cuando HEMOSER tiene al menos una adjudicación con esa fecha de contrato. Rojo = todas las adjudicaciones de ese día fueron directas; gris = al menos una salió por licitación. La opacidad marca el monto del día en tres escalones: < ${formatCompactMXN(DAY_STEPS[0])} · ${formatCompactMXN(DAY_STEPS[0])}–${formatCompactMXN(DAY_STEPS[1])} · > ${formatCompactMXN(DAY_STEPS[1])}. Los registros traen la fecha de adjudicación, no la de solicitud: el conteo de "mismo día" es un rasgo del modelo (z_same_day_count) y no se dibuja aquí.`
+          : `One cell per day of 2020, filled when HEMOSER has at least one award carrying that contract date. Red = every award that day was direct; grey = at least one went through a tender. Opacity steps the day's total in three: < ${formatCompactMXN(DAY_STEPS[0])} · ${formatCompactMXN(DAY_STEPS[0])}–${formatCompactMXN(DAY_STEPS[1])} · > ${formatCompactMXN(DAY_STEPS[1])}. The records carry the award date, not the request date: the same-day count is a model feature (z_same_day_count) and is not drawn here.`
       }
     >
       <div className="px-2 pb-2">
@@ -646,6 +649,7 @@ function Ratchet({ rows, lang }: { rows: YearOverYearChange[]; lang: 'en' | 'es'
 
   return (
     <ChartCard
+      source="/analysis/year-over-year"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -659,8 +663,8 @@ function Ratchet({ rows, lang }: { rows: YearOverYearChange[]; lang: 'en' | 'es'
       }}
       annotation={
         es
-          ? `Serie anual ${series[0].year}–${series[series.length - 1].year}; 2025 se omite porque el corte de datos se congeló el 28 de septiembre de ese año. La regla punteada es el promedio 2015–2019 (${pct(preMean)}); la banda sombreada va del año post-emergencia más bajo (${pct(postLow.v)}, ${postLow.y}) al más alto (${pct(postHigh.v)}, ${postHigh.y}). El más bajo de esos cuatro años supera a cualquier año anterior a la pandemia, cuyo máximo fue ${pct(preMax)}. Cifras en vivo de /analysis/year-over-year.`
-          : `Annual series ${series[0].year}–${series[series.length - 1].year}; 2025 is left out because the data cut froze on September 28 of that year. The dashed rule is the 2015–2019 mean (${pct(preMean)}); the shaded band runs from the lowest post-emergency year (${pct(postLow.v)}, ${postLow.y}) to the highest (${pct(postHigh.v)}, ${postHigh.y}). The lowest of those four years is above every pre-pandemic year on record, whose highest was ${pct(preMax)}. Figures live from /analysis/year-over-year.`
+          ? `Serie anual ${series[0].year}–${series[series.length - 1].year}; 2025 se omite porque el corte de datos se congeló el 28 de septiembre de ese año. La regla punteada es el promedio 2015–2019 (${pct(preMean)}); la banda sombreada va del año post-emergencia más bajo (${pct(postLow.v)}, ${postLow.y}) al más alto (${pct(postHigh.v)}, ${postHigh.y}). El más bajo de esos cuatro años supera a cualquier año anterior a la pandemia, cuyo máximo fue ${pct(preMax)}.`
+          : `Annual series ${series[0].year}–${series[series.length - 1].year}; 2025 is left out because the data cut froze on September 28 of that year. The dashed rule is the 2015–2019 mean (${pct(preMean)}); the shaded band runs from the lowest post-emergency year (${pct(postLow.v)}, ${postLow.y}) to the highest (${pct(postHigh.v)}, ${postHigh.y}). The lowest of those four years is above every pre-pandemic year on record, whose highest was ${pct(preMax)}.`
       }
     >
       <div className="px-2 pt-6">
@@ -747,6 +751,7 @@ function Dumbbell({
 
   return (
     <ChartCard
+      source="/sectors?year="
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -758,8 +763,8 @@ function Dumbbell({
       }}
       annotation={
         es
-          ? `Tasa de adjudicación directa por sector, 2019 → 2020, ordenada por el cambio. El punto hueco es 2019, el lleno 2020; rojo cuando la tasa sube, gris cuando baja. Sólo ${rows.filter((r) => r.d > 0).length} de ${rows.length} sectores se volvieron más directos en el año de la emergencia; ${bottom.name} se movió en sentido contrario, ${bottom.d.toFixed(1)} puntos. La paleta sectorial no se usa aquí: el color codifica la dirección, no el sector. Cifras en vivo de /sectors?year=.`
-          : `Direct-award rate by sector, 2019 → 2020, ordered by the change. The hollow dot is 2019, the filled one 2020; red where the rate rose, grey where it fell. Only ${rows.filter((r) => r.d > 0).length} of ${rows.length} sectors got more direct in the emergency year; ${bottom.name} moved the other way, by ${bottom.d.toFixed(1)} points. The sector palette is not used here — colour encodes direction, not sector. Figures live from /sectors?year=.`
+          ? `Tasa de adjudicación directa por sector, 2019 → 2020, ordenada por el cambio. El punto hueco es 2019, el lleno 2020; rojo cuando la tasa sube, gris cuando baja. Sólo ${rows.filter((r) => r.d > 0).length} de ${rows.length} sectores se volvieron más directos en el año de la emergencia; ${bottom.name} se movió en sentido contrario, ${bottom.d.toFixed(1)} puntos. La paleta sectorial no se usa aquí: el color codifica la dirección, no el sector.`
+          : `Direct-award rate by sector, 2019 → 2020, ordered by the change. The hollow dot is 2019, the filled one 2020; red where the rate rose, grey where it fell. Only ${rows.filter((r) => r.d > 0).length} of ${rows.length} sectors got more direct in the emergency year; ${bottom.name} moved the other way, by ${bottom.d.toFixed(1)} points. The sector palette is not used here — colour encodes direction, not sector.`
       }
     >
       <div className="px-2 pb-2">

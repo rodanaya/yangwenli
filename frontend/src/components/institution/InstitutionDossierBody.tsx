@@ -31,8 +31,8 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   RISK_COLORS,
   RISK_TEXT_COLORS,
-  OECD_DIRECT_AWARD_LIMIT,
-  OECD_SINGLE_BID_LIMIT,
+  EU_DIRECT_AWARD_LIMIT,
+  EU_SINGLE_BID_LIMIT,
   MODEL_HR_BASELINE,
   getRiskLevelFromScore,
 } from '@/lib/constants'
@@ -105,8 +105,8 @@ export function InstitutionReading({
   const da = ratePct(institution.direct_award_pct ?? institution.direct_award_rate)
   const sb = ratePct(institution.single_bid_pct)
   const hr = ratePct(institution.high_risk_pct ?? institution.high_risk_percentage)
-  const daLim = OECD_DIRECT_AWARD_LIMIT * 100
-  const sbLim = OECD_SINGLE_BID_LIMIT * 100
+  const daLim = EU_DIRECT_AWARD_LIMIT * 100
+  const sbLim = EU_SINGLE_BID_LIMIT * 100
   const hrLim = MODEL_HR_BASELINE * 100
   const benchRows: BenchRow[] = []
   if (da != null) benchRows.push({ label: isEs ? 'Adjudicación directa' : 'Direct award', pct: da, limit: daLim, over: da > daLim })

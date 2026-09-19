@@ -60,7 +60,7 @@
   "notes": {
     "allContracts": "Todos los contratos adjudicados, 2002–2025",
     "vsNational": "vs. ~48% promedio nacional",
-    "oecdBenchmark": "Referencia OCDE: 2–15%"
+    "oecdBenchmark": "Meta de calibración: 2–15%"
   },
   "timeline": {
     "heading": "{{total}} Contratos, {{minYear}}–{{maxYear}}",
@@ -175,7 +175,7 @@
     "peakRiskLabel": "{{year}} — {{pct}}% puntuación prom.",
     "chartValueLabel": "Valor de Contratos por Año (millones MXN)",
     "chartRiskLabel": "Puntuación de Riesgo Promedio por Año (%)",
-    "riskNote": "Umbrales de riesgo: Crítico ≥60%, Alto ≥40%, Medio ≥25%. Referencia OCDE: 2–15% alto riesgo."
+    "riskNote": "Umbrales de riesgo: Crítico ≥60%, Alto ≥40%, Medio ≥25%. Meta de calibración: 2–15% de alto riesgo."
   },
   "verdict": {
     "heading": "Resumen de Investigación",

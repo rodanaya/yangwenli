@@ -44,7 +44,7 @@ const INVESTIGATIONS: Investigation[] = [
   {
     slug: 'el-sexenio-del-riesgo',
     headline: 'The Ledger of Five Administrations',
-    headline_es: 'El Libro Mayor de Cinco Sexenios',
+    headline_es: 'El libro mayor de cinco sexenios',
     sub: 'AMLO term HR 12.53% · v0.8.5',
     sub_es: 'Sexenio AMLO AR 12.53% · v0.8.5',
     type: 'procurement_fraud',
@@ -58,8 +58,8 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'el-vacio',
-    headline: 'A Government Erased Its Own Procurement Record',
-    headline_es: 'Un Gobierno Borró Su Propio Registro de Compras',
+    headline: 'A Government Erased Its Own Procurement Record. We Rebuilt 94,899 Contracts It Stopped Publishing.',
+    headline_es: 'Un gobierno borró su propio registro de compras. Reconstruimos los 94,899 contratos que dejó de publicar.',
     sub: 'ComprasMX gap · 78.4% direct award',
     sub_es: 'Hueco ComprasMX · 78.4% adjudicación directa',
     type: 'procurement_fraud',
@@ -105,8 +105,8 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'el-monopolio-invisible',
-    headline: 'The 44 Monopolists Who Ate Their Sector',
-    headline_es: 'Los 44 Monopolistas Que Se Comieron Su Sector',
+    headline: 'Anatomy of a Captured Market',
+    headline_es: 'Anatomía de un mercado capturado',
     sub: 'Grupo Fármacos · IMSS',
     type: 'monopoly',
     status: 'reporteado',
@@ -120,7 +120,7 @@ const INVESTIGATIONS: Investigation[] = [
   {
     slug: 'el-ano-de-la-emergencia',
     headline: 'The Ratchet: Competition Never Came Back',
-    headline_es: 'El Trinquete: La Competencia Nunca Regresó',
+    headline_es: 'El trinquete: la competencia nunca regresó',
     sub: 'Post-emergency floor 79.1% · above every pre-2020 year',
     sub_es: 'Piso post-emergencia 79.1% · por encima de todo año pre-2020',
     type: 'procurement_fraud',
@@ -135,7 +135,7 @@ const INVESTIGATIONS: Investigation[] = [
   {
     slug: 'la-ilusion-competitiva',
     headline: 'Now You See Competition',
-    headline_es: 'Ahora Ve Usted la Competencia',
+    headline_es: 'Ahora usted ve competencia',
     sub: 'Single-bid "competitive" tenders',
     type: 'procurement_fraud',
     status: 'reporteado',
@@ -168,10 +168,10 @@ const INVESTIGATIONS: Investigation[] = [
     // Matches the story's own h1 (SD-06). The card and the page must not greet
     // a reader with two different titles for the same investigation.
     headline: 'The Man Who Won 370 Million Pesos and Disappeared',
-    headline_es: 'El Hombre Que Ganó 370 Millones de Pesos y Desapareció',
+    headline_es: 'El hombre que ganó 370 millones de pesos y desapareció',
     sub: 'P2 ghost-company pattern',
     type: 'ghost_company',
-    status: 'reporteado',
+    status: 'solo_datos',
     // Billions of pesos, as the renderer reads it — the P2 cohort's lifetime
     // federal contracting, 39.6B.
     amount: 39.6,
@@ -183,11 +183,11 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'el-gran-precio',
-    headline: 'The Bigger the Contract, the Higher the Risk',
-    headline_es: 'Mientras Más Grande el Contrato, Mayor el Riesgo',
+    headline: 'The Contracts No One Is Watching Are the Biggest Ones',
+    headline_es: 'Los contratos que nadie vigila son los más grandes',
     sub: '40 mega-contracts above 10B',
     type: 'overpricing',
-    status: 'solo_datos',
+    status: 'reporteado',
     amount: 0,
     era: 'cross',
     contracts: 3000000,
@@ -200,10 +200,10 @@ const INVESTIGATIONS: Investigation[] = [
     // Matches the story's own h1 (SD-05). The card and the page must not
     // greet a reader with two different titles for the same investigation.
     headline: 'Follow the Middleman',
-    headline_es: 'Sigan al Intermediario',
+    headline_es: 'Sigan al intermediario',
     sub: 'P3 pass-through vendors',
     type: 'procurement_fraud',
-    status: 'reporteado',
+    status: 'solo_datos',
     // Billions of pesos, as the renderer reads it — the P3 cohort's lifetime
     // federal contracting, 556.5B.
     amount: 556,
@@ -230,8 +230,8 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'volatilidad-el-precio-del-riesgo',
-    headline: "Price Volatility: The Algorithm's Smoking Gun",
-    headline_es: 'Volatilidad de Precio: La Huella del Algoritmo',
+    headline: "The Smoking Gun Is a Number",
+    headline_es: 'La pistola humeante es un número',
     sub: 'Strongest predictor · v0.8.5',
     type: 'overpricing',
     status: 'solo_datos',

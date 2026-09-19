@@ -18,7 +18,7 @@
  * this is a position instrument, not a risk-severity one.
  */
 import { useMemo } from 'react'
-import { OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
+import { EU_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { CategorySummaryItem } from '@/components/categories/types'
 import { CONTRACT_FLOOR } from '@/components/categories/types'
@@ -30,7 +30,7 @@ export interface KardexPosicionProps {
   lang: 'en' | 'es'
 }
 
-const DA_LIMIT_PCT = OECD_DIRECT_AWARD_LIMIT * 100
+const DA_LIMIT_PCT = EU_DIRECT_AWARD_LIMIT * 100
 const TRACK_H = 22
 const DOT_R = 3.5
 

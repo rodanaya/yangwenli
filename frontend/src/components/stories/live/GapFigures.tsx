@@ -57,13 +57,13 @@ function chromeFor(kind: GapFigureKind, es: boolean): Chrome {
             eyebrow: 'FIGURA I · EL REGISTRO',
             title: 'Veintitrés años de registro, luego silencio',
             annotation:
-              'Diagrama, no escala: la regla sólida es el flujo oficial de CompraNet de 2002 al 28 de septiembre de 2025; la punteada es lo que RUBLI recuperó del portal sucesor desde entonces. Cifras en vivo de /gap/summary.',
+              'Diagrama, no escala: la regla sólida es el flujo oficial de CompraNet de 2002 al 28 de septiembre de 2025; la punteada es lo que RUBLI recuperó del portal sucesor desde entonces.',
           }
         : {
             eyebrow: 'FIGURE I · THE RECORD',
             title: 'Twenty-three years of record, then silence',
             annotation:
-              'A diagram, not a scale: the solid rule is the official CompraNet feed from 2002 to September 28 2025; the dashed one is what RUBLI recovered from the successor portal after it. Figures live from /gap/summary.',
+              'A diagram, not a scale: the solid rule is the official CompraNet feed from 2002 to September 28 2025; the dashed one is what RUBLI recovered from the successor portal after it.',
           }
     case 'gap-funnel':
       return es
@@ -85,13 +85,13 @@ function chromeFor(kind: GapFigureKind, es: boolean): Chrome {
             eyebrow: 'FIGURA III · LAS EXCEPCIONES',
             title: 'Las puertas legales por las que pasaron las adjudicaciones',
             annotation:
-              'Cada adjudicación sin concurso debe citar el artículo que la exenta de licitar. Art. 55 es el umbral de bajo monto (rutinario); las fracciones del Art. 54 son discrecionales. Cifras en vivo de /gap/summary.',
+              'Cada adjudicación sin concurso debe citar el artículo que la exenta de licitar. Art. 55 es el umbral de bajo monto (rutinario); las fracciones del Art. 54 son discrecionales.',
           }
         : {
             eyebrow: 'FIGURE III · THE EXCEPTIONS',
             title: 'The legal doors the awards walked through',
             annotation:
-              'Every no-bid award must cite the article that exempts it from tendering. Art. 55 is the low-value threshold (routine); the Art. 54 fractions are discretionary. Figures live from /gap/summary.',
+              'Every no-bid award must cite the article that exempts it from tendering. Art. 55 is the low-value threshold (routine); the Art. 54 fractions are discretionary.',
           }
     case 'gap-buyers':
       return es
@@ -99,13 +99,13 @@ function chromeFor(kind: GapFigureKind, es: boolean): Chrome {
             eyebrow: 'FIGURA IV · LOS COMPRADORES',
             title: 'Quién compró a oscuras',
             annotation:
-              'Clic en una institución para abrir el registro de /gap ya filtrado por ella. El indicador 0–100 es estructural (mínimo 50 adjudicaciones por institución) — no es el modelo v0.8.5.',
+              'Clic en una institución para abrir el registro de /gap ya filtrado por ella. El indicador 0–100 cuenta solo lo que el registro recuperado todavía muestra — sin competencia, sin precio publicado, una excepción discrecional, el tamaño del contrato — sobre instituciones con al menos 50 adjudicaciones. No es el modelo de riesgo entrenado de RUBLI, que los datos posteriores al congelamiento no pueden sostener.',
           }
         : {
             eyebrow: 'FIGURE IV · THE BUYERS',
             title: 'Who bought in the dark',
             annotation:
-              'Click an institution to open the /gap register already filtered to it. The 0–100 indicator is structural (minimum 50 awards per institution) — it is not the v0.8.5 model.',
+              'Click an institution to open the /gap register already filtered to it. The 0–100 indicator counts only what the recovered record still shows — no competition, no published price, a discretionary exemption, contract size — over institutions with at least 50 awards. It is not RUBLI\'s trained risk model, which post-freeze data cannot support.',
           }
     case 'gap-grade':
       return es
@@ -113,13 +113,13 @@ function chromeFor(kind: GapFigureKind, es: boolean): Chrome {
             eyebrow: 'FIGURA V · LA CALIFICACIÓN',
             title: 'La oscuridad, calificada',
             annotation:
-              'Distribución de las cuatro bandas del indicador estructural sobre todas las adjudicaciones recuperadas. Cifras en vivo de /gap/summary.',
+              'Distribución de las cuatro bandas del indicador estructural sobre todas las adjudicaciones recuperadas.',
           }
         : {
             eyebrow: 'FIGURE V · THE GRADE',
             title: 'The dark, graded',
             annotation:
-              'The four-band distribution of the structural indicator across every recovered award. Figures live from /gap/summary.',
+              'The four-band distribution of the structural indicator across every recovered award.',
           }
   }
 }
@@ -169,6 +169,7 @@ function Blackout({ s, lang, stage }: { s: GapSummaryResponse; lang: 'en' | 'es'
       title={c.title}
       lang={lang}
       stamp={STAMP}
+      source="/gap/summary"
       annotation={c.annotation}
       anchor={{
         value: formatNumber(s.total_contracts),
@@ -197,6 +198,7 @@ function Funnel({ s, lang }: { s: GapSummaryResponse; lang: 'en' | 'es' }) {
       title={c.title}
       lang={lang}
       stamp={STAMP}
+      source="/gap/summary"
       annotation={c.annotation}
       anchor={{ value: recovered, label: es ? 'leído de las imágenes' : 'read off the images' }}
     >
@@ -241,6 +243,7 @@ function Exceptions({ s, lang }: { s: GapSummaryResponse; lang: 'en' | 'es' }) {
       title={c.title}
       lang={lang}
       stamp={STAMP}
+      source="/gap/summary"
       annotation={c.annotation}
       anchor={
         threshold
@@ -275,6 +278,7 @@ function Buyers({ s, lang }: { s: GapSummaryResponse; lang: 'en' | 'es' }) {
       title={c.title}
       lang={lang}
       stamp={STAMP}
+      source="/gap/summary"
       annotation={c.annotation}
       anchor={{
         value: formatNumber(s.young_vendor_count),
@@ -314,6 +318,7 @@ function Grade({ s, lang }: { s: GapSummaryResponse; lang: 'en' | 'es' }) {
       title={c.title}
       lang={lang}
       stamp={STAMP}
+      source="/gap/summary"
       annotation={c.annotation}
       anchor={
         alertPct

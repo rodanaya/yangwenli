@@ -18,8 +18,8 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   RISK_COLORS,
   RISK_TEXT_COLORS,
-  OECD_DIRECT_AWARD_LIMIT,
-  OECD_SINGLE_BID_LIMIT,
+  EU_DIRECT_AWARD_LIMIT,
+  EU_SINGLE_BID_LIMIT,
   MODEL_HR_BASELINE,
   getRiskLevelFromScore,
 } from '@/lib/constants'
@@ -102,8 +102,8 @@ export function CategoryStatStrip({
   const maxY = years.length ? Math.max(...years) : null
   const span = minY != null && maxY != null ? maxY - minY + 1 : null
 
-  const daLimit = OECD_DIRECT_AWARD_LIMIT * 100
-  const sbLimit = OECD_SINGLE_BID_LIMIT * 100
+  const daLimit = EU_DIRECT_AWARD_LIMIT * 100
+  const sbLimit = EU_SINGLE_BID_LIMIT * 100
   const daColor = da == null ? undefined : da > daLimit ? RISK_TEXT_COLORS.critical : da > daLimit / 2 ? RISK_TEXT_COLORS.high : undefined
   const sbColor = sb == null ? undefined : sb > sbLimit ? RISK_TEXT_COLORS.critical : sb > sbLimit / 2 ? RISK_TEXT_COLORS.high : undefined
   const hrColor = hr == null ? undefined : hr >= 25 ? RISK_TEXT_COLORS.critical : hr >= 15 ? RISK_TEXT_COLORS.high : undefined
@@ -128,13 +128,13 @@ export function CategoryStatStrip({
     da == null ? null : {
       label: isEs ? 'Adj. directa' : 'Direct award',
       value: `${Math.round(da)}%`,
-      sub: da > daLimit ? `${(da / daLimit).toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? `≤${daLimit}% OCDE` : `≤${daLimit}% OECD`),
+      sub: da > daLimit ? `${(da / daLimit).toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? `≤${daLimit}% UE` : `≤${daLimit}% OECD`),
       color: daColor,
     },
     sb == null || sb === 0 ? null : {
       label: isEs ? 'Único postor' : 'Single bid',
       value: `${Math.round(sb)}%`,
-      sub: sb > sbLimit ? `${(sb / sbLimit).toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? `≤${sbLimit}% OCDE` : `≤${sbLimit}% OECD`),
+      sub: sb > sbLimit ? `${(sb / sbLimit).toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? `≤${sbLimit}% UE` : `≤${sbLimit}% OECD`),
       color: sbColor,
     },
     avgRisk == null ? null : {
@@ -184,7 +184,7 @@ export function CategoryDiagnosticGrid({
 
   // OECD deviation
   const da = clampPct(category.direct_award_pct), sb = clampPct(category.single_bid_pct), hr = clampPct(category.high_risk_pct)
-  const daLim = OECD_DIRECT_AWARD_LIMIT * 100, sbLim = OECD_SINGLE_BID_LIMIT * 100, hrLim = MODEL_HR_BASELINE * 100
+  const daLim = EU_DIRECT_AWARD_LIMIT * 100, sbLim = EU_SINGLE_BID_LIMIT * 100, hrLim = MODEL_HR_BASELINE * 100
   const benchRows: BenchRow[] = []
   if (da != null) benchRows.push({ label: isEs ? 'Adjudicación directa' : 'Direct award', pct: da, limit: daLim, over: da > daLim })
   if (sb != null && sb > 0) benchRows.push({ label: isEs ? 'Único postor' : 'Single bid', pct: sb, limit: sbLim, over: sb > sbLim })

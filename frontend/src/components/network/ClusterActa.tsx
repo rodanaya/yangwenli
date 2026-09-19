@@ -17,8 +17,8 @@
 import type { ReactNode } from 'react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
-  OECD_DIRECT_AWARD_LIMIT,
-  OECD_SINGLE_BID_LIMIT,
+  EU_DIRECT_AWARD_LIMIT,
+  EU_SINGLE_BID_LIMIT,
   PATTERN_COLORS,
   RISK_COLORS,
   RISK_TEXT_COLORS,
@@ -157,8 +157,8 @@ export function ClusterActa({
   // ── Los cargos ──────────────────────────────────────────────────────────
   const daRate = graph.stats.da_rate ?? 0
   const sbRate = graph.stats.sb_rate ?? 0
-  const daDelta = Math.round((daRate - OECD_DIRECT_AWARD_LIMIT) * 100)
-  const sbDelta = Math.round((sbRate - OECD_SINGLE_BID_LIMIT) * 100)
+  const daDelta = Math.round((daRate - EU_DIRECT_AWARD_LIMIT) * 100)
+  const sbDelta = Math.round((sbRate - EU_SINGLE_BID_LIMIT) * 100)
   const daAbove = daDelta > 0
   const sbAbove = sbDelta > 0
 
@@ -216,13 +216,13 @@ export function ClusterActa({
               color={daAbove ? RISK_COLORS.critical : 'var(--color-text-muted)'}
             >
               {isEs
-                ? `Adjudicación directa ${Math.round(daRate * 100)}% — ${daAbove ? '↑' : '↓'}${Math.abs(daDelta)}pp ${daAbove ? 'por encima del' : 'por debajo del'} techo OCDE (${Math.round(OECD_DIRECT_AWARD_LIMIT * 100)}%)`
-                : `Direct award ${Math.round(daRate * 100)}% — ${daAbove ? '↑' : '↓'}${Math.abs(daDelta)}pp ${daAbove ? 'above' : 'below'} the OECD ceiling (${Math.round(OECD_DIRECT_AWARD_LIMIT * 100)}%)`}
+                ? `Adjudicación directa ${Math.round(daRate * 100)}% — ${daAbove ? '↑' : '↓'}${Math.abs(daDelta)}pp ${daAbove ? 'por encima de' : 'por debajo de'} la línea UE (${Math.round(EU_DIRECT_AWARD_LIMIT * 100)}%)`
+                : `Direct award ${Math.round(daRate * 100)}% — ${daAbove ? '↑' : '↓'}${Math.abs(daDelta)}pp ${daAbove ? 'above' : 'below'} the EU line (${Math.round(EU_DIRECT_AWARD_LIMIT * 100)}%)`}
               <DeviationRow
                 label=""
                 value={daRate}
-                benchmark={OECD_DIRECT_AWARD_LIMIT}
-                benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
+                benchmark={EU_DIRECT_AWARD_LIMIT}
+                benchmarkLabel={isEs ? 'UE' : 'EU'}
                 maxDelta={0.75}
               />
             </ChargeRow>
@@ -232,13 +232,13 @@ export function ClusterActa({
               color={sbAbove ? RISK_COLORS.critical : 'var(--color-text-muted)'}
             >
               {isEs
-                ? `Propuesta única ${Math.round(sbRate * 100)}% — ${sbAbove ? '↑' : '↓'}${Math.abs(sbDelta)}pp ${sbAbove ? 'por encima del' : 'por debajo del'} techo OCDE (${Math.round(OECD_SINGLE_BID_LIMIT * 100)}%)`
-                : `Single bid ${Math.round(sbRate * 100)}% — ${sbAbove ? '↑' : '↓'}${Math.abs(sbDelta)}pp ${sbAbove ? 'above' : 'below'} the OECD ceiling (${Math.round(OECD_SINGLE_BID_LIMIT * 100)}%)`}
+                ? `Propuesta única ${Math.round(sbRate * 100)}% — ${sbAbove ? '↑' : '↓'}${Math.abs(sbDelta)}pp ${sbAbove ? 'por encima de' : 'por debajo de'} la línea UE (${Math.round(EU_SINGLE_BID_LIMIT * 100)}%)`
+                : `Single bid ${Math.round(sbRate * 100)}% — ${sbAbove ? '↑' : '↓'}${Math.abs(sbDelta)}pp ${sbAbove ? 'above' : 'below'} the EU line (${Math.round(EU_SINGLE_BID_LIMIT * 100)}%)`}
               <DeviationRow
                 label=""
                 value={sbRate}
-                benchmark={OECD_SINGLE_BID_LIMIT}
-                benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
+                benchmark={EU_SINGLE_BID_LIMIT}
+                benchmarkLabel={isEs ? 'UE' : 'EU'}
                 maxDelta={0.75}
               />
             </ChargeRow>

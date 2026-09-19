@@ -46,7 +46,7 @@ export interface DotStripProps {
   N?: number
   /** Horizontal (default) or vertical columns */
   orientation?: 'horizontal' | 'vertical'
-  /** OECD cyan mark at this fraction (0–1). Renders as dashed vertical rule. */
+  /** Reference mark at this fraction (0–1). Renders as dashed vertical rule. */
   oecdMark?: { fraction: number; label?: string }
   /** If true, empty dots use dark-context fill (for dark cards/modals) */
   darkContext?: boolean
@@ -180,7 +180,7 @@ export function DotStrip({
       </ul>
       {oecdMark && (
         <div className="text-[12px] font-mono text-oecd mt-1.5">
-          {oecdMark.label ?? `OCDE · ${Math.round(oecdMark.fraction * 100)}%`}
+          {oecdMark.label ?? `UE · ${Math.round(oecdMark.fraction * 100)}%`}
         </div>
       )}
     </div>

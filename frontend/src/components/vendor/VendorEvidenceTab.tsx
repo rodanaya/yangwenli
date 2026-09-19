@@ -418,7 +418,7 @@ function VendorBenchmarkBars({
       label: isEs ? 'Adjudicación directa' : 'Direct award rate',
       value: directAwardPct,
       benchmark: 0.30,
-      benchmarkLabel: isEs ? 'límite OCDE' : 'OECD limit',
+      benchmarkLabel: isEs ? 'línea UE' : 'EU line',
       maxDelta: MAX_DELTA,
     })
   }
@@ -428,7 +428,7 @@ function VendorBenchmarkBars({
       label: isEs ? 'Licitación sin competencia' : 'Single-bid rate',
       value: singleBidPct,
       benchmark: 0.10,
-      benchmarkLabel: isEs ? 'límite OCDE' : 'OECD limit',
+      benchmarkLabel: isEs ? 'línea UE' : 'EU line',
       maxDelta: MAX_DELTA,
     })
   }

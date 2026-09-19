@@ -32,7 +32,7 @@
   "errorHint": "Try reloading the page. If the problem persists, the service may be temporarily offline.",
   "whatIsCapture": {
     "label": "WHAT IS INSTITUTIONAL CAPTURE?",
-    "body": "Institutional capture occurs when a single vendor wins such a large share of an institution's contracts that it effectively controls the institution's purchasing decisions. According to OECD guidelines, when one vendor accounts for more than 30% of an institution's total procurement spend, it is a significant red flag. Above 50%, it represents near-total dependence — a pattern associated with bid rigging, ghost contracts, and systemic corruption.",
+    "body": "Institutional capture occurs when a single vendor wins such a large share of an institution's contracts that it effectively controls the institution's purchasing decisions. RUBLI treats a vendor share above 30% of an institution's total procurement spend as a significant red flag; the threshold is the platform's own, not an international standard. Above 50%, it represents near-total dependence — a pattern associated with bid rigging, ghost contracts, and systemic corruption.",
     "thresholds": {
       "total": "Total Capture — one vendor controls >50% of spend",
       "high": "High Risk — one vendor holds 30–50% of spend",
@@ -87,7 +87,7 @@
   },
   "methodology": {
     "title": "Methodology",
-    "content": "Calculated from 3.05M procurement contracts (2002–2025) with amounts above 100K MXN. The capture percentage is the vendor's share of the institution's total procurement spend across all contract types. High concentration (>30%) is a risk indicator per OECD procurement guidelines. Cell color reflects the intensity of capture — deeper red means greater dependence on a single vendor."
+    "content": "Calculated from 3.05M procurement contracts (2002–2025) with amounts above 100K MXN. The capture percentage is the vendor's share of the institution's total procurement spend across all contract types. High concentration (>30%) is a RUBLI risk indicator, not an international standard. Cell color reflects the intensity of capture — deeper red means greater dependence on a single vendor."
   },
   "stats": {
     "capturedInstitutions": "INSTITUTIONS SHOWN",

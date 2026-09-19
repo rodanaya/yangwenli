@@ -22,8 +22,8 @@ import {
   RISK_TEXT_COLORS,
   SECTOR_COLORS,
   SECTORS,
-  OECD_DIRECT_AWARD_LIMIT,
-  OECD_SINGLE_BID_LIMIT,
+  EU_DIRECT_AWARD_LIMIT,
+  EU_SINGLE_BID_LIMIT,
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import {
@@ -263,8 +263,8 @@ function DualSeal({
   const da = institution.direct_award_pct ?? institution.direct_award_rate ?? 0
   const sb = institution.single_bid_pct ?? 0
   const hhi5 = institution.supplier_diversity?.hhi_5yr_avg ?? null
-  const daLim = OECD_DIRECT_AWARD_LIMIT * 100
-  const sbLim = OECD_SINGLE_BID_LIMIT * 100
+  const daLim = EU_DIRECT_AWARD_LIMIT * 100
+  const sbLim = EU_SINGLE_BID_LIMIT * 100
   const HHI_LIM = 4000 // Prozorro concentrated-purchasing line
   const dims = [
     { key: 'da' as const, ratio: daLim > 0 ? da / daLim : 0 },
@@ -292,11 +292,11 @@ function DualSeal({
   } else if (top.key === 'sb') {
     integBig = `${Math.round(sb)}%`
     integLabel = isEs ? 'único postor' : 'single-bid'
-    integSub = flagged ? `${top.ratio.toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? '≤ límite OCDE' : '≤ OECD limit')
+    integSub = flagged ? `${top.ratio.toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? '≤ línea UE' : '≤ EU line')
   } else {
     integBig = `${Math.round(da)}%`
     integLabel = isEs ? 'sin licitación' : 'no open bid'
-    integSub = flagged ? `${top.ratio.toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? '≤ límite OCDE' : '≤ OECD limit')
+    integSub = flagged ? `${top.ratio.toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? '≤ línea UE' : '≤ EU line')
   }
 
   return (

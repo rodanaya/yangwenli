@@ -55,7 +55,7 @@
       "avgAmount": "~{{value}} promedio",
       "avgRisk": "Riesgo Promedio",
       "directAward": "Adjudicacion Directa",
-      "oecd": "OCDE: max 25%"
+      "oecd": "Tablero UE: máx. 10%"
     },
     "sections": {
       "timeline": "Evolución Histórica",

@@ -37,7 +37,7 @@ import {
   EFECTIVALE_PRIMARY,
   LAST_FULL_YEAR,
   MONTHLY_CROSSCHECK_2010_2024,
-  OECD_CEILING,
+  EU_SINGLE_BID_LINE,
   WINDOW_FROM,
   inWindow,
   provableDepth,
@@ -64,7 +64,7 @@ export type CompetitionFigureKind =
 
 /** The argument — a competitive procedure that drew one bid. */
 const EMPHASIS = 'var(--color-risk-critical)'
-/** The OECD reference line, and the second series in F2. */
+/** The EU scoreboard reference line, and the second series in F2. */
 const REFERENCE = 'var(--color-sector-tecnologia)'
 /** Zinc — everything ordinary. Low is never green (Bible § 3.10). */
 const FIELD = '#71717a'
@@ -202,7 +202,7 @@ function YearLine({ years, lang, stage = 3 }: { years: YearReading[]; lang: 'en'
     // argument is the band, and the band is what carries the colour.
   }))
 
-  const multiple = latestFull ? latestFull.rate / OECD_CEILING : 0
+  const multiple = latestFull ? latestFull.rate / EU_SINGLE_BID_LINE : 0
 
   return (
     <ChartCard
@@ -215,8 +215,8 @@ function YearLine({ years, lang, stage = 3 }: { years: YearReading[]; lang: 'en'
           ? {
               value: pct2(peak.rate),
               label: es
-                ? `de los procedimientos competitivos de ${peak.year} atrajeron exactamente una oferta — el punto más alto del registro, y ${(peak.rate / OECD_CEILING).toFixed(1)} veces el umbral de la OCDE`
-                : `of ${peak.year}'s competitive procedures drew exactly one bid — the register's high-water mark, and ${(peak.rate / OECD_CEILING).toFixed(1)} times the OECD threshold`,
+                ? `de los procedimientos competitivos de ${peak.year} atrajeron exactamente una oferta — el punto más alto del registro, y ${(peak.rate / EU_SINGLE_BID_LINE).toFixed(1)} veces la línea del Tablero UE`
+                : `of ${peak.year}'s competitive procedures drew exactly one bid — the register's high-water mark, and ${(peak.rate / EU_SINGLE_BID_LINE).toFixed(1)} times the EU scoreboard line`,
               color: EMPHASIS,
             }
           : undefined
@@ -238,8 +238,8 @@ function YearLine({ years, lang, stage = 3 }: { years: YearReading[]; lang: 'en'
             stage >= 1
               ? [
                   {
-                    value: OECD_CEILING,
-                    label: es ? `OCDE ${OECD_CEILING}%` : `OECD ${OECD_CEILING}%`,
+                    value: EU_SINGLE_BID_LINE,
+                    label: es ? `UE ${EU_SINGLE_BID_LINE}%` : `EU ${EU_SINGLE_BID_LINE}%`,
                     color: REFERENCE,
                   },
                 ]
@@ -272,7 +272,7 @@ function YearLine({ years, lang, stage = 3 }: { years: YearReading[]; lang: 'en'
                 {latestFull.year}: {pct2(latestFull.rate)}
               </>,
               <>
-                {multiple.toFixed(1)}× {es ? `el umbral OCDE de ${OECD_CEILING}%` : `the OECD ${OECD_CEILING}% line`}
+                {multiple.toFixed(1)}× {es ? `la línea UE de ${EU_SINGLE_BID_LINE}%` : `the EU ${EU_SINGLE_BID_LINE}% line`}
               </>,
               <>
                 {formatNumber(latestFull.singleBid)} {es ? 'de' : 'of'} {formatNumber(latestFull.competitive)}{' '}
@@ -285,8 +285,8 @@ function YearLine({ years, lang, stage = 3 }: { years: YearReading[]; lang: 'en'
         {stage >= 3 && run ? (
           <Footline>
             {es
-              ? `${run.length} años seguidos, ${run.from}–${run.to}, por encima del ${BAND_FLOOR}%. El piso de esa racha es ${pct2(run.floor.rate)} en ${run.floor.year} — tres veces el umbral de la OCDE en el mejor de los años. La historia decía catorce años y un pico de 64.4% en 2011; son quince, y el pico es ${peak ? `${pct2(peak.rate)} en ${peak.year}` : '—'}. 2011 sigue siendo el primer año por encima del 60%.`
-              : `${run.length} straight years, ${run.from}–${run.to}, above ${BAND_FLOOR}%. The floor of that run is ${pct2(run.floor.rate)} in ${run.floor.year} — three times the OECD threshold in the best year of the fifteen. The story said fourteen years and a 64.4% peak in 2011; it is fifteen, and the peak is ${peak ? `${pct2(peak.rate)} in ${peak.year}` : '—'}. 2011 remains the first year above 60%.`}
+              ? `${run.length} años seguidos, ${run.from}–${run.to}, por encima del ${BAND_FLOOR}%. El piso de esa racha es ${pct2(run.floor.rate)} en ${run.floor.year} — más del doble de la línea del Tablero UE en el mejor de los años. La historia decía catorce años y un pico de 64.4% en 2011; son quince, y el pico es ${peak ? `${pct2(peak.rate)} en ${peak.year}` : '—'}. 2011 sigue siendo el primer año por encima del 60%.`
+              : `${run.length} straight years, ${run.from}–${run.to}, above ${BAND_FLOOR}%. The floor of that run is ${pct2(run.floor.rate)} in ${run.floor.year} — more than twice the EU scoreboard line in the best year of the fifteen. The story said fourteen years and a 64.4% peak in 2011; it is fifteen, and the peak is ${peak ? `${pct2(peak.rate)} in ${peak.year}` : '—'}. 2011 remains the first year above 60%.`}
           </Footline>
         ) : null}
       </div>
@@ -353,7 +353,7 @@ function Mirage({ years, lang }: { years: YearReading[]; lang: 'en' | 'es' }) {
           yTicks={[0, 15, 30, 45, 60]}
           formatTick={(v) => `${v}%`}
           rules={[
-            { value: OECD_CEILING, label: es ? `OCDE ${OECD_CEILING}%` : `OECD ${OECD_CEILING}%`, color: REFERENCE },
+            { value: EU_SINGLE_BID_LINE, label: es ? `UE ${EU_SINGLE_BID_LINE}%` : `EU ${EU_SINGLE_BID_LINE}%`, color: REFERENCE },
           ]}
           markers={
             breakIdx > 0
@@ -417,11 +417,11 @@ function Mirage({ years, lang }: { years: YearReading[]; lang: 'en' | 'es' }) {
 const F3_CHROME = {
   en: {
     eyebrow: 'FIGURE III · WHERE THE TENDER RUNS ALONE',
-    title: 'Every sector clears the OECD line; infrastructure clears it six times over',
+    title: 'Eleven of twelve sectors clear the EU line; infrastructure clears it four times over',
   },
   es: {
     eyebrow: 'FIGURA III · DÓNDE SE LICITA A SOLAS',
-    title: 'Los doce sectores rebasan la línea OCDE; infraestructura la rebasa seis veces',
+    title: 'Once de doce sectores rebasan la línea UE; infraestructura la rebasa cuatro veces',
   },
 }
 
@@ -453,8 +453,8 @@ function Sectors({ rows, lang }: { rows: ReturnType<typeof readSectors>; lang: '
       }
       annotation={
         es
-          ? `Cada barra es la proporción de los procedimientos competitivos de ese sector que atrajeron una sola oferta, sobre el registro completo. La marca vertical es el umbral OCDE del ${OECD_CEILING}%. El segundo número de cada fila, «de todos», cuenta las mismas ofertas únicas sobre TODOS los contratos del sector, adjudicación directa incluida: es la cifra que publica /analysis/single-bid-rate y es por eso que infraestructura aparece a veces como ${pct1(top?.shareOfAll ?? 0)}. Los dos son correctos; miden mundos distintos y no deben compararse entre sí.`
-          : `Each bar is the share of that sector's competitive procedures which drew a single bid, across the whole register. The vertical mark is the OECD ${OECD_CEILING}% threshold. The second number on each row, "of all", counts the same single bids over EVERY contract in the sector, direct awards included: it is the figure /analysis/single-bid-rate publishes, and it is why infrastructure is sometimes quoted at ${pct1(top?.shareOfAll ?? 0)}. Both are right; they measure different worlds and must not be read against each other.`
+          ? `Cada barra es la proporción de los procedimientos competitivos de ese sector que atrajeron una sola oferta, sobre el registro completo. La marca vertical es la línea de licitante único del ${EU_SINGLE_BID_LINE}% del Tablero del Mercado Único de la UE. El segundo número de cada fila, «de todos», cuenta las mismas ofertas únicas sobre TODOS los contratos del sector, adjudicación directa incluida: es la cifra que publica /analysis/single-bid-rate y es por eso que infraestructura aparece a veces como ${pct1(top?.shareOfAll ?? 0)}. Los dos son correctos; miden mundos distintos y no deben compararse entre sí.`
+          : `Each bar is the share of that sector's competitive procedures which drew a single bid, across the whole register. The vertical mark is the EU Single Market Scoreboard's ${EU_SINGLE_BID_LINE}% single-bidder line. The second number on each row, "of all", counts the same single bids over EVERY contract in the sector, direct awards included: it is the figure /analysis/single-bid-rate publishes, and it is why infrastructure is sometimes quoted at ${pct1(top?.shareOfAll ?? 0)}. Both are right; they measure different worlds and must not be read against each other.`
       }
     >
       <ol className="px-2 pb-2">
@@ -466,7 +466,7 @@ function Sectors({ rows, lang }: { rows: ReturnType<typeof readSectors>; lang: '
 
             <div className="mt-2 flex items-center gap-2">
               <span className="min-w-0 flex-1">
-                <Track fill={r.rate / 100} color={r.color} rule={OECD_CEILING / 100} />
+                <Track fill={r.rate / 100} color={r.color} rule={EU_SINGLE_BID_LINE / 100} />
               </span>
               <span
                 className="w-[52px] shrink-0 whitespace-nowrap text-right font-mono tabular-nums text-text-primary"
@@ -487,7 +487,7 @@ function Sectors({ rows, lang }: { rows: ReturnType<typeof readSectors>; lang: '
                   {pct1(r.shareOfAll)} {es ? 'de todos los contratos' : 'of all contracts'}
                 </>,
                 <>
-                  {(r.rate / OECD_CEILING).toFixed(1)}× {es ? 'la línea OCDE' : 'the OECD line'}
+                  {(r.rate / EU_SINGLE_BID_LINE).toFixed(1)}× {es ? 'la línea UE' : 'the EU line'}
                 </>,
               ]}
             />
@@ -498,8 +498,8 @@ function Sectors({ rows, lang }: { rows: ReturnType<typeof readSectors>; lang: '
       <div className="px-2 pb-2">
         <Footline>
           {es
-            ? `Los doce sectores. ${formatNumber(totalSingleBid)} ofertas únicas sobre ${formatNumber(totalCompetitive)} procedimientos competitivos — ${pct1(pooled)} del total, sobre ${formatNumber(totalContracts)} contratos registrados. Ninguno está por debajo del umbral OCDE del ${OECD_CEILING}%; el más bajo, ${rows.at(-1)?.name}, lo dobla.`
-            : `All twelve sectors. ${formatNumber(totalSingleBid)} single bids over ${formatNumber(totalCompetitive)} competitive procedures — ${pct1(pooled)} pooled, out of ${formatNumber(totalContracts)} contracts on the register. Not one sits below the OECD ${OECD_CEILING}% threshold; the lowest, ${rows.at(-1)?.name}, is double it.`}
+            ? `Los doce sectores. ${formatNumber(totalSingleBid)} ofertas únicas sobre ${formatNumber(totalCompetitive)} procedimientos competitivos — ${pct1(pooled)} del total, sobre ${formatNumber(totalContracts)} contratos registrados. Solo ${rows.filter((r) => r.rate < EU_SINGLE_BID_LINE).length === 1 ? `${rows.at(-1)?.name}` : `${rows.filter((r) => r.rate < EU_SINGLE_BID_LINE).length} sectores`} queda por debajo de la línea del ${EU_SINGLE_BID_LINE}% del Tablero UE, y por poco.`
+            : `All twelve sectors. ${formatNumber(totalSingleBid)} single bids over ${formatNumber(totalCompetitive)} competitive procedures — ${pct1(pooled)} pooled, out of ${formatNumber(totalContracts)} contracts on the register. Only ${rows.filter((r) => r.rate < EU_SINGLE_BID_LINE).length} of the twelve, ${rows.at(-1)?.name}, sits below the EU ${EU_SINGLE_BID_LINE}% line, and only just.`}
         </Footline>
       </div>
     </ChartCard>

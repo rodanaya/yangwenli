@@ -27,7 +27,7 @@ interface Props {
   deck?: string
   /**
    * OECD direct-award ceiling used for the "N× the ceiling" line.
-   * Default 25 (OECD's recommended threshold). Pass OECD_DIRECT_AWARD_LIMIT*100
+   * Default 25 (OECD's recommended threshold). Pass EU_DIRECT_AWARD_LIMIT*100
    * (30) to align with the platform constant.
    */
   oecdLimitPct?: number

@@ -6,7 +6,7 @@
     }
   },
   "competition.mexicoLabel": "México",
-  "competition.oecdMin": "OCDE mínimo",
+  "competition.oecdMin": "Línea del Tablero UE",
   "competition.gapLabel": "Brecha",
   "storyCarouselTitle": "La Historia en Datos",
   "pauseCarousel": "Pausar",
@@ -19,7 +19,7 @@
     "daRecord": {
       "statLabel": "de contratos sin licitación — 2023",
       "headline": "El año más opaco en 23 años de datos",
-      "body": "En el último año completo del gobierno de López Obrador, 82 de cada 100 pesos contratados fueron a empresas que no tuvieron que competir. Es 3.3 veces el límite recomendado por la OCDE."
+      "body": "En el último año completo del gobierno de López Obrador, 82 de cada 100 pesos contratados fueron a empresas que no tuvieron que competir. Es 8.2 veces la línea del 10% que el Tablero del Mercado Único de la UE considera insatisfactoria."
     },
     "ghostCompanies": {
       "statLabel": "empresas fantasma identificadas post-2018",

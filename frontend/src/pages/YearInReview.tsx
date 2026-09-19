@@ -52,7 +52,7 @@ const ALL_YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2025 - i)
 const DEFAULT_YEAR = new Date().getFullYear() - 1
 
 const OECD_HIGH_RISK_THRESHOLD = 15 // % — upper bound
-const OECD_DIRECT_AWARD_LIMIT = 25 // % — recommended max
+const EU_DIRECT_AWARD_LIMIT = 25 // % — recommended max
 
 interface SexenioInfo {
   president: string
@@ -530,7 +530,7 @@ function ProcedureTypeSection({
 
   const directPct = yearRow.direct_award_pct ?? 0
   const competitivePct = 100 - directPct
-  const isAboveOECD = directPct > OECD_DIRECT_AWARD_LIMIT
+  const isAboveOECD = directPct > EU_DIRECT_AWARD_LIMIT
   const isAboveAvg = directPct > historicalAvg
 
   return (
@@ -604,7 +604,7 @@ function ProcedureTypeSection({
           {/* OECD limit marker */}
           <div
             className="absolute top-0 bottom-0 flex flex-col items-center"
-            style={{ left: `${OECD_DIRECT_AWARD_LIMIT}%`, transform: 'translateX(-50%)' }}
+            style={{ left: `${EU_DIRECT_AWARD_LIMIT}%`, transform: 'translateX(-50%)' }}
           >
             <div className="h-2 w-px bg-oecd" />
             <span className="text-[13px] font-mono text-oecd whitespace-nowrap">

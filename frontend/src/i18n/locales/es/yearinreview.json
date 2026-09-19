@@ -48,12 +48,12 @@
   "riskEvolution": {
     "sectionLabel": "Evolución del Riesgo",
     "headline": "Perfil de riesgo de {{year}} vs promedio histórico",
-    "subtitle": "Distribución de niveles de riesgo comparada con el promedio 2002-2025 y el umbral OCDE.",
+    "subtitle": "Distribución de niveles de riesgo comparada con el promedio 2002-2025 y el techo de calibración de RUBLI.",
     "thisYear": "Este año",
     "historicalAvg": "Promedio 2002-2025",
-    "oecdTarget": "Umbral OCDE (15%)",
-    "aboveOECD": "Por encima del umbral OCDE",
-    "belowOECD": "Dentro del rango OCDE"
+    "oecdTarget": "Techo de calibración (15%)",
+    "aboveOECD": "Por encima del techo de calibración",
+    "belowOECD": "Dentro de la meta de calibración"
   },
   "procedureType": {
     "sectionLabel": "Tipo de Procedimiento",
@@ -61,8 +61,8 @@
     "subtitle": "En {{year}}, el {{directPct}}% de los contratos se adjudicaron directamente, sin competencia formal.",
     "direct": "Adjudicación Directa",
     "competitive": "Competitiva",
-    "historicalContext": "El promedio histórico 2002-2025 es {{avg}}%. La OCDE recomienda menos del 25%.",
-    "oecdLimit": "OCDE: max 25%"
+    "historicalContext": "El promedio histórico 2002-2025 es {{avg}}%. El Tablero UE considera insatisfactorio 10% o más.",
+    "oecdLimit": "Tablero UE: 10%"
   },
   "topVendorsFull": {
     "sectionLabel": "Principales Beneficiarios",

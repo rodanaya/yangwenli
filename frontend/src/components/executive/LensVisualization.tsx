@@ -43,7 +43,7 @@ export function buildLensTiers(t1Count: number, gtCount: number, hcCount: number
       count: hcCount,
       display: formatNumber(hcCount),
       label: { en: 'high + critical risk', es: 'riesgo alto + crítico' },
-      sublabel: { en: '11.0% of all contracts · OECD compliant band', es: '11.0% del total · banda OCDE cumplida' },
+      sublabel: { en: '11.0% of all contracts · inside the 2–15% calibration target', es: '11.0% del total · dentro de la meta de calibración de 2–15%' },
       ringR: 72,
       color: '#f59e0b',
       ringWidth: 1.1,

@@ -588,7 +588,7 @@ export default function CategoryProfile() {
             </p>
           </div>
 
-          {/* Stat 3 — Direct Award vs OECD */}
+          {/* Stat 3 — Direct Award vs the EU line */}
           <div
             className="bg-background-card px-4 py-3 border-l-[3px]"
             style={{ borderLeftColor: daColor }}
@@ -617,10 +617,10 @@ export default function CategoryProfile() {
                   <span style={{ color: 'var(--color-oecd)' }}>
                     {(daPct / 25).toFixed(1)}×
                   </span>
-                  {' '}{isEs ? 'el límite OCDE (25%)' : 'OECD limit (25%)'}
+                  {' '}{isEs ? 'la línea UE (10%)' : 'the EU line (10%)'}
                 </>
               ) : (
-                <>{isEs ? 'dentro del límite OCDE (25%)' : 'within OECD limit (25%)'}</>
+                <>{isEs ? 'dentro de la línea UE (10%)' : 'within the EU line (10%)'}</>
               )}
             </p>
           </div>

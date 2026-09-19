@@ -1274,7 +1274,7 @@ export function SectorProfile() {
               {isEs ? 'sin competencia' : 'direct award'}
             </span>
             <span className="text-text-muted mx-1">·</span>
-            <span className="font-mono text-xs text-text-muted">vs OECD ≤25%</span>
+            <span className="font-mono text-xs text-text-muted">vs EU ≤10%</span>
             {stats.direct_award_pct > 25 && (
               <span
                 className="font-mono text-xs font-bold"
@@ -1729,7 +1729,7 @@ export function SectorProfile() {
                 id="procurement-patterns-heading"
                 className="text-base font-bold text-text-primary mb-1"
               >
-                {isEs ? 'Patrones de contratación vs. OCDE' : 'Procurement patterns vs. OECD'}
+                {isEs ? 'Patrones de contratación vs. el Tablero UE' : 'Procurement patterns vs. the EU scoreboard'}
               </h2>
               <p className="text-xs text-text-secondary mb-4">
                 {isEs
@@ -1745,7 +1745,7 @@ export function SectorProfile() {
                       label: isEs ? 'Adjudicación directa' : 'Direct award',
                       value: (stats.direct_award_pct ?? 0) / 100,
                       benchmark: 0.25,
-                      benchmarkLabel: isEs ? 'límite OCDE' : 'OECD limit',
+                      benchmarkLabel: isEs ? 'línea UE' : 'EU line',
                       maxDelta: MAX_DELTA,
                     },
                     {
@@ -1753,7 +1753,7 @@ export function SectorProfile() {
                       label: isEs ? 'Licitación un solo postor' : 'Single-bid rate',
                       value: (stats.single_bid_pct ?? 0) / 100,
                       benchmark: 0.10,
-                      benchmarkLabel: isEs ? 'límite OCDE' : 'OECD limit',
+                      benchmarkLabel: isEs ? 'línea UE' : 'EU line',
                       maxDelta: MAX_DELTA,
                     },
                     {
@@ -1779,8 +1779,8 @@ export function SectorProfile() {
               </div>
               <p className="text-[13px] font-mono text-text-muted mt-2 opacity-60">
                 {isEs
-                  ? 'OCDE: adj. directa ≤25%, un solo postor ≤10% · Plataforma: riesgo prom. 11.0%'
-                  : 'OECD: direct award ≤25%, single-bid ≤10% · Platform: avg risk 11.0%'}
+                  ? 'Tablero UE: adj. directa ≤10%, licitante único ≤20% · Plataforma: riesgo prom. 11.0%'
+                  : 'EU scoreboard: direct award ≤10%, single bidder ≤20% · Platform: avg risk 11.0%'}
               </p>
             </section>
           )}

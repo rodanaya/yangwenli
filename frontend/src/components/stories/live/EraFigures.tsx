@@ -42,8 +42,8 @@ import {
   CATEGORY_ROWS,
   LEDGER_AFTER,
   LEDGER_BEFORE,
-  OECD_CEILING,
-  OECD_FLOOR,
+  HR_BAND_CEILING,
+  HR_BAND_FLOOR,
   SEDENA_FROM,
   SEDENA_ID,
   readCategoryShift,
@@ -72,7 +72,7 @@ export type EraFigureKind =
   | 'era-categories'
   | 'era-years'
 
-/** F1's track runs to 20% so the OECD band occupies the middle of the lane. */
+/** F1's track runs to 20% so the calibration band occupies the middle of the lane. */
 const TERM_SCALE = 20
 
 const ind = (v: number) => v.toFixed(3)
@@ -129,8 +129,8 @@ function TermBars({ terms, lang, stage = 3 }: { terms: TermReading[]; lang: 'en'
       }
       annotation={
         es
-          ? `La tasa de cada sexenio es Σ contratos marcados ÷ Σ contratos de sus años, no el promedio de las tasas anuales: 2011 aporta 43,773 contratos y 2010 aporta 217,139, y promediarlos por año les daría el mismo peso. El indicador es el modelo v0.8.5 de RUBLI (AUC de prueba 0.785), que no se calibró para ninguna administración. La banda sombreada es el rango de 2 a ${OECD_CEILING}% que la OCDE describe para un sistema funcional (OCDE, 2023); es una referencia externa, no una medición de RUBLI, y ningún sexenio la rebasa. La lectura de Fox es un piso: la Estructura A de CompraNet cubre apenas el 0.1% de los RFC entre 2002 y 2010, así que el período está sub-reportado y su riesgo real es probablemente mayor. Los sexenios se recortan a los años que el registro contiene, no a los años calendario del mandato.`
-          : `Each term's rate is Σ flagged contracts ÷ Σ contracts across its years, not the mean of the annual rates: 2011 contributes 43,773 contracts and 2010 contributes 217,139, and averaging by year would weigh them alike. The indicator is RUBLI's v0.8.5 model (test AUC 0.785), which was not tuned to any administration. The shaded band is the 2 to ${OECD_CEILING}% range the OECD describes for a functioning system (OECD, 2023); it is an external reference, not a RUBLI measurement, and no term crosses it. Fox's reading is a floor: COMPRANET's Structure A carries RFC coverage of 0.1% across 2002-2010, so the period is under-reported and its true risk is likely higher. Terms are cut to the years the register holds, not to the calendar years of the mandate.`
+          ? `La tasa de cada sexenio es Σ contratos marcados ÷ Σ contratos de sus años, no el promedio de las tasas anuales: 2011 aporta 43,773 contratos y 2010 aporta 217,139, y promediarlos por año les daría el mismo peso. El indicador es el modelo v0.8.5 de RUBLI (AUC de prueba 0.785), que no se calibró para ninguna administración. La banda sombreada es la meta de calibración de RUBLI para la proporción señalada, de 2 a ${HR_BAND_CEILING}% (docs/RISK_METHODOLOGY_v6.md); ningún sexenio la rebasa. La lectura de Fox es un piso: la Estructura A de CompraNet cubre apenas el 0.1% de los RFC entre 2002 y 2010, así que el período está sub-reportado y su riesgo real es probablemente mayor. Los sexenios se recortan a los años que el registro contiene, no a los años calendario del mandato.`
+          : `Each term's rate is Σ flagged contracts ÷ Σ contracts across its years, not the mean of the annual rates: 2011 contributes 43,773 contracts and 2010 contributes 217,139, and averaging by year would weigh them alike. The indicator is RUBLI's v0.8.5 model (test AUC 0.785), which was not tuned to any administration. The shaded band is RUBLI's calibration target for the flagged share, 2 to ${HR_BAND_CEILING}% (docs/RISK_METHODOLOGY_v6.md); no term crosses it. Fox's reading is a floor: COMPRANET's Structure A carries RFC coverage of 0.1% across 2002-2010, so the period is under-reported and its true risk is likely higher. Terms are cut to the years the register holds, not to the calendar years of the mandate.`
       }
     >
       <ol className="px-2 pb-2">
@@ -168,7 +168,7 @@ function TermBars({ terms, lang, stage = 3 }: { terms: TermReading[]; lang: 'en'
                 <Track
                   fill={t.rate / TERM_SCALE}
                   color={t.unfinished ? FIELD : EMPHASIS}
-                  band={[OECD_FLOOR / TERM_SCALE, OECD_CEILING / TERM_SCALE]}
+                  band={[HR_BAND_FLOOR / TERM_SCALE, HR_BAND_CEILING / TERM_SCALE]}
                 />
               </span>
               <span
@@ -534,8 +534,8 @@ function CategoryDumbbell({ rows, lang }: { rows: CategoryShift[]; lang: 'en' | 
       }}
       annotation={
         es
-          ? `Las ${CATEGORY_ROWS} partidas con mayor valor contratado en el sexenio de AMLO (/categories/sexenio), ordenadas por su indicador. El punto hueco es el indicador de riesgo medio con Peña Nieto; el lleno, con AMLO. Es un indicador de 0 a 1, no una tasa de contratos marcados: mide el parecido estructural promedio de los contratos de la partida con patrones conocidos, y no se compara con la banda de 2 a ${OECD_CEILING}% de la OCDE, que habla de proporciones de contratos y no de esta escala. El registro no publica una tasa de alto riesgo por partida y por sexenio, así que las cifras de ese tipo que esta historia imprimía —alimentos al 32.4%, farmacéuticos al 22.4%— se retiraron en lugar de dejarlas leerse como si fueran de la misma fuente.`
-          : `The ${CATEGORY_ROWS} categories with the largest contracted value in AMLO's term (/categories/sexenio), ordered by their indicator. The hollow dot is the mean risk indicator under Peña Nieto, the filled one under AMLO. It is an indicator from 0 to 1, not a rate of flagged contracts: it measures the average structural resemblance of the line's contracts to known patterns, and it is not set against the OECD's 2 to ${OECD_CEILING}% band, which speaks of shares of contracts and not of this scale. The register publishes no high-risk rate per category per term, so the figures of that kind this story used to print — food at 32.4%, pharmaceuticals at 22.4% — were withdrawn rather than left to read as though they came from the same source.`
+          ? `Las ${CATEGORY_ROWS} partidas con mayor valor contratado en el sexenio de AMLO (/categories/sexenio), ordenadas por su indicador. El punto hueco es el indicador de riesgo medio con Peña Nieto; el lleno, con AMLO. Es un indicador de 0 a 1, no una tasa de contratos marcados: mide el parecido estructural promedio de los contratos de la partida con patrones conocidos, y no se compara con la banda de calibración de 2 a ${HR_BAND_CEILING}%, que habla de proporciones de contratos y no de esta escala. El registro no publica una tasa de alto riesgo por partida y por sexenio, así que las cifras de ese tipo que esta historia imprimía —alimentos al 32.4%, farmacéuticos al 22.4%— se retiraron en lugar de dejarlas leerse como si fueran de la misma fuente.`
+          : `The ${CATEGORY_ROWS} categories with the largest contracted value in AMLO's term (/categories/sexenio), ordered by their indicator. The hollow dot is the mean risk indicator under Peña Nieto, the filled one under AMLO. It is an indicator from 0 to 1, not a rate of flagged contracts: it measures the average structural resemblance of the line's contracts to known patterns, and it is not set against the OECD's 2 to ${HR_BAND_CEILING}% band, which speaks of shares of contracts and not of this scale. The register publishes no high-risk rate per category per term, so the figures of that kind this story used to print — food at 32.4%, pharmaceuticals at 22.4% — were withdrawn rather than left to read as though they came from the same source.`
       }
     >
       <div className="px-2 pb-2">
@@ -692,8 +692,8 @@ function YearLine({ years, terms, lang }: { years: EraYear[]; terms: TermReading
       }
       annotation={
         es
-          ? `Proporción anual de contratos marcados como de alto riesgo por el modelo v0.8.5, ${opening.year}–${last.year}: ${spanYears} años de registro, no los 23 que decía esta historia, de los cuales el modelo puede calificar ${scoredYears}${skipped > 0 ? ` — 2004 guarda siete contratos y es un artefacto del registro, no un año` : ''}. La banda sombreada es el rango de 2 a ${OECD_CEILING}% de la OCDE (OCDE, 2023), una referencia externa que la serie nunca rebasa. La tira de abajo son los cinco sexenios con su tasa del libro mayor, al ancho de los años que el registro contiene de cada uno. Los años anteriores a 2010 se leen sobre la Estructura A de CompraNet, con 0.1% de cobertura de RFC, así que el arranque de la serie es un piso. ${partial ? `${partial.year} está incompleto — el feed federal se congeló el 28 de septiembre de 2025 — y se dibuja aparte.` : ''}`
-          : `The annual share of contracts the v0.8.5 model flags high-risk, ${opening.year}–${last.year}: ${spanYears} years of register, not the 23 this story used to claim, of which the model can score ${scoredYears}${skipped > 0 ? ` — 2004 holds seven contracts and is a register artefact rather than a year` : ''}. The shaded band is the OECD's 2 to ${OECD_CEILING}% range (OECD, 2023), an external reference the series never crosses. The strip beneath is the five terms with their ledger rate, at the width of the years the register holds for each. Years before 2010 are read off COMPRANET's Structure A, with 0.1% RFC coverage, so the start of the series is a floor. ${partial ? `${partial.year} is incomplete — the federal feed froze on 28 September 2025 — and is drawn apart.` : ''}`
+          ? `Proporción anual de contratos marcados como de alto riesgo por el modelo v0.8.5, ${opening.year}–${last.year}: ${spanYears} años de registro, no los 23 que decía esta historia, de los cuales el modelo puede calificar ${scoredYears}${skipped > 0 ? ` — 2004 guarda siete contratos y es un artefacto del registro, no un año` : ''}. La banda sombreada es la meta de calibración de 2 a ${HR_BAND_CEILING}%, una referencia externa que la serie nunca rebasa. La tira de abajo son los cinco sexenios con su tasa del libro mayor, al ancho de los años que el registro contiene de cada uno. Los años anteriores a 2010 se leen sobre la Estructura A de CompraNet, con 0.1% de cobertura de RFC, así que el arranque de la serie es un piso. ${partial ? `${partial.year} está incompleto — el feed federal se congeló el 28 de septiembre de 2025 — y se dibuja aparte.` : ''}`
+          : `The annual share of contracts the v0.8.5 model flags high-risk, ${opening.year}–${last.year}: ${spanYears} years of register, not the 23 this story used to claim, of which the model can score ${scoredYears}${skipped > 0 ? ` — 2004 holds seven contracts and is a register artefact rather than a year` : ''}. The shaded band is RUBLI's 2 to ${HR_BAND_CEILING}% calibration target, a reference the series never crosses. The strip beneath is the five terms with their ledger rate, at the width of the years the register holds for each. Years before 2010 are read off COMPRANET's Structure A, with 0.1% RFC coverage, so the start of the series is a floor. ${partial ? `${partial.year} is incomplete — the federal feed froze on 28 September 2025 — and is drawn apart.` : ''}`
       }
     >
       <div className="px-4 pb-2 sm:px-5">
@@ -705,9 +705,9 @@ function YearLine({ years, terms, lang }: { years: EraYear[]; terms: TermReading
           formatTick={(v) => `${v}%`}
           bands={[
             {
-              from: OECD_FLOOR,
-              to: OECD_CEILING,
-              label: es ? `OCDE ${OECD_FLOOR}–${OECD_CEILING}%` : `OECD ${OECD_FLOOR}–${OECD_CEILING}%`,
+              from: HR_BAND_FLOOR,
+              to: HR_BAND_CEILING,
+              label: es ? `Meta ${HR_BAND_FLOOR}–${HR_BAND_CEILING}%` : `Target ${HR_BAND_FLOOR}–${HR_BAND_CEILING}%`,
               color: REFERENCE,
             },
           ]}
@@ -787,8 +787,8 @@ function YearLine({ years, terms, lang }: { years: EraYear[]; terms: TermReading
 
         <Footline>
           {es
-            ? `La línea más alta del libro no es un sexenio, es ${peak.year}: ${pct2(peak.rate)} sobre ${formatNumber(peak.contracts)} contratos. Ninguno de los ${scoredYears} años calificados rebasa el techo del ${OECD_CEILING}% de la OCDE, y ninguno baja del piso del ${OECD_FLOOR}%; lo que se mueve pasa entero dentro de la banda. ${partial ? `La cuenta de ${partial.year} sigue abierta con ${formatNumber(partial.contracts)} contratos frente a los ${formatNumber(Math.round(full.slice(-3).reduce((s, r) => s + r.contracts, 0) / 3))} de un año completo reciente: es demasiado pronto para leerle una trayectoria, y lo único que puede decirse de ella es dónde arranca.` : ''}`
-            : `The highest line in the book is not a term, it is ${peak.year}: ${pct2(peak.rate)} across ${formatNumber(peak.contracts)} contracts. None of the ${scoredYears} scored years crosses the OECD's ${OECD_CEILING}% ceiling, and none falls below its ${OECD_FLOOR}% floor; the whole movement happens inside the band. ${partial ? `The ${partial.year} account is still open on ${formatNumber(partial.contracts)} contracts against the ${formatNumber(Math.round(full.slice(-3).reduce((s, r) => s + r.contracts, 0) / 3))} of a recent full year: it is far too early to read a trajectory into it, and the only thing that can be said is where it starts.` : ''}`}
+            ? `La línea más alta del libro no es un sexenio, es ${peak.year}: ${pct2(peak.rate)} sobre ${formatNumber(peak.contracts)} contratos. Ninguno de los ${scoredYears} años calificados rebasa el techo del ${HR_BAND_CEILING}% de la banda de calibración, y ninguno baja de su piso del ${HR_BAND_FLOOR}%; lo que se mueve pasa entero dentro de la banda. ${partial ? `La cuenta de ${partial.year} sigue abierta con ${formatNumber(partial.contracts)} contratos frente a los ${formatNumber(Math.round(full.slice(-3).reduce((s, r) => s + r.contracts, 0) / 3))} de un año completo reciente: es demasiado pronto para leerle una trayectoria, y lo único que puede decirse de ella es dónde arranca.` : ''}`
+            : `The highest line in the book is not a term, it is ${peak.year}: ${pct2(peak.rate)} across ${formatNumber(peak.contracts)} contracts. None of the ${scoredYears} scored years crosses the calibration band's ${HR_BAND_CEILING}% ceiling, and none falls below its ${HR_BAND_FLOOR}% floor; the whole movement happens inside the band. ${partial ? `The ${partial.year} account is still open on ${formatNumber(partial.contracts)} contracts against the ${formatNumber(Math.round(full.slice(-3).reduce((s, r) => s + r.contracts, 0) / 3))} of a recent full year: it is far too early to read a trajectory into it, and the only thing that can be said is where it starts.` : ''}`}
         </Footline>
       </div>
     </ChartCard>

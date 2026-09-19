@@ -46,7 +46,7 @@ import {
 import {
   CODED_FROM,
   LAST_FULL_YEAR,
-  OECD_CEILING,
+  EU_DIRECT_AWARD_LINE,
   RULE_FLOOR,
   SHIFT_FROM,
   SHIFT_TO,
@@ -118,8 +118,8 @@ function TermBars({ terms, lang, stage = 3 }: { terms: TermReading[]; lang: 'en'
       }
       annotation={
         es
-          ? `La proporción de cada mandato es Σ adjudicaciones directas ÷ Σ contratos de sus años, no el promedio de las tasas anuales: 2011 aporta 43,773 contratos y 2010 aporta 217,139, y promediarlos por año les daría el mismo peso. El mandato de Calderón arranca aquí en ${CODED_FROM} y no en 2007 porque CompraNet no codifica el tipo de procedimiento antes de ${CODED_FROM} — la Estructura A marca 0.0% de adjudicación directa en todos sus años, y promediar sobre ellos es lo que producía el 42.3% que esta historia imprimía. Fox (2000-2006) no aparece: no tiene un solo año calificable. La línea vertical es el techo de ~${OECD_CEILING}% que la OCDE describe para un sistema funcional (OCDE, 2023, capítulo 3); es una referencia externa, no una medición de RUBLI.`
-          : `Each term's share is Σ direct awards ÷ Σ contracts across its years, not the mean of the annual rates: 2011 contributes 43,773 contracts and 2010 contributes 217,139, and averaging by year would weigh them alike. Calderón's term starts here in ${CODED_FROM} rather than 2007 because COMPRANET does not code procedure type before ${CODED_FROM} — Structure A records 0.0% direct award across all of its years, and averaging over them is what produced the 42.3% this story used to print. Fox (2000-2006) is absent: it has no scoreable year at all. The vertical mark is the ~${OECD_CEILING}% ceiling the OECD describes for a functioning system (OECD, 2023, chapter 3); it is an external reference, not a RUBLI measurement.`
+          ? `La proporción de cada mandato es Σ adjudicaciones directas ÷ Σ contratos de sus años, no el promedio de las tasas anuales: 2011 aporta 43,773 contratos y 2010 aporta 217,139, y promediarlos por año les daría el mismo peso. El mandato de Calderón arranca aquí en ${CODED_FROM} y no en 2007 porque CompraNet no codifica el tipo de procedimiento antes de ${CODED_FROM} — la Estructura A marca 0.0% de adjudicación directa en todos sus años, y promediar sobre ellos es lo que producía el 42.3% que esta historia imprimía. Fox (2000-2006) no aparece: no tiene un solo año calificable. La línea vertical es la línea de adjudicación directa del ${EU_DIRECT_AWARD_LINE}% que el Tablero del Mercado Único de la UE considera insatisfactoria; es una referencia externa, no una medición de RUBLI.`
+          : `Each term's share is Σ direct awards ÷ Σ contracts across its years, not the mean of the annual rates: 2011 contributes 43,773 contracts and 2010 contributes 217,139, and averaging by year would weigh them alike. Calderón's term starts here in ${CODED_FROM} rather than 2007 because COMPRANET does not code procedure type before ${CODED_FROM} — Structure A records 0.0% direct award across all of its years, and averaging over them is what produced the 42.3% this story used to print. Fox (2000-2006) is absent: it has no scoreable year at all. The vertical mark is the ${EU_DIRECT_AWARD_LINE}% direct-award line the EU Single Market Scoreboard rates unsatisfactory; it is an external reference, not a RUBLI measurement.`
       }
     >
       <ol className="px-2 pb-2">
@@ -148,7 +148,7 @@ function TermBars({ terms, lang, stage = 3 }: { terms: TermReading[]; lang: 'en'
 
             <div className="mt-2 flex items-center gap-2">
               <span className="min-w-0 flex-1">
-                <Track fill={t.share / 100} color={t.unfinished ? FIELD : EMPHASIS} rule={OECD_CEILING / 100} />
+                <Track fill={t.share / 100} color={t.unfinished ? FIELD : EMPHASIS} rule={EU_DIRECT_AWARD_LINE / 100} />
               </span>
               <span
                 className="w-[58px] shrink-0 whitespace-nowrap text-right font-mono tabular-nums text-text-primary"
@@ -167,7 +167,7 @@ function TermBars({ terms, lang, stage = 3 }: { terms: TermReading[]; lang: 'en'
                 </>,
                 <>{formatCompactMXN(t.value)}</>,
                 <>
-                  {(t.share / OECD_CEILING).toFixed(1)}× {es ? 'la línea OCDE' : 'the OECD line'}
+                  {(t.share / EU_DIRECT_AWARD_LINE).toFixed(1)}× {es ? 'la línea UE' : 'the EU line'}
                 </>,
               ]}
             />
@@ -247,8 +247,8 @@ function YearLine({ years, lang }: { years: DaYear[]; lang: 'en' | 'es' }) {
       }
       annotation={
         es
-          ? `Adjudicación directa como proporción de todos los contratos de cada año. La serie arranca en ${CODED_FROM} porque es el primer año en que CompraNet codifica el tipo de procedimiento: los años anteriores marcan 0.0% y no son comparables con nada posterior. La banda sombreada es el piso del ${RULE_FLOOR}% que la historia afirma; la línea punteada baja es el techo de ~${OECD_CEILING}% que describe la OCDE (OCDE, 2023), una referencia externa. ${partial ? `${partial.year} está incompleto y queda fuera de la racha: el feed federal se congeló el 28 de septiembre de 2025.` : ''}`
-          : `Direct awards as a share of every contract that year. The series starts in ${CODED_FROM} because that is the first year COMPRANET codes procedure type: earlier years read 0.0% and are not comparable with anything after them. The shaded band is the ${RULE_FLOOR}% floor the story claims; the lower dashed line is the ~${OECD_CEILING}% ceiling the OECD describes (OECD, 2023), an external reference. ${partial ? `${partial.year} is incomplete and sits outside the run: the federal feed froze on 28 September 2025.` : ''}`
+          ? `Adjudicación directa como proporción de todos los contratos de cada año. La serie arranca en ${CODED_FROM} porque es el primer año en que CompraNet codifica el tipo de procedimiento: los años anteriores marcan 0.0% y no son comparables con nada posterior. La banda sombreada es el piso del ${RULE_FLOOR}% que la historia afirma; la línea punteada baja es la línea del ${EU_DIRECT_AWARD_LINE}% del Tablero del Mercado Único de la UE, una referencia externa. ${partial ? `${partial.year} está incompleto y queda fuera de la racha: el feed federal se congeló el 28 de septiembre de 2025.` : ''}`
+          : `Direct awards as a share of every contract that year. The series starts in ${CODED_FROM} because that is the first year COMPRANET codes procedure type: earlier years read 0.0% and are not comparable with anything after them. The shaded band is the ${RULE_FLOOR}% floor the story claims; the lower dashed line is the EU Single Market Scoreboard's ${EU_DIRECT_AWARD_LINE}% line, an external reference. ${partial ? `${partial.year} is incomplete and sits outside the run: the federal feed froze on 28 September 2025.` : ''}`
       }
     >
       <div className="px-4 pb-2 sm:px-5">
@@ -259,7 +259,7 @@ function YearLine({ years, lang }: { years: DaYear[]; lang: 'en' | 'es' }) {
           yTicks={[0, 30, 60, 90]}
           formatTick={(v) => `${v}%`}
           rules={[
-            { value: OECD_CEILING, label: es ? `OCDE ~${OECD_CEILING}%` : `OECD ~${OECD_CEILING}%`, color: REFERENCE },
+            { value: EU_DIRECT_AWARD_LINE, label: es ? `UE ${EU_DIRECT_AWARD_LINE}%` : `EU ${EU_DIRECT_AWARD_LINE}%`, color: REFERENCE },
           ]}
           bands={
             run
@@ -296,7 +296,7 @@ function YearLine({ years, lang }: { years: DaYear[]; lang: 'en' | 'es' }) {
                 </>
               ) : null,
               <>
-                {(latestFull.rate / OECD_CEILING).toFixed(1)}× {es ? 'la línea OCDE' : 'the OECD line'}
+                {(latestFull.rate / EU_DIRECT_AWARD_LINE).toFixed(1)}× {es ? 'la línea UE' : 'the EU line'}
               </>,
             ]}
           />
@@ -371,8 +371,8 @@ function EmergencyZoom({ years, lang }: { years: DaYear[]; lang: 'en' | 'es' }) 
       }}
       annotation={
         es
-          ? `Los mismos datos de la Figura II, recortados a ${ZOOM_FROM}–${LAST_FULL_YEAR} y con el eje ajustado a la ventana: el movimiento completo son ${Math.abs(span).toFixed(1)} puntos, que en un eje de 0 a 90 es una línea recta. La marca vertical es el decreto de emergencia sanitaria del 30 de marzo de 2020, que habilitó la contratación de excepción. El techo de la OCDE (~${OECD_CEILING}%) queda muy por debajo de esta ventana y no se dibuja; ningún año de los seis se le acerca.`
-          : `The same data as Figure II, cut to ${ZOOM_FROM}–${LAST_FULL_YEAR} with the axis fitted to the window: the entire move is ${Math.abs(span).toFixed(1)} points, which on a 0-to-90 axis is a straight line. The vertical mark is the health-emergency decree of 30 March 2020, which unlocked exception procurement. The OECD ceiling (~${OECD_CEILING}%) sits far below this window and is not drawn; none of the six years comes near it.`
+          ? `Los mismos datos de la Figura II, recortados a ${ZOOM_FROM}–${LAST_FULL_YEAR} y con el eje ajustado a la ventana: el movimiento completo son ${Math.abs(span).toFixed(1)} puntos, que en un eje de 0 a 90 es una línea recta. La marca vertical es el decreto de emergencia sanitaria del 30 de marzo de 2020, que habilitó la contratación de excepción. La línea UE (${EU_DIRECT_AWARD_LINE}%) queda muy por debajo de esta ventana y no se dibuja; ningún año de los seis se le acerca.`
+          : `The same data as Figure II, cut to ${ZOOM_FROM}–${LAST_FULL_YEAR} with the axis fitted to the window: the entire move is ${Math.abs(span).toFixed(1)} points, which on a 0-to-90 axis is a straight line. The vertical mark is the health-emergency decree of 30 March 2020, which unlocked exception procurement. The EU line (${EU_DIRECT_AWARD_LINE}%) sits far below this window and is not drawn; none of the six years comes near it.`
       }
     >
       <div className="px-4 pb-2 sm:px-5">

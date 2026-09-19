@@ -461,13 +461,26 @@ function AnnotationWidest({
   if (idx < 0) return null
   const x = xOffsets[idx] + colWidths[idx] / 2
   const y = 30
-  const label =
+  const line1 =
+    lang === 'es' ? `mayor volumen — ${row.name}` : `largest volume — ${row.name}`
+  const line2 =
     lang === 'es'
-      ? `mayor volumen — ${row.name} · ${formatCompactMXN(row.totalMxn)} observado ${formatCompactMXN(row.varMxn)}`
-      : `largest volume — ${row.name} · ${formatCompactMXN(row.varMxn)} of ${formatCompactMXN(row.totalMxn)} flagged`
+      ? `${formatCompactMXN(row.varMxn)} de ${formatCompactMXN(row.totalMxn)}`
+      : `${formatCompactMXN(row.varMxn)} of ${formatCompactMXN(row.totalMxn)}`
   return (
     <g>
       <line x1={x} y1={y} x2={x} y2={y + 10} stroke="var(--color-text-muted)" strokeWidth={0.8} />
+      <text
+        x={x}
+        y={y - 12}
+        textAnchor="middle"
+        fontFamily="'IBM Plex Mono', monospace"
+        fontStyle="normal"
+        fontSize={8.5}
+        fill="var(--color-text-secondary)"
+      >
+        {line1}
+      </text>
       <text
         x={x}
         y={y - 2}
@@ -477,7 +490,7 @@ function AnnotationWidest({
         fontSize={8.5}
         fill="var(--color-text-secondary)"
       >
-        {label}
+        {line2}
       </text>
     </g>
   )
@@ -503,13 +516,24 @@ function AnnotationTallest({
   const yTop = BAND_H * (1 - share)
   const labelY = Math.max(10, yTop - 14)
   const pct = (share * 100).toFixed(0)
-  const label =
-    lang === 'es'
-      ? `mayor saturación — ${row.name} · ${pct}% de su propio gasto`
-      : `highest saturation — ${row.name} · ${pct}% of its own spend`
+  const line1 =
+    lang === 'es' ? `mayor saturación — ${row.name}` : `highest saturation — ${row.name}`
+  const line2 =
+    lang === 'es' ? `${pct}% de su propio gasto` : `${pct}% of its own spend`
   return (
     <g>
       <line x1={x} y1={labelY + 2} x2={x} y2={yTop} stroke="var(--color-text-muted)" strokeWidth={0.8} />
+      <text
+        x={x}
+        y={labelY - 12}
+        textAnchor="middle"
+        fontFamily="'IBM Plex Mono', monospace"
+        fontStyle="normal"
+        fontSize={8.5}
+        fill="var(--color-text-secondary)"
+      >
+        {line1}
+      </text>
       <text
         x={x}
         y={labelY - 2}
@@ -519,7 +543,7 @@ function AnnotationTallest({
         fontSize={8.5}
         fill="var(--color-text-secondary)"
       >
-        {label}
+        {line2}
       </text>
     </g>
   )

@@ -30,8 +30,8 @@ import {
   RISK_TEXT_COLORS,
   PATTERN_COLORS,
   getRiskLevelFromScore,
-  OECD_DIRECT_AWARD_LIMIT,
-  OECD_SINGLE_BID_LIMIT,
+  EU_DIRECT_AWARD_LIMIT,
+  EU_SINGLE_BID_LIMIT,
 } from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -685,7 +685,7 @@ export default function RedesKnownDossier() {
                   <div className="max-h-[72vh] overflow-y-auto pr-1 space-y-1" role="list">
                     {sortedInstitutions.map((inst, rank) => {
                       const active = inst.institution_id === effectiveInst
-                      const daHot = (inst.direct_award_pct ?? 0) > OECD_DIRECT_AWARD_LIMIT * 100
+                      const daHot = (inst.direct_award_pct ?? 0) > EU_DIRECT_AWARD_LIMIT * 100
                       const hhiHot = (inst.latest_hhi ?? 0) >= HHI_CONCENTRATED
                       return (
                         <div
@@ -850,7 +850,7 @@ export default function RedesKnownDossier() {
                   const lbl = clusterLabel(c, isEs)
                   const active = c.community_id === effectiveComm
                   const pinned = pins.includes(c.community_id)
-                  const daHot = (c.da_rate ?? 0) > OECD_DIRECT_AWARD_LIMIT
+                  const daHot = (c.da_rate ?? 0) > EU_DIRECT_AWARD_LIMIT
                   const verdict = getClusterVerdict(c, meshMedianRisk)
                   return (
                     <div
@@ -1128,15 +1128,15 @@ export default function RedesKnownDossier() {
                           <DeviationRow
                             label={isEs ? 'Adjudicación directa' : 'Direct award'}
                             value={(selectedCaptureItem.direct_award_pct ?? 0) / 100}
-                            benchmark={OECD_DIRECT_AWARD_LIMIT}
-                            benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
+                            benchmark={EU_DIRECT_AWARD_LIMIT}
+                            benchmarkLabel={isEs ? 'UE' : 'EU'}
                             maxDelta={0.75}
                           />
                           <DeviationRow
                             label={isEs ? 'Propuesta única' : 'Single bid'}
                             value={(selectedCaptureItem.single_bid_pct ?? 0) / 100}
-                            benchmark={OECD_SINGLE_BID_LIMIT}
-                            benchmarkLabel={isEs ? 'OCDE' : 'OECD'}
+                            benchmark={EU_SINGLE_BID_LIMIT}
+                            benchmarkLabel={isEs ? 'UE' : 'EU'}
                             maxDelta={0.75}
                           />
                         </div>
@@ -1303,8 +1303,8 @@ export default function RedesKnownDossier() {
                 en: 'Clusters above 150 actors are drawn truncated to their 100 most central; edges are capped at 2,500.',
               },
               {
-                es: `Tasas de adjudicación directa y propuesta única promediadas del motor ARIA por cúmulo; referencias OCDE ${Math.round(OECD_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(OECD_SINGLE_BID_LIMIT * 100)}%.`,
-                en: `Direct-award and single-bid rates are ARIA engine averages per cluster; OECD references ${Math.round(OECD_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(OECD_SINGLE_BID_LIMIT * 100)}%.`,
+                es: `Tasas de adjudicación directa y propuesta única promediadas del motor ARIA por cúmulo; referencias OCDE ${Math.round(EU_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(EU_SINGLE_BID_LIMIT * 100)}%.`,
+                en: `Direct-award and single-bid rates are ARIA engine averages per cluster; OECD references ${Math.round(EU_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(EU_SINGLE_BID_LIMIT * 100)}%.`,
               },
               {
                 es: (

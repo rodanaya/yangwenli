@@ -11,10 +11,10 @@
  * Hex colours ONLY via style={{}} (className hex is silently stripped); colour
  * comes from RISK_COLORS / the var(--…) token set, never an inline hex literal.
  */
-import { RISK_COLORS, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
+import { RISK_COLORS, EU_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 
 // OECD direct-award ceiling as a percentage (0–100). Single source: constants.
-const OECD_DA_CEILING = OECD_DIRECT_AWARD_LIMIT * 100
+const OECD_DA_CEILING = EU_DIRECT_AWARD_LIMIT * 100
 
 export function DABullet({ daPct }: { daPct: number }) {
   const fill = Math.max(0, Math.min(100, daPct))

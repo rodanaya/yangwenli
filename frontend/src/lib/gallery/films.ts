@@ -363,11 +363,11 @@ export const FILMS: Record<string, FilmDef> = {
         mode: 'modelnet', layout: { slot: 'rail-right', mono: true },
         tag: { en: 'EIGHTEEN SIGNALS', es: 'DIECIOCHO SEÑALES' },
         caption: {
-          en: 'The model weighs eighteen signals of how corruption tends to hide, learned from 1,427 documented cases. It does not accuse — it measures resemblance, and ranks the record by risk.',
-          es: 'El modelo pondera dieciocho señales de cómo suele esconderse la corrupción, aprendidas de 1,427 casos documentados. No acusa — mide semejanza, y ordena el registro por riesgo.',
+          en: 'The model weighs eighteen signals of how corruption tends to hide, learned from 1,417 documented cases. It does not accuse — it measures resemblance, and ranks the record by risk.',
+          es: 'El modelo pondera dieciocho señales de cómo suele esconderse la corrupción, aprendidas de 1,417 casos documentados. No acusa — mide semejanza, y ordena el registro por riesgo.',
         },
         durationMs: 15000,
-        stat: { format: 'text', text: '18', label: { en: 'signals · 1,427 cases · AUC 0.785', es: 'señales · 1,427 casos · AUC 0.785' } },
+        stat: { format: 'text', text: '18', label: { en: 'signals · 1,417 cases · AUC 0.785', es: 'señales · 1,417 casos · AUC 0.785' } },
       },
       // ── ACT III · LOS HALLAZGOS ──
       {

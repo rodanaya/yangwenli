@@ -202,6 +202,7 @@ function Sectors({
 
   return (
     <ChartCard
+      source="/aria/patterns/P3/institutions?group=sector"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -215,8 +216,8 @@ function Sectors({
       }}
       annotation={
         es
-          ? `Cada barra suma la contratación federal de por vida de los proveedores P3 cuyo sector principal es ese — el valor viaja con el proveedor y abarca toda su vida en el padrón, no un año ni un presupuesto sectorial. Los tres sectores que el capítulo nombra suman ${formatCompactMXN(namedSum)}, ${pct1(namedShare)} de la cohorte. La segunda cifra de cada fila es la porción de todo lo que ARIA marca en ese sector, bajo cualquier patrón, que corre por intermediarios: el denominador viene de la misma consulta, así que la porción es comprobable sin salir de ella. Los doce sectores están aquí; la cohorte no se reparte en ocho. Cifras en vivo de /aria/patterns/P3/institutions?group=sector.`
-          : `Each bar sums the lifetime federal contracting of the P3 vendors whose primary sector is that one — the value travels with the vendor and covers its whole life in the register, not one year and not a sector budget. The three sectors the chapter names hold ${formatCompactMXN(namedSum)} between them, ${pct1(namedShare)} of the cohort. The second figure on each row is the share of everything ARIA flags in that sector, under any pattern, that runs through intermediaries: the denominator comes from the same query, so the share is checkable without leaving it. All twelve sectors are here; the cohort does not divide into eight. Figures live from /aria/patterns/P3/institutions?group=sector.`
+          ? `Cada barra suma la contratación federal acumulada de los proveedores P3 cuyo sector principal es ese — el valor viaja con el proveedor y abarca toda su vida en el padrón, no un año ni un presupuesto sectorial. Los tres sectores que el capítulo nombra suman ${formatCompactMXN(namedSum)}, ${pct1(namedShare)} de la cohorte. La segunda cifra de cada fila es la porción de todo lo que ARIA marca en ese sector, bajo cualquier patrón, que corre por intermediarios: el denominador viene de la misma consulta, así que la porción es comprobable sin salir de ella. Los doce sectores están aquí; la cohorte no se reparte en ocho.`
+          : `Each bar sums the lifetime federal contracting of the P3 vendors whose primary sector is that one — the value travels with the vendor and covers its whole life in the register, not one year and not a sector budget. The three sectors the chapter names hold ${formatCompactMXN(namedSum)} between them, ${pct1(namedShare)} of the cohort. The second figure on each row is the share of everything ARIA flags in that sector, under any pattern, that runs through intermediaries: the denominator comes from the same query, so the share is checkable without leaving it. All twelve sectors are here; the cohort does not divide into eight.`
       }
     >
       <div className="px-2 pb-2">
@@ -367,6 +368,7 @@ function Channels({ body, lang }: { body: AriaPatternGroupsResponse; lang: 'en' 
 
   return (
     <ChartCard
+      source="/aria/patterns/P3/institutions"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -380,8 +382,8 @@ function Channels({ body, lang }: { body: AriaPatternGroupsResponse; lang: 'en' 
       }}
       annotation={
         es
-          ? `Cada fila es un canal: el comprador donde el patrón concentra más dinero y el mayor proveedor P3 anclado ahí que ningún revisor ha descartado. La cifra es una estimación de dos campos del padrón — la contratación de por vida del proveedor por la porción de ella que va a ese comprador, las dos cifras siguientes de la fila — no una suma contrato por contrato, y por eso se imprime junto a sus dos factores. De los ${formatNumber(fetched)} proveedores mayores en estas ${formatNumber(body.rows.length)} direcciones, ${formatNumber(clearedCount)} llevan una disposición de revisión de falso positivo o exclusión estructural, ${formatCompactMXN(clearedValue)} entre ellos, y no se dibujan: dos contratos enormes dentro de un año son la firma de un contratista de megaproyecto tanto como la de una fachada, y el patrón no los distingue. Los nombres de comprador son las siglas con que la cola archiva al comprador; PEMEX reúne tres registros y la ficha abre el mayor. Cifras en vivo de /aria/patterns/P3/institutions.`
-          : `Each row is a channel: the buyer where the pattern concentrates most money, and the largest P3 vendor anchored there that no reviewer has cleared. The figure is an estimate from two register fields — the vendor's lifetime contracting times the share of it that sits at that buyer — not a summed contract ledger, which is why it is printed beside both of its factors. Of the ${formatNumber(fetched)} largest vendors at these ${formatNumber(body.rows.length)} addresses, ${formatNumber(clearedCount)} carry a review disposition of false positive or structural exclusion, ${formatCompactMXN(clearedValue)} between them, and are not drawn: two enormous contracts inside one year are the signature of a megaproject contractor as much as of a front, and the pattern cannot tell them apart. The buyer names are the acronyms the queue files a buyer under; PEMEX gathers three registrations and the chip opens the largest. Figures live from /aria/patterns/P3/institutions.`
+          ? `Cada fila es un canal: el comprador donde el patrón concentra más dinero y el mayor proveedor P3 anclado ahí que ningún revisor ha descartado. La cifra es una estimación de dos campos del padrón — la contratación de por vida del proveedor por la porción de ella que va a ese comprador, las dos cifras siguientes de la fila — no una suma contrato por contrato, y por eso se imprime junto a sus dos factores. De los ${formatNumber(fetched)} proveedores mayores en estas ${formatNumber(body.rows.length)} direcciones, ${formatNumber(clearedCount)} llevan una disposición de revisión de falso positivo o exclusión estructural, ${formatCompactMXN(clearedValue)} entre ellos, y no se dibujan: dos contratos enormes dentro de un año son la firma de un contratista de megaproyecto tanto como la de una fachada, y el patrón no los distingue. Los nombres de comprador son las siglas con que la cola archiva al comprador; PEMEX reúne tres registros y la ficha abre el mayor.`
+          : `Each row is a channel: the buyer where the pattern concentrates most money, and the largest P3 vendor anchored there that no reviewer has cleared. The figure is an estimate from two register fields — the vendor's lifetime contracting times the share of it that sits at that buyer — not a summed contract ledger, which is why it is printed beside both of its factors. Of the ${formatNumber(fetched)} largest vendors at these ${formatNumber(body.rows.length)} addresses, ${formatNumber(clearedCount)} carry a review disposition of false positive or structural exclusion, ${formatCompactMXN(clearedValue)} between them, and are not drawn: two enormous contracts inside one year are the signature of a megaproject contractor as much as of a front, and the pattern cannot tell them apart. The buyer names are the acronyms the queue files a buyer under; PEMEX gathers three registrations and the chip opens the largest.`
       }
     >
       <div className="px-2 pb-2">
@@ -771,6 +773,7 @@ function FileFigure({ body, lang }: { body: AriaPatternGroupsResponse; lang: 'en
 
   return (
     <ChartCard
+      source="/aria/patterns/P3/institutions"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -784,8 +787,8 @@ function FileFigure({ body, lang }: { body: AriaPatternGroupsResponse; lang: 'en
       }}
       annotation={
         es
-          ? `La población son los ${formatNumber(total)} mayores proveedores P3 de las ${formatNumber(body.rows.length)} direcciones donde el patrón concentra su dinero — ${formatCompactMXN(totalValue)} entre todos — agrupados por lo que dijo la revisión. La cima del patrón es una trampa de falsos positivos: los ${formatNumber(clearedAtTop)} mayores por valor están descartados, y ${formatNumber(cleared?.count ?? 0)} del grupo lo están, ${formatCompactMXN(cleared?.value ?? 0)} entre ellos. Esto no es un defecto del padrón sino del método: el patrón lee una ráfaga —pocos contratos, muy grandes, dentro de una ventana corta— y un contratista de megaproyecto la produce igual que una fachada. Por eso ningún proveedor descartado se nombra ni se dibuja en esta historia. Abajo van los que la revisión sí confirmó. Cifras en vivo de /aria/patterns/P3/institutions.`
-          : `The population is the ${formatNumber(total)} largest P3 vendors at the ${formatNumber(body.rows.length)} addresses where the pattern concentrates its money — ${formatCompactMXN(totalValue)} between them — grouped by what review said. The top of the pattern is a false-positive trap: the ${formatNumber(clearedAtTop)} largest by value are cleared, and ${formatNumber(cleared?.count ?? 0)} of the group are, ${formatCompactMXN(cleared?.value ?? 0)} between them. That is not a flaw in the register but in the method: the pattern reads a burst — few contracts, very large, inside a short window — and a megaproject contractor produces one exactly as a front does. It is why no cleared vendor is named or drawn anywhere in this story. Below are the ones review did confirm. Figures live from /aria/patterns/P3/institutions.`
+          ? `La población son los ${formatNumber(total)} mayores proveedores P3 de las ${formatNumber(body.rows.length)} direcciones donde el patrón concentra su dinero — ${formatCompactMXN(totalValue)} entre todos — agrupados por lo que dijo la revisión. La cima del patrón es una trampa de falsos positivos: los ${formatNumber(clearedAtTop)} mayores por valor están descartados, y ${formatNumber(cleared?.count ?? 0)} del grupo lo están, ${formatCompactMXN(cleared?.value ?? 0)} entre ellos. Esto no es un defecto del padrón sino del método: el patrón lee una ráfaga —pocos contratos, muy grandes, dentro de una ventana corta— y un contratista de megaproyecto la produce igual que una fachada. Por eso ningún proveedor descartado se nombra ni se dibuja en esta historia. Abajo van los que la revisión sí confirmó.`
+          : `The population is the ${formatNumber(total)} largest P3 vendors at the ${formatNumber(body.rows.length)} addresses where the pattern concentrates its money — ${formatCompactMXN(totalValue)} between them — grouped by what review said. The top of the pattern is a false-positive trap: the ${formatNumber(clearedAtTop)} largest by value are cleared, and ${formatNumber(cleared?.count ?? 0)} of the group are, ${formatCompactMXN(cleared?.value ?? 0)} between them. That is not a flaw in the register but in the method: the pattern reads a burst — few contracts, very large, inside a short window — and a megaproject contractor produces one exactly as a front does. It is why no cleared vendor is named or drawn anywhere in this story. Below are the ones review did confirm.`
       }
     >
       <div className="px-2 pb-2">
@@ -918,6 +921,7 @@ function Queue({ body, lang }: { body: AriaPatternGroupsResponse; lang: 'en' | '
 
   return (
     <ChartCard
+      source="/aria/patterns/P3/institutions"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -931,8 +935,8 @@ function Queue({ body, lang }: { body: AriaPatternGroupsResponse; lang: 'en' | '
       }}
       annotation={
         es
-          ? `Las cuatro barras son disposiciones que se traslapan, no subconjuntos anidados: un proveedor puede estar documentado como caso sin haber pasado nunca por una revisión, y al revés. De los ${formatNumber(k.total_vendors)} proveedores de la cohorte, ${formatNumber(k.reviewed)} llevan alguna disposición —${pct1((100 * k.reviewed) / k.total_vendors)} de la cohorte— y ${formatNumber(k.confirmed)} quedaron confirmados. ${formatNumber(tier12)} están en los niveles 1 y 2, la banda que la cola prioriza; los otros ${formatNumber(k.tier3 + k.tier4)} están en los niveles 3 y 4. Esto es lo que ARIA puede decir por sí sola: quién encaja en la forma y quién ha sido visto. Lo que ninguna de estas cifras dice es si la diferencia entre lo que cobró el intermediario y lo que pagó al subcontratista fue renta o trabajo — eso vive en registros bancarios que están fuera del padrón. Cifras en vivo de /aria/patterns/P3/institutions.`
-          : `The four bars are overlapping dispositions, not nested subsets: a vendor can be documented as a case without ever having passed a review, and the other way round. Of the cohort's ${formatNumber(k.total_vendors)} vendors, ${formatNumber(k.reviewed)} carry any disposition at all — ${pct1((100 * k.reviewed) / k.total_vendors)} of the cohort — and ${formatNumber(k.confirmed)} were confirmed. ${formatNumber(tier12)} sit at Tiers 1 and 2, the band the queue prioritises; the other ${formatNumber(k.tier3 + k.tier4)} sit at Tiers 3 and 4. This is what ARIA can say on its own: who fits the shape, and who has been looked at. What none of these counts says is whether the difference between what the intermediary charged and what it paid the subcontractor was rent or work — that lives in bank records the register does not hold. Figures live from /aria/patterns/P3/institutions.`
+          ? `Las cuatro barras son disposiciones que se traslapan, no subconjuntos anidados: un proveedor puede estar documentado como caso sin haber pasado nunca por una revisión, y al revés. De los ${formatNumber(k.total_vendors)} proveedores de la cohorte, ${formatNumber(k.reviewed)} llevan alguna disposición —${pct1((100 * k.reviewed) / k.total_vendors)} de la cohorte— y ${formatNumber(k.confirmed)} quedaron confirmados. ${formatNumber(tier12)} están en los niveles 1 y 2, la banda que la cola prioriza; los otros ${formatNumber(k.tier3 + k.tier4)} están en los niveles 3 y 4. Esto es lo que ARIA puede decir por sí sola: quién encaja en la forma y quién ha sido visto. Lo que ninguna de estas cifras dice es si la diferencia entre lo que cobró el intermediario y lo que pagó al subcontratista fue renta o trabajo — eso vive en registros bancarios que están fuera del padrón.`
+          : `The four bars are overlapping dispositions, not nested subsets: a vendor can be documented as a case without ever having passed a review, and the other way round. Of the cohort's ${formatNumber(k.total_vendors)} vendors, ${formatNumber(k.reviewed)} carry any disposition at all — ${pct1((100 * k.reviewed) / k.total_vendors)} of the cohort — and ${formatNumber(k.confirmed)} were confirmed. ${formatNumber(tier12)} sit at Tiers 1 and 2, the band the queue prioritises; the other ${formatNumber(k.tier3 + k.tier4)} sit at Tiers 3 and 4. This is what ARIA can say on its own: who fits the shape, and who has been looked at. What none of these counts says is whether the difference between what the intermediary charged and what it paid the subcontractor was rent or work — that lives in bank records the register does not hold.`
       }
     >
       <div className="px-2 pb-2">

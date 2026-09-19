@@ -60,7 +60,7 @@ const QUADRANT_RISK_THRESHOLD = 0.20   // risk ≥ 20% → right of line
 const QUADRANT_SPEND_THRESHOLD = 9      // log10(1B) = 9
 
 // OECD reference
-const OECD_RISK_PCT = 25
+const EU_DA_PCT = 10 // EU Single Market Scoreboard direct-award line
 
 // Amber for priority quadrant — the one raw hex permitted by spec
 const QUADRANT_AMBER = '#f59e0b'
@@ -287,7 +287,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
   const quadrantH = quadrantY  // from top to 1B line
 
   // ── OECD reference x ──────────────────────────────────────────────────────
-  const oecdX = xScale(OECD_RISK_PCT)
+  const oecdX = xScale(EU_DA_PCT)
 
   // ── Agricultura circle ────────────────────────────────────────────────────
   const agricNode = nodes.find((n) => n.sector.sector_code === 'agricultura')
@@ -417,7 +417,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
             fillOpacity={0.85}
             aria-hidden="true"
           >
-            {isEs ? 'OCDE 25%' : 'OECD 25%'}
+            {isEs ? `UE ${EU_DA_PCT}%` : `EU ${EU_DA_PCT}%`}
           </text>
 
           {/* ── Sector glyphs ──────────────────────────────────────────── */}
@@ -593,14 +593,14 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
           />
           {X_TICKS.map((tick) => {
             const x = xScale(tick)
-            const isOECD = tick === 25
+            const isRef = tick === EU_DA_PCT
             return (
               <g key={tick} aria-hidden="true">
                 <line
                   x1={x} x2={x}
                   y1={innerH} y2={innerH + 4}
-                  stroke={isOECD ? '#22d3ee' : 'var(--color-border)'}
-                  strokeWidth={isOECD ? 1.5 : 0.75}
+                  stroke={isRef ? '#22d3ee' : 'var(--color-border)'}
+                  strokeWidth={isRef ? 1.5 : 0.75}
                 />
                 <text
                   x={x}
@@ -608,8 +608,8 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   textAnchor="middle"
                   fontFamily="var(--font-family-mono, monospace)"
                   fontSize={13}
-                  fill={isOECD ? '#22d3ee' : 'var(--color-text-muted)'}
-                  fillOpacity={isOECD ? 0.9 : 0.7}
+                  fill={isRef ? '#22d3ee' : 'var(--color-text-muted)'}
+                  fillOpacity={isRef ? 0.9 : 0.7}
                 >
                   {tick}%
                 </text>

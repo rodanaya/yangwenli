@@ -112,8 +112,8 @@ export default function Press() {
       <Section id="method" icon={FlaskConical} kicker={es ? 'EL MÉTODO' : 'THE METHOD'} title={es ? 'Cómo funciona el modelo' : 'How the model works'}>
         <p>
           {es
-            ? 'RUBLI usa regresión logística ElasticNet con corrección PU-learning (Elkan & Noto 2008) sobre 18 señales estandarizadas (puntuaciones Z) por sector y año — de modo que una adjudicación directa en Defensa, donde es la norma, no se penaliza igual que una en Educación, donde es la excepción. Entrenado con 1,427 casos documentados y una separación estricta por proveedor (ningún proveedor aparece a la vez en entrenamiento y prueba).'
-            : 'RUBLI uses ElasticNet logistic regression with PU-learning correction (Elkan & Noto 2008) over 18 standardized (z-score) signals by sector and year — so a direct award in Defense, where it is the norm, is not penalized like one in Education, where it is the exception. Trained on 1,427 documented cases with a strict per-vendor split (no vendor appears in both training and test).'}
+            ? 'RUBLI usa regresión logística ElasticNet con corrección PU-learning (Elkan & Noto 2008) sobre 18 señales estandarizadas (puntuaciones Z) por sector y año — de modo que una adjudicación directa en Defensa, donde es la norma, no se penaliza igual que una en Educación, donde es la excepción. Entrenado con 1,417 casos documentados y una separación estricta por proveedor (ningún proveedor aparece a la vez en entrenamiento y prueba).'
+            : 'RUBLI uses ElasticNet logistic regression with PU-learning correction (Elkan & Noto 2008) over 18 standardized (z-score) signals by sector and year — so a direct award in Defense, where it is the norm, is not penalized like one in Education, where it is the exception. Trained on 1,417 documented cases with a strict per-vendor split (no vendor appears in both training and test).'}
         </p>
         <p className="text-xs text-text-muted font-mono">
           {es ? 'Metodología completa, coeficientes y limitaciones:' : 'Full methodology, coefficients, and limitations:'}{' '}

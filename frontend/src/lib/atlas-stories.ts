@@ -173,10 +173,10 @@ const PHARMA_CARTEL: Story = {
         es: 'Llega COVID. Las agencias federales invocan disposiciones de emergencia — la adjudicación directa vuelve a permitirse. Los distribuidores regresan por el canal abierto. El cúmulo farmacéutico se intensifica abruptamente. El veto, en la práctica, queda suspendido durante la emergencia. La emergencia dura.',
       },
       pull: {
-        value: { en: '87%', es: '87%' },
+        value: { en: '78.1%', es: '78.1%' },
         caption: {
-          en: '2020 direct-award rate (vs 75% baseline)',
-          es: 'tasa adjudicación directa 2020 (vs 75% base)',
+          en: '2020 direct-award rate · 2019 was 77.8%',
+          es: 'tasa de adjudicación directa 2020 · 2019 fue 77.8%',
         },
       },
       state: { mode: 'patterns', year: 2020, pinnedCode: 'P5' },
@@ -356,14 +356,14 @@ const COVID_YEAR: Story = {
       yearLabel: { en: 'March 2020', es: 'Marzo 2020' },
       title: { en: 'The Emergency Provisions', es: 'Las Disposiciones de Emergencia' },
       body: {
-        en: 'On March 30, 2020, COVID-19 is declared a national health emergency. Article 41 of the Federal Procurement Law permits direct-award in emergency conditions. Within weeks, the share of contracts awarded without competition climbs to 87% — the highest single-year reading in the COMPRANET record.',
-        es: 'El 30 de marzo de 2020, COVID-19 se declara emergencia sanitaria nacional. El artículo 41 de la LAASSP permite adjudicación directa en condiciones de emergencia. En semanas, la proporción de contratos sin licitación trepa al 87% — la lectura anual más alta en el registro COMPRANET.',
+        en: 'On March 30, 2020, COVID-19 is declared a national health emergency. Article 41 of the Federal Procurement Law permits direct-award in emergency conditions. The share of contracts awarded without competition ends the year at 78.1% — a tenth of a point above 2019, and four points below the record the register sets in 2023. The emergency did not open the door; it was already open.',
+        es: 'El 30 de marzo de 2020, COVID-19 se declara emergencia sanitaria nacional. El artículo 41 de la LAASSP permite adjudicación directa en condiciones de emergencia. La proporción de contratos sin licitación cierra el año en 78.1% — una décima por encima de 2019 y cuatro puntos por debajo del récord que el registro marca en 2023. La emergencia no abrió la puerta: ya estaba abierta.',
       },
       pull: {
-        value: { en: '87%', es: '87%' },
+        value: { en: '78.1%', es: '78.1%' },
         caption: {
-          en: 'highest single-year direct-award rate (2002–2025)',
-          es: 'mayor tasa anual de adjudicación directa (2002–2025)',
+          en: '2020 direct-award rate · the peak is 2023, at 82.2%',
+          es: 'tasa de adjudicación directa 2020 · el pico es 2023, con 82.2%',
         },
       },
       state: { mode: 'patterns', year: 2020, pinnedCode: 'P5' },

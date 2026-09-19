@@ -26,7 +26,7 @@
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { SECTOR_COLORS, RISK_COLORS, OECD_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, EU_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
 import type { SectorTrajectoryPoint } from '@/api/types'
@@ -60,9 +60,9 @@ export interface LedgerRow {
 const DAGGER_SECTORS = new Set(['salud', 'agricultura', 'trabajo'])
 
 // OECD direct-award ceiling, as a percentage (0–100) for this surface's copy.
-// Single source: constants.ts OECD_DIRECT_AWARD_LIMIT (anti-pattern A7 — never
+// Single source: constants.ts EU_DIRECT_AWARD_LIMIT (anti-pattern A7 — never
 // retype the limit per surface).
-const OECD_DA_CEILING = OECD_DIRECT_AWARD_LIMIT * 100
+const EU_DA_LINE = EU_DIRECT_AWARD_LIMIT * 100
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tiny local helpers (intensityColor / compactCount shared with §B/§C/dossier)
@@ -301,7 +301,7 @@ function LedgerRowItem({
         >
           <div className="flex items-center gap-1.5 mb-2">
             <span className="font-mono shrink-0" style={{ fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-              DA · {lang === 'es' ? 'OCDE' : 'OECD'} ≤{OECD_DA_CEILING.toFixed(0)}%
+              DA · {lang === 'es' ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
             </span>
             <DABullet daPct={row.daPct} />
             <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
@@ -398,7 +398,7 @@ export function ExposureLedger({
           <span className="font-mono w-6 text-right shrink-0" style={KICKER_STYLE} aria-hidden="true">#</span>
           <span className="font-mono flex-1" style={KICKER_STYLE} aria-hidden="true">{lang === 'es' ? 'Sector' : 'Sector'}</span>
           <span className="font-mono w-[120px] shrink-0" style={KICKER_STYLE} aria-hidden="true">
-            DA · {lang === 'es' ? 'OCDE' : 'OECD'} ≤{OECD_DA_CEILING.toFixed(0)}%
+            DA · {lang === 'es' ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
           </span>
           {sortHeader('var', 'VaR', 'w-20 sm:w-24')}
           {sortHeader('intensity', 'Intens.', 'w-[64px]')}
@@ -504,8 +504,8 @@ export function ExposureLedger({
           style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
         >
           {lang === 'es'
-            ? `regla = adjudicación directa vs techo OCDE ${OECD_DA_CEILING.toFixed(0)}% (excedente en ámbar) · ● = intensidad · línea = trayectoria de riesgo`
-            : `rule = direct award vs OECD ${OECD_DA_CEILING.toFixed(0)}% ceiling (overshoot in amber) · ● = intensity · line = risk trajectory`}
+            ? `regla = adjudicación directa vs línea UE ${EU_DA_LINE.toFixed(0)}% (excedente en ámbar) · ● = intensidad · línea = trayectoria de riesgo`
+            : `rule = direct award vs the EU ${EU_DA_LINE.toFixed(0)}% line (overshoot in amber) · ● = intensity · line = risk trajectory`}
         </p>
 
         {/* Footnote register — caveat notes, shown at all breakpoints. */}

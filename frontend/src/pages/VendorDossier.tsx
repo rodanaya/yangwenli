@@ -281,8 +281,8 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           }}
         >
           {lang === 'es'
-            ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
-            : 'COMPRANET data 2002–2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'}
+            ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 entrenado con 1,417 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
+            : 'COMPRANET data 2002–2025. v0.8.5 risk model trained on 1,417 documented corruption cases. Model signals are statistical indicators, not legal determinations.'}
         </p>
         <button
           type="button"

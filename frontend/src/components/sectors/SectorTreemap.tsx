@@ -288,15 +288,15 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
           const h = y1 - y0
           const fill = cellFill(s.sector_code, s.avg_risk_score)
           const daPct = s.direct_award_pct ?? 0
-          const isOECDViolator = daPct > 25
+          const isAboveEuLine = daPct > 10
           const isHovered = hoveredId === s.sector_id
           const isAnyHovered = hoveredId !== null
           const opacity = isAnyHovered && !isHovered ? 0.3 : 1
-          const strokeColor = isOECDViolator ? '#f59e0b' : 'var(--color-border)'
-          const strokeWidth = isHovered ? 2 : isOECDViolator ? 1.5 : 1
+          const strokeColor = isAboveEuLine ? '#f59e0b' : 'var(--color-border)'
+          const strokeWidth = isHovered ? 2 : isAboveEuLine ? 1.5 : 1
 
           const showLabel = w > 80 && h > 40
-          const showChip = w > 55 && h > 30 && isOECDViolator
+          const showChip = w > 55 && h > 30 && isAboveEuLine
 
           // Sector display name — must localize via getSectorName so EN
           // UI doesn't show Spanish (F088). sector_name from API is
@@ -376,7 +376,7 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
                 </>
               )}
 
-              {/* OCDE ✗ chip — top-right corner */}
+              {/* EU-line chip — top-right corner */}
               {showChip && (
                 <g style={{ pointerEvents: 'none' }}>
                   <rect
@@ -398,7 +398,7 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
                     textAnchor="middle"
                     fill="#f59e0b"
                   >
-                    OCDE ✗
+                    UE ✗
                   </text>
                 </g>
               )}

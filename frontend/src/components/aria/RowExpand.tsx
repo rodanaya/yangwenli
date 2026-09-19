@@ -129,7 +129,7 @@ export function RowExpand({ item, isEs, onClose, onNext }: RowExpandProps) {
                 label={isEs ? 'Adjudicación directa' : 'Direct award rate'}
                 value={item.direct_award_rate}
                 benchmark={0.3}
-                benchmarkLabel={isEs ? 'límite OCDE' : 'OECD limit'}
+                benchmarkLabel={isEs ? 'línea UE' : 'EU line'}
                 maxDelta={0.5}
               />
             </div>

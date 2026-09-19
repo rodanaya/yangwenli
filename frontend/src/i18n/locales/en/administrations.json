@@ -137,7 +137,7 @@
     },
     "amlo": {
       "headline": "AMLO: 78.9% Direct Awards — Highest in the Modern Record",
-      "findings": "The AMLO administration (2018–2024) generated the largest procurement volume of any presidency: approximately 1.24 million contracts worth 3.2 trillion MXN. The direct award rate reached 78.9% — the highest recorded across all five administrations and well above the OECD guideline of 30%. Emergency COVID-19 procurement in 2020–2021 flagged significant irregularities in health-sector contracts, with vendors such as Bruluart and DIMM receiving multi-billion-peso awards through expedited processes with minimal competitive scrutiny. Average risk score reached 0.31.",
+      "findings": "The AMLO administration (2018–2024) generated the largest procurement volume of any presidency: approximately 1.24 million contracts worth 3.2 trillion MXN. The direct award rate reached 78.9% — the highest recorded across all five administrations and eight times the 10% direct-award line the EU Single Market Scoreboard rates unsatisfactory. Emergency COVID-19 procurement in 2020–2021 flagged significant irregularities in health-sector contracts, with vendors such as Bruluart and DIMM receiving multi-billion-peso awards through expedited processes with minimal competitive scrutiny. Average risk score reached 0.31.",
       "keyRisk": "The systematic bypassing of competitive tendering — justified variously as emergency powers, austerity, or anti-corruption — paradoxically created conditions that OECD frameworks identify as among the highest-risk procurement patterns.",
       "legacy": "With 1.24 million contracts, AMLO's term accounts for roughly 40% of all procurement records in the RUBLI dataset; the exceptionally high direct award rate means a disproportionate share of those contracts lack the competitive documentation needed to reconstruct pricing rationale or detect overpricing after the fact."
     },
@@ -177,7 +177,7 @@
   },
   "patternsView": {
     "directAwardCard": "Direct Award Rate",
-    "directAwardDesc": "23-year average. OECD benchmark: 20–30%.",
+    "directAwardDesc": "23-year average. EU scoreboard: ≥10% direct award = unsatisfactory.",
     "directAwardAboveBenchmark": "+{{val}}pp above benchmark.",
     "directAwardPeak": "Peak: {{val}}% ({{year}})",
     "singleBidCard": "Single Bidder Rate",
@@ -248,7 +248,7 @@
   },
   "grade": {
     "title": "PROCUREMENT GRADE",
-    "procurement": "Based on OECD benchmarks: direct award rate, high-risk rate, and single-bid rate."
+    "procurement": "Direct-award and single-bidder rates against the EU Single Market Scoreboard lines; high-risk rate against RUBLI's calibration target."
   },
   "radar": {
     "title": "All Administrations: Procurement Fingerprint",
@@ -269,8 +269,8 @@
     "totalValue": "Total Value",
     "directAward": "Direct Award",
     "avgRisk": "Avg Risk",
-    "daVsOecd": "Direct Award vs OECD ({{pct}}%)",
-    "oecdBenchmark": "OECD {{pct}}%",
+    "daVsOecd": "Direct Award vs EU line ({{pct}}%)",
+    "oecdBenchmark": "EU {{pct}}%",
     "notableCase": "Notable case:"
   },
   "share": "Share",

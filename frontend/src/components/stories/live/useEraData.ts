@@ -62,13 +62,13 @@ export const FIRST_YEAR = 2002
 /** The last complete year — the federal feed froze at 2025-09-28. */
 export const LAST_FULL_YEAR = 2024
 /**
- * The OECD's 2-15% band for the share of contracts a functioning system should
- * flag. External to RUBLI, carried with the story's citation (OECD 2023,
- * Public Procurement Performance Report: Mexico), and never presented as
- * something the register measures.
+ * RUBLI's own calibration target for the flagged share of contracts, 2-15%
+ * (docs/RISK_METHODOLOGY_v6.md). Earlier editions attributed this band to the
+ * OECD; no published OECD instrument states it, so it is carried as what it is
+ * — the band v0.8.5 was calibrated into, not an external benchmark.
  */
-export const OECD_FLOOR = 2
-export const OECD_CEILING = 15
+export const HR_BAND_FLOOR = 2
+export const HR_BAND_CEILING = 15
 /**
  * A year holding fewer contracts than this is a register artefact, not a year:
  * the table carries rows dated 2000 (1 contract), 2001 (19) and 2004 (7).

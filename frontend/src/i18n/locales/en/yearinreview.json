@@ -48,12 +48,12 @@
   "riskEvolution": {
     "sectionLabel": "Risk Evolution",
     "headline": "{{year}} risk profile vs historical average",
-    "subtitle": "Risk level distribution compared to the 2002-2025 average and the OECD threshold.",
+    "subtitle": "Risk level distribution compared to the 2002-2025 average and RUBLI's calibration ceiling.",
     "thisYear": "This year",
     "historicalAvg": "2002-2025 average",
-    "oecdTarget": "OECD threshold (15%)",
-    "aboveOECD": "Above OECD threshold",
-    "belowOECD": "Within OECD range"
+    "oecdTarget": "calibration ceiling (15%)",
+    "aboveOECD": "Above the calibration ceiling",
+    "belowOECD": "Within the calibration target"
   },
   "procedureType": {
     "sectionLabel": "Procedure Type",
@@ -61,8 +61,8 @@
     "subtitle": "In {{year}}, {{directPct}}% of contracts were awarded directly, without formal competition.",
     "direct": "Direct Award",
     "competitive": "Competitive",
-    "historicalContext": "The 2002-2025 historical average is {{avg}}%. OECD recommends under 25%.",
-    "oecdLimit": "OECD: max 25%"
+    "historicalContext": "The 2002-2025 historical average is {{avg}}%. The EU scoreboard rates 10% or more unsatisfactory.",
+    "oecdLimit": "EU scoreboard: 10%"
   },
   "topVendorsFull": {
     "sectionLabel": "Top Beneficiaries",

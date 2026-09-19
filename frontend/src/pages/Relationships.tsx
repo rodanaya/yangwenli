@@ -253,8 +253,8 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <div className="mt-4">
         <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
           {lang === 'en'
-            ? 'COMPRANET data 2002–2025; data horizon Sep 28 2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'
-            : 'Datos COMPRANET 2002–2025; horizonte de datos 28 sep 2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'}
+            ? 'COMPRANET data 2002–2025; data horizon Sep 28 2025. v0.8.5 risk model trained on 1,417 documented corruption cases. Model signals are statistical indicators, not legal determinations.'
+            : 'Datos COMPRANET 2002–2025; horizonte de datos 28 sep 2025. Modelo de riesgo v0.8.5 entrenado con 1,417 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'}
         </p>
         <button
           type="button"

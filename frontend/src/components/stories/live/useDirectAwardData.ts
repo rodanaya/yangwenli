@@ -49,13 +49,15 @@ export const CODED_FROM = 2010
 /** The last complete year — the federal feed froze at 2025-09-28. */
 export const LAST_FULL_YEAR = 2024
 /**
- * The direct-award ceiling the story argues against.
+ * The direct-award line the story argues against.
  *
- * External to RUBLI and carried with the story's own citation (OECD 2023,
- * Public Procurement Performance Report: Mexico), never presented as something
- * the register measures. Every figure that draws it says whose line it is.
+ * European Commission, Single Market Scoreboard — a direct-award share at or
+ * above 10% is rated unsatisfactory (5% or under is satisfactory). External to
+ * RUBLI and never presented as something the register measures; every figure
+ * that draws it says whose line it is. The 25-30% "OECD ceiling" earlier
+ * editions carried could not be traced to a published OECD instrument.
  */
-export const OECD_CEILING = 30
+export const EU_DIRECT_AWARD_LINE = 10
 /** The floor of the run the headline claims. */
 export const RULE_FLOOR = 60
 /** The dumbbell's two cuts: the first coded year against the peak year. */

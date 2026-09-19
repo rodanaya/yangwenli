@@ -19,8 +19,8 @@ import {
   RISK_COLORS,
   RISK_TEXT_COLORS,
   SECTOR_COLORS,
-  OECD_DIRECT_AWARD_LIMIT,
-  OECD_SINGLE_BID_LIMIT,
+  EU_DIRECT_AWARD_LIMIT,
+  EU_SINGLE_BID_LIMIT,
   MODEL_HR_BASELINE,
 } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
@@ -67,8 +67,8 @@ export function VendorStatStrip({
       ? vendor.last_contract_year - vendor.first_contract_year + 1
       : null
 
-  const daLimit = OECD_DIRECT_AWARD_LIMIT * 100 // 30
-  const sbLimit = OECD_SINGLE_BID_LIMIT * 100   // 10
+  const daLimit = EU_DIRECT_AWARD_LIMIT * 100 // 30
+  const sbLimit = EU_SINGLE_BID_LIMIT * 100   // 10
   const daColor = da == null ? undefined : da > daLimit ? RISK_TEXT_COLORS.critical : da > daLimit / 2 ? RISK_TEXT_COLORS.high : undefined
   const sbColor = sb == null ? undefined : sb > sbLimit ? RISK_TEXT_COLORS.critical : sb > sbLimit / 2 ? RISK_TEXT_COLORS.high : undefined
   const hrColor = hr == null ? undefined : hr >= 60 ? RISK_TEXT_COLORS.critical : hr >= 30 ? RISK_TEXT_COLORS.high : undefined
@@ -92,13 +92,13 @@ export function VendorStatStrip({
     da == null ? null : {
       label: isEs ? 'Adj. directa' : 'Direct award',
       value: `${Math.round(da)}%`,
-      sub: da > daLimit ? `${(da / daLimit).toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? `≤${daLimit}% OCDE` : `≤${daLimit}% OECD`),
+      sub: da > daLimit ? `${(da / daLimit).toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? `≤${daLimit}% UE` : `≤${daLimit}% OECD`),
       color: daColor,
     },
     sb == null ? null : {
       label: isEs ? 'Único postor' : 'Single bid',
       value: `${Math.round(sb)}%`,
-      sub: sb > sbLimit ? `${(sb / sbLimit).toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? `≤${sbLimit}% OCDE` : `≤${sbLimit}% OECD`),
+      sub: sb > sbLimit ? `${(sb / sbLimit).toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? `≤${sbLimit}% UE` : `≤${sbLimit}% OECD`),
       color: sbColor,
     },
     {
@@ -145,7 +145,7 @@ export function VendorDiagnosticGrid({
   const da = ratePct(vendor.direct_award_pct)
   const sb = ratePct(vendor.single_bid_pct)
   const benchRows: BenchRow[] = []
-  const daLim = OECD_DIRECT_AWARD_LIMIT * 100, sbLim = OECD_SINGLE_BID_LIMIT * 100, hrLim = MODEL_HR_BASELINE * 100
+  const daLim = EU_DIRECT_AWARD_LIMIT * 100, sbLim = EU_SINGLE_BID_LIMIT * 100, hrLim = MODEL_HR_BASELINE * 100
   if (da != null) benchRows.push({ label: isEs ? 'Adjudicación directa' : 'Direct award', pct: da, limit: daLim, over: da > daLim })
   if (sb != null) benchRows.push({ label: isEs ? 'Único postor' : 'Single bid', pct: sb, limit: sbLim, over: sb > sbLim })
   if (hr != null) benchRows.push({ label: isEs ? 'Alto riesgo' : 'High-risk', pct: hr, limit: hrLim, over: hr > hrLim })

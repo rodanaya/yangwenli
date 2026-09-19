@@ -4030,7 +4030,7 @@ function Z3Panel({
       label: lang === 'en' ? 'Direct award' : 'Adj. directa',
       kind: 'pct', vendorVal: daVendor, medianVal: daMedian,
       percentile: daV?.percentile ?? null,
-      absoluteRef: { value: 25, label: 'OECD' },
+      absoluteRef: { value: 10, label: 'EU' },
       alarm: daVendor >= 75, ratio: ratioOf(daVendor, daMedian),
     },
     {

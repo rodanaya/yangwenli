@@ -60,7 +60,7 @@
   "notes": {
     "allContracts": "All contracts awarded, 2002–2025",
     "vsNational": "vs. ~48% national average",
-    "oecdBenchmark": "OECD benchmark: 2–15%"
+    "oecdBenchmark": "Calibration target: 2–15%"
   },
   "timeline": {
     "heading": "{{total}} Contracts, {{minYear}}–{{maxYear}}",
@@ -175,7 +175,7 @@
     "peakRiskLabel": "{{year}} — {{pct}}% avg score",
     "chartValueLabel": "Contract Value by Year (MXN millions)",
     "chartRiskLabel": "Average Risk Score by Year (%)",
-    "riskNote": "Risk thresholds: Critical ≥60%, High ≥40%, Medium ≥25%. OECD benchmark: 2–15% high-risk."
+    "riskNote": "Risk thresholds: Critical ≥60%, High ≥40%, Medium ≥25%. Calibration target: 2–15% high-risk."
   },
   "verdict": {
     "heading": "Investigation Summary",

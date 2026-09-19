@@ -40,10 +40,10 @@ const ANCHOR_STATS: AnchorStat[] = [
   {
     value: '11.01%',
     label: { en: 'High-risk rate', es: 'Tasa de alto riesgo' },
-    sub: { en: 'OECD range: 2–15%', es: 'rango OCDE: 2–15%' },
+    sub: { en: 'calibration target: 2–15%', es: 'meta de calibración: 2–15%' },
   },
   {
-    value: '1,427',
+    value: '1,417',
     label: { en: 'Ground-truth cases', es: 'Casos de verdad fundamental' },
     sub: {
       en: '1,554 vendors · ~302K contracts',
@@ -107,8 +107,8 @@ export function DictamenMasthead({ className }: { className?: string }) {
         style={{ fontFamily: SERIF, fontSize: 17, maxWidth: '68ch', lineHeight: 1.55 }}
       >
         {lang === 'es'
-          ? 'Un modelo logístico regularizado con corrección positivo–no-etiquetado, entrenado con 1,427 casos documentados de corrupción y probado con proveedores que nunca vio. Esta página es el expediente completo: los pesos, las matemáticas, los fracasos que conservamos y los límites que declaramos.'
-          : 'A regularized logistic model with positive–unlabeled correction, trained on 1,427 documented corruption cases and tested on vendors it never saw. This page is the full record: the weights, the math, the failures we kept, and the limits we declare.'}
+          ? 'Un modelo logístico regularizado con corrección positivo–no-etiquetado, entrenado con 1,417 casos documentados de corrupción y probado con proveedores que nunca vio. Esta página es el expediente completo: los pesos, las matemáticas, los fracasos que conservamos y los límites que declaramos.'
+          : 'A regularized logistic model with positive–unlabeled correction, trained on 1,417 documented corruption cases and tested on vendors it never saw. This page is the full record: the weights, the math, the failures we kept, and the limits we declare.'}
       </p>
 
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">

@@ -204,6 +204,7 @@ function ImssLedger({
 
   return (
     <ChartCard
+      source="/aria/patterns/P6/institutions · /capture/landscape"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -211,7 +212,7 @@ function ImssLedger({
       anchor={{
         value: formatCompactMXN(row.total_value_mxn),
         label: es
-          ? `en contratos federales de por vida de los ${formatNumber(row.vendor_count)} proveedores marcados que canalizan su trabajo al IMSS`
+          ? `en contratos federales acumulados de los ${formatNumber(row.vendor_count)} proveedores marcados que canalizan su trabajo al IMSS`
           : `in lifetime federal contracts held by the ${formatNumber(row.vendor_count)} flagged vendors that route their work through IMSS`,
         color: EMPHASIS,
       }}
@@ -225,7 +226,7 @@ function ImssLedger({
               twinIds.size
                 ? ` Dos filas llevan el mismo nombre: están inscritas en el padrón con grafías que solo difieren en la puntuación, y ninguna de las dos trae RFC — la cobertura de RFC en los años en que se registraron va de 0.1% a 15.7% —, así que el padrón no puede fusionarlas y esta figura tampoco. Se distinguen por su número de registro, su valor y su número de contratos.`
                 : ''
-            } Cifras en vivo de /aria/patterns/P6/institutions y /capture/landscape.`
+            }`
           : `Each bar is one vendor’s dependence: the share of ITS OWN federal contracting that goes to IMSS. It is not the share of the IMSS budget that vendor takes — the arrow runs from supplier to buyer, and that is the direction the P6 pattern measures. The dashed rules are the floor (${floor}%) and ceiling (${ceil}%) of the /captura capture definition, read from the endpoint. These are the six largest by value of the ${formatNumber(row.vendor_count)} anchored at IMSS. Read the other way the finding reverses: ${
               imssClimbs
                 ? 'IMSS does appear among the buyers where one supplier climbed from the floor to the ceiling.'
@@ -234,7 +235,7 @@ function ImssLedger({
               twinIds.size
                 ? ` Two rows carry the same name: they are filed in the padrón under spellings that differ only in punctuation, and neither one carries an RFC — coverage across the years they were registered runs from 0.1% to 15.7% — so the register cannot merge them and this figure will not either. They are told apart by their register number, their value and their contract count.`
                 : ''
-            } Figures live from /aria/patterns/P6/institutions and /capture/landscape.`
+            }`
       }
     >
       <div className="px-2 pb-2">
@@ -393,6 +394,7 @@ function Institutions({
 
   return (
     <ChartCard
+      source="/aria/patterns/P6/institutions"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -406,8 +408,8 @@ function Institutions({
       }}
       annotation={
         es
-          ? `Cada barra suma la contratación federal de por vida de los proveedores P6 cuyo comprador principal es esa institución — el valor viaja con el proveedor, no sale del presupuesto de la institución. La regla punteada es el promedio de los ${rows.length} (${formatCompactMXN(mean)}); ${leader.label} corre ${(leader.total_value_mxn / (mean || 1)).toFixed(1)}× eso. La barra «otros» es el resto de la cohorte, repartido entre el resto de los compradores. Los nombres son las siglas con que la cola archiva al comprador: PEMEX reúne tres registros (corporativo, Refinación, Exploración) y la ficha abre el mayor. El embudo de abajo lee en el otro sentido y cuenta instituciones, no proveedores. Cifras en vivo de /aria/patterns/P6/institutions.`
-          : `Each bar sums the lifetime federal contracting of the P6 vendors whose main buyer is that institution — the value travels with the vendor; it does not come out of the institution’s budget. The dashed rule is the ${rows.length}-buyer average (${formatCompactMXN(mean)}); ${leader.label} runs ${(leader.total_value_mxn / (mean || 1)).toFixed(1)}× it. The “others” bar is the rest of the cohort, spread across every other buyer. The names are the acronyms the queue files a buyer under: PEMEX gathers three registrations (corporate, Refinación, Exploración) and the chip opens the largest. The funnel below reads the other way and counts institutions, not vendors. Figures live from /aria/patterns/P6/institutions.`
+          ? `Cada barra suma la contratación federal acumulada de los proveedores P6 cuyo comprador principal es esa institución — el valor viaja con el proveedor, no sale del presupuesto de la institución. La regla punteada es el promedio de los ${rows.length} (${formatCompactMXN(mean)}); ${leader.label} corre ${(leader.total_value_mxn / (mean || 1)).toFixed(1)}× eso. La barra «otros» es el resto de la cohorte, repartido entre el resto de los compradores. Los nombres son las siglas con que la cola archiva al comprador: PEMEX reúne tres registros (corporativo, Refinación, Exploración) y la ficha abre el mayor. El embudo de abajo lee en el otro sentido y cuenta instituciones, no proveedores.`
+          : `Each bar sums the lifetime federal contracting of the P6 vendors whose main buyer is that institution — the value travels with the vendor; it does not come out of the institution’s budget. The dashed rule is the ${rows.length}-buyer average (${formatCompactMXN(mean)}); ${leader.label} runs ${(leader.total_value_mxn / (mean || 1)).toFixed(1)}× it. The “others” bar is the rest of the cohort, spread across every other buyer. The names are the acronyms the queue files a buyer under: PEMEX gathers three registrations (corporate, Refinación, Exploración) and the chip opens the largest. The funnel below reads the other way and counts institutions, not vendors.`
       }
     >
       <div className="px-2 pb-2">
@@ -563,6 +565,7 @@ function Intermediaries({ body, lang }: { body: AriaPatternGroupsResponse; lang:
 
   return (
     <ChartCard
+      source="/aria/patterns/P3/institutions?group=sector"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -584,7 +587,7 @@ function Intermediaries({ body, lang }: { body: AriaPatternGroupsResponse; lang:
               thinNames.length
                 ? ` ${thinNames.join(' y ')} ${thinNames.length > 1 ? 'aparecen' : 'aparece'} en gris: su base marcada es demasiado pequeña para sostener una porción — un solo proveedor la mueve puntos enteros.`
                 : ''
-            } Cifras en vivo de /aria/patterns/P3/institutions?group=sector.`
+            }`
           : `Each bar is the share of a sector’s flagged spend that runs through P3 vendors — intermediaries that win the contract and subcontract the work. The denominator is everything ARIA flags in that sector, under any pattern, from the same endpoint: ${formatCompactMXN(cohort.total_value_mxn)} of P3 against each sector’s flagged total.${
               health
                 ? ` ${SECTOR_LABEL[lead.row.label]?.en ?? lead.row.label} runs ${(lead.share / (health.share || 1)).toFixed(1)}× the share in health (${pct1(health.share)}).`
@@ -593,7 +596,7 @@ function Intermediaries({ body, lang }: { body: AriaPatternGroupsResponse; lang:
               thinNames.length
                 ? ` ${thinNames.join(' and ')} ${thinNames.length > 1 ? 'are' : 'is'} drawn in grey: their flagged base is too small to carry a share — one vendor moves it by whole points.`
                 : ''
-            } Figures live from /aria/patterns/P3/institutions?group=sector.`
+            }`
       }
     >
       <div className="px-2 pb-2">
@@ -715,6 +718,7 @@ function Estafa({
 
   return (
     <ChartCard
+      source="/cases/${ESTAFA_SLUG} · /aria/patterns/P3/institutions"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -728,8 +732,8 @@ function Estafa({
       }}
       annotation={
         es
-          ? `El expediente es el que RUBLI tiene verificado en su biblioteca de casos: ${caseName}, ${scandal.contract_year_start}–${scandal.contract_year_end}, ${formatCompactMXN(low)}${high ? ` a ${formatCompactMXN(high)}` : ''}, estado legal «${statusText}»${note ? ` — ${note}` : ''}. La comparación es de estructura, no de culpa: los ${formatNumber(cohort.total_vendors)} proveedores P3 comparten la forma —ganar el contrato y subcontratar la entrega— no una sentencia. ${formatNumber(cohort.in_ground_truth)} de ellos ya figuran como casos documentados. Cifras en vivo de /cases/${ESTAFA_SLUG} y /aria/patterns/P3/institutions.`
-          : `The file is the one RUBLI holds verified in its case library: ${caseName}, ${scandal.contract_year_start}–${scandal.contract_year_end}, ${formatCompactMXN(low)}${high ? ` to ${formatCompactMXN(high)}` : ''}, legal status “${statusText}”${note ? ` — ${note}` : ''}. The comparison is of structure, not of guilt: the ${formatNumber(cohort.total_vendors)} P3 vendors share the shape — win the contract, subcontract the delivery — not a verdict. ${formatNumber(cohort.in_ground_truth)} of them already appear as documented cases. Figures live from /cases/${ESTAFA_SLUG} and /aria/patterns/P3/institutions.`
+          ? `El expediente es el que RUBLI tiene verificado en su biblioteca de casos: ${caseName}, ${scandal.contract_year_start}–${scandal.contract_year_end}, ${formatCompactMXN(low)}${high ? ` a ${formatCompactMXN(high)}` : ''}, estado legal «${statusText}»${note ? ` — ${note}` : ''}. La comparación es de estructura, no de culpa: los ${formatNumber(cohort.total_vendors)} proveedores P3 comparten la forma —ganar el contrato y subcontratar la entrega— no una sentencia. ${formatNumber(cohort.in_ground_truth)} de ellos ya figuran como casos documentados.`
+          : `The file is the one RUBLI holds verified in its case library: ${caseName}, ${scandal.contract_year_start}–${scandal.contract_year_end}, ${formatCompactMXN(low)}${high ? ` to ${formatCompactMXN(high)}` : ''}, legal status “${statusText}”${note ? ` — ${note}` : ''}. The comparison is of structure, not of guilt: the ${formatNumber(cohort.total_vendors)} P3 vendors share the shape — win the contract, subcontract the delivery — not a verdict. ${formatNumber(cohort.in_ground_truth)} of them already appear as documented cases.`
       }
     >
       <div className="px-2 pb-2">
@@ -798,6 +802,7 @@ function Queue({
 
   return (
     <ChartCard
+      source="/aria/patterns/P6/institutions · /aria/patterns/P3/institutions"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -811,8 +816,8 @@ function Queue({
       }}
       annotation={
         es
-          ? `Los dos patrones de esta historia juntos: ${formatNumber(a.total_vendors)} con captura P6 y ${formatNumber(b.total_vendors)} con intermediación P3, ${formatNumber(total)} en total, sobre ${formatCompactMXN(value)} de contratación federal de por vida. Las tres barras de abajo son disposiciones que se traslapan, no subconjuntos anidados: un proveedor puede estar documentado sin haber pasado por revisión. ${formatNumber(tier12)} están en los niveles 1 y 2 de ARIA, la banda que la cola prioriza. Cifras en vivo de /aria/patterns/P6/institutions y /aria/patterns/P3/institutions.`
-          : `The story’s two patterns together: ${formatNumber(a.total_vendors)} under P6 capture and ${formatNumber(b.total_vendors)} under P3 intermediation, ${formatNumber(total)} in all, across ${formatCompactMXN(value)} of lifetime federal contracting. The three bars below are overlapping dispositions, not nested subsets: a vendor can be documented without ever having passed a review. ${formatNumber(tier12)} sit at ARIA Tiers 1 and 2, the band the queue prioritises. Figures live from /aria/patterns/P6/institutions and /aria/patterns/P3/institutions.`
+          ? `Los dos patrones de esta historia juntos: ${formatNumber(a.total_vendors)} con captura P6 y ${formatNumber(b.total_vendors)} con intermediación P3, ${formatNumber(total)} en total, sobre ${formatCompactMXN(value)} de contratación federal de por vida. Las tres barras de abajo son disposiciones que se traslapan, no subconjuntos anidados: un proveedor puede estar documentado sin haber pasado por revisión. ${formatNumber(tier12)} están en los niveles 1 y 2 de ARIA, la banda que la cola prioriza.`
+          : `The story’s two patterns together: ${formatNumber(a.total_vendors)} under P6 capture and ${formatNumber(b.total_vendors)} under P3 intermediation, ${formatNumber(total)} in all, across ${formatCompactMXN(value)} of lifetime federal contracting. The three bars below are overlapping dispositions, not nested subsets: a vendor can be documented without ever having passed a review. ${formatNumber(tier12)} sit at ARIA Tiers 1 and 2, the band the queue prioritises.`
       }
     >
       <div className="px-2 pb-2">

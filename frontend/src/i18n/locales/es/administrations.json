@@ -137,7 +137,7 @@
     },
     "amlo": {
       "headline": "AMLO: 78.9% de adjudicaciones directas — el máximo histórico en el registro moderno",
-      "findings": "La administración de AMLO (2018–2024) generó el mayor volumen de contratación de cualquier presidencia: aproximadamente 1.24 millones de contratos por 3.2 billones de pesos. La tasa de adjudicaciones directas alcanzó el 78.9%, la más alta registrada en todas las administraciones y muy por encima del criterio orientador de la OCDE del 30%. La contratación de emergencia por COVID-19 en 2020–2021 presentó irregularidades significativas en contratos del sector salud, con proveedores como Bruluart y DIMM recibiendo adjudicaciones de miles de millones de pesos mediante procesos expeditos con mínimo escrutinio competitivo. El riesgo promedio llegó a 0.31.",
+      "findings": "La administración de AMLO (2018–2024) generó el mayor volumen de contratación de cualquier presidencia: aproximadamente 1.24 millones de contratos por 3.2 billones de pesos. La tasa de adjudicaciones directas alcanzó el 78.9%, la más alta registrada en todas las administraciones y ocho veces la línea de adjudicación directa del 10% que el Tablero del Mercado Único de la UE considera insatisfactoria. La contratación de emergencia por COVID-19 en 2020–2021 presentó irregularidades significativas en contratos del sector salud, con proveedores como Bruluart y DIMM recibiendo adjudicaciones de miles de millones de pesos mediante procesos expeditos con mínimo escrutinio competitivo. El riesgo promedio llegó a 0.31.",
       "keyRisk": "La elusión sistemática de la licitación competitiva —justificada alternativamente como poderes de emergencia, austeridad o anticorrupción— creó paradójicamente las condiciones que los marcos de la OCDE identifican como patrones de contratación de mayor riesgo.",
       "legacy": "Con 1.24 millones de contratos, el sexenio de AMLO representa aproximadamente el 40% de todos los registros de contratación en la base de datos RUBLI; la tasa excepcionalmente alta de adjudicaciones directas implica que una proporción desproporcionada de esos contratos carece de documentación competitiva suficiente para reconstruir la lógica de precios o detectar sobreprecio con posterioridad."
     },
@@ -177,7 +177,7 @@
   },
   "patternsView": {
     "directAwardCard": "Tasa de Adj. Directa",
-    "directAwardDesc": "Promedio de 23 años. Referencia OCDE: 20–30%.",
+    "directAwardDesc": "Promedio de 23 años. Tablero UE: ≥10% de adjudicación directa = insatisfactorio.",
     "directAwardAboveBenchmark": "+{{val}}pp por encima del referente.",
     "directAwardPeak": "Pico: {{val}}% ({{year}})",
     "singleBidCard": "Tasa de Licitación Única",
@@ -248,7 +248,7 @@
   },
   "grade": {
     "title": "CALIFICACIÓN DE COMPRAS",
-    "procurement": "Basado en referencias OCDE: tasa de adjudicación directa, tasa de alto riesgo y tasa de licitación única."
+    "procurement": "Tasas de adjudicación directa y licitante único frente a las líneas del Tablero UE; tasa de alto riesgo frente a la meta de calibración de RUBLI."
   },
   "radar": {
     "title": "Todas las Administraciones: Huella de Compras",
@@ -269,8 +269,8 @@
     "totalValue": "Valor total",
     "directAward": "Adj. directa",
     "avgRisk": "Riesgo prom.",
-    "daVsOecd": "Adj. directa vs OCDE ({{pct}}%)",
-    "oecdBenchmark": "OCDE {{pct}}%",
+    "daVsOecd": "Adj. Directa vs línea UE ({{pct}}%)",
+    "oecdBenchmark": "UE {{pct}}%",
     "notableCase": "Caso notable:"
   },
   "share": "Compartir",

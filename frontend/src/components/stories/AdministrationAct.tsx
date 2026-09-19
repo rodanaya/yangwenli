@@ -56,7 +56,7 @@ const ERA_LABELS: Record<EraKey, string> = {
   sheinbaum: 'Claudia Sheinbaum',
 }
 
-const OECD_DA_BENCHMARK = 25 // OECD average direct award %
+const EU_DA_LINE = 10 // EU Single Market Scoreboard direct-award line (%)
 
 export default function AdministrationAct({
   era,
@@ -129,7 +129,7 @@ export default function AdministrationAct({
                 duration={1400}
                 className={cn(
                   'text-lg font-bold tabular-nums',
-                  s.label === t('actCard.directAward') && s.value > OECD_DA_BENCHMARK
+                  s.label === t('actCard.directAward') && s.value > EU_DA_LINE
                     ? 'text-risk-critical'
                     : 'text-text-primary'
                 )}
@@ -141,25 +141,25 @@ export default function AdministrationAct({
         {/* DA% comparison bar */}
         <div className="px-5 pb-4">
           <div className="flex items-center gap-3 text-[12px] text-text-muted mb-1">
-            <span>{t('actCard.daVsOecd', { pct: OECD_DA_BENCHMARK })}</span>
+            <span>{t('actCard.daVsOecd', { pct: EU_DA_LINE })}</span>
           </div>
           <div className="relative">
             <AnimatedFill
               pct={Math.min(stats.daPct, 100)}
-              color={stats.daPct > OECD_DA_BENCHMARK ? partyStyle.accent : 'var(--color-text-muted)'}
+              color={stats.daPct > EU_DA_LINE ? partyStyle.accent : 'var(--color-text-muted)'}
               height="h-2.5"
               delay={300}
             />
-            {/* OECD benchmark marker */}
+            {/* EU scoreboard marker */}
             <div
               className="absolute top-0 h-2.5 border-r-2 border-dashed border-border"
-              style={{ left: `${OECD_DA_BENCHMARK}%` }}
+              style={{ left: `${EU_DA_LINE}%` }}
               aria-hidden="true"
             />
           </div>
           <div className="flex justify-between mt-1">
             <span className="text-[12px] text-text-muted">0%</span>
-            <span className="text-[12px] text-text-muted">{t('actCard.oecdBenchmark', { pct: OECD_DA_BENCHMARK })}</span>
+            <span className="text-[12px] text-text-muted">{t('actCard.oecdBenchmark', { pct: EU_DA_LINE })}</span>
             <span className="text-[12px] text-text-muted">100%</span>
           </div>
         </div>

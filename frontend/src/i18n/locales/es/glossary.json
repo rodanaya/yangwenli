@@ -9,7 +9,7 @@
   },
   "riskLevel": {
     "title": "Nivel de Riesgo",
-    "description": "Categorización basada en la puntuación: Crítico (>=60%), Alto (>=40%), Medio (>=25%), Bajo (<25%). Estos umbrales están alineados con las referencias de contratación de la OCDE."
+    "description": "Categorización basada en la puntuación: Crítico (>=60%), Alto (>=40%), Medio (>=25%), Bajo (<25%). Estos umbrales son propios de RUBLI, fijados en la calibración (docs/RISK_METHODOLOGY_v6.md)."
   },
   "singleBid": {
     "title": "Licitante Único",
@@ -85,7 +85,7 @@
   },
   "groundTruth": {
     "title": "Verdad Base",
-    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 1,427 casos con ~1,554 proveedores y ~288,000 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
+    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 1,417 casos con ~1,554 proveedores y ~288,000 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
   },
   "adPeriod": {
     "title": "Período de Publicación",

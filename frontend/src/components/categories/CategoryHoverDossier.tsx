@@ -12,12 +12,12 @@
  * Hex colours ONLY via style={{}} (className hex is stripped). No green for low.
  */
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { SECTOR_COLORS, OECD_DIRECT_AWARD_LIMIT, getSectorName } from '@/lib/constants'
+import { SECTOR_COLORS, EU_DIRECT_AWARD_LIMIT, getSectorName } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import type { CategorySummaryItem } from './types'
 import { intensityColor } from './types'
 
-const DA_LIMIT_PCT = OECD_DIRECT_AWARD_LIMIT * 100
+const DA_LIMIT_PCT = EU_DIRECT_AWARD_LIMIT * 100
 
 export function CategoryHoverDossier({
   item,
@@ -98,7 +98,7 @@ export function CategoryHoverDossier({
           <span>{isEs ? 'riesgo' : 'risk'}</span>
         </span>
         <span className="whitespace-nowrap" style={{ color: daOver ? 'var(--color-text-secondary)' : undefined }}>
-          {isEs ? 'AD' : 'DA'} {item.direct_award_pct.toFixed(0)}% · {isEs ? 'OCDE' : 'OECD'} {DA_LIMIT_PCT.toFixed(0)}%
+          {isEs ? 'AD' : 'DA'} {item.direct_award_pct.toFixed(0)}% · {isEs ? 'UE' : 'EU'} {DA_LIMIT_PCT.toFixed(0)}%
         </span>
         <span className="whitespace-nowrap" style={{ color: sbHot ? 'var(--color-text-secondary)' : undefined }}>
           1P {item.single_bid_pct.toFixed(1)}%

@@ -192,6 +192,7 @@ function Lifecycles({
 
   return (
     <ChartCard
+      source="/vendors/:id/risk-timeline"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -205,8 +206,8 @@ function Lifecycles({
       }}
       annotation={
         es
-          ? `Cada tira son los ${YEARS.length} años del registro federal, de ${YEAR_FROM} a ${YEAR_TO}. Una celda se llena solo si ese proveedor firmó al menos un contrato ese año, y el monto del año va impreso debajo, no dentro de la celda: a 390 px una celda mide trece píxeles y una cifra dentro de ella se cortaría. Las filas van en el orden en que el capítulo las nombra, no por monto. El año de cada contrato es el que trae el contrato; el padrón de proveedores fecha los dos de Carranza en 2011 y por eso ARIA le cuenta un solo año activo. Cifras en vivo de /vendors/:id/risk-timeline.`
-          : `Each strip is the ${YEARS.length} years of the federal record, ${YEAR_FROM} to ${YEAR_TO}. A cell fills only if that vendor signed at least one contract that year, and the year's amount is printed below the strip rather than inside the cell: at 390 px a cell is thirteen pixels wide and a figure set inside it would be cut. Rows run in the order the chapter names them, not by value. Each contract's year is the one the contract carries; the vendor register dates both of Carranza's to 2011, which is why ARIA counts him a single active year. Figures live from /vendors/:id/risk-timeline.`
+          ? `Una tira por proveedor, una celda por año del registro federal, de \${YEAR_FROM} a \${YEAR_TO} — \${YEARS.length} años en total. Una celda se llena solo si ese proveedor firmó al menos un contrato ese año, así que una vida casi vacía es justo el punto. El monto del año va impreso debajo y no dentro de la celda, demasiado angosta para sostenerlo en un teléfono. Las filas van en el orden en que el capítulo las nombra, no por monto. El año de cada contrato es el que trae el contrato; el padrón de proveedores fecha los dos de Carranza en 2011 y por eso ARIA le cuenta un solo año activo.`
+          : `One strip per vendor, one cell per year of the federal record, \${YEAR_FROM} to \${YEAR_TO} — \${YEARS.length} years in all. A cell fills only if that vendor signed at least one contract that year, so a life that is almost all empty is the point. The year's amount is printed below the strip rather than inside the cell, which is too narrow to hold it on a phone. Rows run in the order the chapter names them, not by value. Each contract's year is the one the contract carries; the vendor register dates both of Carranza's to 2011, which is why ARIA counts him a single active year.`
       }
     >
       <div className="px-2 pb-2">
@@ -405,6 +406,7 @@ function Population({
 
   return (
     <ChartCard
+      source="/aria/ghost-suspects"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -412,14 +414,14 @@ function Population({
       anchor={{
         value: formatCompactMXN(median),
         label: es
-          ? `es la contratación federal de por vida del proveedor mediano entre los ${formatNumber(drawn.length)} de mayor evidencia — el patrón es una multitud de proveedores chicos, no un puñado de grandes`
+          ? `es la contratación federal acumulada del proveedor mediano entre los ${formatNumber(drawn.length)} de mayor evidencia — el patrón es una multitud de proveedores chicos, no un puñado de grandes`
           : `is the lifetime federal contracting of the median vendor among the ${formatNumber(drawn.length)} best-evidenced — the pattern is a crowd of small vendors, not a handful of big ones`,
         color: EMPHASIS,
       }}
       annotation={
         es
-          ? `Cada marca es un proveedor, colocado por su contratación federal de por vida sobre un eje logarítmico de seis décadas; la altura es un desplazamiento fijo derivado de su folio, solo para que las marcas no se encimen. Nada está ordenado en una retícula y ninguna marca representa un conteo. Se dibujan ${formatNumber(drawn.length)} de los ${formatNumber(pop.total)} proveedores que el modelo de señales fantasma puntúa, tomados por evidencia y no por monto: eso incluye las ${formatNumber(pop.tiers.confirmed)} filas corroboradas y las ${formatNumber(pop.tiers.multi_signal)} multiseñal completas, más las ${formatNumber(drawn.length - pop.tiers.confirmed - pop.tiers.multi_signal)} conductuales de mayor puntaje. La mediana y la cuenta de años activos de abajo son de esas ${formatNumber(drawn.length)}, no de la cohorte entera. Cifras en vivo de /aria/ghost-suspects.`
-          : `Each mark is one vendor, placed by its lifetime federal contracting on a six-decade logarithmic axis; the height is a fixed offset derived from its record number, there only to keep marks from sitting on top of each other. Nothing is arranged on a lattice and no mark stands for a count. ${formatNumber(drawn.length)} of the ${formatNumber(pop.total)} vendors the ghost-signal model scores are drawn, taken by evidence rather than by value: that is every one of the ${formatNumber(pop.tiers.confirmed)} corroborated and all ${formatNumber(pop.tiers.multi_signal)} multi-signal rows, plus the ${formatNumber(drawn.length - pop.tiers.confirmed - pop.tiers.multi_signal)} highest-scoring behavioural ones. The median and the active-year count below are of those ${formatNumber(drawn.length)}, not of the whole cohort. Figures live from /aria/ghost-suspects.`
+          ? `Cada marca es un proveedor, colocado por su contratación federal acumulada sobre un eje logarítmico de seis décadas; la altura es un desplazamiento fijo derivado de su folio, solo para que las marcas no se encimen. Nada está ordenado en una retícula y ninguna marca representa un conteo. Se dibujan ${formatNumber(drawn.length)} de los ${formatNumber(pop.total)} proveedores que el modelo de señales fantasma puntúa, tomados por evidencia y no por monto: eso incluye las ${formatNumber(pop.tiers.confirmed)} filas corroboradas y las ${formatNumber(pop.tiers.multi_signal)} multiseñal completas, más las ${formatNumber(drawn.length - pop.tiers.confirmed - pop.tiers.multi_signal)} conductuales de mayor puntaje. La mediana y la cuenta de años activos de abajo son de esas ${formatNumber(drawn.length)}, no de la cohorte entera.`
+          : `Each mark is one vendor, placed by its lifetime federal contracting on a six-decade logarithmic axis; the height is a fixed offset derived from its record number, there only to keep marks from sitting on top of each other. Nothing is arranged on a lattice and no mark stands for a count. ${formatNumber(drawn.length)} of the ${formatNumber(pop.total)} vendors the ghost-signal model scores are drawn, taken by evidence rather than by value: that is every one of the ${formatNumber(pop.tiers.confirmed)} corroborated and all ${formatNumber(pop.tiers.multi_signal)} multi-signal rows, plus the ${formatNumber(drawn.length - pop.tiers.confirmed - pop.tiers.multi_signal)} highest-scoring behavioural ones. The median and the active-year count below are of those ${formatNumber(drawn.length)}, not of the whole cohort.`
       }
     >
       <div className="px-2 pb-2">
@@ -492,7 +494,7 @@ function Population({
           })}
         </div>
         <p className="mt-1 font-mono text-text-muted" style={{ fontSize: 10.5 }}>
-          {es ? 'contratación de por vida, millones de pesos (escala logarítmica)' : 'lifetime contracting, MXN (log scale)'}
+          {es ? 'contratación acumulada, millones de pesos (escala logarítmica)' : 'lifetime contracting, MXN (log scale)'}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1">
@@ -621,6 +623,7 @@ function Signals({
 
   return (
     <ChartCard
+      source="/aria/ghost-suspects · /aria/queue"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -634,8 +637,8 @@ function Signals({
       }}
       annotation={
         es
-          ? `Las primeras cinco filas son los proveedores que el capítulo 1 nombra; las otras cinco son las de mayor puntaje de evidencia en toda la tabla. Una paloma es una señal que se dispara, una raya es una que no: ningún dato se codifica solo por color. La columna EFOS se lee de la cola de ARIA y no de la fila puntuada, porque la tabla de puntajes va un corte del SAT atrás — trae 42 listados y la cola trae ${formatNumber(efos.count)}. Las señales «empresa joven», «RFC inválido», «alto riesgo» y «EFOS presuntivo» no se dibujan: no se disparan en ninguna fila que el endpoint entrega. Cifras en vivo de /aria/ghost-suspects y /aria/queue.`
-          : `The first five rows are the vendors chapter 1 names; the other five are the highest evidence scores in the whole table. A tick is a signal that fires and a dash is one that does not: nothing here is encoded by colour alone. The EFOS column is read from the ARIA queue rather than from the scored row, because the scoring table is one SAT import behind — it carries 42 listings where the queue carries ${formatNumber(efos.count)}. The "young company", "invalid RFC", "high risk" and "presumptive EFOS" signals are not drawn: they fire on no row the endpoint serves. Figures live from /aria/ghost-suspects and /aria/queue.`
+          ? `Las primeras cinco filas son los proveedores que el capítulo 1 nombra; las otras cinco son las de mayor puntaje de evidencia en toda la tabla. Una paloma es una señal que se dispara, una raya es una que no: ningún dato se codifica solo por color. La columna EFOS se lee de la cola de ARIA y no de la fila puntuada, porque la tabla de puntajes va un corte del SAT atrás — trae 42 listados y la cola trae ${formatNumber(efos.count)}. Las señales «empresa joven», «RFC inválido», «alto riesgo» y «EFOS presuntivo» no se dibujan: no se disparan en ninguna fila que el endpoint entrega.`
+          : `The first five rows are the vendors chapter 1 names; the other five are the highest evidence scores in the whole table. A tick is a signal that fires and a dash is one that does not: nothing here is encoded by colour alone. The EFOS column is read from the ARIA queue rather than from the scored row, because the scoring table is one SAT import behind — it carries 42 listings where the queue carries ${formatNumber(efos.count)}. The "young company", "invalid RFC", "high risk" and "presumptive EFOS" signals are not drawn: they fire on no row the endpoint serves.`
       }
     >
       <div className="px-2 pb-2">
@@ -763,6 +766,7 @@ function Match({
 
   return (
     <ChartCard
+      source="/aria/patterns/P2/institutions · /aria/queue"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -776,8 +780,8 @@ function Match({
       }}
       annotation={
         es
-          ? `Cada banda es una lista entera dibujada a todo el ancho, con su propio total impreso: no comparten escala, porque lo que se compara es la misma astilla de ${formatNumber(confirmed)} vista desde los dos lados. Los tres tramos de la primera banda suman la cohorte exacta —${formatNumber(confirmed)} + ${formatNumber(gtOnly)} + ${formatNumber(neither)} = ${formatNumber(k.total_vendors)}— y el detalle amplía ese primer tramo diez veces para que se lea, como en la lámina de /methodology. La segunda banda es la única cifra tecleada de la figura: el tamaño del listado definitivo del SAT a abril de 2026, que ningún endpoint publica. Cifras en vivo de /aria/patterns/P2/institutions y /aria/queue.`
-          : `Each band is one whole list drawn at full width, with its own total printed: they do not share a scale, because what is being compared is the same sliver of ${formatNumber(confirmed)} seen from both sides. The three segments of the first band sum to the cohort exactly — ${formatNumber(confirmed)} + ${formatNumber(gtOnly)} + ${formatNumber(neither)} = ${formatNumber(k.total_vendors)} — and the detail magnifies that first segment ten times to make it legible, as the plate on /methodology does. The second band is the only typed number in the figure: the size of SAT's definitive list as of April 2026, which no endpoint publishes. Figures live from /aria/patterns/P2/institutions and /aria/queue.`
+          ? `Cada banda es una lista entera dibujada a todo el ancho, con su propio total impreso: no comparten escala, porque lo que se compara es la misma astilla de ${formatNumber(confirmed)} vista desde los dos lados. Los tres tramos de la primera banda suman la cohorte exacta —${formatNumber(confirmed)} + ${formatNumber(gtOnly)} + ${formatNumber(neither)} = ${formatNumber(k.total_vendors)}— y el detalle amplía ese primer tramo diez veces para que se lea, como en la lámina de /methodology. La segunda banda es la única cifra tecleada de la figura: el tamaño del listado definitivo del SAT a abril de 2026, que ningún endpoint publica.`
+          : `Each band is one whole list drawn at full width, with its own total printed: they do not share a scale, because what is being compared is the same sliver of ${formatNumber(confirmed)} seen from both sides. The three segments of the first band sum to the cohort exactly — ${formatNumber(confirmed)} + ${formatNumber(gtOnly)} + ${formatNumber(neither)} = ${formatNumber(k.total_vendors)} — and the detail magnifies that first segment ten times to make it legible, as the plate on /methodology does. The second band is the only typed number in the figure: the size of SAT's definitive list as of April 2026, which no endpoint publishes.`
       }
     >
       <div className="px-2 pb-2">
@@ -868,7 +872,7 @@ function Match({
             <span style={{ color: AGREE }}>
               {formatNumber(confirmed)} · {pct1(satShare)} {es ? 'de la lista del SAT' : "of SAT's list"}
             </span>,
-            <span className="text-text-muted">{es ? 'cifra tecleada · SAT, abril 2026' : 'typed figure · SAT, April 2026'}</span>,
+            <span className="text-text-muted">{es ? 'cifra capturada a mano · SAT, abril 2026' : 'typed figure · SAT, April 2026'}</span>,
           ]}
         />
 
@@ -941,6 +945,7 @@ function Roster({
 
   return (
     <ChartCard
+      source="/aria/patterns/P2/institutions"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -954,8 +959,8 @@ function Roster({
       }}
       annotation={
         es
-          ? `La cola de ARIA no acepta un parámetro de orden, así que el ranking por monto sale del agregado por comprador: los ${formatNumber(all.length)} proveedores P2 mayores en los doce compradores donde más dinero P2 hay, ordenados por su contratación federal de por vida. ${dropped === 0 ? 'Ninguno de ellos lleva una disposición de descarte, así que no se cayó ninguna fila.' : `${formatNumber(dropped)} filas llevan una disposición de descarte de un revisor y no se dibujan.`} La disposición de revisión va impresa en cada fila, en palabras y no en el identificador del padrón: «nunca abierto» quiere decir que nadie lo ha mirado, no que esté limpio. Cifras en vivo de /aria/patterns/P2/institutions.`
-          : `The ARIA queue takes no sort parameter, so the ranking by money comes from the buyer aggregate: the ${formatNumber(all.length)} largest P2 vendors at the twelve buyers where the P2 money sits, ordered by lifetime federal contracting. ${dropped === 0 ? 'None of them carries a cleared disposition, so no row was dropped.' : `${formatNumber(dropped)} rows carry a reviewer's cleared disposition and are not drawn.`} Each row prints its review disposition in words rather than in the register's identifier: "never opened" means nobody has looked at it, not that it is clean. Figures live from /aria/patterns/P2/institutions.`
+          ? `La cola de ARIA no acepta un parámetro de orden, así que el ranking por monto sale del agregado por comprador: los ${formatNumber(all.length)} proveedores P2 mayores en los doce compradores donde más dinero P2 hay, ordenados por su contratación federal de por vida. ${dropped === 0 ? 'Ninguno de ellos lleva una disposición de descarte, así que no se cayó ninguna fila.' : `${formatNumber(dropped)} filas llevan una disposición de descarte de un revisor y no se dibujan.`} La disposición de revisión va impresa en cada fila, en palabras y no en el identificador del padrón: «nunca abierto» quiere decir que nadie lo ha mirado, no que esté limpio.`
+          : `The ARIA queue takes no sort parameter, so the ranking by money comes from the buyer aggregate: the ${formatNumber(all.length)} largest P2 vendors at the twelve buyers where the P2 money sits, ordered by lifetime federal contracting. ${dropped === 0 ? 'None of them carries a cleared disposition, so no row was dropped.' : `${formatNumber(dropped)} rows carry a reviewer's cleared disposition and are not drawn.`} Each row prints its review disposition in words rather than in the register's identifier: "never opened" means nobody has looked at it, not that it is clean.`
       }
     >
       <div className="px-2 pb-2">

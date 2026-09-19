@@ -284,6 +284,7 @@ function Silhouette({
 
   return (
     <ChartCard
+      source="/analysis/amount-histogram"
       eyebrow={c.eyebrow}
       title={c.title}
       lang={lang}
@@ -297,8 +298,8 @@ function Silhouette({
       }}
       annotation={
         es
-          ? `La misma banda, dos resoluciones. En el primer compás cada barra es un cubo de diez mil pesos y la curva baja limpia. Después cada barra es un cubo de mil pesos: la curva resulta ser una alfombra baja con un diente cada diez mil. Un diente no es un precio, es una decisión — el ${pct1(grid.directAwardShare)} de los contratos escritos sobre un número redondo se adjudicaron directamente, contra el ${pct1(grid.bandDirectAwardShare)} de la banda entera. Conteos en vivo de /analysis/amount-histogram; la banda es semiabierta, así que ${amountLabel(BAND_MAX, lang)} queda fuera.`
-          : `The same band at two resolutions. On the first beat each bar is a ten-thousand-peso bucket and the curve falls cleanly. After that each bar is a one-thousand-peso bucket, and the curve turns out to be a low carpet with a tooth every ten thousand. A tooth is not a price, it is a decision — ${pct1(grid.directAwardShare)} of the contracts written on a round number were awarded directly, against ${pct1(grid.bandDirectAwardShare)} of the whole band. Counts live from /analysis/amount-histogram; the band is half-open, so ${amountLabel(BAND_MAX, lang)} falls outside it.`
+          ? `La misma banda, dos resoluciones. En el primer compás cada barra es un cubo de diez mil pesos y la curva baja limpia. Después cada barra es un cubo de mil pesos: la curva resulta ser una alfombra baja con un diente cada diez mil. Un diente no es un precio, es una decisión — el ${pct1(grid.directAwardShare)} de los contratos escritos sobre un número redondo se adjudicaron directamente, contra el ${pct1(grid.bandDirectAwardShare)} de la banda entera. La banda es semiabierta, así que ${amountLabel(BAND_MAX, lang)} queda fuera.`
+          : `The same band at two resolutions. On the first beat each bar is a ten-thousand-peso bucket and the curve falls cleanly. After that each bar is a one-thousand-peso bucket, and the curve turns out to be a low carpet with a tooth every ten thousand. A tooth is not a price, it is a decision — ${pct1(grid.directAwardShare)} of the contracts written on a round number were awarded directly, against ${pct1(grid.bandDirectAwardShare)} of the whole band. The band is half-open, so ${amountLabel(BAND_MAX, lang)} falls outside it.`
       }
     >
       <div className="px-2 pb-2">
@@ -346,7 +347,7 @@ function Silhouette({
             clamped === 0
               ? [
                   <span className="text-text-primary">
-                    {es ? 'cubos de ' : 'buckets of '}
+                    {es ? 'intervalos de ' : 'buckets of '}
                     {amountLabel(COARSE_BUCKET, lang)}
                   </span>,
                   <>
@@ -487,7 +488,7 @@ function ExactVsNeighbours({ coarse, lang }: { coarse: AmountHistogramResponse; 
                 className="whitespace-nowrap font-mono tabular-nums text-text-primary"
                 style={{ fontSize: 13 }}
               >
-                {amountLabel(s.amount, lang)} {es ? 'de pesos' : 'pesos'}
+                {amountLabel(s.amount, lang)} {es ? 'pesos' : 'pesos'}
               </span>
               <span
                 className="whitespace-nowrap font-mono tabular-nums"

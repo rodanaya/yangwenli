@@ -69,14 +69,14 @@
       "v52Title": "Capa Analítica (En Vivo)",
       "v52Desc": "Valores SHAP por proveedor (456K proveedores) + ensemble PyOD de validación cruzada (9.3M puntuaciones) + monitoreo de deriva KS. Ver Perfil de Proveedor → Pestaña Riesgo, Detalle de contrato → Confirmado por IA, Panel → Validación Cruzada.",
       "v85Title": "Modelo de Producción Recalibrado",
-      "v85Desc": "1,427 casos GT · 1,554 proveedores. ElasticNet (C=0.2243, l1_ratio=0.7545), 18 variables activas, c_pu=0.32. HR=11.01% (cumple OECD 2–15%). Corrida: CAL-v8-202605020212."
+      "v85Desc": "1,417 casos GT · 1,554 proveedores. ElasticNet (C=0.2243, l1_ratio=0.7545), 18 variables activas, c_pu=0.32. HR=11.01% (dentro de la meta de calibración de 2–15%). Corrida: CAL-v8-202605020212."
     },
     "axisNow": "AHORA"
   },
   "kpiBadges": {
     "contracts": "3.05M Contratos",
     "auc": "AUC 0.785",
-    "cases": "1,427 Casos Validados",
+    "cases": "1,417 Casos Validados",
     "sectors": "12 Sectores"
   },
   "body": {
@@ -97,7 +97,7 @@
       "tableColCount": "Cantidad",
       "highRiskSummaryStart": "Tasa de alto riesgo: ",
       "highRiskSummaryValue": "11.01%",
-      "highRiskSummaryEnd": " (crítico + alto). Umbrales calibrados con 1,427 casos documentados para obtener una tasa consistente con rangos internacionales de riesgo en contrataciones (OCDE 2–15%). v0.8.5 es el modelo activo (2 de mayo de 2026), usando validación estratificada por proveedor.",
+      "highRiskSummaryEnd": " (crítico + alto). Umbrales calibrados con 1,417 casos documentados para obtener una tasa dentro de la meta de calibración de RUBLI (2–15%). v0.8.5 es el modelo activo (2 de mayo de 2026), usando validación estratificada por proveedor.",
       "tableFootnote": "* 3,051,294 contratos calificados de 3,058,286 totales. Los ~7K restantes carecen de asignación sectorial y fueron excluidos del modelo."
     },
     "features": {
@@ -138,7 +138,7 @@
     },
     "validation": {
       "p1Start": "El modelo fue entrenado y validado contra ",
-      "p1Strong": "1,427 casos documentados de corrupción mexicana",
+      "p1Strong": "1,417 casos documentados de corrupción mexicana",
       "p1End": ", coincidiendo 1,554 proveedores con ~302K contratos en los 12 sectores de la base de datos COMPRANET.",
       "tableAriaLabel": "Validación de casos de corrupción",
       "tableColCase": "Caso",
@@ -147,13 +147,13 @@
       "tableColDetected": "Detectados",
       "tableColHighPlus": "Alto+",
       "tableColAvgScore": "Puntaje Promedio",
-      "footnote": "*El Caso 9 (PEMEX Emilio Lozoya) comparte proveedores con el caso Odebrecht. Documentado como referencia pero no aporta datos de entrenamiento adicionales. La tabla muestra los 22 casos fundacionales originales de v5.1. v0.8.5 expandió la verdad fundamental a 1,427 casos y 1,554 proveedores mediante investigación sistemática de COMPRANET, referencias cruzadas con auditorías de la ASF e integración del EFOS del SAT.",
+      "footnote": "*El Caso 9 (PEMEX Emilio Lozoya) comparte proveedores con el caso Odebrecht. Documentado como referencia pero no aporta datos de entrenamiento adicionales. La tabla muestra los 22 casos fundacionales originales de v5.1. v0.8.5 expandió la verdad fundamental a 1,417 casos y 1,554 proveedores mediante investigación sistemática de COMPRANET, referencias cruzadas con auditorías de la ASF e integración del EFOS del SAT.",
       "metricTestAuc": "AUC-ROC de Prueba",
       "metricTrainAuc": "AUC-ROC de Entrenamiento",
-      "metricOecdRate": "Tasa de alto riesgo (cumple OCDE)",
+      "metricOecdRate": "Tasa de alto riesgo (meta de calibración)",
       "metricHighPlus": "Detección GT (alto+)",
       "metricMedPlus": "Detección GT (medio+)",
-      "technicalNote": "AUC Entrenamiento 0.797 / AUC Prueba 0.785 — división 70/30 estratificada por proveedor, ningún proveedor aparece en entrenamiento y prueba. HR=11.01% cumple OCDE (rango 2–15%). Modelo v0.8.5 activo desde el 2 de mayo de 2026. Corrida: CAL-v8-202605020212."
+      "technicalNote": "AUC Entrenamiento 0.797 / AUC Prueba 0.785 — división 70/30 estratificada por proveedor, ningún proveedor aparece en entrenamiento y prueba. HR=11.01%, dentro de la meta de calibración de RUBLI (2–15%). Modelo v0.8.5 activo desde el 2 de mayo de 2026. Corrida: CAL-v8-202605020212."
     },
     "methods": {
       "zScoreTitle": "Normalización Z-Score",
@@ -165,7 +165,7 @@
       "mahalanobisFormula": "D^2(z) = z^T Sigma^(-1) z ~ chi^2(16)",
       "mahalanobisNote": "Covarianza estimada con contracción de Ledoit-Wolf para estabilidad en sectores pequeños. Valores p calculados contra distribución chi-cuadrado con 16 grados de libertad.",
       "logisticTitle": "Regresión Logística por Sector",
-      "logisticP1": "ElasticNet optimizado con Optuna (C=0.2243, l1_ratio=0.7545, 200 pruebas) entrenado en ~302K contratos malos conocidos de 1,427 casos de corrupción con división estratificada por proveedor 70/30 (ningún proveedor en entrenamiento y prueba). 12 submodelos por sector + 1 respaldo global capturan patrones de corrupción específicos por sector.",
+      "logisticP1": "ElasticNet optimizado con Optuna (C=0.2243, l1_ratio=0.7545, 200 pruebas) entrenado en ~302K contratos malos conocidos de 1,417 casos de corrupción con división estratificada por proveedor 70/30 (ningún proveedor en entrenamiento y prueba). 12 submodelos por sector + 1 respaldo global capturan patrones de corrupción específicos por sector.",
       "logisticNote": "AUC Entrenamiento: 0.797, AUC Prueba: 0.785. La mezcla ElasticNet lleva 6 características no informativas a cero preservando más señal que L1 puro.",
       "puTitle": "Corrección PU-Learning (Elkan y Noto 2008)",
       "puP1Start": "Como los contratos no etiquetados no son necesariamente limpios (algunos pueden ser corruptos pero no detectados), aplicamos una corrección de aprendizaje Positivo-No Etiquetado: ",
@@ -204,7 +204,7 @@
     },
     "limitations": {
       "item1Title": "Concentración de verdad fundamental",
-      "item1Text": "v0.8.5 entrenó con 1,427 casos y 1,554 proveedores (~302K contratos) con un tope de 100 por proveedor. Los sectores Salud y Agricultura aún contribuyen desproporcionadamente datos de entrenamiento positivos debido a los ecosistemas IMSS, Segalmex y DICONSA/LICONSA.",
+      "item1Text": "v0.8.5 entrenó con 1,417 casos y 1,554 proveedores (~302K contratos) con un tope de 100 por proveedor. Los sectores Salud y Agricultura aún contribuyen desproporcionadamente datos de entrenamiento positivos debido a los ecosistemas IMSS, Segalmex y DICONSA/LICONSA.",
       "item2Title": "La detección de casos pequeños es más débil",
       "item2Text": "Los casos con pocos contratos (La Estafa Maestra: 10, Grupo Higa: 3, Oceanografía: 2) tienen tasas de detección más bajas. El modelo requiere suficiente volumen de contratos para detectar patrones de forma confiable.",
       "item3Title": "La calidad de datos varía por período",
@@ -284,7 +284,7 @@
     "testAucLabel": "AUC de prueba",
     "testAucSource": "División 70/30 estratificada por proveedor",
     "highRiskLabel": "Tasa de alto riesgo",
-    "highRiskSource": "Referencia OCDE: 2–15%",
+    "highRiskSource": "Meta de calibración RUBLI: 2–15%",
     "gtCasesLabel": "Casos de verdad documentada",
     "gtCasesSource": "1,554 proveedores · ~302K contratos"
   },
@@ -297,7 +297,7 @@
     "sourcesLabel": "Fuentes en RUBLI",
     "tierISource1": "· Lista SAT EFOS Definitivo (13,960 proveedores)",
     "tierISource2": "· Registro de sanciones SFP (544 proveedores)",
-    "tierISource3": "· Casos documentados (1,427 investigaciones)",
+    "tierISource3": "· Casos documentados (1,417 investigaciones)",
     "sayLabel": "Di",
     "tierISay": "\"confirmado\" · \"documentado\" · \"establecido formalmente\"",
     "tierIILabel": "NIVEL II",
@@ -392,8 +392,8 @@
     "row13_l": "Fuga temporal de características",
     "row13_i": "Agregados de proveedor usan historial completo; mitigado por split temporal v0.8.5",
     "row13_f": "Características rodantes punto-en-el-tiempo",
-    "row14_l": "Calibración PU c=0.32 post-OCDE",
-    "row14_i": "HR=11.01% (dentro del rango OCDE 2–15%); piso de intercepto -2.616 aplicado",
+    "row14_l": "Calibración PU c=0.32 posterior",
+    "row14_i": "HR=11.01% (dentro de la meta de calibración de 2–15%); piso de intercepto -2.616 aplicado",
     "row14_f": "Decisión de diseño intencional documentada",
     "row15_l": "ARIA T1 = búsqueda de ground truth",
     "row15_i": "El boost +0.20 IPS de flags externos garantiza que vendors GT entren a T1; T2 es la superficie real de descubrimiento",

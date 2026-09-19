@@ -9,7 +9,7 @@
  * not duplicate it.
  *
  * Layout: full-width 820×260 SVG. Mexico DA-rate line in crimson.
- * OECD 25% reference dashed cyan + right-edge label. Admin wash bands
+ * EU scoreboard 10% reference dashed cyan + right-edge label. Admin wash bands
  * behind the line with mono labels at the top. 4 FT-style callout boxes
  * with leader lines (Casa Blanca · Estafa Maestra · COVID · Toka IT).
  *
@@ -18,18 +18,13 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useYearOverYear } from '@/components/stories/live/useEmergencyData'
 
-// Per-year direct-award rates
-const YEARLY_DA: Array<{ year: number; da: number; covid?: boolean }> = [
-  { year: 2002, da: 58 }, { year: 2003, da: 60 }, { year: 2004, da: 62 },
-  { year: 2005, da: 63 }, { year: 2006, da: 65 }, { year: 2007, da: 70 },
-  { year: 2008, da: 72 }, { year: 2009, da: 73 }, { year: 2010, da: 71 },
-  { year: 2011, da: 73 }, { year: 2012, da: 74 }, { year: 2013, da: 78 },
-  { year: 2014, da: 79 }, { year: 2015, da: 78 }, { year: 2016, da: 79 },
-  { year: 2017, da: 78 }, { year: 2018, da: 76 }, { year: 2019, da: 79 },
-  { year: 2020, da: 87, covid: true }, { year: 2021, da: 81 }, { year: 2022, da: 75 },
-  { year: 2023, da: 74 }, { year: 2024, da: 72 }, { year: 2025, da: 74 },
-]
+// Per-year direct-award rates come from /analysis/year-over-year. The hardcoded
+// 2002-2025 series this component used to carry read 58-73% for 2002-2009 and
+// 87% for 2020; the register codes procedure type only from 2010 (Structure A
+// reads 0.0%) and 2020 closes at 78.09%. Years the register cannot score are
+// dropped rather than drawn.
 
 // Era bands behind the line (presidential terms)
 const ERA_BANDS: Array<{ label: string; start: number; end: number; color: string }> = [
@@ -48,7 +43,7 @@ const CALLOUTS: Array<{ year: number; en: string; es: string; dy: number }> = [
   { year: 2014, en: 'Casa Blanca',         es: 'Casa Blanca',         dy: 60 },
   { year: 2017, en: 'Estafa Maestra',      es: 'Estafa Maestra',      dy: 110 },
   { year: 2020, en: 'COVID emergency',     es: 'Emergencia COVID',    dy: 60 },
-  { year: 2023, en: 'Toka IT monopoly',    es: 'Toka IT monopoly',    dy: 110 },
+  { year: 2023, en: 'Peak year',           es: 'Año pico',            dy: 110 },
 ]
 
 interface Props {
@@ -58,6 +53,11 @@ interface Props {
 export function MacroArc({ lang }: Props) {
   const [hoverYear, setHoverYear] = useState<number | null>(null)
   const isEs = lang === 'es'
+  const yoy = useYearOverYear()
+  const series = (yoy.data ?? [])
+    .filter((d) => d.direct_award_pct > 0)
+    .map((d) => ({ year: d.year, da: d.direct_award_pct }))
+    .sort((a, b) => a.year - b.year)
 
   // Layout
   const W = 820
@@ -69,24 +69,41 @@ export function MacroArc({ lang }: Props) {
   const CW = W - PAD_L - PAD_R
   const CH = H - PAD_T - PAD_B
 
-  const Y_MIN_YR = 2002
-  const Y_MAX_YR = 2025
+  const Y_MIN_YR = series.length ? series[0].year : 2010
+  const Y_MAX_YR = series.length ? series[series.length - 1].year : 2025
   const Y_MAX_PCT = 100
-  const OECD = 25
+  // European Commission, Single Market Scoreboard: a direct-award share at or
+  // above 10% is rated unsatisfactory. External reference, not a RUBLI measure.
+  const EU_LINE = 10
 
-  const xOf = (year: number) => PAD_L + ((year - Y_MIN_YR) / (Y_MAX_YR - Y_MIN_YR)) * CW
+  const xOf = (year: number) =>
+    PAD_L + ((year - Y_MIN_YR) / Math.max(1, Y_MAX_YR - Y_MIN_YR)) * CW
   const yOf = (pct: number) => PAD_T + CH * (1 - pct / Y_MAX_PCT)
-  const OECD_Y = yOf(OECD)
+  const EU_Y = yOf(EU_LINE)
   const AXIS_Y = PAD_T + CH
 
-  const linePath = YEARLY_DA
+  const linePath = series
     .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xOf(d.year).toFixed(2)} ${yOf(d.da).toFixed(2)}`)
     .join(' ')
 
   const areaPath = `${linePath} L ${xOf(Y_MAX_YR).toFixed(2)} ${AXIS_Y} L ${xOf(Y_MIN_YR).toFixed(2)} ${AXIS_Y} Z`
 
   const yTicks = [0, 25, 50, 75, 100]
-  const xTicks = [2002, 2006, 2010, 2014, 2018, 2022, 2025]
+  const xTicks = series
+    .map((d) => d.year)
+    .filter((y, i, a) => i === 0 || i === a.length - 1 || y % 4 === 0)
+
+  if (yoy.isLoading || yoy.isError || !series.length) {
+    return (
+      <p className="font-mono text-[12.5px] text-text-muted py-8">
+        {yoy.isLoading
+          ? (isEs ? 'Cargando la serie anual…' : 'Loading the annual series…')
+          : (isEs
+            ? 'La serie anual de adjudicación directa no cargó. No se dibuja nada en su lugar.'
+            : 'The annual direct-award series did not load. Nothing is drawn in its place.')}
+      </p>
+    )
+  }
 
   function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -104,8 +121,8 @@ export function MacroArc({ lang }: Props) {
         style={{ height: 'auto', maxHeight: H, overflow: 'visible' }}
         role="img"
         aria-label={isEs
-          ? 'Tasa de adjudicación directa 2002–2025 vs techo OCDE 25%'
-          : 'Direct-award rate 2002–2025 vs OECD 25% ceiling'}
+          ? `Tasa de adjudicación directa ${Y_MIN_YR}–${Y_MAX_YR} frente a la línea UE de ${EU_LINE}%`
+          : `Direct-award rate ${Y_MIN_YR}–${Y_MAX_YR} against the EU ${EU_LINE}% line`}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHoverYear(null)}
       >
@@ -181,12 +198,12 @@ export function MacroArc({ lang }: Props) {
           </text>
         ))}
 
-        {/* OECD 25% reference line — dashed cyan */}
+        {/* EU scoreboard reference line — dashed cyan */}
         <line
           x1={PAD_L}
           x2={PAD_L + CW}
-          y1={OECD_Y}
-          y2={OECD_Y}
+          y1={EU_Y}
+          y2={EU_Y}
           stroke="#22d3ee"
           strokeWidth={1.2}
           strokeDasharray="6 4"
@@ -194,13 +211,13 @@ export function MacroArc({ lang }: Props) {
         />
         <text
           x={PAD_L + CW + 6}
-          y={OECD_Y + 3}
+          y={EU_Y + 3}
           fontSize={13}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight="700"
           fill="#22d3ee"
         >
-          {isEs ? 'OCDE 25%' : 'OECD 25%'}
+          {isEs ? `UE ${EU_LINE}%` : `EU ${EU_LINE}%`}
         </text>
 
         {/* Area fill under Mexico line */}
@@ -228,7 +245,7 @@ export function MacroArc({ lang }: Props) {
         />
 
         {/* Year dots */}
-        {YEARLY_DA.map((d) => (
+        {series.map((d) => (
           <circle
             key={d.year}
             cx={xOf(d.year)}
@@ -242,7 +259,7 @@ export function MacroArc({ lang }: Props) {
 
         {/* Right-edge "Mexico" direct label at the line endpoint */}
         {(() => {
-          const last = YEARLY_DA[YEARLY_DA.length - 1]
+          const last = series[series.length - 1]
           return (
             <text
               x={xOf(last.year) + 6}
@@ -252,17 +269,19 @@ export function MacroArc({ lang }: Props) {
               fontWeight="700"
               fill="#dc2626"
             >
-              {isEs ? `México · ${last.da}%` : `Mexico · ${last.da}%`}
+              {isEs ? `México · ${last.da.toFixed(1)}%` : `Mexico · ${last.da.toFixed(1)}%`}
             </text>
           )
         })()}
 
         {/* Annotation callouts BELOW the line at staggered depths.
-            COVID 2020 (peak at 87%) gets a Playfair pull-out;
-            the other three use the standard FT-style mono box. */}
+            COVID 2020 gets a Playfair pull-out; the other three use the
+            standard FT-style mono box. 2020 is not the peak — the register's
+            highest direct-award year is 2023 — but it is the year readers
+            come looking for. */}
         {CALLOUTS.map((c) => {
           const cx = xOf(c.year)
-          const pt = YEARLY_DA.find((d) => d.year === c.year)
+          const pt = series.find((d) => d.year === c.year)
           if (!pt) return null
           const cy = yOf(pt.da)
           const label = isEs ? c.es : c.en
@@ -345,7 +364,7 @@ export function MacroArc({ lang }: Props) {
 
         {/* Hover tooltip dot + value */}
         {hoverYear !== null && (() => {
-          const pt = YEARLY_DA.find((d) => d.year === hoverYear)
+          const pt = series.find((d) => d.year === hoverYear)
           if (!pt) return null
           const tx = xOf(pt.year)
           const ty = yOf(pt.da)
@@ -370,7 +389,7 @@ export function MacroArc({ lang }: Props) {
                 fontWeight="800"
                 fill="#dc2626"
               >
-                {pt.da}%
+                {pt.da.toFixed(1)}%
               </text>
             </g>
           )
@@ -380,8 +399,8 @@ export function MacroArc({ lang }: Props) {
       {/* Caption — minimal, methodology-only */}
       <p className="mt-2 text-[12px] font-mono text-text-muted leading-relaxed">
         {isEs
-          ? `Tasa de adjudicación directa anual · bandas administrativas · OCDE recomienda ≤ 25%. Fuente: COMPRANET 2002–2025.`
-          : `Yearly direct-award rate · admin wash bands · OECD recommends ≤ 25%. Source: COMPRANET 2002–2025.`}
+          ? `Tasa de adjudicación directa anual · bandas administrativas · el Tablero UE considera insatisfactorio ≥ ${EU_LINE}%. Fuente: COMPRANET ${Y_MIN_YR}–${Y_MAX_YR}.`
+          : `Yearly direct-award rate · admin wash bands · the EU scoreboard rates ≥ ${EU_LINE}% unsatisfactory. Source: COMPRANET ${Y_MIN_YR}–${Y_MAX_YR}.`}
       </p>
     </div>
   )
