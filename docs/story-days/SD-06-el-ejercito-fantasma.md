@@ -49,5 +49,11 @@ ch1 `live: 'p2-lifecycle', scrolly: true` + `live2: 'p2-roster'` (typed roster r
 ## Acceptance (`sd06.mjs`, 1440 + 390, EN + ES)
 ≥ 5 live figures; numbers equal the endpoints; no `circle` grid tally anywhere (probe: no figure with > 200 circles arranged on a regular grid — count distinct x positions); stages 0→3; Days 1–5 scrollies step; `clipcensus.mjs` 0 (EN + ES, four widths); 0 console errors; card headline == story h1 (headline unchanged unless a number in it moved).
 
+## Result + Deploy
+
+Built by `story-day06` (report `_parallax_shots/story-days/sd06-report.md`); judged by Fable on `sd06/after/` (f1-stage3, f3 population, f5 match at 1440 EN). Headline kept; card aligned to the story h1. The load-bearing "42 confirmed on SAT's list" was one import behind: `/aria/stats`, `/intersection/summary` and `/aria/queue?pattern=P2&efos_only=true` all say **126** (2.1%, one in 49); RUBLI latency "2 wks" replaced by the measured run (4m 57s, run d4e7b665); the five named vendors verified as ranks 1–5 by value; the three personas físicas each won 372.2 MDP in their first year. Five live figures (lifecycle scrolly, roster, population strip — no lattice —, signal matrix, Two-Worlds match ledger with `HatchBand` imported from `TwoWorldsExhibit`). Gates: tsc 0 · build OK · lint:tokens PASS · probe 119/0 · census 0 narrow captions, 0 structural clips (EN + ES, 4 widths).
+
+Deployed 2026-09-19 ≈06:20 CET via `deploy-safe.sh` (VPS HEAD `afd95a5d`). Commits `32e29941` · docs · BUILD_ID `afd95a5d` (`2026-09-19-story-d6-fantasma`). Entry `index-Fn3sE0Bv.js` → `index-DUxnpqUr.js`; BUILD_ID string served; health OK.
+
 ## Build notes
 Branch `story/day-06-fantasma` off origin/main after Day 5 ships. Same rules as Days 1–5 (read fully, ≤3 edits per re-read, no bare stash, no junction, temp under D:\, sticky chrome hidden in crops, unbreakable value+unit only where it fits, write the report to `_parallax_shots/story-days/sd06-report.md` as well as messaging). Commit: `feat(stories § SD-06 el-ejercito-fantasma): live P2 figures — lifecycle scrolly, population strip, signal matrix, match ledger, roster; numbers verified`. Trailer `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. No BUILD_ID, push or deploy.
