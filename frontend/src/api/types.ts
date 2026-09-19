@@ -2580,7 +2580,26 @@ export interface AriaQueueItem {
   fp_data_error?: boolean | null
   fp_structural_monopoly?: boolean | null
   burst_score: number
-  review_status: 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
+  /**
+   * What review said, as the queue stores it.
+   *
+   * The PATCH endpoint only accepts the first four, but the pipeline and the
+   * CENTINELA passes write five more, and SD-05 has to tell a cleared vendor
+   * from a standing one: `false_positive` and `fp_excluded` are the two that
+   * rule a vendor out, `confirmed_corrupt` the one that rules it in. Typing
+   * this as the accepted four made every one of them invisible.
+   */
+  review_status:
+    | 'pending'
+    | 'confirmed'
+    | 'dismissed'
+    | 'reviewing'
+    | 'needs_review'
+    | 'reviewed'
+    | 'confirmed_corrupt'
+    | 'false_positive'
+    | 'fp_excluded'
+    | 'skipped'
   primary_sector_name: string | null
   direct_award_rate?: number
   years_active?: number

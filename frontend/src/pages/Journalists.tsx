@@ -189,17 +189,21 @@ const INVESTIGATIONS: Investigation[] = [
   },
   {
     slug: 'la-industria-del-intermediario',
-    headline: 'The Intermediary Industry',
-    headline_es: 'La Industria del Intermediario',
+    // Matches the story's own h1 (SD-05). The card and the page must not
+    // greet a reader with two different titles for the same investigation.
+    headline: 'Follow the Middleman',
+    headline_es: 'Sigan al Intermediario',
     sub: 'P3 pass-through vendors',
     type: 'procurement_fraud',
     status: 'reporteado',
-    amount: 0,
+    // Billions of pesos, as the renderer reads it — the P3 cohort's lifetime
+    // federal contracting, 556.5B.
+    amount: 556,
     era: 'cross',
     contracts: 0,
     yearSpan: '2002–2025',
-    brief: '2,974 vendors function as pure procurement intermediaries — no physical product, no technical service, just margin extracted between agencies and the real suppliers.',
-    brief_es: '2,974 proveedores funcionan como puros intermediarios de contratación — sin producto físico, sin servicio técnico, solo el margen extraído entre las dependencias y los proveedores reales.',
+    brief: '2,972 vendors match the pass-through pattern and hold 556.5 billion pesos between them. But more than half the money at the top of that list has already been reviewed and ruled out — and 2,691 of the 2,972 have never been opened at all.',
+    brief_es: '2,972 proveedores coinciden con el patrón de paso y acumulan 556.5 mil millones de pesos. Pero más de la mitad del dinero de la cima de esa lista ya fue revisado y descartado — y 2,691 de los 2,972 no se han abierto nunca.',
   },
   {
     slug: 'el-umbral-de-los-300k',
