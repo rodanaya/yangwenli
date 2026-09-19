@@ -5,7 +5,7 @@
  * Folio voice, zero SaaS chrome: a Playfair Display Italic sledgehammer
  * numeral for the national PHI score, an FT-bullet verdict block against
  * OECD ceilings, a sector register of deviation bars anchored on the
- * OECD 25% direct-award line, and a compact annotated trend line.
+ * EU 10% direct-award line, and a compact annotated trend line.
  *
  * Rebuilt 2026-07-02 per docs spec §3.4 "EL CORTE NACIONAL" — killed the
  * 66/100 gauge ring, the SemaforoIndicator traffic light, all framer-motion
@@ -227,7 +227,7 @@ function VerdictBlock({
       label: t('oecdDALabel'),
       value: daRate / 100,
       benchmark: 0.25,
-      benchmarkLabel: lang === 'es' ? 'techo OCDE 25%' : 'OECD 25% ceiling',
+      benchmarkLabel: lang === 'es' ? 'línea UE 10%' : 'EU line 10%',
     })
   }
   if (sbRate != null) {
@@ -245,7 +245,7 @@ function VerdictBlock({
       label: t('statHighRiskRate'),
       value: highRiskPct / 100,
       benchmark: 0.15,
-      benchmarkLabel: lang === 'es' ? 'banda OCDE 2–15%' : 'OECD 2–15% band',
+      benchmarkLabel: lang === 'es' ? 'meta de calibración 2–15%' : 'calibration target 2–15%',
     })
   }
 
@@ -275,7 +275,7 @@ function VerdictBlock({
 // through EntityIdentityChip — the sanctioned entity-link pattern.
 // ---------------------------------------------------------------------------
 
-const OECD_DA_ANCHOR_PCT = 25
+const EU_DA_ANCHOR_PCT = 10
 const SECTOR_MAX_DELTA_FRAC = 0.5
 
 function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 'es' }) {
@@ -284,7 +284,7 @@ function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 
   const displayName = getSectorName(sector.sector_name, lang)
 
   const daPct = sector.direct_award_rate_by_value ?? (sector.competition_by_value != null ? 100 - sector.competition_by_value : 0)
-  const delta = daPct / 100 - OECD_DA_ANCHOR_PCT / 100
+  const delta = daPct / 100 - EU_DA_ANCHOR_PCT / 100
   const isAbove = delta > 0
   const barFrac = Math.min(Math.abs(delta) / SECTOR_MAX_DELTA_FRAC, 1)
   const barWidthPct = barFrac * 50
@@ -296,8 +296,8 @@ function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 
 
   const rowAriaLabel =
     lang === 'en'
-      ? `${displayName}: ${daPct.toFixed(1)}% direct award by value, ${absPp} points ${isAbove ? 'above' : 'below'} the OECD 25% ceiling.`
-      : `${displayName}: ${daPct.toFixed(1)}% de adjudicación directa por valor, ${absPp} puntos ${isAbove ? 'por encima' : 'por debajo'} del techo OCDE de 25%.`
+      ? `${displayName}: ${daPct.toFixed(1)}% direct award by value, ${absPp} points ${isAbove ? 'above' : 'below'} the EU scoreboard 10% line.`
+      : `${displayName}: ${daPct.toFixed(1)}% de adjudicación directa por valor, ${absPp} puntos ${isAbove ? 'por encima' : 'por debajo'} de la línea del 10% del Tablero UE.`
 
   return (
     <div className="flex items-center gap-3 py-1.5 border-b border-border/30 last:border-0" role="row" aria-label={rowAriaLabel}>
@@ -308,7 +308,7 @@ function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 
       <div className="flex-1 relative min-w-0" style={{ height: 20 }} aria-hidden="true">
         {/* Track */}
         <div className="absolute left-0 right-0" style={{ top: '50%', height: 3, transform: 'translateY(-50%)', background: '#27272a', borderRadius: 2 }} />
-        {/* OECD 25% anchor tick — center of the diverging scale */}
+        {/* EU 10% anchor tick — center of the diverging scale */}
         <div className="absolute" style={{ left: '50%', top: 2, bottom: 2, width: 1.5, background: 'var(--color-oecd)', opacity: 0.7 }} />
         {barWidthPct > 0 && (
           <div
@@ -362,8 +362,8 @@ function SectorRegister({ sectors, lang }: { sectors: PHISector[]; lang: 'en' | 
       </h2>
       <p className="text-sm mb-4 text-text-muted">
         {lang === 'en'
-          ? 'Adjudication share versus the OECD 25% direct-award ceiling — bars right of the line exceed it.'
-          : 'Participación de adjudicación directa contra el techo OCDE de 25% — barras a la derecha de la línea lo exceden.'}
+          ? 'Adjudication share versus the EU scoreboard\'s 10% direct-award line — bars right of the line exceed it.'
+          : 'Participación de adjudicación directa contra la línea del 10% del Tablero UE — barras a la derecha de la línea la exceden.'}
       </p>
       <div className="surface-card p-4" role="table" aria-label={t('sectorTitle')}>
         {sorted.map((sector) => (
@@ -671,7 +671,7 @@ function ReportCard() {
         {/* Verdict block: three FT-bullet OECD benchmarks */}
         <VerdictBlock national={national} highRiskPct={highRiskPct} lang={lang} />
 
-        {/* Sector register: deviation bars anchored on OECD 25% */}
+        {/* Sector register: deviation bars anchored on the EU 10% line */}
         <SectorRegister sectors={sectors} lang={lang} />
 
         {/* Trend: compact annotated line */}

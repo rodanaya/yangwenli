@@ -209,7 +209,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
           <StatCard
             value="11.01%"
             label="High-risk rate"
-            sub="OECD compliant (2–15% benchmark)."
+            sub="Inside the 2–15% calibration target."
           />
           <StatCard
             value={formatNumber(nContracts || 3_051_294)}
@@ -494,7 +494,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
         <SectionHeadline
           eyebrow={`Risk distribution · ${formatNumber(totalContracts)} contracts`}
           headline="11.01 % of procurement volume crosses the high-risk threshold"
-          deck="Within the OECD 2–15 % benchmark range, with structural false-positive exclusions and ghost-companion boosts applied."
+          deck="Inside the RUBLI 2–15 % calibration target, with structural false-positive exclusions and ghost-companion boosts applied."
         />
 
         {/* Unified distribution dot-matrix (was: stacked bar) */}

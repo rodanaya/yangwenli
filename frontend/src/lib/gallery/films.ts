@@ -242,7 +242,7 @@ export const FILMS: Record<string, FilmDef> = {
         },
         durationMs: 12000,
         stat: { format: 'pct', target: 78.7, label: { en: 'direct award', es: 'adjudicación directa' } },
-        ref: { value: 40, label: { en: 'OECD ceiling', es: 'techo OCDE' } },
+        ref: { value: 10, label: { en: 'EU line', es: 'línea UE' } },
       },
       {
         id: 'noprice',
@@ -398,8 +398,8 @@ export const FILMS: Record<string, FilmDef> = {
           es: 'La mayor parte del dinero se salta el concurso — adjudicado de forma directa, sin licitación y sin oferta rival. La OCDE lo considera la excepción, no la regla.',
         },
         durationMs: 15000,
-        stat: { format: 'pct', target: 78, label: { en: 'peak direct award · OECD ceiling 40%', es: 'máx. adjudicación directa · techo OCDE 40%' } },
-        ref: { value: 40, label: { en: 'OECD ceiling', es: 'techo OCDE' } },
+        stat: { format: 'pct', target: 78, label: { en: 'peak direct award · EU line 10%', es: 'máx. adjudicación directa · línea UE 10%' } },
+        ref: { value: 10, label: { en: 'EU line', es: 'línea UE' } },
         agate: { en: '72–78% depending on the year', es: '72–78% según el año' },
       },
       {

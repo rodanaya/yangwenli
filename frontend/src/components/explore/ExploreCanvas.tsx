@@ -4881,7 +4881,7 @@ export type Z3LedgerRow = {
 }
 
 const OCHRE = '#a06820'
-const OECD_CYAN = '#0891b2'
+const REF_CYAN = '#0891b2'
 
 // The verdict line — one prose finding (the strongest deviation, stated once)
 // with the population count·spend tail folded in on the right (ex-Z3ContextStrip,
@@ -5018,7 +5018,7 @@ function Z3DeviationCell({ row, isStrongest, smallN }: { row: Z3LedgerRow; isStr
           />
         )}
         {refPos != null && (
-          <span aria-hidden="true" className="absolute" style={{ left: `${refPos * 100}%`, top: 0, bottom: 0, width: 1.5, background: OECD_CYAN }} title={`${row.absoluteRef?.label} ${row.absoluteRef?.value}%`} />
+          <span aria-hidden="true" className="absolute" style={{ left: `${refPos * 100}%`, top: 0, bottom: 0, width: 1.5, background: REF_CYAN }} title={`${row.absoluteRef?.label} ${row.absoluteRef?.value}%`} />
         )}
         {mPos != null && (
           <span aria-hidden="true" className="absolute" style={{ left: `${mPos * 100}%`, top: 0, bottom: 0, width: 1, background: 'var(--color-text-secondary)', opacity: 0.7 }} />
@@ -5051,7 +5051,7 @@ function Z3DeviationBand({ rows, strongestKey, smallN, multiSector, lang }: { ro
         </div>
         <div className="flex items-center gap-2.5 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
           <span className="flex items-center gap-1"><span style={{ width: 8, height: 1, background: 'var(--color-text-secondary)', display: 'inline-block' }} /> {lang === 'en' ? 'median' : 'mediana'}</span>
-          <span className="flex items-center gap-1"><span style={{ width: 8, height: 2, background: OECD_CYAN, display: 'inline-block' }} /> OECD 25%</span>
+          <span className="flex items-center gap-1"><span style={{ width: 8, height: 2, background: REF_CYAN, display: 'inline-block' }} /> EU 10%</span>
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">

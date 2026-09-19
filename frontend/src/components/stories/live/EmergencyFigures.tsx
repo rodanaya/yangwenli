@@ -166,8 +166,8 @@ function Floor({ rows, lang }: { rows: YearOverYearChange[]; lang: 'en' | 'es' }
       }}
       annotation={
         es
-          ? `Los registros de CompraNet de 2002 a 2009 no traen el tipo de procedimiento, así que la serie de adjudicación directa empieza en ${first.year}. Desde entonces nunca ha bajado de ${pct(min.direct_award_pct)} (${min.year}). La OCDE considera que 15–20% es el tope de un sistema competitivo: la banda sombreada al pie.`
-          : `CompraNet's 2002–2009 records do not carry the award procedure, so the direct-award series begins in ${first.year}. It has never since fallen below ${pct(min.direct_award_pct)} (${min.year}). The OECD treats 15–20% as the ceiling of a competitive system — the shaded band at the foot.`
+          ? `Los registros de CompraNet de 2002 a 2009 no traen el tipo de procedimiento, así que la serie de adjudicación directa empieza en ${first.year}. Desde entonces nunca ha bajado de ${pct(min.direct_award_pct)} (${min.year}). El Tablero del Mercado Único de la UE considera insatisfactorio un 10% o más: la banda sombreada al pie.`
+          : `CompraNet's 2002–2009 records do not carry the award procedure, so the direct-award series begins in ${first.year}. It has never since fallen below ${pct(min.direct_award_pct)} (${min.year}). The EU Single Market Scoreboard rates 10% or more unsatisfactory — the shaded band at the foot.`
       }
     >
       <div className="px-2 pt-6">

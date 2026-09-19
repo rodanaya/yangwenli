@@ -93,7 +93,7 @@ const DATA_STRUCTURES = [
 
 const REFERENCES = [
   { authors: 'IMF Working Paper 2022/094', title: 'Assessing Vulnerabilities to Corruption in Public Procurement', year: 2022 },
-  { authors: 'OECD', title: 'Public Procurement Performance Report', year: 2023 },
+  { authors: 'OECD', title: 'Public procurement performance: A framework for measuring efficiency, compliance and strategic goals (Policy Paper 36)', year: 2023 },
   { authors: 'European Commission', title: 'ARACHNE Risk Scoring Methodology', year: 2023 },
   { authors: 'World Bank INT', title: 'Warning Signs of Fraud and Corruption in Public Procurement', year: 2019 },
   { authors: 'Gallego, J. et al.', title: 'Early Warning Model of Malfeasance in Public Procurement', year: 2022 },

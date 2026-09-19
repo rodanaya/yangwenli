@@ -1303,8 +1303,8 @@ export default function RedesKnownDossier() {
                 en: 'Clusters above 150 actors are drawn truncated to their 100 most central; edges are capped at 2,500.',
               },
               {
-                es: `Tasas de adjudicación directa y propuesta única promediadas del motor ARIA por cúmulo; referencias OCDE ${Math.round(EU_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(EU_SINGLE_BID_LIMIT * 100)}%.`,
-                en: `Direct-award and single-bid rates are ARIA engine averages per cluster; OECD references ${Math.round(EU_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(EU_SINGLE_BID_LIMIT * 100)}%.`,
+                es: `Tasas de adjudicación directa y propuesta única promediadas del motor ARIA por cúmulo; referencias del Tablero UE ${Math.round(EU_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(EU_SINGLE_BID_LIMIT * 100)}%.`,
+                en: `Direct-award and single-bid rates are ARIA engine averages per cluster; EU scoreboard references ${Math.round(EU_DIRECT_AWARD_LIMIT * 100)}%/${Math.round(EU_SINGLE_BID_LIMIT * 100)}%.`,
               },
               {
                 es: (

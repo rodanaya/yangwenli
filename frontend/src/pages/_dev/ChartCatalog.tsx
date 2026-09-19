@@ -121,10 +121,10 @@ export default function ChartCatalog() {
         <Example caption="rows + colorToken (risk palette)">
           <DotStrip rows={SAMPLE_RISK_RANK} />
         </Example>
-        <Example caption="with OECD reference mark at 0.13">
+        <Example caption="with a reference mark at 0.13">
           <DotStrip
             rows={SAMPLE_SECTOR_RANK.slice(0, 3)}
-            oecdMark={{ fraction: 0.13, label: 'OCDE · 13%' }}
+            oecdMark={{ fraction: 0.13, label: 'UE · 13%' }}
           />
         </Example>
         <Example caption="orientation='vertical'  · time series columns">

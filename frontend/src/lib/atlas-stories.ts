@@ -344,8 +344,8 @@ const COVID_YEAR: Story = {
       yearLabel: { en: '2019', es: '2019' },
       title: { en: 'Before', es: 'Antes' },
       body: {
-        en: 'Mexican federal procurement entered 2020 already at 79% direct-award rate — well above the OECD recommended ceiling of 30%. The pattern was bad. It was also stable. The constellation distribution was, by recent standards, a baseline.',
-        es: 'La contratación federal mexicana entró a 2020 ya con 79% de adjudicación directa — muy por encima del techo recomendado por la OCDE de 30%. El patrón era malo. También era estable. La distribución de la constelación era, según los estándares recientes, una línea base.',
+        en: 'Mexican federal procurement entered 2020 already at 79% direct-award rate — nearly eight times the 10% line the EU Single Market Scoreboard rates unsatisfactory. The pattern was bad. It was also stable. The constellation distribution was, by recent standards, a baseline.',
+        es: 'La contratación federal mexicana entró a 2020 ya con 79% de adjudicación directa — casi ocho veces la línea del 10% que el Tablero del Mercado Único de la UE considera insatisfactoria. El patrón era malo. También era estable. La distribución de la constelación era, según los estándares recientes, una línea base.',
       },
       state: { mode: 'patterns', year: 2019, pinnedCode: null },
       dwellMs: 8500,

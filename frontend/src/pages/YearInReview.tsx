@@ -51,7 +51,7 @@ const FEATURED_YEARS = [2024, 2023, 2022, 2021, 2020] as const
 const ALL_YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2025 - i)
 const DEFAULT_YEAR = new Date().getFullYear() - 1
 
-const OECD_HIGH_RISK_THRESHOLD = 15 // % — upper bound
+const HR_TARGET_CEILING = 15 // % — the ceiling of RUBLI's own calibration target
 const EU_DIRECT_AWARD_LIMIT = 25 // % — recommended max
 
 interface SexenioInfo {
@@ -392,13 +392,13 @@ function RiskEvolution({
       ? 'riskEvolution.verdictWorse'
       : 'riskEvolution.verdictBetter'
   const verdictText = t(verdictKey, { pct: Math.abs(delta).toFixed(1) })
-  const isAboveOECD = (yearRow.high_risk_pct ?? 0) > OECD_HIGH_RISK_THRESHOLD
+  const isAboveTarget = (yearRow.high_risk_pct ?? 0) > HR_TARGET_CEILING
 
   // Horizontal "tape" chart showing this year vs avg vs OECD
-  const maxDisplay = Math.max(yearRow.high_risk_pct ?? 0, historicalAvg, OECD_HIGH_RISK_THRESHOLD, 10) * 1.2
+  const maxDisplay = Math.max(yearRow.high_risk_pct ?? 0, historicalAvg, HR_TARGET_CEILING, 10) * 1.2
   const yearPct = ((yearRow.high_risk_pct ?? 0) / maxDisplay) * 100
   const avgPct = (historicalAvg / maxDisplay) * 100
-  const oecdPct = (OECD_HIGH_RISK_THRESHOLD / maxDisplay) * 100
+  const oecdPct = (HR_TARGET_CEILING / maxDisplay) * 100
 
   return (
     <div>
@@ -406,7 +406,7 @@ function RiskEvolution({
         <HallazgoStat
           value={`${yearRow.high_risk_pct.toFixed(1)}%`}
           label={`${t('riskEvolution.thisYear')} · ${validYear}`}
-          color={isAboveOECD ? 'border-risk-critical' : 'border-risk-high'}
+          color={isAboveTarget ? 'border-risk-critical' : 'border-risk-high'}
         />
         <HallazgoStat
           value={`${historicalAvg.toFixed(1)}%`}
@@ -414,7 +414,7 @@ function RiskEvolution({
           color="border-border"
         />
         <HallazgoStat
-          value={`${OECD_HIGH_RISK_THRESHOLD}%`}
+          value={`${HR_TARGET_CEILING}%`}
           label={t('riskEvolution.oecdTarget')}
           color="border-cyan-500"
         />
@@ -443,7 +443,7 @@ function RiskEvolution({
                 <span className="text-[12px] uppercase tracking-[0.15em] text-text-muted w-28 flex-shrink-0">
                   {t('riskEvolution.thisYear')}
                 </span>
-                <div className="flex-1">{renderStrip(yearPct, isAboveOECD ? '#dc2626' : '#f59e0b')}</div>
+                <div className="flex-1">{renderStrip(yearPct, isAboveTarget ? '#dc2626' : '#f59e0b')}</div>
                 <span className="font-mono text-xs font-bold text-text-primary w-14 text-right flex-shrink-0 tabular-nums">
                   {yearRow.high_risk_pct.toFixed(1)}%
                 </span>
@@ -467,11 +467,11 @@ function RiskEvolution({
                 </span>
                 <div className="flex-1">{renderStrip(oecdPct, '#22d3ee')}</div>
                 <span className="font-mono text-xs text-oecd w-14 text-right flex-shrink-0 tabular-nums">
-                  {OECD_HIGH_RISK_THRESHOLD}%
+                  {HR_TARGET_CEILING}%
                 </span>
               </div>
               <p className="text-[13px] font-mono text-text-muted/70 pt-1 border-t border-border/20">
-                1 ● = 2% · cyan line = OECD target ({OECD_HIGH_RISK_THRESHOLD}%)
+                1 ● = 2% · cyan line = calibration ceiling ({HR_TARGET_CEILING}%)
               </p>
             </>
           )
@@ -482,23 +482,23 @@ function RiskEvolution({
       <div
         className={cn(
           'mt-4 rounded-sm border px-4 py-3 flex items-start gap-3',
-          isAboveOECD ? 'border-risk-critical/30 bg-risk-critical/5' : 'border-border-hover bg-background-elevated',
+          isAboveTarget ? 'border-risk-critical/30 bg-risk-critical/5' : 'border-border-hover bg-background-elevated',
         )}
       >
         <div
           className={cn(
             'h-2 w-2 rounded-full flex-shrink-0 mt-1.5',
-            isAboveOECD ? 'bg-risk-critical animate-pulse' : 'bg-text-muted',
+            isAboveTarget ? 'bg-risk-critical animate-pulse' : 'bg-text-muted',
           )}
         />
         <div>
           <p
             className={cn(
               'text-[12px] font-mono font-bold uppercase tracking-[0.15em] mb-0.5',
-              isAboveOECD ? 'text-risk-critical' : 'text-text-muted',
+              isAboveTarget ? 'text-risk-critical' : 'text-text-muted',
             )}
           >
-            {isAboveOECD ? t('riskEvolution.aboveOECD') : t('riskEvolution.belowOECD')}
+            {isAboveTarget ? t('riskEvolution.aboveOECD') : t('riskEvolution.belowOECD')}
           </p>
           <p className="text-sm text-text-secondary leading-relaxed">{verdictText}</p>
         </div>
@@ -530,7 +530,7 @@ function ProcedureTypeSection({
 
   const directPct = yearRow.direct_award_pct ?? 0
   const competitivePct = 100 - directPct
-  const isAboveOECD = directPct > EU_DIRECT_AWARD_LIMIT
+  const isAboveTarget = directPct > EU_DIRECT_AWARD_LIMIT
   const isAboveAvg = directPct > historicalAvg
 
   return (
@@ -550,7 +550,7 @@ function ProcedureTypeSection({
           const DOT_GAP = 8
           const directDots = Math.round((directPct / 100) * N_DOTS)
           const svgW = N_DOTS * DOT_GAP + DOT_R * 2
-          const directColor = isAboveOECD ? '#dc2626' : '#ea580c'
+          const directColor = isAboveTarget ? '#dc2626' : '#ea580c'
           const competitiveColor = '#64748b' // slate — §3.10: competitive share isn't green-for-good
           return (
             <>
@@ -617,7 +617,7 @@ function ProcedureTypeSection({
           {t('procedureType.historicalContext', { avg: historicalAvg.toFixed(1) })}
         </p>
 
-        {isAboveOECD && (
+        {isAboveTarget && (
           <div className="mt-3 flex items-start gap-2 rounded border border-risk-critical/30 bg-risk-critical/5 px-3 py-2">
             <AlertTriangle className="h-3.5 w-3.5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-[13px] text-risk-critical/90 leading-relaxed">

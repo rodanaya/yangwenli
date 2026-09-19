@@ -81,7 +81,7 @@ export function VendorEvidenceTab({
   return (
     <div className="space-y-5">
 
-      {/* §0 Benchmark bars — how this vendor's key rates diverge from OECD limits */}
+      {/* §0 Benchmark bars — how this vendor's key rates diverge from the EU lines */}
       {showBenchmarks && (
         <VendorBenchmarkBars
           directAwardPct={hasDA ? normalizeRate(vendor.direct_award_pct) : null}
@@ -472,8 +472,8 @@ function VendorBenchmarkBars({
       </div>
       <p className="text-[13px] font-mono text-text-muted mt-2 opacity-60">
         {isEs
-          ? 'OCDE: adjudicación directa ≤30%, licitación sin competencia ≤10%'
-          : 'OECD: direct award ≤30%, single-bid ≤10%'}
+          ? 'Tablero UE: adjudicación directa ≤10%, licitante único ≤20%'
+          : 'EU scoreboard: direct award ≤10%, single bidder ≤20%'}
       </p>
     </section>
   )

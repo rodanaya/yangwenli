@@ -23,10 +23,10 @@ const INFOGRAPHICS: Infographic[] = [
     title_es: 'Adjudicación Directa: 23 Años de Opacidad',
     title_en: 'Direct Award: 23 Years of Opacity',
     caption_es:
-      'La tasa de adjudicación directa en México ha crecido de 62% (2002) a 80% (2024), triplicando el límite recomendado por la OCDE del 25%. El pico fue en 2020 con 85%, en plena pandemia.',
+      'La tasa de adjudicación directa en México ha crecido de 62% (2002) a 80% (2024), ocho veces la línea del 10% que el Tablero del Mercado Único de la UE considera insatisfactoria. El pico del registro es 2023, con 82.2%.',
     caption_en:
-      'Mexico\'s direct award rate has grown from 62% (2002) to 80% (2024), tripling the OECD-recommended 25% limit. The peak was 85% in 2020, during the pandemic.',
-    source: 'RUBLI · COMPRANET 2002–2024 · OECD Public Procurement Report 2023',
+      'Mexico\'s direct award rate has grown from 62% (2002) to 80% (2024), eight times the 10% line the EU Single Market Scoreboard rates unsatisfactory. The peak in the register is 2023, at 82.2%.',
+    source: 'RUBLI · COMPRANET 2002–2024 · European Commission, Single Market Scoreboard',
     tag_es: 'Adjudicación',
     tag_en: 'Direct Award',
     tagColor: '#5070dd',
@@ -37,9 +37,9 @@ const INFOGRAPHICS: Infographic[] = [
     title_es: 'Todos los Sectores Rebasan el Límite OCDE',
     title_en: 'Every Sector Exceeds the OECD Threshold',
     caption_es:
-      'Ningún sector federal cumple el estándar OCDE del 25%. Agricultura lidera con 93.4% de contratos sin licitación. Incluso Energía, con el menor porcentaje, triplica el umbral internacional.',
+      'Ningún sector federal queda por debajo de la línea del 10% del Tablero UE. Agricultura lidera con 93.4% de contratos sin licitación. Incluso Energía, con el menor porcentaje, la multiplica varias veces.',
     caption_en:
-      'No federal sector meets the 25% OECD standard. Agriculture leads with 93.4% of contracts awarded without bidding. Even Energy, with the lowest rate, triples the international threshold.',
+      'No federal sector sits under the EU scoreboard 10% line. Agriculture leads with 93.4% of contracts awarded without bidding. Even Energy, the lowest, is several times above it.',
     source: 'RUBLI · COMPRANET 2002–2024 · 3,051,294 contracts analyzed',
     tag_es: 'Sectores',
     tag_en: 'Sectors',
@@ -54,7 +54,7 @@ const INFOGRAPHICS: Infographic[] = [
       'De 3.05 millones de contratos federales, 334,066 (10.95%) presentan patrones de alto o crítico riesgo de corrupción según el modelo RUBLI v0.8.5 — entrenado con 1,417 casos documentados.',
     caption_en:
       'Of 3.05 million federal contracts, 334,066 (10.95%) show high or critical corruption risk patterns per the RUBLI v0.8.5 model — trained on 1,417 documented cases.',
-    source: 'RUBLI v0.8.5 · AUC=0.785 · HR=11.0% (OECD 2–15% compliant)',
+    source: 'RUBLI v0.8.5 · AUC=0.785 · HR=11.0% (inside the 2–15% calibration target)',
     tag_es: 'Modelo de Riesgo',
     tag_en: 'Risk Model',
     tagColor: '#f87171',
@@ -65,9 +65,9 @@ const INFOGRAPHICS: Infographic[] = [
     title_es: 'De Fox a AMLO: La Opacidad Aumentó Cada Sexenio',
     title_en: 'From Fox to AMLO: Opacity Rose with Every Administration',
     caption_es:
-      'Cada gobierno federal ha incrementado el uso de adjudicaciones directas. AMLO alcanzó 82.1%, el nivel más alto registrado — 57 puntos porcentuales por encima del estándar OCDE.',
+      'Cada gobierno federal ha incrementado el uso de adjudicaciones directas. AMLO alcanzó 82.1%, el nivel más alto registrado — 72 puntos porcentuales por encima de la línea del Tablero UE.',
     caption_en:
-      'Every federal administration has increased direct award usage. AMLO reached 82.1%, the highest on record — 57 percentage points above the OECD standard.',
+      'Every federal administration has increased direct award usage. AMLO reached 82.1%, the highest on record — 72 percentage points above the EU scoreboard line.',
     source: 'RUBLI · COMPRANET 2002–2024 · Fox, Calderón, Peña Nieto, AMLO',
     tag_es: 'Sexenios',
     tag_en: 'Administrations',
@@ -93,9 +93,9 @@ const INFOGRAPHICS: Infographic[] = [
     title_es: 'El Pico de Riesgo: 2020 y la Pandemia',
     title_en: 'The Risk Peak: 2020 and the Pandemic',
     caption_es:
-      '2020 marcó el máximo histórico con 18.2% de contratos de alto riesgo — superando el umbral OCDE del 15%. Las compras de emergencia por COVID-19 dispararon patrones anómalos. Desde 2021 hay descenso, llegando a 9.2% en 2024.',
+      '2020 marcó el máximo histórico con 18.2% de contratos de alto riesgo — por encima del techo del 15% de la meta de calibración de RUBLI. Las compras de emergencia por COVID-19 dispararon patrones anómalos. Desde 2021 hay descenso, llegando a 9.2% en 2024.',
     caption_en:
-      '2020 set the all-time record with 18.2% high-risk contracts — exceeding the 15% OECD threshold. COVID-19 emergency procurement triggered anomalous patterns. Since 2021, the rate has declined to 9.2% in 2024.',
+      '2020 set the all-time record with 18.2% high-risk contracts — above the 15% ceiling of the RUBLI calibration target. COVID-19 emergency procurement triggered anomalous patterns. Since 2021, the rate has declined to 9.2% in 2024.',
     source: 'RUBLI v0.8.5 · Contracts rated high or critical risk 2013–2024',
     tag_es: 'Tendencia',
     tag_en: 'Trend',

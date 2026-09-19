@@ -92,13 +92,13 @@ export function VendorStatStrip({
     da == null ? null : {
       label: isEs ? 'Adj. directa' : 'Direct award',
       value: `${Math.round(da)}%`,
-      sub: da > daLimit ? `${(da / daLimit).toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? `≤${daLimit}% UE` : `≤${daLimit}% OECD`),
+      sub: da > daLimit ? `${(da / daLimit).toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? `≤${daLimit}% UE` : `≤${daLimit}% EU`),
       color: daColor,
     },
     sb == null ? null : {
       label: isEs ? 'Único postor' : 'Single bid',
       value: `${Math.round(sb)}%`,
-      sub: sb > sbLimit ? `${(sb / sbLimit).toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? `≤${sbLimit}% UE` : `≤${sbLimit}% OECD`),
+      sub: sb > sbLimit ? `${(sb / sbLimit).toFixed(1)}× ${isEs ? 'UE' : 'EU'}` : (isEs ? `≤${sbLimit}% UE` : `≤${sbLimit}% EU`),
       color: sbColor,
     },
     {

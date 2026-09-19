@@ -485,8 +485,8 @@ export default function Executive() {
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
-              ? 'Direct award rate — share of contracts awarded without competitive bidding — has remained 2–3× the OECD ceiling under every Mexican administration since 2001. The AI model trained on this systemic pattern now detects its variants automatically.'
-              : 'La tasa de adjudicación directa — contratos sin licitación — ha permanecido 2–3× por encima del umbral OCDE en cada administración mexicana desde 2001. El modelo entrenado en este patrón sistémico lo detecta automáticamente.'}
+              ? 'Direct award rate — share of contracts awarded without competitive bidding — has stayed six to eight times the EU scoreboard line under every Mexican administration the register can score. The AI model trained on this systemic pattern now detects its variants automatically.'
+              : 'La tasa de adjudicación directa — contratos sin licitación — se ha mantenido de seis a ocho veces por encima de la línea del Tablero UE en cada administración que el registro puede calificar. El modelo entrenado en este patrón sistémico lo detecta automáticamente.'}
           </p>
           <PlateFrame
             bleed
@@ -494,8 +494,8 @@ export default function Executive() {
             folio="III"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
             caption={lang === 'en'
-              ? 'Plate — Direct-award rate stays 2–3× above the OECD ceiling across five administrations.'
-              : 'Lámina — La tasa de adjudicación directa permanece 2–3× sobre el techo OCDE en cinco administraciones.'}
+              ? 'Plate — Direct-award rate stays six to eight times above the EU scoreboard line across five administrations.'
+              : 'Lámina — La tasa de adjudicación directa permanece de seis a ocho veces sobre la línea del Tablero UE en cinco administraciones.'}
           >
             <MacroArc lang={lang} />
           </PlateFrame>
@@ -725,7 +725,7 @@ export default function Executive() {
                     75<span className="text-[26px] align-baseline" style={{ fontFamily: 'inherit' }}>%</span>
                   </div>
                   <div className="font-mono text-[12px] tracking-[0.1em] text-text-muted mt-1.5">
-                    {lang === 'en' ? '· vs 30% OECD ceiling' : '· vs umbral OCDE 30%'}
+                    {lang === 'en' ? '· vs the EU 10% line' : '· vs la línea UE del 10%'}
                   </div>
                   <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
                     {lang === 'en' ? 'DIRECT AWARDS' : 'ADJUDICACIÓN DIRECTA'}
@@ -750,7 +750,7 @@ export default function Executive() {
                       stroke="var(--color-text-muted)" strokeWidth={1.2} strokeDasharray="2 2" opacity={0.8} />
                   </svg>
                   <div className="mt-2.5 pt-1.5 text-[13px] font-mono text-text-muted leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
-                    {lang === 'en' ? '2.5× the OECD recommended ceiling' : '2.5× el umbral recomendado OCDE'}
+                    {lang === 'en' ? 'seven times the EU scoreboard line' : 'siete veces la línea del Tablero UE'}
                   </div>
                 </ColumnFrame>
 
@@ -776,8 +776,8 @@ export default function Executive() {
                   </div>
                   <div className="font-mono text-[12px] tracking-[0.1em] text-text-muted mt-1">
                     {lang === 'en'
-                      ? `· ${stats.highCriticalRate}% of contracts · OECD band 2–15%`
-                      : `· ${stats.highCriticalRate}% de contratos · banda OCDE 2–15%`}
+                      ? `· ${stats.highCriticalRate}% of contracts · calibration target 2–15%`
+                      : `· ${stats.highCriticalRate}% de contratos · meta de calibración 2–15%`}
                   </div>
                   <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
                     {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}

@@ -63,7 +63,7 @@ export default function Press() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Figure value="3,058,286" label={es ? 'contratos federales · 2002–2025' : 'federal contracts · 2002–2025'} />
         <Figure value="~9.9T MXN" label={es ? 'valor agregado validado' : 'validated aggregate value'} />
-        <Figure value="11%" label={es ? 'tasa de alto riesgo (rango OCDE 2–15%)' : 'high-risk rate (OECD range 2–15%)'} />
+        <Figure value="11%" label={es ? 'tasa de alto riesgo (meta de calibración 2–15%)' : 'high-risk rate (calibration target 2–15%)'} />
         <Figure value="0.785" label={es ? 'AUC-ROC en prueba (v0.8.5)' : 'test AUC-ROC (v0.8.5)'} />
       </div>
 

@@ -17,7 +17,7 @@ import { formatCompactMXN } from '@/lib/utils'
 import type { VendorPeerComparisonResponse, PeerComparisonMetric } from '@/api/types'
 
 const OCHRE = '#a06820'
-const OECD_CYAN = '#0891b2'
+const REF_CYAN = '#0891b2'
 
 export type DeviationRowModel = {
   key: 'direct_award' | 'single_bid' | 'risk' | 'price'
@@ -55,7 +55,7 @@ export function buildDeviationRows(
     {
       key: 'direct_award', label: lang === 'en' ? 'Direct award' : 'Adj. directa', kind: 'pct',
       vendorVal: daVendor, medianVal: daMedian, percentile: da?.percentile ?? null,
-      absoluteRef: { value: EU_DIRECT_AWARD_LIMIT * 100, label: 'OECD' }, alarm: daVendor >= 75, ratio: ratioOf(daVendor, daMedian),
+      absoluteRef: { value: EU_DIRECT_AWARD_LIMIT * 100, label: 'EU' }, alarm: daVendor >= 75, ratio: ratioOf(daVendor, daMedian),
     },
     {
       key: 'single_bid', label: lang === 'en' ? 'Single bid' : 'Único postor', kind: 'pct',
@@ -111,7 +111,7 @@ function DeviationRow({ row }: { row: DeviationRowModel }) {
           <span aria-hidden="true" className="absolute" style={{ left: `${lo * 100}%`, width: `${(hi - lo) * 100}%`, top: '50%', height: 9, transform: 'translateY(-50%)', background: wedgeColor, opacity: overNorm ? 0.7 : 0.4, borderRadius: 1 }} />
         )}
         {refPos != null && (
-          <span aria-hidden="true" className="absolute" style={{ left: `${refPos * 100}%`, top: 1, bottom: 1, width: 1.5, background: OECD_CYAN }} title={`${row.absoluteRef?.label} ${row.absoluteRef?.value}%`} />
+          <span aria-hidden="true" className="absolute" style={{ left: `${refPos * 100}%`, top: 1, bottom: 1, width: 1.5, background: REF_CYAN }} title={`${row.absoluteRef?.label} ${row.absoluteRef?.value}%`} />
         )}
         {mPos != null && (
           <span aria-hidden="true" className="absolute" style={{ left: `${mPos * 100}%`, top: 0, bottom: 0, width: 1, background: 'var(--color-text-secondary)', opacity: 0.7 }} />
@@ -179,7 +179,7 @@ export function VendorDeviationLedger({
           </div>
           <div className="flex items-center gap-2.5 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
             <span className="flex items-center gap-1"><span style={{ width: 8, height: 1, background: 'var(--color-text-secondary)', display: 'inline-block' }} /> {lang === 'en' ? 'median' : 'mediana'}</span>
-            <span className="flex items-center gap-1"><span style={{ width: 8, height: 2, background: OECD_CYAN, display: 'inline-block' }} /> OECD 25%</span>
+            <span className="flex items-center gap-1"><span style={{ width: 8, height: 2, background: REF_CYAN, display: 'inline-block' }} /> EU 10%</span>
           </div>
         </div>
         <div className="px-4 py-2.5">
