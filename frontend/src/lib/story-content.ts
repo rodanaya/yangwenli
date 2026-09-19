@@ -463,6 +463,11 @@ export type StoryChartLive =
   | 'p2-signals'
   | 'p2-match'
   | 'p2-roster'
+  // SD-07 `el-umbral-de-los-300k` — the amount histogram, coarse and fine
+  | 'threshold-histogram'
+  | 'threshold-exact'
+  | 'threshold-institutions'
+  | 'threshold-years'
 
 /** ARIA pattern codes from the queue typology (P1–P7). */
 export type AriaPattern = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
@@ -4475,40 +4480,40 @@ export const STORIES: StoryDef[] = [
     ],
   },
 
-  // === STORY 9: A Line in the Law, and the Crowd Beneath It ===
+  // === STORY 9: The Prices That End in Zeros ===
   {
     slug: 'el-umbral-de-los-300k',
     outlet: 'data_analysis',
     type: 'thematic',
     era: 'cross',
-    headline: "A Line in the Law, and the Crowd Beneath It",
-    headline_es: "Una línea en la ley, y la multitud debajo de ella",
+    headline: "The Prices That End in Zeros",
+    headline_es: "Los precios que terminan en ceros",
     subheadline:
-      "28,264 federal contracts were written for exactly 210,000 pesos — 76 percent more than the bucket just below it. Two more crowds pile at 250,000 and 300,000 pesos, each a value where Mexican law lets a buyer switch off competition. Across 3.05 million contracts the spikes line up with the rules, not with prices. Honest pricing cannot produce them. Contract-splitting can — and Art. 17 of the procurement law bans exactly that.",
+      "22,263 federal contracts between 200,000 and 400,000 pesos are written on an exact multiple of ten thousand — a figure a market almost never produces on its own. Every one of those twenty values stands three to twenty-nine times above the thousand-peso carpet around it, and four in five of the contracts on them were handed to a vendor without a contest, against seven in ten across the band. The habit peaked in 2014 and has roughly halved since. Art. 17 of the procurement law bans sizing a purchase to dodge a procedure; nobody has been charged under it.",
     subheadline_es:
-      "28,264 contratos federales se escribieron en exactamente 210,000 pesos — 76 por ciento más que el cubo justo debajo. Otras dos multitudes se apilan en 250,000 y 300,000 pesos, cada uno un valor donde la ley mexicana permite apagar la competencia. A lo largo de 3.05 millones de contratos, los picos se alinean con las reglas, no con los precios. Una fijación honesta de precios no los produce. El fraccionamiento sí — y el Art. 17 de la ley de adquisiciones prohíbe exactamente eso.",
+      "22,263 contratos federales de 200 mil a 400 mil pesos están escritos sobre un múltiplo exacto de diez mil — una cifra que un mercado casi nunca produce por sí solo. Cada uno de esos veinte valores se levanta entre tres y veintinueve veces sobre la alfombra de mil pesos que lo rodea, y cuatro de cada cinco de esos contratos se entregaron sin competencia, contra siete de cada diez en la banda entera. El hábito llegó a su máximo en 2014 y desde entonces casi se dividió a la mitad. El Art. 17 de la ley de adquisiciones prohíbe dimensionar una compra para evadir un procedimiento; nadie ha sido imputado por él.",
     byline: 'RUBLI Data Analysis Unit',
     estimatedMinutes: 14,
     status: 'solo_datos',
     leadStat: {
-      value: '28,264',
-      label: "contracts piled at exactly 210K MXN",
-      label_es: "contratos amontonados exactamente en 210 mil pesos",
-      sublabel: "76% above the baseline just below it",
-      sublabel_es: "76% sobre la línea base justo debajo",
+      value: '22,263',
+      label: "contracts written on an exact multiple of 10,000 MXN",
+      label_es: "contratos escritos sobre un múltiplo exacto de diez mil pesos",
+      sublabel: "81.5% of them awarded directly, against 70.8% of the band",
+      sublabel_es: "81.5% adjudicados directamente, contra 70.8% de la banda",
       color: '#f59e0b',
     },
     kickerStats: [
       {
-        value: '28,264',
-        suffix: "contracts at exactly 210K MXN",
-        suffix_es: "contratos exactamente en 210 mil pesos",
+        value: '2,796',
+        suffix: "contracts written for exactly 300,000 pesos",
+        suffix_es: "contratos escritos en exactamente 300 mil pesos",
         tone: 'critical',
       },
       {
-        value: '76%',
-        suffix: "above the baseline at the line",
-        suffix_es: "sobre la línea base en el umbral",
+        value: '19.2×',
+        suffix: "the count a thousand pesos to either side",
+        suffix_es: "el conteo a mil pesos de cualquier lado",
         tone: 'data',
       },
       {
@@ -4550,150 +4555,45 @@ export const STORIES: StoryDef[] = [
         number: 1,
         title: "Stand at the Line",
         title_es: "Párate en la línea",
-        subtitle: "Contract volume from 200K to 400K pesos, in 10K buckets",
-        subtitle_es: "Volumen de contratos de 200K a 400K pesos, en cubos de 10K",
+        subtitle: "The same 200K-400K band at two resolutions, and what the coarse one hides",
+        subtitle_es: "La misma banda de 200 a 400 mil pesos en dos resoluciones, y lo que esconde la gruesa",
         prose: [
-          "At exactly 210,000 pesos, 28,264 federal contracts pile up. The bucket just below — 200,000 pesos — holds 16,075. The crowd at the line runs 76 percent higher than the crowd one step beneath it. 210,000 pesos is not a price. It is a value in Mexican procurement law where the rules quietly change and competition can be switched off.",
-          "Two more crowds form on the same logic: 24,966 contracts at 250,000 pesos, 22,064 at 300,000. Plot all 3.05 million federal contracts awarded from 2002 to 2025 in the 200K-to-400K band, in 10,000-peso buckets, and a clean downward slope appears underneath — about 16,000 contracts at 200K easing to roughly 12,000 at 400K, exactly as larger contracts thin out. Three buckets jut straight up through that slope.",
-          "Walk the silhouette. The 250K bucket (24,966) sits above its neighbors at 240K (23,331) and 260K (24,841). The 300K bucket (22,064) rises over 290K (18,925) and 310K (16,024). A secondary plateau holds across 220K-260K — 27,773 at 220K, 24,820 at 230K — staying high where the rest of the curve has begun to fall. Past 300K the descent resumes: 15,914 at 320K, 14,304 at 350K, 12,599 at 380K, 12,045 at 400K.",
-          "A vendor delivering 300,000 pesos of goods is no likelier to invoice exactly 300,000 than 297,000 or 303,000. Real prices spread out, peaking only where the world genuinely clusters — UMA multiples, catalog round numbers, fixed regulatory fees. These spikes do the opposite. They are not a pricing pattern. They are a statistical signature: a crowd that forms because the line is worth crowding beneath.",
+          "Take every federal contract written for between 200,000 and 400,000 pesos — 386,852 of them across the whole register — and sort them into buckets ten thousand pesos wide. What comes back is unremarkable. The tallest bucket is the first, 30,441 contracts starting at 200,000, and from there the curve eases down to 11,700 in the last one. Larger contracts thin out. That is what the shape says, and for years it is all anyone read in it.",
+          "Now cut the same band at a thousand pesos instead of ten thousand, and the smooth slope turns out to have teeth. The carpet underneath runs to a few dozen contracts per thousand-peso step. Standing out of it, at regular intervals, are twenty spikes — one at every multiple of ten thousand. At exactly 300,000 pesos sit 2,796 contracts. At 299,000, 236. At 301,000, 55. The spike is 19.2 times the average of its two neighbours.",
+          "Walk the comb. 250,000 pesos carries 2,404 contracts against a neighbourhood of 154, a factor of 15.6. 210,000 carries 1,613 against 125, a factor of 12.9. The sharpest tooth in the band is not one of the three this story was built on: 240,000 pesos holds 1,568 contracts where its neighbours hold an average of 54 — twenty-nine times over. Every round number is a spike, and the spikes are not small.",
+          "A vendor delivering 300,000 pesos of goods is no likelier to invoice exactly 300,000 than 299,000 or 301,000. Real prices spread out. A price that lands on a closed figure did not come from a market; it came from somebody choosing it. That choice is legal, common, and by itself proves nothing — until you look at how those contracts were awarded. Across the band, 70.8 percent of contracts are direct awards. On the round numbers, 81.5 percent are.",
         ],
         prose_es: [
-          "En exactamente 210,000 pesos se apilan 28,264 contratos federales. El cubo justo debajo — 200,000 pesos — guarda 16,075. La multitud en la línea corre 76 por ciento por encima de la que está un escalón abajo. 210,000 pesos no es un precio. Es un valor en la ley mexicana de adquisiciones donde las reglas cambian discretamente y la competencia puede apagarse.",
-          "Otras dos multitudes se forman con la misma lógica: 24,966 contratos en 250,000 pesos, 22,064 en 300,000. Grafica los 3.05 millones de contratos federales adjudicados de 2002 a 2025 en la banda de 200K a 400K, en cubos de 10,000 pesos, y debajo aparece una pendiente limpia y descendente — unos 16,000 contratos en 200K que bajan a cerca de 12,000 en 400K, justo como se adelgazan los contratos grandes. Tres cubos brincan derecho hacia arriba a través de esa pendiente.",
-          "Recorre la silueta. El cubo de 250K (24,966) se sienta sobre sus vecinos en 240K (23,331) y 260K (24,841). El cubo de 300K (22,064) se eleva sobre 290K (18,925) y 310K (16,024). Una meseta secundaria se sostiene a lo largo de 220K-260K — 27,773 en 220K, 24,820 en 230K — y se mantiene alta donde el resto de la curva ya empezó a caer. Pasando 300K el descenso retoma: 15,914 en 320K, 14,304 en 350K, 12,599 en 380K, 12,045 en 400K.",
-          "Un proveedor que entrega 300,000 pesos en bienes no tiene más probabilidad de facturar exactamente 300,000 que 297,000 o 303,000. Los precios reales se reparten y solo pican donde el mundo genuinamente se agrupa — múltiplos de UMA, números redondos de catálogo, tarifas regulatorias fijas. Estos picos hacen lo contrario. No son un patrón de precio. Son una firma estadística: una multitud que se forma porque la línea vale la pena aglomerarse debajo.",
+          "Toma cada contrato federal escrito por entre 200 mil y 400 mil pesos — 386,852 en todo el registro — y ordénalos en cubos de diez mil pesos de ancho. Lo que regresa no llama la atención. El cubo más alto es el primero, 30,441 contratos a partir de 200 mil, y de ahí la curva baja suave hasta 11,700 en el último. Los contratos grandes se adelgazan. Eso dice la forma, y durante años es todo lo que alguien leyó en ella.",
+          "Ahora corta la misma banda a mil pesos en vez de diez mil, y la pendiente lisa resulta tener dientes. La alfombra de abajo corre en unas decenas de contratos por escalón de mil pesos. Levantándose de ella, a intervalos regulares, hay veinte picos — uno en cada múltiplo de diez mil. En exactamente 300 mil pesos se sientan 2,796 contratos. En 299 mil, 236. En 301 mil, 55. El pico es 19.2 veces el promedio de sus dos vecinos.",
+          "Recorre el peine. 250 mil pesos carga 2,404 contratos contra un vecindario de 154, un factor de 15.6. 210 mil carga 1,613 contra 125, un factor de 12.9. El diente más agudo de la banda no es ninguno de los tres sobre los que se construyó este relato: 240 mil pesos guarda 1,568 contratos donde sus vecinos guardan un promedio de 54 — veintinueve veces. Cada número redondo es un pico, y los picos no son chicos.",
+          "Un proveedor que entrega 300 mil pesos en bienes no tiene más probabilidad de facturar exactamente 300 mil que 299 mil o 301 mil. Los precios reales se reparten. Un precio que aterriza sobre una cifra cerrada no salió de un mercado; salió de que alguien lo eligió. Esa elección es legal, común, y por sí sola no prueba nada — hasta que miras cómo se adjudicaron esos contratos. En la banda entera, el 70.8 por ciento son adjudicaciones directas. Sobre los números redondos, el 81.5 por ciento.",
         ],
         chartConfig: {
-          type: 'inline-spike',
+          type: 'live',
+          live: 'threshold-histogram',
+          live2: 'threshold-exact',
+          scrolly: true,
           title: 'The Line and the Crowd: Contract Volume, 200K-400K MXN',
           title_es: 'La línea y la multitud: volumen de contratos, 200K-400K MXN',
           chartId: 'threshold-spikes',
-          data: {
-            points: [
-              {
-                label: '200K',
-                value: 16075,
-              },
-              {
-                label: '210K',
-                value: 28264,
-                highlight: true,
-                annotation: '+76% vs floor',
-                annotation_es: '+76% vs base',
-              },
-              {
-                label: '220K',
-                value: 27773,
-              },
-              {
-                label: '230K',
-                value: 24820,
-              },
-              {
-                label: '240K',
-                value: 23331,
-              },
-              {
-                label: '250K',
-                value: 24966,
-                highlight: true,
-                annotation: 'threshold?',
-                annotation_es: '¿umbral?',
-              },
-              {
-                label: '260K',
-                value: 24841,
-              },
-              {
-                label: '270K',
-                value: 19259,
-              },
-              {
-                label: '280K',
-                value: 19805,
-              },
-              {
-                label: '290K',
-                value: 18925,
-              },
-              {
-                label: '300K',
-                value: 22064,
-                highlight: true,
-                annotation: '300K legal line',
-                annotation_es: 'línea legal 300K',
-              },
-              {
-                label: '310K',
-                value: 16024,
-              },
-              {
-                label: '320K',
-                value: 15914,
-              },
-              {
-                label: '330K',
-                value: 14986,
-              },
-              {
-                label: '340K',
-                value: 16707,
-              },
-              {
-                label: '350K',
-                value: 14304,
-              },
-              {
-                label: '360K',
-                value: 13580,
-              },
-              {
-                label: '370K',
-                value: 12260,
-              },
-              {
-                label: '380K',
-                value: 12599,
-              },
-              {
-                label: '390K',
-                value: 14318,
-              },
-              {
-                label: '400K',
-                value: 12045,
-              },
-            ],
-            unit: 'contracts',
-            referenceLine: {
-              value: 16075,
-              label: 'baseline floor · 16K',
-              label_es: 'línea base · 16K',
-              color: 'var(--color-text-secondary)',
-            },
-            annotation:
-              'Anomalous spikes at 210K, 250K, and 300K suggest artificial contract splitting.',
-            annotation_es:
-              'Picos anómalos en 210K, 250K y 300K sugieren división artificial de contratos.',
-          },
         },
         pullquote: {
           quote:
-            "28,264 contracts at exactly 210,000 pesos. The bucket immediately below holds 16,075. This is not a pricing pattern. It is a procedural escape.",
+            "2,796 contracts written for exactly 300,000 pesos. 236 for 299,000, and 55 for 301,000. A price that lands on a closed figure is not a price. It is a decision.",
           quote_es:
-            "28,264 contratos exactamente en 210,000 pesos. El cubo inmediatamente debajo guarda 16,075. No es un patrón de precio. Es un escape procedimental.",
-          stat: '28,264',
-          statLabel: "contracts at exactly 210K MXN",
-          statLabel_es: "contratos exactamente en 210 mil pesos",
-          barValue: 0.76,
-          barLabel: 'excess above baseline',
-          barLabel_es: 'exceso sobre la línea base',
+            "2,796 contratos escritos en exactamente 300 mil pesos. 236 en 299 mil, y 55 en 301 mil. Un precio que aterriza sobre una cifra cerrada no es un precio. Es una decisión.",
+          stat: '19.2×',
+          statLabel: "the count a thousand pesos to either side",
+          statLabel_es: "el conteo a mil pesos de cualquier lado",
+          barValue: 0.815,
+          barLabel: 'of them awarded directly',
+          barLabel_es: 'adjudicados directamente',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
-          'RUBLI contracts table, amount_mxn histogram analysis. Queried April 2026.',
-          'RUBLI histogram analysis of contract amounts, 200K-400K range in 10K buckets.',
+          'RUBLI contracts table, GET /analysis/amount-histogram, 200K-400K band at 10,000 and 1,000 peso resolution. Queried September 2026.',
+          'Exact-value counts are equality matches on amount_mxn over the whole register; bucket counts are half-open on [from, to).',
           'Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público, Art. 42 (simplified procedures).',
         ],
       },
@@ -4702,141 +4602,41 @@ export const STORIES: StoryDef[] = [
         number: 2,
         title: "Why the Crowd Forms",
         title_es: "Por qué se forma la multitud",
-        subtitle: "The legal magnet, the splitting engine, and the roster that works the line",
-        subtitle_es: "El imán legal, el motor de fragmentación y el padrón que trabaja la línea",
+        subtitle: "The legal magnet, the fragmentation ban, and the buyers that write closed figures",
+        subtitle_es: "El imán legal, la prohibición de fraccionar y las dependencias que escriben cifras cerradas",
         prose: [
-          "DICONSA awarded 985 suspicious clusters — three or more contracts to the same vendor, on the same day, each in the 195K-305K threshold band — 3,395 split contracts worth 829.6 million pesos. Count those clusters across every federal institution and the histogram gets names. Its renamed successor, Alimentación para el Bienestar, adds 230 clusters and 869 contracts (214.2M MXN). Both move bulk staples against a thin oversight surface — large recurrent buying, a mechanism distinct from day-of splitting.",
+          "Count the round-numbered contracts by buyer and the comb gets names. The Comisión Federal de Electricidad writes the most — 2,346 of them, 7.4 percent of everything it contracts in this band, and 77.9 percent awarded directly. The Instituto Mexicano del Seguro Social is second with 2,165, the ISSSTE third with 1,889. DICONSA, the state food distributor, writes 1,015 and hands out 93.3 percent of them without a contest. Nacional Financiera writes 847 out of only 1,812 contracts in the whole band — 46.7 percent of its mid-sized purchasing lands on a closed figure.",
           "The pull is written in law. Below certain values a buyer may use \"invitación a cuando menos tres personas\" — a simplified three-vendor invitation under Art. 42 of the Ley de Adquisiciones — instead of full competitive bidding; below others, direct adjudication with no procedure at all. The 300,000-peso value has historically sat near the invitación-a-tres threshold; 210,000 and 250,000 map to subdivision and small-value limits. The exact figures drift each year as UMA values update, but the structure of Art. 43, and the bunching just beneath it, hold constant. To hand a predetermined vendor a contract without competition, sizing it just under the line is the reliable legal route.",
           "Art. 17 of the same law forbids the trick: the procurement of one good or service may not be fragmented to evade required procedures. The data ignores the ban. RUBLI's z-score analysis of same-day awards — same vendor, same day, same institution — finds thousands of cases split into multiple sub-threshold contracts. In extreme cases a single unit fires 10 to 20 contracts in one day to one vendor for what is plainly one need. A 2019 World Bank study found threshold splitting added 8 to 12 percent to unit prices by killing volume discounts; across tens of thousands of Mexican contracts at threshold values, the aggregate distortion plausibly runs into the billions of pesos a year.",
-          "The editorial finding is healthcare. IMSS ranks second by cluster count — 588 clusters, 2,109 split contracts, 519.5M MXN — followed by ISSSTE (77 clusters, 302 contracts, 75.1M), the INCMNSZ-Salvador Zubirán (69 clusters, 268 contracts, 65.7M), and the federal Secretaría de Salud (15 clusters, 132 contracts, 30.1M). The rest fills out the curve: CFE (47 clusters, 162 contracts, 40.1M), CONALITEG (36 clusters, 132 contracts, 31.7M), Puebla's Comité Educativo (27 clusters, 186 contracts, 46.2M), SEMAR (19 clusters, 61 contracts, 15.2M), PROFECO (18 clusters, 89 contracts, 20.8M), IPN (14 clusters, 53 contracts, 13.0M). Medical-supply procurement rarely needs day-of fragmentation, which is exactly why the pattern reads loudest there. Sum the excess across the spike buckets and roughly 30,000 to 40,000 contracts were structured at threshold values instead of at natural prices — each one a purchase that could have gone to competition and was sized to avoid it.",
+          "The editorial finding is healthcare. The IMSS and the ISSSTE together write 4,054 round-numbered contracts in this band, more than any other pair of buyers, and 72.2 percent of what the two of them put on a closed figure went out as a direct award. Buying medical supplies almost never produces a closed figure on its own: a consignment of syringes or reagents prices out to whatever the unit cost times the quantity comes to. When it comes to exactly 300,000 pesos, the quantity was chosen to reach the price rather than the price arrived at from the quantity. Add every round value in the band and 22,263 contracts were written that way — each one a purchase where somebody picked the number first.",
         ],
         prose_es: [
-          "DICONSA adjudicó 985 cúmulos sospechosos — tres o más contratos al mismo proveedor, el mismo día, cada uno en la banda umbral de 195K-305K — 3,395 contratos divididos por 829.6 millones de pesos. Cuenta esos cúmulos en cada institución federal y el histograma cobra nombres. Su entidad sucesora renombrada, Alimentación para el Bienestar, suma 230 cúmulos y 869 contratos (214.2 M MXN). Ambas mueven productos básicos a granel contra una superficie de fiscalización delgada — compra grande y recurrente, un mecanismo distinto del fraccionamiento del mismo día.",
+          "Cuenta por dependencia los contratos escritos sobre un número redondo y el peine cobra nombres. La Comisión Federal de Electricidad escribe más que nadie — 2,346, el 7.4 por ciento de todo lo que contrata en esta banda, y el 77.9 por ciento adjudicado directamente. El Instituto Mexicano del Seguro Social va segundo con 2,165, el ISSSTE tercero con 1,889. DICONSA, la distribuidora estatal de alimentos, escribe 1,015 y entrega el 93.3 por ciento de ellos sin competencia. Nacional Financiera escribe 847 de apenas 1,812 contratos en toda la banda — el 46.7 por ciento de su compra mediana aterriza sobre una cifra cerrada.",
           "El imán está escrito en la ley. Por debajo de ciertos valores una unidad compradora puede usar la \"invitación a cuando menos tres personas\" — procedimiento simplificado de tres proveedores bajo el Art. 42 de la Ley de Adquisiciones — en vez de licitación competitiva plena; por debajo de otros, adjudicación directa sin procedimiento alguno. El valor de 300,000 pesos ha estado históricamente cerca del umbral de invitación a tres; 210,000 y 250,000 corresponden a límites de subdivisión y de bajo valor. Los números exactos se desplazan año con año conforme se actualiza la UMA, pero la estructura del Art. 43, y el agrupamiento justo debajo, se mantienen constantes. Para entregar a un proveedor predeterminado un contrato sin competencia, dimensionarlo justo por debajo de la línea es la ruta legal confiable.",
           "El Art. 17 de la misma ley prohíbe el truco: la contratación de un bien o servicio no podrá fragmentarse para evadir los procedimientos exigidos. Los datos ignoran la prohibición. El análisis z-score de RUBLI sobre adjudicaciones del mismo día — mismo proveedor, mismo día, misma institución — encuentra miles de casos divididos en varios contratos por debajo del umbral. En casos extremos una sola unidad adjudica de 10 a 20 contratos en un día a un proveedor para lo que claramente es una sola necesidad. Un estudio del Banco Mundial de 2019 halló que la fragmentación por umbral añadía entre 8 y 12 por ciento a los precios unitarios al matar los descuentos por volumen; a través de decenas de miles de contratos mexicanos en valores umbral, la distorsión agregada plausiblemente alcanza miles de millones de pesos al año.",
-          "El hallazgo editorial es el sector salud. El IMSS se ubica segundo por número de cúmulos — 588 cúmulos, 2,109 contratos divididos, 519.5 M MXN — seguido por ISSSTE (77 cúmulos, 302 contratos, 75.1 M), el INCMNSZ-Salvador Zubirán (69 cúmulos, 268 contratos, 65.7 M) y la Secretaría de Salud federal (15 cúmulos, 132 contratos, 30.1 M). El resto completa la curva: CFE (47 cúmulos, 162 contratos, 40.1 M), CONALITEG (36 cúmulos, 132 contratos, 31.7 M), el Comité Educativo de Puebla (27 cúmulos, 186 contratos, 46.2 M), SEMAR (19 cúmulos, 61 contratos, 15.2 M), PROFECO (18 cúmulos, 89 contratos, 20.8 M), IPN (14 cúmulos, 53 contratos, 13.0 M). La contratación de insumos médicos rara vez necesita fragmentarse en un mismo día, y por eso ahí el patrón suena más fuerte. Suma el exceso en los cubos pico y aproximadamente 30,000 a 40,000 contratos fueron estructurados en valores umbral en vez de en precios naturales — cada uno una compra que pudo ir a competencia y fue dimensionada para evitarla.",
+          "El hallazgo editorial es el sector salud. El IMSS y el ISSSTE juntos escriben 4,054 contratos sobre un número redondo en esta banda, más que cualquier otro par de compradores, y el 72.2 por ciento de lo que los dos pusieron sobre una cifra cerrada salió por adjudicación directa. La compra de insumos médicos casi nunca produce una cifra cerrada por sí sola: un lote de jeringas o de reactivos da el precio que dé el costo unitario por la cantidad. Cuando da exactamente 300 mil pesos, la cantidad se eligió para llegar al precio y no al revés. Suma cada valor redondo de la banda y son 22,263 contratos escritos así — cada uno una compra donde alguien eligió primero el número.",
         ],
         chartConfig: {
-          type: 'inline-roster',
-          title: 'Who Works the Line: Same-Day, Same-Vendor Threshold-Cluster Splits',
-          title_es: 'Quién trabaja la línea: divisiones umbral con mismo proveedor en el mismo día',
-          chartId: 'threshold-split-institutions',
-          data: {
-            points: [
-              {
-                label: 'DICONSA',
-                label_es: 'DICONSA',
-                value: 985,
-                annotation: 'HACIENDA · SOCIAL PROGRAMS · 3,395 CONTRACTS · 829.6M MXN',
-                annotation_es: 'HACIENDA · PROGRAMAS SOCIALES · 3,395 CONTRATOS · 829.6 M MXN',
-              },
-              {
-                label: 'IMSS',
-                label_es: 'IMSS',
-                value: 588,
-                highlight: true,
-                color: '#dc2626',
-                annotation: 'SALUD · MEDICAL SUPPLY · 2,109 CONTRACTS · 519.5M MXN',
-                annotation_es: 'SALUD · INSUMOS MÉDICOS · 2,109 CONTRATOS · 519.5 M MXN',
-              },
-              {
-                label: 'Alimentación p/ Bienestar',
-                label_es: 'Alimentación p/ Bienestar',
-                value: 230,
-                annotation: 'HACIENDA · SOCIAL PROGRAMS · 869 CONTRACTS · 214.2M MXN',
-                annotation_es: 'HACIENDA · PROGRAMAS SOCIALES · 869 CONTRATOS · 214.2 M MXN',
-              },
-              {
-                label: 'ISSSTE',
-                label_es: 'ISSSTE',
-                value: 77,
-                highlight: true,
-                color: '#dc2626',
-                annotation: 'SALUD · MEDICAL SUPPLY · 302 CONTRACTS · 75.1M MXN',
-                annotation_es: 'SALUD · INSUMOS MÉDICOS · 302 CONTRATOS · 75.1 M MXN',
-              },
-              {
-                label: 'INCMNSZ Salvador Zubirán',
-                label_es: 'INCMNSZ Salvador Zubirán',
-                value: 69,
-                highlight: true,
-                color: '#dc2626',
-                annotation: 'SALUD · MEDICAL SUPPLY · 268 CONTRACTS · 65.7M MXN',
-                annotation_es: 'SALUD · INSUMOS MÉDICOS · 268 CONTRATOS · 65.7 M MXN',
-              },
-              {
-                label: 'CFE',
-                label_es: 'CFE',
-                value: 47,
-                annotation: 'ENERGÍA · ELECTRICITY · 162 CONTRACTS · 40.1M MXN',
-                annotation_es: 'ENERGÍA · ELECTRICIDAD · 162 CONTRATOS · 40.1 M MXN',
-              },
-              {
-                label: 'CONALITEG',
-                label_es: 'CONALITEG',
-                value: 36,
-                annotation: 'EDUCACIÓN · TEXTBOOKS · 132 CONTRACTS · 31.7M MXN',
-                annotation_es: 'EDUCACIÓN · LIBROS DE TEXTO · 132 CONTRATOS · 31.7 M MXN',
-              },
-              {
-                label: 'Puebla — Comité Educativo',
-                label_es: 'Puebla — Comité Educativo',
-                value: 27,
-                annotation: 'EDUCACIÓN · STATE-LEVEL · 186 CONTRACTS · 46.2M MXN',
-                annotation_es: 'EDUCACIÓN · NIVEL ESTATAL · 186 CONTRATOS · 46.2 M MXN',
-              },
-              {
-                label: 'SEMAR',
-                label_es: 'SEMAR',
-                value: 19,
-                annotation: 'DEFENSA · NAVAL · 61 CONTRACTS · 15.2M MXN',
-                annotation_es: 'DEFENSA · MARINA · 61 CONTRATOS · 15.2 M MXN',
-              },
-              {
-                label: 'PROFECO',
-                label_es: 'PROFECO',
-                value: 18,
-                annotation: 'GOBERNACIÓN · CONSUMER PROTECTION · 89 CONTRACTS · 20.8M MXN',
-                annotation_es:
-                  'GOBERNACIÓN · PROCURADURÍA DEL CONSUMIDOR · 89 CONTRATOS · 20.8 M MXN',
-              },
-              {
-                label: 'Secretaría de Salud',
-                label_es: 'Secretaría de Salud',
-                value: 15,
-                highlight: true,
-                annotation: 'SALUD · FEDERAL HEALTH · 132 CONTRACTS · 30.1M MXN',
-                annotation_es: 'SALUD · SALUD FEDERAL · 132 CONTRATOS · 30.1 M MXN',
-              },
-              {
-                label: 'IPN',
-                label_es: 'IPN',
-                value: 14,
-                annotation: 'EDUCACIÓN · POLYTECHNIC · 53 CONTRACTS · 13.0M MXN',
-                annotation_es: 'EDUCACIÓN · POLITÉCNICO · 53 CONTRATOS · 13.0 M MXN',
-              },
-            ],
-            unit: 'clusters',
-            annotation:
-              'Each cluster = one institution awarding 3+ contracts to the same vendor on the same day, each between 195K and 305K MXN. The healthcare cluster (IMSS / ISSSTE / INCMNSZ / SSA — ochre rail) is the editorial finding: medical procurement rarely needs day-of fragmentation, so the threshold-splitting pattern is most editorially loaded there. DICONSA and Alimentación p/ Bienestar lead by raw count, but their bulk-staples profile is a different mechanism — large recurrent purchases against a thin oversight surface.',
-            annotation_es:
-              'Cada cúmulo = una institución que adjudicó 3 o más contratos al mismo proveedor el mismo día, cada uno entre 195 mil y 305 mil pesos. El cúmulo de salud (IMSS / ISSSTE / INCMNSZ / SSA — riel ocre) es el hallazgo editorial: la contratación médica rara vez necesita fragmentarse en un mismo día, por lo que ahí el patrón de fragmentación por umbral está más editorialmente cargado. DICONSA y Alimentación para el Bienestar encabezan por conteo bruto, pero su perfil de compra de productos básicos a granel es un mecanismo distinto — compras grandes y recurrentes contra una superficie de fiscalización delgada.',
-          },
+          type: 'live',
+          live: 'threshold-institutions',
+          title: 'Who Stands on the Line: Round-Numbered Contracts by Buyer',
+          title_es: 'Quién se para en la línea: contratos con número redondo por dependencia',
+          chartId: 'threshold-institutions',
         },
         pullquote: {
           quote:
-            "Three statistical spikes in a 200K range, each aligned with a regulatory line. Sum the excess and roughly 40,000 contracts were structured to escape competition.",
+            "Nacional Financiera writes 847 round-numbered contracts out of 1,812 in the whole band. Nearly half of its mid-sized purchasing lands on a closed figure.",
           quote_es:
-            "Tres picos estadísticos en un rango de 200K, cada uno alineado con una línea regulatoria. Suma el exceso y unos 40,000 contratos fueron estructurados para escapar de la competencia.",
-          stat: '~40,000',
-          statLabel: "excess contracts at threshold values",
-          statLabel_es: "contratos en exceso en valores umbral",
+            "Nacional Financiera escribe 847 contratos con número redondo de 1,812 en toda la banda. Casi la mitad de su compra mediana aterriza sobre una cifra cerrada.",
+          stat: '46.7%',
+          statLabel: "of NAFIN's band purchasing sits on a round number",
+          statLabel_es: "de la compra de NAFIN en la banda se sienta sobre un número redondo",
         },
         sources: [
           'Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público. Art. 42 and Art. 43 threshold structure.',
           'Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público. Art. 17 (fragmentation prohibition).',
           'World Bank. (2019). Procurement Fraud Indicators: Threshold Manipulation in Public Contracting.',
-          'RUBLI same-day same-vendor cluster analysis: contracts in 195K-305K band, GROUP BY institution × vendor × contract_date HAVING COUNT ≥ 3. April 2026.',
+          'RUBLI contracts table, GET /analysis/amount-histogram top_institutions, 200K-400K band. Queried September 2026.',
         ],
       },
       {
@@ -4847,32 +4647,41 @@ export const STORIES: StoryDef[] = [
         subtitle: "Easy to detect, hard to prosecute, audited at neither end",
         subtitle_es: "Fácil de detectar, difícil de imputar, sin auditoría en ningún extremo",
         prose: [
-          "After 14 years, threshold-clustering has produced 0 systemic enforcement cases. The pattern is one of the easiest procurement frauds to detect — counting contracts at fixed values against a baseline runs in seconds on the full CompraNet dataset — and one of the hardest to prosecute. Each contract is a legitimate, documented, defensible purchase. The fraud lives in the aggregate decision to fragment, which is the only place it can be proven.",
-          "Among threshold-cluster contracts, 75 percent are direct awards — no competition, no public tender — against an OECD ceiling of 30 percent for non-competitive procedures. The escape the line was built to enable has become the default.",
+          "Across twenty-three years of record, round-number clustering has produced no systemic enforcement case anyone can point to. The pattern is one of the easiest procurement irregularities to detect — counting contracts at fixed values against their neighbours runs in seconds on the full CompraNet dataset — and one of the hardest to prosecute. Each contract on its own is a legitimate, documented, defensible purchase. Whatever is wrong lives in the aggregate decision, which is the only place it could be proven and the one place nobody looks.",
+          "Among the round-numbered contracts, 81.5 percent are direct awards — no competition, no public tender — against 70.8 percent across the band and an OECD ceiling of 30 percent for non-competitive procedures. Both figures are far above that ceiling; the gap between them is the part that is a choice.",
           "The enforcement geography explains the silence. Small sub-threshold contracts fall outside the federal audit net: the ASF spends its limited capacity on large contracts, and SFP pattern audits, when they happen, hit high-profile units rather than the diffuse municipal and decentralized bodies where splitting concentrates. It mirrors the failure at the top. Five-billion-peso contracts escape audit because they are politically dangerous to touch; 210,000-peso contracts escape because they are individually too small to be worth investigating. Opposite ends of the value spectrum, the same result — procurement without meaningful oversight.",
-          "What is missing is will, not capability. RUBLI's clustering detection already hands investigators a target list: units firing 20 contracts of exactly 300,000 pesos in a week, vendors that live only in threshold-adjacent awards. The remedies are well-established — automatic threshold-adjacency flagging at data entry, mandatory explanation when same-vendor same-day awards aggregate above the line, algorithmically prioritized SFP audits, and aggregation rules that treat a series of related contracts as one procurement. The EU's Directive 2014/24/EU already requires that aggregation in Art. 5; Mexican law has not fully adopted it, even though Art. 17 already supplies the prohibition. CompraNet holds every byte needed. The spikes at 210K, 250K and 300K are printed in public data for anyone able to read them. The question is no longer whether this happens at scale — it does — but when Mexican institutions will act on a number they can already see.",
+          "And yet the habit is receding. In 2002, 3.2 percent of the band's contracts were written on a round number. By 2014 it was 8.0 percent, the high-water mark. By 2025 it is back to 4.2 percent — roughly half the peak, without a single prosecution to explain it. Something changed: the 2010 CompraNet overhaul, the shift to electronic procedure records, the slow professionalisation of purchasing units. The decline is real and it deserves saying, because a story that only shouts loses the right to be believed when the number moves.",
+          "What remains is still large, and what is missing is still will rather than capability. 578 contracts in the latest year were written on a closed figure. The remedies are well-established — automatic flagging of round-numbered awards at data entry, mandatory explanation when same-vendor same-day awards aggregate above a threshold, algorithmically prioritized SFP audits, and aggregation rules that treat a series of related contracts as one procurement. The EU's Directive 2014/24/EU already requires that aggregation in Art. 5; Mexican law has not fully adopted it, even though Art. 17 already supplies the prohibition. CompraNet holds every byte needed. Counting contracts at fixed values against their neighbours takes one query. The question is no longer whether this happens at scale — it does, less than it did — but whether anyone will read a number that has been printed in public for twenty-three years.",
         ],
         prose_es: [
-          "Tras 14 años, el agrupamiento en umbrales ha producido 0 casos sistémicos de fiscalización. El patrón es de los fraudes en contratación más fáciles de detectar — contar contratos en valores fijos contra una línea base corre en segundos sobre todo el dataset de CompraNet — y de los más difíciles de imputar. Cada contrato es una compra legítima, documentada y defendible. El fraude vive en la decisión agregada de fragmentar, el único lugar donde puede probarse.",
-          "Entre los contratos en cúmulo de umbral, el 75 por ciento son adjudicaciones directas — sin competencia, sin licitación pública — contra un techo de la OCDE de 30 por ciento para procedimientos no competitivos. El escape que la línea fue construida para habilitar se volvió la regla por defecto.",
+          "A lo largo de veintitrés años de registro, el agrupamiento en números redondos no ha producido un solo caso sistémico de fiscalización que alguien pueda señalar. El patrón es de las irregularidades en contratación más fáciles de detectar — contar contratos en valores fijos contra sus vecinos corre en segundos sobre todo el dataset de CompraNet — y de las más difíciles de imputar. Cada contrato por separado es una compra legítima, documentada y defendible. Lo que esté mal vive en la decisión agregada, el único lugar donde podría probarse y el único donde nadie mira.",
+          "Entre los contratos con número redondo, el 81.5 por ciento son adjudicaciones directas — sin competencia, sin licitación pública — contra el 70.8 por ciento de la banda entera y un techo de la OCDE de 30 por ciento para procedimientos no competitivos. Ambas cifras rebasan por mucho ese techo; la diferencia entre las dos es la parte que es una elección.",
           "La geografía de la fiscalización explica el silencio. Los contratos chicos por debajo del umbral caen fuera de la red de auditoría federal: la ASF gasta su capacidad limitada en contratos grandes, y las auditorías de patrón de la SFP, cuando ocurren, golpean unidades de alto perfil en vez de los cuerpos municipales y descentralizados donde se concentra la fragmentación. Es el espejo de la falla en el extremo alto. Los contratos de cinco mil millones de pesos escapan a la auditoría porque son políticamente peligrosos de tocar; los de 210,000 pesos escapan porque son individualmente demasiado chicos para investigarlos. Extremos opuestos del espectro de valor, el mismo resultado — contratación sin fiscalización significativa.",
-          "Lo que falta es voluntad, no capacidad. La detección de cúmulos de RUBLI ya entrega a los investigadores una lista de blancos: unidades que adjudican 20 contratos de exactamente 300,000 pesos en una semana, proveedores que viven solo en adjudicaciones colindantes al umbral. Los remedios están bien establecidos — marcado automático de colindancia con umbral al registro, explicación obligatoria cuando las adjudicaciones del mismo día al mismo proveedor agregan por encima de la línea, auditorías de la SFP priorizadas algorítmicamente, y reglas de agregación que tratan una serie de contratos relacionados como una sola contratación. La Directiva 2014/24/UE de la UE ya exige esa agregación en su Art. 5; la ley mexicana no la ha adoptado plenamente, aunque el Art. 17 ya provee la prohibición. CompraNet guarda cada byte necesario. Los picos en 210K, 250K y 300K están impresos en datos públicos para cualquiera capaz de leerlos. La pregunta ya no es si esto ocurre a escala — sí ocurre — sino cuándo las instituciones mexicanas actuarán sobre un número que ya pueden ver.",
+          "Y sin embargo el hábito retrocede. En 2002, el 3.2 por ciento de los contratos de la banda se escribía sobre un número redondo. Para 2014 era el 8.0 por ciento, el punto más alto. Para 2025 vuelve a 4.2 por ciento — cerca de la mitad del máximo, sin una sola imputación que lo explique. Algo cambió: la renovación de CompraNet en 2010, el paso al registro electrónico de procedimientos, la lenta profesionalización de las unidades compradoras. La caída es real y merece decirse, porque un relato que solo grita pierde el derecho a que le crean cuando el número se mueve.",
+          "Lo que queda sigue siendo grande, y lo que falta sigue siendo voluntad y no capacidad. En el último año 578 contratos se escribieron sobre una cifra cerrada. Los remedios están bien establecidos — marcado automático de las adjudicaciones con número redondo al registro, explicación obligatoria cuando las adjudicaciones del mismo día al mismo proveedor agregan por encima de un umbral, auditorías de la SFP priorizadas algorítmicamente, y reglas de agregación que tratan una serie de contratos relacionados como una sola contratación. La Directiva 2014/24/UE de la UE ya exige esa agregación en su Art. 5; la ley mexicana no la ha adoptado plenamente, aunque el Art. 17 ya provee la prohibición. CompraNet guarda cada byte necesario. Contar contratos en valores fijos contra sus vecinos toma una consulta. La pregunta ya no es si esto ocurre a escala — sí ocurre, menos que antes — sino si alguien leerá un número que lleva veintitrés años impreso en público.",
         ],
+        chartConfig: {
+          type: 'live',
+          live: 'threshold-years',
+          title: 'The Line in Time: Round-Numbered Contracts as a Share of the Band',
+          title_es: 'La línea en el tiempo: contratos con número redondo como proporción de la banda',
+          chartId: 'threshold-years',
+        },
         pullquote: {
           quote:
-            "The line is printed, statistically, in public data for anyone able to read it. In 14 years it has produced zero systemic enforcement cases.",
+            "The number is printed in public data for anyone able to read it. In twenty-three years it has produced no systemic enforcement case — and it halved anyway.",
           quote_es:
-            "La línea está impresa, estadísticamente, en datos públicos para cualquiera capaz de leerla. En 14 años ha producido cero casos sistémicos de fiscalización.",
-          stat: '0',
-          statLabel: "systemic enforcement cases against threshold-clustering in 14 years",
+            "El número está impreso en datos públicos para cualquiera capaz de leerlo. En veintitrés años no ha producido un solo caso sistémico de fiscalización — y aun así se dividió a la mitad.",
+          stat: '4.2%',
+          statLabel: "of the band written on a round number in 2025, down from 8.0% in 2014",
           statLabel_es:
-            "casos sistémicos de fiscalización contra el agrupamiento en umbrales en 14 años",
+            "de la banda escrito sobre un número redondo en 2025, desde 8.0% en 2014",
         },
         sources: [
           'OECD. (2015). Recommendation of the Council on Public Procurement. Principle 7: accountability.',
           'EU Procurement Directive 2014/24/EU. Art. 5 (aggregation rules and anti-splitting).',
           'Transparencia Mexicana. (2024). Diagnóstico de la Corrupción en Compras Municipales y Estatales.',
-          'RUBLI aggregate threshold analysis, April 2026.',
+          'RUBLI contracts table, GET /analysis/amount-histogram by_year, 200K-400K band. Queried September 2026. Procedure type is not coded before 2010 (COMPRANET Structure A).',
         ],
       },
     ],
