@@ -98,7 +98,7 @@ function ChargeRow({
         <span
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontSize: 12.5,
+            fontSize: 13,
             color: 'var(--color-text-primary)',
             lineHeight: 1.35,
           }}
@@ -193,15 +193,24 @@ export const ClusterActa = memo(function ClusterActa({
         </span>
         <span className="ml-auto font-mono text-[13px] text-text-muted">C-{community.community_id}</span>
       </div>
-      <p
-        className="mb-1.5"
-        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 15, color: 'var(--color-text-primary)', lineHeight: 1.45 }}
-      >
-        «{lede}»
-      </p>
-      <p className="mb-4 font-mono" style={{ fontSize: 12, color: verdict.color, lineHeight: 1.5 }}>
-        {isEs ? verdict.rationale_es : verdict.rationale_en}
-      </p>
+      {/* D4 § 5 — lede and rationale sit on the same two columns as the body
+          grid below, so neither strands half the card's width. */}
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-1.5">
+        <p
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontSize: 15,
+            color: 'var(--color-text-primary)',
+            lineHeight: 1.45,
+            maxWidth: 'none',
+          }}
+        >
+          «{lede}»
+        </p>
+        <p className="font-mono" style={{ fontSize: 12, color: verdict.color, lineHeight: 1.5, maxWidth: 'none' }}>
+          {isEs ? verdict.rationale_es : verdict.rationale_en}
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 border-t border-border/50 pt-4">
         {/* ── LOS CARGOS ─────────────────────────────────────────────── */}

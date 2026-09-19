@@ -97,8 +97,8 @@ export function buildEvidenceMarks(graph: CommunityGraphResponse): EvidenceEntry
       id: 'E4',
       vendorId: topDocumented.vendor_id,
       focusVendorId: topDocumented.vendor_id,
-      clause_es: `Caso documentado — ${name}: vinculado a ${topDocumented.gt_case_count} caso(s) de la verdad fundamental.`,
-      clause_en: `Documented case — ${name}: linked to ${topDocumented.gt_case_count} ground-truth case(s).`,
+      clause_es: `Caso documentado — ${name}: vinculado a ${topDocumented.gt_case_count} caso(s) documentado(s).`,
+      clause_en: `Documented case — ${name}: linked to ${topDocumented.gt_case_count} documented case(s).`,
     })
   }
 

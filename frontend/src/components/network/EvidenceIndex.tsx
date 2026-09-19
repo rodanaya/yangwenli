@@ -27,7 +27,9 @@ export function EvidenceIndex({ entries, onFocusVendor, lang }: EvidenceIndexPro
       >
         {lang === 'es' ? '§ Marcas de evidencia' : '§ Evidence marks'}
       </h2>
-      <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+      {/* D4 § 5 — a two-column grid instead of a wrap of 320px boxes: the
+          clauses fill the plate's width instead of ragging down its left. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2.5">
         {entries.map((entry) => {
           const clause = lang === 'es' ? entry.clause_es : entry.clause_en
           const ariaLabel =
@@ -41,7 +43,7 @@ export function EvidenceIndex({ entries, onFocusVendor, lang }: EvidenceIndexPro
               onClick={() => onFocusVendor(entry.focusVendorId)}
               aria-label={ariaLabel}
               className={cn(
-                'flex items-start gap-2 text-left max-w-[320px]',
+                'flex w-full items-start gap-2 text-left',
                 'hover:opacity-80 transition-opacity cursor-pointer',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
               )}

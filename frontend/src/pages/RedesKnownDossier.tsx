@@ -1386,7 +1386,7 @@ export default function RedesKnownDossier() {
                 en: 'RFC coverage is 0.1% for 2002–2010: the co-bidding network is under-represented before 2010 and this sketch is most reliable from 2010 onward.',
               },
             ].map((cl, i) => (
-              <li key={i} className="flex gap-3 text-[12px] text-text-secondary leading-relaxed">
+              <li key={i} className="flex gap-3 text-[13px] text-text-secondary leading-relaxed">
                 <span
                   className="shrink-0 font-mono text-[12px] uppercase tracking-[0.14em] text-accent pt-0.5"
                   style={{ minWidth: '2rem' }}
