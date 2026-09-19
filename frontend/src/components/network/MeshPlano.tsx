@@ -20,6 +20,7 @@ import { RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/const
 import { formatCompactMXN, formatDualCurrency, formatNumber } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
+import { placeLabels, measureLabel, type LabelBox, type LabelCandidate } from './plateLabels'
 
 interface MeshPlanoProps {
   communities: CommunityIndexItem[]
@@ -39,12 +40,22 @@ export function signalDensity(c: Pick<CommunityIndexItem, 'avg_risk' | 'total_va
 // ── geometry ────────────────────────────────────────────────────────────────
 const HEIGHT_DESKTOP = 240
 const HEIGHT_MOBILE = 200
-const PAD_L = 46
+// D4 § 2: axis glyphs go to the 10px floor, so the gutters grow to match.
+const PAD_L = 52
 const PAD_R = 22
 const PAD_TOP = 16
-const PAD_BOTTOM = 40
+const PAD_BOTTOM = 44
 const MOBILE_BREAK = 640
 const X_TICKS = [5, 20, 100, 500, 2000, 10000]
+const AXIS_FS = 10
+const CALLOUT_FS = 11
+const CALLOUT_LH = 13
+// The measured font MUST be the rendered font: measuring in IBM Plex Mono and
+// rendering in font-mono (JetBrains Mono) wrapped every callout past its
+// reserved box, which is how one landed on the quadrant annotation.
+const CALLOUT_FAMILY = '"IBM Plex Mono", "JetBrains Mono", monospace'
+const CALLOUT_FONT = `${CALLOUT_FS}px ${CALLOUT_FAMILY}`
+const HALO_PAD = 4
 
 interface PlacedMark extends CommunityIndexItem {
   cx: number
@@ -66,6 +77,23 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
     })
     ro.observe(containerRef.current)
     return () => ro.disconnect()
+  }, [])
+
+  // Label boxes are measured with canvas measureText. Measured before the web
+  // fonts land, every box comes out narrow and the rendered label wraps past
+  // it — which is exactly how a callout ended up sitting on the quadrant
+  // annotation. Re-run the layout once the fonts are in.
+  const [fontsReady, setFontsReady] = useState(
+    () => typeof document !== 'undefined' && document.fonts?.status === 'loaded',
+  )
+  useEffect(() => {
+    let alive = true
+    document.fonts?.ready.then(() => {
+      if (alive) setFontsReady(true)
+    })
+    return () => {
+      alive = false
+    }
   }, [])
 
   const isMobile = width < MOBILE_BREAK
@@ -113,28 +141,75 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
       candidates.push(m)
     }
 
-    const cap = isMobile ? 3 : 5
-    const CH_W = isMobile ? 5.1 : 5.4
-    const LABEL_H = 12
-    const PAD_BOX = 3
-    const placedBoxes: { x0: number; x1: number; y0: number; y1: number }[] = []
-    const annotations: { mark: PlacedMark; label: string }[] = []
-    for (const m of candidates) {
-      if (annotations.length >= cap) break
-      const label = `C-${m.community_id} · ${formatEntityName('vendor', m.hub_vendor_name, 'sm')}`
-      const w = label.length * CH_W
-      const cx = m.cx
-      const cy = m.cy - m.side / 2 - 10
-      const box = { x0: cx - w / 2 - PAD_BOX, x1: cx + w / 2 + PAD_BOX, y0: cy - LABEL_H, y1: cy + PAD_BOX }
-      const clear = placedBoxes.every((b) => box.x1 < b.x0 || box.x0 > b.x1 || box.y1 < b.y0 || box.y0 > b.y1)
-      if (clear) {
-        placedBoxes.push(box)
-        annotations.push({ mark: m, label })
-      }
+    // D4 § 2 — callouts are HTML, placed by the shared greedy mechanic in
+    // RENDERED px (this SVG is 1:1 with the box, so viewBox units are px).
+    // The chart's own furniture is pre-placed: a callout never sits on the
+    // axis columns, the quadrant annotations or the threshold labels.
+    const quadFs = isMobile ? 10.5 : 12.5
+    const quadFont = `${quadFs}px "EB Garamond", Georgia, serif`
+    const quadTL = lang === 'en' ? 'dense knots — the signal lives here' : 'nudos densos — aquí vive la señal'
+    const quadBR = lang === 'en' ? 'market plumbing — big and cold' : 'plomería de mercado — grande y fría'
+    const wTL = measureLabel(quadTL, quadFont, 9999, quadFs).width
+    const wBR = measureLabel(quadBR, quadFont, 9999, quadFs).width
+    const thresholdFont = `${AXIS_FS}px "IBM Plex Mono", "JetBrains Mono", monospace`
+
+    const obstacles: LabelBox[] = [
+      // y-tick column and the x-axis strip (ticks + axis title)
+      { x0: 0, y0: PAD_TOP - 10, x1: PAD_L, y1: baselineY + 8 },
+      { x0: 0, y0: baselineY, x1: width, y1: height },
+      // quadrant annotations
+      { x0: PAD_L + 6, y0: PAD_TOP + 12 - quadFs, x1: PAD_L + 6 + wTL, y1: PAD_TOP + 15 },
+      { x0: width - PAD_R - 6 - wBR, y0: baselineY - 6 - quadFs, x1: width - PAD_R - 6, y1: baselineY - 3 },
+    ]
+    for (const v of [RISK_THRESHOLDS.medium, RISK_THRESHOLDS.high]) {
+      const label = v === RISK_THRESHOLDS.medium
+        ? (lang === 'en' ? 'medium' : 'media')
+        : (lang === 'en' ? 'high' : 'alta')
+      const tw = measureLabel(label, thresholdFont, 9999, AXIS_FS).width
+      const ty = yScale(v) - 3
+      // On mobile the labels move to the LEFT end of their rules — the right
+      // end is where the giants' callouts live.
+      obstacles.push(
+        isMobile
+          ? { x0: PAD_L + 2, y0: ty - AXIS_FS, x1: PAD_L + 2 + tw, y1: ty + 3 }
+          : { x0: width - PAD_R - 2 - tw, y0: ty - AXIS_FS, x1: width - PAD_R - 2, y1: ty + 3 },
+      )
     }
 
-    return { marks, annotations, xScale, yScale, innerW, maxRisk, yMax }
-  }, [communities, width, isMobile, baselineY])
+    const cap = isMobile ? 3 : 5
+    const maxLabelW = isMobile ? 130 : 180
+    const labelText = new Map<string | number, string>()
+    const labelCandidates: LabelCandidate[] = candidates.slice(0, cap).map((m) => {
+      // Full hub name — no 'sm'/'xs' character cut (the "C-0 · Martinez
+      // Barranco" clip and the trailing "…" both came from those).
+      const text = `C-${m.community_id} · ${formatEntityName('vendor', m.hub_vendor_name, 'full')}`
+      labelText.set(m.community_id, text)
+      const measured = measureLabel(text, CALLOUT_FONT, maxLabelW - HALO_PAD, CALLOUT_LH)
+      return {
+        id: m.community_id,
+        x: m.cx,
+        y: m.cy,
+        width: measured.width + HALO_PAD,
+        // 4px of slack for hinting differences — the measurement itself is
+        // font-accurate (it waits for document.fonts.ready).
+        height: measured.height + 4,
+        above: m.side / 2 + 8,
+        below: m.side / 2 + 8,
+      }
+    })
+    const annotations = placeLabels(labelCandidates, obstacles, {
+      x0: 2,
+      y0: 2,
+      x1: width - 2,
+      y1: baselineY,
+    }).map((p) => ({
+      placed: p,
+      label: labelText.get(p.id) ?? '',
+      mark: marks.find((m) => m.community_id === p.id) as PlacedMark,
+    }))
+
+    return { marks, annotations, xScale, yScale, innerW, maxRisk, yMax, obstacles }
+  }, [communities, width, isMobile, baselineY, height, lang, fontsReady])
 
   const hovered = useMemo(() => {
     if (!layout || hoverId == null) return null
@@ -265,11 +340,11 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
                 opacity={0.6}
               />
               <text
-                x={width - PAD_R - 2}
+                x={isMobile ? PAD_L + 2 : width - PAD_R - 2}
                 y={yScale(v) - 3}
-                textAnchor="end"
+                textAnchor={isMobile ? 'start' : 'end'}
                 fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-                fontSize={8}
+                fontSize={AXIS_FS}
                 letterSpacing="0.08em"
                 fill="var(--color-text-muted)"
                 style={{ textTransform: 'uppercase' }}
@@ -290,7 +365,7 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
               y={yScale(tick) + 3}
               textAnchor="end"
               fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-              fontSize={8.5}
+              fontSize={AXIS_FS}
               fill="var(--color-text-muted)"
             >
               {Math.round(tick * 100)}%
@@ -311,10 +386,10 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
               />
               <text
                 x={xScale(tick)}
-                y={baselineY + 13}
+                y={baselineY + 15}
                 textAnchor="middle"
                 fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-                fontSize={8.5}
+                fontSize={AXIS_FS}
                 fill="var(--color-text-muted)"
               >
                 {formatNumber(tick)}
@@ -326,7 +401,7 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
             y={height - 6}
             textAnchor="middle"
             fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-            fontSize={8}
+            fontSize={AXIS_FS}
             letterSpacing="0.06em"
             fill="var(--color-text-muted)"
             style={{ textTransform: 'uppercase' }}
@@ -387,37 +462,59 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
             )
           })}
 
-          {/* Named callouts — leader line + mono label, greedy de-collided */}
-          {annotations.map(({ mark: m, label }) => {
-            const labelY = m.cy - m.side / 2 - 10
+          {/* Named callouts — SVG owns the leader line only; the glyphs are
+              HTML below, so they never inherit the viewBox scale. */}
+          {annotations.map(({ mark: m, placed }) => {
+            const above = placed.box.y1 <= m.cy
+            const endX = Math.min(Math.max(m.cx, placed.box.x0 + 4), placed.box.x1 - 4)
             return (
-              <g key={`ann-${m.community_id}`}>
-                <line
-                  x1={m.cx}
-                  x2={m.cx}
-                  y1={m.cy - m.side / 2}
-                  y2={labelY + 3}
-                  stroke="var(--color-accent)"
-                  strokeWidth={0.75}
-                  opacity={0.5}
-                />
-                <text
-                  x={m.cx}
-                  y={labelY}
-                  textAnchor="middle"
-                  fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-                  fontSize={isMobile ? 8.5 : 9.5}
-                  fill="var(--color-text-secondary)"
-                  paintOrder="stroke"
-                  stroke="var(--color-background-elevated)"
-                  strokeWidth={3}
-                >
-                  {label}
-                </text>
-              </g>
+              <line
+                key={`ann-${m.community_id}`}
+                x1={m.cx}
+                x2={endX}
+                y1={m.cy + (above ? -m.side / 2 : m.side / 2)}
+                y2={above ? placed.box.y1 : placed.box.y0}
+                stroke="var(--color-accent)"
+                strokeWidth={0.75}
+                opacity={0.5}
+              />
             )
           })}
         </svg>
+
+        {/* HTML callouts — full hub names, 11px, seated by placeLabels. */}
+        {annotations.map(({ placed, label }) => (
+          <span
+            key={`lbl-${placed.id}`}
+            className="pointer-events-none absolute text-text-secondary"
+            style={{
+              fontFamily: CALLOUT_FAMILY,
+              left: placed.box.x0,
+              top: placed.box.y0,
+              width: placed.box.x1 - placed.box.x0,
+              boxSizing: 'border-box',
+              padding: '1px 2px',
+              fontSize: CALLOUT_FS,
+              lineHeight: `${CALLOUT_LH}px`,
+              // No letter-spacing: canvas measureText does not apply it, so
+              // any tracking here makes the rendered label wider than the box
+              // placeLabels reserved for it.
+              textAlign: placed.align === 'right' ? 'right' : placed.align === 'left' ? 'left' : 'center',
+              textWrap: 'balance',
+              background: 'color-mix(in srgb, var(--color-background-elevated) 85%, transparent)',
+            }}
+          >
+            {label}
+          </span>
+        ))}
+
+        {/* Selection here is pointer-only by design — the rail is the keyboard
+            path, so say where it is instead of faking 3,000 tab stops. */}
+        <p className="sr-only">
+          {lang === 'en'
+            ? 'Select a cluster from the index below to open its mesh.'
+            : 'Selecciona un cúmulo en el índice de abajo para abrir su trama.'}
+        </p>
 
         {/* Pointer tooltip */}
         {hovered && (
@@ -433,7 +530,7 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
             role="status"
           >
             <p className="font-bold text-text-primary mb-0.5">
-              {`C-${hovered.community_id}`} · {formatEntityName('vendor', hovered.hub_vendor_name, 'sm')}
+              {`C-${hovered.community_id}`} · {formatEntityName('vendor', hovered.hub_vendor_name, 'full')}
             </p>
             <p className="text-text-secondary">
               {lang === 'en' ? `${formatNumber(hovered.size)} actors` : `${formatNumber(hovered.size)} actores`}
