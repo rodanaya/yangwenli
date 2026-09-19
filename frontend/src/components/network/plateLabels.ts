@@ -140,25 +140,23 @@ export function measureLabel(
   lineHeight: number,
 ): Measured {
   const c = sharedCtx()
-  let w: number
-  if (c) {
-    c.font = font
-    w = c.measureText(text).width
-  } else {
-    const size = parseFloat(font) || 11
-    w = text.length * size * 0.6
-  }
+  // Assigning ctx.font re-parses the shorthand, so set it ONCE per call and
+  // let every measurement below reuse it.
+  if (c) c.font = font
+  const fallbackSize = parseFloat(font) || 11
+  const widthOf = (s: string) => (c ? c.measureText(s).width : s.length * fallbackSize * 0.6)
+
+  const w = widthOf(text)
   if (w <= maxWidth) return { width: Math.ceil(w), height: lineHeight, lines: 1 }
-  // Wrapped: the box is the cap width, as tall as the lines it needs. Word
-  // wrapping can leave a short last line, so the width is the longest line,
-  // not the cap — a narrow label must not reserve a wide box.
+  // Wrapped: the box is as tall as the lines it needs, and as wide as the
+  // LONGEST line rather than the cap — a short last line must not make a
+  // narrow label reserve a wide box.
   const words = text.split(/\s+/)
   const lines: string[] = []
   let line = ''
   for (const word of words) {
     const next = line ? `${line} ${word}` : word
-    const nw = c ? (c.font = font, c.measureText(next).width) : next.length * ((parseFloat(font) || 11) * 0.6)
-    if (nw > maxWidth && line) {
+    if (widthOf(next) > maxWidth && line) {
       lines.push(line)
       line = word
     } else {
@@ -166,9 +164,7 @@ export function measureLabel(
     }
   }
   if (line) lines.push(line)
-  const widest = lines.reduce((m, l) => {
-    const lw = c ? (c.font = font, c.measureText(l).width) : l.length * ((parseFloat(font) || 11) * 0.6)
-    return Math.max(m, lw)
-  }, 0)
+  let widest = 0
+  for (const l of lines) widest = Math.max(widest, widthOf(l))
   return { width: Math.ceil(Math.min(widest, maxWidth)), height: lines.length * lineHeight, lines: lines.length }
 }
