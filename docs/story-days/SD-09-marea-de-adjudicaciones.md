@@ -50,5 +50,11 @@ ch1 `live: 'da-terms', scrolly: true`; ch2 `live: 'da-line'`; ch3 `live: 'da-eme
 ## Acceptance (`sd09.mjs`, 1440 + 390, EN + ES)
 5 live figures; numbers equal the endpoints; stages 0→3; Days 1–8 scrollies step; `clipcensus.mjs` 0 (EN + ES, four widths); 0 console errors; card headline == story h1; no request to `/stories/administration-comparison` in the page's network log (probe asserts).
 
+## Result + Deploy
+
+Built by `story-day09` (report `_parallax_shots/story-days/sd09-report.md`, commit `7664fc1d`, 5 files +1,192 / −352, `DirectAwardFigures.tsx` + hook); judged by Fable on `sd09/after/` (f1-stage3 1440 EN, f4 1440 ES) with the four term shares rechecked against `/analysis/year-over-year` (Calderón 2010–12 61.90 · Peña 73.10 · AMLO 79.41 · Sheinbaum 68.26, exact) and the 2023 register total (413.0B) confirming the 720B retraction. The brief's per-term instruction was right; the story's Calderón base was averaged over three zero-coded years. Corrections as in the STORY_DAYS row; ch4 changed subject to the sector cut (its vendor roster had drifted and Televisa is five identities — QC). `/sectors?year=2023` publishes Hacienda at 125.21% direct award, so F4 reads `sector-year-breakdown` (QC). OECD ~30% kept as a cited external benchmark, flagged for verification. Gates: tsc 0 · build OK · lint:tokens PASS · probe 151/0 · census 0/0 (EN + ES, 4 widths) · Days 1–8 still step.
+
+Deployed 2026-09-19 ≈11:05 CET via `deploy-safe.sh`. Commits `7664fc1d` · docs · BUILD_ID `2026-09-19-story-d9-marea` (hash in STORY_DAYS row).
+
 ## Build notes
 Branch `story/day-09-marea` off origin/main after Day 8 ships. Same rules as Days 1–8; report file `_parallax_shots/story-days/sd09-report.md`. Commit: `feat(stories § SD-09 marea-de-adjudicaciones): live direct-award figures — term bars scrolly, 2010–2024 line, post-emergency zoom, sector dumbbell, yearly counts; numbers verified`. Trailer `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. No BUILD_ID, push or deploy.
