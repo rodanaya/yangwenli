@@ -20,6 +20,7 @@ import type { CaptureFigureKind } from '@/components/stories/live/CaptureFigures
 import type { IntermediaryFigureKind } from '@/components/stories/live/IntermediaryFigures'
 import type { GhostFigureKind } from '@/components/stories/live/GhostFigures'
 import type { ThresholdFigureKind } from '@/components/stories/live/ThresholdFigures'
+import type { CompetitionFigureKind } from '@/components/stories/live/CompetitionFigures'
 import { StickyStepFrame, useProseStage } from '@/components/stories/live/StickyStepFigure'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { OutletBadge } from '@/components/stories/OutletBadge'
@@ -92,6 +93,7 @@ const LiveCaptureFigure = lazy(() => import('@/components/stories/live/CaptureFi
 const LiveIntermediaryFigure = lazy(() => import('@/components/stories/live/IntermediaryFigures'))
 const LiveGhostFigure = lazy(() => import('@/components/stories/live/GhostFigures'))
 const LiveThresholdFigure = lazy(() => import('@/components/stories/live/ThresholdFigures'))
+const LiveCompetitionFigure = lazy(() => import('@/components/stories/live/CompetitionFigures'))
 
 /** Route a `chartConfig.live` kind to the story family that owns it. */
 function LiveFigure({
@@ -120,6 +122,9 @@ function LiveFigure({
   }
   if (kind.startsWith('threshold-')) {
     return <LiveThresholdFigure kind={kind as ThresholdFigureKind} lang={lang} stage={stage} />
+  }
+  if (kind.startsWith('sb-')) {
+    return <LiveCompetitionFigure kind={kind as CompetitionFigureKind} lang={lang} stage={stage} />
   }
   return <LiveGapFigure kind={kind as GapFigureKind} lang={lang} stage={stage} />
 }

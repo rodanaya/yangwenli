@@ -53,6 +53,22 @@ export interface SeriesMarker {
   label: string
 }
 
+/**
+ * A second series on the same axes — SD-08's F2 needs one.
+ *
+ * It is an option rather than a `series[]` rewrite because the three SD-02
+ * figures this renderer was built for draw one line, and an array would make
+ * every one of them index into it. `values` is parallel to `points`: same
+ * length, same order, so the two series share the x positions and neither can
+ * drift from the other.
+ */
+export interface SeriesOverlay {
+  values: number[]
+  color: string
+  /** Printed at the overlay's last drawn point. */
+  endLabel?: string
+}
+
 const PAD = { l: 48, r: 16, t: 34, b: 30 }
 const PLOT_H = 232
 const AXIS_FS = 11
@@ -72,6 +88,7 @@ export function SeriesLine({
   rules = [],
   bands = [],
   markers = [],
+  overlay,
   formatTick,
   ariaSummary,
 }: {
@@ -84,6 +101,7 @@ export function SeriesLine({
   rules?: SeriesRule[]
   bands?: SeriesBand[]
   markers?: SeriesMarker[]
+  overlay?: SeriesOverlay
   formatTick: (v: number) => string
   ariaSummary: string
 }) {
@@ -127,6 +145,14 @@ export function SeriesLine({
   const path = visible.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ')
   // The emphasis run is the tail of the series, so one extra path over the same
   // points is enough — no per-segment stroke switching.
+  const overlayPath =
+    overlay && shown > 0
+      ? overlay.values
+          .slice(0, shown)
+          .map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`)
+          .join(' ')
+      : ''
+
   const firstEmph = points.findIndex((p) => p.emphasis)
   const emphPath =
     firstEmph >= 0 && shown > firstEmph
@@ -202,8 +228,24 @@ export function SeriesLine({
           )
         })}
 
+        {overlayPath && (
+          <path
+            d={overlayPath}
+            fill="none"
+            stroke={overlay!.color}
+            strokeWidth={2}
+            strokeDasharray="6 4"
+            strokeLinejoin="round"
+          />
+        )}
+
         <path d={path} fill="none" stroke={BASE_INK} strokeWidth={2} strokeLinejoin="round" />
         {emphPath && <path d={emphPath} fill="none" stroke={EMPHASIS} strokeWidth={2.5} strokeLinejoin="round" />}
+
+        {overlay &&
+          overlay.values.slice(0, shown).map((v, i) => (
+            <circle key={`ov-${points[i].key}`} cx={x(i)} cy={y(v)} r={2.5} fill={overlay.color} />
+          ))}
 
         {visible.map((p, i) => (
           <circle
@@ -292,6 +334,48 @@ export function SeriesLine({
             </span>
           ) : null,
         )}
+
+        {/* The overlay names itself at its own last drawn point rather than in
+            a legend: two lines need two names, and a legend box would be a
+            third thing competing for the plot's corners. Right if the label
+            fits there, otherwise left of the point — it cannot overflow.
+
+            Vertically it sits on the far side of its own point from the base
+            series, because a rule caption is pinned to this same right edge and
+            a reference line sits, by definition, where a series might: SD-08's
+            overlay ends at 12.8% and its OECD rule at 15%, seven pixels apart,
+            and centring both on their values stacked them on each other. */}
+        {overlay?.endLabel && shown > 0
+          ? (() => {
+              const i = shown - 1
+              const capW = overlay.endLabel.length * AXIS_FS * MONO_ADVANCE + 8
+              const fitsRight = x(i) + 8 + capW <= w - 2
+              const runsBelow = overlay.values[i] < points[i].value
+              return (
+                <span
+                  className="absolute font-mono tabular-nums whitespace-nowrap"
+                  style={{
+                    fontSize: AXIS_FS,
+                    lineHeight: 1.3,
+                    color: overlay.color,
+                    left: fitsRight ? x(i) + 8 : undefined,
+                    right: fitsRight ? undefined : w - x(i) + 8,
+                    // Pinned to the plot floor rather than nudged off its own
+                    // point: a rule caption is right-anchored too, and 5% of a
+                    // 70-point scale is five pixels, so "nudge clear" is not a
+                    // distance that exists. The floor always is.
+                    top: runsBelow
+                      ? PAD.t + innerH - AXIS_FS - 1
+                      : Math.max(y(overlay.values[i]) - AXIS_FS - 5, 2),
+                    background: 'var(--color-background-card)',
+                    padding: '0 4px',
+                  }}
+                >
+                  {overlay.endLabel}
+                </span>
+              )
+            })()
+          : null}
 
         {markers.map((m, i) => {
           if (shown <= m.afterIndex + 1) return null
