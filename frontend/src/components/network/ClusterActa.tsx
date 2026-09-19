@@ -206,9 +206,9 @@ export const ClusterActa = memo(function ClusterActa({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 border-t border-border/50 pt-4">
         {/* ── LOS CARGOS ─────────────────────────────────────────────── */}
         <div>
-          <p className="mb-2 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
+          <h2 className="mb-2 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
             {isEs ? '§ Los cargos' : '§ The charges'}
-          </p>
+          </h2>
           <div className="space-y-2">
             <ChargeRow
               glyph={daAbove ? '▲' : '·'}
@@ -275,9 +275,9 @@ export const ClusterActa = memo(function ClusterActa({
           {/* Pattern mix — visible suppression below 30% coverage */}
           {patternMixVisible ? (
             <div className="mt-2.5 border-t border-border/50 pt-2">
-              <p className="mb-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
+              <h3 className="mb-1 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
                 {isEs ? 'Mezcla de patrones ARIA' : 'ARIA pattern mix'}
-              </p>
+              </h3>
               <div className="flex h-[5px] w-full overflow-hidden rounded-full bg-border/40" aria-hidden="true">
                 {graph.stats.pattern_mix.map((m) => (
                   <span
@@ -307,9 +307,9 @@ export const ClusterActa = memo(function ClusterActa({
 
         {/* ── LOS SEÑALADOS + COMPRADORES ASEDIADOS ────────────────────── */}
         <div>
-          <p className="text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
+          <h2 className="text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
             {isEs ? '§ Los señalados · por influencia (pagerank)' : '§ The named · by influence (pagerank)'}
-          </p>
+          </h2>
           <p className="mb-2 text-[10px] font-mono text-text-muted">
             {isEs ? 'centralidad pagerank · conexiones = grado' : 'pagerank centrality · ties = degree'}
           </p>
@@ -346,7 +346,7 @@ export const ClusterActa = memo(function ClusterActa({
               <button
                 type="button"
                 onClick={() => onViewVendorRing(selectedVendorId)}
-                className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
+                className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               >
                 {isEs ? 'Ver su red →' : 'View its ring →'}
               </button>
@@ -355,9 +355,9 @@ export const ClusterActa = memo(function ClusterActa({
 
           {besiegedBuyers.length > 0 && (
             <div className="mt-3 border-t border-border/50 pt-2.5">
-              <p className="mb-1.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
+              <h2 className="mb-1.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
                 {isEs ? '§ Compradores asediados por este nudo' : '§ Buyers besieged by this knot'}
-              </p>
+              </h2>
               <ul className="space-y-1.5">
                 {besiegedBuyers.slice(0, 4).map((b) => (
                   <li key={b.institutionId} className={cn('flex items-center justify-between gap-2')}>
@@ -365,7 +365,7 @@ export const ClusterActa = memo(function ClusterActa({
                     <button
                       type="button"
                       onClick={() => onOpenBuyerSiege(b.institutionId)}
-                      className="flex-shrink-0 font-mono text-[13px] font-bold uppercase tracking-wider text-accent hover:opacity-70 transition-opacity"
+                      className="flex-shrink-0 min-h-6 font-mono text-[13px] font-bold uppercase tracking-wider text-accent hover:opacity-70 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                     >
                       {isEs ? 'sitio →' : 'siege →'}
                     </button>

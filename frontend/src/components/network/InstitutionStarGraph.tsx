@@ -12,7 +12,7 @@
  * intermediary web). Static layout (golden-angle orbit) — a printed
  * plate, not a simulation.
  */
-import { memo, useMemo, useState } from 'react'
+import { memo, useCallback, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { InstitutionStarResponse } from '@/api/client'
 import { RISK_COLORS, RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
@@ -91,6 +91,60 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
   const hoverNode = hoverId != null ? placed.find((p) => p.v.vendor_id === hoverId) : null
   const activeId = hoverId ?? selectedVendorId
 
+  // ── Roving tabindex (D4 § 6) — one tab stop for the whole siege; arrows walk
+  // the orbit in value order (the order it is drawn in), Enter selects.
+  const descId = useId()
+  const order = useMemo(() => placed.map((p) => p.v.vendor_id), [placed])
+  const [rovingId, setRovingId] = useState<number | null>(null)
+  const focusTarget =
+    rovingId != null && order.includes(rovingId)
+      ? rovingId
+      : selectedVendorId != null && order.includes(selectedVendorId)
+        ? selectedVendorId
+        : (order[0] ?? null)
+  const nodeRefs = useRef(new Map<number, SVGGElement | null>())
+
+  const select = useCallback(
+    (id: number) => onSelectVendor?.(id === selectedVendorId ? null : id),
+    [onSelectVendor, selectedVendorId],
+  )
+
+  const handleNodeKey = useCallback(
+    (ev: ReactKeyboardEvent<SVGGElement>, id: number) => {
+      const idx = order.indexOf(id)
+      let next: number | undefined
+      switch (ev.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          next = order[Math.min(order.length - 1, idx + 1)]
+          break
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          next = order[Math.max(0, idx - 1)]
+          break
+        case 'Home':
+          next = order[0]
+          break
+        case 'End':
+          next = order[order.length - 1]
+          break
+        case 'Enter':
+        case ' ':
+          ev.preventDefault()
+          select(id)
+          return
+        default:
+          return
+      }
+      ev.preventDefault()
+      if (next != null && next !== id) {
+        setRovingId(next)
+        nodeRefs.current.get(next)?.focus()
+      }
+    },
+    [order, select],
+  )
+
   return (
     <div className="relative">
       <svg
@@ -102,6 +156,7 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
             ? `Telaraña de captura: ${data.vendors.length} proveedores principales orbitan ${data.name}`
             : `Capture web: ${data.vendors.length} top vendors orbit ${data.name}`
         }
+        aria-describedby={descId}
       >
         {/* Spokes */}
         <g>
@@ -150,23 +205,21 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
             return (
               <g
                 key={p.v.vendor_id}
+                ref={(el) => {
+                  nodeRefs.current.set(p.v.vendor_id, el)
+                }}
                 transform={`translate(${p.x},${p.y})`}
                 opacity={dimmed ? 0.3 : 1}
-                tabIndex={0}
+                tabIndex={p.v.vendor_id === focusTarget ? 0 : -1}
                 role="button"
                 aria-label={p.v.vendor_name}
-                className="cursor-pointer focus:outline-none"
+                className="cursor-pointer focus:outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                 onMouseEnter={() => setHoverId(p.v.vendor_id)}
                 onMouseLeave={() => setHoverId(null)}
                 onFocus={() => setHoverId(p.v.vendor_id)}
                 onBlur={() => setHoverId(null)}
-                onClick={() => onSelectVendor?.(p.v.vendor_id === selectedVendorId ? null : p.v.vendor_id)}
-                onKeyDown={(ev) => {
-                  if (ev.key === 'Enter' || ev.key === ' ') {
-                    ev.preventDefault()
-                    onSelectVendor?.(p.v.vendor_id === selectedVendorId ? null : p.v.vendor_id)
-                  }
-                }}
+                onClick={() => select(p.v.vendor_id)}
+                onKeyDown={(ev) => handleNodeKey(ev, p.v.vendor_id)}
               >
                 {p.v.vendor_id === selectedVendorId && (
                   <circle r={p.r + 6.5} fill="none" stroke="var(--color-accent)" strokeWidth={1.4} />
@@ -208,6 +261,11 @@ export const InstitutionStarGraph = memo(function InstitutionStarGraph({
           )}
         </g>
       </svg>
+      <p id={descId} className="sr-only">
+        {isEs
+          ? 'Usa las flechas para moverte entre proveedores; Enter selecciona.'
+          : 'Use the arrow keys to move between vendors; Enter selects.'}
+      </p>
 
       {/* Hover dossier card */}
       {hoverNode && (

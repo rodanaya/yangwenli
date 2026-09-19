@@ -21,12 +21,12 @@ export function EvidenceIndex({ entries, onFocusVendor, lang }: EvidenceIndexPro
 
   return (
     <div className="mt-3 pt-3" style={{ borderTop: '0.5px solid var(--color-border)' }}>
-      <div
+      <h2
         className="font-mono uppercase mb-2"
         style={{ fontSize: 13, letterSpacing: '0.16em', color: 'var(--color-text-muted)' }}
       >
         {lang === 'es' ? '§ Marcas de evidencia' : '§ Evidence marks'}
-      </div>
+      </h2>
       <div className="flex flex-wrap gap-x-5 gap-y-2.5">
         {entries.map((entry) => {
           const clause = lang === 'es' ? entry.clause_es : entry.clause_en
@@ -43,6 +43,7 @@ export function EvidenceIndex({ entries, onFocusVendor, lang }: EvidenceIndexPro
               className={cn(
                 'flex items-start gap-2 text-left max-w-[320px]',
                 'hover:opacity-80 transition-opacity cursor-pointer',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
               )}
             >
               <span

@@ -19,7 +19,7 @@
  *   - Keyboard: every node is focusable (tabIndex=0, Enter/Space
  *     selects) — the a11y gap flagged on Atlas bubbles.
  */
-import { memo, useMemo, useState, useCallback } from 'react'
+import { memo, useId, useMemo, useRef, useState, useCallback, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import {
   forceSimulation,
   forceLink,
@@ -182,6 +182,62 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
   const hoverNode = hoverId != null ? nodes.find((n) => n.id === hoverId) : null
   const maxShared = Math.max(...edges.map((e) => e.shared), 1)
 
+  // ── Roving tabindex (D4 § 6) — the mesh is ONE tab stop; arrows walk the
+  // vendors in pagerank order, Enter selects. The roster below stays the
+  // assistive-technology path; this makes the plate itself operable without
+  // dropping 100 tab stops into the page.
+  const descId = useId()
+  const order = useMemo(
+    () => [...nodes].sort((a, b) => b.node.pagerank - a.node.pagerank).map((n) => n.id),
+    [nodes],
+  )
+  const [rovingId, setRovingId] = useState<number | null>(null)
+  const focusTarget =
+    rovingId != null && order.includes(rovingId)
+      ? rovingId
+      : selectedVendorId != null && order.includes(selectedVendorId)
+        ? selectedVendorId
+        : (order[0] ?? null)
+  const nodeRefs = useRef(new Map<number, SVGGElement | null>())
+
+  const handleNodeKey = useCallback(
+    (ev: ReactKeyboardEvent<SVGGElement>, id: number) => {
+      const idx = order.indexOf(id)
+      let next: number | undefined
+      switch (ev.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          next = order[Math.min(order.length - 1, idx + 1)]
+          break
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          next = order[Math.max(0, idx - 1)]
+          break
+        case 'Home':
+          next = order[0]
+          break
+        case 'End':
+          next = order[order.length - 1]
+          break
+        case 'Enter':
+        case ' ':
+          ev.preventDefault()
+          handleSelect(id)
+          return
+        default:
+          return
+      }
+      ev.preventDefault()
+      // focus() lives in the key handler, never in an effect that depends on
+      // the state it sets (React #301 hygiene).
+      if (next != null && next !== id) {
+        setRovingId(next)
+        nodeRefs.current.get(next)?.focus()
+      }
+    },
+    [order, handleSelect],
+  )
+
   return (
     <div className="relative">
       <svg
@@ -193,6 +249,7 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
             ? `Grafo de co-licitación: ${data.rendered_members} proveedores, ${data.edges.length} aristas`
             : `Co-bidding graph: ${data.rendered_members} vendors, ${data.edges.length} edges`
         }
+        aria-describedby={descId}
       >
         {/* Edges underneath — weight by shared procedures; collusion pairs in critical red */}
         <g>
@@ -221,23 +278,21 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
             return (
               <g
                 key={n.id}
+                ref={(el) => {
+                  nodeRefs.current.set(n.id, el)
+                }}
                 transform={`translate(${n.x},${n.y})`}
                 opacity={dimmed ? 0.25 : 1}
-                tabIndex={0}
+                tabIndex={n.id === focusTarget ? 0 : -1}
                 role="button"
                 aria-label={`${n.node.name}${n.node.is_sanctioned ? (isEs ? ' · sancionado' : ' · sanctioned') : ''}`}
-                className="cursor-pointer focus:outline-none"
+                className="cursor-pointer focus:outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                 onMouseEnter={() => setHoverId(n.id)}
                 onMouseLeave={() => setHoverId(null)}
                 onFocus={() => setHoverId(n.id)}
                 onBlur={() => setHoverId(null)}
                 onClick={() => handleSelect(n.id)}
-                onKeyDown={(ev) => {
-                  if (ev.key === 'Enter' || ev.key === ' ') {
-                    ev.preventDefault()
-                    handleSelect(n.id)
-                  }
-                }}
+                onKeyDown={(ev) => handleNodeKey(ev, n.id)}
               >
                 {isActive && (
                   <circle r={n.r + 5} fill="none" stroke="var(--color-accent)" strokeWidth={1.4} strokeOpacity={0.9} />
@@ -341,6 +396,11 @@ export const CommunityForceGraph = memo(function CommunityForceGraph({
           </g>
         )}
       </svg>
+      <p id={descId} className="sr-only">
+        {isEs
+          ? 'Usa las flechas para moverte entre proveedores; Enter selecciona.'
+          : 'Use the arrow keys to move between vendors; Enter selects.'}
+      </p>
 
       {/* Hover dossier card — editorial sidebar voice, not chart-help tooltip */}
       {hoverNode && (

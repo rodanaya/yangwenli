@@ -267,7 +267,8 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
+      {/* D4 § 6: the app shell already owns <main> — this was a nested one. */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
         {/* View toggle */}
         <div className="flex items-stretch border-b border-border mb-6" role="tablist">
           <ViewTab
@@ -305,7 +306,7 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
             buildHopTo={buildHopTo}
           />
         )}
-      </main>
+      </div>
     </div>
   )
 }

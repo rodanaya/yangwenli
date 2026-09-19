@@ -584,18 +584,24 @@ export default function RedesKnownDossier() {
           {/* RUNG 0 — index rail (two lenses) */}
           <aside className="order-2 lg:order-1 lg:sticky lg:top-4">
             {/* Lens tabs — CÚMULOS (default) | INSTITUCIONES */}
-            <div className="mb-3 flex items-stretch rounded-sm border border-border overflow-hidden" role="tablist">
+            {/* D4 § 6 — the lens swaps rail AND plate and owns no panel, so it
+                is a toggle group, not a tablist. */}
+            <div
+              className="mb-3 flex items-stretch rounded-sm border border-border overflow-hidden"
+              role="group"
+              aria-label={isEs ? 'Lente' : 'Lens'}
+            >
               <button
                 type="button"
-                role="tab"
-                aria-selected={lens === 'clusters'}
+                aria-pressed={lens === 'clusters'}
                 onClick={() => {
                   setLens('clusters')
                   setQuery('')
                 }}
                 className={cn(
                   'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.14em] transition-colors',
-                  lens === 'clusters' ? 'bg-accent/12 text-accent' : 'text-text-muted/60 hover:text-text-secondary',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
+                  lens === 'clusters' ? 'bg-accent/12 text-accent' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 <Network className="h-3 w-3" aria-hidden="true" />
@@ -603,15 +609,15 @@ export default function RedesKnownDossier() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={lens === 'institutions'}
+                aria-pressed={lens === 'institutions'}
                 onClick={() => {
                   setLens('institutions')
                   setQuery('')
                 }}
                 className={cn(
                   'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.14em] border-l border-border transition-colors',
-                  lens === 'institutions' ? 'bg-accent/12 text-accent' : 'text-text-muted/60 hover:text-text-secondary',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
+                  lens === 'institutions' ? 'bg-accent/12 text-accent' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 <Building2 className="h-3 w-3" aria-hidden="true" />
@@ -620,12 +626,12 @@ export default function RedesKnownDossier() {
             </div>
 
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-[12px] font-mono font-bold uppercase tracking-[0.2em] text-accent/90">
+              <h2 className="text-[12px] font-mono font-bold uppercase tracking-[0.2em] text-accent/90">
                 {lens === 'clusters'
                   ? isEs ? '§ Índice de cúmulos' : '§ Cluster index'
                   : isEs ? '§ Compradores sitiados' : '§ Besieged buyers'}
-              </span>
-              <span className="text-[12px] font-mono text-text-muted/50">
+              </h2>
+              <span className="text-[12px] font-mono text-text-muted">
                 {lens === 'clusters'
                   ? `${filtered.length}/${index?.communities.length ?? 0}`
                   : `${sortedInstitutions.length}/${capture?.total ?? 0}`}
@@ -633,16 +639,24 @@ export default function RedesKnownDossier() {
               <button
                 type="button"
                 onClick={copyTrailLink}
-                className="ml-auto rounded-sm border border-border px-2 py-0.5 text-[13px] font-mono uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-border/20 transition-colors"
+                className="ml-auto rounded-sm border border-border px-2 py-1 text-[13px] font-mono uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-border/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               >
                 {linkCopied ? (isEs ? 'Copiado ✓' : 'Copied ✓') : isEs ? 'Copiar enlace' : 'Copy link'}
               </button>
+              {/* The copy confirmation was visual only — announce it. */}
+              <span role="status" aria-live="polite" className="sr-only">
+                {linkCopied ? (isEs ? 'Enlace copiado' : 'Link copied') : ''}
+              </span>
             </div>
 
             {/* Search */}
             <div className="relative mb-2">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted/40" aria-hidden="true" />
               <input
+                type="search"
+                name="trama-search"
+                autoComplete="off"
+                spellCheck={false}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
@@ -655,14 +669,18 @@ export default function RedesKnownDossier() {
                     ? isEs ? 'Buscar cúmulo' : 'Search cluster'
                     : isEs ? 'Buscar institución' : 'Search institution'
                 }
-                className="w-full rounded-sm border border-border bg-background px-8 py-1.5 text-[12px] font-mono text-text-primary placeholder:text-text-muted/40 focus:border-accent/50 focus:outline-none"
+                className="w-full rounded-sm border border-border bg-background px-8 py-1.5 text-[12px] font-mono text-text-primary placeholder:text-text-muted focus:border-accent/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               />
             </div>
 
             {/* Institution sort pills */}
             {lens === 'institutions' && (
-              <div className="mb-3 flex flex-wrap items-center gap-1">
-                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
+              <div
+                className="mb-3 flex flex-wrap items-center gap-1"
+                role="group"
+                aria-label={isEs ? 'Ordenar instituciones' : 'Sort institutions'}
+              >
+                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted mr-1">
                   {isEs ? 'Ordenar:' : 'Sort:'}
                 </span>
                 {(
@@ -675,12 +693,15 @@ export default function RedesKnownDossier() {
                 ).map(([k, label]) => (
                   <button
                     key={k}
+                    type="button"
+                    aria-pressed={instSort === k}
                     onClick={() => setInstSort(k)}
                     className={cn(
-                      'px-2 py-0.5 rounded text-[13px] font-mono uppercase tracking-wider border transition-colors',
+                      'px-2 py-1 rounded text-[13px] font-mono uppercase tracking-wider border transition-colors',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
                       instSort === k
                         ? 'bg-text-primary/8 border-text-primary/20 text-text-primary'
-                        : 'border-border text-text-muted/50 hover:border-border-hover hover:text-text-secondary',
+                        : 'border-border text-text-muted hover:border-border-hover hover:text-text-secondary',
                     )}
                   >
                     {label}
@@ -794,13 +815,19 @@ export default function RedesKnownDossier() {
             {lens === 'clusters' && (
             <>
             <div className="mb-3 space-y-1.5">
-              <div className="flex flex-wrap items-center gap-1">
-                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
+              <div
+                className="flex flex-wrap items-center gap-1"
+                role="group"
+                aria-label={isEs ? 'Ordenar cúmulos' : 'Sort clusters'}
+              >
+                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted mr-1">
                   {isEs ? 'Ordenar:' : 'Sort:'}
                 </span>
                 {(Object.keys(sortLabels) as SortKey[]).map((k) => (
                   <button
                     key={k}
+                    type="button"
+                    aria-pressed={sortBy === k}
                     onClick={() => setSortBy(k)}
                     title={
                       k === 'senal'
@@ -810,27 +837,35 @@ export default function RedesKnownDossier() {
                         : undefined
                     }
                     className={cn(
-                      'px-2 py-0.5 rounded text-[13px] font-mono uppercase tracking-wider border transition-colors',
+                      'px-2 py-1 rounded text-[13px] font-mono uppercase tracking-wider border transition-colors',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
                       sortBy === k
                         ? 'bg-text-primary/8 border-text-primary/20 text-text-primary'
-                        : 'border-border text-text-muted/50 hover:border-border-hover hover:text-text-secondary',
+                        : 'border-border text-text-muted hover:border-border-hover hover:text-text-secondary',
                     )}
                   >
                     {isEs ? sortLabels[k].es : sortLabels[k].en}
                   </button>
                 ))}
               </div>
-              <div className="flex flex-wrap items-center gap-1">
-                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
+              <div
+                className="flex flex-wrap items-center gap-1"
+                role="group"
+                aria-label={isEs ? 'Filtrar por patrón dominante' : 'Filter by dominant pattern'}
+              >
+                <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted mr-1">
                   {isEs ? 'Patrón dominante:' : 'Dominant pattern:'}
                 </span>
                 <button
+                  type="button"
+                  aria-pressed={patternFilter === null}
                   onClick={() => setPatternFilter(null)}
                   className={cn(
-                    'px-2 py-0.5 rounded-full text-[13px] font-mono font-bold uppercase border transition-colors',
+                    'px-2 py-1 min-h-6 rounded-full text-[13px] font-mono font-bold uppercase border transition-colors',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
                     patternFilter === null
                       ? 'bg-text-primary/10 border-text-primary/30 text-text-primary'
-                      : 'border-border text-text-muted/60 hover:border-border-hover',
+                      : 'border-border text-text-muted hover:border-border-hover',
                   )}
                 >
                   {isEs ? 'Todos' : 'All'}
@@ -838,10 +873,13 @@ export default function RedesKnownDossier() {
                 {['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'].map((p) => (
                   <button
                     key={p}
+                    type="button"
+                    aria-pressed={patternFilter === p}
                     onClick={() => setPatternFilter(patternFilter === p ? null : p)}
                     className={cn(
-                      'px-2 py-0.5 rounded-full text-[13px] font-mono font-bold uppercase border transition-colors',
-                      patternFilter === p ? 'border-transparent text-white' : 'border-border text-text-muted/60 hover:border-border-hover',
+                      'px-2 py-1 min-h-6 min-w-6 rounded-full text-[13px] font-mono font-bold uppercase border transition-colors',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
+                      patternFilter === p ? 'border-transparent text-white' : 'border-border text-text-muted hover:border-border-hover',
                     )}
                     style={patternFilter === p ? { background: PATTERN_COLORS[p] ?? 'var(--color-text-muted)' } : undefined}
                   >
@@ -1137,9 +1175,9 @@ export default function RedesKnownDossier() {
                     className="rounded-sm border border-border bg-background-card px-4 py-3.5"
                     style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
                   >
-                    <p className="mb-2.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+                    <h2 className="mb-2.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
                       {isEs ? '§ Firma del sitio' : '§ Siege signature'}
-                    </p>
+                    </h2>
                     {selectedCaptureItem ? (
                       <>
                         <div className="space-y-2.5">
@@ -1203,14 +1241,14 @@ export default function RedesKnownDossier() {
                         </div>
                         {selectedCaptureItem.top1_vendor && (
                           <div className="mt-3 border-t border-border/50 pt-2.5">
-                            <p className="mb-1.5 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
+                            <h3 className="mb-1.5 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
                               {isEs ? 'Proveedor dominante' : 'Dominant vendor'}
                               {selectedCaptureItem.top1_share_pct != null && (
                                 <span className="text-accent font-bold ml-1.5">
                                   {Math.round(selectedCaptureItem.top1_share_pct)}% {isEs ? 'del gasto' : 'of spend'}
                                 </span>
                               )}
-                            </p>
+                            </h3>
                             <EntityIdentityChip
                               type="vendor"
                               id={selectedCaptureItem.top1_vendor.vendor_id}
@@ -1234,9 +1272,9 @@ export default function RedesKnownDossier() {
                     className="rounded-sm border border-border bg-background-card px-4 py-3.5"
                     style={{ boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)' }}
                   >
-                    <p className="mb-2.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted/60">
+                    <h2 className="mb-2.5 text-[13px] font-mono uppercase tracking-[0.18em] text-text-muted">
                       {isEs ? '§ Los clanes que se alimentan' : '§ The feeding clans'}
-                    </p>
+                    </h2>
                     {selectedCaptureItem && selectedCaptureItem.feeding_communities.length > 0 ? (
                       <div className="mb-3 flex flex-wrap gap-1.5">
                         {selectedCaptureItem.feeding_communities.map((f) => (
@@ -1244,7 +1282,7 @@ export default function RedesKnownDossier() {
                             key={f.community_id}
                             type="button"
                             onClick={() => jumpToClan(f.community_id)}
-                            className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
+                            className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                             title={isEs ? 'Abrir el cúmulo en la trama' : 'Open the cluster in the mesh'}
                           >
                             C-{f.community_id} · {f.vendor_count} {isEs ? 'firmas' : 'firms'} →
@@ -1258,9 +1296,9 @@ export default function RedesKnownDossier() {
                           : 'No clan with ≥2 firms among its top vendors.'}
                       </p>
                     )}
-                    <p className="mb-2 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted/60">
+                    <h3 className="mb-2 text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
                       {isEs ? 'Quiénes se llevan el gasto' : 'Who takes the spend'}
-                    </p>
+                    </h3>
                     <ul className="space-y-1.5">
                       {star.vendors.slice(0, 8).map((v) => (
                         <li key={v.vendor_id} className="flex items-center justify-between gap-2 min-w-0">
@@ -1281,16 +1319,17 @@ export default function RedesKnownDossier() {
                     </ul>
                     {selectedVendor != null && (
                       <div className="mt-3 border-t border-border/50 pt-2.5 flex items-center justify-between gap-2">
-                        <span className="text-[12px] font-mono text-text-muted/70">
+                        <span className="text-[12px] font-mono text-text-muted">
                           {isEs ? 'Actor seleccionado en el sitio' : 'Actor selected in the siege'}
                         </span>
                         <button
+                          type="button"
                           onClick={() => {
                             const next = new URLSearchParams(searchParams)
                             next.set('vendor', String(selectedVendor))
                             setSearchParams(next)
                           }}
-                          className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors"
+                          className="rounded-sm border border-accent/40 bg-accent/8 px-2.5 py-1 text-[13px] font-mono font-bold uppercase tracking-wider text-accent hover:bg-accent/15 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                         >
                           {isEs ? 'Ver su red →' : 'View its ring →'}
                         </button>
@@ -1303,9 +1342,9 @@ export default function RedesKnownDossier() {
 
         {/* ── Methodology footer ───────────────────────────────────── */}
         <div className="mt-8 rounded-sm border border-border bg-background-card px-5 py-4">
-          <p className="text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-3">
+          <h2 className="text-[12px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3">
             {isEs ? 'Fe de método' : 'Attestation of method'}
-          </p>
+          </h2>
           <ol className="space-y-2.5">
             {[
               {
