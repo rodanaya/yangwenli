@@ -81,7 +81,9 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
           <div
             key={c.label}
             className="px-3 py-3 sm:px-4 sm:py-3.5"
-            style={{ borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)' }}
+            // Anchors take two tracks at every width so "1.7 billones MXN" never
+            // breaks (at 390 the auto-fit grid has 2 columns → the full row).
+            style={{ borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)', gridColumn: c.anchor ? 'span 2' : undefined }}
           >
             <div
               className="font-mono"
@@ -92,21 +94,21 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
             {isRange ? (
               // Period span — demoted: mono, body size, never an anchor blob.
               <div
-                className="font-mono tabular-nums"
+                className="font-mono tabular-nums whitespace-nowrap"
                 style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.05, color: c.color ?? 'var(--color-text-secondary)', letterSpacing: '0.01em' }}
               >
                 {c.value}
               </div>
             ) : (
               <div
-                className="tabular-nums"
+                className="tabular-nums whitespace-nowrap"
                 style={{
                   fontFamily: '"EB Garamond", Georgia, serif',
                   fontStyle: 'normal',
                   fontWeight: c.anchor ? 700 : 600,
-                  // Anchors run bigger and scale harder with viewport width so the
-                  // decisive numbers fill the page instead of sitting small.
-                  fontSize: c.anchor ? 'clamp(26px, 3vw, 38px)' : 'clamp(20px, 2.1vw, 27px)',
+                  // Anchors run bigger and scale with viewport width, capped so
+                  // ES "1.7 billones MXN" fits its 2-track cell (PARALLAX D7 judge).
+                  fontSize: c.anchor ? 'clamp(24px, 2.6vw, 32px)' : 'clamp(20px, 2.1vw, 27px)',
                   lineHeight: 0.95,
                   color: c.color ?? 'var(--color-text-primary)',
                   letterSpacing: '-0.015em',

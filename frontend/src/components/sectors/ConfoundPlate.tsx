@@ -578,7 +578,9 @@ export function ConfoundPlate({
                 className="py-1.5"
                 style={{ borderBottom: '1px solid var(--color-border)', borderLeft: `3px solid ${sector}`, paddingLeft: 10 }}
               >
-                <div className="flex items-baseline gap-2">
+                {/* Line 1: rank · name (wraps at spaces) · % — line 2: the
+                    amount alone under the name (a value never breaks). */}
+                <div className="grid items-baseline gap-x-2" style={{ gridTemplateColumns: 'auto minmax(0,1fr) auto' }}>
                   <span className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                     {String(idx + 1).padStart(2, '0')}
                   </span>
@@ -589,16 +591,11 @@ export function ConfoundPlate({
                         ? `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% del gasto propio`
                         : `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% of own spend`
                     }
-                    className="shrink-0 py-0.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                    className="min-w-0 py-0.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                     style={{ ...SERIF_NAME, fontSize: 14, color: 'var(--color-text-primary)' }}
                   >
                     {r.name}
                   </Link>
-                  {/* The amount flexes (and wraps at its spaces) so the sector
-                      name is never cut or broken mid-word on a phone. */}
-                  <span className="flex-1 min-w-0 text-right font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                    {formatCompactMXN(r.varMxn)}
-                  </span>
                   <span
                     className="tabular-nums"
                     style={{
@@ -612,6 +609,9 @@ export function ConfoundPlate({
                     }}
                   >
                     {(share * 100).toFixed(0)}%
+                  </span>
+                  <span className="font-mono tabular-nums whitespace-nowrap" style={{ gridColumn: 2, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                    {formatCompactMXN(r.varMxn)}
                   </span>
                 </div>
                 <OwnSpendTrack share={share} ringColor={ringColor} height={20} />

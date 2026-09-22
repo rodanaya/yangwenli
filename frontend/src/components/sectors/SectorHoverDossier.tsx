@@ -172,8 +172,10 @@ export function SectorDossierCard({
             type="institution"
             id={row.topInstitution.id}
             name={row.topInstitution.siglas || row.topInstitution.name}
-            size="xs"
+            size="sm"
             hideIcon
+            fullName
+            className="inline-flex w-auto"
           />
           <span className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             · {row.topInstitution.sharePct.toFixed(0)}% {isEs ? 'del sector' : 'of sector'}
@@ -213,7 +215,7 @@ export function SectorDossierCard({
                   {formatCompactMXN(top.amount_mxn)}
                 </span>
                 {top.vendor_id != null && top.vendor_name && (
-                  <EntityIdentityChip type="vendor" id={top.vendor_id} name={top.vendor_name} size="xs" hideIcon />
+                  <EntityIdentityChip type="vendor" id={top.vendor_id} name={top.vendor_name} size="sm" hideIcon fullName className="inline-flex w-auto" />
                 )}
               </div>
             )}

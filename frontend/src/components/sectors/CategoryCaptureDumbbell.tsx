@@ -126,7 +126,7 @@ interface Props {
 
 const LABEL_W = 190     // px — category chip column (≥ STACK_BELOW)
 const NUM_W = 96        // px — "14% / 4%" numerics column
-const NUM_W_STACKED = 64
+const NUM_W_STACKED = 76
 const COL_GAP = 12
 const STACK_BELOW = 560 // container px under which the label sits above the track
 const DOT_H = 20        // px — the 1:1 svg strip that holds connector + dots
@@ -573,7 +573,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                   </div>
 
                   {/* Numerics: #1 share (sector text twin) / #2 share */}
-                  <div className="tabular-nums text-text-secondary" style={{ ...monoStyle, fontSize: 13, letterSpacing: '0.03em' }}>
+                  <div className="tabular-nums whitespace-nowrap text-text-secondary" style={{ ...monoStyle, fontSize: 13, letterSpacing: '0.03em' }}>
                     <span className="sr-only">{isEs ? '#1 y #2: ' : '#1 and #2: '}</span>
                     <span style={{ color: SECTOR_TEXT_COLORS[row.sector_code] ?? 'var(--color-text-primary)', fontWeight: 700 }}>
                       {row.top1.market_share_pct.toFixed(0)}%

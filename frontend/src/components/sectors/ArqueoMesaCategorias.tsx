@@ -22,7 +22,6 @@ import {
   SECTOR_COLORS,
   SECTOR_TEXT_COLORS,
   RISK_COLORS,
-  RISK_TEXT_COLORS,
   RISK_THRESHOLDS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
@@ -348,11 +347,15 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: 12,
+              // Phone: the axis label drops to its own right-aligned line so the
+              // readout keeps the full width (it was squeezed to ~100px).
+              flexWrap: isMobile ? 'wrap' : undefined,
+              rowGap: isMobile ? 2 : undefined,
               fontVariantNumeric: 'tabular-nums',
             }}
           >
             <span style={isMobile ? undefined : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
-            <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase', ...(isMobile ? { flexBasis: '100%', textAlign: 'right' as const } : {}) }}>
               {lang === 'es' ? `riesgo promedio · indicador 0–${domainMax}%` : `mean risk · indicator 0–${domainMax}%`}
             </span>
           </div>
@@ -568,7 +571,9 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 fontSize={11}
                 fontFamily={mono}
                 fontWeight={700}
-                fill={RISK_TEXT_COLORS.high}
+                // Small type in accent-hover (Day 6b decision): RISK_TEXT_COLORS.high
+                // measured 4.45:1 on the plate paper. The dashed rule keeps RISK_COLORS.high.
+                fill="var(--color-accent-hover)"
                 letterSpacing="0.05em"
                 pointerEvents="none"
               >

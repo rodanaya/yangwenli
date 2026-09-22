@@ -861,7 +861,7 @@ export function Sectors() {
                                     />
                                     {/* Top vendor + institution — inline single row */}
                                     {(cat.top_vendor || cat.top_institution) && (
-                                      <span className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-text-muted font-mono">
+                                      <span className="flex flex-wrap items-center gap-x-1.5 basis-full sm:basis-auto text-[12px] text-text-muted font-mono">
                                         {cat.top_vendor && (
                                           <EntityIdentityChip
                                             type="vendor"
@@ -870,12 +870,12 @@ export function Sectors() {
                                             size="sm"
                                             hideIcon
                                             fullName
-                                            className="inline-flex w-auto"
+                                            className="inline-flex w-auto basis-full sm:basis-auto"
                                             sectorCode={cat.sector_code ?? null}
                                           />
                                         )}
                                         {cat.top_vendor && cat.top_institution && (
-                                          <span className="opacity-40" aria-hidden="true">·</span>
+                                          <span className="hidden sm:inline opacity-40" aria-hidden="true">·</span>
                                         )}
                                         {cat.top_institution && (
                                           <EntityIdentityChip
@@ -885,7 +885,7 @@ export function Sectors() {
                                             size="sm"
                                             hideIcon
                                             fullName
-                                            className="inline-flex w-auto"
+                                            className="inline-flex w-auto basis-full sm:basis-auto"
                                           />
                                         )}
                                       </span>
