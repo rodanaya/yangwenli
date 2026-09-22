@@ -24,7 +24,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CaptureTrajectory } from './CaptureTrajectory'
 import { CaptureExpand } from './CaptureExpand'
 import { captureCaseFor } from '@/lib/capture-cases'
-import { makeSetParam } from './captureAxis'
+import { makeSetParam } from './captureParams'
 
 // Documented + still-held climbers, in lead preference (EDENRED then TOKA).
 const LEAD_PREFERENCE = [44372, 102627]

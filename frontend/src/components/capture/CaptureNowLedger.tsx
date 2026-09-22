@@ -17,7 +17,7 @@ import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
-import { makeSetParam } from './captureAxis'
+import { makeSetParam } from './captureParams'
 
 // In-house DOJ/FTC threshold — keep in sync with RedesKnownDossier.tsx
 const HHI_CONCENTRATED = 2500
