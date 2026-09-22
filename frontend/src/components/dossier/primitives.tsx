@@ -248,16 +248,20 @@ export function ScaleBlock({
       >
         {lang === 'es' ? 'Pesos mexicanos' : 'Mexican pesos'}
       </div>
-      <div
-        className="font-mono tabular-nums"
-        style={{
-          fontSize: 12,
-          letterSpacing: '0.05em',
-          color: 'var(--color-text-secondary)',
-        }}
-      >
-        ≈ {usd}
-      </div>
+      {/* Spanish reads MXN natively — the USD companion is for the EN
+          reader's sense of scale only (CLAUDE.md currency table). */}
+      {lang !== 'es' && (
+        <div
+          className="font-mono tabular-nums"
+          style={{
+            fontSize: 12,
+            letterSpacing: '0.05em',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          ≈ {usd}
+        </div>
+      )}
     </div>
   )
 }

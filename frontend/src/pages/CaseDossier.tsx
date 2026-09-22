@@ -508,12 +508,14 @@ function SourceList({ sources, lang }: { sources: ScandalSource[]; lang: Lang })
 
 function DossierSkeleton() {
   return (
-    <div className="max-w-[1180px] mx-auto px-4 sm:px-8 py-10 space-y-8">
-      <Skeleton className="h-2 w-full" />
-      <Skeleton className="h-16 w-3/4" />
-      <div className="grid grid-cols-[200px_1fr] gap-8">
-        <Skeleton className="h-72" />
-        <Skeleton className="h-72" />
+    <div className="px-4 sm:px-8 py-10">
+      <div className="max-w-[1010px] mx-auto space-y-8">
+        <Skeleton className="h-2 w-full" />
+        <Skeleton className="h-16 w-3/4" />
+        <div className="grid grid-cols-[210px_1fr] gap-10">
+          <Skeleton className="h-72" />
+          <Skeleton className="h-72" />
+        </div>
       </div>
     </div>
   )
@@ -667,12 +669,17 @@ export default function CaseDossier() {
     <DossierOriginProvider value={{ route: `/cases/${scandal.slug}`, label: name }}>
       <div className="relative" style={{ background: 'var(--color-background)', minHeight: '100vh' }}>
         <PaperGrain />
-        <div className="relative max-w-[1180px] mx-auto px-4 sm:px-8 py-6" style={{ zIndex: 1 }}>
+        {/* Reading frame (D5 Change 7, Day 2d pattern): the padding sits on the
+            outer box so the frame itself is exactly 1,010px of content —
+            rail 210 + gap 40 + figure 760. The old 1,180px box left ~250px of
+            dead paper to the right of every section. */}
+        <div className="relative px-4 sm:px-8 py-6" style={{ zIndex: 1 }}>
+         <div className="max-w-[1010px] mx-auto">
           <WayfindingSpine nav={nav} lang={lang} accent={sectorAccent} />
 
           <CaseHero scandal={scandal} lang={lang} sectorAccent={sectorAccent} sectorName={sectorName} finding={finding} />
 
-          <div className="lg:grid lg:grid-cols-[212px_minmax(0,1fr)] lg:gap-8 items-start">
+          <div className="lg:grid lg:grid-cols-[210px_minmax(0,760px)] lg:gap-10 items-start">
             {/* Docket rail — sticky on desktop, stacked above on mobile */}
             <div className="lg:sticky lg:top-6 mb-6 lg:mb-0">
               <CaseDocketRail
@@ -685,8 +692,9 @@ export default function CaseDossier() {
               />
             </div>
 
-            {/* Story column */}
-            <div className="max-w-[720px]">
+            {/* Story column — figures span 760, running prose keeps the
+                global 68ch measure (Day 2d shape). */}
+            <div className="max-w-[760px]">
               {/* § I — El caso */}
               <FeatureSection
                 id="caso"
@@ -903,6 +911,7 @@ export default function CaseDossier() {
 
           <KeepReadingFooter current={scandal} allCases={allCases} lang={lang} />
           <ProvenanceFooter lang={lang} />
+         </div>
         </div>
       </div>
     </DossierOriginProvider>
