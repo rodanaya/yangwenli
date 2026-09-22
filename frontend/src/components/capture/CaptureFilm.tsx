@@ -20,6 +20,7 @@ import {
 } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
 import { RISK_TEXT_COLORS } from '@/lib/constants'
+import { formatEntityName } from '@/lib/entity/format'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CaptureTrajectory } from './CaptureTrajectory'
 import { CaptureExpand } from './CaptureExpand'
@@ -134,7 +135,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
   const keyOf = (c: CaptureItem) => `${c.institution_id}-${c.vendor_id}`
 
   return (
-    <section id="la-pelicula" aria-labelledby="pelicula-heading" className="mt-8 scroll-mt-6">
+    <section id="la-pelicula" aria-labelledby="pelicula-heading" className="mt-8 scroll-mt-14">
       {/* ── §B′ Exhibit A — the documented climber, shown intimately ── */}
       {lead && (
         <div className="mb-8 lg:max-w-[760px]">
@@ -196,7 +197,17 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
                 'punteado tenue = años sin datos',
                 '* 2025 parcial, al 28 sep',
               ]
-          ).join(' · ')}
+          ).map((term, i) => (
+            // The separator is glued to the term's first word with a
+            // non-breaking space, so a `·` can never orphan at a line end.
+            // A whitespace-nowrap span round the WHOLE term overflows 390:
+            // "dashed rule = the 50% capture ceiling" is wider than the column.
+            <span key={term}>
+              {i > 0 ? '· ' : ''}
+              {term}
+              {' '}
+            </span>
+          ))}
         </p>
       </div>
 
@@ -309,7 +320,7 @@ function FacetRow({
   if (rows.length === 0) return null
   return (
     <div className="mb-6">
-      <div className="flex items-baseline gap-2 mb-2">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mb-2">
         <h3 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-text-secondary">
           {title}
         </h3>
@@ -335,7 +346,10 @@ function FacetRow({
                   aria-controls={panelId(c)}
                   className="block w-full text-left cursor-pointer rounded-sm hover:bg-background-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                 >
-                  <div className={expanded ? 'max-w-[380px]' : ''}>
+                  <span className="sr-only">
+                    {`${formatEntityName('vendor', c.vendor_name, 'full')} · ${formatEntityName('institution', c.institution_name, 'full')}: `}
+                  </span>
+                  <span className={expanded ? 'block max-w-[380px]' : 'block'}>
                     <CaptureTrajectory
                       timeline={c.timeline}
                       ceil={ceil}
@@ -344,13 +358,13 @@ function FacetRow({
                       latestSharePct={c.latest_share_pct}
                       lang={lang}
                     />
-                  </div>
-                  <p className="mt-1 font-mono text-[13px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
+                  </span>
+                  <span className="mt-1 font-mono text-[13px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
                     <span>+{delta.toFixed(0)}pp</span>
                     <span>·</span>
                     <span>{formatCompactMXN(c.cumulative_value_mxn)}</span>
                     <CrossSeal c={c} lang={lang} />
-                  </p>
+                  </span>
                   <span
                     className="mt-1 inline-block font-mono text-[12px] uppercase tracking-[0.14em] hover:opacity-80"
                     style={{ color: 'var(--color-accent)' }}

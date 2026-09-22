@@ -55,7 +55,7 @@ export function CaptureTrajectory({
   // viewBox inside a ~300px card, so half the card was empty and every glyph
   // rendered at its authored size in a box half the width it had. W is now the
   // measured width of the wrapper and the svg is drawn at 1:1.
-  const box = useRef<HTMLDivElement>(null)
+  const box = useRef<HTMLSpanElement>(null)
   const measured = useMeasuredWidth(box)
   const W = Math.max(measured, isLead ? 280 : 150)
   const H = isLead ? 176 : 112
@@ -66,7 +66,7 @@ export function CaptureTrajectory({
   if (tl.length === 0) return null
   // First paint has no measurement yet; the wrapper alone gives the observer
   // something to measure, and the segments are not built at the wrong scale.
-  if (measured === 0) return <div ref={box} className="w-full" style={{ height: H }} />
+  if (measured === 0) return <span ref={box} className="block w-full" style={{ height: H }} />
   const years = tl.map((p) => p.year)
   const minYear = Math.min(...years)
   const maxYear = Math.max(...years)
@@ -233,7 +233,7 @@ export function CaptureTrajectory({
   const peakLabel = `▲ ${peakSharePct.toFixed(1)}% (${peakYear})`
 
   return (
-    <div ref={box} className="w-full">
+    <span ref={box} className="block w-full">
       <svg
         width="100%"
         height={H}
@@ -332,6 +332,6 @@ export function CaptureTrajectory({
           </text>
         )}
       </svg>
-    </div>
+    </span>
   )
 }

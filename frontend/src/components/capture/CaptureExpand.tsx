@@ -40,8 +40,9 @@ export function CaptureExpand({
   thresholds,
   landscape,
 }: {
-  /** Matches the disclosure button's aria-controls. */
-  id?: string
+  /** Matches the disclosure button's aria-controls. Required: the panel is
+   *  only ever rendered by a disclosure that points at it. */
+  id: string
   c: CaptureItem
   lang: 'en' | 'es'
   thresholds: CaptureTopResponse['thresholds']

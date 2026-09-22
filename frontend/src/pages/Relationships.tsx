@@ -146,7 +146,7 @@ export default function Relationships() {
             <Skeleton className="h-6 w-1/4" />
           </div>
         ) : funnelTiers ? (
-          <section className="mb-10 lg:max-w-[760px]" aria-label={lang === 'en' ? 'The funnel' : 'El embudo'}>
+          <section className="mb-10 lg:max-w-[760px]">
             <h2 className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-4">
               {lang === 'en' ? '§ THE FUNNEL' : '§ EL EMBUDO'}
             </h2>
