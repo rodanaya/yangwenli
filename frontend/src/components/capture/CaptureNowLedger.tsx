@@ -155,7 +155,13 @@ export function CaptureNowLedger({
         tabIndex={-1}
         className="overflow-x-auto lg:overflow-visible rounded-sm border border-border bg-background-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
-        <table className="w-full table-fixed text-[13px] min-w-[760px] md:min-w-[824px] lg:min-w-0">
+        {/* "HHI · último año" is two characters longer than "HHI · latest yr";
+            without the extra room the Spanish header wraps and drops its sort
+            arrow onto a second line. The column is hidden below md, so the
+            wider floor starts there. */}
+        <table
+          className={`w-full table-fixed text-[13px] min-w-[760px] lg:min-w-0 ${lang === 'es' ? 'md:min-w-[848px]' : 'md:min-w-[824px]'}`}
+        >
           <caption className="sr-only">
             {lang === 'en'
               ? 'Institutions where one vendor holds the majority of recorded spend'
@@ -167,7 +173,7 @@ export function CaptureNowLedger({
             <col />
             <col style={{ width: 168 }} />
             <col style={{ width: 112 }} />
-            <col className="hidden md:table-column" style={{ width: 168 }} />
+            <col className="hidden md:table-column" style={{ width: lang === 'es' ? 192 : 168 }} />
           </colgroup>
           <thead>
             <tr className="border-b border-border font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
