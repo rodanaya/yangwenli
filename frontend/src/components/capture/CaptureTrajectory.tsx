@@ -68,12 +68,20 @@ export function CaptureTrajectory({
   const x = (year: number) => PAD + ((year - minYear) / span) * (W - 2 * PAD)
   const y = (share: number) => 6 + (1 - share / 100) * (PLOT_H - 12)
 
+  // The first year the series sits at or above the ceiling. The callout names
+  // this year, so it must also anchor on the pierce that leads INTO it.
+  const crossYear = tl.find((p) => p.share_pct >= ceil)?.year ?? null
+
   // Build colored segments; split any segment that straddles the ceiling so the
   // color switches exactly at 50% (true Reuters recolor — no overlap).
   const segs: Array<{ x1: number; y1: number; x2: number; y2: number; color: string }> = []
-  // x where the path first pierces the ceiling — the callout anchors here, not
-  // on the crossing year's dot, which sits further right than the piercing.
-  let ceilCrossX: number | null = null
+  // x where the path pierces the ceiling on its way into `crossYear` — the
+  // callout anchors here, not on the crossing year's dot, which sits further
+  // right than the piercing. Keying the pierce to `crossYear` matters on a
+  // dip-and-recross series (AFAC crosses twice): the first upward pierce
+  // anywhere can belong to a later re-entry, and the label would then print one
+  // year over a different year's crossing.
+  let pierceX: number | null = null
   for (let i = 0; i < tl.length - 1; i++) {
     const a = tl[i]
     const b = tl[i + 1]
@@ -89,13 +97,12 @@ export function CaptureTrajectory({
       const t = (ceil - a.share_pct) / (b.share_pct - a.share_pct)
       const cx = ax + t * (bx - ax)
       const cy = y(ceil)
-      if (ceilCrossX === null && bAbove) ceilCrossX = cx
+      if (bAbove && b.year === crossYear) pierceX = cx
       segs.push({ x1: ax, y1: ay, x2: cx, y2: cy, color: aAbove ? RED : ZINC })
       segs.push({ x1: cx, y1: cy, x2: bx, y2: by, color: bAbove ? RED : ZINC })
     }
   }
 
-  const crossYear = tl.find((p) => p.share_pct >= ceil)?.year ?? null
   const tickYears =
     isLead || W / years.length >= YEAR_TICK_ROOM
       ? years
@@ -129,31 +136,6 @@ export function CaptureTrajectory({
     return lo > hi ? W / 2 - w / 2 + lead : Math.min(Math.max(cx, lo), hi)
   }
 
-  /**
-   * The lead's sentence-length callout sat centred ON the crossing, so the
-   * rising red segment ran straight through "in 2025". It now steps to
-   * whichever side has room: past the midpoint it ends 6px left of where the
-   * path pierces the ceiling, before it, it starts 6px right. On that side the
-   * path is on the other side of the ceiling from the label, so the glyphs sit
-   * clear of the line. Cards keep the centred two-character label — it is too
-   * short to collide.
-   */
-  // A series that starts above the ceiling never pierces it; fall back to the
-  // crossing year's own x so the callout still has an anchor.
-  const crossX = ceilCrossX ?? x(crossYear ?? minYear)
-  const crossAnchor: 'start' | 'middle' | 'end' = !isLead
-    ? 'middle'
-    : crossX > W / 2
-      ? 'end'
-      : 'start'
-  /**
-   * Axis-end ticks anchor to the edge they sit on. At 11px a centred `2021`
-   * over x = PAD hangs 3px past the svg's left edge and the browser clips it;
-   * `start` / `end` keep the label attached to its own year AND inside the box.
-   */
-  const tickAnchor = (xp: number): 'start' | 'middle' | 'end' =>
-    xp - PAD < 14 ? 'start' : W - PAD - xp < 14 ? 'end' : 'middle'
-
   const crossLabel =
     crossYear === null
       ? ''
@@ -162,6 +144,73 @@ export function CaptureTrajectory({
           ? `crossed 50% in ${crossYear}`
           : `cruzó el 50% en ${crossYear}`
         : `'${String(crossYear).slice(2)}`
+
+  /**
+   * The callout steps off the line — on BOTH variants (D6b C2).
+   *
+   * The lead's sentence-length label already did this; the cards kept a centred
+   * two-character label on the crossing dot, and the panel measured a segment
+   * inside the label box on 11 of the 12 cards (every fell-card peak is 52–57%,
+   * one to five pixels above that row).
+   *
+   * The rule: anchor on the geometric pierce, not the dot. Past the midpoint
+   * the label ENDS 6px left of the pierce; before it, it STARTS 6px right. The
+   * y follows the side, because a rising path is below the ceiling to the left
+   * of its pierce and above it to the right — so the label sits above the rule
+   * on the left and below it on the right, always across the 50% line from the
+   * stroke.
+   *
+   * That rule is the FIRST candidate, not the only one. A series that rises and
+   * falls inside the window re-crosses the ceiling further along, and on two of
+   * the twelve cards the descending zinc leg still clipped the top of the
+   * dropped label. So the placement is checked against the geometry it has to
+   * avoid and the first clear candidate wins — the invariant "no mark inside
+   * the glyph box" is enforced rather than approximated.
+   */
+  // A series that already starts above the ceiling never pierces it; fall back
+  // to the crossing year's own x so the callout still has an anchor.
+  const crossX = pierceX ?? (crossYear !== null ? x(crossYear) : 0)
+  const labelW = crossLabel.length * 11 * 0.6
+  /** Marks inside the box a label would occupy at this anchor and baseline. */
+  const marksInBox = (anchor: 'start' | 'end', baseline: number) => {
+    const xf = clampX(crossX + (anchor === 'end' ? -6 : 6), crossLabel, 11, anchor)
+    const x1 = anchor === 'end' ? xf - labelW : xf
+    const x2 = x1 + labelW
+    // 11px JetBrains Mono: ~11px of ascent above the baseline, ~3px below.
+    const y1 = baseline - 11
+    const y2 = baseline + 3
+    const inBox = (px: number, py: number) => px >= x1 && px <= x2 && py >= y1 && py <= y2
+    let n = 0
+    for (const s of segs) {
+      const steps = Math.max(24, Math.ceil(Math.hypot(s.x2 - s.x1, s.y2 - s.y1)))
+      for (let i = 0; i <= steps; i++) {
+        if (inBox(s.x1 + ((s.x2 - s.x1) * i) / steps, s.y1 + ((s.y2 - s.y1) * i) / steps)) {
+          n++
+          break
+        }
+      }
+    }
+    for (const p of tl) if (inBox(x(p.year), y(p.share_pct))) n++
+    return n
+  }
+  const above = y(ceil) - 4
+  const below = y(ceil) + 12
+  const preferEnd = crossX > W / 2
+  const candidates: Array<[('start' | 'end'), number]> = preferEnd
+    ? [['end', above], ['start', below], ['end', below], ['start', above]]
+    : [['start', below], ['end', above], ['start', above], ['end', below]]
+  const [crossAnchor, crossY] = crossLabel
+    ? (candidates.find(([a, b]) => marksInBox(a, b) === 0) ??
+       candidates.reduce((best, c) => (marksInBox(...c) < marksInBox(...best) ? c : best)))
+    : candidates[0]
+  /**
+   * Axis-end ticks anchor to the edge they sit on. At 11px a centred `2021`
+   * over x = PAD hangs 3px past the svg's left edge and the browser clips it;
+   * `start` / `end` keep the label attached to its own year AND inside the box.
+   */
+  const tickAnchor = (xp: number): 'start' | 'middle' | 'end' =>
+    xp - PAD < 14 ? 'start' : W - PAD - xp < 14 ? 'end' : 'middle'
+
   const peakLabel = `▲ ${peakSharePct}% (${peakYear})`
 
   return (
@@ -230,13 +279,8 @@ export function CaptureTrajectory({
         {/* crossing-year callout */}
         {crossYear !== null && (
           <text
-            x={clampX(
-              isLead ? crossX + (crossAnchor === 'end' ? -6 : 6) : x(crossYear),
-              crossLabel,
-              11,
-              crossAnchor,
-            )}
-            y={y(ceil) - 4}
+            x={clampX(crossX + (crossAnchor === 'end' ? -6 : 6), crossLabel, 11, crossAnchor)}
+            y={crossY}
             textAnchor={crossAnchor}
             fontSize={11}
             fontFamily="JetBrains Mono, monospace"
