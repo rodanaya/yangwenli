@@ -23,13 +23,13 @@
  * core at r=5), sort lens URL-synced (?lens=var|intensity) with a ~280ms
  * FLIP reorder.
  */
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { LedgerRow } from './ExposureLedger'
-import { intensityColor } from './ExposureLedger'
+import { intensityColor, intensityTextColor } from './ExposureLedger'
 import { makeLogFrac, ownSpendShare, orderForLens } from './confoundScales'
 import type { PlateLens } from './confoundScales'
 
@@ -115,7 +115,6 @@ export function ConfoundPlate({
   lens: PlateLens
   onLensChange: (l: PlateLens) => void
 }) {
-  const navigate = useNavigate()
   const [hovered, setHovered] = useState<number | null>(null)
 
   const logFrac = useMemo(() => makeLogFrac(rows), [rows])
@@ -124,6 +123,28 @@ export function ConfoundPlate({
     () => new Map(ordered.map((r, i) => [r.sectorId, i])),
     [ordered],
   )
+
+  // FLIP. Rows render in lens order (DOM/Tab order == visual order), but a
+  // node React physically moves loses its CSS transform transition — measured:
+  // 8 of 12 rows jumped on VaR → Intensity. Replay the slide with WAAPI for
+  // every row whose slot changed; the inline transition stays for the rest.
+  const rowRefs = useRef(new Map<number, HTMLDivElement>())
+  const prevIndex = useRef(orderIndex)
+  useLayoutEffect(() => {
+    const prev = prevIndex.current
+    prevIndex.current = orderIndex
+    if (prev === orderIndex) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    for (const [id, idx] of orderIndex) {
+      const from = prev.get(id)
+      const el = rowRefs.current.get(id)
+      if (from == null || from === idx || !el?.animate) continue
+      el.animate(
+        [{ transform: `translateY(${from * ROW_H}px)` }, { transform: `translateY(${idx * ROW_H}px)` }],
+        { duration: 280, easing: 'cubic-bezier(0.2, 0, 0.2, 1)' },
+      )
+    }
+  }, [orderIndex])
 
   // The two named outliers — computed argmax, never hardcoded (Reuters
   // discipline: annotate the breaks only).
@@ -275,7 +296,7 @@ export function ConfoundPlate({
                 >
                   ½
                 </span>
-                <span className="font-mono" style={{ ...MONO_MICRO, fontSize: 8, color: 'var(--color-text-muted)' }}>
+                <span className="font-mono" style={{ ...MONO_MICRO, fontSize: 11, color: 'var(--color-text-muted)' }}>
                   {isEs ? 'gasto propio' : 'own spend'}
                 </span>
               </span>
@@ -287,7 +308,7 @@ export function ConfoundPlate({
               style={{ left: '80%', transform: 'translateX(-50%)', opacity: 0.6 }}
               aria-hidden="true"
             >
-              <span className="font-mono whitespace-nowrap" style={{ ...MONO_MICRO, fontSize: 8, color: 'var(--color-text-muted)' }}>
+              <span className="font-mono whitespace-nowrap" style={{ ...MONO_MICRO, fontSize: 11, color: 'var(--color-text-muted)' }}>
                 80%
               </span>
               <span style={{ width: 1, height: 5, marginTop: 2, background: 'rgba(160, 104, 32, 0.45)' }} />
@@ -303,7 +324,9 @@ export function ConfoundPlate({
           style={{ height: rows.length * ROW_H }}
           onMouseLeave={() => setHovered(null)}
         >
-          {rows.map((r) => {
+          {/* Rendered in lens order so DOM (and Tab) order == visual order;
+              the slide is replayed by the FLIP effect above. */}
+          {ordered.map((r) => {
             const idx = orderIndex.get(r.sectorId) ?? 0
             const share = ownSpendShare(r)
             const dotFrac = logFrac(r.varMxn)
@@ -320,8 +343,12 @@ export function ConfoundPlate({
             return (
               <div
                 key={r.sectorId}
+                ref={(el) => {
+                  if (el) rowRefs.current.set(r.sectorId, el)
+                  else rowRefs.current.delete(r.sectorId)
+                }}
                 role="listitem"
-                className="absolute inset-x-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                className="absolute inset-x-0"
                 style={{
                   height: ROW_H,
                   transform: `translateY(${idx * ROW_H}px)`,
@@ -329,18 +356,7 @@ export function ConfoundPlate({
                   opacity: dimmed ? 0.45 : 1,
                   borderBottom: '1px solid var(--color-border)',
                 }}
-                tabIndex={0}
-                aria-label={aria}
                 onMouseEnter={() => setHovered(r.sectorId)}
-                onFocus={() => setHovered(r.sectorId)}
-                onBlur={() => setHovered(null)}
-                onClick={() => navigate(`/sectors/${r.sectorId}`)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    navigate(`/sectors/${r.sectorId}`)
-                  }
-                }}
               >
                 <div style={{ ...GRID, height: '100%' }}>
                   {/* rank in the ACTIVE lens */}
@@ -348,9 +364,13 @@ export function ConfoundPlate({
                     {String(idx + 1).padStart(2, '0')}
                   </span>
 
-                  {/* name + sector rule */}
-                  <span
-                    className="truncate"
+                  {/* name + sector rule — the row's link. Rule-1 note: a Garamond
+                      Link, not an EntityIdentityChip; the plate's name column is
+                      the loved centrepiece (PARALLAX D7 § Change 3). */}
+                  <Link
+                    to={`/sectors/${r.sectorId}`}
+                    aria-label={aria}
+                    className="truncate rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                     style={{
                       ...SERIF_NAME,
                       fontSize: 15,
@@ -361,9 +381,11 @@ export function ConfoundPlate({
                       textUnderlineOffset: 2,
                       textDecorationThickness: 1,
                     }}
+                    onFocus={() => setHovered(r.sectorId)}
+                    onBlur={() => setHovered(null)}
                   >
                     {r.name}
-                  </span>
+                  </Link>
 
                   {/* Lane 1 — log VaR */}
                   <span className="relative h-full block">
@@ -416,7 +438,7 @@ export function ConfoundPlate({
                           right: `calc(${(1 - dotFrac) * 100}% + 12px)`,
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          fontSize: 8.5,
+                          fontSize: 11,
                           fontStyle: 'normal',
                           letterSpacing: '0.06em',
                           color: 'var(--color-text-muted)',
@@ -458,10 +480,10 @@ export function ConfoundPlate({
                         style={{
                           right: `calc(${(1 - share) * 100}% + 10px)`,
                           top: 3,
-                          fontSize: 8.5,
+                          fontSize: 11,
                           fontStyle: 'normal',
                           letterSpacing: '0.06em',
-                          color: 'var(--color-accent)',
+                          color: 'var(--color-accent-hover)',
                         }}
                       >
                         {isEs ? 'mayor saturación ↘' : 'highest saturation ↘'}
@@ -477,7 +499,7 @@ export function ConfoundPlate({
                       fontStyle: 'normal',
                       fontWeight: 800,
                       fontSize: 14,
-                      color: ringColor,
+                      color: intensityTextColor(r.avgRiskScore),
                     }}
                   >
                     {sharePct}%
@@ -499,7 +521,7 @@ export function ConfoundPlate({
               return (
                 <span key={t} className="absolute flex flex-col items-center" style={{ left: `${f * 100}%`, transform: 'translateX(-50%)' }}>
                   <span style={{ width: 1, height: 4, background: 'var(--color-border)' }} />
-                  <span className="font-mono tabular-nums" style={{ fontSize: 8.5, color: 'var(--color-text-muted)', marginTop: 1 }}>
+                  <span className="font-mono tabular-nums" style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 1 }}>
                     {t / 1e12}
                   </span>
                 </span>
@@ -507,7 +529,7 @@ export function ConfoundPlate({
             })}
             <span
               className="absolute right-0 top-0 font-mono"
-              style={{ ...MONO_MICRO, fontSize: 8, color: 'var(--color-text-muted)', opacity: 0.7 }}
+              style={{ ...MONO_MICRO, fontSize: 11, color: 'var(--color-text-muted)' }}
             >
               {isEs ? 'billones MXN' : 'trillions MXN'}
             </span>
@@ -524,7 +546,7 @@ export function ConfoundPlate({
                 }}
               >
                 <span style={{ width: 1, height: 4, background: 'var(--color-border)' }} />
-                <span className="font-mono tabular-nums" style={{ fontSize: 8.5, color: 'var(--color-text-muted)', marginTop: 1 }}>
+                <span className="font-mono tabular-nums" style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 1 }}>
                   {t}
                 </span>
               </span>
@@ -538,7 +560,7 @@ export function ConfoundPlate({
       <div className="md:hidden">
         <div className="mb-2 flex items-center justify-between gap-2 flex-wrap">
           {sortControl}
-          <span className="font-mono" style={{ ...MONO_MICRO, fontSize: 8.5, color: 'var(--color-text-muted)' }}>
+          <span className="font-mono" style={{ ...MONO_MICRO, fontSize: 11, color: 'var(--color-text-muted)' }}>
             ○ {isEs ? '% del gasto propio · bandera = ½' : '% of own spend · flag = ½'}
           </span>
         </div>
@@ -551,29 +573,25 @@ export function ConfoundPlate({
               <div
                 key={r.sectorId}
                 role="listitem"
-                tabIndex={0}
-                className="py-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                className="py-1.5"
                 style={{ borderBottom: '1px solid var(--color-border)', borderLeft: `3px solid ${sector}`, paddingLeft: 10 }}
-                onClick={() => navigate(`/sectors/${r.sectorId}`)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    navigate(`/sectors/${r.sectorId}`)
-                  }
-                }}
-                aria-label={
-                  isEs
-                    ? `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% del gasto propio`
-                    : `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% of own spend`
-                }
               >
                 <div className="flex items-baseline gap-2">
                   <span className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                     {String(idx + 1).padStart(2, '0')}
                   </span>
-                  <span className="flex-1 truncate" style={{ ...SERIF_NAME, fontSize: 14, color: 'var(--color-text-primary)' }}>
+                  <Link
+                    to={`/sectors/${r.sectorId}`}
+                    aria-label={
+                      isEs
+                        ? `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% del gasto propio`
+                        : `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% of own spend`
+                    }
+                    className="flex-1 truncate rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                    style={{ ...SERIF_NAME, fontSize: 14, color: 'var(--color-text-primary)' }}
+                  >
                     {r.name}
-                  </span>
+                  </Link>
                   <span className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                     {formatCompactMXN(r.varMxn)}
                   </span>
@@ -584,7 +602,7 @@ export function ConfoundPlate({
                       fontStyle: 'normal',
                       fontWeight: 800,
                       fontSize: 13,
-                      color: ringColor,
+                      color: intensityTextColor(r.avgRiskScore),
                       minWidth: 36,
                       textAlign: 'right',
                     }}

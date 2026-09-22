@@ -19,11 +19,11 @@ import { useQuery } from '@tanstack/react-query'
 import { sectorApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
-import { RISK_COLORS, EU_DIRECT_AWARD_LIMIT } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, EU_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { SectorTrajectoryPoint } from '@/api/types'
 import type { LedgerRow } from './ExposureLedger'
-import { intensityColor, compactCount } from './ExposureLedger'
+import { intensityTextColor, compactCount } from './ExposureLedger'
 import { ownSpendShare } from './confoundScales'
 
 // OECD direct-award ceiling as a percentage (0–100). Single source: constants.
@@ -53,7 +53,7 @@ export function SectorDossierCard({
 }) {
   const isEs = lang === 'es'
   const share = ownSpendShare(row)
-  const sledgeColor = intensityColor(row.avgRiskScore)
+  const sledgeColor = intensityTextColor(row.avgRiskScore)
   const critFrac = row.varMxn > 0 ? Math.max(0, Math.min(1, row.criticalMxn / row.varMxn)) : 0
   const critPct = row.contracts > 0 ? (row.criticalCount / row.contracts) * 100 : 0
   const sbHot = row.sbPct > 25
@@ -88,7 +88,7 @@ export function SectorDossierCard({
         </span>
         <span
           className="font-mono whitespace-nowrap"
-          style={{ fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
         >
           VaR {rankVar} / {totalRows}
         </span>
@@ -133,7 +133,7 @@ export function SectorDossierCard({
       <div className="mt-2.5 flex items-center gap-2">
         <span
           className="font-mono shrink-0"
-          style={{ fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+          style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
         >
           DA · {isEs ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
         </span>
@@ -148,7 +148,7 @@ export function SectorDossierCard({
         <div className="mt-1.5 flex items-center gap-2">
           <span
             className="font-mono shrink-0"
-            style={{ fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+            style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
           >
             {isEs ? 'Trayectoria' : 'Trajectory'}
           </span>
@@ -187,7 +187,7 @@ export function SectorDossierCard({
           <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 1, background: RISK_COLORS.critical, flexShrink: 0 }} />
           {isEs ? 'crít' : 'crit'} {critPct.toFixed(1)}%
         </span>
-        <span className="whitespace-nowrap" style={{ color: sbHot ? RISK_COLORS.critical : undefined }}>
+        <span className="whitespace-nowrap" style={{ color: sbHot ? RISK_TEXT_COLORS.critical : undefined }}>
           1P {row.sbPct.toFixed(1)}%
         </span>
         <span className="whitespace-nowrap">
@@ -222,11 +222,11 @@ export function SectorDossierCard({
                 <span
                   className="inline-block font-mono px-1.5 py-0.5 rounded-[1px]"
                   style={{
-                    fontSize: 8.5,
+                    fontSize: 11,
                     fontWeight: 700,
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    color: RISK_COLORS.high,
+                    color: RISK_TEXT_COLORS.high,
                     border: `1px solid ${RISK_COLORS.high}`,
                   }}
                 >
@@ -235,7 +235,7 @@ export function SectorDossierCard({
               ) : (
                 <span
                   className="font-mono"
-                  style={{ fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+                  style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
                 >
                   {isEs ? 'Sin casos documentados en este sector' : 'No documented cases in this sector'}
                 </span>

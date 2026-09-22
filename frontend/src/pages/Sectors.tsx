@@ -470,7 +470,7 @@ export function Sectors() {
               fontWeight: 400,
             }}
           >
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>Folio·II</span>
+            <span style={{ color: 'var(--color-accent-hover)', fontStyle: 'normal', fontWeight: 500 }}>Folio·II</span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
             <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               {lang === 'es' ? 'Arqueo de caja federal' : 'Federal cash count'}

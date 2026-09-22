@@ -17,7 +17,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { LedgerRow } from './ExposureLedger'
-import { intensityColor } from './ExposureLedger'
+import { intensityColor, intensityTextColor } from './ExposureLedger'
 import { OwnSpendTrack } from './ConfoundPlate'
 import { ownSpendShare, rankDeltas } from './confoundScales'
 
@@ -77,14 +77,14 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                     fontSize: 13,
                     fontWeight: 700,
                     letterSpacing: '0.04em',
-                    color: hot ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                    color: hot ? 'var(--color-accent-hover)' : 'var(--color-text-secondary)',
                   }}
                 >
                   {String(d.rankVar).padStart(2, '0')}→{String(d.rankIntensity).padStart(2, '0')}
                 </span>
                 <span
                   className="font-mono whitespace-nowrap"
-                  style={{ fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+                  style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
                 >
                   {isEs ? `▲ ${d.delta} ${d.delta === 1 ? 'puesto' : 'puestos'}` : `▲ ${d.delta} ${d.delta === 1 ? 'rank' : 'ranks'}`}
                 </span>
@@ -111,8 +111,10 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                         type="institution"
                         id={cap.id}
                         name={cap.siglas || cap.name}
-                        size="xs"
+                        size="sm"
                         hideIcon
+                        fullName
+                        className="inline-flex w-auto"
                       />
                       <span className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                         {cap.sharePct.toFixed(0)}% {isEs ? 'del sector' : 'of sector'}
@@ -121,7 +123,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                   )}
                   <Link
                     to={`/sectors/${row.sectorId}`}
-                    className="font-mono underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity whitespace-nowrap rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                    className="py-1 font-mono underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity whitespace-nowrap rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                     style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
                   >
                     {isEs ? 'ver sector ↗' : 'view sector ↗'}
@@ -140,14 +142,14 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                     fontWeight: 800,
                     fontSize: 22,
                     lineHeight: 1,
-                    color: ringColor,
+                    color: intensityTextColor(row.avgRiskScore),
                   }}
                 >
                   {(share * 100).toFixed(0)}%
                 </div>
                 <div
                   className="font-mono mt-0.5"
-                  style={{ fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
+                  style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
                 >
                   {isEs ? 'del gasto propio' : 'of own spend'}
                 </div>
