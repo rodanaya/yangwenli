@@ -17,16 +17,19 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   SECTOR_COLORS,
   SECTOR_TEXT_COLORS,
   RISK_COLORS,
+  RISK_TEXT_COLORS,
   RISK_THRESHOLDS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
+import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/components/network/plateLabels'
+import { useFontsReady } from '@/hooks/useMeasuredWidth'
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -63,15 +66,24 @@ interface Column {
 
 // ── Constants ────────────────────────────────────────────────────────────
 
+// Headroom inside the svg for the top tick and the annotation leader, so the
+// plate no longer needs `overflow: visible` (PARALLAX D7 § Change 2).
+const TOP_PAD = 28
 const BAND_H = 300
 const LEFT_GUTTER = 34
 const RIGHT_PAD = 8
 const READOUT_H = 20
 const STRIP_H = 4
-const LABEL_H = 18
+const LABEL_H = 22
 const LEGEND_H = 16
-const MIN_LABEL_W = 56
+// Pre-font fallback only; once the faces land every name is measured.
+const PRE_FONT_LABEL_W = 56
 const TOP_N = 14
+const MOBILE_ROW_MIN_H = 24
+
+// Glyph faces — the canvas measures exactly what the svg/HTML renders.
+const MONO = 'var(--font-family-mono, monospace)'
+const ANNO_LINE_H = 13
 
 const RISK_LEVEL_COLOR: Record<'low' | 'medium' | 'high' | 'critical', string> = {
   low: 'var(--color-text-muted)',
@@ -84,8 +96,11 @@ function snap5Up(v: number): number {
   return Math.ceil(v / 5) * 5
 }
 
-function truncate(s: string, n: number): string {
-  return s.length > n ? s.slice(0, n - 1) + '…' : s
+/** The resolved mono stack behind --font-family-mono, for canvas measureText. */
+function monoStack(): string {
+  if (typeof document === 'undefined') return 'monospace'
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--font-family-mono').trim()
+  return v || 'monospace'
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -169,25 +184,42 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
 
   const bandW = Math.max(0, width - LEFT_GUTTER - RIGHT_PAD)
 
-  const yFor = useCallback((riskPct: number) => BAND_H - (riskPct / domainMax) * BAND_H, [domainMax])
+  const yFor = useCallback((riskPct: number) => TOP_PAD + BAND_H - (riskPct / domainMax) * BAND_H, [domainMax])
 
   const mediumRuleY = yFor(RISK_THRESHOLDS.medium * 100)
 
-  // Column x-positions (desktop) / heights (mobile)
+  // Column x-positions (desktop) / heights (mobile). The run starts at the
+  // tick gutter, like the WHO plate (it used to start at 0, under the tick
+  // labels, leaving a dead 42px band at the right — PARALLAX D7 § Change 2).
   const laidOut = useMemo(() => {
-    let cursor = 0
-    return columns.map(col => {
+    const out: { col: Column; x: number; w: number }[] = []
+    let cursor = LEFT_GUTTER
+    for (const col of columns) {
       const w = totalValue > 0 ? (col.total_value / totalValue) * bandW : 0
-      const x = cursor
+      out.push({ col, x: cursor, w })
       cursor += w
-      return { col, x, w }
-    })
+    }
+    return out
   }, [columns, totalValue, bandW])
 
-  // Narrow columns (< MIN_LABEL_W) get circled-number ticks + legend
+  // A column shows its full name (11px) only when the measured name + 6px fits
+  // the column; otherwise a circled index + legend entry (columns under 3px
+  // get neither, as before). Measured in the plate's mono face once the fonts
+  // are in — a fallback-face measure runs narrow.
+  const fontsReady = useFontsReady()
+  const mono = useMemo(() => (fontsReady ? monoStack() : 'monospace'), [fontsReady])
+  const labelFits = useMemo(
+    () =>
+      laidOut.map(({ col, w }) => {
+        if (!fontsReady) return w >= PRE_FONT_LABEL_W
+        const name = lang === 'es' ? col.name_es : col.name_en
+        return measureLabel(name, `11px ${mono}`, Number.POSITIVE_INFINITY, 14).width + 6 <= w
+      }),
+    [fontsReady, mono, laidOut, lang],
+  )
   const narrowSet = useMemo(
-    () => laidOut.filter(({ w }) => w < MIN_LABEL_W && w >= 3),
-    [laidOut]
+    () => laidOut.filter(({ w }, i) => !labelFits[i] && w >= 3),
+    [laidOut, labelFits]
   )
 
   // Two computed annotations: tallest hatch + big-and-hot
@@ -231,7 +263,44 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
       ? 'pase el cursor por una columna · clic → dossier de la categoría'
       : 'hover a column · click → category dossier'
 
-  const totalHeightDesktop = READOUT_H + BAND_H + STRIP_H + LABEL_H + LEGEND_H
+  const totalHeightDesktop = READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H + LEGEND_H
+  const svgH = TOP_PAD + BAND_H + LABEL_H
+  const hoveredIdx = hoveredKey === null ? -1 : laidOut.findIndex(({ col }) => col.key === hoveredKey)
+
+  // ── The two computed annotations — HTML glyphs over the svg geometry ──
+  // Seated with placeLabels (bounded to the plate, re-anchored at the edges,
+  // the second dropped rather than overprinted when both land on one column);
+  // obstacles = the tick column, the threshold label and the dagger.
+  const annoFont = `11px ${mono}`
+  const annoWidth = (lines: string[]) =>
+    Math.max(...lines.map((l) => measureLabel(l, annoFont, Number.POSITIVE_INFINITY, ANNO_LINE_H).width))
+  const annoText: Record<string, [string, string]> = {}
+  const candidates: LabelCandidate[] = []
+  const tallestFound = tallest ? laidOut.find(({ col }) => col.key === tallest.key) : undefined
+  const tallestTop = tallest ? yFor(tallest.avg_risk * 100) : 0
+  if (tallest && tallestFound) {
+    const name = lang === 'es' ? tallest.name_es : tallest.name_en
+    const pct = (tallest.avg_risk * 100).toFixed(1)
+    annoText.tallest = lang === 'es' ? ['mayor riesgo —', `${name} · ${pct}%`] : ['highest risk —', `${name} · ${pct}%`]
+    candidates.push({ id: 'tallest', x: tallestFound.x + tallestFound.w / 2, y: tallestTop, width: annoWidth(annoText.tallest), height: 2 * ANNO_LINE_H, above: 14, below: 4 })
+  }
+  const bigFound = bigAndHot ? laidOut.find(({ col }) => col.key === bigAndHot.key) : undefined
+  if (bigAndHot && bigFound) {
+    const name = lang === 'es' ? bigAndHot.name_es : bigAndHot.name_en
+    annoText.bigAndHot = lang === 'es' ? ['grande y caliente —', name] : ['big and hot —', name]
+    const w = annoWidth(annoText.bigAndHot)
+    // Start-anchored just inside the column, sitting under the waterline.
+    candidates.push({ id: 'bigAndHot', x: bigFound.x + Math.min(8, bigFound.w / 2) + w / 2, y: yFor(bigAndHot.avg_risk * 100) + 4 + 2 * ANNO_LINE_H, width: w, height: 2 * ANNO_LINE_H, above: 0 })
+  }
+  const thresholdLabel = lang === 'es' ? 'UMBRAL MEDIO · 25% (modelo)' : 'MEDIUM THRESHOLD · 25% (model)'
+  const thresholdW = measureLabel(thresholdLabel, `700 ${annoFont}`, Number.POSITIVE_INFINITY, ANNO_LINE_H).width + thresholdLabel.length * 11 * 0.05
+  const daggerFound = daggerCol ? laidOut.find(({ col }) => col.key === daggerCol.key) : undefined
+  const obstacles: LabelBox[] = [
+    { x0: 0, y0: 0, x1: LEFT_GUTTER, y1: svgH },
+    { x0: width - RIGHT_PAD - thresholdW - 2, y0: mediumRuleY - 16, x1: width, y1: mediumRuleY + 2 },
+  ]
+  if (daggerFound) obstacles.push({ x0: daggerFound.x, y0: TOP_PAD, x1: daggerFound.x + 12, y1: TOP_PAD + 16 })
+  const placed = isMobile ? [] : placeLabels(candidates, obstacles, { x0: 0, y0: 0, x1: width, y1: TOP_PAD + BAND_H })
 
   const caption =
     lang === 'en'
@@ -269,7 +338,9 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
           {/* Hover readout strip — hover data on the left, persistent axis label on the right */}
           <div
             style={{
-              height: READOUT_H,
+              // Fixed on desktop (no layout jump on hover); on a phone the
+              // sentence wraps instead of clipping (PARALLAX D7 § Change 2).
+              ...(isMobile ? { minHeight: READOUT_H } : { height: READOUT_H }),
               fontFamily: 'var(--font-family-mono, monospace)',
               fontSize: 12,
               color: 'var(--color-text-secondary, var(--color-text-muted))',
@@ -280,17 +351,18 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
-            <span style={{ flexShrink: 0, fontSize: 8, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+            <span style={isMobile ? undefined : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+            <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
               {lang === 'es' ? `riesgo promedio · indicador 0–${domainMax}%` : `mean risk · indicator 0–${domainMax}%`}
             </span>
           </div>
 
           {!isMobile ? (
+            <div className="relative">
             <svg
               width={width}
-              height={BAND_H + LABEL_H}
-              style={{ display: 'block', overflow: 'visible' }}
+              height={svgH}
+              style={{ display: 'block' }}
               role="img"
               aria-label={
                 lang === 'es'
@@ -340,10 +412,9 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                       y={ty}
                       textAnchor="end"
                       dominantBaseline="middle"
-                      fontSize={8.5}
-                      fontFamily="var(--font-family-mono, monospace)"
-                      fill="currentColor"
-                      fillOpacity={0.4}
+                      fontSize={11}
+                      fontFamily={mono}
+                      fill="var(--color-text-muted)"
                     >
                       {tick}
                     </text>
@@ -362,7 +433,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 const isHovered = hoveredKey === col.key
                 const isDimmed = hoveredKey !== null && !isHovered
                 const name = lang === 'es' ? col.name_es : col.name_en
-                const showLabel = w >= MIN_LABEL_W
+                const showLabel = labelFits[laidOut.findIndex((d) => d.col.key === col.key)]
 
                 return (
                   <g key={col.key}>
@@ -371,17 +442,19 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                       x={x}
                       y={hatchTop}
                       width={Math.max(0, w - 1)}
-                      height={Math.max(0, BAND_H - hatchTop)}
+                      height={Math.max(0, TOP_PAD + BAND_H - hatchTop)}
                       fill={`url(#hatch-${uid}-${col.key})`}
                       opacity={isHovered ? 1.3 : isDimmed ? 0.55 : 1}
                     />
                     {/* transparent hit area + interactivity */}
                     <rect
                       x={x}
-                      y={0}
+                      y={TOP_PAD}
                       width={Math.max(0, w - 1)}
                       height={BAND_H}
                       fill="transparent"
+                      // The accent outline rect is the focus indicator; no native double box.
+                      className="focus-visible:outline-none"
                       style={{ cursor: col.isRemainder ? 'default' : 'pointer' }}
                       tabIndex={0}
                       role="button"
@@ -411,45 +484,48 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                       y2={hatchTop}
                       stroke={waterColor}
                       strokeWidth={1.5}
+                      pointerEvents="none"
                     />
                     {/* separator */}
                     <line
                       x1={x + w}
-                      y1={0}
+                      y1={TOP_PAD}
                       x2={x + w}
-                      y2={BAND_H}
+                      y2={TOP_PAD + BAND_H}
                       stroke="var(--color-border)"
                       strokeWidth={1}
+                      pointerEvents="none"
                     />
                     {/* baseline sector strip */}
                     <rect
                       x={x}
-                      y={BAND_H}
+                      y={TOP_PAD + BAND_H}
                       width={Math.max(0, w - 1)}
                       height={STRIP_H}
                       fill={color}
                     />
-                    {/* label */}
+                    {/* label — the full name, shown only when it fits */}
                     {showLabel && (
                       <text
                         x={x + w / 2}
-                        y={BAND_H + STRIP_H + 12}
+                        y={TOP_PAD + BAND_H + STRIP_H + 13}
                         textAnchor="middle"
-                        fontSize={8.5}
-                        fontFamily="var(--font-family-mono, monospace)"
+                        fontSize={11}
+                        fontFamily={mono}
                         fill={textColor}
                       >
-                        {truncate(name, 16)}
+                        {name}
                       </text>
                     )}
                     {/* dagger */}
                     {daggerCol && col.key === daggerCol.key && (
                       <text
                         x={x + 3}
-                        y={12}
+                        y={TOP_PAD + 12}
                         fontSize={12}
-                        fontFamily="var(--font-family-mono, monospace)"
+                        fontFamily={mono}
                         fill="var(--color-text-muted)"
+                        pointerEvents="none"
                       >
                         †
                       </text>
@@ -463,10 +539,10 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 <text
                   key={`narrow-${col.key}`}
                   x={x + w / 2}
-                  y={BAND_H + STRIP_H + 12}
+                  y={TOP_PAD + BAND_H + STRIP_H + 14}
                   textAnchor="middle"
-                  fontSize={8}
-                  fontFamily="var(--font-family-mono, monospace)"
+                  fontSize={13}
+                  fontFamily={mono}
                   fill="var(--color-text-muted)"
                 >
                   {String.fromCharCode(9312 + Math.min(idx, 19))}
@@ -483,84 +559,74 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 strokeWidth={1.5}
                 strokeDasharray="5 3"
                 strokeOpacity={0.85}
+                pointerEvents="none"
               />
               <text
                 x={width - RIGHT_PAD}
                 y={mediumRuleY - 4}
                 textAnchor="end"
-                fontSize={8}
-                fontFamily="var(--font-family-mono, monospace)"
+                fontSize={11}
+                fontFamily={mono}
                 fontWeight={700}
-                fill={RISK_COLORS.high}
+                fill={RISK_TEXT_COLORS.high}
                 letterSpacing="0.05em"
+                pointerEvents="none"
               >
-                {lang === 'es' ? 'UMBRAL MEDIO · 25% (modelo)' : 'MEDIUM THRESHOLD · 25% (model)'}
+                {thresholdLabel}
               </text>
 
-              {/* annotations: tallest + big-and-hot */}
-              {tallest && (() => {
-                const found = laidOut.find(({ col }) => col.key === tallest.key)
-                if (!found) return null
-                const name = lang === 'es' ? tallest.name_es : tallest.name_en
-                const ty = yFor(tallest.avg_risk * 100)
+              {/* Hover / keyboard-focus outline around the active column */}
+              {hoveredIdx >= 0 && (
+                <rect
+                  x={laidOut[hoveredIdx].x + 1}
+                  y={TOP_PAD + 1}
+                  width={Math.max(2, laidOut[hoveredIdx].w - 3)}
+                  height={BAND_H - 2}
+                  fill="none"
+                  stroke="var(--color-accent)"
+                  strokeWidth={2}
+                  pointerEvents="none"
+                />
+              )}
+
+              {/* Annotation leader for "highest risk" (glyphs are HTML, below) */}
+              {placed.some((p) => p.id === 'tallest') && tallestFound && (() => {
+                const p = placed.find((q) => q.id === 'tallest')!
+                const cx = tallestFound.x + tallestFound.w / 2
+                const [y1, y2] = p.box.y0 >= tallestTop ? [tallestTop, p.box.y0 - 2] : [p.box.y1 + 2, tallestTop]
                 return (
-                  <g pointerEvents="none">
-                    <line
-                      x1={found.x + found.w / 2}
-                      y1={ty}
-                      x2={found.x + found.w / 2}
-                      y2={Math.max(0, ty - 14)}
-                      stroke="var(--color-text-muted)"
-                      strokeWidth={0.8}
-                      strokeOpacity={0.7}
-                    />
-                    <text
-                      x={found.x + found.w / 2}
-                      y={Math.max(9, ty - 16)}
-                      textAnchor="middle"
-                      fontSize={8.5}
-                      fontStyle="normal"
-                      fontFamily="var(--font-family-mono, monospace)"
-                      fill="var(--color-text-secondary, var(--color-text-muted))"
-                    >
-                      {lang === 'es'
-                        ? `mayor riesgo — ${name} · ${(tallest.avg_risk * 100).toFixed(1)}%`
-                        : `highest risk — ${name} · ${(tallest.avg_risk * 100).toFixed(1)}%`}
-                    </text>
-                  </g>
-                )
-              })()}
-              {bigAndHot && (() => {
-                const found = laidOut.find(({ col }) => col.key === bigAndHot.key)
-                if (!found) return null
-                const name = lang === 'es' ? bigAndHot.name_es : bigAndHot.name_en
-                const ty = yFor(bigAndHot.avg_risk * 100)
-                return (
-                  <g pointerEvents="none">
-                    <text
-                      x={found.x + Math.min(8, found.w / 2)}
-                      y={Math.max(24, ty + 14)}
-                      textAnchor="start"
-                      fontSize={8.5}
-                      fontStyle="normal"
-                      fontFamily="var(--font-family-mono, monospace)"
-                      fill="var(--color-text-secondary, var(--color-text-muted))"
-                    >
-                      {lang === 'es'
-                        ? `grande y caliente — ${name}`
-                        : `big and hot — ${name}`}
-                    </text>
-                  </g>
+                  <line x1={cx} y1={y1} x2={cx} y2={y2} stroke="var(--color-text-muted)" strokeWidth={0.8} strokeOpacity={0.7} pointerEvents="none" />
                 )
               })()}
             </svg>
+            {placed.map((p) => (
+              <div
+                key={p.id}
+                aria-hidden="true"
+                className="absolute pointer-events-none whitespace-nowrap"
+                style={{
+                  left: p.box.x0,
+                  top: p.box.y0,
+                  width: p.box.x1 - p.box.x0,
+                  textAlign: p.id === 'bigAndHot' && p.align === 'center' ? 'left' : p.align,
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  lineHeight: `${ANNO_LINE_H}px`,
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                {annoText[p.id as string]?.[0]}
+                <br />
+                {annoText[p.id as string]?.[1]}
+              </div>
+            ))}
+            </div>
           ) : (
             <MobileMesa
               laidOut={laidOut}
               lang={lang}
               hoveredKey={hoveredKey}
               setHoveredKey={setHoveredKey}
-              handleClick={handleClick}
               domainMax={domainMax}
             />
           )}
@@ -569,9 +635,9 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
           {!isMobile && narrowSet.length > 0 && (
             <div
               style={{
-                height: LEGEND_H,
+                minHeight: LEGEND_H,
                 fontFamily: 'var(--font-family-mono, monospace)',
-                fontSize: 8.5,
+                fontSize: 13,
                 color: 'var(--color-text-muted)',
               }}
             >
@@ -621,18 +687,17 @@ function MobileMesa({
   lang,
   hoveredKey,
   setHoveredKey,
-  handleClick,
   domainMax,
 }: {
   laidOut: LaidOutRow[]
   lang: 'en' | 'es'
   hoveredKey: string | null
   setHoveredKey: (k: string | null) => void
-  handleClick: (col: Column) => void
   domainMax: number
 }) {
   const totalW = laidOut.reduce((s, { w }) => s + w, 0) || 1
-  const ROW_MIN_H = 18
+  // 24px floor: each row is a link, so it is also a 24px target.
+  const ROW_MIN_H = MOBILE_ROW_MIN_H
 
   return (
     <div className="flex flex-col gap-[1px]">
@@ -647,32 +712,19 @@ function MobileMesa({
         const saturationPct = ((col.avg_risk * 100) / domainMax) * 100
         const halfwayPct = (RISK_THRESHOLDS.medium * 100 / domainMax) * 100
 
-        return (
-          <div
-            key={col.key}
-            role="button"
-            tabIndex={0}
-            aria-label={
-              col.isRemainder
-                ? lang === 'es'
-                  ? 'agregado — sin dossier'
-                  : 'aggregate — no dossier'
-                : `${name} — ${(col.avg_risk * 100).toFixed(1)}%`
-            }
-            onClick={() => handleClick(col)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') handleClick(col)
-            }}
-            onTouchStart={() => setHoveredKey(col.key)}
-            style={{
-              position: 'relative',
-              height: rowH,
-              cursor: col.isRemainder ? 'default' : 'pointer',
-              background: isHovered ? 'rgba(0,0,0,0.03)' : 'transparent',
-              borderLeft: `4px solid ${color}`,
-              overflow: 'hidden',
-            }}
-          >
+        // The whole row is the link (the remainder has no dossier: plain div).
+        const rowStyle = {
+          position: 'relative' as const,
+          display: 'flex',
+          alignItems: 'center',
+          minHeight: rowH,
+          cursor: col.isRemainder ? 'default' : 'pointer',
+          background: isHovered ? 'rgba(0,0,0,0.03)' : 'transparent',
+          borderLeft: `4px solid ${color}`,
+          overflow: 'hidden' as const,
+        }
+        const body = (
+          <>
             <div
               style={{
                 position: 'absolute',
@@ -696,7 +748,7 @@ function MobileMesa({
               }}
             />
             <div
-              className="flex items-center justify-between h-full px-2"
+              className="flex items-center justify-between w-full px-2"
               style={{
                 fontFamily: '"Playfair Display", Georgia, serif',
                 fontStyle: 'normal',
@@ -705,12 +757,28 @@ function MobileMesa({
                 color: 'var(--color-text-primary)',
               }}
             >
-              <span style={{ fontFamily: 'var(--font-family-mono, monospace)', fontStyle: 'normal', fontWeight: 600, fontSize: 13 }}>
-                {truncate(name, 22)}
+              <span className="min-w-0 break-words" style={{ fontFamily: 'var(--font-family-mono, monospace)', fontStyle: 'normal', fontWeight: 600, fontSize: 13 }}>
+                {name}
               </span>
-              <span>{(col.avg_risk * 100).toFixed(1)}%</span>
+              <span className="shrink-0 pl-2">{(col.avg_risk * 100).toFixed(1)}%</span>
             </div>
+          </>
+        )
+        return col.isRemainder || col.category_id === null ? (
+          <div key={col.key} style={rowStyle}>
+            {body}
           </div>
+        ) : (
+          <Link
+            key={col.key}
+            to={`/categories/${col.category_id}`}
+            aria-label={`${name} — ${(col.avg_risk * 100).toFixed(1)}%`}
+            className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+            style={rowStyle}
+            onTouchStart={() => setHoveredKey(col.key)}
+          >
+            {body}
+          </Link>
         )
       })}
     </div>

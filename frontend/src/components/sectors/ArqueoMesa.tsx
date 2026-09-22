@@ -21,12 +21,14 @@
  *   §2.1 Act I «La Mesa del Arqueo» + §3 NEW 1 — ArqueoMesa.tsx
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { LedgerRow } from './ExposureLedger'
 import { ownSpendShare } from './confoundScales'
 import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
+import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/components/network/plateLabels'
+import { useFontsReady } from '@/hooks/useMeasuredWidth'
 
 interface ArqueoMesaProps {
   rows: LedgerRow[]
@@ -35,15 +37,27 @@ interface ArqueoMesaProps {
 
 // ── Geometry constants ──────────────────────────────────────────────────────
 const READOUT_H = 20
+// Headroom inside the svg for the top tick and the annotation leaders, so the
+// plate no longer needs `overflow: visible` (PARALLAX D7 § Change 2).
+const TOP_PAD = 28
 const BAND_H = 300
 const STRIP_H = 4
 const LABEL_H = 18
 const GUTTER_W = 34
 const RIGHT_PAD = 8
 const MIN_COL_W = 6
+// Pre-font fallback only; once the faces land every name is measured.
 const NARROW_LABEL_THRESHOLD = 48
 const MOBILE_BREAKPOINT = 768
-const MOBILE_ROW_MIN_H = 18
+// 24px floor: each mobile row is a link, so it is also a 24px target.
+const MOBILE_ROW_MIN_H = 24
+
+// Glyph faces — the canvas measures exactly what the svg/HTML renders.
+const MONO = "'IBM Plex Mono', monospace"
+const LABEL_FONT = `13px ${MONO}`
+const LABEL_TRACKING = 0.04 // em — letterSpacing on the column names
+const ANNO_FONT = `11px ${MONO}`
+const ANNO_LINE_H = 13
 
 const OCHRE_STRONG = 'rgba(160, 104, 32, 0.7)'
 const OCHRE_FAINT = 'rgba(160, 104, 32, 0.35)'
@@ -115,9 +129,22 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
     return ordered.map((r) => floor + (r.totalMxn / totalSpend) * free)
   }, [ordered, totalSpend, bandW])
 
+  // A column shows its full name only when the measured name (+6px) fits the
+  // column; otherwise a circled index + legend entry. Measured in the plate's
+  // mono face once the web fonts are in (a fallback-face measure runs narrow).
+  const fontsReady = useFontsReady()
+  const labelFits = useMemo(() => {
+    if (!fontsReady) return colWidths.map((w) => w >= NARROW_LABEL_THRESHOLD)
+    return ordered.map((r, i) => {
+      const name = r.name.toUpperCase()
+      const w = measureLabel(name, LABEL_FONT, Number.POSITIVE_INFINITY, 16).width + name.length * 13 * LABEL_TRACKING
+      return w + 6 <= colWidths[i]
+    })
+  }, [fontsReady, ordered, colWidths])
+
   const narrowSet = useMemo(
-    () => ordered.map((r, i) => ({ row: r, w: colWidths[i] })).filter((d) => d.w < NARROW_LABEL_THRESHOLD),
-    [ordered, colWidths],
+    () => ordered.map((r, i) => ({ row: r, w: colWidths[i] })).filter((_, i) => !labelFits[i]),
+    [ordered, colWidths, labelFits],
   )
 
   const readoutText = useMemo(() => {
@@ -185,7 +212,7 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
             is sized to this, so it can never overhang the frame's border. */}
         <div ref={containerRef} className="w-full">
           {isMobile ? (
-            <MobileMesa rows={ordered} lang={lang} onSelect={goToSector} readoutText={readoutText} hoverId={hoverId} setHoverId={setHoverId} />
+            <MobileMesa rows={ordered} lang={lang} readoutText={readoutText} hoverId={hoverId} setHoverId={setHoverId} />
           ) : (
             <DesktopMesa
               rows={ordered}
@@ -237,6 +264,9 @@ function DesktopMesa({
   const yTicks = [0, 25, 50, 75, 100]
   const patternId = 'arqueo-fine'
   const denseId = 'arqueo-dense'
+  const svgH = TOP_PAD + BAND_H + STRIP_H + LABEL_H
+  const bandY = (share: number) => TOP_PAD + BAND_H * (1 - share)
+  const hoverIdx = hoverId === null ? -1 : rows.findIndex((r) => r.sectorId === hoverId)
 
   // x-offsets per column
   const xOffsets: number[] = []
@@ -254,9 +284,9 @@ function DesktopMesa({
       const share = ownSpendShare(r)
       const x0 = xOffsets[i]
       const x1 = xOffsets[i] + colWidths[i]
-      // Band-local coords: the readout strip is a sibling <div>, NOT part of
-      // this SVG, so the waterline must sit at the hatch top (no READOUT_H).
-      const y = BAND_H * (1 - share)
+      // The readout strip is a sibling <div>, NOT part of this SVG, so the
+      // waterline sits at the hatch top (TOP_PAD headroom, no READOUT_H).
+      const y = bandY(share)
       return `${x0.toFixed(1)},${y.toFixed(1)} ${x1.toFixed(1)},${y.toFixed(1)}`
     })
     .join(' ')
@@ -268,6 +298,44 @@ function DesktopMesa({
           .join(' · ')
       : ''
 
+  // ── The two computed annotations — HTML glyphs over the svg geometry ──
+  // Seated with placeLabels (bounded to the plate, re-anchored at the edges,
+  // the second dropped rather than overprinted); obstacles = the tick column
+  // and the two flag labels.
+  const annoWidth = (lines: string[]) =>
+    Math.max(...lines.map((l) => measureLabel(l, ANNO_FONT, Number.POSITIVE_INFINITY, ANNO_LINE_H).width))
+  const annoText: Record<string, [string, string]> = {}
+  const candidates: LabelCandidate[] = []
+  const wIdx = rows.findIndex((r) => r.sectorId === widest.sectorId)
+  if (wIdx >= 0) {
+    annoText.widest = lang === 'es'
+      ? [`mayor volumen — ${widest.name}`, `${formatCompactMXN(widest.varMxn)} de ${formatCompactMXN(widest.totalMxn)}`]
+      : [`largest volume — ${widest.name}`, `${formatCompactMXN(widest.varMxn)} of ${formatCompactMXN(widest.totalMxn)}`]
+    candidates.push({ id: 'widest', x: xOffsets[wIdx] + colWidths[wIdx] / 2, y: TOP_PAD + 30, width: annoWidth(annoText.widest), height: 2 * ANNO_LINE_H, above: 2 })
+  }
+  const tIdx = rows.findIndex((r) => r.sectorId === tallest.sectorId)
+  const tallestTop = bandY(ownSpendShare(tallest))
+  if (tIdx >= 0) {
+    const pct = (ownSpendShare(tallest) * 100).toFixed(0)
+    annoText.tallest = lang === 'es'
+      ? [`mayor saturación — ${tallest.name}`, `${pct}% de su propio gasto`]
+      : [`highest saturation — ${tallest.name}`, `${pct}% of its own spend`]
+    candidates.push({ id: 'tallest', x: xOffsets[tIdx] + colWidths[tIdx] / 2, y: tallestTop, width: annoWidth(annoText.tallest), height: 2 * ANNO_LINE_H, above: 14, below: 4 })
+  }
+  const flagLabelBox = (y: number, text: string, lead: number): LabelBox => ({
+    x0: GUTTER_W, y0: y - 16, x1: GUTTER_W + lead + measureLabel(text, ANNO_FONT, Number.POSITIVE_INFINITY, ANNO_LINE_H).width + 4, y1: y + 2,
+  })
+  const ownSpendLabel = lang === 'es' ? 'gasto propio' : 'own spend'
+  const placed = placeLabels(
+    candidates,
+    [
+      { x0: 0, y0: 0, x1: GUTTER_W, y1: svgH },
+      flagLabelBox(bandY(0.5), ownSpendLabel, 16),
+      flagLabelBox(bandY(0.8), '80%', 4),
+    ],
+    { x0: 0, y0: 0, x1: width, y1: TOP_PAD + BAND_H },
+  )
+
   return (
     <div>
       {/* Fixed readout strip — hover data on the left, persistent axis label on the right */}
@@ -276,12 +344,13 @@ function DesktopMesa({
         style={{ height: READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
-        <span style={{ flexShrink: 0, fontSize: 8, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+        <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
           {lang === 'es' ? '% del gasto propio observado' : '% of own spend flagged'}
         </span>
       </div>
 
-      <svg width={width} height={BAND_H + STRIP_H + LABEL_H} style={{ display: 'block', overflow: 'visible' }} role="img"
+      <div className="relative">
+      <svg width={width} height={svgH} style={{ display: 'block' }} role="img"
         aria-label={lang === 'es' ? 'Mosaico Marimekko: ancho por gasto sectorial, achurado por saturación observada' : 'Marimekko mosaic: width by sector spend, hatch by flagged saturation'}
       >
         <defs>
@@ -298,10 +367,10 @@ function DesktopMesa({
           <g key={t}>
             <text
               x={GUTTER_W - 6}
-              y={BAND_H * (1 - t / 100) + 3}
+              y={bandY(t / 100) + 4}
               textAnchor="end"
               fontFamily="'IBM Plex Mono', monospace"
-              fontSize={8.5}
+              fontSize={11}
               fill="var(--color-text-muted)"
             >
               {t}
@@ -315,14 +384,14 @@ function DesktopMesa({
           const w = colWidths[i]
           const share = ownSpendShare(r)
           const critShare = r.totalMxn > 0 ? Math.max(0, Math.min(1, r.criticalMxn / r.totalMxn)) : 0
-          const hatchY = BAND_H * (1 - share)
-          const denseY = BAND_H * (1 - critShare)
+          const hatchY = bandY(share)
+          const denseY = bandY(critShare)
           const isHover = hoverId === r.sectorId
           const isDimmed = hoverId !== null && !isHover
           const fill = sectorFill(r.sectorCode)
           const text = sectorText(r.sectorCode)
-          const showLabel = w >= NARROW_LABEL_THRESHOLD
           const narrowIdx = narrowSet.findIndex((d) => d.row.sectorId === r.sectorId)
+          const showLabel = narrowIdx < 0
 
           const ariaLabel =
             lang === 'es'
@@ -332,14 +401,14 @@ function DesktopMesa({
           return (
             <g key={r.sectorId}>
               {/* separator */}
-              {i > 0 && <line x1={x} y1={0} x2={x} y2={BAND_H} stroke="var(--color-border)" strokeWidth={1} />}
+              {i > 0 && <line x1={x} y1={TOP_PAD} x2={x} y2={TOP_PAD + BAND_H} stroke="var(--color-border)" strokeWidth={1} />}
 
               {/* fine hatch (own-spend share) */}
               <rect
                 x={x}
                 y={hatchY}
                 width={w}
-                height={BAND_H - hatchY}
+                height={TOP_PAD + BAND_H - hatchY}
                 fill={`url(#${patternId})`}
                 opacity={isHover ? 1.3 : isDimmed ? 0.55 : 1}
               />
@@ -349,20 +418,20 @@ function DesktopMesa({
                   x={x}
                   y={denseY}
                   width={w}
-                  height={BAND_H - denseY}
+                  height={TOP_PAD + BAND_H - denseY}
                   fill={`url(#${denseId})`}
                   opacity={isHover ? 1.3 : isDimmed ? 0.55 : 1}
                 />
               )}
 
               {/* sector baseline strip */}
-              <rect x={x} y={BAND_H} width={w} height={STRIP_H} fill={fill} opacity={isDimmed ? 0.55 : 1} />
+              <rect x={x} y={TOP_PAD + BAND_H} width={w} height={STRIP_H} fill={fill} opacity={isDimmed ? 0.55 : 1} />
 
               {/* label or circled tick */}
               {showLabel ? (
                 <text
                   x={x + w / 2}
-                  y={BAND_H + STRIP_H + 12}
+                  y={TOP_PAD + BAND_H + STRIP_H + 12}
                   textAnchor="middle"
                   fontFamily="'IBM Plex Mono', monospace"
                   fontSize={13}
@@ -375,7 +444,7 @@ function DesktopMesa({
               ) : (
                 <text
                   x={x + w / 2}
-                  y={BAND_H + STRIP_H + 12}
+                  y={TOP_PAD + BAND_H + STRIP_H + 12}
                   textAnchor="middle"
                   fontFamily="'IBM Plex Mono', monospace"
                   fontSize={13}
@@ -385,17 +454,20 @@ function DesktopMesa({
                 </text>
               )}
 
-              {/* hit target */}
+              {/* hit target — focus is drawn by the accent outline below */}
               <rect
                 x={x}
-                y={0}
+                y={TOP_PAD}
                 width={Math.max(w, 8)}
                 height={BAND_H}
                 fill="transparent"
                 tabIndex={0}
                 role="button"
                 aria-label={ariaLabel}
-                style={{ cursor: 'pointer', outline: 'none' }}
+                // The native ring would draw a second box; the accent outline
+                // rect below is the focus indicator (hover and focus alike).
+                className="focus-visible:outline-none"
+                style={{ cursor: 'pointer' }}
                 onMouseEnter={() => setHoverId(r.sectorId)}
                 onFocus={() => setHoverId(r.sectorId)}
                 onMouseLeave={() => setHoverId(null)}
@@ -412,27 +484,71 @@ function DesktopMesa({
           )
         })}
 
-        {/* Ruled flags */}
-        <line x1={GUTTER_W} y1={BAND_H * 0.5} x2={GUTTER_W + bandW} y2={BAND_H * 0.5} stroke={OCHRE_STRONG} strokeWidth={1} />
-        <text x={GUTTER_W + 4} y={BAND_H * 0.5 - 4} fontFamily="'EB Garamond', Georgia, serif" fontStyle="normal" fontSize={12} fill={OCHRE_STRONG}>
+        {/* Ruled flags — marks keep the ochre hairlines; their text reads in
+            accent-hover. Nothing here takes the pointer (the ½ line used to
+            steal hover from the column underneath). */}
+        <line x1={GUTTER_W} y1={bandY(0.5)} x2={GUTTER_W + bandW} y2={bandY(0.5)} stroke={OCHRE_STRONG} strokeWidth={1} pointerEvents="none" />
+        <text x={GUTTER_W + 4} y={bandY(0.5) - 4} fontFamily="'EB Garamond', Georgia, serif" fontStyle="normal" fontWeight={700} fontSize={13} fill="var(--color-accent-hover)" pointerEvents="none">
           ½
         </text>
-        <text x={GUTTER_W + 16} y={BAND_H * 0.5 - 4} fontFamily="'IBM Plex Mono', monospace" fontSize={8.5} fill={OCHRE_STRONG}>
-          {lang === 'es' ? 'gasto propio' : 'own spend'}
+        <text x={GUTTER_W + 16} y={bandY(0.5) - 4} fontFamily="'IBM Plex Mono', monospace" fontSize={11} fill="var(--color-accent-hover)" pointerEvents="none">
+          {ownSpendLabel}
         </text>
 
-        <line x1={GUTTER_W} y1={BAND_H * 0.2} x2={GUTTER_W + bandW} y2={BAND_H * 0.2} stroke={OCHRE_FAINT} strokeWidth={1} />
-        <text x={GUTTER_W + 4} y={BAND_H * 0.2 - 4} fontFamily="'IBM Plex Mono', monospace" fontSize={8.5} fill={OCHRE_FAINT}>
+        <line x1={GUTTER_W} y1={bandY(0.8)} x2={GUTTER_W + bandW} y2={bandY(0.8)} stroke={OCHRE_FAINT} strokeWidth={1} pointerEvents="none" />
+        <text x={GUTTER_W + 4} y={bandY(0.8) - 4} fontFamily="'IBM Plex Mono', monospace" fontSize={11} fill="var(--color-accent-hover)" pointerEvents="none">
           80%
         </text>
 
         {/* Waterline */}
-        <polyline points={waterlinePoints} fill="none" stroke={RISK_COLORS.critical} strokeWidth={1.5} />
+        <polyline points={waterlinePoints} fill="none" stroke={RISK_COLORS.critical} strokeWidth={1.5} pointerEvents="none" />
 
-        {/* Two computed annotations */}
-        <AnnotationWidest row={widest} xOffsets={xOffsets} colWidths={colWidths} rows={rows} lang={lang} />
-        <AnnotationTallest row={tallest} xOffsets={xOffsets} colWidths={colWidths} rows={rows} lang={lang} />
+        {/* Hover / keyboard-focus outline around the active column */}
+        {hoverIdx >= 0 && (
+          <rect
+            x={xOffsets[hoverIdx] + 1}
+            y={TOP_PAD + 1}
+            width={Math.max(2, colWidths[hoverIdx] - 2)}
+            height={BAND_H - 2}
+            fill="none"
+            stroke="var(--color-accent)"
+            strokeWidth={2}
+            pointerEvents="none"
+          />
+        )}
+
+        {/* Annotation leaders (the glyphs are HTML, below) */}
+        {placed.map((p) => {
+          const c = candidates.find((k) => k.id === p.id)
+          if (!c) return null
+          const [y1, y2] = p.id === 'widest'
+            ? [TOP_PAD + 30, TOP_PAD + 40]
+            : p.box.y0 >= tallestTop ? [tallestTop, p.box.y0 - 2] : [p.box.y1 + 2, tallestTop]
+          return <line key={p.id} x1={c.x} y1={y1} x2={c.x} y2={y2} stroke="var(--color-text-muted)" strokeWidth={0.8} pointerEvents="none" />
+        })}
       </svg>
+      {placed.map((p) => (
+        <div
+          key={p.id}
+          aria-hidden="true"
+          className="absolute pointer-events-none whitespace-nowrap"
+          style={{
+            left: p.box.x0,
+            top: p.box.y0,
+            width: p.box.x1 - p.box.x0,
+            textAlign: p.align,
+            fontFamily: MONO,
+            fontSize: 11,
+            lineHeight: `${ANNO_LINE_H}px`,
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          {annoText[p.id as string]?.[0]}
+          <br />
+          {annoText[p.id as string]?.[1]}
+        </div>
+      ))}
+      </div>
 
       {legendLine && (
         <p className="mt-2 font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
@@ -443,124 +559,16 @@ function DesktopMesa({
   )
 }
 
-// ── Annotations (Reuters discipline: exactly two, computed, argmax) ────────
-function AnnotationWidest({
-  row,
-  xOffsets,
-  colWidths,
-  rows,
-  lang,
-}: {
-  row: LedgerRow
-  xOffsets: number[]
-  colWidths: number[]
-  rows: LedgerRow[]
-  lang: 'en' | 'es'
-}) {
-  const idx = rows.findIndex((r) => r.sectorId === row.sectorId)
-  if (idx < 0) return null
-  const x = xOffsets[idx] + colWidths[idx] / 2
-  const y = 30
-  const line1 =
-    lang === 'es' ? `mayor volumen — ${row.name}` : `largest volume — ${row.name}`
-  const line2 =
-    lang === 'es'
-      ? `${formatCompactMXN(row.varMxn)} de ${formatCompactMXN(row.totalMxn)}`
-      : `${formatCompactMXN(row.varMxn)} of ${formatCompactMXN(row.totalMxn)}`
-  return (
-    <g>
-      <line x1={x} y1={y} x2={x} y2={y + 10} stroke="var(--color-text-muted)" strokeWidth={0.8} />
-      <text
-        x={x}
-        y={y - 12}
-        textAnchor="middle"
-        fontFamily="'IBM Plex Mono', monospace"
-        fontStyle="normal"
-        fontSize={8.5}
-        fill="var(--color-text-secondary)"
-      >
-        {line1}
-      </text>
-      <text
-        x={x}
-        y={y - 2}
-        textAnchor="middle"
-        fontFamily="'IBM Plex Mono', monospace"
-        fontStyle="normal"
-        fontSize={8.5}
-        fill="var(--color-text-secondary)"
-      >
-        {line2}
-      </text>
-    </g>
-  )
-}
-
-function AnnotationTallest({
-  row,
-  xOffsets,
-  colWidths,
-  rows,
-  lang,
-}: {
-  row: LedgerRow
-  xOffsets: number[]
-  colWidths: number[]
-  rows: LedgerRow[]
-  lang: 'en' | 'es'
-}) {
-  const idx = rows.findIndex((r) => r.sectorId === row.sectorId)
-  if (idx < 0) return null
-  const share = ownSpendShare(row)
-  const x = xOffsets[idx] + colWidths[idx] / 2
-  const yTop = BAND_H * (1 - share)
-  const labelY = Math.max(10, yTop - 14)
-  const pct = (share * 100).toFixed(0)
-  const line1 =
-    lang === 'es' ? `mayor saturación — ${row.name}` : `highest saturation — ${row.name}`
-  const line2 =
-    lang === 'es' ? `${pct}% de su propio gasto` : `${pct}% of its own spend`
-  return (
-    <g>
-      <line x1={x} y1={labelY + 2} x2={x} y2={yTop} stroke="var(--color-text-muted)" strokeWidth={0.8} />
-      <text
-        x={x}
-        y={labelY - 12}
-        textAnchor="middle"
-        fontFamily="'IBM Plex Mono', monospace"
-        fontStyle="normal"
-        fontSize={8.5}
-        fill="var(--color-text-secondary)"
-      >
-        {line1}
-      </text>
-      <text
-        x={x}
-        y={labelY - 2}
-        textAnchor="middle"
-        fontFamily="'IBM Plex Mono', monospace"
-        fontStyle="normal"
-        fontSize={8.5}
-        fill="var(--color-text-secondary)"
-      >
-        {line2}
-      </text>
-    </g>
-  )
-}
-
 // ── Mobile rotated mesa ──────────────────────────────────────────────────────
 function MobileMesa({
   rows,
   lang,
-  onSelect,
   readoutText,
   hoverId,
   setHoverId,
 }: {
   rows: LedgerRow[]
   lang: 'en' | 'es'
-  onSelect: (sectorId: number) => void
   readoutText: string
   hoverId: number | null
   setHoverId: (id: number | null) => void
@@ -578,7 +586,7 @@ function MobileMesa({
     <div>
       <div
         className="font-mono tabular-nums mb-2"
-        style={{ height: READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
+        style={{ minHeight: READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
       >
         {readoutText}
       </div>
@@ -592,23 +600,16 @@ function MobileMesa({
               ? `${row.name} — ${formatCompactMXN(row.totalMxn)} de gasto, ${formatCompactMXN(row.varMxn)} observado (${(share * 100).toFixed(0)}% del gasto propio)`
               : `${row.name} — ${formatCompactMXN(row.totalMxn)} spend, ${formatCompactMXN(row.varMxn)} flagged (${(share * 100).toFixed(0)}% of own spend)`
           return (
-            <div
+            <Link
               key={row.sectorId}
-              role="button"
-              tabIndex={0}
+              to={`/sectors/${row.sectorId}`}
               aria-label={ariaLabel}
+              className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
               style={{ height: h, position: 'relative', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
-              onClick={() => onSelect(row.sectorId)}
               onMouseEnter={() => setHoverId(row.sectorId)}
               onMouseLeave={() => setHoverId(null)}
               onFocus={() => setHoverId(row.sectorId)}
               onBlur={() => setHoverId(null)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  onSelect(row.sectorId)
-                }
-              }}
             >
               <svg width="100%" height={h} style={{ display: 'block' }} preserveAspectRatio="none" viewBox={`0 0 ${rowW} ${h}`}>
                 <defs>
@@ -638,11 +639,11 @@ function MobileMesa({
               </span>
               <span
                 className="absolute font-mono"
-                style={{ right: 6, top: 2, fontSize: 8, color: 'var(--color-text-muted)' }}
+                style={{ right: 6, top: 2, fontSize: 11, color: 'var(--color-text-muted)' }}
               >
                 {(spendShare * 100).toFixed(1)}%
               </span>
-            </div>
+            </Link>
           )
         })}
       </div>
