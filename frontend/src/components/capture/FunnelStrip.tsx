@@ -93,6 +93,13 @@ export function FunnelStrip({ tiers, lang }: Props) {
           </div>
         )
       })}
+      {/* The bar LENGTH is log-scaled; only the counts carry the quantity. That
+          was a code comment and an invisible contract with the reader. */}
+      <p className="font-mono text-[12px] tracking-[0.06em] text-text-muted">
+        {lang === 'en'
+          ? 'bar length log-scaled for legibility · the counts are the measure'
+          : 'largo en escala logarítmica · las cifras son la medida'}
+      </p>
     </section>
   )
 }

@@ -150,9 +150,22 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
             : 'La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada línea merece investigación — no acusación.'}
         </p>
         <p className="mb-3 font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
-          {lang === 'en'
-            ? `dashed line = the ${ceil}% capture ceiling · zinc below · red above`
-            : `línea punteada = el techo de captura del ${ceil}% · zinc abajo · rojo arriba`}
+          {(lang === 'en'
+            ? [
+                `dashed rule = the ${ceil}% capture ceiling`,
+                'zinc below',
+                'red above',
+                'faint dashes = years without data',
+                '* 2025 partial, to Sep 28',
+              ]
+            : [
+                `regla punteada = el techo de captura del ${ceil}%`,
+                'zinc abajo',
+                'rojo arriba',
+                'punteado tenue = años sin datos',
+                '* 2025 parcial, al 28 sep',
+              ]
+          ).join(' · ')}
         </p>
       </div>
 

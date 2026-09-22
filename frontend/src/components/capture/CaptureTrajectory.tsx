@@ -24,6 +24,12 @@ const ZINC = '#71717a'
 const RED_INK = RISK_TEXT_COLORS.critical
 /** Below this px-per-year the card falls back to min/peak/max ticks. */
 const YEAR_TICK_ROOM = 40
+/**
+ * The upstream federal feed froze at Sep 28 2025, so a 2025 point is a partial
+ * year drawn beside twelve whole ones. Six of the thirteen series end there and
+ * Exhibit A's peak AND crossing are both 2025 — the figure has to say so.
+ */
+const PARTIAL_YEAR = 2025
 
 interface Props {
   timeline: CapturePoint[]
@@ -74,7 +80,15 @@ export function CaptureTrajectory({
 
   // Build colored segments; split any segment that straddles the ceiling so the
   // color switches exactly at 50% (true Reuters recolor — no overlap).
-  const segs: Array<{ x1: number; y1: number; x2: number; y2: number; color: string }> = []
+  const segs: Array<{
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+    color: string
+    /** True when the two ends are more than one year apart (see `bridged`). */
+    gap: boolean
+  }> = []
   // x where the path pierces the ceiling on its way into `crossYear` — the
   // callout anchors here, not on the crossing year's dot, which sits further
   // right than the piercing. Keying the pierce to `crossYear` matters on a
@@ -91,15 +105,19 @@ export function CaptureTrajectory({
     const by = y(b.share_pct)
     const aAbove = a.share_pct >= ceil
     const bAbove = b.share_pct >= ceil
+    // The backend drops vendor-years under 1M MXN, so six of the thirteen
+    // series have holes. A solid segment across one reads as a measured climb
+    // through years nobody measured; a bridged segment is drawn dashed.
+    const gap = b.year - a.year > 1
     if (aAbove === bAbove) {
-      segs.push({ x1: ax, y1: ay, x2: bx, y2: by, color: aAbove ? RED : ZINC })
+      segs.push({ x1: ax, y1: ay, x2: bx, y2: by, color: aAbove ? RED : ZINC, gap })
     } else {
       const t = (ceil - a.share_pct) / (b.share_pct - a.share_pct)
       const cx = ax + t * (bx - ax)
       const cy = y(ceil)
       if (bAbove && b.year === crossYear) pierceX = cx
-      segs.push({ x1: ax, y1: ay, x2: cx, y2: cy, color: aAbove ? RED : ZINC })
-      segs.push({ x1: cx, y1: cy, x2: bx, y2: by, color: bAbove ? RED : ZINC })
+      segs.push({ x1: ax, y1: ay, x2: cx, y2: cy, color: aAbove ? RED : ZINC, gap })
+      segs.push({ x1: cx, y1: cy, x2: bx, y2: by, color: bAbove ? RED : ZINC, gap })
     }
   }
 
@@ -236,7 +254,6 @@ export function CaptureTrajectory({
           stroke={RED}
           strokeWidth={0.75}
           strokeDasharray="3 3"
-          opacity={0.5}
         />
         {/* trajectory segments (recolored at the crossing) */}
         {segs.map((s, i) => (
@@ -248,6 +265,8 @@ export function CaptureTrajectory({
             y2={s.y2}
             stroke={s.color}
             strokeWidth={s.color === RED ? (isLead ? 2.4 : 1.8) : isLead ? 1.8 : 1.4}
+            strokeDasharray={s.gap ? '2 4' : undefined}
+            opacity={s.gap ? 0.55 : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -259,7 +278,15 @@ export function CaptureTrajectory({
             cx={x(p.year)}
             cy={y(p.share_pct)}
             r={p.share_pct >= ceil ? (isLead ? 3 : 2.2) : isLead ? 2.4 : 1.6}
-            fill={p.share_pct >= ceil ? RED : ZINC}
+            fill={
+              p.year >= PARTIAL_YEAR
+                ? 'var(--color-background-card)'
+                : p.share_pct >= ceil
+                  ? RED
+                  : ZINC
+            }
+            stroke={p.year >= PARTIAL_YEAR ? (p.share_pct >= ceil ? RED : ZINC) : undefined}
+            strokeWidth={p.year >= PARTIAL_YEAR ? 1.2 : undefined}
           />
         ))}
         {/* year ticks */}
@@ -273,7 +300,7 @@ export function CaptureTrajectory({
             fontFamily="JetBrains Mono, monospace"
             fill="var(--color-text-muted)"
           >
-            {isLead ? yr : `'${String(yr).slice(2)}`}
+            {(isLead ? String(yr) : `'${String(yr).slice(2)}`) + (yr >= PARTIAL_YEAR ? '*' : '')}
           </text>
         ))}
         {/* crossing-year callout */}
