@@ -229,7 +229,8 @@ export function CaptureTrajectory({
   const tickAnchor = (xp: number): 'start' | 'middle' | 'end' =>
     xp - PAD < 14 ? 'start' : W - PAD - xp < 14 ? 'end' : 'middle'
 
-  const peakLabel = `▲ ${peakSharePct}% (${peakYear})`
+  // One decimal, like the sentence beside it — the figure printed "70.01%".
+  const peakLabel = `▲ ${peakSharePct.toFixed(1)}% (${peakYear})`
 
   return (
     <div ref={box} className="w-full">

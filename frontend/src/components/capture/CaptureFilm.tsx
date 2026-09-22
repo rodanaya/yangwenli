@@ -51,6 +51,37 @@ const receiptsLabel = (lang: 'en' | 'es', expanded: boolean) =>
       ? 'recibos ↑'
       : 'recibos ↓'
 
+/**
+ * Exhibit A's standfirst.
+ *
+ * Three corrections from the panel: the latest share is "as of <year>", not
+ * "today" (six of the thirteen series end in 2023 or 2024); the money is the
+ * window total, not the share above the ceiling; and when the peak year IS the
+ * latest year the two clauses collapse, because "peaked 70.01% ... holds 70.01%
+ * today" printed the same number twice 300px apart.
+ */
+const leadSentence = (c: CaptureItem, holds: boolean, lang: 'en' | 'es') => {
+  const peak = c.peak_share_pct.toFixed(1)
+  const latest = c.latest_share_pct.toFixed(1)
+  const mxn = formatCompactMXN(c.cumulative_value_mxn)
+  if (holds && c.peak_year === c.latest_year) {
+    return lang === 'en'
+      ? `holds ${latest}% as of ${c.latest_year}, its peak · ${mxn} over the window`
+      : `sostiene ${latest}% al cierre de ${c.latest_year}, su pico · ${mxn} en la ventana`
+  }
+  const now =
+    lang === 'en'
+      ? holds
+        ? `holds ${latest}% as of ${c.latest_year}`
+        : `fell to ${latest}% by ${c.latest_year}`
+      : holds
+        ? `sostiene ${latest}% al cierre de ${c.latest_year}`
+        : `cayó a ${latest}% para ${c.latest_year}`
+  return lang === 'en'
+    ? `peaked ${peak}% in ${c.peak_year} · ${now} · ${mxn} over the window`
+    : `llegó a ${peak}% en ${c.peak_year} · ${now} · ${mxn} en la ventana`
+}
+
 const crossingYear = (c: CaptureItem, ceil: number) =>
   [...c.timeline].sort((a, b) => a.year - b.year).find((p) => p.share_pct >= ceil)?.year ??
   c.peak_year
@@ -397,9 +428,7 @@ function LeadExhibit({
             <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="md" />
           </div>
           <p className="mt-3 font-mono text-[13px] text-text-secondary tabular-nums leading-relaxed">
-            {lang === 'en'
-              ? `peaked ${c.peak_share_pct}% in ${c.peak_year} · ${holds ? `holds ${c.latest_share_pct}% today` : `fell to ${c.latest_share_pct}%`} · ${formatCompactMXN(c.cumulative_value_mxn)} captured`
-              : `llegó a ${c.peak_share_pct}% en ${c.peak_year} · ${holds ? `sostiene ${c.latest_share_pct}% hoy` : `cayó a ${c.latest_share_pct}%`} · ${formatCompactMXN(c.cumulative_value_mxn)} capturados`}
+            {leadSentence(c, holds, lang)}
           </p>
           <div className="mt-3 flex items-center gap-2 flex-wrap">
             <CrossSeal c={c} lang={lang} />

@@ -69,7 +69,6 @@ export function MoneySledgehammer({
           color: accentColor,
           letterSpacing: '-0.03em',
         }}
-        aria-hidden
       >
         {value}
       </div>

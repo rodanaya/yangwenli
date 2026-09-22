@@ -69,10 +69,11 @@ export function CaptureExpand({
     return { share: landscape.ticks[idx][3], pct }
   }, [landscape, c.institution_id])
 
-  const maxVal = useMemo(
-    () => Math.max(1, ...c.timeline.map((p) => p.value_mxn)),
+  const tallest = useMemo(
+    () => c.timeline.reduce((a, p) => (p.value_mxn > a.value_mxn ? p : a), c.timeline[0]),
     [c.timeline],
   )
+  const maxVal = Math.max(1, tallest?.value_mxn ?? 1)
   const ceil = thresholds.ceil_share_pct
   const riskLevel = ariaEntry != null ? getRiskLevelFromScore(ariaEntry.avg_risk_score) : null
 
@@ -100,12 +101,13 @@ export function CaptureExpand({
               const h = 4 + 44 * (p.value_mxn / maxVal)
               return (
                 <div key={p.year} className="flex flex-col items-center gap-1" title={`${p.year} · ${p.share_pct}% · ${formatCompactMXN(p.value_mxn)}`}>
+                  <span className="sr-only">{`${p.year} · ${p.share_pct}% · ${formatCompactMXN(p.value_mxn)}`}</span>
                   <div
+                    aria-hidden="true"
                     style={{
                       width: 12,
                       height: h,
                       background: p.share_pct >= ceil ? 'var(--color-risk-critical)' : '#71717a',
-                      opacity: p.share_pct >= ceil ? 0.85 : 0.5,
                     }}
                   />
                   <span className="font-mono text-[10px] text-text-muted tabular-nums">
@@ -117,6 +119,7 @@ export function CaptureExpand({
         </div>
         <p className="mt-2 font-mono text-[13px] text-text-muted tabular-nums">
           {lang === 'en' ? 'bars = MXN awarded per year · red ≥ 50%' : 'barras = MXN adjudicados por año · rojo ≥ 50%'}
+          {tallest ? ` · ${lang === 'en' ? 'tallest' : 'la mayor'} = ${formatCompactMXN(tallest.value_mxn)} (${tallest.year})` : ''}
         </p>
       </div>
 
@@ -198,8 +201,8 @@ export function CaptureExpand({
           {fieldFacts && (
             <p>
               {lang === 'en'
-                ? `№1 vendor holds ${fieldFacts.share}% of the record — more concentrated than ${fieldFacts.pct}% of the field`
-                : `El №1 acumula ${fieldFacts.share}% del registro — más concentrada que el ${fieldFacts.pct}% del campo`}
+                ? `Across the full 2002–2025 record, the №1 vendor holds ${fieldFacts.share}% — more concentrated than ${fieldFacts.pct}% of the field`
+                : `En todo el registro 2002–2025, el №1 acumula ${fieldFacts.share}% — más concentrada que el ${fieldFacts.pct}% del campo`}
             </p>
           )}
           {instDetail?.direct_award_rate != null && (
@@ -225,7 +228,7 @@ export function CaptureExpand({
           <EntityIdentityChip
             type="pattern"
             id="P6"
-            name={lang === 'en' ? 'Capture pattern (P6)' : 'Patrón de captura (P6)'}
+            name={lang === 'en' ? 'Capture pattern' : 'Patrón de captura'}
             size="sm"
             fullName
           />

@@ -57,8 +57,8 @@ export default function Relationships() {
     return [
       {
         count: landscape.qualifying_count,
-        labelEn: 'federal institutions with over 100M MXN on record',
-        labelEs: 'instituciones federales con más de 100M MXN en el registro',
+        labelEn: 'institutions with over 100M MXN on record',
+        labelEs: 'instituciones con más de 100M MXN en el registro',
         color: BAND_COLOR.low,
       },
       {
@@ -166,26 +166,26 @@ export default function Relationships() {
             </h2>
             <MoneySledgehammer
               value={formatCompactMXN(sum119)}
-              valueSub={lang === 'en' ? formatCompactUSD(sum119) : undefined}
+              valueSub={lang === 'en' ? `≈${formatCompactUSD(sum119)}` : undefined}
               eyebrow={
                 lang === 'en'
-                  ? `ACROSS THESE ${landscape.captured_now_count} INSTITUTIONS, ONE VENDOR HOLDS THE MAJORITY OF`
-                  : `EN ESTAS ${landscape.captured_now_count} INSTITUCIONES, UN SOLO PROVEEDOR CONCENTRA LA MAYORÍA DE`
+                  ? `ACROSS THESE ${landscape.captured_now_count} INSTITUTIONS, A SINGLE VENDOR EACH HOLDS THE MAJORITY OF`
+                  : `EN ESTAS ${landscape.captured_now_count} INSTITUCIONES, UN SOLO PROVEEDOR EN CADA UNA CONCENTRA LA MAYORÍA DE`
               }
               deck={
                 lang === 'en'
-                  ? 'of recorded spend — cumulative across the full record, not one year’s flow.'
+                  ? 'in recorded spend — cumulative across the full record, not one year’s flow.'
                   : 'del gasto registrado — acumulado en todo el registro, no el flujo de un año.'
               }
               microStats={[
                 { value: capData?.total_captures != null ? String(capData.total_captures) : '—', label: lang === 'en' ? 'built year by year' : 'construidas año con año' },
                 { value: landscape.qualifying_count.toLocaleString(), label: lang === 'en' ? 'in the field' : 'en el campo' },
-                { value: landscape.aria_p6_total.toLocaleString(), label: lang === 'en' ? 'vendor fingerprints (P6)' : 'huellas de proveedor (P6)' },
+                { value: landscape.aria_p6_total.toLocaleString(), label: lang === 'en' ? 'vendor fingerprints' : 'huellas de proveedor' },
               ]}
               ariaLabel={
                 lang === 'en'
-                  ? `Across ${landscape.captured_now_count} institutions, one vendor holds the majority of ${formatCompactMXN(sum119)} of recorded spend, cumulative.`
-                  : `En ${landscape.captured_now_count} instituciones, un solo proveedor concentra la mayoría de ${formatCompactMXN(sum119)} del gasto registrado, acumulado.`
+                  ? 'The reckoning: the cumulative recorded spend of the captured institutions.'
+                  : 'El saldo: el gasto registrado acumulado de las instituciones capturadas.'
               }
             />
           </section>
@@ -218,8 +218,8 @@ export default function Relationships() {
                 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}
               >
                 {lang === 'en'
-                  ? `Computed over ${capData.total_unfiltered} (institution, vendor) candidates with at least ${capData.thresholds.min_years} years of data. Thresholds: floor ${capData.thresholds.floor_share_pct}%, ceiling ${capData.thresholds.ceil_share_pct}%. Ranking: Δshare × √(captured MXN). Data: COMPRANET federal contracts 2018–2025. The trajectory recolors at the ${capData.thresholds.ceil_share_pct}% ceiling — zinc below, red above — so spikes and reversals read as honestly as clean climbs.`
-                  : `Calculado sobre ${capData.total_unfiltered} candidatos (institución, proveedor) con al menos ${capData.thresholds.min_years} años de datos. Umbrales: piso ${capData.thresholds.floor_share_pct}%, techo ${capData.thresholds.ceil_share_pct}%. Ranking: Δparticipación × √(valor MXN capturado). Datos: COMPRANET contratos federales 2018–2025. La trayectoria recolorea en el techo del ${capData.thresholds.ceil_share_pct}% — zinc abajo, rojo arriba — para que los picos y reversiones se lean tan honestamente como los ascensos limpios.`}
+                  ? `Screened ${landscape ? landscape.qualifying_count.toLocaleString() : '—'} institutions; ${capData.total_captures} (institution, vendor) pairs passed: at least ${capData.thresholds.min_years} years of data, floor ${capData.thresholds.floor_share_pct}%, ceiling ${capData.thresholds.ceil_share_pct}%. Ranking: Δshare × √(captured MXN). Data: COMPRANET contracts 2018–2025, horizon Sep 28 2025. The trajectory recolors at the ${capData.thresholds.ceil_share_pct}% ceiling — zinc below, red above — so spikes and reversals read as honestly as clean climbs.`
+                  : `Se revisaron ${landscape ? landscape.qualifying_count.toLocaleString() : '—'} instituciones; ${capData.total_captures} pares (institución, proveedor) pasaron: al menos ${capData.thresholds.min_years} años de datos, piso ${capData.thresholds.floor_share_pct}%, techo ${capData.thresholds.ceil_share_pct}%. Ranking: Δparticipación × √(valor MXN capturado). Datos: COMPRANET contratos 2018–2025, horizonte 28 sep 2025. La trayectoria recolorea en el techo del ${capData.thresholds.ceil_share_pct}% — zinc abajo, rojo arriba — para que los picos y reversiones se lean tan honestamente como los ascensos limpios.`}
               </p>
             </div>
           </>
