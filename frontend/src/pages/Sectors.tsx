@@ -20,8 +20,10 @@ import { sectorApi } from '@/api/client'
 import {
   SECTOR_COLORS,
   RISK_COLORS,
+  RISK_TEXT_COLORS,
   getRiskLevelFromScore,
   getSectorName,
+  getSectorTextColor,
 } from '@/lib/constants'
 import type { SectorStatistics } from '@/api/types'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -129,7 +131,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
               </span>
               <span
                 className="text-[13px] font-mono font-bold uppercase tracking-[0.12em] flex-1"
-                style={{ color }}
+                style={{ color: getSectorTextColor(sectorCode) }}
               >
                 {getSectorName(sectorCode, isEs ? 'es' : 'en')}
               </span>
@@ -149,7 +151,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
               const sbDotClass =
                 (cat.single_bid_pct ?? 0) > 25 ? 'bg-risk-critical'
                 : (cat.single_bid_pct ?? 0) >= 15 ? 'bg-risk-high'
-                : 'bg-zinc-400'
+                : 'bg-text-muted'
               const barWidth = maxSpend > 0 ? Math.min(100, (cat.total_value / maxSpend) * 100) : 0
 
               return (
@@ -185,7 +187,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
                   </div>
                   <div
                     className="flex-shrink-0 font-mono text-xs font-bold tabular-nums w-14 text-right"
-                    style={{ color: RISK_COLORS[riskLevel] }}
+                    style={{ color: RISK_TEXT_COLORS[riskLevel] }}
                   >
                     {(cat.avg_risk * 100).toFixed(1)}%
                   </div>
@@ -472,9 +474,9 @@ export function Sectors() {
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
             <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               {lang === 'es' ? 'Arqueo de caja federal' : 'Federal cash count'}
-              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+              <span aria-hidden="true" style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               COMPRANET 2002–2025
-              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+              <span aria-hidden="true" style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               v0.8.5
             </span>
           </div>
@@ -682,7 +684,7 @@ export function Sectors() {
                           ? '§ La captura · cuánto controla el líder de cada categoría'
                           : '§ The capture · how much the leader of each category holds'}
                       </h2>
-                      <span className="text-[13px] text-text-muted/50 font-mono hidden sm:block">
+                      <span className="text-[13px] text-text-muted font-mono hidden sm:block">
                         {lang === 'es'
                           ? 'las 12 categorías de mayor gasto'
                           : 'the 12 largest categories by spend'}
@@ -718,7 +720,7 @@ export function Sectors() {
                                 setSearchParams(next, { replace: true })
                               }}
                               className={cn(
-                                'px-2 py-1 text-[13px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
+                                'min-h-6 px-2 py-1 text-[13px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
                                 catSortKey === key
                                   ? 'bg-text-primary text-background border-transparent'
                                   : 'text-text-muted border-border hover:text-text-secondary',
@@ -802,7 +804,7 @@ export function Sectors() {
                     return (
                       <div className="rounded-sm border border-border overflow-hidden">
                         {/* Column headers */}
-                        <div className="flex items-center gap-4 px-5 py-1.5 bg-background-elevated border-b border-border text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted/50">
+                        <div className="flex items-center gap-4 px-5 py-1.5 bg-background-elevated border-b border-border text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                           <span className="w-8 flex-shrink-0">#</span>
                           <span className="flex-1">{lang === 'es' ? 'Categoría' : 'Category'}</span>
                           <span className="flex-shrink-0 min-w-[90px] text-right">{lang === 'es' ? 'Gasto' : 'Spend'}</span>
@@ -824,7 +826,7 @@ export function Sectors() {
                               ? 'bg-risk-critical'
                               : sbPct >= 15
                                 ? 'bg-risk-high'
-                                : 'bg-zinc-400'
+                                : 'bg-text-muted'
 
                           return (
                             <div key={cat.category_id}>
@@ -855,31 +857,31 @@ export function Sectors() {
                                     />
                                     {/* Top vendor + institution — inline single row */}
                                     {(cat.top_vendor || cat.top_institution) && (
-                                      <span className="flex items-center gap-1.5 text-[12px] text-text-muted/70 font-mono">
+                                      <span className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-text-muted font-mono">
                                         {cat.top_vendor && (
                                           <EntityIdentityChip
                                             type="vendor"
                                             id={cat.top_vendor.id}
                                             name={cat.top_vendor.name}
-                                            size="xs"
+                                            size="sm"
                                             hideIcon
+                                            fullName
+                                            className="inline-flex w-auto"
                                             sectorCode={cat.sector_code ?? null}
                                           />
                                         )}
                                         {cat.top_vendor && cat.top_institution && (
-                                          <span className="opacity-40">·</span>
+                                          <span className="opacity-40" aria-hidden="true">·</span>
                                         )}
                                         {cat.top_institution && (
                                           <EntityIdentityChip
                                             type="institution"
                                             id={cat.top_institution.id}
-                                            name={
-                                              cat.top_institution.name.length > 28
-                                                ? cat.top_institution.name.slice(0, 28) + '…'
-                                                : cat.top_institution.name
-                                            }
-                                            size="xs"
+                                            name={cat.top_institution.name}
+                                            size="sm"
                                             hideIcon
+                                            fullName
+                                            className="inline-flex w-auto"
                                           />
                                         )}
                                       </span>
@@ -909,7 +911,7 @@ export function Sectors() {
                                     </div>
                                     <div
                                       className="font-mono text-[13px] font-bold tabular-nums text-right"
-                                      style={{ color: RISK_COLORS[riskLevel] }}
+                                      style={{ color: RISK_TEXT_COLORS[riskLevel] }}
                                     >
                                       {(cat.avg_risk * 100).toFixed(1)}%
                                     </div>
@@ -919,7 +921,8 @@ export function Sectors() {
                                 <div className="flex-shrink-0 flex items-center justify-end gap-1 min-w-[80px]">
                                   <span
                                     className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`}
-                                    title={`${sbPct.toFixed(1)}% single-bid`}
+                                    role="img"
+                                    title={`${sbPct.toFixed(1)}% ${lang === 'es' ? 'licitación con un solo postor' : 'single-bid'}`}
                                     aria-label={`${sbPct.toFixed(1)}% ${lang === 'es' ? 'licitación con un solo postor' : 'single-bid'}`}
                                   />
                                   <div className="font-mono text-sm tabular-nums text-text-secondary">
