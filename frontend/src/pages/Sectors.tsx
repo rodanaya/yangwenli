@@ -1,11 +1,12 @@
 /**
  * Sectors — 12 Sectors of Mexican Federal Procurement
  *
- * WHO view: "El Libro Mayor de la Exposición / The Exposure Ledger"
- * Single-page ranked exposure ledger. Lede strip + CumulativeRibbon +
- * ExposureLedger table + ∑ sum rule. No card grid, no beeswarm, no slope chart.
+ * WHO view — Folio·II «El Arqueo»: ArqueoMesa Marimekko → §A confound lede →
+ * ConfoundPlate (default) / ExposureLedger (toggle, ?reg=register) →
+ * SelfCaptureBand (the climbers) → FeDeArqueo.
  *
- * WHAT view: category tree/list — untouched from previous version.
+ * WHAT view (?view=categories): ArqueoMesaCategorias → CategoryCaptureDumbbell
+ * → catalog list / CategoryTreeView (?cview=) → FeDeArqueo.
  */
 
 import { useMemo, useState } from 'react'

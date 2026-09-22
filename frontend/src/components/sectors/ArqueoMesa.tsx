@@ -14,7 +14,7 @@
  * share. Because width × hatch-height = flagged pesos, the hatched AREA of
  * each column IS the flagged value — no separate bar, no dot, no circle.
  *
- * Pure SVG, ResizeObserver-driven width (like CategorySectorSwimlane), no
+ * Pure SVG, ResizeObserver-driven width (1 svg unit = 1 px), no
  * recharts. Self-contained: no shared chart primitives, no dots.
  *
  * Spec: docs/../.claude/designs/sectors-fable-2026-07-02-spec.md
