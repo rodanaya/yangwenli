@@ -50,6 +50,7 @@ export function CaseDocketRail({
   totalCases,
   sectorName,
   sectorColor,
+  ink,
   sections,
   lang,
 }: {
@@ -57,8 +58,10 @@ export function CaseDocketRail({
   totalCases: number | null
   sectorName: string | null
   /** Resolved sector accent (defaults to RISK_COLORS.critical upstream) —
-   *  runs the card's left spine and the § index numerals (W3). */
+   *  runs the card's left inset spine (W3). */
   sectorColor: string
+  /** AA-safe ink for the § index numerals — `getSectorTextColor(code)`. */
+  ink: string
   sections: { id: string; numeral: string; label: string }[]
   lang: Lang
 }) {
@@ -184,7 +187,7 @@ export function CaseDocketRail({
                   fontStyle: 'normal',
                   fontWeight: 800,
                   fontSize: 13,
-                  color: sectorColor,
+                  color: ink,
                   minWidth: 18,
                 }}
               >
@@ -235,14 +238,18 @@ export function CostInArchive({
   sectorId,
   sectorName,
   accentKind,
+  ink,
   allCases,
   lang,
 }: {
   amount: number
   sectorId: number | null
   sectorName: string | null
-  /** Sector accent, or the disposition ink when legal_status === 'impunity'. */
+  /** Sector accent, or the disposition ink when legal_status === 'impunity' —
+   *  the dot fill. */
   accentKind: string
+  /** AA-safe ink for the THIS CASE callout (the mark keeps `accentKind`). */
+  ink: string
   allCases: ScandalListItem[] | undefined
   lang: Lang
 }) {
@@ -325,7 +332,7 @@ export function CostInArchive({
       {
         id: 'this',
         text: `${lang === 'es' ? 'ESTE CASO' : 'THIS CASE'} · ${formatCompactMXN(amount)}`,
-        color: accentKind,
+        color: ink,
         weight: 700,
         x: thisX,
         y: COST_AXIS_Y,

@@ -76,6 +76,7 @@ export function FeatureSection({
   meta,
   lang,
   accent,
+  ink,
   movement,
   children,
 }: {
@@ -85,21 +86,26 @@ export function FeatureSection({
   /** Optional right-aligned mono meta fragment. */
   meta?: string
   lang: Lang
-  /** Sector-tinted accent for the § numeral (falls back to var(--color-accent)). */
+  /** Sector-tinted accent for the rules and marks (falls back to var(--color-accent)). */
   accent?: string
+  /** AA-safe ink for the type that carries the accent — the movement label and
+   *  the § numeral. Defaults to `accent`; pass `getSectorTextColor(code)` when
+   *  `accent` is a vivid sector hex, which fails AA as small type. */
+  ink?: string
   /** Optional act-movement label rendered above the § eyebrow — groups
    *  sections into the three-act structure without restructuring the tree. */
   movement?: { en: string; es: string }
   children: React.ReactNode
 }) {
   const accentColor = accent ?? 'var(--color-accent)'
+  const inkColor = ink ?? accentColor
   return (
     <section id={id} className="py-6 scroll-mt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
       {movement && (
         <div className="flex items-center gap-3 mb-3">
           <span
             className="font-mono uppercase"
-            style={{ fontSize: 10, letterSpacing: '0.18em', color: accentColor, fontWeight: 600 }}
+            style={{ fontSize: 10, letterSpacing: '0.18em', color: inkColor, fontWeight: 600 }}
           >
             {lang === 'es' ? movement.es : movement.en}
           </span>
@@ -117,7 +123,7 @@ export function FeatureSection({
             fontWeight: 500,
           }}
         >
-          <span style={{ color: accentColor, fontWeight: 700 }}>§ {numeral}</span>
+          <span style={{ color: inkColor, fontWeight: 700 }}>§ {numeral}</span>
           <span className="mx-2 opacity-50" aria-hidden="true">·</span>
           {lang === 'es' ? title.es : title.en}
         </h2>

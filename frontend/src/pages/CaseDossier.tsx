@@ -40,7 +40,7 @@ import { AlertTriangle, ArrowLeft, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { RISK_COLORS, SECTORS } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, SECTORS, getSectorTextColor } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { ScandalDetail, ScandalSource, KeyActor, LinkedVendor } from '@/api/types'
 
@@ -134,14 +134,14 @@ function legalStatusBody(status: string, lang: Lang): string {
 // leadFinding(); this component only composes the JSX and paints the
 // emphasis token(s) in accentKind.
 
-function renderChargeClause(text: string, emphasis: string, accentKind: string): React.ReactNode {
+function renderChargeClause(text: string, emphasis: string, ink: string): React.ReactNode {
   if (!emphasis) return text
   const idx = text.indexOf(emphasis)
   if (idx === -1) return text
   return (
     <>
       {text.slice(0, idx)}
-      <span style={{ fontStyle: 'normal', fontWeight: 600, color: accentKind }}>
+      <span style={{ fontStyle: 'normal', fontWeight: 600, color: ink }}>
         {text.slice(idx, idx + emphasis.length)}
       </span>
       {text.slice(idx + emphasis.length)}
@@ -149,13 +149,13 @@ function renderChargeClause(text: string, emphasis: string, accentKind: string):
   )
 }
 
-function CaseCharge({ finding, lang }: { finding: LeadFinding; lang: Lang }) {
+function CaseCharge({ finding, ink, lang }: { finding: LeadFinding; ink: string; lang: Lang }) {
   return (
     <div style={{ paddingTop: 20, maxWidth: '42ch' }}>
       <div className="flex items-center gap-3 mb-2.5">
         <span
           className="font-mono uppercase flex-shrink-0"
-          style={{ fontSize: 10, letterSpacing: '0.18em', color: finding.accentKind, fontWeight: 600 }}
+          style={{ fontSize: 10, letterSpacing: '0.18em', color: ink, fontWeight: 600 }}
         >
           {lang === 'es' ? 'ACTO I · EL CARGO' : 'ACT I · THE CHARGE'}
         </span>
@@ -163,7 +163,7 @@ function CaseCharge({ finding, lang }: { finding: LeadFinding; lang: Lang }) {
       </div>
       <p
         className="font-mono uppercase mb-2"
-        style={{ fontSize: 10, letterSpacing: '0.18em', color: finding.accentKind, fontWeight: 600 }}
+        style={{ fontSize: 10, letterSpacing: '0.18em', color: ink, fontWeight: 600 }}
       >
         ▎{finding.eyebrow}
       </p>
@@ -178,11 +178,11 @@ function CaseCharge({ finding, lang }: { finding: LeadFinding; lang: Lang }) {
           maxWidth: '34ch',
         }}
       >
-        {renderChargeClause(finding.primaryText, finding.emphasis[0] ?? '', finding.accentKind)}
+        {renderChargeClause(finding.primaryText, finding.emphasis[0] ?? '', ink)}
         {finding.secondaryText && (
           <>
             {' — '}
-            {renderChargeClause(finding.secondaryText, finding.emphasis[1] ?? '', finding.accentKind)}
+            {renderChargeClause(finding.secondaryText, finding.emphasis[1] ?? '', ink)}
           </>
         )}
       </p>
@@ -199,12 +199,15 @@ function CaseHero({
   sectorAccent,
   sectorName,
   finding,
+  ink,
 }: {
   scandal: ScandalDetail
   lang: Lang
   sectorAccent: string
   sectorName: string | null
   finding: LeadFinding
+  /** AA-safe ink for the charge's type (the 6px spine keeps `sectorAccent`). */
+  ink: string
 }) {
   const name = lang === 'es' && scandal.name_es ? scandal.name_es : scandal.name_en
   const yearStart = scandal.contract_year_start ?? scandal.discovery_year ?? null
@@ -269,7 +272,7 @@ function CaseHero({
         </h1>
 
         {/* Act I — the charge */}
-        <CaseCharge finding={finding} lang={lang} />
+        <CaseCharge finding={finding} ink={ink} lang={lang} />
 
         {/* Meta strip */}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -610,8 +613,16 @@ export default function CaseDossier() {
   }
 
   const sectorAccent = primarySector?.color ?? RISK_COLORS.critical
+  // Vivid sector hexes run every MARK on this page; as TYPE on the warm-white
+  // page seven of the twelve fail AA (energia 1.82:1). Type takes the darker
+  // twin — same hue, same reading, AA-safe (D5b Change 1). Computed once here
+  // and passed down; never re-derived in a block.
+  const sectorInk = primarySector ? getSectorTextColor(primarySector.code) : RISK_TEXT_COLORS.critical
   const sectorName = primarySector ? (lang === 'es' ? primarySector.name : primarySector.nameEN) : null
   const disposition = dispositionFor(scandal.legal_status)
+  const isImpunity = scandal.legal_status === 'impunity'
+  const accentKind = isImpunity ? disposition.ink : sectorAccent
+  const accentInk = isImpunity ? disposition.ink : sectorInk
   const finding = leadFinding(scandal, allCases, lang)
   const name = lang === 'es' && scandal.name_es ? scandal.name_es : scandal.name_en
 
@@ -677,7 +688,7 @@ export default function CaseDossier() {
          <div className="max-w-[1010px] mx-auto">
           <WayfindingSpine nav={nav} lang={lang} accent={sectorAccent} />
 
-          <CaseHero scandal={scandal} lang={lang} sectorAccent={sectorAccent} sectorName={sectorName} finding={finding} />
+          <CaseHero scandal={scandal} lang={lang} sectorAccent={sectorAccent} sectorName={sectorName} finding={finding} ink={accentInk} />
 
           <div className="lg:grid lg:grid-cols-[210px_minmax(0,760px)] lg:gap-10 items-start">
             {/* Docket rail — sticky on desktop, stacked above on mobile */}
@@ -687,6 +698,7 @@ export default function CaseDossier() {
                 totalCases={allCases?.length ?? null}
                 sectorName={sectorName}
                 sectorColor={sectorAccent}
+                ink={sectorInk}
                 sections={railSections}
                 lang={lang}
               />
@@ -703,6 +715,7 @@ export default function CaseDossier() {
                 meta={lang === 'es' ? 'Qué pasó' : 'What happened'}
                 lang={lang}
                 accent={sectorAccent}
+                ink={sectorInk}
                 movement={accountMovement}
               >
                 <LedeParagraph sectorAccent={sectorAccent}>{ledeText}</LedeParagraph>
@@ -746,6 +759,7 @@ export default function CaseDossier() {
                   meta={lang === 'es' ? 'El arco de impunidad' : 'The impunity arc'}
                   lang={lang}
                   accent={sectorAccent}
+                  ink={sectorInk}
                 >
                   <CaseTimeline scandal={scandal} sectorAccent={sectorAccent} lang={lang} />
                 </FeatureSection>
@@ -764,6 +778,7 @@ export default function CaseDossier() {
                 }
                 lang={lang}
                 accent={sectorAccent}
+                ink={sectorInk}
               >
                 {/* Row 1: the number beside its range note. Row 2: the cost
                     field spans the story column on its own — squeezed into the
@@ -774,7 +789,8 @@ export default function CaseDossier() {
                     <div className="flex flex-wrap items-start gap-5">
                       <ScaleBlock
                         mxn={headlineAmount}
-                        sectorAccent={scandal.legal_status === 'impunity' ? disposition.ink : sectorAccent}
+                        sectorAccent={accentKind}
+                        ink={accentInk}
                         lang={lang}
                       />
                       {rangeText && (
@@ -796,7 +812,8 @@ export default function CaseDossier() {
                       amount={headlineAmount}
                       sectorId={scandal.sector_id ?? scandal.sector_ids?.[0] ?? null}
                       sectorName={sectorName}
-                      accentKind={scandal.legal_status === 'impunity' ? disposition.ink : sectorAccent}
+                      accentKind={accentKind}
+                      ink={accentInk}
                       allCases={allCases}
                       lang={lang}
                     />
@@ -856,6 +873,7 @@ export default function CaseDossier() {
                   }
                   lang={lang}
                   accent={sectorAccent}
+                  ink={sectorInk}
                   movement={implicatedMovement}
                 >
                   <ActorList actors={scandal.key_actors} linkedVendors={vendors} lang={lang} />
@@ -876,6 +894,7 @@ export default function CaseDossier() {
                 }
                 lang={lang}
                 accent={sectorAccent}
+                ink={sectorInk}
                 movement={hasActors ? undefined : implicatedMovement}
               >
                 {vendors.length > 0 || ghostVendors.length > 0 ? (
@@ -907,6 +926,7 @@ export default function CaseDossier() {
                   meta={lang === 'es' ? 'Qué se cita' : 'What is cited'}
                   lang={lang}
                   accent={sectorAccent}
+                  ink={sectorInk}
                 >
                   <SourceList sources={scandal.sources} lang={lang} />
                 </FeatureSection>

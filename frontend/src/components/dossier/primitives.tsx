@@ -195,10 +195,15 @@ export function LedeParagraph({
 export function ScaleBlock({
   mxn,
   sectorAccent,
+  ink,
   lang,
 }: {
   mxn: number
   sectorAccent: string
+  /** AA-safe ink for the number itself (`getSectorTextColor`). Defaults to
+   *  `sectorAccent` so existing callers are unchanged; the vivid palette
+   *  fails AA as type at this size on the warm-white page. */
+  ink?: string
   lang: 'en' | 'es'
 }) {
   const formatted = formatCompactMXN(mxn)
@@ -224,7 +229,7 @@ export function ScaleBlock({
           fontWeight: 800,
           fontSize: 'clamp(56px, 8vw, 88px)',
           lineHeight: 1,
-          color: sectorAccent,
+          color: ink ?? sectorAccent,
           letterSpacing: '-0.025em',
         }}
       >
