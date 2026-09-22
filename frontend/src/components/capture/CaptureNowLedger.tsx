@@ -138,10 +138,13 @@ export function CaptureNowLedger({
         )}
       </div>
 
-      {/* Desktop shows the whole table; only below md does it scroll, and then
-          it says so (D6 C5 — the Day 2 /gap decision). */}
-      <div className="overflow-x-auto md:overflow-visible rounded-sm border border-border bg-background-card">
-        <table className="w-full table-fixed text-[13px] min-w-[640px] md:min-w-0">
+      {/* The table needs 760px for its six columns; the container only clears
+          that at lg. Below it the table keeps its floor and scrolls, and says
+          so (D6 C5 — the Day 2 /gap decision). Releasing at md let the two
+          name columns fall to 97px between 768 and ~900, which broke names
+          mid-word. */}
+      <div className="overflow-x-auto lg:overflow-visible rounded-sm border border-border bg-background-card">
+        <table className="w-full table-fixed text-[13px] min-w-[760px] lg:min-w-0">
           <caption className="sr-only">
             {lang === 'en'
               ? 'Institutions where one vendor holds the majority of recorded spend'
@@ -222,7 +225,7 @@ export function CaptureNowLedger({
       </div>
       <p
         aria-hidden="true"
-        className="md:hidden mt-1.5 font-mono text-[12px] uppercase tracking-[0.12em] text-text-muted"
+        className="lg:hidden mt-1.5 font-mono text-[12px] uppercase tracking-[0.12em] text-text-muted"
       >
         {lang === 'en' ? '← scroll →' : '← desliza →'}
       </p>

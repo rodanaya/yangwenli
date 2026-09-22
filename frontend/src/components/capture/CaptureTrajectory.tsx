@@ -71,6 +71,9 @@ export function CaptureTrajectory({
   // Build colored segments; split any segment that straddles the ceiling so the
   // color switches exactly at 50% (true Reuters recolor — no overlap).
   const segs: Array<{ x1: number; y1: number; x2: number; y2: number; color: string }> = []
+  // x where the path first pierces the ceiling — the callout anchors here, not
+  // on the crossing year's dot, which sits further right than the piercing.
+  let ceilCrossX: number | null = null
   for (let i = 0; i < tl.length - 1; i++) {
     const a = tl[i]
     const b = tl[i + 1]
@@ -86,6 +89,7 @@ export function CaptureTrajectory({
       const t = (ceil - a.share_pct) / (b.share_pct - a.share_pct)
       const cx = ax + t * (bx - ax)
       const cy = y(ceil)
+      if (ceilCrossX === null && bAbove) ceilCrossX = cx
       segs.push({ x1: ax, y1: ay, x2: cx, y2: cy, color: aAbove ? RED : ZINC })
       segs.push({ x1: cx, y1: cy, x2: bx, y2: by, color: bAbove ? RED : ZINC })
     }
@@ -98,23 +102,50 @@ export function CaptureTrajectory({
       : Array.from(new Set([minYear, peakYear, maxYear])).sort((a, b) => a - b)
 
   /**
-   * Keep a centred mono callout inside the plot box (STORY_DAYS.md § 7).
+   * Keep a mono callout inside the plot box (STORY_DAYS.md § 7).
    *
    * Both callouts anchor on a data year, and the year they anchor on is
    * usually the newest one — a share that peaks at the end of the window is
    * exactly what capture looks like. Centred on the last tick, the label ran
    * ~45px past the viewBox and the browser clipped it at the svg edge.
-   * JetBrains Mono advances 0.6em per glyph, so half the label is known
+   * JetBrains Mono advances 0.6em per glyph, so the label's box is known
    * before layout and the anchor can be clamped instead of the text cut.
+   *
+   * `anchor` moves the reference point: `start` measures the whole label to
+   * the right of x, `end` the whole label to its left, `middle` half each way.
    */
-  const clampX = (cx: number, text: string, fontSize: number) => {
-    const half = (text.length * fontSize * 0.6) / 2
-    const lo = PAD + half
-    const hi = W - PAD - half
+  const clampX = (
+    cx: number,
+    text: string,
+    fontSize: number,
+    anchor: 'start' | 'middle' | 'end' = 'middle',
+  ) => {
+    const w = text.length * fontSize * 0.6
+    const lead = anchor === 'start' ? 0 : anchor === 'end' ? w : w / 2
+    const lo = PAD + lead
+    const hi = W - PAD - (w - lead)
     // A label wider than the whole plot cannot be clamped into it; centre it
     // and let the box grow around it rather than pinning it to one edge.
-    return lo > hi ? W / 2 : Math.min(Math.max(cx, lo), hi)
+    return lo > hi ? W / 2 - w / 2 + lead : Math.min(Math.max(cx, lo), hi)
   }
+
+  /**
+   * The lead's sentence-length callout sat centred ON the crossing, so the
+   * rising red segment ran straight through "in 2025". It now steps to
+   * whichever side has room: past the midpoint it ends 6px left of where the
+   * path pierces the ceiling, before it, it starts 6px right. On that side the
+   * path is on the other side of the ceiling from the label, so the glyphs sit
+   * clear of the line. Cards keep the centred two-character label — it is too
+   * short to collide.
+   */
+  // A series that starts above the ceiling never pierces it; fall back to the
+  // crossing year's own x so the callout still has an anchor.
+  const crossX = ceilCrossX ?? x(crossYear ?? minYear)
+  const crossAnchor: 'start' | 'middle' | 'end' = !isLead
+    ? 'middle'
+    : crossX > W / 2
+      ? 'end'
+      : 'start'
   /**
    * Axis-end ticks anchor to the edge they sit on. At 11px a centred `2021`
    * over x = PAD hangs 3px past the svg's left edge and the browser clips it;
@@ -199,9 +230,14 @@ export function CaptureTrajectory({
         {/* crossing-year callout */}
         {crossYear !== null && (
           <text
-            x={clampX(x(crossYear), crossLabel, 11)}
+            x={clampX(
+              isLead ? crossX + (crossAnchor === 'end' ? -6 : 6) : x(crossYear),
+              crossLabel,
+              11,
+              crossAnchor,
+            )}
             y={y(ceil) - 4}
-            textAnchor="middle"
+            textAnchor={crossAnchor}
             fontSize={11}
             fontFamily="JetBrains Mono, monospace"
             fontWeight={700}

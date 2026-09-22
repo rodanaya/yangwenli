@@ -400,6 +400,7 @@ function LeadExhibit({
                     : `Documentado: ${caseLink.label_es}`
                 }
                 size="sm"
+                fullName
               />
             )}
           </div>

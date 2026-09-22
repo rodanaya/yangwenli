@@ -227,6 +227,7 @@ export function CaptureExpand({
             id="P6"
             name={lang === 'en' ? 'Capture pattern (P6)' : 'Patrón de captura (P6)'}
             size="sm"
+            fullName
           />
         </div>
       </div>
