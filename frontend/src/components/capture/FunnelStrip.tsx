@@ -83,7 +83,7 @@ export function FunnelStrip({ tiers, lang }: Props) {
               {t.anchor && (
                 <a
                   href={t.anchor}
-                  className="ml-1.5 font-mono text-[12px] uppercase tracking-wide hover:opacity-80"
+                  className="ml-1.5 inline-block py-1 font-mono text-[12px] uppercase tracking-wide rounded-sm hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   style={{ color: 'var(--color-accent)' }}
                 >
                   {lang === 'en' ? 'see the film ↓' : 'ver la película ↓'}

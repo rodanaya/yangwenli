@@ -37,6 +37,19 @@ const SORT_LABEL: Record<SortKey, { es: string; en: string }> = {
   vigencia: { es: 'Persistencia', en: 'Persistence' },
 }
 
+/** The panel a card's disclosure button controls (aria-controls target). */
+const panelId = (c: CaptureItem) => `recibos-${c.institution_id}-${c.vendor_id}`
+
+/** Short affordance on a card; the lead exhibit keeps its longer sentence. */
+const receiptsLabel = (lang: 'en' | 'es', expanded: boolean) =>
+  lang === 'en'
+    ? expanded
+      ? 'receipts ↑'
+      : 'receipts ↓'
+    : expanded
+      ? 'recibos ↑'
+      : 'recibos ↓'
+
 const crossingYear = (c: CaptureItem, ceil: number) =>
   [...c.timeline].sort((a, b) => a.year - b.year).find((p) => p.share_pct >= ceil)?.year ??
   c.peak_year
@@ -94,7 +107,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
   const keyOf = (c: CaptureItem) => `${c.institution_id}-${c.vendor_id}`
 
   return (
-    <section id="la-pelicula" aria-labelledby="pelicula-heading" className="mt-8">
+    <section id="la-pelicula" aria-labelledby="pelicula-heading" className="mt-8 scroll-mt-6">
       {/* ── §B′ Exhibit A — the documented climber, shown intimately ── */}
       {lead && (
         <div className="mb-8 lg:max-w-[760px]">
@@ -147,9 +160,12 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
         </p>
       </div>
 
-      {/* Sort control */}
-      <div className="flex items-center gap-3 mb-3 overflow-x-auto">
-        <span className="text-[12px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted flex-shrink-0">
+      {/* Sort control — wraps instead of scrolling (D6 C3) */}
+      <div role="group" aria-labelledby="pelicula-sort" className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3">
+        <span
+          id="pelicula-sort"
+          className="text-[12px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted flex-shrink-0"
+        >
           {lang === 'en' ? 'Order' : 'Ordenar'}
         </span>
         {SORT_KEYS.map((k) => (
@@ -158,7 +174,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
             type="button"
             onClick={() => setParam('sort', k === 'cruce' ? null : k)}
             aria-pressed={sort === k}
-            className={`flex-shrink-0 font-mono text-[12px] uppercase tracking-wider transition-colors ${
+            className={`flex-shrink-0 min-h-6 px-1 inline-flex items-center font-mono text-[12px] uppercase tracking-wider transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
               sort === k ? 'underline underline-offset-4' : 'text-text-muted hover:text-text-secondary'
             }`}
             style={sort === k ? { color: 'var(--color-accent)' } : undefined}
@@ -269,32 +285,39 @@ function FacetRow({
               style={expanded ? { gridColumn: '1 / -1' } : undefined}
               className={expanded ? 'rounded-sm border border-border bg-background-card' : 'rounded-sm border border-border/60 bg-background-card'}
             >
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  if ((e.target as HTMLElement).closest('a')) return // inner chips navigate
-                  onToggle(c)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    onToggle(c)
-                  }
-                }}
-                aria-expanded={expanded}
-                className="w-full text-left p-3 cursor-pointer hover:bg-background-elevated transition-colors focus:outline-none focus:ring-1 focus:ring-text-muted rounded-sm"
-              >
-                <div className={expanded ? 'max-w-[380px]' : ''}>
-                  <CaptureTrajectory
-                    timeline={c.timeline}
-                    ceil={ceil}
-                    peakYear={c.peak_year}
-                    peakSharePct={c.peak_share_pct}
-                    latestSharePct={c.latest_share_pct}
-                    lang={lang}
-                  />
-                </div>
+              {/* The figure and its numbers are ONE disclosure button; the two
+                  chips are links after it, never inside it (D6 C3). */}
+              <div className="p-3">
+                <button
+                  type="button"
+                  onClick={() => onToggle(c)}
+                  aria-expanded={expanded}
+                  aria-controls={panelId(c)}
+                  className="block w-full text-left cursor-pointer rounded-sm hover:bg-background-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                >
+                  <div className={expanded ? 'max-w-[380px]' : ''}>
+                    <CaptureTrajectory
+                      timeline={c.timeline}
+                      ceil={ceil}
+                      peakYear={c.peak_year}
+                      peakSharePct={c.peak_share_pct}
+                      latestSharePct={c.latest_share_pct}
+                      lang={lang}
+                    />
+                  </div>
+                  <p className="mt-1 font-mono text-[13px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
+                    <span>+{delta.toFixed(0)}pp</span>
+                    <span>·</span>
+                    <span>{formatCompactMXN(c.cumulative_value_mxn)}</span>
+                    <CrossSeal c={c} lang={lang} />
+                  </p>
+                  <span
+                    className="mt-1 inline-block font-mono text-[12px] uppercase tracking-[0.14em] hover:opacity-80"
+                    style={{ color: 'var(--color-accent)' }}
+                  >
+                    {receiptsLabel(lang, expanded)}
+                  </span>
+                </button>
                 <div className="mt-1.5">
                   <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" fullName />
                 </div>
@@ -304,15 +327,9 @@ function FacetRow({
                   </span>
                   <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="sm" fullName />
                 </div>
-                <p className="mt-0.5 font-mono text-[13px] text-text-muted tabular-nums flex items-center gap-1.5 flex-wrap">
-                  <span>+{delta.toFixed(0)}pp</span>
-                  <span>·</span>
-                  <span>{formatCompactMXN(c.cumulative_value_mxn)}</span>
-                  <CrossSeal c={c} lang={lang} />
-                </p>
               </div>
               {expanded && (
-                <CaptureExpand c={c} lang={lang} thresholds={thresholds} landscape={landscape} />
+                <CaptureExpand id={panelId(c)} c={c} lang={lang} thresholds={thresholds} landscape={landscape} />
               )}
             </div>
           )
@@ -399,7 +416,8 @@ function LeadExhibit({
             type="button"
             onClick={onToggle}
             aria-expanded={expanded}
-            className="mt-3 font-mono text-[12px] font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
+            aria-controls={panelId(c)}
+            className="mt-3 min-h-6 inline-flex items-center font-mono text-[12px] font-bold uppercase tracking-[0.14em] rounded-sm hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             style={{ color: 'var(--color-accent)' }}
           >
             {expanded
@@ -408,7 +426,9 @@ function LeadExhibit({
           </button>
         </div>
       </div>
-      {expanded && <CaptureExpand c={c} lang={lang} thresholds={thresholds} landscape={landscape} />}
+      {expanded && (
+        <CaptureExpand id={panelId(c)} c={c} lang={lang} thresholds={thresholds} landscape={landscape} />
+      )}
     </div>
   )
 }

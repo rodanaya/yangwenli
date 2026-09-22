@@ -19,6 +19,7 @@ import {
 } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
 import { getRiskLevelFromScore, RISK_TEXT_COLORS } from '@/lib/constants'
+import { formatEntityName } from '@/lib/entity/format'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -33,11 +34,14 @@ const bandTitle =
   'text-[13px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted mb-2'
 
 export function CaptureExpand({
+  id,
   c,
   lang,
   thresholds,
   landscape,
 }: {
+  /** Matches the disclosure button's aria-controls. */
+  id?: string
   c: CaptureItem
   lang: 'en' | 'es'
   thresholds: CaptureTopResponse['thresholds']
@@ -74,7 +78,13 @@ export function CaptureExpand({
 
   return (
     <div
+      id={id}
       role="region"
+      aria-label={
+        lang === 'en'
+          ? `Receipts for ${formatEntityName('vendor', c.vendor_name, 'full')}`
+          : `Recibos de ${formatEntityName('vendor', c.vendor_name, 'full')}`
+      }
       className="px-5 py-4 bg-background-elevated grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr] gap-x-6 gap-y-5"
       style={{ borderTop: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)' }}
     >
