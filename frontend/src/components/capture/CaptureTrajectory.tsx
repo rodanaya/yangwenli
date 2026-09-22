@@ -217,10 +217,23 @@ export function CaptureTrajectory({
   const candidates: Array<[('start' | 'end'), number]> = preferEnd
     ? [['end', above], ['start', below], ['end', below], ['start', above]]
     : [['start', below], ['end', above], ['start', above], ['end', below]]
-  const [crossAnchor, crossY] = crossLabel
-    ? (candidates.find(([a, b]) => marksInBox(a, b) === 0) ??
-       candidates.reduce((best, c) => (marksInBox(...c) < marksInBox(...best) ? c : best)))
-    : candidates[0]
+  // Score each candidate once, in preference order, and stop at the first
+  // clear one. Re-deriving a score inside a reduce would run the sampler
+  // twice per comparison, on every card, on every paint.
+  let crossAnchor = candidates[0][0]
+  let crossY = candidates[0][1]
+  if (crossLabel) {
+    let bestScore = Infinity
+    for (const [anchor, baseline] of candidates) {
+      const score = marksInBox(anchor, baseline)
+      if (score < bestScore) {
+        bestScore = score
+        crossAnchor = anchor
+        crossY = baseline
+      }
+      if (score === 0) break
+    }
+  }
   /**
    * Axis-end ticks anchor to the edge they sit on. At 11px a centred `2021`
    * over x = PAD hangs 3px past the svg's left edge and the browser clips it;
