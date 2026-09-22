@@ -513,10 +513,16 @@ export function leadFinding(
   if (allCases && scandal.legal_status === 'convicted') {
     const n = allCases.filter((c) => c.legal_status === 'convicted').length
     const t = allCases.length
-    const emphasis = lang === 'es' ? `${n} condenas` : `${n} convictions`
-    const text = lang === 'es'
-      ? `una de solo ${n} condenas en ${t} casos documentados`
-      : `one of only ${n} convictions in ${t} documented cases`
+    const emphasis = n === 1
+      ? (lang === 'es' ? 'única condena' : 'only conviction')
+      : (lang === 'es' ? `${n} condenas` : `${n} convictions`)
+    const text = n === 1
+      ? (lang === 'es'
+        ? `la ${emphasis} en ${t} casos documentados`
+        : `the ${emphasis} in ${t} documented cases`)
+      : (lang === 'es'
+        ? `una de solo ${emphasis} en ${t} casos documentados`
+        : `one of only ${emphasis} in ${t} documented cases`)
     candidates.push({ kind: 'conviction', text, emphasis, strength: 0.7 })
   }
 
