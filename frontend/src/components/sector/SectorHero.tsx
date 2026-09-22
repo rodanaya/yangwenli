@@ -16,6 +16,7 @@ import {
   SECTOR_COLORS,
   getRiskLevelFromScore,
   getSectorName,
+  getSectorTextColor,
 } from '@/lib/constants'
 import {
   formatCompactMXN,
@@ -90,7 +91,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
             fontStyle: 'normal',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: sectorAccent,
+            color: getSectorTextColor(sector.code),
             fontWeight: 500,
           }}
         >
@@ -120,7 +121,6 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 fontSize: 16,
                 fontWeight: 400,
                 color: 'var(--color-text-secondary)',
-                opacity: 0.6,
                 letterSpacing: '0.02em',
               }}
             >
@@ -142,9 +142,9 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}
               >
                 <span>{formatNumber(stats.total_contracts)} {lang === 'es' ? 'contratos' : 'contracts'}</span>
-                <span className="mx-2" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>
+                <span className="mx-2" aria-hidden="true" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>
                 <span>{Math.round(stats.direct_award_pct)}% {lang === 'es' ? 'adj. directa' : 'direct award'}</span>
-                <span className="mx-2" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>
+                <span className="mx-2" aria-hidden="true" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>
                 <span>{Math.round(stats.single_bid_pct)}% {lang === 'es' ? 'único postor' : 'single bid'}</span>
               </div>
             </div>
@@ -181,7 +181,6 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 style={{
                   fontSize: 13,
                   color: 'var(--color-text-muted)',
-                  opacity: 0.6,
                   letterSpacing: '0.10em',
                   textTransform: 'uppercase',
                 }}
@@ -381,7 +380,7 @@ function ExposureLedger({
           fontStyle: 'normal',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
-          color: sectorAccent,
+          color: getSectorTextColor(sector.code),
           fontWeight: 500,
           marginBottom: 8,
         }}
@@ -415,7 +414,7 @@ function ExposureLedger({
         }}
       >
         {lang === 'es' ? 'Gasto total del sector' : 'Total sector spend'}
-        <span className="mx-1.5" style={{ opacity: 0.5 }}>·</span>
+        <span className="mx-1.5" aria-hidden="true" style={{ opacity: 0.5 }}>·</span>
         ≈{formatCompactUSD(totalMxn)}
       </div>
 
@@ -506,7 +505,7 @@ function ExposureLedger({
                   <span style={{ color: b.key === 'low' ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[b.key] }}>
                     {lang === 'es' ? b.es : b.en}
                   </span>
-                  <span style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>
                     {((b.count / bandTotal) * 100).toFixed(0)}%
                   </span>
                 </span>
@@ -560,7 +559,7 @@ function ExposureStat({
         {label}
         {caption && (
           <>
-            <span className="mx-1" style={{ opacity: 0.5 }}>·</span>
+            <span className="mx-1" aria-hidden="true" style={{ opacity: 0.5 }}>·</span>
             {caption}
           </>
         )}

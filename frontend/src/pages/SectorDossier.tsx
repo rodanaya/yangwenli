@@ -18,7 +18,7 @@
  * TimelineHourglass) are no longer imported here. Legacy SectorProfile retains
  * its card-grid for /print.
  */
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { sectorApi, atlasApi, vendorApi, categoriesApi, caseLibraryApi, ariaApi } from '@/api/client'
@@ -52,7 +52,7 @@ import {
   useSiblingNav,
   type WayfindingLinkState,
 } from '@/lib/nav/wayfinding'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_TEXT_COLORS, getSectorTextColor } from '@/lib/constants'
 
 // Reference-section header — tight, left-aligned (mirrors the other dossiers).
 function DossierSectionHeader({
@@ -61,17 +61,21 @@ function DossierSectionHeader({
   title,
   meta,
   accent,
+  accentText,
 }: {
   id: string
   eyebrow: string
   title: string
   meta?: string
+  /** Sector hue for the rule (a mark). */
   accent: string
+  /** AA-safe sector twin for the eyebrow (type). */
+  accentText: string
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4 pb-2 mb-5" style={{ borderBottom: `1px solid ${accent}33` }}>
       <div className="flex items-baseline gap-3 min-w-0">
-        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
+        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: accentText, fontWeight: 700 }}>
           § {eyebrow}
         </span>
         <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
@@ -88,25 +92,23 @@ function DossierSectionHeader({
 }
 
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
-  const navigate = useNavigate()
   return (
     <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <p className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+      <h2 className="font-mono mb-2" style={{ fontSize: 13, lineHeight: 1.6, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
-      </p>
+      </h2>
       <p className="lg:max-w-[640px]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5. Las señales agregadas a nivel sectorial son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. v0.8.5 risk model. Sector-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
       </p>
-      <button
-        type="button"
-        onClick={() => navigate('/methodology')}
-        className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+      <Link
+        to="/methodology"
+        className="inline-block mt-3 py-1 font-mono hover:opacity-70 transition-opacity rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}
       >
         {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
-      </button>
+      </Link>
     </section>
   )
 }
@@ -261,6 +263,7 @@ export default function SectorDossier() {
   }
 
   const sectorAccent = SECTOR_COLORS[sector.code] ?? '#64748b'
+  const sectorAccentText = getSectorTextColor(sector.code)
   const institutions = institutionsResp?.institutions ?? []
   const totalSpend = sector.statistics.total_value_mxn ?? 0
 
@@ -328,20 +331,18 @@ export default function SectorDossier() {
       <SectorHero sector={sector} showTOC={false} />
 
       {/* GT linkage credibility line — documented cases + GT vendors in the sector */}
-      {gtCases > 0 && (
-        <button
-          type="button"
-          onClick={() => gtTarget && document.getElementById(gtTarget)?.scrollIntoView({ behavior: 'smooth' })}
-          disabled={!gtTarget}
-          className="font-mono uppercase tracking-widest hover:opacity-70 transition-opacity -mt-3 mb-1"
-          style={{ fontSize: 12, color: 'var(--color-text-secondary)', background: 'none', border: 'none', padding: 0, cursor: gtTarget ? 'pointer' : 'default' }}
+      {gtCases > 0 && gtTarget && (
+        <a
+          href={`#${gtTarget}`}
+          className="inline-block py-1 font-mono uppercase tracking-widest hover:opacity-70 transition-opacity -mt-3 mb-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+          style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
         >
-          <span style={{ color: 'var(--color-risk-critical)', fontWeight: 700 }}>{gtCases.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}</span>{' '}
+          <span style={{ color: RISK_TEXT_COLORS.critical, fontWeight: 700 }}>{gtCases.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}</span>{' '}
           {lang === 'es' ? 'casos GT' : 'GT cases'}
-          <span style={{ opacity: 0.5, margin: '0 6px' }}>·</span>
+          <span aria-hidden="true" style={{ opacity: 0.5, margin: '0 6px' }}>·</span>
           <span style={{ color: 'var(--color-text-primary)', fontWeight: 700 }}>{gtVendors.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')}</span>{' '}
-          {lang === 'es' ? 'proveedores con vínculo documentado operan aquí' : 'GT-linked vendors operate here'}{gtTarget ? ' ↓' : ''}
-        </button>
+          {lang === 'es' ? 'proveedores con vínculo documentado operan aquí' : 'GT-linked vendors operate here'} ↓
+        </a>
       )}
 
       {/* COMMAND PANEL */}
@@ -368,6 +369,7 @@ export default function SectorDossier() {
               title={lang === 'es' ? 'Los proveedores que dominan' : 'The vendors who dominate'}
               meta={lang === 'es' ? `Los ${topVendors.length} mayores` : `Top ${topVendors.length}`}
               accent={sectorAccent}
+              accentText={sectorAccentText}
             />
             <SectorVendorTable vendors={topVendors} totalSpend={totalSpend} lang={lang} />
           </section>
@@ -384,6 +386,7 @@ export default function SectorDossier() {
               title={lang === 'es' ? 'En qué se gasta' : 'What the money buys'}
               meta={lang === 'es' ? `${sectorCategories.length} canastas` : `${sectorCategories.length} baskets`}
               accent={sectorAccent}
+              accentText={sectorAccentText}
             />
             <SectorCategoryComposition categories={sectorCategories} totalSpend={totalSpend} accent={sectorAccent} lang={lang} />
           </section>
@@ -399,6 +402,7 @@ export default function SectorDossier() {
               eyebrow={lang === 'es' ? 'Administraciones' : 'Administrations'}
               title={lang === 'es' ? 'El sexenio del gasto' : 'Spend by administration'}
               accent={sectorAccent}
+              accentText={sectorAccentText}
             />
             <SectorSexenioStrip trends={sector.trends ?? []} accent={sectorAccent} lang={lang} />
           </section>
@@ -414,6 +418,7 @@ export default function SectorDossier() {
               eyebrow={lang === 'es' ? 'Señales' : 'Signals'}
               title={lang === 'es' ? 'Qué ve el modelo' : 'What the model sees'}
               accent={sectorAccent}
+              accentText={sectorAccentText}
             />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {concentrationHistory.length > 1 && (
@@ -440,6 +445,7 @@ export default function SectorDossier() {
               title={lang === 'es' ? 'Casos documentados' : 'Documented cases'}
               meta={lang === 'es' ? `${sectorCases.length} en archivo` : `${sectorCases.length} on file`}
               accent={sectorAccent}
+              accentText={sectorAccentText}
             />
             <SectorCaseRoll cases={sectorCases} lang={lang} />
           </section>
@@ -455,6 +461,7 @@ export default function SectorDossier() {
               eyebrow={lang === 'es' ? 'ARIA · La cola' : 'ARIA · The queue'}
               title={lang === 'es' ? 'A quién investigar' : 'Who to investigate'}
               accent={sectorAccent}
+              accentText={sectorAccentText}
             />
             <SectorQueueRibbon tiers={tiers} sectorId={sectorId} lang={lang} />
           </section>
@@ -471,6 +478,7 @@ export default function SectorDossier() {
               title={lang === 'es' ? 'Los contratos más grandes' : 'The largest single contracts'}
               meta={lang === 'es' ? `Top ${largestContracts.length}` : `Top ${largestContracts.length}`}
               accent={sectorAccent}
+              accentText={sectorAccentText}
             />
             <SectorLargestContracts contracts={largestContracts} lang={lang} />
           </section>
@@ -486,6 +494,7 @@ export default function SectorDossier() {
             title={lang === 'es' ? 'Quién gasta en el sector' : 'Who spends in the sector'}
             meta={instMeta}
             accent={sectorAccent}
+            accentText={sectorAccentText}
           />
           <SectorInstitutionTable institutions={institutions} totalSpend={sector.statistics.total_value_mxn ?? 0} lang={lang} />
         </section>

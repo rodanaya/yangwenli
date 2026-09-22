@@ -118,7 +118,7 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
             {c.sub && (
               <div
                 className="font-mono tabular-nums"
-                style={{ fontSize: 13, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, opacity: c.color ? 0.85 : 1, whiteSpace: 'nowrap' }}
+                style={{ fontSize: 13, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, whiteSpace: 'nowrap' }}
               >
                 {c.sub}
               </div>
@@ -452,6 +452,9 @@ export function SectorInstitutionTable({
           </tbody>
         </table>
       </div>
+      <p className="lg:hidden font-mono mt-1.5" aria-hidden="true" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+        {isEs ? '← desliza →' : '← scroll →'}
+      </p>
     </div>
   )
 }

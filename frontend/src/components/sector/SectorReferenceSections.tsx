@@ -198,6 +198,9 @@ export function SectorVendorTable({
           </tbody>
         </table>
       </div>
+      <p className="lg:hidden font-mono mt-1.5" aria-hidden="true" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+        {t(lang, '← desliza →', '← scroll →')}
+      </p>
     </div>
   )
 }
@@ -270,11 +273,11 @@ export function SectorCategoryComposition({
                 <span style={{ color: share >= 20 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: share >= 20 ? 600 : 400 }}>
                   {share.toFixed(1)}% {t(lang, 'del sector', 'of sector')}
                 </span>
-                <span style={{ opacity: 0.5 }}>·</span>
+                <span aria-hidden="true" style={{ opacity: 0.5 }}>·</span>
                 <span>{formatNumber(c.total_contracts ?? 0)} {t(lang, 'contratos', 'contracts')}</span>
                 {riskPct != null && (
                   <>
-                    <span style={{ opacity: 0.5 }}>·</span>
+                    <span aria-hidden="true" style={{ opacity: 0.5 }}>·</span>
                     <span className="inline-flex items-center gap-1">
                       <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: RISK_COLORS[lvl] }} />
                       <span style={{ color: RISK_TEXT_COLORS[lvl], fontWeight: 600 }}>{riskPct}</span>
@@ -357,7 +360,7 @@ export function SectorSexenioStrip({
         return (
           <div key={r.key} className="flex items-center gap-3">
             <div className="shrink-0 w-28 sm:w-36 min-w-0">
-              <div className="font-mono truncate" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-primary)', fontWeight: isPeak ? 600 : 400 }}>
+              <div className="font-mono break-words" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-primary)', fontWeight: isPeak ? 600 : 400 }}>
                 {ADMIN_DISPLAY_ACCENTED[r.key]}
                 {isPeak && <span className="ml-1" style={{ color: RISK_TEXT_COLORS.high, fontSize: 13 }}>▲</span>}
               </div>
@@ -482,14 +485,15 @@ export function SectorModelLadder({
         <div className="space-y-2">
           {rows.map((c) => {
             const positive = c.coefficient > 0
-            const color = positive ? RISK_COLORS.critical : 'var(--color-text-muted)'
+            const barColor = positive ? RISK_COLORS.critical : 'var(--color-text-muted)'
+            const textColor = positive ? RISK_TEXT_COLORS.critical : 'var(--color-text-muted)'
             const sign = positive ? '+' : ''
             const barPct = (Math.abs(c.coefficient) / maxAbs) * 100
             return (
               <div key={c.feature} className="flex items-center gap-3">
                 <span className="font-mono shrink-0 w-28 sm:w-40 leading-tight" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>{featureLabel(c.feature, lang)}</span>
-                <SignedBar pct={barPct} positive={positive} color={color} />
-                <span className="font-mono tabular-nums shrink-0 w-12 text-right" style={{ fontSize: 13, fontWeight: 600, color }}>{sign}{c.coefficient.toFixed(2)}</span>
+                <SignedBar pct={barPct} positive={positive} color={barColor} />
+                <span className="font-mono tabular-nums shrink-0 w-12 text-right" style={{ fontSize: 13, fontWeight: 600, color: textColor }}>{sign}{c.coefficient.toFixed(2)}</span>
               </div>
             )
           })}
@@ -653,9 +657,9 @@ export function SectorCaseRoll({
             {/* Line 3 — fraud type · administration · years · status */}
             <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-1.5 font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
               {fraud && <span style={{ color: 'var(--color-text-secondary)' }}>{fraud}</span>}
-              {admin && (<><span style={{ opacity: 0.5 }}>·</span><span>{admin}</span></>)}
-              {years && (<><span style={{ opacity: 0.5 }}>·</span><span>{years}</span></>)}
-              <span style={{ opacity: 0.5 }}>·</span>
+              {admin && (<><span aria-hidden="true" style={{ opacity: 0.5 }}>·</span><span>{admin}</span></>)}
+              {years && (<><span aria-hidden="true" style={{ opacity: 0.5 }}>·</span><span>{years}</span></>)}
+              <span aria-hidden="true" style={{ opacity: 0.5 }}>·</span>
               <span className="uppercase tracking-wider" style={{ fontSize: 13, color: statusColor, fontWeight: statusColor === 'var(--color-text-muted)' ? 400 : 600 }}>
                 {legalLabel(c.legal_status, lang)}
               </span>
@@ -701,8 +705,8 @@ export function SectorQueueRibbon({
         </p>
         <Link
           to={`/aria?sector_id=${sectorId}`}
-          className="font-mono uppercase tracking-widest hover:opacity-70 transition-opacity"
-          style={{ fontSize: 12, color: 'var(--color-accent)' }}
+          className="py-1 font-mono uppercase tracking-widest hover:opacity-70 transition-opacity rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+          style={{ fontSize: 12, color: 'var(--color-accent-hover)' }}
         >
           {t(lang, 'Ver la Lista de Vigilancia', 'Open the Watchlist')} →
         </Link>
@@ -803,12 +807,12 @@ export function SectorLargestContracts({
                 </div>
               </div>
             )}
-            {/* Line 4 — year · title (title may truncate; it's a description, not a name) */}
+            {/* Line 4 — year · title (wraps — a description, never clipped) */}
             {(c.year != null || c.title) && (
               <div className="flex items-baseline gap-2 mt-0.5 pl-8 font-mono" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                 {c.year != null && <span className="tabular-nums shrink-0">{c.year}</span>}
                 {c.title && (
-                  <span className="truncate min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5 }}>· {c.title}</span>
+                  <span className="break-words min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5 }}>· {c.title}</span>
                 )}
               </div>
             )}
