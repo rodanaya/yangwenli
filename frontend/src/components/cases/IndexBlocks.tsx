@@ -29,6 +29,10 @@ import {
 } from './casesVocab'
 import { DispositionSeal, SeverityDots } from './CasesShared'
 
+/** Same focus treatment as the page's controls (WCAG 2.4.7). */
+const FOCUS_RING =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1'
+
 function caseName(cas: ScandalListItem, lang: Lang): string {
   return lang === 'es' && cas.name_es ? cas.name_es : cas.name_en
 }
@@ -98,7 +102,11 @@ export function LeadCase({
       <div className="grid gap-7 md:grid-cols-[1.55fr_1fr] items-start">
         {/* Left — headline + deck */}
         <div>
-          <Link to={caseTo(cas).pathname} state={caseTo(cas).state} className="block text-left group">
+          <Link
+            to={caseTo(cas).pathname}
+            state={caseTo(cas).state}
+            className={`block text-left group ${FOCUS_RING}`}
+          >
             <h2
               className="group-hover:opacity-80 transition-opacity"
               style={{
@@ -221,7 +229,7 @@ export function LeadCase({
           <Link
             to={caseTo(cas).pathname}
             state={caseTo(cas).state}
-            className="mt-4 inline-flex items-center gap-1.5 font-mono uppercase hover:opacity-70 transition-opacity"
+            className={`mt-4 inline-flex items-center gap-1.5 py-1 font-mono uppercase hover:opacity-70 transition-opacity ${FOCUS_RING}`}
             style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-primary)', fontWeight: 600 }}
           >
             {lang === 'es' ? 'Leer el expediente' : 'Read the file'}
@@ -250,7 +258,11 @@ export function SecondaryCaseCard({
       className="py-4 md:pr-7"
       style={withGutter ? { borderRight: '1px solid var(--color-border)' } : undefined}
     >
-      <Link to={caseTo(cas).pathname} state={caseTo(cas).state} className="block text-left group w-full">
+      <Link
+        to={caseTo(cas).pathname}
+        state={caseTo(cas).state}
+        className={`block text-left group w-full ${FOCUS_RING}`}
+      >
         <div className="flex items-baseline justify-between gap-3 mb-1.5">
           <span
             className="font-mono uppercase"
@@ -394,7 +406,7 @@ function AgateRow({
       <Link
         to={caseTo(cas).pathname}
         state={caseTo(cas).state}
-        className={`${AGATE_GRID} w-full items-center gap-x-3 py-2 text-left transition-colors group hover:bg-accent/5`}
+        className={`${AGATE_GRID} w-full items-center gap-x-3 py-2 text-left transition-colors group hover:bg-accent/5 ${FOCUS_RING}`}
       >
         {/* Disposition rail */}
         <span

@@ -20,7 +20,7 @@
  * invisible white-on-white hover, inline-<circle> severity (now DotBar,
  * correct 4-point scale), fraud-type rainbow palette.
  */
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -66,6 +66,10 @@ const STATUS_VALUES: LegalStatus[] = [
   'convicted', 'acquitted', 'dismissed', 'settled', 'unresolved',
 ]
 
+/** One focus treatment for every control on the page (WCAG 2.4.7). */
+const FOCUS_RING =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1'
+
 const ADMIN_SHORT: Record<string, string> = {
   fox: 'Fox', calderon: 'Calderón', epn: 'Peña Nieto', amlo: 'AMLO',
   sheinbaum: 'Sheinbaum', multiple: 'Multi',
@@ -97,9 +101,9 @@ function FilterMenu({
   const ref = useRef<HTMLDetailsElement>(null)
   const close = () => ref.current?.removeAttribute('open')
   return (
-    <details ref={ref} className="relative">
+    <details ref={ref} className="sm:relative">
       <summary
-        className="list-none cursor-pointer select-none inline-flex items-center gap-1.5 font-mono uppercase px-2.5 py-1.5 transition-colors"
+        className={`list-none cursor-pointer select-none inline-flex items-center gap-1.5 font-mono uppercase px-2.5 py-1.5 transition-colors ${FOCUS_RING}`}
         style={{
           fontSize: 12,
           letterSpacing: '0.14em',
@@ -112,8 +116,12 @@ function FilterMenu({
         {activeLabel && <span className="normal-case tracking-normal font-semibold">· {activeLabel}</span>}
         <ChevronDown className="h-3 w-3 opacity-70" aria-hidden="true" />
       </summary>
+      {/* Below `sm` the panel resolves against the (relative) filter row and
+          spans it, so no menu can open past the edge of a 390px viewport;
+          from `sm` up <details> is positioned again and the panel hangs off
+          its own summary as before. */}
       <div
-        className="absolute left-0 z-30 mt-1 min-w-[240px] py-1"
+        className="absolute left-0 right-0 sm:right-auto z-30 mt-1 sm:min-w-[220px] py-1"
         style={{
           background: 'var(--color-background-card)',
           border: '1px solid var(--color-border-hover)',
@@ -123,7 +131,7 @@ function FilterMenu({
         <button
           type="button"
           onClick={() => { onClear(); close() }}
-          className="w-full text-left px-3 py-1.5 font-mono uppercase hover:bg-background-elevated transition-colors"
+          className={`w-full text-left px-3 py-1.5 font-mono uppercase hover:bg-background-elevated transition-colors ${FOCUS_RING}`}
           style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
         >
           {lang === 'es' ? 'Todos' : 'All'}
@@ -133,7 +141,7 @@ function FilterMenu({
             key={o.value}
             type="button"
             onClick={() => { onSelect(o.value); close() }}
-            className="w-full flex items-baseline justify-between gap-4 text-left px-3 py-1.5 hover:bg-background-elevated transition-colors"
+            className={`w-full flex items-baseline justify-between gap-4 text-left px-3 py-1.5 hover:bg-background-elevated transition-colors ${FOCUS_RING}`}
           >
             <span
               className="font-mono uppercase"
@@ -158,7 +166,8 @@ function FilterMenu({
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
-type SortKey = 'loss' | 'severity' | 'year' | 'gt'
+const SORT_VALUES = ['loss', 'severity', 'year', 'gt'] as const
+type SortKey = (typeof SORT_VALUES)[number]
 
 export default function CaseLibrary() {
   const { i18n } = useTranslation('cases')
@@ -195,7 +204,12 @@ export default function CaseLibrary() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const [sortBy, setSortBy] = useState<SortKey>('loss')
+  // Sort lives in the URL like every other filter: a refresh keeps the order,
+  // and the list El Hilo publishes matches the link you share.
+  const [sortBy, setSortBy] = useQueryState(
+    'sort',
+    parseAsStringEnum<SortKey>([...SORT_VALUES]).withDefault('loss'),
+  )
 
   const data = useMemo(() => {
     if (!rawData) return rawData
@@ -297,7 +311,7 @@ export default function CaseLibrary() {
             <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 600 }}>
               {lang === 'es' ? 'El Padrón' : 'The Docket'}
             </span>
-            <span className="mx-2 opacity-50">·</span>
+            <span className="mx-2 opacity-50" aria-hidden="true">·</span>
             {lang === 'es' ? 'Casos documentados · 2002–2025' : 'Documented cases · 2002–2025'}
           </p>
 
@@ -360,31 +374,32 @@ export default function CaseLibrary() {
 
         {/* ─── Dateline filters ─── */}
         <div
-          className="mt-4 py-3 flex flex-wrap items-center gap-3"
+          className="relative mt-4 py-3 flex flex-wrap items-center gap-3"
           style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}
         >
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
             <input
-              type="text"
+              type="search"
+              name="case-search"
+              autoComplete="off"
+              spellCheck={false}
               aria-label={lang === 'es' ? 'Buscar casos' : 'Search cases'}
               value={search ?? ''}
               onChange={(e) => setSearch(e.target.value || null)}
               placeholder={lang === 'es' ? 'Buscar caso o proveedor…' : 'Search case or vendor…'}
-              className="w-full pl-9 pr-8 py-1.5 text-[12px] bg-transparent focus:outline-none transition-colors"
+              className="w-full pl-9 pr-8 py-1.5 text-[12px] bg-transparent transition-colors focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
               style={{
                 fontFamily: 'var(--font-family-mono)',
                 color: 'var(--color-text-primary)',
                 border: '1px solid var(--color-border-hover)',
               }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-accent)' }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border-hover)' }}
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch(null)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
+                className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary ${FOCUS_RING}`}
                 aria-label={lang === 'es' ? 'Limpiar búsqueda' : 'Clear search'}
               >
                 <X className="h-3.5 w-3.5" />
@@ -422,7 +437,7 @@ export default function CaseLibrary() {
               <button
                 type="button"
                 onClick={clearAll}
-                className="inline-flex items-center gap-1 font-mono uppercase text-text-muted hover:text-accent transition-colors"
+                className={`inline-flex items-center gap-1 font-mono uppercase text-text-muted hover:text-accent transition-colors ${FOCUS_RING}`}
                 style={{ fontSize: 12, letterSpacing: '0.12em' }}
               >
                 <X className="h-3 w-3" aria-hidden="true" />
@@ -491,7 +506,7 @@ export default function CaseLibrary() {
                 <button
                   type="button"
                   onClick={clearAll}
-                  className="mt-3 inline-flex items-center gap-1.5 font-mono uppercase text-accent hover:opacity-70 transition-opacity"
+                  className={`mt-3 inline-flex items-center gap-1.5 font-mono uppercase text-accent hover:opacity-70 transition-opacity ${FOCUS_RING}`}
                   style={{ fontSize: 13, letterSpacing: '0.12em' }}
                 >
                   <X className="h-3 w-3" aria-hidden="true" />
@@ -530,10 +545,12 @@ export default function CaseLibrary() {
 
                 {/* Sort control */}
                 <div
+                  role="group"
+                  aria-label={lang === 'es' ? 'Ordenar' : 'Sort'}
                   className="mt-6 flex items-center justify-end gap-1.5 flex-wrap font-mono uppercase"
                   style={{ fontSize: 12, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
                 >
-                  <span>{lang === 'es' ? 'Ordenar' : 'Sort'}</span>
+                  <span aria-hidden="true">{lang === 'es' ? 'Ordenar' : 'Sort'}</span>
                   {([
                     { key: 'loss' as SortKey, label: lang === 'es' ? 'Pérdida ↓' : 'Loss ↓' },
                     { key: 'severity' as SortKey, label: lang === 'es' ? 'Gravedad ↓' : 'Severity ↓' },
@@ -546,7 +563,8 @@ export default function CaseLibrary() {
                         key={s.key}
                         type="button"
                         onClick={() => setSortBy(s.key)}
-                        className="px-2 py-0.5 font-medium transition-colors"
+                        aria-pressed={active}
+                        className={`px-2 py-1 font-medium transition-colors ${FOCUS_RING}`}
                         style={{
                           fontFamily: 'var(--font-family-mono)',
                           background: active ? 'var(--color-accent)' : 'transparent',
