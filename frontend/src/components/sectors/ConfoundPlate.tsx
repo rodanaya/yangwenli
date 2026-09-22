@@ -511,10 +511,10 @@ export function ConfoundPlate({
         </div>
 
         {/* Ruler row: lane-1 log ticks + lane-2 quartile ruler */}
-        <div style={GRID} className="mt-1" aria-hidden="true">
+        <div style={{ ...GRID, alignItems: 'start' }} className="mt-1" aria-hidden="true">
           <span />
           <span />
-          <span className="relative block" style={{ height: 16 }}>
+          <span className="relative block" style={{ height: 36 }}>
             {VAR_TICKS.map((t) => {
               const f = logFrac(t)
               if (f <= 0 || f >= 1) return null
@@ -527,15 +527,17 @@ export function ConfoundPlate({
                 </span>
               )
             })}
+            {/* Unit on its own line under the ticks — at 11px it no longer
+                fits beside the 0.5 / 1 tick labels. */}
             <span
-              className="absolute right-0 top-0 font-mono"
-              style={{ ...MONO_MICRO, fontSize: 11, color: 'var(--color-text-muted)' }}
+              className="absolute right-0 font-mono whitespace-nowrap"
+              style={{ ...MONO_MICRO, top: 20, fontSize: 11, color: 'var(--color-text-muted)' }}
             >
               {isEs ? 'billones MXN' : 'trillions MXN'}
             </span>
           </span>
           <span />
-          <span className="relative block" style={{ height: 16 }}>
+          <span className="relative block" style={{ height: 20 }}>
             {[0, 25, 50, 75, 100].map((t) => (
               <span
                 key={t}
