@@ -68,7 +68,6 @@ const Administrations = lazy(() => import('@/pages/Administrations'))
 // See docs/RUBLI_v1.0_LAUNCH_PLAN.md for the cut list.
 //   ModelTransparency        → /methodology
 //   Investigation/Case       → /aria
-//   CapturaHeatmap           → /captura
 //   YearInReview             → /
 //   VendorCompare            → /sectors
 //   InstitutionCompare       → /institutions
@@ -577,7 +576,7 @@ function App() {
               />
 
               {/* Redirects from merged/renamed pages */}
-              {/* v1.0 launch cut — CapturaHeatmap duplicate of /captura. */}
+              {/* Legacy alias — the retired money-flow surface folded into /captura. */}
               <Route path="money-flow" element={<Navigate to="/captura" replace />} />
               {/* Plural/singular + recent-rename aliases kept for external links */}
               <Route path="networks" element={<Navigate to="/network" replace />} />

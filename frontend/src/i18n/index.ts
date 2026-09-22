@@ -49,8 +49,6 @@ import esReportcard from './locales/es/reportcard.json'
 import enReportcard from './locales/en/reportcard.json'
 import esAria from './locales/es/aria.json'
 import enAria from './locales/en/aria.json'
-import esCaptura from './locales/es/captura.json'
-import enCaptura from './locales/en/captura.json'
 import esJournalists from './locales/es/journalists.json'
 import enJournalists from './locales/en/journalists.json'
 import esInstitutionleague from './locales/es/institutionleague.json'
@@ -89,7 +87,6 @@ i18n
         vendorcompare: esVendorcompare,
         reportcard: esReportcard,
         aria: esAria,
-        captura: esCaptura,
         journalists: esJournalists,
         institutionleague: esInstitutionleague,
         collusion: esCollusion,
@@ -114,7 +111,6 @@ i18n
         vendorcompare: enVendorcompare,
         reportcard: enReportcard,
         aria: enAria,
-        captura: enCaptura,
         journalists: enJournalists,
         institutionleague: enInstitutionleague,
         collusion: enCollusion,
