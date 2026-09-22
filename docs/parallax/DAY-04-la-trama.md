@@ -164,4 +164,4 @@ Deviations accepted: PlateFrame context label wraps instead of ellipsing (verifi
 
 Noticed, not fixed (→ PARALLAX backlog): siege-plate centre label covers two small orbit nodes at 1440; C-3 callout sits over grey marks at 390 (label-over-data — placeLabels has no data-mark obstacles); ochre accent 4.44:1 on the page background (Day 1 token decision); local backend boot needs the no-scan launcher on a cold disk (`_parallax_shots/day04/local_backend.py`).
 
-Shipped 2026-09-22: BUILD_ID `2026-09-22-parallax-d4-la-trama` — commit + entry chunk recorded below after deploy.
+Shipped 2026-09-22 06:51Z: origin/main + VPS HEAD `6f6c21ac`, BUILD_ID `2026-09-22-parallax-d4-la-trama`, entry `index-C5A6mxjf.js`, page chunk `RedesKnownDossier-B08PJfOZ.js` (new strings verified in the served JS), health OK (3,058,286 contracts). Deployed via `deploy-safe.sh`; no local re-verification against prod beyond the served-chunk check (prod is never probed).
