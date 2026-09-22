@@ -31,7 +31,7 @@ function RailLabel({ children }: { children: React.ReactNode }) {
   return (
     <p
       className="font-mono uppercase"
-      style={{ fontSize: 8.5, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 500 }}
+      style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--color-text-muted)', fontWeight: 500 }}
     >
       {children}
     </p>
@@ -90,7 +90,7 @@ export function CaseDocketRail({
       {scandal.is_verified ? (
         <p
           className="font-mono mt-1"
-          style={{ fontSize: 8.5, letterSpacing: '0.18em', color: 'var(--color-text-secondary)', fontWeight: 600 }}
+          style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--color-text-secondary)', fontWeight: 600 }}
         >
           {lang === 'es' ? 'VERIFICADO ✓' : 'VERIFIED ✓'}
         </p>
@@ -249,15 +249,15 @@ export function CostInArchive({
       className="mt-2"
       style={{
         fontFamily: '"EB Garamond", Georgia, serif',
-        fontStyle: 'italic',
+        fontStyle: 'normal',
         fontSize: 14.5,
         lineHeight: 1.45,
         color: 'var(--color-text-primary)',
       }}
     >
       {lang === 'es'
-        ? <><strong className="tabular-nums not-italic">{formatMultiplier(multiplier)}×</strong> el umbral de revisión de la plataforma para {sector} — un umbral interno, no una norma oficial.</>
-        : <><strong className="tabular-nums not-italic">{formatMultiplier(multiplier)}×</strong> the platform's {sector} review threshold — an internal benchmark, not an official norm.</>}
+        ? <><strong className="tabular-nums">{formatMultiplier(multiplier)}×</strong> el umbral de revisión de la plataforma para {sector} — un umbral interno, no una norma oficial.</>
+        : <><strong className="tabular-nums">{formatMultiplier(multiplier)}×</strong> the platform's {sector} review threshold — an internal benchmark, not an official norm.</>}
     </p>
   )
 
@@ -363,7 +363,7 @@ export function CostInArchive({
       </div>
       <p
         className="mt-2"
-        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 12, color: 'var(--color-text-muted)', maxWidth: '64ch' }}
+        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 12, color: 'var(--color-text-muted)', maxWidth: '64ch' }}
       >
         {caption}
       </p>
@@ -468,7 +468,7 @@ export function LinkedVendorList({
                   {v.vendor_name}
                   <span
                     className="font-mono ml-2 uppercase"
-                    style={{ fontSize: 8.5, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
+                    style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
                   >
                     {lang === 'es' ? 'sin vínculo COMPRANET' : 'no COMPRANET link'}
                   </span>
@@ -483,7 +483,7 @@ export function LinkedVendorList({
             <span
               className="font-mono flex-shrink-0 uppercase"
               style={{
-                fontSize: 8.5,
+                fontSize: 10,
                 letterSpacing: '0.12em',
                 color: 'var(--color-text-muted)',
                 border: '1px solid var(--color-border)',
@@ -517,15 +517,15 @@ export function LinkedVendorList({
             className="flex-1 min-w-0"
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               fontSize: 14.5,
               color: 'var(--color-text-muted)',
             }}
           >
             {a.name}{' '}
             <span
-              className="font-mono not-italic uppercase"
-              style={{ fontSize: 8.5, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
+              className="font-mono uppercase"
+              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
             >
               · {lang === 'es' ? 'nombrado en §IV · sin registro COMPRANET' : 'named in §IV · no COMPRANET record'}
             </span>

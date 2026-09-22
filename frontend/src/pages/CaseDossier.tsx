@@ -155,7 +155,7 @@ function CaseCharge({ finding, lang }: { finding: LeadFinding; lang: Lang }) {
       <div className="flex items-center gap-3 mb-2.5">
         <span
           className="font-mono uppercase flex-shrink-0"
-          style={{ fontSize: 9.5, letterSpacing: '0.22em', color: finding.accentKind, fontWeight: 600 }}
+          style={{ fontSize: 10, letterSpacing: '0.18em', color: finding.accentKind, fontWeight: 600 }}
         >
           {lang === 'es' ? 'ACTO I · EL CARGO' : 'ACT I · THE CHARGE'}
         </span>
@@ -163,14 +163,14 @@ function CaseCharge({ finding, lang }: { finding: LeadFinding; lang: Lang }) {
       </div>
       <p
         className="font-mono uppercase mb-2"
-        style={{ fontSize: 9, letterSpacing: '0.2em', color: finding.accentKind, fontWeight: 600 }}
+        style={{ fontSize: 10, letterSpacing: '0.18em', color: finding.accentKind, fontWeight: 600 }}
       >
         ▎{finding.eyebrow}
       </p>
       <p
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
+          fontStyle: 'normal',
           fontWeight: 500,
           fontSize: 'clamp(20px, 2.4vw, 27px)',
           lineHeight: 1.34,
@@ -406,7 +406,7 @@ function ActorList({
               {actor.role === 'vendor' && !resolved && (
                 <p
                   className="font-mono uppercase mt-0.5"
-                  style={{ fontSize: 8.5, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
+                  style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
                 >
                   → {lang === 'es' ? 'sin registro COMPRANET' : 'no COMPRANET record'}
                 </p>
@@ -427,7 +427,7 @@ function ActorList({
             </div>
             <span
               className="font-mono flex-shrink-0 uppercase"
-              style={{ fontSize: 8.5, letterSpacing: '0.14em', color: 'var(--color-accent)', fontWeight: 700 }}
+              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-accent)', fontWeight: 700 }}
             >
               {ROLE_LABEL[actor.role]?.[lang] ?? actor.role}
             </span>

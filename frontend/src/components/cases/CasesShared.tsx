@@ -39,7 +39,7 @@ export function DispositionSeal({
     <span
       className="inline-flex items-center gap-1.5 font-mono uppercase"
       style={{
-        fontSize: size === 'md' ? 10 : 9,
+        fontSize: 10,
         letterSpacing: '0.16em',
         fontWeight: 700,
         color: meta.ink,
@@ -96,7 +96,7 @@ export function FeatureSection({
         <div className="flex items-center gap-3 mb-3">
           <span
             className="font-mono uppercase"
-            style={{ fontSize: 9.5, letterSpacing: '0.22em', color: accentColor, fontWeight: 600 }}
+            style={{ fontSize: 10, letterSpacing: '0.18em', color: accentColor, fontWeight: 600 }}
           >
             {lang === 'es' ? movement.es : movement.en}
           </span>

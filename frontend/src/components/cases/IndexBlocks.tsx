@@ -341,8 +341,8 @@ export function AgateLedger({
       <div
         className={`${AGATE_GRID} items-baseline gap-x-3 pb-1.5 font-mono uppercase`}
         style={{
-          fontSize: 8.5,
-          letterSpacing: '0.16em',
+          fontSize: 10,
+          letterSpacing: '0.14em',
           color: 'var(--color-text-muted)',
           borderBottom: '1px solid var(--color-text-primary)',
         }}
@@ -423,7 +423,7 @@ function AgateRow({
           {cas.ground_truth_case_id != null && (
             <span
               className="font-mono ml-2"
-              style={{ fontSize: 8.5, letterSpacing: '0.12em', color: 'var(--color-accent)', fontWeight: 700 }}
+              style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--color-accent)', fontWeight: 700 }}
             >
               ▪GT
             </span>

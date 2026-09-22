@@ -615,7 +615,7 @@ export default function CaseLibrary() {
 
 /** Shared by the caption and the optional USD sub-line so the two never drift. */
 const MASTHEAD_LABEL = {
-  fontSize: 8.5,
+  fontSize: 10,
   letterSpacing: '0.18em',
   color: 'var(--color-text-muted)',
 } as const
