@@ -6,7 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { formatNumber, formatCompactMXN, formatPercent, getRiskLevel } from '../lib/utils'
+import { formatNumber, formatCompactMXN, formatPercent, getRiskLevel, toTitleCase } from '../lib/utils'
+import { formatEntityName } from '../lib/entity/format'
 import { RISK_THRESHOLDS, RISK_THRESHOLDS_V3, CURRENT_MODEL_VERSION } from '../lib/constants'
 
 describe('formatNumber', () => {
@@ -122,5 +123,47 @@ describe('Amount validation constants', () => {
 
     expect(MAX_CONTRACT_VALUE).toBe(100000000000)
     expect(FLAG_THRESHOLD).toBe(10000000000)
+  })
+})
+
+// PARALLAX D6b § Change 1 — siglas keep their capitals, institution names take
+// their casing from toTitleCase (particles + period suffixes handled once).
+describe('toTitleCase — sigla guard', () => {
+  it('leaves a lone all-caps token of 8 characters or fewer alone', () => {
+    for (const sigla of ['SPF', 'INAI', 'AFAC', 'SIAP', 'FND', 'CIJ', 'AGN', 'IMSS', 'PEMEX', 'CFE']) {
+      expect(toTitleCase(sigla)).toBe(sigla)
+    }
+  })
+
+  it('still title-cases multi-word ALL CAPS names', () => {
+    expect(toTitleCase('SECRETARIA DE SALUD')).toBe('Secretaria de Salud')
+  })
+
+  it('still title-cases a long single all-caps token', () => {
+    expect(toTitleCase('ASIPONAACAPULCO')).toBe('Asiponaacapulco')
+  })
+
+  it('leaves genuine mixed case alone', () => {
+    expect(toTitleCase('Grupo Fármacos')).toBe('Grupo Fármacos')
+  })
+})
+
+describe('formatEntityName — institution', () => {
+  it('keeps siglas uppercase', () => {
+    expect(formatEntityName('institution', 'SPF', 'full')).toBe('SPF')
+    expect(formatEntityName('institution', 'PUE', 'full')).toBe('PUE')
+  })
+
+  it('lowercases Spanish particles', () => {
+    expect(formatEntityName('institution', 'SECRETARÍA DE SALUD DEL ESTADO DE MÉXICO', 'full')).toBe(
+      'Secretaría de Salud del Estado de México',
+    )
+  })
+
+  it('cases a period-separated corporate suffix instead of mangling it', () => {
+    const out = formatEntityName('institution', 'TRANSPORTADORA DE SAL, S.A. DE C.V.', 'full')
+    expect(out).toBe('Transportadora de Sal, S.A. de C.V.')
+    expect(out).not.toContain('S.a.')
+    expect(out).not.toContain('De Sal')
   })
 })

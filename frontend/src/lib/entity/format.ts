@@ -7,6 +7,7 @@
  * vs "Grupo Fármacos…" inconsistency the audit found across 28 surfaces.
  */
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { toTitleCase } from '@/lib/utils'
 
 export type EntityType =
   | 'vendor'
@@ -35,23 +36,17 @@ const TRUNCATE: Record<EntityType, { xs: number; sm: number; md: number; full: n
   story:         { xs: 20, sm: 32, md: 48,  full: 300 },
 }
 
-/** Strip common Mexican legal-entity suffixes — institution variant. */
+/** Case an institution name for display. */
 function formatInstitutionName(raw: string, max: number): string {
   if (!raw) return ''
-  const cleaned = raw
-    .replace(/\b(SA DE CV|S\.A\. DE C\.V\.|S DE RL DE CV)\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-  // Title-case if input is ALL CAPS
-  // NOTE: avoid \b\w regex — it misreads Unicode word boundaries (e.g. "Secretaría" → "SecretaríA")
-  const isAllCaps = cleaned === cleaned.toUpperCase()
-  // A single all-caps token of ≤8 chars is a sigla/acronym (IMSS, PEMEX, CFE,
-  // CONAGUA, SEGALMEX) — keep it uppercase. Title-casing it produced "Imss".
-  // Only multi-word ALL-CAPS names (shouty full names) get title-cased.
-  const isSigla = isAllCaps && !cleaned.includes(' ') && cleaned.length <= 8
-  const cased = isAllCaps && !isSigla
-    ? cleaned.toLowerCase().split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-    : cleaned
+  // toTitleCase owns the whole casing problem in one place: Spanish particles,
+  // period-separated corporate suffixes, state prefixes and the ≤8-character
+  // sigla guard. The local copy this replaced capitalised every space-separated
+  // token, so "SECRETARÍA DE SALUD DEL ESTADO DE MÉXICO" printed "Secretaría De
+  // Salud Del Estado De México"; and its `\b`-terminated suffix regex could
+  // never match "S.A. DE C.V." (no word character follows the final period), so
+  // that suffix fell through to the same naive pass as "S.a. De C.v.".
+  const cased = toTitleCase(raw.replace(/\s+/g, ' ').trim())
   if (cased.length <= max) return cased
   // Truncate at word boundary
   const cut = cased.slice(0, max - 1).replace(/\s+\S*$/, '')

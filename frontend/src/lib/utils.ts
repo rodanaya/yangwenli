@@ -321,6 +321,14 @@ export function toTitleCase(text: string): string {
   // correctly recognises it as effectively all-caps and title-cases it.
   if (/[a-z]/.test(text) && /[A-Z]/.test(text)) return text
 
+  // A lone ASCII all-caps token of ≤8 characters is a sigla, not a shouty word:
+  // SPF, INAI, AGN, CIJ, FND, AFAC, SIAP, IMSS, PEMEX, CFE. Title-casing those
+  // printed non-words ("Spf", "Inai", "Afac") on every surface that renders an
+  // institution_name, because this normaliser runs in the axios interceptor
+  // before formatInstitutionName's own sigla guard can ever see the capitals.
+  // Multi-word ALL-CAPS names (real names shouted by COMPRANET) are unaffected.
+  if (text.length <= 8 && /^[A-Z][A-Z0-9]*$/.test(text)) return text
+
   let lower = text.toLowerCase()
 
   // Preserve period-separated corporate suffixes BEFORE word-level processing
