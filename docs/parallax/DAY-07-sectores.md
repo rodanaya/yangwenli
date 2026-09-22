@@ -136,3 +136,29 @@ Mechanic Day 5/6: measured width, 1 unit = 1 px, HTML owns every glyph.
 - Probes: extend `_parallax_shots/day07/audit7.mjs` (tag `after`): add the labelled-column width check (`text.getBBox().width + 6 ≤ strip width`), the Tab walk on `who-intensity` and a 60-stop walk on `what`, a `transition` check on the plate rows; run EN and `LANG_ES=1` at `WIDTHS=1440,1024,390` plus one 1920 run for the frame. Census: `MSYS_NO_PATHCONV=1 node "D:/…/day04/clipcensus4.mjs" http://localhost:3009 "/sectors,/sectors?reg=register,/sectors?view=categories,/sectors/1,/sectors/4" 1440,1280,1024,390` EN and ES → 0 on every line at ≥ 1024 is a hard gate; at 390 only the dossier table scrollers may appear (report them). Write `_parallax_shots/day07/crop7.mjs` modelled on `day06/crop6.mjs` (hide sticky chrome outside `main` first; element screenshots; **never widen the viewport for a mobile crop**) and crop at 1440 and 390, EN and ES, into `after/`: masthead, WHO mesa, confound lede, plate (VaR), plate (`?lens=intensity`), plate with the third column focused, register (`?reg=register`) + hover card, climbers, Fe; WHAT mesa, dumbbell, catalog rows 1–15, tree; `/sectors/1` hero + stat strip, diagnostic grid, vendors table, cases, provenance; `/sectors/4` hero, signals. **LOOK at every crop before reporting** — read the sentences and the label placements, not just the layout.
 - Review inside the agent: `vercel-react-best-practices` on the diff, `rubli-bilingual-audit` on every touched TSX, then gates from `frontend/`: `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.app.json` · `npm run build` · `npm run lint:tokens` · `npx eslint` on the touched files.
 - Do NOT bump BUILD_ID, push, deploy or merge — Fable judges first.
+
+## Result
+
+Built by Opus executor `parallax-day07` (STEP 0 + Changes 1→8→7→6→3→4→2→5 + four review/crop follow-ups), judged by Fable on the `after/` crops at 1440 + 390, EN + ES, and on re-runs of `audit7.mjs` + the census against the executor's HEAD (`judge`, `judge3`); one judge round of seven fixes (`6ed810c2`, `3ed55984`), re-verified on `judge2/` crops.
+
+| Measure | before | after (`3ed55984`) |
+|---|---|---|
+| sub-10px text leaves (1440 / 390) | `who` 20 / 19 · register hover 22 · `what` 26 / **58** (dumbbell at 4.5px) | **0 / 0 on every route**, EN + ES |
+| smallest SVG glyph | 4.5px | 11px; `svgClip` 0, `svgOutsidePlate` 0, `svgTextContrast` 0 |
+| Marimekko names | 7 category names truncated (`Building Constr…`), labels overprinting | 0 truncated: measured names or circled index + 13px legend; Treasury circled (55px column), categories 1 labelled + 14 circled at 946 (backlog) |
+| clickable non-native (`div`/`rect`/`circle` buttons, focusable listitems) | `who` 24, register 36, `what` 39 | 12 / 12 / 15 (the mesa columns, now with a visible focus outline); 0 at 390 — rows and names are `<Link>`s, Tab order follows the lens |
+| nested interactive / no focus style / targets < 24px | 12 / 47 / 144 (`what`) | 0 / 0 / 0 |
+| sector palette as type | energía dossier 10, tree 8 | 0 (`getSectorTextColor`) |
+| failing contrast, dossiers | 55 / 81 | 1 / 1 (shared `WayfindingSpine` `— / —`) |
+| failing contrast, `/sectors` at 1440 | 19 (incl. ochre 8.5px callout, `#f59e0b` 12px type, `/50` headers) | 12 = PlateFrame ×6 (shared) + `#a16207` 4.36 ×2 (constants) + accent spans ≥ 28px ×4; `what` 8 = the same + 2 chip high-risk names (shared chip) |
+| headings / skips | `who` 3, `what` 2, dossiers 9 | 6 / 6 / 10, skips 0; `aria-label` on role-less elements 76 → 0 |
+| clip census, 5 routes × 4 widths × EN/ES | dossiers 5–15 per width, `?view=categories` 101 at 390 | **0 / 40** |
+| frame | 1,176 / 1,152 | 1,010 centred on both pages (103/103 at 1440, 343/343 at 1920); prose 15px; DenseReadout labels 0 clipped |
+| values breaking across lines (judge) | mobile plate amount, dumbbell numerics at 390, stat-strip anchors EN + ES | 0 (`nowrap`, anchors span two tracks) |
+| `docH` `who@1440` | 3,129 | 3,363 (+7.5 %) |
+
+Commits: `742cf432` STEP 0 · `7ee44348` §1 · `e00ae614` §8 · `c56a87d8` §7 · `7990c9b5` §6 · `319fdfe9` §3 · `7d2bcceb` §4 · `5ec5a3c7` §2 · `5055b92e` §5 · `e82aaa4f` `34c103a6` `bc3b1b4f` `864b3194` `2677d36f` review/crop follow-ups · `6ed810c2` `3ed55984` judge fixes (hashes as built on `d9893d6a`; rebased onto `23d6ae23` for the ship). Gates: tsc 0 · build OK (39 s) · lint:tokens PASS · eslint clean on touched files (3 pre-existing warnings) · bilingual audit clean · `EditorialSparkline` other caller byte-identical (md5 05a59513).
+
+Deviations accepted: the ConfoundPlate FLIP is replayed with WAAPI (a node React moves loses its CSS transition; reduced-motion respected); Treasury falls to the circled legend on the WHO plate and 14 of 15 category columns are circled — the measured rule replaces a 48px threshold that let a 66px name sit in a 65px column; the categories run now starts at the tick gutter; mobile mesa rows are 24px links; the `MEDIUM THRESHOLD` label uses accent-hover (`RISK_TEXT_COLORS.high` measured 4.45 on the plate tint); `intensityTextColor` lives in `confoundScales.ts` (react-refresh); the catalog list scrolls at 680px on phones with the numeric columns tightened.
+
+Noticed, not fixed (→ PARALLAX backlog): PlateFrame stamp/folio inks; `RISK_TEXT_COLORS.medium` 4.36; chip high-risk names; WayfindingSpine `— / —`; `InstitutionProfile.tsx`; two-line Marimekko labels; Link-vs-chip on the plate; DenseReadout grid holes; tail-column hit targets; desktop hover readout ellipsis at 1024 ES; catalog mobile card layout; view-local `useState`.
