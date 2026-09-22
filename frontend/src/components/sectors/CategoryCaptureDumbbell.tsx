@@ -6,22 +6,25 @@
  * Design decisions:
  * - Fan-out: one getTopVendors(catId, 2) per top-12-by-spend category.
  *   12 calls × 5 min cache = cheap after first load; no new backend endpoint needed.
- * - Y-axis: categories sorted by (share_top1 − share_top2) descending — gap is capture proxy.
- * - X-axis: vendor share of category spend [0%, 100%].
+ * - Y-axis: categories sorted by #1-vendor share descending.
+ * - X-axis: vendor share of category spend on a data-driven domain.
  * - #1 dot: filled r=7, SECTOR_COLORS[sector_code] at 0.95 opacity.
  * - #2 dot: open r=5, stroke = sector color, fill = background-elevated.
- * - Connector: 2px line, sector color at 0.4 opacity; thickness clamps 1.5–4px on total_value.
- * - Reference dashed line at 50%; "MERCADO CAPTURADO" pill when #1 share > 75%.
- * - Pull-quote on widest dumbbell (max gap row).
- * - Hover dims others to 0.4; tooltip shows both vendor chips, counts, value.
- * - Click dot → /vendors/:id via EntityIdentityChip semantics; click label → /categories/:id.
- * - Pure SVG; no recharts.
+ * - Connector: sector color at 0.4 opacity; thickness clamps 1.5–4px on total_value.
+ * - Hover (or keyboard focus) dims others to 0.25; tooltip shows both vendor
+ *   chips, counts, value.
  *
- * Build: 2026-05-04-cat-p2
+ * PARALLAX D7 § Change 5 — 1:1 with HTML glyphs. The old 900-unit viewBox was
+ * scaled by CSS, so on a phone every label rendered at ~4.5px. Now: the width
+ * is measured (useMeasuredWidth), each row is an HTML grid, the middle cell
+ * holds a 1:1 svg with only the connector + the two dots (aria-hidden), and
+ * every glyph is HTML: the category chip, the #1 vendor chip (a real link, full
+ * name, never truncated), the numerics, the axis, the ceiling label and the
+ * legend. The #2 vendor stays reachable through an sr-only span and the
+ * tooltip, which also opens on keyboard focus.
  */
 
 import { useState, useMemo, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/client'
@@ -29,6 +32,8 @@ import { SECTOR_COLORS, SECTOR_TEXT_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { formatCompactMXN } from '@/lib/utils'
+import { useMeasuredWidth, useFontsReady } from '@/hooks/useMeasuredWidth'
+import { measureLabel } from '@/components/network/plateLabels'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -119,12 +124,13 @@ interface Props {
 
 // ── Layout constants ───────────────────────────────────────────────────────────
 
-const LEFT_W = 180   // px reserved for category label column
-const RIGHT_W = 88   // px reserved for "XX% / YY%" numerics
-const ROW_H_DESKTOP = 28
-const ROW_H_MOBILE = 24
-const HEADER_H = 36
-const FOOTER_H = 44
+const LABEL_W = 190     // px — category chip column (≥ STACK_BELOW)
+const NUM_W = 96        // px — "14% / 4%" numerics column
+const NUM_W_STACKED = 64
+const COL_GAP = 12
+const STACK_BELOW = 560 // container px under which the label sits above the track
+const DOT_H = 20        // px — the 1:1 svg strip that holds connector + dots
+const TRACK_PAD = 8     // px — keeps the r=7 dot inside the track at 0% / max
 
 const MIN_SPEND_FILTER = 1_000_000_000 // 1B MXN — skip tiny categories
 const MAX_ROWS = 12
@@ -138,10 +144,10 @@ function connectorThickness(totalValue: number): number {
   return Math.max(1.5, Math.min(4, 1.5 + t * 1.25))
 }
 
-/** Truncate vendor name label for SVG text */
-function truncateLabel(name: string, maxChars = 28): string {
-  const formatted = formatVendorName(name)
-  return formatted.length > maxChars ? formatted.slice(0, maxChars - 1) + '…' : formatted
+/** The body sans stack, for measuring the vendor chip (text-xs font-medium). */
+function chipFont(): string {
+  if (typeof document === 'undefined') return '500 12px sans-serif'
+  return `500 12px ${getComputedStyle(document.body).fontFamily || 'sans-serif'}`
 }
 
 // ── Tooltip ────────────────────────────────────────────────────────────────────
@@ -155,9 +161,12 @@ interface TooltipData {
 function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
   const { row, anchorX, anchorY } = data
   const top1Name = formatVendorName(row.top1.vendor_name)
+  const textColor = SECTOR_TEXT_COLORS[row.sector_code] ?? 'var(--color-text-primary)'
 
   return (
     <div
+      // A pointer-less preview: inert, so Tab never lands in its chips.
+      inert
       className="pointer-events-none fixed z-50 bg-background-elevated border border-border rounded-sm shadow-lg p-3 text-xs"
       style={{
         left: anchorX + 12,
@@ -175,7 +184,7 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
       <div className="flex items-center gap-2 mb-1.5">
         <span
           className="font-bold text-[12px] font-mono uppercase tracking-wide"
-          style={{ color: row.color }}
+          style={{ color: textColor }}
         >
           #1
         </span>
@@ -186,7 +195,7 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
           size="xs"
           hideIcon
         />
-        <span className="ml-auto font-mono tabular-nums font-bold" style={{ color: row.color }}>
+        <span className="ml-auto font-mono tabular-nums font-bold" style={{ color: textColor }}>
           {row.top1.market_share_pct.toFixed(1)}%
         </span>
       </div>
@@ -244,9 +253,10 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
 
 export function CategoryCaptureDumbbell({ categories }: Props) {
   const { i18n } = useTranslation()
-  const navigate = useNavigate()
   const isEs = i18n.language === 'es'
   const containerRef = useRef<HTMLDivElement>(null)
+  const W = useMeasuredWidth(containerRef)
+  const fontsReady = useFontsReady()
 
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
@@ -308,11 +318,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
   })
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const rows = captureRows ?? []
-  const rowCount = rows.length
-  // After the #1-share sort, index 0 is the most-concentrated leader — the
-  // pull-quote sits there.
-  const leaderIdx = 0
+  const rows = useMemo(() => captureRows ?? [], [captureRows])
   // Data-driven x-domain. Real category #1-vendor shares top out at ~14%
   // (federal categories span thousands of vendors); the old 0–100% axis wasted
   // ~75% of the width and propped up a "market captured" story the data refutes.
@@ -323,18 +329,41 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
   // "the leader holds barely 1 peso in N" — computed, never hardcoded.
   const fragDenom = Math.max(2, Math.round(100 / Math.max(maxTop1, 1)))
 
-  const chartH_desktop = rowCount * ROW_H_DESKTOP + HEADER_H + FOOTER_H
-  const chartH_mobile = rowCount * ROW_H_MOBILE + HEADER_H + FOOTER_H
-  // The SVG viewBox uses desktop coords; CSS scales it responsively.
-  const CHART_H = chartH_desktop
+  // ── Measured geometry: 1 svg unit = 1 px ──────────────────────────────────
+  const stacked = W > 0 && W < STACK_BELOW
+  const numW = stacked ? NUM_W_STACKED : NUM_W
+  const trackW = Math.max(0, stacked ? W - numW - COL_GAP : W - LABEL_W - numW - 2 * COL_GAP)
+  const gridTemplateColumns = stacked
+    ? `minmax(0,1fr) ${numW}px`
+    : `${LABEL_W}px minmax(0,1fr) ${numW}px`
+  const xPos = useCallback(
+    (pct: number) => TRACK_PAD + (pct / domainMax) * Math.max(0, trackW - 2 * TRACK_PAD),
+    [domainMax, trackW],
+  )
+  const xCeiling = xPos(maxTop1) // the observed concentration ceiling
+  const ticks = Array.from({ length: Math.floor(domainMax / 5) + 1 }, (_, i) => i * 5)
 
-  // ── Mouse handlers ────────────────────────────────────────────────────────
-  const handleRowEnter = useCallback((idx: number, row: DumbbellRow, e: React.MouseEvent) => {
+  // #1 vendor label side: right of the dot when it fits the track, else left
+  // of it (so it never runs into the numerics column); when neither side fits
+  // it takes the roomier side and wraps.
+  const labelSides = useMemo(() => {
+    const font = chipFont()
+    return rows.map((row) => {
+      const x1 = xPos(row.top1.market_share_pct)
+      const nameW = (fontsReady ? measureLabel(formatVendorName(row.top1.vendor_name), font, Number.POSITIVE_INFINITY, 16).width : 0) + 12
+      const right = trackW - (x1 + 11)
+      const left = x1 - 11
+      return nameW <= right || (nameW > left && right >= left) ? 'right' as const : 'left' as const
+    })
+  }, [rows, xPos, trackW, fontsReady])
+
+  // ── Mouse + keyboard handlers ─────────────────────────────────────────────
+  const openTooltip = useCallback((idx: number, row: DumbbellRow, x: number, y: number) => {
     setHoveredIdx(idx)
-    setTooltip({ row, anchorX: e.clientX, anchorY: e.clientY })
+    setTooltip({ row, anchorX: x, anchorY: y })
   }, [])
 
-  const handleRowLeave = useCallback(() => {
+  const closeTooltip = useCallback(() => {
     setHoveredIdx(null)
     setTooltip(null)
   }, [])
@@ -345,48 +374,55 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
     }
   }, [tooltip])
 
-  // ── Navigate helpers ──────────────────────────────────────────────────────
-  const handleVendorClick = useCallback((vendorId: number, e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigate(`/vendors/${vendorId}`)
-  }, [navigate])
+  // The ceiling label ends 4px left of the dashed ceiling (measured in the
+  // resolved mono face once the fonts are in).
+  const ceilingText = isEs ? `techo de concentración · ${maxTop1.toFixed(0)}%` : `concentration ceiling · ${maxTop1.toFixed(0)}%`
+  const monoStack = useMemo(
+    () => (fontsReady && typeof document !== 'undefined'
+      ? getComputedStyle(document.documentElement).getPropertyValue('--font-family-mono').trim() || 'monospace'
+      : 'monospace'),
+    [fontsReady],
+  )
+  const ceilingW = measureLabel(ceilingText, `13px ${monoStack}`, Number.POSITIVE_INFINITY, 16).width
 
-  const handleCategoryClick = useCallback((categoryId: number, e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigate(`/categories/${categoryId}`)
-  }, [navigate])
+  // Loading skeleton / empty state render INSIDE the measured wrapper, so the
+  // ResizeObserver is attached from the first paint (useMeasuredWidth observes
+  // once, on mount).
+  const skeleton = (
+    <div className="w-full animate-pulse">
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="flex items-center gap-3 py-2 border-b border-border last:border-b-0">
+          <div className="h-3 bg-background-elevated rounded w-32" />
+          <div className="flex-1 h-2 bg-background-elevated rounded" />
+          <div className="h-3 bg-background-elevated rounded w-16" />
+        </div>
+      ))}
+    </div>
+  )
+  const empty = (
+    <div className="py-8 text-sm text-text-muted text-center">
+      {isEs ? 'No hay datos de concentración disponibles.' : 'No concentration data available.'}
+    </div>
+  )
 
-  // ── Loading skeleton ──────────────────────────────────────────────────────
-  if (isLoading || !captureRows) {
-    return (
-      <div className="w-full animate-pulse">
-        {Array.from({ length: 8 }, (_, i) => (
-          <div key={i} className="flex items-center gap-3 py-2 border-b border-border last:border-b-0">
-            <div className="h-3 bg-background-elevated rounded w-32" />
-            <div className="flex-1 h-2 bg-background-elevated rounded" />
-            <div className="h-3 bg-background-elevated rounded w-16" />
-          </div>
-        ))}
-      </div>
-    )
-  }
+  // Gridlines + the dashed ceiling, drawn behind a track cell (a mark layer).
+  const gridLayer = (
+    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+      {ticks.map(pct => (
+        <span
+          key={pct}
+          className="absolute inset-y-0"
+          style={{ left: xPos(pct), width: 1, background: 'var(--color-text-muted)', opacity: 0.12 }}
+        />
+      ))}
+      <span
+        className="absolute inset-y-0"
+        style={{ left: xCeiling, width: 0, borderLeft: '1px dashed var(--color-text-muted)', opacity: 0.4 }}
+      />
+    </div>
+  )
 
-  if (rows.length === 0) {
-    return (
-      <div className="py-8 text-sm text-text-muted text-center">
-        {isEs ? 'No hay datos de concentración disponibles.' : 'No concentration data available.'}
-      </div>
-    )
-  }
-
-  // ── SVG geometry ──────────────────────────────────────────────────────────
-  // Total width is 100% of container. We draw in a fixed-width coordinate
-  // system and let SVG scale.
-  const TOTAL_W = 900 // SVG coordinate width
-  const barAreaW = TOTAL_W - LEFT_W - RIGHT_W
-  // X position for a share percentage, on the data-driven domain (0 → domainMax).
-  const xPos = (pct: number) => LEFT_W + (pct / domainMax) * barAreaW
-  const xCeiling = xPos(maxTop1) // the observed concentration ceiling
+  const monoStyle: React.CSSProperties = { fontFamily: 'var(--font-family-mono)' }
 
   return (
     <div
@@ -394,6 +430,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
       className="w-full relative"
       onMouseMove={handleMouseMove}
     >
+      {isLoading || !captureRows ? skeleton : rows.length === 0 ? empty : (<>
       {/* Anchor stat — the sharpest thesis on the page: the most dominant vendor
           in ANY federal category holds barely 1 peso in N. Computed from the live
           max, never hardcoded, so it stays honest across rescores. */}
@@ -419,265 +456,157 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
         </span>
       </div>
 
-      {/* ── Responsive SVG wrapper ── */}
-      {/* Desktop height via style; mobile via CSS override */}
       <div
-        className="w-full overflow-visible"
-        style={{ height: `clamp(${chartH_mobile}px, ${chartH_desktop}px, ${chartH_desktop}px)` }}
+        className="w-full"
+        role="list"
+        aria-label={isEs ? `Concentración de proveedores por categoría: participación #1 vs #2, máx. ${maxTop1.toFixed(0)}%` : `Vendor concentration by category: #1 vs #2 share, max ${maxTop1.toFixed(0)}%`}
       >
-        <svg
-          viewBox={`0 0 ${TOTAL_W} ${CHART_H}`}
-          width="100%"
-          height="100%"
-          aria-label={isEs ? `Concentración de proveedores por categoría: participación #1 vs #2, máx. ${maxTop1.toFixed(0)}%` : `Vendor concentration by category: #1 vs #2 share, max ${maxTop1.toFixed(0)}%`}
-          role="img"
-        >
-          {/* ── X-axis header labels (data-driven ticks every 5%) ── */}
-          {Array.from({ length: Math.floor(domainMax / 5) + 1 }, (_, i) => i * 5).map(pct => (
-            <g key={pct}>
-              <line
-                x1={xPos(pct)}
-                y1={HEADER_H - 8}
-                x2={xPos(pct)}
-                y2={CHART_H - FOOTER_H}
-                stroke="currentColor"
-                strokeWidth={0.5}
-                strokeOpacity={0.12}
-                className="text-text-muted"
-              />
-              <text
-                x={xPos(pct)}
-                y={HEADER_H - 14}
-                textAnchor="middle"
-                className="fill-current text-text-muted"
-                style={{ fontSize: 12, fontFamily: 'var(--font-family-mono)', letterSpacing: '0.05em' }}
-              >
-                {pct}%
-              </text>
-            </g>
-          ))}
-
-          {/* ── Concentration ceiling: the observed #1-share maximum, drawn in
-                 a NEUTRAL (non-risk) zinc — concentration is structure, not a
-                 verdict. The empty track to its right IS the finding: even the
-                 most-concentrated leader is nowhere near a majority. ── */}
-          <line
-            x1={xCeiling}
-            y1={HEADER_H - 8}
-            x2={xCeiling}
-            y2={CHART_H - FOOTER_H}
-            stroke="currentColor"
-            strokeWidth={1}
-            strokeDasharray="2 4"
-            strokeOpacity={0.4}
-            className="text-text-muted"
-          />
-          <text
-            x={xCeiling - 4}
-            y={CHART_H - FOOTER_H + 16}
-            textAnchor="end"
-            className="fill-current text-text-muted"
-            style={{ fontSize: 13, fontFamily: 'var(--font-family-mono)' }}
-          >
-            {isEs ? `techo de concentración · ${maxTop1.toFixed(0)}%` : `concentration ceiling · ${maxTop1.toFixed(0)}%`}
-          </text>
-
-          {/* ── Row legend: #1 filled / #2 open ── */}
-          <g transform={`translate(${LEFT_W}, ${CHART_H - FOOTER_H + 16})`}>
-            <circle cx={0} cy={0} r={5} fill="#6b7280" fillOpacity={0.7} />
-            <text
-              x={8}
-              y={4}
-              className="fill-current text-text-muted"
-              style={{ fontSize: 13, fontFamily: 'var(--font-family-mono)' }}
-            >
-              {isEs ? '#1 proveedor' : '#1 vendor'}
-            </text>
-            <circle cx={90} cy={0} r={4} fill="none" stroke="#6b7280" strokeWidth={1.5} />
-            <text
-              x={98}
-              y={4}
-              className="fill-current text-text-muted"
-              style={{ fontSize: 13, fontFamily: 'var(--font-family-mono)' }}
-            >
-              {isEs ? '#2 proveedor' : '#2 vendor'}
-            </text>
-          </g>
-
-          {/* ── Dumbbell rows ── */}
-          {rows.map((row, idx) => {
-            const rowY = HEADER_H + idx * ROW_H_DESKTOP
-            const cy = rowY + ROW_H_DESKTOP / 2
-            const x1 = xPos(row.top1.market_share_pct)
-            const x2 = row.top2 ? xPos(row.top2.market_share_pct) : null
-            const dimmed = hoveredIdx !== null && hoveredIdx !== idx
-            const opacity = dimmed ? 0.25 : 1
-            const isLeader = idx === leaderIdx
-            const barThickness = connectorThickness(row.total_value)
-
-            return (
-              <g
-                key={row.category_id}
-                opacity={opacity}
-                style={{ transition: 'opacity 0.15s ease', cursor: 'pointer' }}
-                onMouseEnter={e => handleRowEnter(idx, row, e)}
-                onMouseLeave={handleRowLeave}
-                role="row"
-                aria-label={`${isEs ? row.name_es : row.name_en}: ${row.top1.market_share_pct.toFixed(1)}% vs ${row.top2?.market_share_pct.toFixed(1) ?? 'N/A'}%`}
-              >
-                {/* Zebra background */}
-                {idx % 2 === 1 && (
-                  <rect
-                    x={0}
-                    y={rowY}
-                    width={TOTAL_W}
-                    height={ROW_H_DESKTOP}
-                    fill="currentColor"
-                    fillOpacity={0.025}
-                    className="text-text-muted"
-                  />
-                )}
-
-                {/* ── Category label (left column) ── */}
-                <foreignObject
-                  x={2}
-                  y={rowY + 2}
-                  width={LEFT_W - 6}
-                  height={ROW_H_DESKTOP - 4}
-                  onClick={e => handleCategoryClick(row.category_id, e as unknown as React.MouseEvent)}
-                  style={{ cursor: 'pointer', overflow: 'visible' }}
-                >
-                  <div
+        {W > 0 && (
+          <>
+            {/* ── Axis header (data-driven ticks every 5%) ── */}
+            <div className="grid" style={{ gridTemplateColumns, columnGap: COL_GAP }} aria-hidden="true">
+              {!stacked && <span />}
+              <div className="relative h-5">
+                {ticks.map((pct, i) => (
+                  <span
+                    key={pct}
+                    className="absolute top-0 tabular-nums text-text-muted"
                     style={{
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
+                      ...monoStyle,
+                      left: xPos(pct),
+                      transform: i === 0 ? 'translateX(-25%)' : i === ticks.length - 1 ? 'translateX(-85%)' : 'translateX(-50%)',
+                      fontSize: 12,
+                      letterSpacing: '0.05em',
                     }}
                   >
+                    {pct}%
+                  </span>
+                ))}
+              </div>
+              <span />
+            </div>
+
+            {/* ── Dumbbell rows ── */}
+            {rows.map((row, idx) => {
+              const x1 = xPos(row.top1.market_share_pct)
+              const x2 = row.top2 ? xPos(row.top2.market_share_pct) : null
+              const cy = DOT_H / 2
+              const dimmed = hoveredIdx !== null && hoveredIdx !== idx
+              const side = labelSides[idx]
+              const catName = isEs ? row.name_es : row.name_en
+              return (
+                <div
+                  key={row.category_id}
+                  role="listitem"
+                  className="grid items-center even:bg-background-elevated/60"
+                  style={{
+                    gridTemplateColumns,
+                    columnGap: COL_GAP,
+                    opacity: dimmed ? 0.25 : 1,
+                    transition: 'opacity 0.15s ease',
+                  }}
+                  onMouseEnter={e => openTooltip(idx, row, e.clientX, e.clientY)}
+                  onMouseLeave={closeTooltip}
+                  onFocusCapture={e => {
+                    const r = (e.target as HTMLElement).getBoundingClientRect()
+                    openTooltip(idx, row, r.right, r.top + r.height / 2)
+                  }}
+                  onBlurCapture={e => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeTooltip()
+                  }}
+                >
+                  {/* Category label — full name (wraps; never truncated) */}
+                  <div className="min-w-0 py-0.5" style={stacked ? { gridColumn: '1 / -1' } : undefined}>
                     <EntityIdentityChip
                       type="category"
                       id={row.category_id}
-                      name={isEs ? row.name_es : row.name_en}
-                      size="xs"
+                      name={catName}
+                      size="sm"
                       hideIcon
+                      fullName
+                      className="inline-flex w-auto"
                     />
                   </div>
-                </foreignObject>
 
-                {/* ── Connector bar between #2 and #1 ── */}
-                {x2 !== null && (
-                  <line
-                    x1={Math.min(x1, x2)}
-                    y1={cy}
-                    x2={Math.max(x1, x2)}
-                    y2={cy}
-                    stroke={row.color}
-                    strokeWidth={barThickness}
-                    strokeOpacity={0.4}
-                    strokeLinecap="round"
-                  />
-                )}
-
-                {/* ── #2 vendor dot (open circle) ── */}
-                {row.top2 && x2 !== null && (
-                  <circle
-                    cx={x2}
-                    cy={cy}
-                    r={5}
-                    fill="var(--color-background-elevated, #1c1c1e)"
-                    stroke={row.color}
-                    strokeWidth={1.5}
-                    style={{ cursor: 'pointer' }}
-                    onClick={e => handleVendorClick(row.top2!.vendor_id, e as unknown as React.MouseEvent)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/vendors/${row.top2!.vendor_id}`) } }}
-                    aria-label={`${formatVendorName(row.top2.vendor_name)} — ${row.top2.market_share_pct.toFixed(1)}%`}
-                  />
-                )}
-
-                {/* ── #1 vendor dot (filled circle) ── */}
-                <circle
-                  cx={x1}
-                  cy={cy}
-                  r={7}
-                  fill={row.color}
-                  fillOpacity={0.95}
-                  style={{ cursor: 'pointer' }}
-                  onClick={e => handleVendorClick(row.top1.vendor_id, e as unknown as React.MouseEvent)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/vendors/${row.top1.vendor_id}`) } }}
-                  aria-label={`${formatVendorName(row.top1.vendor_name)} — ${row.top1.market_share_pct.toFixed(1)}%`}
-                />
-
-                {/* ── #1 vendor name label — flips to the LEFT of the dot when
-                       the dot sits in the right 40% of the track, so the label
-                       never runs off the (now data-tight) axis ── */}
-                {(() => {
-                  const flip = x1 > LEFT_W + barAreaW * 0.6
-                  return (
-                    <text
-                      x={flip ? x1 - 11 : x1 + 11}
-                      y={cy - 6}
-                      textAnchor={flip ? 'end' : 'start'}
-                      className="fill-current text-text-primary"
-                      style={{
-                        fontSize: 13,
-                        fontFamily: 'var(--font-family-mono)',
-                        pointerEvents: 'none',
-                      }}
+                  {/* Track: #1 vendor chip (a real link) above the 1:1 dumbbell */}
+                  <div className="relative self-stretch flex flex-col justify-center min-w-0">
+                    {gridLayer}
+                    <div
+                      className="relative flex"
+                      style={side === 'right'
+                        ? { justifyContent: 'flex-start', paddingLeft: Math.min(x1 + 11, Math.max(0, trackW - 40)) }
+                        : { justifyContent: 'flex-end', paddingRight: Math.max(0, trackW - (x1 - 11)) }}
                     >
-                      {truncateLabel(row.top1.vendor_name)}
-                    </text>
-                  )
-                })()}
+                      <EntityIdentityChip
+                        type="vendor"
+                        id={row.top1.vendor_id}
+                        name={row.top1.vendor_name}
+                        size="sm"
+                        hideIcon
+                        fullName
+                        className="inline-flex w-auto"
+                      />
+                    </div>
+                    <svg width={trackW} height={DOT_H} viewBox={`0 0 ${trackW} ${DOT_H}`} className="relative block" aria-hidden="true">
+                      {x2 !== null && (
+                        <line
+                          x1={Math.min(x1, x2)}
+                          y1={cy}
+                          x2={Math.max(x1, x2)}
+                          y2={cy}
+                          stroke={row.color}
+                          strokeWidth={connectorThickness(row.total_value)}
+                          strokeOpacity={0.4}
+                          strokeLinecap="round"
+                        />
+                      )}
+                      {x2 !== null && (
+                        <circle cx={x2} cy={cy} r={5} fill="var(--color-background-elevated)" stroke={row.color} strokeWidth={1.5} />
+                      )}
+                      <circle cx={x1} cy={cy} r={7} fill={row.color} fillOpacity={0.95} />
+                    </svg>
+                    {row.top2 && (
+                      <span className="sr-only">
+                        {`#2 ${formatVendorName(row.top2.vendor_name)} · ${row.top2.market_share_pct.toFixed(1)}%`}
+                      </span>
+                    )}
+                  </div>
 
-                {/* ── Right numerics: XX% vs YY% ── */}
-                <text
-                  x={LEFT_W + barAreaW + 8}
-                  y={cy + 4}
-                  className="fill-current text-text-secondary"
-                  style={{
-                    fontSize: 12,
-                    fontFamily: 'var(--font-family-mono)',
-                    letterSpacing: '0.03em',
-                    pointerEvents: 'none',
-                  }}
-                >
-                  {/* XX% numeral: AA-safe darker text color */}
-                  <tspan fill={SECTOR_TEXT_COLORS[row.sector_code] ?? row.color} fontWeight="700">
-                    {row.top1.market_share_pct.toFixed(0)}%
-                  </tspan>
-                  <tspan> / </tspan>
-                  <tspan>
+                  {/* Numerics: #1 share (sector text twin) / #2 share */}
+                  <div className="tabular-nums text-text-secondary" style={{ ...monoStyle, fontSize: 13, letterSpacing: '0.03em' }}>
+                    <span className="sr-only">{isEs ? '#1 y #2: ' : '#1 and #2: '}</span>
+                    <span style={{ color: SECTOR_TEXT_COLORS[row.sector_code] ?? 'var(--color-text-primary)', fontWeight: 700 }}>
+                      {row.top1.market_share_pct.toFixed(0)}%
+                    </span>
+                    {' / '}
                     {row.top2 ? row.top2.market_share_pct.toFixed(0) + '%' : 'N/A'}
-                  </tspan>
-                </text>
+                  </div>
+                </div>
+              )
+            })}
 
-                {/* ── Pull-quote on the leader row (most-concentrated #1) ── */}
-                {isLeader && (
-                  <text
-                    x={LEFT_W + 4}
-                    y={rowY + ROW_H_DESKTOP - 4}
-                    style={{
-                      fontSize: 13,
-                      fontFamily: 'var(--font-family-serif)',
-                      fontStyle: 'normal',
-                      pointerEvents: 'none',
-                    }}
-                    className="fill-current text-text-muted"
-                  >
-                    {isEs
-                      ? `"El mayor proveedor de cualquier categoría federal controla apenas ~1 de cada ${fragDenom} pesos"`
-                      : `"The top vendor in any federal category holds barely ~1 peso in ${fragDenom}"`
-                    }
-                  </text>
-                )}
-              </g>
-            )
-          })}
-        </svg>
+            {/* ── Ceiling label + legend (HTML, under the stack) ── */}
+            <div className="grid mt-1" style={{ gridTemplateColumns, columnGap: COL_GAP }} aria-hidden="true">
+              {!stacked && <span />}
+              <div className="min-w-0 space-y-1" style={{ ...monoStyle, fontSize: 13 }}>
+                <div className="text-text-muted whitespace-nowrap" style={{ paddingLeft: Math.max(0, xCeiling - 4 - ceilingW) }}>
+                  {ceilingText}
+                </div>
+                <div className="flex items-center gap-4 text-text-muted" style={{ paddingLeft: TRACK_PAD }}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="inline-block rounded-full" style={{ width: 10, height: 10, background: 'var(--color-text-muted)', opacity: 0.7 }} />
+                    {isEs ? '#1 proveedor' : '#1 vendor'}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="inline-block rounded-full" style={{ width: 8, height: 8, border: '1.5px solid var(--color-text-muted)' }} />
+                    {isEs ? '#2 proveedor' : '#2 vendor'}
+                  </span>
+                </div>
+              </div>
+              <span />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Honesty guard — fragmentation is not a clean bill of health. */}
@@ -691,6 +620,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
       {tooltip && (
         <DumbbellTooltip data={tooltip} isEs={isEs} />
       )}
+      </>)}
     </div>
   )
 }
