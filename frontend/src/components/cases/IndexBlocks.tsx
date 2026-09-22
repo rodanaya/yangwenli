@@ -15,7 +15,7 @@
  */
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
-import { formatCompactMXN } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD } from '@/lib/utils'
 import type { ScandalListItem } from '@/api/types'
 import {
   arcMicro,
@@ -194,6 +194,8 @@ export function LeadCase({
                 {cas.amount_mxn_high && cas.amount_mxn_high !== cas.amount_mxn_low && (
                   <span> · {lang === 'es' ? 'estimación alta' : 'high estimate'}</span>
                 )}
+                {/* USD scale, EN only — Spanish reads MXN natively. */}
+                {lang === 'en' && <span className="tabular-nums"> · ≈{formatCompactUSD(amount)}</span>}
               </div>
             </div>
           )}

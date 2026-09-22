@@ -36,6 +36,7 @@ import type {
 } from '@/api/types'
 import { AlertCircle, ArrowRight, ChevronDown, Search, X } from 'lucide-react'
 import { PageFooter } from '@/components/layout/PageFooter'
+import { formatCompactMXN, formatCompactUSD } from '@/lib/utils'
 import { RISK_TEXT_COLORS } from '@/lib/constants'
 import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import {
@@ -45,22 +46,6 @@ import {
 } from '@/components/cases/casesVocab'
 import { DispositionBand } from '@/components/cases/DispositionBand'
 import { LeadCase, SecondaryCaseCard, AgateLedger } from '@/components/cases/IndexBlocks'
-
-// ─── Hero money formatter (Mexican convention: MDP / billones, never B MXN) ──
-
-function formatMXNHero(n: number, lang: Lang): string {
-  if (lang === 'es') {
-    if (n >= 1e12) return `${(n / 1e12).toFixed(2)} billones`
-    if (n >= 1e9) {
-      const mdp = Math.round(n / 1e6)
-      return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(mdp)} MDP`
-    }
-    return `${(n / 1e6).toFixed(0)} MDP`
-  }
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T MXN`
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B MXN`
-  return `$${(n / 1e6).toFixed(0)}M MXN`
-}
 
 const NUMBER_WORD: Record<number, { en: string; es: string }> = {
   43: { en: 'Forty-three', es: 'Cuarenta y tres' },
@@ -335,16 +320,23 @@ export default function CaseLibrary() {
               </span>
             </h1>
 
-            {/* Stat rail */}
-            <div className="flex items-end gap-8" aria-label={lang === 'es' ? 'Cifras del padrón' : 'Docket figures'}>
+            {/* Stat rail — flex-wrap so a narrow viewport drops a whole stat
+                to the next line instead of breaking inside its number. */}
+            <div
+              className="flex flex-wrap items-end gap-x-8 gap-y-4"
+              aria-label={lang === 'es' ? 'Cifras del padrón' : 'Docket figures'}
+            >
               <MastheadStat
                 value={totalCases ? `${convicted}/${totalCases}` : '—'}
                 caption={lang === 'es' ? 'Condenas' : 'Convictions'}
                 ink="var(--color-text-primary)"
               />
               <MastheadStat
-                value={totalLoss ? formatMXNHero(totalLoss, lang) : '—'}
+                value={totalLoss ? formatCompactMXN(totalLoss) : '—'}
                 caption={lang === 'es' ? 'Daño documentado' : 'Documented harm'}
+                /* USD scale as a sub-line, EN only — the Spanish docket reads
+                   MXN natively (CLAUDE.md currency table). */
+                sub={totalLoss > 0 && lang === 'en' ? `≈${formatCompactUSD(totalLoss)}` : undefined}
                 ink="var(--color-text-primary)"
               />
               <MastheadStat
@@ -621,19 +613,29 @@ export default function CaseLibrary() {
   )
 }
 
+/** Shared by the caption and the optional USD sub-line so the two never drift. */
+const MASTHEAD_LABEL = {
+  fontSize: 8.5,
+  letterSpacing: '0.18em',
+  color: 'var(--color-text-muted)',
+} as const
+
 function MastheadStat({
   value,
   caption,
+  sub,
   ink,
 }: {
   value: string
   caption: string
+  /** Optional second label line — the USD scale on EN hero numbers. */
+  sub?: string
   ink: string
 }) {
   return (
     <div className="text-right">
       <div
-        className="tabular-nums"
+        className="tabular-nums whitespace-nowrap"
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
           fontStyle: 'normal',
@@ -646,12 +648,14 @@ function MastheadStat({
       >
         {value}
       </div>
-      <div
-        className="font-mono uppercase mt-1"
-        style={{ fontSize: 8.5, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
-      >
+      <div className="font-mono uppercase mt-1" style={MASTHEAD_LABEL}>
         {caption}
       </div>
+      {sub && (
+        <div className="font-mono uppercase tabular-nums" style={MASTHEAD_LABEL}>
+          {sub}
+        </div>
+      )}
     </div>
   )
 }
