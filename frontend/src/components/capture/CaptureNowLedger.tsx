@@ -9,18 +9,15 @@
  * rug) lets a reader find their own institution.
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { CaptureLandscapeResponse } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
-import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, HHI_CONCENTRATED } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
 import { makeSetParam } from './captureParams'
-
-// In-house DOJ/FTC threshold — keep in sync with RedesKnownDossier.tsx
-const HHI_CONCENTRATED = 2500
 
 type LedgerSort = 'share' | 'value' | 'hhi'
 const LEDGER_SORTS: LedgerSort[] = ['share', 'value', 'hhi']
@@ -50,6 +47,9 @@ export function CaptureNowLedger({
   const order: 'asc' | 'desc' = searchParams.get('dir') === 'asc' ? 'asc' : 'desc'
   const showAll = searchParams.get('todas') === '1'
   const [query, setQuery] = useState('')
+  // "See all" unmounts itself, and activeElement fell to <body>. The wrapper
+  // the click just filled takes the focus instead.
+  const tableWrap = useRef<HTMLDivElement>(null)
 
   const q = normalize(query.trim())
   const filtering = q.length >= 2
@@ -115,10 +115,10 @@ export function CaptureNowLedger({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={
-            lang === 'en' ? 'Is your institution here? Search…' : '¿Está tu institución aquí? Busque…'
+            lang === 'en' ? 'Is your institution here? Search…' : '¿Está tu institución aquí? Busca…'
           }
           aria-label={lang === 'en' ? 'Search the ledger' : 'Buscar en el registro'}
-          className="w-full px-3 py-2 text-[13px] border border-border rounded-sm bg-background-card focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent"
+          className="w-full px-3 py-2 text-[13px] border border-border rounded-sm bg-background-card placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent"
           style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
         />
         {/* The filter result is announced, not just repainted. */}
@@ -143,8 +143,13 @@ export function CaptureNowLedger({
           so (D6 C5 — the Day 2 /gap decision). Releasing at md let the two
           name columns fall to 97px between 768 and ~900, which broke names
           mid-word. */}
-      <div className="overflow-x-auto lg:overflow-visible rounded-sm border border-border bg-background-card">
-        <table className="w-full table-fixed text-[13px] min-w-[760px] lg:min-w-0">
+      <div
+        ref={tableWrap}
+        id="registro-tabla"
+        tabIndex={-1}
+        className="overflow-x-auto lg:overflow-visible rounded-sm border border-border bg-background-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        <table className="w-full table-fixed text-[13px] min-w-[824px] lg:min-w-0">
           <caption className="sr-only">
             {lang === 'en'
               ? 'Institutions where one vendor holds the majority of recorded spend'
@@ -156,16 +161,18 @@ export function CaptureNowLedger({
             <col />
             <col style={{ width: 168 }} />
             <col style={{ width: 112 }} />
-            <col className="hidden md:table-column" style={{ width: 104 }} />
+            <col className="hidden md:table-column" style={{ width: 168 }} />
           </colgroup>
           <thead>
             <tr className="border-b border-border font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
-              <th className="px-3 py-2 text-left">#</th>
-              <th className="px-3 py-2 text-left">{lang === 'en' ? 'Institution' : 'Institución'}</th>
-              <th className="px-3 py-2 text-left">{lang === 'en' ? '№1 vendor' : 'Proveedor №1'}</th>
+              {/* "#" is the row number in the current order, not a rank that
+                  survives a re-sort — say so. */}
+              <th scope="col" className="px-3 py-2 text-left">{lang === 'en' ? 'Row' : 'Fila'}</th>
+              <th scope="col" className="px-3 py-2 text-left">{lang === 'en' ? 'Institution' : 'Institución'}</th>
+              <th scope="col" className="px-3 py-2 text-left">{lang === 'en' ? '№1 vendor' : 'Proveedor №1'}</th>
               <SortHeaderTh field="share" label={lang === 'en' ? 'Share' : 'Participación'} activeField={sort} order={order} onSort={onSort} className="px-3 py-2" />
-              <SortHeaderTh field="value" label={lang === 'en' ? 'Recorded' : 'Registrado'} activeField={sort} order={order} onSort={onSort} className="px-3 py-2" />
-              <SortHeaderTh field="hhi" label="HHI" activeField={sort} order={order} onSort={onSort} className="px-3 py-2 hidden md:table-cell" />
+              <SortHeaderTh field="value" label={lang === 'en' ? 'Recorded' : 'Registrado'} activeField={sort} order={order} onSort={onSort} className="px-3 py-2 text-right" />
+              <SortHeaderTh field="hhi" label={lang === 'en' ? 'HHI · latest yr' : 'HHI · último año'} activeField={sort} order={order} onSort={onSort} className="px-3 py-2 text-right hidden md:table-cell" />
             </tr>
           </thead>
           <tbody>
@@ -179,7 +186,7 @@ export function CaptureNowLedger({
                   <td className="px-3 py-2">
                     <span className="inline-flex items-center gap-1.5">
                       {sector && (
-                        <span className="inline-block h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: SECTOR_COLORS[sector.code] }} aria-hidden="true" />
+                        <span className="inline-block h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: SECTOR_COLORS[sector.code] }} title={sector.name} />
                       )}
                       <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="md" fullName />
                     </span>
@@ -193,22 +200,11 @@ export function CaptureNowLedger({
                       <span className="font-mono text-[12px] tabular-nums">{r.share_pct}%</span>
                     </span>
                   </td>
-                  <td className="px-3 py-2 font-mono text-[12px] tabular-nums whitespace-nowrap">
+                  <td className="px-3 py-2 font-mono text-[12px] tabular-nums whitespace-nowrap text-right">
                     {formatCompactMXN(r.window_total_mxn)}
                   </td>
-                  <td className="px-3 py-2 font-mono text-[12px] tabular-nums hidden md:table-cell whitespace-nowrap">
-                    {r.latest_hhi != null ? (
-                      <>
-                        {Math.round(r.latest_hhi).toLocaleString()}
-                        {r.latest_hhi >= HHI_CONCENTRATED && (
-                          <span className="ml-1.5 text-[10px] uppercase tracking-wider" style={{ color: RISK_TEXT_COLORS.critical }}>
-                            conc.
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      '—'
-                    )}
+                  <td className="px-3 py-2 font-mono text-[12px] tabular-nums hidden md:table-cell whitespace-nowrap text-right">
+                    {r.latest_hhi != null ? Math.round(r.latest_hhi).toLocaleString() : '—'}
                   </td>
                 </tr>
               )
@@ -229,14 +225,32 @@ export function CaptureNowLedger({
       >
         {lang === 'en' ? '← scroll →' : '← desliza →'}
       </p>
-      {!filtering && !showAll && rows.length > TRUNCATE_AT && (
+      {/* The `conc.` tag fired on 99 of the 119 rows, so it flagged the norm.
+          The threshold and its basis are stated once instead. */}
+      <p className="mt-2 font-mono text-[12px] text-text-muted tabular-nums">
+        {lang === 'en'
+          ? `HHI ≥ ${HHI_CONCENTRATED.toLocaleString()} = concentrated (US DOJ/FTC line) · latest year, not the record`
+          : `HHI ≥ ${HHI_CONCENTRATED.toLocaleString()} = concentrado (línea DOJ/FTC de EE. UU.) · último año, no el registro`}
+      </p>
+      {!filtering && rows.length > TRUNCATE_AT && (
         <button
           type="button"
-          onClick={() => setParam('todas', '1')}
+          onClick={() => {
+            setParam('todas', showAll ? null : '1')
+            // The button that was clicked may unmount; park focus on the table
+            // whose row count just changed rather than losing it to <body>.
+            requestAnimationFrame(() => tableWrap.current?.focus())
+          }}
           className="mt-3 min-h-6 inline-flex items-center font-mono text-[12px] font-bold uppercase tracking-[0.14em] rounded-sm hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
           style={{ color: 'var(--color-accent)' }}
         >
-          {lang === 'en' ? `See all ${total} →` : `Ver las ${total} →`}
+          {showAll
+            ? lang === 'en'
+              ? `← Show ${TRUNCATE_AT}`
+              : `← Ver ${TRUNCATE_AT}`
+            : lang === 'en'
+              ? `See all ${total} →`
+              : `Ver las ${total} →`}
         </button>
       )}
       {landscape.antesala_count > 0 && (

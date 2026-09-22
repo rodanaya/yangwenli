@@ -32,6 +32,7 @@ import {
   getRiskLevelFromScore,
   EU_DIRECT_AWARD_LIMIT,
   EU_SINGLE_BID_LIMIT,
+  HHI_CONCENTRATED,
 } from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -51,7 +52,6 @@ const PINS_KEY = 'rubli_trama_pins_v1'
 type SortKey = 'senal' | 'value' | 'risk' | 'size' | 'sb' | 'gt'
 type LensKey = 'clusters' | 'institutions'
 type InstSortKey = 'value' | 'top1_share' | 'hhi' | 'risk'
-const HHI_CONCENTRATED = 2500 // DOJ/FTC threshold: highly concentrated market
 
 function readPins(): number[] {
   try {

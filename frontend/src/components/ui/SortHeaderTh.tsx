@@ -35,6 +35,7 @@ export function SortHeaderTh<F extends string = string>({
 
   return (
     <th
+      scope="col"
       className={`font-medium cursor-pointer select-none ${className}`}
       aria-sort={
         isActive ? (order === 'desc' ? 'descending' : 'ascending') : 'none'

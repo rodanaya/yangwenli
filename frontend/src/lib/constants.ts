@@ -222,6 +222,11 @@ export const RISK_TEXT_COLORS = {
 // ceiling" these constants used to carry could not be traced to any published
 // OECD instrument (QC pass, Sep 2026) — the OECD's 2023 framework lists
 // indicators without stating thresholds.
+// The US DOJ/FTC Horizontal Merger Guidelines call a market with an HHI at or
+// above 2,500 highly concentrated. /captura and /network both drew this line;
+// it lives here so they cannot drift apart.
+export const HHI_CONCENTRATED = 2500
+
 export const EU_DIRECT_AWARD_LIMIT = 0.10
 export const EU_SINGLE_BID_LIMIT = 0.20
 export const MODEL_HR_BASELINE = 0.11
