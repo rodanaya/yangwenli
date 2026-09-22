@@ -100,7 +100,7 @@ export default function Relationships() {
             style={{ fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace', fontSize: '12px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 400 }}
           >
             <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
-              <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
+              <span style={{ color: 'var(--color-accent-hover)', fontWeight: 500 }}>Folio·XIV</span>
               <span aria-hidden="true" style={{ margin: '0 8px' }}>·</span>
               <span>{lang === 'en' ? 'Institutional capture · monotonic concentration' : 'Captura institucional · concentración monótona'}</span>
             </span>

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatEntityName, type EntityType } from '@/lib/entity/format'
-import { getRiskLevelFromScore } from '@/lib/constants'
+import { getRiskLevelFromScore, RISK_TEXT_COLORS } from '@/lib/constants'
 import { useDossierOrigin, type WayfindingLinkState } from '@/lib/nav/wayfinding'
 
 const ICON_FOR_TYPE = {
@@ -101,10 +101,23 @@ const TIER_LABEL: Record<1 | 2 | 3 | 4, string> = {
 }
 
 const TIER_BG: Record<1 | 2 | 3 | 4, string> = {
-  1: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30',
-  2: 'bg-risk-high/10 text-risk-high border-risk-high/30',
-  3: 'bg-risk-medium/10 text-risk-medium border-risk-medium/30',
+  1: 'bg-risk-critical/10 border-risk-critical/30',
+  2: 'bg-risk-high/10 border-risk-high/30',
+  3: 'bg-risk-medium/10 border-risk-medium/30',
   4: 'bg-text-muted/10 text-text-muted border-border',
+}
+
+/**
+ * Badge TYPE ink (D6b C8). The fill and the border keep the vivid mark colour;
+ * the 12px label takes the AA-safe reading ink, because --color-risk-critical
+ * (#ef4444) on the badge's 10%-tinted ground measured 3.33:1 on GT and 3.76:1
+ * on T1 -- the platform's lowest type contrast. RISK_TEXT_COLORS is the same
+ * ink /captura's seals and risk words already use.
+ */
+const BADGE_INK: Record<1 | 2 | 3, string> = {
+  1: RISK_TEXT_COLORS.critical,
+  2: RISK_TEXT_COLORS.high,
+  3: RISK_TEXT_COLORS.medium,
 }
 
 /** Optional status flags shown as badges. EFOS/SFP/GT/Ghost/FP. */
@@ -115,11 +128,19 @@ const FLAG_LABEL: Record<FlagKind, string> = {
 }
 
 const FLAG_TONE: Record<FlagKind, string> = {
-  gt: 'bg-risk-critical/15 text-risk-critical',
-  efos: 'bg-risk-critical/15 text-risk-critical',
-  sfp: 'bg-risk-high/15 text-risk-high',
-  ghost: 'bg-risk-high/15 text-risk-high',
+  gt: 'bg-risk-critical/15',
+  efos: 'bg-risk-critical/15',
+  sfp: 'bg-risk-high/15',
+  ghost: 'bg-risk-high/15',
   fp_structural: 'bg-text-muted/15 text-text-muted',
+}
+
+/** Flag badge type ink — see BADGE_INK. `fp_structural` keeps its muted class. */
+const FLAG_INK: Partial<Record<FlagKind, string>> = {
+  gt: RISK_TEXT_COLORS.critical,
+  efos: RISK_TEXT_COLORS.critical,
+  sfp: RISK_TEXT_COLORS.high,
+  ghost: RISK_TEXT_COLORS.high,
 }
 
 export interface EntityIdentityChipProps {
@@ -235,7 +256,10 @@ export function EntityIdentityChip({
         {displayName}
       </span>
       {ariaTier && (
-        <span className={cn('flex-shrink-0 rounded-sm border font-mono font-bold tracking-wider uppercase', tierSize, TIER_BG[ariaTier])}>
+        <span
+          className={cn('flex-shrink-0 rounded-sm border font-mono font-bold tracking-wider uppercase', tierSize, TIER_BG[ariaTier])}
+          style={ariaTier === 4 ? undefined : { color: BADGE_INK[ariaTier] }}
+        >
           {TIER_LABEL[ariaTier]}
         </span>
       )}
@@ -251,6 +275,7 @@ export function EntityIdentityChip({
         <span
           key={flag}
           className={cn('flex-shrink-0 rounded-sm font-mono font-bold uppercase', tierSize, FLAG_TONE[flag])}
+          style={FLAG_INK[flag] ? { color: FLAG_INK[flag] } : undefined}
         >
           {FLAG_LABEL[flag]}
         </span>

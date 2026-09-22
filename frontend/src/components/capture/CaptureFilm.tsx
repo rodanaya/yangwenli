@@ -234,7 +234,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
             className={`flex-shrink-0 min-h-6 px-1 inline-flex items-center font-mono text-[12px] uppercase tracking-wider transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
               sort === k ? 'underline underline-offset-4' : 'text-text-muted hover:text-text-secondary'
             }`}
-            style={sort === k ? { color: 'var(--color-accent)' } : undefined}
+            style={sort === k ? { color: 'var(--color-accent-hover)' } : undefined}
           >
             {SORT_LABEL[k][lang]}
           </button>
@@ -369,7 +369,7 @@ function FacetRow({
                   </span>
                   <span
                     className="mt-1 inline-block font-mono text-[12px] uppercase tracking-[0.14em] hover:opacity-80"
-                    style={{ color: 'var(--color-accent)' }}
+                    style={{ color: 'var(--color-accent-hover)' }}
                   >
                     {receiptsLabel(lang, expanded)}
                   </span>
@@ -473,7 +473,7 @@ function LeadExhibit({
             aria-expanded={expanded}
             aria-controls={panelId(c)}
             className="mt-3 min-h-6 inline-flex items-center font-mono text-[12px] font-bold uppercase tracking-[0.14em] rounded-sm hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
-            style={{ color: 'var(--color-accent)' }}
+            style={{ color: 'var(--color-accent-hover)' }}
           >
             {expanded
               ? lang === 'en' ? 'Hide the receipts ↑' : 'Ocultar los recibos ↑'

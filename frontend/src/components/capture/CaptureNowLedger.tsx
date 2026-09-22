@@ -248,7 +248,7 @@ export function CaptureNowLedger({
             requestAnimationFrame(() => tableWrap.current?.focus())
           }}
           className="mt-3 min-h-6 inline-flex items-center font-mono text-[12px] font-bold uppercase tracking-[0.14em] rounded-sm hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
-          style={{ color: 'var(--color-accent)' }}
+          style={{ color: 'var(--color-accent-hover)' }}
         >
           {showAll
             ? lang === 'en'
