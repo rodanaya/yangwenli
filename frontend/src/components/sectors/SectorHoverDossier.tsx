@@ -153,7 +153,7 @@ export function SectorDossierCard({
             {isEs ? 'Trayectoria' : 'Trajectory'}
           </span>
           <span className="flex-1 min-w-0">
-            <EditorialSparkline data={row.trajectory} yKey="avg_risk" colorToken="text-muted" height={24} kind="line" />
+            <EditorialSparkline data={row.trajectory} yKey="avg_risk" colorToken="text-muted" height={24} kind="line" decorative />
           </span>
           <span
             className="font-mono shrink-0"

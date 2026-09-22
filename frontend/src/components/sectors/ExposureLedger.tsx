@@ -25,7 +25,7 @@
  */
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { SECTOR_COLORS, RISK_COLORS, RISK_TEXT_COLORS, EU_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
@@ -183,7 +183,6 @@ function LedgerRowItem({
   rankVar: number
   totalRows: number
 }) {
-  const navigate = useNavigate()
   const fill = sectorFill(row.sectorCode)
   const hasDagger = DAGGER_SECTORS.has(row.sectorCode)
   const intensity = row.avgRiskScore ?? 0
@@ -194,22 +193,19 @@ function LedgerRowItem({
     lang === 'es'
       ? `${row.name} — ${formatCompactMXN(row.varMxn)} monto observado, intensidad ${intensity.toFixed(2)}, adjudicación directa ${row.daPct.toFixed(0)}%`
       : `${row.name} — ${formatCompactMXN(row.varMxn)} flagged amount, intensity ${intensity.toFixed(2)}, direct award ${row.daPct.toFixed(0)}%`
+  // The sparkline is decorative — its direction lives in the link's name.
+  const dirWord = !hasTraj
+    ? null
+    : lang === 'es'
+      ? `trayectoria ${dir.glyph === '↑' ? 'al alza' : dir.glyph === '↓' ? 'a la baja' : 'estable'}`
+      : `trajectory ${dir.glyph === '↑' ? 'rising' : dir.glyph === '↓' ? 'falling' : 'flat'}`
+  const dossierId = `ledger-dossier-${row.sectorId}`
 
   return (
     <div
-      role="button"
-      tabIndex={0}
       data-wf-row={row.sectorId}
-      aria-label={ariaLabel}
-      className="group cursor-pointer transition-colors hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      className="group transition-colors hover:bg-background-elevated"
       style={{ borderLeft: `3px solid ${fill}` }}
-      onClick={() => navigate(`/sectors/${row.sectorId}`)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          navigate(`/sectors/${row.sectorId}`)
-        }
-      }}
     >
       {/* The single register line */}
       <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2">
@@ -221,12 +217,14 @@ function LedgerRowItem({
         </span>
 
         <div className="flex-1 min-w-0 flex items-baseline gap-0.5">
-          <span
-            className="truncate group-hover:underline decoration-1 underline-offset-2"
+          <Link
+            to={`/sectors/${row.sectorId}`}
+            aria-label={dirWord ? `${ariaLabel} · ${dirWord}` : ariaLabel}
+            className="truncate group-hover:underline decoration-1 underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
             style={{ ...SERIF_NAME_STYLE, fontSize: 15, color: 'var(--color-text-primary)' }}
           >
             {row.name}
-          </span>
+          </Link>
           {hasDagger && (
             <sup className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }} aria-hidden="true">†</sup>
           )}
@@ -250,8 +248,9 @@ function LedgerRowItem({
 
         {/* Intensity dot + score (size-independent) */}
         <span
-          className="hidden sm:flex shrink-0 w-[64px] items-center justify-end gap-1.5"
-          title={lang === 'es' ? `Intensidad de riesgo ${intensity.toFixed(2)}` : `Risk intensity ${intensity.toFixed(2)}`}
+          className="hidden sm:flex shrink-0 w-[92px] items-center justify-end gap-1.5"
+          role="img"
+          aria-label={lang === 'es' ? `Intensidad de riesgo ${intensity.toFixed(2)}` : `Risk intensity ${intensity.toFixed(2)}`}
         >
           <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 9999, background: intensityColor(intensity), flexShrink: 0 }} />
           <span className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-text-primary)' }}>
@@ -264,7 +263,7 @@ function LedgerRowItem({
           {hasTraj ? (
             <>
               <span className="flex-1 min-w-0">
-                <EditorialSparkline data={row.trajectory} yKey="avg_risk" colorToken="text-muted" height={24} kind="line" />
+                <EditorialSparkline data={row.trajectory} yKey="avg_risk" colorToken="text-muted" height={24} kind="line" decorative />
               </span>
               <span
                 className="font-mono shrink-0"
@@ -282,18 +281,16 @@ function LedgerRowItem({
         {/* Mobile expand toggle (the dossier becomes an inline block on touch) */}
         <button
           type="button"
-          className="sm:hidden shrink-0 font-mono px-1.5 py-1"
+          className="sm:hidden shrink-0 min-h-6 min-w-6 font-mono px-1.5 py-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           style={{ fontSize: 13, color: 'var(--color-text-muted)' }}
           aria-expanded={expanded}
+          aria-controls={dossierId}
           aria-label={
             lang === 'es'
               ? `${expanded ? 'Cerrar' : 'Abrir'} dossier de ${row.name}`
               : `${expanded ? 'Close' : 'Open'} ${row.name} dossier`
           }
-          onClick={(e) => {
-            e.stopPropagation()
-            onToggleExpand()
-          }}
+          onClick={onToggleExpand}
         >
           {expanded ? '▴' : '▾'}
         </button>
@@ -301,11 +298,7 @@ function LedgerRowItem({
 
       {/* Mobile inline dossier */}
       {expanded && (
-        <div
-          className="sm:hidden px-3 pb-3"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
+        <div id={dossierId} className="sm:hidden px-3 pb-3">
           <div className="flex items-center gap-1.5 mb-2">
             <span className="font-mono shrink-0" style={{ fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
               DA · {lang === 'es' ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
@@ -318,9 +311,8 @@ function LedgerRowItem({
           <SectorDossierCard row={row} rankVar={rankVar} totalRows={totalRows} lang={lang} active={expanded} />
           <Link
             to={`/sectors/${row.sectorId}`}
-            className="mt-2 inline-block font-mono underline decoration-1 underline-offset-2"
+            className="mt-2 inline-block font-mono underline decoration-1 underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
-            onClick={(e) => e.stopPropagation()}
           >
             {lang === 'es' ? 'ver dossier del sector ↗' : 'view sector dossier ↗'}
           </Link>
@@ -379,13 +371,12 @@ export function ExposureLedger({
       type="button"
       onClick={() => changeLens(key)}
       aria-pressed={lens === key}
-      className={`font-mono text-right ${widthClass} shrink-0 transition-opacity hover:opacity-70`}
+      className={`font-mono text-right ${widthClass} shrink-0 min-h-6 px-1 rounded-sm transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
       style={{
         ...KICKER_STYLE,
         color: lens === key ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
         background: 'none',
         border: 0,
-        padding: 0,
         cursor: 'pointer',
       }}
     >
@@ -408,7 +399,7 @@ export function ExposureLedger({
             DA · {lang === 'es' ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
           </span>
           {sortHeader('var', 'VaR', 'w-20 sm:w-24')}
-          {sortHeader('intensity', 'Intens.', 'w-[64px]')}
+          {sortHeader('intensity', lang === 'es' ? 'Intensidad' : 'Intensity', 'w-[92px]')}
           <span className="hidden lg:inline font-mono w-24 text-right truncate shrink-0" style={KICKER_STYLE} aria-hidden="true">
             {lang === 'es' ? 'Trayectoria' : 'Trajectory'}
           </span>
@@ -436,9 +427,13 @@ export function ExposureLedger({
             </div>
           ))}
 
-          {/* Floating dossier (desktop only) — edge-flips above/below mid-register */}
+          {/* Floating dossier (desktop only) — edge-flips above/below mid-register.
+              A pointer-less preview: inert, so Tab never lands in it (focusing
+              its chips blurred the row, unmounted the card and dropped focus
+              to <body>). */}
           {hoverRow && hover && (
             <div
+              inert
               className="hidden sm:block pointer-events-none absolute z-20"
               style={{
                 right: 8,
