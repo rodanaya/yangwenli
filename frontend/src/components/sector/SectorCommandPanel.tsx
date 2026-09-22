@@ -73,7 +73,7 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
   return (
     <div
       className="grid border-t border-b"
-      style={{ borderColor: 'var(--color-border)', gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))' }}
+      style={{ borderColor: 'var(--color-border)', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}
     >
       {shown.map((c, i) => {
         const isRange = c.value.includes('–')
@@ -85,7 +85,7 @@ function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
           >
             <div
               className="font-mono"
-              style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 5, lineHeight: 1.25 }}
             >
               {c.label}
             </div>
@@ -155,7 +155,7 @@ function FullBarRow({ label, readout, pct, color, readoutColor }: { label: strin
   return (
     <div>
       <div className="flex items-baseline justify-between" style={{ marginBottom: 4, gap: 8 }}>
-        <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+        <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)', lineHeight: 1.25, minWidth: 0 }}>{label}</span>
         <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 13, fontWeight: 600, color: readoutColor ?? 'var(--color-text-primary)' }}>{readout}</span>
       </div>
       <div style={{ position: 'relative', height: 6, background: 'var(--color-background-elevated)', borderRadius: 2, overflow: 'hidden' }} aria-hidden="true">

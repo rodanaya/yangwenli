@@ -94,7 +94,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <p className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
       </p>
-      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
+      <p className="lg:max-w-[640px]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5. Las señales agregadas a nivel sectorial son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. v0.8.5 risk model. Sector-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
@@ -113,7 +113,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
 
 function DossierSkeleton() {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-[1010px] mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <Skeleton className="h-2 w-full" />
       <Skeleton className="h-12 w-96" />
       <div className="grid grid-cols-3 gap-4">
@@ -321,7 +321,7 @@ export default function SectorDossier() {
 
   return (
     <DossierOriginProvider value={{ route: `/sectors/${sectorId}`, label: sectorDisplayName }}>
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-[1010px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <WayfindingSpine nav={wf} lang={lang} accent={sectorAccent} origin={wfOrigin} />
 
       {/* HERO */}

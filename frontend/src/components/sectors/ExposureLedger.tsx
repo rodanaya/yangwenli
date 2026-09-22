@@ -108,7 +108,7 @@ const SERIF_NAME_STYLE: CSSProperties = {
 const MARGIN_NOTE_STYLE: CSSProperties = {
   fontFamily: '"EB Garamond", Georgia, serif',
   fontStyle: 'normal',
-  fontSize: 13,
+  fontSize: 13.5,
   lineHeight: 1.45,
   color: 'var(--color-text-secondary)',
 }

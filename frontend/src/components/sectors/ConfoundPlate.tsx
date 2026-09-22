@@ -223,7 +223,7 @@ export function ConfoundPlate({
         </div>
         <p
           className="mt-2"
-          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-text-muted)', maxWidth: '72ch' }}
+          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, lineHeight: 1.45, color: 'var(--color-text-muted)', maxWidth: '72ch' }}
         >
           {isEs
             ? 'Son dos rankings distintos. Cuando no coinciden, el sector es chico en pesos pero arde en su propia casa — eso es el confundido.'

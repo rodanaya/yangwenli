@@ -43,12 +43,12 @@ const NUM_STYLE: CSSProperties = {
   fontVariantNumeric: 'tabular-nums',
 }
 
-// Clause body — EB Garamond 12.5px (the ExposureLedger marginalia pattern).
+// Clause body — EB Garamond 15px (the PARALLAX Day 2d reading register).
 const CLAUSE_STYLE: CSSProperties = {
   fontFamily: '"EB Garamond", Georgia, serif',
   fontStyle: 'normal',
-  fontSize: 12.5,
-  lineHeight: 1.5,
+  fontSize: 15,
+  lineHeight: 1.55,
   color: 'var(--color-text-secondary)',
 }
 
@@ -136,7 +136,7 @@ export function FeDeArqueo({ view, lang, totals }: FeDeArqueoProps) {
           {lang === 'es' ? 'FE DE ARQUEO · MÉTODO Y LÍMITES' : "AUDITOR'S NOTE · METHOD AND LIMITS"}
         </p>
 
-        <ol className="mt-3 space-y-2.5" style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
+        <ol className="mt-3 space-y-2.5 lg:max-w-[640px]" style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
           {clauses.map((c, i) => (
             <li key={c.id} className="flex gap-2.5">
               <span className="font-mono shrink-0 tabular-nums" style={{ ...NUM_STYLE, marginTop: 2 }}>

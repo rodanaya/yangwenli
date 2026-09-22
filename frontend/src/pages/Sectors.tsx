@@ -455,7 +455,7 @@ export function Sectors() {
 
       {/* ── MASTHEAD ─────────────────────────────────────────────────────────── */}
       <header className="border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7">
+        <div className="max-w-[1010px] mx-auto px-4 sm:px-6 lg:px-8 py-7">
           {/* folio-v1-P2: archival eyebrow */}
           <div
             className="mb-3 flex items-center gap-3"
@@ -544,14 +544,13 @@ export function Sectors() {
           {/* Deck paragraph — per-view, under the constant «El Arqueo» headline */}
           {deckText && (
             <p
-              className="mt-3"
+              className="mt-3 lg:max-w-[640px]"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
                 fontSize: '16px',
                 lineHeight: 1.55,
                 color: 'var(--color-text-secondary, var(--color-text-muted))',
                 letterSpacing: '0.005em',
-                maxWidth: '58ch',
               }}
             >
               {deckText}
@@ -561,7 +560,7 @@ export function Sectors() {
       </header>
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div className="max-w-[1010px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
         {/* ── WHO / WHAT axis toggle ─────────────────────────────────
             Sectors = WHO bought (12 agency taxonomy).
@@ -653,7 +652,10 @@ export function Sectors() {
                         </>
                       )}
                     </h2>
-                    <p className="text-sm text-text-secondary leading-[1.6]">
+                    <p
+                      className="text-text-secondary lg:max-w-[640px]"
+                      style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 15, lineHeight: 1.55 }}
+                    >
                       {lang === 'es' ? (
                         <>
                           Las categorías agrupan <strong className="text-text-primary">qué</strong> compró el Estado — medicamentos, obra, seguros — sin importar quién. Por volumen manda <strong className="text-text-primary">{topByValue.name_es}</strong> ({formatSpend(topByValue.total_value)}, {(topByValue.avg_risk * 100).toFixed(1)}% de riesgo — debajo de la regla). El catálogo repite el confundido de los sectores: lo grande casi nunca es lo más caliente.
@@ -1016,6 +1018,7 @@ export function Sectors() {
                   aria-label={lang === 'es' ? 'Hallazgo: el confundido' : 'Finding: the confound'}
                   className="mb-6 pb-6 border-b border-border"
                 >
+                  <div className="lg:max-w-[640px]">
                   <p
                     className="mb-2"
                     style={{
@@ -1112,12 +1115,13 @@ export function Sectors() {
                   {/* The concentration finding survives as one mono line */}
                   <p
                     className="mt-2.5 font-mono tabular-nums"
-                    style={{ fontSize: '12px', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+                    style={{ fontSize: '13px', letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
                   >
                     {lang === 'es'
                       ? `top 3 = ${ledeStats.varPct}% del monto observado · ${ledeStats.minSat.name}: ${ledeStats.minSatMoneyRank}.º en dinero, la saturación más baja (${ledeStats.minSatSatPct}%) y ${ledeStats.minSatSbPct}% a licitación de un solo postor · indicador de riesgo, no estimación de fraude`
                       : `top 3 = ${ledeStats.varPct}% of flagged amount · ${ledeStats.minSat.name}: ${ledeStats.minSatMoneyRank}${ledeStats.minSatMoneyRank === 1 ? 'st' : ledeStats.minSatMoneyRank === 2 ? 'nd' : ledeStats.minSatMoneyRank === 3 ? 'rd' : 'th'} in money, lowest saturation (${ledeStats.minSatSatPct}%) and ${ledeStats.minSatSbPct}% single-bid · risk indicator, not a fraud estimate`}
                   </p>
+                  </div>
                 </section>
 
                 {/* §B+§D — THE REGISTRY (one section, two views) ───────────
