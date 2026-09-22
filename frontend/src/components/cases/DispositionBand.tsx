@@ -8,7 +8,11 @@
  * still sees a band that is overwhelmingly red-and-amber with a hairline
  * neutral sliver at the far end — the geometry IS the argument.
  *
- * Segments are buttons: clicking one filters the docket (?status=...).
+ * The legend is the control (PARALLAX D5 Change 4): each legend item is a
+ * button carrying the dot, the label and the count, so the filter is reachable
+ * by keyboard and readable without colour. The band's segments stay clickable
+ * for the mouse but leave the accessibility tree and the tab order — they are
+ * the picture, not the interface.
  */
 import {
   DISPOSITION_ORDER,
@@ -56,13 +60,13 @@ export function DispositionBand({
             ? `Resolución judicial de ${total} casos`
             : `Judicial outcome of ${total} cases`}
         </span>
-        <span className="hidden sm:inline">
-          {lang === 'es' ? 'clic en un segmento para filtrar' : 'click a segment to filter'}
+        <span style={{ fontSize: 12, letterSpacing: '0.14em' }}>
+          {lang === 'es' ? 'elige una resolución para filtrar' : 'select an outcome to filter'}
         </span>
       </div>
 
       {/* The band */}
-      <div className="flex w-full" style={{ height: 18, gap: 1 }}>
+      <div className="flex w-full" style={{ height: 24, gap: 2 }} aria-hidden="true">
         {ordered.map((status) => {
           const n = byStatus.get(status) ?? 0
           const meta = dispositionFor(status)
@@ -73,7 +77,9 @@ export function DispositionBand({
               key={status}
               type="button"
               onClick={() => onSelect(active ? null : status)}
-              className="relative transition-opacity focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="relative transition-opacity"
               style={{
                 width: `${(n / total) * 100}%`,
                 minWidth: 6,
@@ -86,8 +92,6 @@ export function DispositionBand({
                 opacity: activeStatus && !active ? 0.35 : 0.92,
                 cursor: 'pointer',
               }}
-              aria-label={`${label} · ${n}`}
-              aria-pressed={active}
               title={`${label} · ${n}`}
             />
           )
@@ -102,8 +106,23 @@ export function DispositionBand({
         {ordered.map((status) => {
           const meta = dispositionFor(status)
           const n = byStatus.get(status) ?? 0
+          const active = activeStatus === status
+          // Dim by ink, never by opacity — an opacity-dimmed label drops below
+          // the contrast floor (Bible §3.10 / D5 audit).
+          const dimmed = activeStatus != null && !active
+          const label = dispositionLabel(status, lang)
           return (
-            <span key={status} className="inline-flex items-center gap-1.5">
+            <button
+              key={status}
+              type="button"
+              onClick={() => onSelect(active ? null : status)}
+              aria-pressed={active}
+              className="inline-flex items-center gap-1.5 min-h-6 px-0.5 uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+              style={{
+                letterSpacing: 'inherit',
+                borderBottom: active ? '2px solid var(--color-accent)' : '2px solid transparent',
+              }}
+            >
               <span
                 aria-hidden="true"
                 style={{
@@ -115,11 +134,11 @@ export function DispositionBand({
                   flexShrink: 0,
                 }}
               />
-              <span style={{ color: meta.ink, fontWeight: 600 }}>
-                {dispositionLabel(status, lang)}
+              <span style={{ color: dimmed ? 'var(--color-text-muted)' : meta.ink, fontWeight: 600 }}>
+                {label}
               </span>
               <span className="tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{n}</span>
-            </span>
+            </button>
           )
         })}
         {convictedCount === 1 && (
