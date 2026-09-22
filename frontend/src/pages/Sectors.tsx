@@ -806,14 +806,14 @@ export function Sectors() {
                       {/* Phones scroll the five columns inside the frame instead of
                           clipping them (the Day 2/5/6 table precedent + hint). */}
                       <div className="rounded-sm border border-border overflow-x-auto">
-                      <div className="min-w-[560px] sm:min-w-0">
+                      <div className="min-w-[680px] sm:min-w-0">
                         {/* Column headers */}
-                        <div className="flex items-center gap-4 px-5 py-1.5 bg-background-elevated border-b border-border text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
-                          <span className="w-8 flex-shrink-0">#</span>
+                        <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-1.5 bg-background-elevated border-b border-border text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                          <span className="w-6 sm:w-8 flex-shrink-0">#</span>
                           <span className="flex-1">{lang === 'es' ? 'Categoría' : 'Category'}</span>
-                          <span className="flex-shrink-0 min-w-[90px] text-right">{lang === 'es' ? 'Gasto' : 'Spend'}</span>
-                          <span className="flex-shrink-0 min-w-[80px] text-right">{lang === 'es' ? 'Riesgo' : 'Risk'}</span>
-                          <span className="flex-shrink-0 min-w-[80px] text-right">DA%</span>
+                          <span className="flex-shrink-0 min-w-[72px] sm:min-w-[90px] text-right">{lang === 'es' ? 'Gasto' : 'Spend'}</span>
+                          <span className="flex-shrink-0 min-w-[56px] sm:min-w-[80px] text-right">{lang === 'es' ? 'Riesgo' : 'Risk'}</span>
+                          <span className="flex-shrink-0 min-w-[48px] sm:min-w-[80px] text-right">DA%</span>
                         </div>
                         {catRows.map((cat, idx) => {
                           const riskLevel = getRiskLevelFromScore(cat.avg_risk)
@@ -843,10 +843,10 @@ export function Sectors() {
                                 />
                               )}
                               <div
-                                className="flex items-center gap-4 px-5 py-1.5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
+                                className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-1.5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
                                 style={{ borderLeft: `3px solid ${sectorColor}` }}
                               >
-                                <span className="flex-shrink-0 w-8 font-mono text-[13px] font-bold text-text-muted tabular-nums">
+                                <span className="flex-shrink-0 w-6 sm:w-8 font-mono text-[13px] font-bold text-text-muted tabular-nums">
                                   {String(idx + 1).padStart(2, '0')}
                                 </span>
                                 <div className="flex-1 min-w-0">
@@ -892,7 +892,7 @@ export function Sectors() {
                                     )}
                                   </div>
                                 </div>
-                                <div className="flex-shrink-0 text-right min-w-[90px]">
+                                <div className="flex-shrink-0 text-right min-w-[72px] sm:min-w-[90px]">
                                   <div className="font-mono text-sm tabular-nums text-text-primary">
                                     {formatSpend(cat.total_value)}
                                   </div>
@@ -901,7 +901,7 @@ export function Sectors() {
                                     {lang === 'es' ? 'cont.' : 'contracts'}
                                   </div>
                                 </div>
-                                <div className="flex-shrink-0 min-w-[90px]">
+                                <div className="flex-shrink-0 min-w-[56px] sm:min-w-[90px]">
                                   <div className="flex items-center justify-end gap-1.5">
                                     <div className="w-14 h-1 rounded-full bg-background-elevated overflow-hidden hidden sm:block">
                                       <div
@@ -922,7 +922,7 @@ export function Sectors() {
                                   </div>
                                 </div>
                                 {/* cat-P3 A: DA% with single-bid dot to its left */}
-                                <div className="flex-shrink-0 flex items-center justify-end gap-1 min-w-[80px]">
+                                <div className="flex-shrink-0 flex items-center justify-end gap-1 min-w-[48px] sm:min-w-[80px]">
                                   <span
                                     className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`}
                                     role="img"
