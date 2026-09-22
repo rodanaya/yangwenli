@@ -23,8 +23,8 @@ import { RISK_COLORS, RISK_TEXT_COLORS, EU_DIRECT_AWARD_LIMIT } from '@/lib/cons
 import { formatCompactMXN } from '@/lib/utils'
 import type { SectorTrajectoryPoint } from '@/api/types'
 import type { LedgerRow } from './ExposureLedger'
-import { intensityTextColor, compactCount } from './ExposureLedger'
-import { ownSpendShare } from './confoundScales'
+import { compactCount } from './ExposureLedger'
+import { intensityTextColor, ownSpendShare } from './confoundScales'
 
 // OECD direct-award ceiling as a percentage (0–100). Single source: constants.
 const EU_DA_LINE = EU_DIRECT_AWARD_LIMIT * 100

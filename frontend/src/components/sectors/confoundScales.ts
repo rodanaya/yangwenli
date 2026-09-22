@@ -8,6 +8,18 @@
  * the components own the pixel mapping.
  */
 import type { LedgerRow } from './ExposureLedger'
+import { RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+
+/**
+ * Intensity as TYPE — the AA-safe twin of ExposureLedger's intensityColor for
+ * every % numeral (rings and dots keep intensityColor). Never green for low.
+ * PARALLAX D7 § Change 3 (lives here, not in the component file, so that file
+ * does not grow another non-component export — react-refresh).
+ */
+export function intensityTextColor(score: number): string {
+  const level = getRiskLevelFromScore(score)
+  return level === 'low' ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[level]
+}
 
 /** Share of the sector's own spend that is model-flagged (0–1). */
 export function ownSpendShare(row: Pick<LedgerRow, 'varMxn' | 'totalMxn'>): number {

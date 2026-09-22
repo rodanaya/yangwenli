@@ -26,7 +26,7 @@
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { SECTOR_COLORS, RISK_COLORS, RISK_TEXT_COLORS, EU_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, EU_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
 import type { SectorTrajectoryPoint } from '@/api/types'
@@ -128,12 +128,6 @@ export function intensityColor(score: number): string {
   return level === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[level]
 }
 
-// Intensity as TYPE — the AA-safe twin of intensityColor for every % numeral
-// (rings and dots keep intensityColor). PARALLAX D7 § Change 3.
-export function intensityTextColor(score: number): string {
-  const level = getRiskLevelFromScore(score)
-  return level === 'low' ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[level]
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Marginalia note strings — caveat register (Hacienda note promoted to §A/§B).
