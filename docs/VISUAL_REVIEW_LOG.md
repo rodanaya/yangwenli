@@ -14918,3 +14918,36 @@ Network policy blocks all outbound HTTPS to rubli.xyz (eighth consecutive blocke
 
 ### Overall: WARN
 **Persistent blocker (≥19 runs)**: HTTP and API health checks remain unverifiable — all blocked by egress proxy policy on rubli.xyz:443. Bilingual gap scan (local filesystem): **PASS**. **Action required**: migrate HTTP/API checks to a GitHub Actions scheduled workflow with direct egress, or allowlist rubli.xyz in the remote session network policy.
+
+---
+## Visual Review — 2026-09-22T00:24:08Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/atlas | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/aria | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/sectors | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/sectors/salud | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/cases | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/methodology | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (proxy rejected) | ✗ |
+
+**Reason**: Egress proxy returns `connect_rejected` (organization policy, 403 CONNECT) for rubli.xyz:443. This constraint has now persisted across ≥20 consecutive scheduled runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same egress policy) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | ✗ |
+| /api/v1/sectors | BLOCKED | ✗ |
+
+### Bilingual Gaps
+- **Raw i18n key leaks**: None detected — grep hits are TypeScript comments, data-constant property accesses (`PATTERN_CHIP.P5`, `TIER_STYLES.Excelente`), bibliographic strings, corporate abbreviations (S.A., C.V.), and properly-guarded `isEs ? '...' : '...'` ternaries
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+
+### Overall: WARN
+**Persistent blocker (≥20 runs)**: HTTP and API health checks remain unverifiable — all blocked by egress proxy policy on rubli.xyz:443. Bilingual gap scan (local filesystem): **PASS**. **Action required**: migrate HTTP/API checks to a GitHub Actions scheduled workflow with direct egress, or allowlist rubli.xyz in the remote session network policy.
