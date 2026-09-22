@@ -370,7 +370,7 @@ export function ConfoundPlate({
                   <Link
                     to={`/sectors/${r.sectorId}`}
                     aria-label={aria}
-                    className="truncate rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                    className="truncate py-0.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                     style={{
                       ...SERIF_NAME,
                       fontSize: 15,
@@ -587,7 +587,7 @@ export function ConfoundPlate({
                         ? `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% del gasto propio`
                         : `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% of own spend`
                     }
-                    className="flex-1 truncate rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                    className="flex-1 truncate py-0.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                     style={{ ...SERIF_NAME, fontSize: 14, color: 'var(--color-text-primary)' }}
                   >
                     {r.name}

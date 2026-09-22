@@ -214,7 +214,7 @@ function LedgerRowItem({
           <Link
             to={`/sectors/${row.sectorId}`}
             aria-label={dirWord ? `${ariaLabel} · ${dirWord}` : ariaLabel}
-            className="truncate group-hover:underline decoration-1 underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+            className="truncate py-0.5 group-hover:underline decoration-1 underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
             style={{ ...SERIF_NAME_STYLE, fontSize: 15, color: 'var(--color-text-primary)' }}
           >
             {row.name}
