@@ -765,16 +765,21 @@ export default function CaseDossier() {
                 lang={lang}
                 accent={sectorAccent}
               >
+                {/* Row 1: the number beside its range note. Row 2: the cost
+                    field spans the story column on its own — squeezed into the
+                    flex cell beside ScaleBlock it rendered ~400px wide with
+                    5.3px labels (D5 Change 6). */}
                 {headlineAmount != null && (
-                  <div className="flex flex-wrap items-start gap-5">
-                    <ScaleBlock
-                      mxn={headlineAmount}
-                      sectorAccent={scandal.legal_status === 'impunity' ? disposition.ink : sectorAccent}
-                      lang={lang}
-                    />
-                    <div className="flex-1 min-w-[240px]">
+                  <>
+                    <div className="flex flex-wrap items-start gap-5">
+                      <ScaleBlock
+                        mxn={headlineAmount}
+                        sectorAccent={scandal.legal_status === 'impunity' ? disposition.ink : sectorAccent}
+                        lang={lang}
+                      />
                       {rangeText && (
                         <p
+                          className="flex-1 min-w-[240px]"
                           style={{
                             fontFamily: '"EB Garamond", Georgia, serif',
                             fontStyle: 'normal',
@@ -786,16 +791,16 @@ export default function CaseDossier() {
                           {rangeText}
                         </p>
                       )}
-                      <CostInArchive
-                        amount={headlineAmount}
-                        sectorId={scandal.sector_id ?? scandal.sector_ids?.[0] ?? null}
-                        sectorName={sectorName}
-                        accentKind={scandal.legal_status === 'impunity' ? disposition.ink : sectorAccent}
-                        allCases={allCases}
-                        lang={lang}
-                      />
                     </div>
-                  </div>
+                    <CostInArchive
+                      amount={headlineAmount}
+                      sectorId={scandal.sector_id ?? scandal.sector_ids?.[0] ?? null}
+                      sectorName={sectorName}
+                      accentKind={scandal.legal_status === 'impunity' ? disposition.ink : sectorAccent}
+                      allCases={allCases}
+                      lang={lang}
+                    />
+                  </>
                 )}
                 {/* amount/ruling notes are analyst content authored in English
                     only — lang="en" keeps screen readers correct on /es. */}

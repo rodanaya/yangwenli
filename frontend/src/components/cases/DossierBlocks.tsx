@@ -10,10 +10,13 @@
  *                              + ghost rows for named-but-unlinked vendors.
  *   KeepReadingFooter        — same-sector onward routing.
  */
+import { useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { formatCompactMXN } from '@/lib/utils'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { placeLabels, measureLabel, type LabelCandidate } from '@/components/network/plateLabels'
+import { useFontsReady, useMeasuredWidth } from './CasesShared'
 import type { KeyActor, LinkedVendor, ScandalDetail, ScandalListItem } from '@/api/types'
 import {
   dispositionFor,
@@ -205,23 +208,27 @@ export function CaseDocketRail({
 // NYT-Upshot annotated dot field: this case's cost placed among every
 // documented case, on a square-root value scale. Migrates MoneyBenchmark's
 // two jobs (threshold reference, multiplier sentence) into the new frame.
+//
+// PARALLAX D5 § Change 6 — "HTML owns glyphs, SVG owns geometry". The viewBox
+// is the figure's MEASURED width, so nothing is scaled: the old fixed 640-unit
+// box was squeezed to ~400px beside ScaleBlock and rendered its labels at
+// 5.3px. The three callouts are HTML seated by `placeLabels`, which re-anchors
+// a label that would cross the plate edge instead of letting it escape (the
+// Oceanografia THRESHOLD label overhung its SVG by 36-57px).
 
 function formatMultiplier(m: number): string {
   return m >= 10 ? String(Math.round(m)) : m.toFixed(1)
 }
 
-const COST_VB_W = 640
-const COST_VB_H = 96
+const COST_VB_H = 108
 const COST_PAD_L = 16
 const COST_PAD_R = 16
-const COST_AXIS_Y = 54
-const COST_PLOT_W = COST_VB_W - COST_PAD_L - COST_PAD_R
+const COST_AXIS_Y = 58
+const COST_MIN_W = 280
 
-function clampAnchor(x: number, vbW: number, pad: number): 'start' | 'middle' | 'end' {
-  if (x < pad + 44) return 'start'
-  if (x > vbW - pad - 44) return 'end'
-  return 'middle'
-}
+const CALLOUT_FS = 11
+const CALLOUT_LH = 14
+const CALLOUT_FONT = `${CALLOUT_FS}px "JetBrains Mono", monospace`
 
 export function CostInArchive({
   amount,
@@ -239,10 +246,128 @@ export function CostInArchive({
   allCases: ScandalListItem[] | undefined
   lang: Lang
 }) {
+  const figureRef = useRef<HTMLElement>(null)
+  const measured = useMeasuredWidth(figureRef)
+  const fontsReady = useFontsReady()
+
   const threshold = sectorRedFlag(sectorId)
   const multiplier = amount / threshold
-  if (!Number.isFinite(multiplier) || multiplier <= 0) return null
   const sector = sectorName ?? (lang === 'es' ? 'el sector' : 'the sector')
+
+  const usable = (allCases ?? [])
+    .map((c) => ({
+      v: c.amount_mxn_high ?? c.amount_mxn_low ?? null,
+      name: lang === 'es' && c.name_es ? c.name_es : c.name_en,
+    }))
+    .filter((c): c is { v: number; name: string } => c.v != null && c.v > 0)
+
+  // Degraded: fewer than 5 usable amounts in the docket — this-case dot +
+  // threshold rule + multiplier sentence only (MoneyBenchmark's old info,
+  // new frame).
+  const degraded = usable.length < 5
+  const values = usable.map((c) => c.v)
+  const maxV = degraded ? Math.max(amount, threshold) : Math.max(...values)
+  const minV = degraded ? 0 : Math.min(...values)
+
+  const W = Math.max(COST_MIN_W, measured || 640)
+  const plotW = W - COST_PAD_L - COST_PAD_R
+  // The threshold rule is a reference mark, so it belongs IN the domain.
+  // Leaving it out put Oceanografía's 50B threshold past the right edge —
+  // its label escaped the SVG by 36-57px and placeLabels could not seat it
+  // at all, because no alignment rescues an anchor outside the bounds.
+  const domainMax = Math.max(maxV, threshold)
+  const sqrtMin = degraded
+    ? Math.sqrt(Math.max(0, Math.min(amount, threshold) * 0.8))
+    : Math.sqrt(Math.min(minV, threshold))
+  const sqrtMax = degraded
+    ? Math.sqrt(Math.max(sqrtMin * sqrtMin + 1, domainMax * 1.15))
+    : Math.sqrt(Math.max(domainMax, minV + 1))
+  const x = (v: number) => COST_PAD_L + ((Math.sqrt(v) - sqrtMin) / (sqrtMax - sqrtMin)) * plotW
+
+  const thisX = x(amount)
+  const threshX = x(threshold)
+  const isThisTheMax = maxV === amount
+  const total = usable.length
+
+  const caption = lang === 'es'
+    ? `Cada punto es uno de ${total} casos documentados, ubicado por su costo estimado (escala de raíz cuadrada).`
+    : `Each dot is one of ${total} documented cases, placed by estimated cost (square-root scale).`
+
+  const ariaLabel = degraded
+    ? lang === 'es'
+      ? `Este caso: ${formatCompactMXN(amount)} frente al umbral de ${formatCompactMXN(threshold)}.`
+      : `This case: ${formatCompactMXN(amount)} against the ${formatCompactMXN(threshold)} threshold.`
+    : lang === 'es'
+      ? `Costo de este caso entre los ${total} casos documentados: ${formatCompactMXN(amount)}; umbral ${formatCompactMXN(threshold)}; máximo del archivo ${formatCompactMXN(maxV)}.`
+      : `This case's cost among ${total} documented cases: ${formatCompactMXN(amount)}; threshold ${formatCompactMXN(threshold)}; archive max ${formatCompactMXN(maxV)}.`
+
+  // ── HTML callouts, seated inside the plate box ───────────────────────────
+  // Priority order: this case first, then the threshold it is measured
+  // against, then the archive maximum. THRESHOLD is anchored below the axis
+  // (its candidate y IS the label's bottom, with `above: 0`); the other two
+  // sit above their dot.
+  const callouts = useMemo(() => {
+    if (measured <= 0) return []
+    void fontsReady // re-seat once the real faces are in
+    const entries: {
+      id: string
+      text: string
+      color: string
+      weight: number
+      x: number
+      y: number
+      above: number
+      below?: number
+    }[] = [
+      {
+        id: 'this',
+        text: `${lang === 'es' ? 'ESTE CASO' : 'THIS CASE'} · ${formatCompactMXN(amount)}`,
+        color: accentKind,
+        weight: 700,
+        x: thisX,
+        y: COST_AXIS_Y,
+        above: 11,
+      },
+      {
+        id: 'threshold',
+        text: `${lang === 'es' ? 'UMBRAL' : 'THRESHOLD'} · ${formatCompactMXN(threshold)}`,
+        color: RISK_COLORS.critical,
+        weight: 400,
+        x: threshX,
+        y: COST_AXIS_Y + 24 + CALLOUT_LH,
+        above: 0,
+      },
+    ]
+    if (!degraded && !isThisTheMax) {
+      entries.push({
+        id: 'largest',
+        text: `${lang === 'es' ? 'MAYOR' : 'LARGEST'} · ${formatCompactMXN(maxV)}`,
+        color: 'var(--color-text-muted)',
+        weight: 400,
+        x: x(maxV),
+        y: COST_AXIS_Y,
+        above: 11,
+        // Falls below the axis when the archive maximum crowds THIS CASE —
+        // otherwise placeLabels drops it rather than overprint.
+        below: 24,
+      })
+    }
+    const candidates: LabelCandidate[] = entries.map((e) => ({
+      id: e.id,
+      // Belt and braces: an anchor outside the plate can never be seated.
+      x: Math.min(Math.max(e.x, 0), W),
+      y: e.y,
+      width: measureLabel(e.text, CALLOUT_FONT, W, CALLOUT_LH).width + 2,
+      height: CALLOUT_LH,
+      above: e.above,
+      below: e.below,
+    }))
+    const bounds = { x0: 0, y0: 0, x1: W, y1: COST_VB_H }
+    const placed = placeLabels(candidates, [], bounds)
+    return placed.map((p) => ({ placed: p, meta: entries.find((e) => e.id === p.id)! }))
+  }, [measured, fontsReady, W, thisX, threshX, maxV, amount, threshold, accentKind, lang, degraded, isThisTheMax])
+
+  if (!Number.isFinite(multiplier) || multiplier <= 0) return null
 
   const multiplierSentence = multiplier >= 1.5 && (
     <p
@@ -261,114 +386,58 @@ export function CostInArchive({
     </p>
   )
 
-  const usable = (allCases ?? [])
-    .map((c) => ({
-      v: c.amount_mxn_high ?? c.amount_mxn_low ?? null,
-      name: lang === 'es' && c.name_es ? c.name_es : c.name_en,
-    }))
-    .filter((c): c is { v: number; name: string } => c.v != null && c.v > 0)
-
-  // Degraded: fewer than 5 usable amounts in the docket — this-case dot +
-  // threshold rule + multiplier sentence only (MoneyBenchmark's old info,
-  // new frame).
-  if (usable.length < 5) {
-    const lo = Math.sqrt(Math.max(0, Math.min(amount, threshold) * 0.8))
-    const hi = Math.sqrt(Math.max(lo * lo + 1, Math.max(amount, threshold) * 1.15))
-    const x = (v: number) => COST_PAD_L + ((Math.sqrt(v) - lo) / (hi - lo)) * COST_PLOT_W
-    const thisX = x(amount)
-    const threshX = x(threshold)
-    return (
-      <div className="mt-4 max-w-xl">
-        <div className="overflow-x-auto">
-          <svg
-            viewBox={`0 0 ${COST_VB_W} ${COST_VB_H}`}
-            width="100%"
-            style={{ minWidth: 280, display: 'block' }}
-            role="img"
-            aria-label={
-              lang === 'es'
-                ? `Este caso: ${formatCompactMXN(amount)} frente al umbral de ${formatCompactMXN(threshold)}.`
-                : `This case: ${formatCompactMXN(amount)} against the ${formatCompactMXN(threshold)} threshold.`
-            }
-          >
-            <line x1={COST_PAD_L} y1={COST_AXIS_Y} x2={COST_VB_W - COST_PAD_R} y2={COST_AXIS_Y} stroke="var(--color-border)" strokeWidth={1} />
-            <line x1={threshX} y1={COST_AXIS_Y - 20} x2={threshX} y2={COST_AXIS_Y + 20} stroke={RISK_COLORS.critical} strokeWidth={1.5} strokeDasharray="2 4" />
-            <text x={threshX} y={COST_AXIS_Y + 34} textAnchor={clampAnchor(threshX, COST_VB_W, COST_PAD_R)} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8.5, fill: RISK_COLORS.critical }}>
-              {lang === 'es' ? 'UMBRAL' : 'THRESHOLD'} · {formatCompactMXN(threshold)}
-            </text>
-            <circle cx={thisX} cy={COST_AXIS_Y} r={5} fill={accentKind} stroke="var(--color-background)" strokeWidth={1.5} />
-            <text x={thisX} y={COST_AXIS_Y - 12} textAnchor={clampAnchor(thisX, COST_VB_W, COST_PAD_R)} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 700, fill: accentKind }}>
-              {lang === 'es' ? 'ESTE CASO' : 'THIS CASE'} · {formatCompactMXN(amount)}
-            </text>
-          </svg>
-        </div>
-        {multiplierSentence}
-      </div>
-    )
-  }
-
-  const values = usable.map((c) => c.v)
-  const minV = Math.min(...values)
-  const maxV = Math.max(...values)
-  const sqrtMin = Math.sqrt(minV)
-  const sqrtMax = Math.sqrt(Math.max(maxV, minV + 1))
-  const x = (v: number) => COST_PAD_L + ((Math.sqrt(v) - sqrtMin) / (sqrtMax - sqrtMin)) * COST_PLOT_W
-  const total = usable.length
-  const thisX = x(amount)
-  const threshX = x(threshold)
-  const isThisTheMax = maxV === amount
-
-  const caption = lang === 'es'
-    ? `Cada punto es uno de ${total} casos documentados, ubicado por su costo estimado (escala de raíz cuadrada).`
-    : `Each dot is one of ${total} documented cases, placed by estimated cost (square-root scale).`
-
   return (
-    <div className="mt-4 max-w-2xl">
-      <div className="overflow-x-auto">
-        <svg
-          viewBox={`0 0 ${COST_VB_W} ${COST_VB_H}`}
-          width="100%"
-          style={{ minWidth: 400, display: 'block' }}
-          role="img"
-          aria-label={
-            lang === 'es'
-              ? `Costo de este caso entre los ${total} casos documentados: ${formatCompactMXN(amount)}; umbral ${formatCompactMXN(threshold)}; máximo del archivo ${formatCompactMXN(maxV)}.`
-              : `This case's cost among ${total} documented cases: ${formatCompactMXN(amount)}; threshold ${formatCompactMXN(threshold)}; archive max ${formatCompactMXN(maxV)}.`
-          }
-        >
-          <line x1={COST_PAD_L} y1={COST_AXIS_Y} x2={COST_VB_W - COST_PAD_R} y2={COST_AXIS_Y} stroke="var(--color-border)" strokeWidth={1} />
-
-          {usable.map((c, i) => (
-            <circle key={i} cx={x(c.v)} cy={COST_AXIS_Y} r={2.5} fill="var(--color-text-muted)" opacity={0.32}>
-              <title>{`${c.name} · ${formatCompactMXN(c.v)}`}</title>
-            </circle>
-          ))}
-
-          <line x1={threshX} y1={COST_AXIS_Y - 20} x2={threshX} y2={COST_AXIS_Y + 20} stroke={RISK_COLORS.critical} strokeWidth={1.5} strokeDasharray="2 4" />
-          <text x={threshX} y={COST_AXIS_Y + 34} textAnchor={clampAnchor(threshX, COST_VB_W, COST_PAD_R)} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8.5, fill: RISK_COLORS.critical }}>
-            {lang === 'es' ? 'UMBRAL' : 'THRESHOLD'} · {formatCompactMXN(threshold)}
-          </text>
-
-          {!isThisTheMax && (
-            <text x={x(maxV)} y={COST_AXIS_Y - 8} textAnchor="end" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8.5, fill: 'var(--color-text-muted)' }}>
-              {lang === 'es' ? 'MAYOR' : 'LARGEST'} · {formatCompactMXN(maxV)}
-            </text>
-          )}
-
-          <circle cx={thisX} cy={COST_AXIS_Y} r={5} fill={accentKind} stroke="var(--color-background)" strokeWidth={1.5} />
-          <text x={thisX} y={COST_AXIS_Y - 12} textAnchor={clampAnchor(thisX, COST_VB_W, COST_PAD_R)} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 700, fill: accentKind }}>
-            {lang === 'es' ? 'ESTE CASO' : 'THIS CASE'} · {formatCompactMXN(amount)}
-          </text>
-        </svg>
-      </div>
-      <p
-        className="mt-2"
-        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 12, color: 'var(--color-text-muted)', maxWidth: '64ch' }}
+    <figure ref={figureRef} className="mt-4 relative">
+      <svg
+        viewBox={`0 0 ${W} ${COST_VB_H}`}
+        width="100%"
+        height={COST_VB_H}
+        style={{ display: 'block' }}
+        role="img"
+        aria-label={ariaLabel}
       >
-        {caption}
-      </p>
+        <line x1={COST_PAD_L} y1={COST_AXIS_Y} x2={W - COST_PAD_R} y2={COST_AXIS_Y} stroke="var(--color-border)" strokeWidth={1} />
+
+        {!degraded && usable.map((c, i) => (
+          <circle key={i} cx={x(c.v)} cy={COST_AXIS_Y} r={2.5} fill="var(--color-text-muted)" opacity={0.32}>
+            <title>{`${c.name} · ${formatCompactMXN(c.v)}`}</title>
+          </circle>
+        ))}
+
+        <line x1={threshX} y1={COST_AXIS_Y - 20} x2={threshX} y2={COST_AXIS_Y + 20} stroke={RISK_COLORS.critical} strokeWidth={1.5} strokeDasharray="2 4" />
+
+        <circle cx={thisX} cy={COST_AXIS_Y} r={5} fill={accentKind} stroke="var(--color-background)" strokeWidth={1.5} />
+      </svg>
+
+      {callouts.map(({ placed, meta }) => (
+        <span
+          key={placed.id}
+          className="absolute pointer-events-none whitespace-nowrap font-mono"
+          style={{
+            left: placed.box.x0,
+            top: placed.box.y0,
+            width: placed.box.x1 - placed.box.x0,
+            fontSize: CALLOUT_FS,
+            lineHeight: `${CALLOUT_LH}px`,
+            color: meta.color,
+            fontWeight: meta.weight,
+            textAlign: placed.align === 'right' ? 'right' : placed.align === 'left' ? 'left' : 'center',
+          }}
+        >
+          {meta.text}
+        </span>
+      ))}
+
+      {!degraded && (
+        <figcaption
+          className="mt-2 font-mono"
+          style={{ fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-text-muted)' }}
+        >
+          {caption}
+        </figcaption>
+      )}
       {multiplierSentence}
-    </div>
+    </figure>
   )
 }
 

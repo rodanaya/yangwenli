@@ -13,7 +13,9 @@
  *   SeverityScale   — this-case-vs-the-archive severity distribution strip.
  *   PaperGrain      — page-scoped archival grain (dossier only).
  */
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { DotBar } from '@/components/ui/DotBar'
+import { measureLabel } from '@/components/network/plateLabels'
 import {
   dispositionFor,
   dispositionLabel,
@@ -21,6 +23,51 @@ import {
   SEVERITY_MAX,
   type Lang,
 } from './casesVocab'
+
+// ─── Measurement hooks (PARALLAX D4 mechanic: HTML owns glyphs, SVG owns
+//     geometry — so every figure here needs its RENDERED width in px) ────────
+
+/**
+ * Rendered content width of `ref`, via ResizeObserver. 0 until the first tick;
+ * callers render measured glyphs only once it is non-zero. State is written
+ * only when the width actually changes (React error #301 guard).
+ */
+export function useMeasuredWidth(ref: RefObject<HTMLElement | null>): number {
+  const [width, setWidth] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const next = Math.round(entries[0]?.contentRect.width ?? 0)
+      if (next > 0) setWidth((prev) => (prev === next ? prev : next))
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [ref])
+  return width
+}
+
+/**
+ * True once the web fonts have landed. `measureLabel` uses canvas measureText,
+ * and a box measured against the fallback face comes out narrow — the label
+ * then renders wider than the box reserved for it. Re-run the layout after the
+ * fonts are in (the Day 4 lesson).
+ */
+export function useFontsReady(): boolean {
+  const [ready, setReady] = useState(
+    () => typeof document !== 'undefined' && document.fonts?.status === 'loaded',
+  )
+  useEffect(() => {
+    let alive = true
+    document.fonts?.ready.then(() => {
+      if (alive) setReady(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+  return ready
+}
 
 // ─── DispositionSeal ────────────────────────────────────────────────────────
 
@@ -179,6 +226,8 @@ export function MarginNote({
 
 // ─── SeverityScale — this case against the whole archive ────────────────────
 
+const LABEL_FONT = '10px "JetBrains Mono", monospace'
+
 export function SeverityScale({
   severity,
   distribution,
@@ -189,6 +238,8 @@ export function SeverityScale({
   distribution: Record<number, number>
   lang: Lang
 }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const width = useMeasuredWidth(ref)
   const total = Object.values(distribution).reduce((a, b) => a + b, 0)
   if (!total) return null
   const graver = Object.entries(distribution)
@@ -203,22 +254,25 @@ export function SeverityScale({
         ? `Severity ${severity} of ${SEVERITY_MAX} — among the gravest of ${total} documented cases.`
         : `Severity ${severity} of ${SEVERITY_MAX} — ${graver} of ${total} documented cases are graver.`
 
+  const levels = [1, 2, 3, 4].filter((lvl) => (distribution[lvl] ?? 0) > 0)
+
   return (
-    <div className="mt-5">
+    <div ref={ref} className="mt-5">
+      {/* The band is colour, not text — the labels sit under it at 10px on the
+          page ground. Inside a 0.18-opacity segment they measured 1.09:1
+          (D5 audit); here they are text-secondary on the page. */}
       <div
         className="flex w-full"
         style={{ height: 16, gap: 2 }}
         role="img"
         aria-label={sentence}
       >
-        {[1, 2, 3, 4].map((lvl) => {
+        {levels.map((lvl) => {
           const n = distribution[lvl] ?? 0
-          if (n === 0) return null
           const isThis = lvl === severity
           return (
             <div
               key={lvl}
-              className="relative flex items-center justify-center"
               style={{
                 width: `${(n / total) * 100}%`,
                 background: severityColor(lvl),
@@ -226,18 +280,33 @@ export function SeverityScale({
                 outline: isThis ? '1px solid var(--color-accent)' : 'none',
                 outlineOffset: 1,
               }}
+            />
+          )
+        })}
+      </div>
+      <div className="flex w-full mt-1.5" style={{ gap: 2 }} aria-hidden="true">
+        {levels.map((lvl) => {
+          const n = distribution[lvl] ?? 0
+          const isThis = lvl === severity
+          const full = `S${lvl} · ${n}`
+          // A cell too narrow for the pair prints the count alone — the
+          // sentence below already names the level.
+          const fits =
+            width > 0 &&
+            width * (n / total) >= measureLabel(full, LABEL_FONT, 999, 12).width + 6
+          return (
+            <div
+              key={lvl}
+              className="font-mono tabular-nums text-center"
+              style={{
+                width: `${(n / total) * 100}%`,
+                fontSize: 10,
+                letterSpacing: '0.04em',
+                color: isThis ? severityColor(lvl) : 'var(--color-text-secondary)',
+                fontWeight: isThis ? 700 : 400,
+              }}
             >
-              <span
-                className="font-mono tabular-nums"
-                style={{
-                  fontSize: 8.5,
-                  letterSpacing: '0.08em',
-                  color: isThis ? '#ffffff' : 'var(--color-text-muted)',
-                  fontWeight: isThis ? 700 : 400,
-                }}
-              >
-                S{lvl}·{n}
-              </span>
+              {fits ? full : n}
             </div>
           )
         })}
