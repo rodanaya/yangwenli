@@ -512,7 +512,7 @@ function DossierSkeleton() {
       <div className="max-w-[1010px] mx-auto space-y-8">
         <Skeleton className="h-2 w-full" />
         <Skeleton className="h-16 w-3/4" />
-        <div className="grid grid-cols-[210px_1fr] gap-10">
+        <div className="space-y-8 lg:space-y-0 lg:grid lg:grid-cols-[210px_1fr] lg:gap-10">
           <Skeleton className="h-72" />
           <Skeleton className="h-72" />
         </div>
