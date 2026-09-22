@@ -58,6 +58,9 @@ export function CaptureTrajectory({
 
   const tl = [...timeline].sort((a, b) => a.year - b.year)
   if (tl.length === 0) return null
+  // First paint has no measurement yet; the wrapper alone gives the observer
+  // something to measure, and the segments are not built at the wrong scale.
+  if (measured === 0) return <div ref={box} className="w-full" style={{ height: H }} />
   const years = tl.map((p) => p.year)
   const minYear = Math.min(...years)
   const maxYear = Math.max(...years)
@@ -129,10 +132,6 @@ export function CaptureTrajectory({
           : `cruzó el 50% en ${crossYear}`
         : `'${String(crossYear).slice(2)}`
   const peakLabel = `▲ ${peakSharePct}% (${peakYear})`
-
-  // First paint has no measurement yet; the wrapper alone gives the observer
-  // something to measure and keeps the glyphs from drawing at the wrong scale.
-  if (measured === 0) return <div ref={box} className="w-full" style={{ height: H }} />
 
   return (
     <div ref={box} className="w-full">
