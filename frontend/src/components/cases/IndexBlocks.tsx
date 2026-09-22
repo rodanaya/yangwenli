@@ -310,7 +310,7 @@ export function SecondaryCaseCard({
 // ─── AgateLedger ────────────────────────────────────────────────────────────
 
 const AGATE_GRID =
-  'grid grid-cols-[3px_minmax(0,1fr)_96px_24px] sm:grid-cols-[3px_64px_minmax(0,1fr)_72px_118px_96px_24px] md:grid-cols-[3px_64px_minmax(0,1fr)_104px_64px_72px_118px_96px_24px]'
+  'grid grid-cols-[3px_minmax(0,1fr)_96px_24px] sm:grid-cols-[3px_64px_minmax(0,1fr)_72px_118px_96px_24px] md:grid-cols-[3px_64px_minmax(0,1fr)_132px_64px_72px_118px_96px_24px]'
 
 export function AgateLedger({
   cases,
@@ -374,15 +374,23 @@ function AgateRow({
   lang: Lang
 }) {
   const meta = dispositionFor(cas.legal_status)
+  // maxWidth: 'none' — index.css's D2c measure directive
+  // (`main :where(p, li, …) { max-width: 68ch }`) reaches any <li> nobody
+  // bounded and was cutting the case name to four letters. A `max-w-none`
+  // utility does NOT win here: that rule is unlayered while Tailwind
+  // utilities live in @layer utilities, and unlayered beats layered
+  // regardless of specificity. Inline maxWidth is the escape the rule's own
+  // comment names. Do not "fix" this in index.css — the 68ch is right for
+  // prose. (Day 5 Change 1.)
   return (
-    <li style={{ borderBottom: '1px solid var(--color-border)' }} data-wf-row={cas.slug}>
+    <li
+      style={{ borderBottom: '1px solid var(--color-border)', maxWidth: 'none' }}
+      data-wf-row={cas.slug}
+    >
       <Link
         to={caseTo(cas).pathname}
         state={caseTo(cas).state}
-        className={`${AGATE_GRID} w-full items-center gap-x-3 py-2 text-left transition-colors group`}
-        style={{ background: 'transparent' }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(160,104,32,0.05)' }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+        className={`${AGATE_GRID} w-full items-center gap-x-3 py-2 text-left transition-colors group hover:bg-accent/5`}
       >
         {/* Disposition rail */}
         <span
@@ -397,8 +405,8 @@ function AgateRow({
         >
           {folio(cas.id)}
         </span>
-        {/* Name */}
-        <span className="min-w-0 truncate">
+        {/* Name — never truncated: it is the row's identity. */}
+        <span className="min-w-0">
           <span
             className="group-hover:opacity-75 transition-opacity"
             style={{
@@ -421,7 +429,7 @@ function AgateRow({
         </span>
         {/* Sexenio */}
         <span
-          className="hidden md:block font-mono uppercase truncate"
+          className="hidden md:block font-mono uppercase"
           style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}
         >
           {sexenioLabel(cas, lang)}
@@ -439,7 +447,7 @@ function AgateRow({
         </span>
         {/* Status */}
         <span
-          className="hidden sm:flex items-center gap-1 font-mono uppercase truncate"
+          className="hidden sm:flex items-center gap-1 font-mono uppercase"
           style={{ fontSize: 13, letterSpacing: '0.1em', color: meta.ink, fontWeight: 600 }}
         >
           {meta.ring && (
