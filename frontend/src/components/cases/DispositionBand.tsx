@@ -50,17 +50,22 @@ export function DispositionBand({
         ? `Resolución judicial de ${total} casos documentados`
         : `Judicial outcome of ${total} documented cases`
     }>
-      {/* Label row */}
+      {/* Label row — a label is not a paragraph (D2c/D2d): each of these
+          stays on ONE line. Side by side at 390 they each wrapped to three,
+          so below `sm` the hint drops to its own line under the title. */}
       <div
-        className="flex items-baseline justify-between gap-3 mb-2 font-mono uppercase"
+        className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-2 font-mono uppercase"
         style={{ fontSize: 13, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}
       >
-        <span>
+        <span className="whitespace-nowrap">
           {lang === 'es'
             ? `Resolución judicial de ${total} casos`
             : `Judicial outcome of ${total} cases`}
         </span>
-        <span style={{ fontSize: 12, letterSpacing: '0.14em' }}>
+        <span
+          className="basis-full sm:basis-auto whitespace-nowrap"
+          style={{ fontSize: 12, letterSpacing: '0.14em' }}
+        >
           {lang === 'es' ? 'elige una resolución para filtrar' : 'select an outcome to filter'}
         </span>
       </div>
