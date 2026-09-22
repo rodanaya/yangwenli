@@ -504,15 +504,15 @@ export default function CaseLibrary() {
 
                 {secondary.length > 0 && (
                   <section aria-label={lang === 'es' ? 'Más en portada' : 'More on the front page'}>
-                    <div
-                      className="flex items-center gap-3 mt-6 mb-1 font-mono uppercase"
-                      style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
-                    >
-                      <span>
+                    <div className="flex items-center gap-3 mt-6 mb-1">
+                      <h2
+                        className="font-mono uppercase"
+                        style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
+                      >
                         {lang === 'es'
                           ? `Más en portada · ${secondary.length} casos`
                           : `More on the front page · ${secondary.length} cases`}
-                      </span>
+                      </h2>
                       <span aria-hidden="true" className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
                     </div>
                     <div className="grid md:grid-cols-2 gap-x-7">

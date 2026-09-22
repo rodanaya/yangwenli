@@ -91,7 +91,7 @@ export function FeatureSection({
 }) {
   const accentColor = accent ?? 'var(--color-accent)'
   return (
-    <section id={id} className="py-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+    <section id={id} className="py-6 scroll-mt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
       {movement && (
         <div className="flex items-center gap-3 mb-3">
           <span
@@ -104,8 +104,8 @@ export function FeatureSection({
         </div>
       )}
       <div className="flex items-baseline justify-between gap-4 mb-4">
-        <p
-          className="font-mono"
+        <h2
+          className="font-mono uppercase"
           style={{
             fontSize: 12,
             letterSpacing: '0.22em',
@@ -115,9 +115,9 @@ export function FeatureSection({
           }}
         >
           <span style={{ color: accentColor, fontWeight: 700 }}>§ {numeral}</span>
-          <span className="mx-2 opacity-50">·</span>
+          <span className="mx-2 opacity-50" aria-hidden="true">·</span>
           {lang === 'es' ? title.es : title.en}
-        </p>
+        </h2>
         {meta && (
           <p
             className="font-mono tabular-nums"

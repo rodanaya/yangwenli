@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/tooltip'
 
 const LINK_CLS =
-  'inline-flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary font-mono uppercase tracking-widest transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent'
+  'inline-flex items-center gap-1.5 py-1 text-[13px] text-text-muted hover:text-text-primary font-mono uppercase tracking-widest transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent'
 
 export function WayfindingSpine({
   nav,

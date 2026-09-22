@@ -31,7 +31,7 @@
  * every label renders through casesVocab with a humanized fallback.
  */
 import { useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { caseLibraryApi } from '@/api/client'
@@ -219,7 +219,7 @@ function CaseHero({
       <div aria-hidden="true" className="absolute left-0 right-0" style={{ top: 0, height: 6, background: sectorAccent }} />
       <div className="pt-8 pb-5">
         {/* Index strip */}
-        <div className="flex items-baseline justify-between gap-4 mb-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-4">
           <div
             className="font-mono tabular-nums uppercase"
             style={{ fontSize: 13, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 500 }}
@@ -227,7 +227,7 @@ function CaseHero({
             {folio(scandal.id)}
             {scandal.is_verified ? (
               <>
-                <span className="mx-2 opacity-40">·</span>
+                <span className="mx-2 opacity-40" aria-hidden="true">·</span>
                 <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>
                   {lang === 'es' ? 'VERIFICADO' : 'VERIFIED'}
                 </span>
@@ -312,16 +312,15 @@ function CaseHero({
 // ─── Provenance footer ──────────────────────────────────────────────────────
 
 function ProvenanceFooter({ lang }: { lang: Lang }) {
-  const navigate = useNavigate()
   return (
-    <section id="methodology" className="py-8">
+    <section id="methodology" className="py-8 scroll-mt-6">
       <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 20, textAlign: 'center' }}>
-        <p
+        <h2
           className="font-mono mb-3 uppercase"
           style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-muted)', fontWeight: 500 }}
         >
           § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
-        </p>
+        </h2>
         <p
           style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 14, color: 'var(--color-text-secondary)', maxWidth: '64ch', margin: '0 auto', lineHeight: 1.6 }}
         >
@@ -329,14 +328,13 @@ function ProvenanceFooter({ lang }: { lang: Lang }) {
             ? 'Casos compilados de periodismo investigativo, auditorías de la ASF y procesos judiciales públicos. Los vínculos a proveedores se construyen con coincidencia exacta de RFC o nombre. La presencia en esta biblioteca no constituye una determinación de culpabilidad.'
             : 'Cases compiled from investigative journalism, ASF audits, and public judicial proceedings. Vendor links are constructed from exact RFC or name match. Inclusion in this library is not a determination of guilt.'}
         </p>
-        <button
-          type="button"
-          onClick={() => navigate('/methodology')}
-          className="mt-4 font-mono cursor-pointer hover:opacity-70 transition-opacity uppercase"
-          style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+        <Link
+          to="/methodology"
+          className="mt-4 inline-block py-1 font-mono hover:opacity-70 transition-opacity uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+          style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--color-text-secondary)', textDecoration: 'none' }}
         >
           {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
-        </button>
+        </Link>
       </div>
     </section>
   )
@@ -491,7 +489,7 @@ function SourceList({ sources, lang }: { sources: ScandalSource[]; lang: Lang })
                 href={s.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block hover:bg-background-card/60 transition-colors"
+                className="block hover:bg-background-card/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                 style={{ textDecoration: 'none', color: 'inherit' }}
               >
                 {inner}

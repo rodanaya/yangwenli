@@ -171,7 +171,7 @@ export function CaseDocketRail({
           <li key={s.id}>
             <a
               href={`#${s.id}`}
-              className="inline-flex items-baseline gap-1.5 hover:opacity-70 transition-opacity"
+              className="inline-flex items-baseline gap-1.5 py-1 hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               style={{ textDecoration: 'none' }}
             >
               <span
@@ -572,11 +572,13 @@ export function KeepReadingFooter({
 
   return (
     <section className="py-7" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <div
-        className="flex items-center gap-3 mb-3 font-mono uppercase"
-        style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
-      >
-        <span>{heading}</span>
+      <div className="flex items-center gap-3 mb-3">
+        <h2
+          className="font-mono uppercase"
+          style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
+        >
+          {heading}
+        </h2>
         <span aria-hidden="true" className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
         {sector && (
           <EntityIdentityChip
@@ -622,7 +624,7 @@ export function KeepReadingFooter({
       <p className="mt-4 text-center">
         <Link
           to="/cases"
-          className="font-mono uppercase hover:opacity-70 transition-opacity"
+          className="inline-block py-1 font-mono uppercase hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
           style={{ fontSize: 12, letterSpacing: '0.18em', color: 'var(--color-text-primary)', fontWeight: 600, textDecoration: 'none' }}
         >
           {lang === 'es'

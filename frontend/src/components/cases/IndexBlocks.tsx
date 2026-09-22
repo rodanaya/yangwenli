@@ -328,11 +328,13 @@ export function AgateLedger({
   return (
     <section aria-label={header ?? (lang === 'es' ? 'El archivo' : 'The archive')}>
       {header && (
-        <div
-          className="flex items-center gap-3 mt-8 mb-2 font-mono uppercase"
-          style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
-        >
-          <span>{header}</span>
+        <div className="flex items-center gap-3 mt-8 mb-2">
+          <h2
+            className="font-mono uppercase"
+            style={{ fontSize: 12, letterSpacing: '0.2em', color: 'var(--color-text-muted)', fontWeight: 600 }}
+          >
+            {header}
+          </h2>
           <span aria-hidden="true" className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
         </div>
       )}
