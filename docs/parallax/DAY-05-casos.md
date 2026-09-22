@@ -125,3 +125,32 @@ Pattern: `docs/parallax/DAY-02d-methodology-reading-frame.md` (rail 210 + gap 40
 - Probes: extend `_parallax_shots/day05/audit5.mjs` (tag `after`) with the row-width check (Change 1), the label-box intersection check (Change 6, adapt Day 4's `labelAudit`), the centre-line/column-width check (Change 7), the heading-skip check and the Tab-walk log; run EN and `LANG_ES=1`; run the census with `MSYS_NO_PATHCONV=1 node "D:/…/day04/clipcensus4.mjs" http://localhost:3009 "/cases,/cases/linea-12-metro-collapse,/cases/oceanografia-pemex-fraud" 1440,1280,1024,390` EN and ES → **0 clipped on all 24 lines** (teasers excepted, listed) is a hard gate. Write `_parallax_shots/day05/crop5.mjs` modelled on `day04/crop4.mjs` (hide sticky chrome first) and crop: index masthead+band, filter row, lead, first 12 ledger rows; dossier hero+charge, rail, § II, § III, § IV–V; at 1440 and 390, EN and ES, into `after/`. LOOK at the crops before reporting.
 - Review inside the agent: `vercel-react-best-practices` on the diff, `rubli-bilingual-audit` on every touched TSX, then gates from `frontend/`: `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.app.json` · `npm run build` · `npm run lint:tokens`.
 - Do NOT bump BUILD_ID, push or deploy — Fable judges first.
+
+## Result
+
+Built by Opus executor `parallax-day05` (9 commits, order 1→2→5→8→3→4→7→6 + review fix), judge fix `e493113e` (band label row wraps by whole line at 390 — title and hint had sat side by side, three lines each). Judged by Fable on region crops at 1440 + 390, EN + ES (`_parallax_shots/day05/after/`, 68 crops), numbers re-read from `after/en-report.json` / `es-report.json`, census re-run on the fixed build.
+
+| Measure | before | after |
+|---|---|---|
+| ledger `li` width vs header (1440) | 686 / 1,120 · name column 45px | **1,120 / 1,120** · name column 419px · 38/38 rows single 40px line EN+ES |
+| clip census `/cases` (EN / ES, 390) | 104 / 102 | **8 / 8** = the four `line-clamp-2` teasers ×2 (exempt, listed); dossiers **0 on all 16 lines** |
+| sub-10px text leaves index / dossiers (1440 · 390) | 41 / 28+25 · 41 / 33+30 | **0 everywhere** |
+| smallest SVG glyph, dossier 390 | 3.9px | 12px (years only; caps + callouts are HTML ≥ 10.5px) |
+| SVG text escaping its box (Oceanografía) | 2 | 0 (threshold joined the scale domain) |
+| live italics (all elements, 3 routes) | 4 | 0 |
+| controls with no focus style index / dossier | 77 / 8 | 0 / 0 |
+| targets < 24px index / dossier | 6 / 2 | 0 / 0 (band 24px; legend items are the buttons) |
+| headings index / dossier (skips) | 6 / 1 | 8 / 9 (0 skips) |
+| masthead value at 390 | `$208.4B MXN` on two lines | one line, `≈US$10B` sub-line in EN only; ES `208,370 MDP` unchanged |
+| `US$` in Spanish (dossier + vendor + institution ScaleBlock) | 1 each | 0 (EN unchanged) |
+| dossier frame (1920 / 1440) | 1,176 left-anchored, column 720 | **1,010 centred** (margins 343/343 · 103/103), column 760 |
+| cost plate | ≈400px inside a scroller, labels 5.4px | 760 (334 at 390), no scroller, HTML labels via `placeLabels`, 0 overlaps / 0 outside |
+| severity labels contrast | 1.09:1 / 1.4:1 on the band | off the band, none failing |
+| `?sort=` | `useState` | URL (nuqs), `?sort=loss` not written on load |
+| search input | text / no name / no autocomplete | search / `case-search` / off |
+
+Commits: `34f63c44` §1 · `438f0cee` §2 · `147bd19d` §5 · `a2195965` §8 · `854fb7f2` §3 · `238ec871` §4 · `e69e657f` §7 · `19a96042` §6 · `e28b241b` review fix (single-line ledger rows, `useMeasured.ts` extracted for Fast Refresh, compiler-refused memo removed) · `e493113e` judge fix. Gates: tsc 0 · build OK · lint:tokens PASS · eslint 0 on the 10 files · bilingual audit 0 monolingual additions.
+
+Deviations accepted: `<li>` un-capped with inline `maxWidth: 'none'` rather than `max-w-none` (the Day 2c rule is unlayered, so it beats Tailwind's layered utility regardless of specificity — the plan's premise was wrong); page padding moved outside the 1,010 container and the rail set to 210 so 210 + 40 + 760 = 1,010 holds; the filter menus below `sm` are unpositioned and span the filter row instead of an `align` prop; `WayfindingSpine` back link got `py-1` (shared, 20 → 28px on every dossier); the archive-maximum callout falls back below the axis and is dropped at 390 when there is no room (documented, lowest priority); the 8 extra census lines at 390 on `/cases` are the census's own `content-visibility: visible` override rendering CLOSED `<details>` panels — with a panel actually open every option sits inside the viewport (`_menuprobe.mjs`).
+
+Noticed, not fixed (→ PARALLAX backlog): the site-wide `<li>` measure QC (any register row wider than 68ch is capped the same way); the AgateLedger `aria-hidden` column header (a `<table>` is a half-day); § III's ScaleBlock tile leaves its row half empty when the case has no amount range; the census script's `content-visibility` override should skip closed `<details>`.
