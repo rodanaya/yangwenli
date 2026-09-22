@@ -802,7 +802,11 @@ export function Sectors() {
                     }
 
                     return (
-                      <div className="rounded-sm border border-border overflow-hidden">
+                      <>
+                      {/* Phones scroll the five columns inside the frame instead of
+                          clipping them (the Day 2/5/6 table precedent + hint). */}
+                      <div className="rounded-sm border border-border overflow-x-auto">
+                      <div className="min-w-[560px] sm:min-w-0">
                         {/* Column headers */}
                         <div className="flex items-center gap-4 px-5 py-1.5 bg-background-elevated border-b border-border text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                           <span className="w-8 flex-shrink-0">#</span>
@@ -934,6 +938,11 @@ export function Sectors() {
                           )
                         })}
                       </div>
+                      </div>
+                      <p className="sm:hidden font-mono mt-1.5" aria-hidden="true" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+                        {lang === 'es' ? '← desliza →' : '← scroll →'}
+                      </p>
+                      </>
                     )
                   })()}
                   <div className="mt-6">
