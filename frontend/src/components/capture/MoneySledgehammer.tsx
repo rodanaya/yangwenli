@@ -36,7 +36,7 @@ export function MoneySledgehammer({
   eyebrow,
   deck,
   microStats,
-  accentColor = '#dc2626',
+  accentColor = 'var(--color-risk-critical)',
   ariaLabel,
 }: Props) {
   return (

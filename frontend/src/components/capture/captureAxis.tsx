@@ -74,7 +74,7 @@ export function ThresholdRules({
       >
         {labeled && (
           <span
-            className="absolute left-1.5 font-mono text-[8.5px] uppercase tracking-[0.12em] text-text-muted whitespace-nowrap"
+            className="absolute left-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted whitespace-nowrap"
             style={labelPos}
           >
             {lang === 'es' ? `piso ${floor}%` : `floor ${floor}%`}
@@ -93,7 +93,7 @@ export function ThresholdRules({
       >
         {labeled && (
           <span
-            className="absolute left-1.5 font-mono text-[8.5px] uppercase tracking-[0.12em] whitespace-nowrap"
+            className="absolute left-1.5 font-mono text-[10px] uppercase tracking-[0.12em] whitespace-nowrap"
             style={{ color: 'var(--color-risk-critical)', ...labelPos }}
           >
             {lang === 'es' ? `techo ${ceil}%` : `ceiling ${ceil}%`}

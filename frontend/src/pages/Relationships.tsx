@@ -101,7 +101,7 @@ export default function Relationships() {
           >
             <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
               <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
-              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+              <span aria-hidden="true" style={{ margin: '0 8px' }}>·</span>
               <span>{lang === 'en' ? 'Institutional capture · monotonic concentration' : 'Captura institucional · concentración monótona'}</span>
             </span>
           </div>

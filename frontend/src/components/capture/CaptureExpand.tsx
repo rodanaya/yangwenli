@@ -18,7 +18,7 @@ import {
   type CaptureLandscapeResponse,
 } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
-import { getRiskLevelFromScore } from '@/lib/constants'
+import { getRiskLevelFromScore, RISK_TEXT_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -76,7 +76,7 @@ export function CaptureExpand({
     <div
       role="region"
       className="px-5 py-4 bg-background-elevated grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr] gap-x-6 gap-y-5"
-      style={{ borderTop: '1px solid rgba(160, 104, 32, 0.25)' }}
+      style={{ borderTop: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)' }}
     >
       {/* Band A — year-by-year receipts */}
       <div>
@@ -98,7 +98,7 @@ export function CaptureExpand({
                       opacity: p.share_pct >= ceil ? 0.85 : 0.5,
                     }}
                   />
-                  <span className="font-mono text-[8px] text-text-muted tabular-nums">
+                  <span className="font-mono text-[10px] text-text-muted tabular-nums">
                     {String(p.year).slice(2)}
                   </span>
                 </div>
@@ -156,10 +156,12 @@ export function CaptureExpand({
                 {lang === 'en' ? 'risk indicator' : 'indicador de riesgo'}:{' '}
                 <span
                   style={{
+                    // 12px type takes the AA-safe reading ink, not the vivid
+                    // mark colour (D6 C4). Marks below keep --color-risk-*.
                     color:
                       riskLevel === 'low'
                         ? 'var(--color-text-muted)'
-                        : `var(--color-risk-${riskLevel})`,
+                        : RISK_TEXT_COLORS[riskLevel],
                     fontWeight: 700,
                   }}
                 >

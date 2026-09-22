@@ -12,7 +12,7 @@
 import { useMemo, useState } from 'react'
 import type { CaptureLandscapeResponse } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
-import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
@@ -156,7 +156,7 @@ export function CaptureNowLedger({
                       <>
                         {Math.round(r.latest_hhi).toLocaleString()}
                         {r.latest_hhi >= HHI_CONCENTRATED && (
-                          <span className="ml-1.5 text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-risk-critical)' }}>
+                          <span className="ml-1.5 text-[10px] uppercase tracking-wider" style={{ color: RISK_TEXT_COLORS.critical }}>
                             conc.
                           </span>
                         )}

@@ -19,6 +19,7 @@ import {
   type CaptureLandscapeResponse,
 } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CaptureTrajectory } from './CaptureTrajectory'
 import { CaptureExpand } from './CaptureExpand'
@@ -198,10 +199,17 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
 // ─── Seal (at rest, from the folded aria field) ──────────────────────────────
 function CrossSeal({ c, lang }: { c: CaptureItem; lang: 'en' | 'es' }) {
   if (!c.aria) return null
-  const badges: Array<{ t: string; color: string }> = []
+  // 10px seals are small text: the ink is the AA-safe reading colour, the
+  // border keeps the vivid mark colour (D6 C4 — "inks for type, marks vivid").
+  const badges: Array<{ t: string; ink: string; edge: string }> = []
   if (c.aria.in_ground_truth)
-    badges.push({ t: lang === 'en' ? 'documented' : 'documentado', color: 'var(--color-risk-critical)' })
-  if (c.aria.ips_tier === 1) badges.push({ t: 'ARIA T1', color: 'var(--color-accent)' })
+    badges.push({
+      t: lang === 'en' ? 'documented' : 'documentado',
+      ink: RISK_TEXT_COLORS.critical,
+      edge: 'var(--color-risk-critical)',
+    })
+  if (c.aria.ips_tier === 1)
+    badges.push({ t: 'ARIA T1', ink: 'var(--color-accent-hover)', edge: 'var(--color-accent)' })
   if (badges.length === 0) return null
   return (
     <span className="inline-flex gap-1.5 align-middle">
@@ -209,7 +217,7 @@ function CrossSeal({ c, lang }: { c: CaptureItem; lang: 'en' | 'es' }) {
         <span
           key={b.t}
           className="font-mono text-[10px] uppercase tracking-[0.1em] px-1 py-0.5 rounded-[2px]"
-          style={{ color: b.color, border: `1px solid ${b.color}`, opacity: 0.9 }}
+          style={{ color: b.ink, border: `1px solid ${b.edge}` }}
         >
           {b.t}
         </span>
