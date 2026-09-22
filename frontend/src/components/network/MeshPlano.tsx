@@ -167,13 +167,12 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
         : (lang === 'en' ? 'high' : 'alta')
       const tw = measureLabel(label, thresholdFont, 9999, AXIS_FS).width
       const ty = yScale(v) - 3
-      // On mobile the labels move to the LEFT end of their rules — the right
-      // end is where the giants' callouts live.
-      obstacles.push(
-        isMobile
-          ? { x0: PAD_L + 2, y0: ty - AXIS_FS, x1: PAD_L + 2 + tw, y1: ty + 3 }
-          : { x0: width - PAD_R - 2 - tw, y0: ty - AXIS_FS, x1: width - PAD_R - 2, y1: ty + 3 },
-      )
+      // The labels stay at the RIGHT end of their rules at every width. The
+      // left end is the dense column (the marks at 5–20 actors), so a
+      // left-anchored label sits on the data; the right end is safe because
+      // the callout placer treats these boxes as obstacles and routes around
+      // them.
+      obstacles.push({ x0: width - PAD_R - 2 - tw, y0: ty - AXIS_FS, x1: width - PAD_R - 2, y1: ty + 3 })
     }
 
     const cap = isMobile ? 3 : 5
@@ -340,9 +339,9 @@ export const MeshPlano = memo(function MeshPlano({ communities, totalCommunities
                 opacity={0.6}
               />
               <text
-                x={isMobile ? PAD_L + 2 : width - PAD_R - 2}
+                x={width - PAD_R - 2}
                 y={yScale(v) - 3}
-                textAnchor={isMobile ? 'start' : 'end'}
+                textAnchor="end"
                 fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
                 fontSize={AXIS_FS}
                 letterSpacing="0.08em"
