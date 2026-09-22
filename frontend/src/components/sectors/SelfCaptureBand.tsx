@@ -40,11 +40,12 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
       aria-label={isEs ? 'Los que suben en el arqueo — lo que el tamaño esconde' : 'The climbers of the count — what size hides'}
       className="mb-6 pb-6 border-b border-border"
     >
-      <p
+      <h2
         className="mb-3"
         style={{
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 12,
+          lineHeight: 1.6,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
@@ -52,7 +53,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
         }}
       >
         {isEs ? '§ Los que suben en el arqueo · lo que el tamaño esconde' : '§ The climbers of the count · what size hides'}
-      </p>
+      </h2>
 
       <div role="list">
         {picks.map(({ row, d }) => {
@@ -120,7 +121,7 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                   )}
                   <Link
                     to={`/sectors/${row.sectorId}`}
-                    className="font-mono underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity whitespace-nowrap"
+                    className="font-mono underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity whitespace-nowrap rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                     style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
                   >
                     {isEs ? 'ver sector ↗' : 'view sector ↗'}

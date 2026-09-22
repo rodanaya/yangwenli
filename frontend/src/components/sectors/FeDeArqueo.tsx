@@ -132,9 +132,9 @@ export function FeDeArqueo({ view, lang, totals }: FeDeArqueoProps) {
       style={{ borderTop: '3px double var(--color-text-muted)' }}
     >
       <div className="pt-3 px-2 sm:px-3">
-        <p className="font-mono" style={KICKER_STYLE}>
+        <h2 className="font-mono" style={{ ...KICKER_STYLE, lineHeight: 1.6 }}>
           {lang === 'es' ? 'FE DE ARQUEO · MÉTODO Y LÍMITES' : "AUDITOR'S NOTE · METHOD AND LIMITS"}
-        </p>
+        </h2>
 
         <ol className="mt-3 space-y-2.5 lg:max-w-[640px]" style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
           {clauses.map((c, i) => (
@@ -150,7 +150,7 @@ export function FeDeArqueo({ view, lang, totals }: FeDeArqueoProps) {
         <p className="mt-3 pb-3 font-mono">
           <Link
             to="/methodology"
-            className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"
+            className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             style={{ fontSize: 12, letterSpacing: '0.02em', color: 'var(--color-text-secondary)' }}
           >
             {lang === 'es' ? 'modelo v0.8.5 · AUC 0.785 · metodología ↗' : 'model v0.8.5 · AUC 0.785 · methodology ↗'}

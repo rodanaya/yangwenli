@@ -491,7 +491,7 @@ export function ExposureLedger({
             : 'Model v0.8.5 · flagged amount = MXN via high+critical contracts · intensity = sector mean risk · statistical indicator, not a legal determination · click a row → dossier · '}
           <Link
             to="/methodology"
-            className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"
+            className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             style={{ color: 'var(--color-text-secondary)' }}
           >
             {lang === 'es' ? 'metodología ↗' : 'methodology ↗'}

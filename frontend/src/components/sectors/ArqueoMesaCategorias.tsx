@@ -247,10 +247,13 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
     >
       <div className="w-full">
         <div className="mb-1">
-          <span
+          <h2
+            className="inline"
             style={{
               fontFamily: 'var(--font-family-mono, monospace)',
               fontSize: 13,
+              fontWeight: 400,
+              lineHeight: 'inherit',
               letterSpacing: '0.08em',
               color: 'var(--color-text-muted)',
               textTransform: 'uppercase',
@@ -259,7 +262,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
             {lang === 'es'
               ? '§ LA MESA · POR CATEGORÍA · ANCHO = GASTO, ALTURA = RIESGO'
               : '§ THE TABLE · BY CATEGORY · WIDTH = SPEND, HEIGHT = RISK'}
-          </span>
+          </h2>
         </div>
 
         <div ref={containerRef} className="relative w-full">

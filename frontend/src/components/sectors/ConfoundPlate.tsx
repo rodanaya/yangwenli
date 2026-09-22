@@ -163,7 +163,7 @@ export function ConfoundPlate({
           type="button"
           onClick={() => onLensChange(b.key)}
           aria-pressed={lens === b.key}
-          className="px-2 py-1 font-mono rounded-sm border transition-colors"
+          className="px-2 py-1 font-mono rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
           style={{
             ...MONO_MICRO,
             fontSize: 13,

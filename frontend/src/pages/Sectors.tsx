@@ -118,7 +118,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
             {/* Sector header row */}
             <button
               type="button"
-              className="w-full flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-background-elevated transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-background-elevated transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
               style={{ borderLeft: `3px solid ${color}` }}
               onClick={() => toggle(sectorCode)}
               aria-expanded={isOpen}
@@ -506,6 +506,7 @@ export function Sectors() {
             {!isLoading && totalVarMxn > 0 && (
               <div className="text-right">
                 <div
+                  role="group"
                   aria-label={
                     lang === 'es'
                       ? `${formatDualCurrency(totalVarMxn)} monto observado`
@@ -571,7 +572,7 @@ export function Sectors() {
             type="button"
             onClick={() => setView('sectors')}
             className={cn(
-              'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
+              'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
               view === 'sectors'
                 ? 'border-text-primary text-text-primary'
                 : 'border-transparent text-text-muted hover:text-text-secondary',
@@ -586,7 +587,7 @@ export function Sectors() {
             type="button"
             onClick={() => setView('categories')}
             className={cn(
-              'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
+              'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
               view === 'categories'
                 ? 'border-text-primary text-text-primary'
                 : 'border-transparent text-text-muted hover:text-text-secondary',
@@ -676,11 +677,11 @@ export function Sectors() {
                   {/* ── § 2 — CAPTURE DUMBBELL HERO ─────────────────────── */}
                   <div className="mb-3 pb-3 border-b border-border">
                     <div className="flex items-baseline gap-3 mb-2">
-                      <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+                      <h2 className="text-[12px] leading-[1.6] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                         {lang === 'es'
                           ? '§ La captura · cuánto controla el líder de cada categoría'
                           : '§ The capture · how much the leader of each category holds'}
-                      </p>
+                      </h2>
                       <span className="text-[13px] text-text-muted/50 font-mono hidden sm:block">
                         {lang === 'es'
                           ? 'las 12 categorías de mayor gasto'
@@ -692,11 +693,11 @@ export function Sectors() {
 
                   {/* ── § 3 — CATALOG (List or Tree) ────────────────────── */}
                   <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
-                    <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+                    <h2 className="text-[12px] leading-[1.6] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                       {lang === 'es'
                         ? `§ El Catálogo · ${categoryData.total} categorías, asiento por asiento`
                         : `§ The Catalog · ${categoryData.total} categories, entry by entry`}
-                    </p>
+                    </h2>
                     <div className="flex items-center gap-2">
                       {/* Sort chips — visible UI for catSortKey */}
                       {cview === 'list' && (
@@ -717,7 +718,7 @@ export function Sectors() {
                                 setSearchParams(next, { replace: true })
                               }}
                               className={cn(
-                                'px-2 py-1 text-[13px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
+                                'px-2 py-1 text-[13px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
                                 catSortKey === key
                                   ? 'bg-text-primary text-background border-transparent'
                                   : 'text-text-muted border-border hover:text-text-secondary',
@@ -737,7 +738,7 @@ export function Sectors() {
                             type="button"
                             onClick={() => setCview(v)}
                             className={cn(
-                              'px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                              'px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent',
                               cview === v
                                 ? 'bg-text-primary text-background'
                                 : 'text-text-muted hover:text-text-secondary',
@@ -957,7 +958,8 @@ export function Sectors() {
                 {t('page.failedToLoad')}
                 <button
                   onClick={() => refetch()}
-                  className="ml-3 underline opacity-70 hover:opacity-100"
+                  type="button"
+                  className="ml-3 underline opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                 >
                   {lang === 'es' ? 'Reintentar' : 'Retry'}
                 </button>
@@ -1130,12 +1132,14 @@ export function Sectors() {
                     data sharing the same VaR/Intensity lens. The Plate is the
                     page centrepiece — kept first, right under the lede, as the
                     DEFAULT view; the table is a toggle-away view. Don't stack. */}
-                <div className="mb-6" aria-label={lang === 'es' ? 'El Registro del Arqueo' : 'The Count Register'}>
+                <section className="mb-6" aria-labelledby="registro-heading">
                   <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
-                    <p
+                    <h2
+                      id="registro-heading"
                       style={{
                         fontFamily: '"IBM Plex Mono", monospace',
                         fontSize: 12,
+                        lineHeight: 1.6,
                         letterSpacing: '0.18em',
                         textTransform: 'uppercase',
                         color: 'var(--color-text-muted)',
@@ -1143,7 +1147,7 @@ export function Sectors() {
                       }}
                     >
                       {lang === 'es' ? '§ El Registro del Arqueo · dos vistas, un orden' : '§ The Count Register · two views, one order'}
-                    </p>
+                    </h2>
                     {/* Plate / Register view toggle (Plate default; lens shared) */}
                     <div
                       className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0"
@@ -1159,7 +1163,7 @@ export function Sectors() {
                           type="button"
                           onClick={() => setRegView(key)}
                           className={cn(
-                            'px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                            'px-3 py-1.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent',
                             regView === key
                               ? 'bg-text-primary text-background'
                               : 'text-text-muted hover:text-text-secondary',
@@ -1177,7 +1181,7 @@ export function Sectors() {
                   ) : (
                     <ExposureLedger rows={ledgerRows} lang={lang} lens={lens} onLensChange={setLens} />
                   )}
-                </div>
+                </section>
 
                 {/* §C — SELF-CAPTURE HONOR ROLL (intensity highlight) ─────
                     The 3 sectors whose intensity rank most exceeds their VaR
