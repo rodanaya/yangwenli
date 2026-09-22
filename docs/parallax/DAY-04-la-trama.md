@@ -139,4 +139,29 @@ Pattern: `docs/parallax/DAY-02d-methodology-reading-frame.md` + `DAY-03b-story-t
 - Do NOT bump BUILD_ID, push or deploy — Fable judges first.
 
 ## Result
-_(filled at step 6: commits, BUILD_ID, acceptance table, deviations)_
+
+Built by Opus executor `parallax-day04` (10 commits, order 8→3→6→7→5→4→plateLabels→2→1 + review fix), judge fix by `parallax-day04-fix` (`523daeee`, threshold labels right-anchored at all widths — the Change 2 spec line "left end on mobile" put MEDIA on the dense data column). Judged by Fable on region crops at 1440 + 390, EN + ES (`_parallax_shots/day04/after/`, `final/`), numbers re-read from `after/en-report.json`, census re-run on the fixed build.
+
+| Measure (clusters / buyers) | before 1440 | after 1440 | before 390 | after 390 |
+|---|---|---|---|---|
+| sub-10px text leaves | 46 / 6 | **0 / 0** | 45 / 6 | **0 / 0** |
+| smallest glyph | 5.3px | 11px (tents 10px) | 2.3px | 11px |
+| clamped / truncated names (EN, ES) | 0+0 / 37+8 (ES 43) | **0** | same | **0** |
+| clip census EN / ES (all 4 widths) | 2 / 10 · 74 / 86 | **0 on all 16 lines** | | |
+| `div[role=button]` · nested interactive | 60·60 / 120·0 | **0 · 0** | | |
+| tab stops inside a graph | 49 / 30 | **1** | | |
+| controls without focus ring | 50 / 31 | **0** | | |
+| opacity-dimmed text leaves | 97 / 139 | **0** (rail 5.01:1, plate 4.68:1) | | |
+| headings | 1 | 8 / 7, no skips | | |
+| live regions | 0 | 1 | | |
+| frame widths | 1152 left-anchored | {640, 760, 1152} on one centre x at 1920/1440/1280/1024/390 | | |
+| plate at 1024 | 380px | 870px | | |
+| typing 5 chars → plate re-renders | every keystroke | **0** | | |
+
+Commits: `516d157a` §8 · `99f9f9db` §3 · `a2f76ef1` §6 · `7152330b` §7 · `6185ef26` §5 · `95ac9692` §4 · `495b839e` plateLabels + vitest 9/9 · `bf1a8d4c` §2 · `fb08386a` §1 · `a330fe22` review fix · `360508da` untrack probes · `523daeee` judge fix. Gates: tsc 0 · build OK · lint:tokens PASS · vitest 9/9 · bilingual audit 0 monolingual additions.
+
+Deviations accepted: PlateFrame context label wraps instead of ellipsing (verified single-line on /gap, /methodology, /atlas, /network at 1440/1024/390 EN+ES — the wrap is a safety net); probes disable `content-visibility` before measuring so §3's rows cannot pass the census unrendered; Change 2's mobile left-anchoring reverted (judge fix).
+
+Noticed, not fixed (→ PARALLAX backlog): siege-plate centre label covers two small orbit nodes at 1440; C-3 callout sits over grey marks at 390 (label-over-data — placeLabels has no data-mark obstacles); ochre accent 4.44:1 on the page background (Day 1 token decision); local backend boot needs the no-scan launcher on a cold disk (`_parallax_shots/day04/local_backend.py`).
+
+Shipped 2026-09-22: BUILD_ID `2026-09-22-parallax-d4-la-trama` — commit + entry chunk recorded below after deploy.
