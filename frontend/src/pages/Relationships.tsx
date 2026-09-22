@@ -15,7 +15,7 @@
  */
 
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -147,9 +147,9 @@ export default function Relationships() {
           </div>
         ) : funnelTiers ? (
           <section className="mb-10 lg:max-w-[760px]" aria-label={lang === 'en' ? 'The funnel' : 'El embudo'}>
-            <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-4">
+            <h2 className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-4">
               {lang === 'en' ? '§ THE FUNNEL' : '§ EL EMBUDO'}
-            </p>
+            </h2>
             <FunnelStrip tiers={funnelTiers} lang={lang} />
           </section>
         ) : null}
@@ -161,9 +161,9 @@ export default function Relationships() {
           </div>
         ) : landscape ? (
           <section className="mb-12 lg:max-w-[760px]" aria-label={lang === 'en' ? 'The reckoning' : 'El saldo'}>
-            <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
+            <h2 className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
               {lang === 'en' ? '§ THE RECKONING' : '§ EL SALDO'}
-            </p>
+            </h2>
             <MoneySledgehammer
               value={formatCompactMXN(sum119)}
               valueSub={lang === 'en' ? formatCompactUSD(sum119) : undefined}
@@ -178,7 +178,7 @@ export default function Relationships() {
                   : 'del gasto registrado — acumulado en todo el registro, no el flujo de un año.'
               }
               microStats={[
-                { value: String(capData?.total_captures ?? 13), label: lang === 'en' ? 'built year by year' : 'construidas año con año' },
+                { value: capData?.total_captures != null ? String(capData.total_captures) : '—', label: lang === 'en' ? 'built year by year' : 'construidas año con año' },
                 { value: landscape.qualifying_count.toLocaleString(), label: lang === 'en' ? 'in the field' : 'en el campo' },
                 { value: landscape.aria_p6_total.toLocaleString(), label: lang === 'en' ? 'vendor fingerprints (P6)' : 'huellas de proveedor (P6)' },
               ]}
@@ -210,9 +210,9 @@ export default function Relationships() {
 
             {/* Methodology — live thresholds */}
             <div className="mt-8 pt-4 border-t border-border">
-              <p className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              <h2 className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
                 {lang === 'en' ? 'Methodology' : 'Metodología'}
-              </p>
+              </h2>
               <p
                 className="lg:max-w-[640px]"
                 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}
@@ -239,15 +239,14 @@ export default function Relationships() {
 
 // ─── ProvenanceFooter — local, matching the dossier provenance idiom ─────────
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
-  const navigate = useNavigate()
   return (
     <section className="mt-10 pt-5" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <p
+      <h2
         className="font-mono mb-2"
         style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
       >
         § {lang === 'en' ? "What this plate can't tell you" : 'Lo que esta lámina no puede decir'}
-      </p>
+      </h2>
       <p className="lg:max-w-[640px]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
         {lang === 'en'
           ? 'Monotonic concentration reads how spend was awarded — not how it was performed. A high risk indicator marks a publishable geometry, not proof of wrongdoing, which only courts establish.'
@@ -259,14 +258,13 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
             ? 'COMPRANET data 2002–2025; data horizon Sep 28 2025. v0.8.5 risk model trained on 1,417 documented corruption cases. Model signals are statistical indicators, not legal determinations.'
             : 'Datos COMPRANET 2002–2025; horizonte de datos 28 sep 2025. Modelo de riesgo v0.8.5 entrenado con 1,417 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'}
         </p>
-        <button
-          type="button"
-          onClick={() => navigate('/methodology')}
-          className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
+        <Link
+          to="/methodology"
+          className="mt-3 inline-block py-1 font-mono cursor-pointer hover:opacity-70 transition-opacity rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
           style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
         >
           {lang === 'en' ? 'See full methodology' : 'Ver metodología completa'} ↗
-        </button>
+        </Link>
       </div>
     </section>
   )

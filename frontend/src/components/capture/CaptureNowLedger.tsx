@@ -71,9 +71,9 @@ export function CaptureNowLedger({
 
   return (
     <section className="mt-12">
-      <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+      <h2 className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
         {lang === 'en' ? `§ THE LEDGER · ${total}` : `§ EL REGISTRO · ${total}`}
-      </p>
+      </h2>
       <p
         className="mb-4 lg:max-w-[640px]"
         style={{

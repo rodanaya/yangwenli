@@ -97,9 +97,9 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
       {/* ── §B′ Exhibit A — the documented climber, shown intimately ── */}
       {lead && (
         <div className="mb-8 lg:max-w-[760px]">
-          <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+          <h2 className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
             {lang === 'en' ? '§ Exhibit A' : '§ Prueba A'}
-          </p>
+          </h2>
           <LeadExhibit
             c={lead}
             ceil={ceil}
@@ -115,14 +115,14 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
       )}
 
       {/* ── §C — the film: 13 threshold-crossing trajectories ── */}
-      <p
+      <h2
         id="pelicula-heading"
         className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2"
       >
         {lang === 'en'
           ? '§ THE FILM · PLATE XIV·a — THIRTEEN LINES CROSSING ONE LINE'
           : '§ LA PELÍCULA · LÁMINA XIV·a — TRECE LÍNEAS QUE CRUZAN UNA LÍNEA'}
-      </p>
+      </h2>
       {/* Standfirst — the legal-honesty sentence (frozen contract, kept once) */}
       <div className="lg:max-w-[640px]">
         <p

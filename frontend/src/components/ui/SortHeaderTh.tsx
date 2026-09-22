@@ -40,10 +40,12 @@ export function SortHeaderTh<F extends string = string>({
         isActive ? (order === 'desc' ? 'descending' : 'ascending') : 'none'
       }
     >
+      {/* min-h-6 lifts the hit target to 24px; -my-0.5 spends the 4px inside the
+          cell's own padding so no caller's header row changes height. */}
       <button
         type="button"
         onClick={() => onSort(field)}
-        className="inline-flex items-center gap-0.5 hover:text-text-primary transition-colors uppercase tracking-wider text-[13px]"
+        className="inline-flex items-center gap-0.5 min-h-6 -my-0.5 rounded-sm hover:text-text-primary transition-colors uppercase tracking-wider text-[13px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
       >
         {label}
         <Icon className={iconCls} />

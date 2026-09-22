@@ -40,7 +40,8 @@ export function MoneySledgehammer({
   ariaLabel,
 }: Props) {
   return (
-    <div
+    <figure
+      role="group"
       className="surface-card rounded-sm p-8 md:p-12 relative overflow-hidden"
       aria-label={ariaLabel}
     >
@@ -130,6 +131,6 @@ export function MoneySledgehammer({
           </div>
         </>
       )}
-    </div>
+    </figure>
   )
 }
