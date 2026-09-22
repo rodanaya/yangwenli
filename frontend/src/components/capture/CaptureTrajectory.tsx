@@ -15,7 +15,7 @@
 
 import { useRef } from 'react'
 import type { CapturePoint } from '@/api/client'
-import { useMeasuredWidth } from '@/components/cases/useMeasured'
+import { useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import { RISK_TEXT_COLORS } from '@/lib/constants'
 
 const RED = 'var(--color-risk-critical)'

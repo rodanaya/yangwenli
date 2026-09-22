@@ -12,7 +12,7 @@
  */
 
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useQueryStates, parseAsString, parseAsStringLiteral } from 'nuqs'
 import {
   type CaptureItem,
   type CaptureTopResponse,
@@ -25,7 +25,6 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CaptureTrajectory } from './CaptureTrajectory'
 import { CaptureExpand } from './CaptureExpand'
 import { captureCaseFor } from '@/lib/capture-cases'
-import { makeSetParam } from './captureParams'
 
 // Documented + still-held climbers, in lead preference (EDENRED then TOKA).
 const LEAD_PREFERENCE = [44372, 102627]
@@ -38,6 +37,9 @@ const SORT_LABEL: Record<SortKey, { es: string; en: string }> = {
   valor: { es: 'MXN acumulado', en: 'Cumulative MXN' },
   vigencia: { es: 'Persistencia', en: 'Persistence' },
 }
+
+/** The URL key for one (institution, vendor) pair — the ?open= value. */
+const keyOf = (c: CaptureItem) => `${c.institution_id}-${c.vendor_id}`
 
 /** The panel a card's disclosure button controls (aria-controls target). */
 const panelId = (c: CaptureItem) => `recibos-${c.institution_id}-${c.vendor_id}`
@@ -95,14 +97,20 @@ interface Props {
 }
 
 export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
-  const [searchParams, setSearchParams] = useSearchParams()
   const ceil = thresholds.ceil_share_pct
-  const sort = (SORT_KEYS as string[]).includes(searchParams.get('sort') ?? '')
-    ? (searchParams.get('sort') as SortKey)
-    : 'cruce'
-  const openKey = searchParams.get('abrir')
+  // The film's two URL keys. nuqs writes them together, so two writes in one
+  // tick cannot clobber each other the way a searchParams closure did, and
+  // `clearOnDefault` keeps a default out of the URL entirely.
+  const [{ sort, open: openKey }, setFilmState] = useQueryStates(
+    {
+      sort: parseAsStringLiteral(SORT_KEYS).withDefault('cruce'),
+      open: parseAsString,
+    },
+    { history: 'replace', clearOnDefault: true },
+  )
 
-  const setParam = makeSetParam(searchParams, setSearchParams)
+  /** One toggle for the lead and the twelve cards. */
+  const toggle = (c: CaptureItem) => setFilmState({ open: openKey === keyOf(c) ? null : keyOf(c) })
 
   const lead = useMemo(() => {
     const held = data.filter((c) => c.latest_share_pct >= ceil)
@@ -132,8 +140,6 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
     }
   }, [data, lead, sort, ceil])
 
-  const keyOf = (c: CaptureItem) => `${c.institution_id}-${c.vendor_id}`
-
   return (
     <section id="la-pelicula" aria-labelledby="pelicula-heading" className="mt-8 scroll-mt-14">
       {/* ── §B′ Exhibit A — the documented climber, shown intimately ── */}
@@ -149,7 +155,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
             agreeCount={agreeCount}
             total={data.length}
             expanded={openKey === keyOf(lead)}
-            onToggle={() => setParam('abrir', openKey === keyOf(lead) ? null : keyOf(lead))}
+            onToggle={() => toggle(lead)}
             thresholds={thresholds}
             landscape={landscape}
           />
@@ -223,7 +229,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
           <button
             key={k}
             type="button"
-            onClick={() => setParam('sort', k === 'cruce' ? null : k)}
+            onClick={() => setFilmState({ sort: k })}
             aria-pressed={sort === k}
             className={`flex-shrink-0 min-h-6 px-1 inline-flex items-center font-mono text-[12px] uppercase tracking-wider transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
               sort === k ? 'underline underline-offset-4' : 'text-text-muted hover:text-text-secondary'
@@ -242,8 +248,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
         ceil={ceil}
         lang={lang}
         openKey={openKey}
-        keyOf={keyOf}
-        onToggle={(c) => setParam('abrir', openKey === keyOf(c) ? null : keyOf(c))}
+        onToggle={toggle}
         thresholds={thresholds}
         landscape={landscape}
       />
@@ -254,8 +259,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
         ceil={ceil}
         lang={lang}
         openKey={openKey}
-        keyOf={keyOf}
-        onToggle={(c) => setParam('abrir', openKey === keyOf(c) ? null : keyOf(c))}
+        onToggle={toggle}
         thresholds={thresholds}
         landscape={landscape}
       />
@@ -301,7 +305,6 @@ function FacetRow({
   ceil,
   lang,
   openKey,
-  keyOf,
   onToggle,
   thresholds,
   landscape,
@@ -312,7 +315,6 @@ function FacetRow({
   ceil: number
   lang: 'en' | 'es'
   openKey: string | null
-  keyOf: (c: CaptureItem) => string
   onToggle: (c: CaptureItem) => void
   thresholds: CaptureTopResponse['thresholds']
   landscape?: CaptureLandscapeResponse

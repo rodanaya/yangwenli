@@ -10,19 +10,28 @@
  */
 
 import { useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useQueryStates, parseAsStringLiteral, createParser } from 'nuqs'
 import type { CaptureLandscapeResponse } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
 import { SECTORS, SECTOR_COLORS, HHI_CONCENTRATED } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
-import { makeSetParam } from './captureParams'
 
-type LedgerSort = 'share' | 'value' | 'hhi'
-const LEDGER_SORTS: LedgerSort[] = ['share', 'value', 'hhi']
+const LEDGER_SORTS = ['share', 'value', 'hhi'] as const
+type LedgerSort = (typeof LEDGER_SORTS)[number]
+const LEDGER_ORDERS = ['asc', 'desc'] as const
 
-/** Rows shown before "See all"; ?todas=1 lifts the cap. */
+/**
+ * `?all=1` — parseAsBoolean only reads the literal "true", and the shipped URL
+ * shape is `1`. Both spellings read as on; a write is always `1`.
+ */
+const parseAsFlag = createParser({
+  parse: (v: string) => v === '1' || v.toLowerCase() === 'true',
+  serialize: () => '1',
+})
+
+/** Rows shown before "See all"; ?all=1 lifts the cap. */
 const TRUNCATE_AT = 12
 
 function normalize(s: string): string {
@@ -36,16 +45,18 @@ export function CaptureNowLedger({
   landscape: CaptureLandscapeResponse
   lang: 'en' | 'es'
 }) {
-  // The film owns ?sort / ?abrir; the ledger owns ?registro / ?dir / ?todas —
-  // two vocabularies on one page, never a shared key (D6 C5).
-  const [searchParams, setSearchParams] = useSearchParams()
-  const setParam = makeSetParam(searchParams, setSearchParams)
-  const sortParam = searchParams.get('registro')
-  const sort: LedgerSort = (LEDGER_SORTS as string[]).includes(sortParam ?? '')
-    ? (sortParam as LedgerSort)
-    : 'share'
-  const order: 'asc' | 'desc' = searchParams.get('dir') === 'asc' ? 'asc' : 'desc'
-  const showAll = searchParams.get('todas') === '1'
+  // The film owns ?sort / ?open; the ledger owns ?ledger / ?ledger_order /
+  // ?all — two registers on one page, never a shared key. nuqs writes the
+  // three together, so a column change that also resets the direction is one
+  // URL write rather than two that race through the same closure.
+  const [{ ledger: sort, ledger_order: order, all: showAll }, setLedgerState] = useQueryStates(
+    {
+      ledger: parseAsStringLiteral(LEDGER_SORTS).withDefault('share'),
+      ledger_order: parseAsStringLiteral(LEDGER_ORDERS).withDefault('desc'),
+      all: parseAsFlag.withDefault(false),
+    },
+    { history: 'replace', clearOnDefault: true },
+  )
   const [query, setQuery] = useState('')
   // "See all" unmounts itself, and activeElement fell to <body>. The wrapper
   // the click just filled takes the focus instead.
@@ -75,14 +86,9 @@ export function CaptureNowLedger({
   const total = landscape.captured_now_count
 
   const onSort = (field: LedgerSort) => {
-    if (field === sort) setParam('dir', order === 'desc' ? 'asc' : null)
-    else {
-      const next = new URLSearchParams(searchParams)
-      if (field === 'share') next.delete('registro')
-      else next.set('registro', field)
-      next.delete('dir') // a new column starts descending
-      setSearchParams(next, { replace: true })
-    }
+    if (field === sort) setLedgerState({ ledger_order: order === 'desc' ? 'asc' : 'desc' })
+    // A new column starts descending.
+    else setLedgerState({ ledger: field, ledger_order: 'desc' })
   }
 
   return (
@@ -236,7 +242,7 @@ export function CaptureNowLedger({
         <button
           type="button"
           onClick={() => {
-            setParam('todas', showAll ? null : '1')
+            setLedgerState({ all: !showAll })
             // The button that was clicked may unmount; park focus on the table
             // whose row count just changed rather than losing it to <body>.
             requestAnimationFrame(() => tableWrap.current?.focus())

@@ -1,5 +1,5 @@
 /**
- * Measurement hooks for the case figures.
+ * Measurement hooks for any figure that draws its own glyphs.
  *
  * PARALLAX D4/D5 mechanic — "HTML owns glyphs, SVG owns geometry": a figure
  * that draws its labels inside a fixed viewBox shrinks them along with the
@@ -7,8 +7,9 @@
  * here needs its RENDERED width in px, and any label measured with canvas
  * measureText needs to be re-measured once the real faces are in.
  *
- * Lives apart from CasesShared.tsx because a module that exports both
- * components and hooks breaks Fast Refresh.
+ * Lived in components/cases/ until D6b: /captura's CaptureTrajectory imported
+ * it across domains while components/stories/InlineCharts.tsx carried a second,
+ * incompatible copy of the same hook. One home, one implementation.
  */
 import { useEffect, useState, type RefObject } from 'react'
 

@@ -16,7 +16,7 @@ import { formatCompactMXN } from '@/lib/utils'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { placeLabels, measureLabel, type LabelCandidate } from '@/components/network/plateLabels'
-import { useFontsReady, useMeasuredWidth } from './useMeasured'
+import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import type { KeyActor, LinkedVendor, ScandalDetail, ScandalListItem } from '@/api/types'
 import {
   dispositionFor,

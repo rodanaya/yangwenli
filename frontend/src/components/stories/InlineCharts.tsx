@@ -19,7 +19,7 @@
  * the anchor.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Building2 } from 'lucide-react'
 import type {
@@ -31,6 +31,7 @@ import type {
 } from '@/lib/story-content'
 import { RISK_COLORS, SECTOR_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
+import { useMeasuredWidth as useMeasuredRef } from '@/hooks/useMeasuredWidth'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ---------------------------------------------------------------------------
@@ -187,19 +188,11 @@ function maxVal(points: StoryChartPoint[], provided?: number): number {
 
 export function useMeasuredWidth<T extends HTMLElement = HTMLDivElement>() {
   const ref = useRef<T | null>(null)
-  const [width, setWidth] = useState(360)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width
-      if (w && w > 0) setWidth(w)
-    })
-    ro.observe(el)
-    if (el.clientWidth > 0) setWidth(el.clientWidth)
-    return () => ro.disconnect()
-  }, [])
-  return { ref, width } as const
+  // One ResizeObserver implementation for the whole app (hooks/useMeasuredWidth).
+  // This wrapper keeps the { ref, width } shape its six callers expect, and the
+  // 360px phone-width fallback they render against before the first measurement.
+  const measured = useMeasuredRef(ref)
+  return { ref, width: measured || 360 } as const
 }
 
 // ---------------------------------------------------------------------------
