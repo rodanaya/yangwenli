@@ -7,6 +7,23 @@
  * Threshold positions come from the API response — never hardcoded.
  */
 
+/**
+ * Writer for one search param, `replace: true` so a sort or an expander never
+ * stacks history entries. Shared by the film (?sort / ?abrir) and the ledger
+ * (?registro / ?dir / ?todas) — never the same key twice on one page.
+ */
+export function makeSetParam(
+  searchParams: URLSearchParams,
+  setSearchParams: (next: URLSearchParams, opts?: { replace?: boolean }) => void,
+) {
+  return (key: string, value: string | null) => {
+    const next = new URLSearchParams(searchParams)
+    if (value === null) next.delete(key)
+    else next.set(key, value)
+    setSearchParams(next, { replace: true })
+  }
+}
+
 export type ShareBand = 'low' | 'mid' | 'captured'
 
 /** Band classification against the live thresholds. No green anywhere. */

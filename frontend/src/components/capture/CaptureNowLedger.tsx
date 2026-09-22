@@ -10,17 +10,23 @@
  */
 
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { CaptureLandscapeResponse } from '@/api/client'
 import { formatCompactMXN } from '@/lib/utils'
 import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
+import { makeSetParam } from './captureAxis'
 
 // In-house DOJ/FTC threshold — keep in sync with RedesKnownDossier.tsx
 const HHI_CONCENTRATED = 2500
 
 type LedgerSort = 'share' | 'value' | 'hhi'
+const LEDGER_SORTS: LedgerSort[] = ['share', 'value', 'hhi']
+
+/** Rows shown before "See all"; ?todas=1 lifts the cap. */
+const TRUNCATE_AT = 12
 
 function normalize(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -33,9 +39,16 @@ export function CaptureNowLedger({
   landscape: CaptureLandscapeResponse
   lang: 'en' | 'es'
 }) {
-  const [sort, setSort] = useState<LedgerSort>('share')
-  const [order, setOrder] = useState<'asc' | 'desc'>('desc')
-  const [showAll, setShowAll] = useState(false)
+  // The film owns ?sort / ?abrir; the ledger owns ?registro / ?dir / ?todas —
+  // two vocabularies on one page, never a shared key (D6 C5).
+  const [searchParams, setSearchParams] = useSearchParams()
+  const setParam = makeSetParam(searchParams, setSearchParams)
+  const sortParam = searchParams.get('registro')
+  const sort: LedgerSort = (LEDGER_SORTS as string[]).includes(sortParam ?? '')
+    ? (sortParam as LedgerSort)
+    : 'share'
+  const order: 'asc' | 'desc' = searchParams.get('dir') === 'asc' ? 'asc' : 'desc'
+  const showAll = searchParams.get('todas') === '1'
   const [query, setQuery] = useState('')
 
   const q = normalize(query.trim())
@@ -58,14 +71,17 @@ export function CaptureNowLedger({
     return tick ? { name: tick[1], share: tick[3] } : null
   }, [filtering, rows.length, landscape.ticks, q])
 
-  const visible = filtering ? rows : showAll ? rows : rows.slice(0, 12)
+  const visible = filtering || showAll ? rows : rows.slice(0, TRUNCATE_AT)
   const total = landscape.captured_now_count
 
   const onSort = (field: LedgerSort) => {
-    if (field === sort) setOrder(order === 'desc' ? 'asc' : 'desc')
+    if (field === sort) setParam('dir', order === 'desc' ? 'asc' : null)
     else {
-      setSort(field)
-      setOrder('desc')
+      const next = new URLSearchParams(searchParams)
+      if (field === 'share') next.delete('registro')
+      else next.set('registro', field)
+      next.delete('dir') // a new column starts descending
+      setSearchParams(next, { replace: true })
     }
   }
 
@@ -92,16 +108,27 @@ export function CaptureNowLedger({
       {/* ¿Y la tuya? — salvaged typeahead, now a table filter */}
       <div className="mb-3 max-w-md">
         <input
-          type="text"
+          type="search"
+          name="ledger-search"
+          autoComplete="off"
+          spellCheck={false}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={
             lang === 'en' ? 'Is your institution here? Search…' : '¿Está tu institución aquí? Busque…'
           }
           aria-label={lang === 'en' ? 'Search the ledger' : 'Buscar en el registro'}
-          className="w-full px-3 py-2 text-[13px] border border-border rounded-sm bg-background-card focus:outline-none"
+          className="w-full px-3 py-2 text-[13px] border border-border rounded-sm bg-background-card focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent"
           style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
         />
+        {/* The filter result is announced, not just repainted. */}
+        <p className="sr-only" aria-live="polite">
+          {filtering
+            ? lang === 'en'
+              ? `${rows.length} of ${total} institutions match`
+              : `${rows.length} de ${total} instituciones coinciden`
+            : ''}
+        </p>
         {fieldHint && (
           <p className="mt-1.5 text-[13px] text-text-secondary leading-snug">
             {lang === 'en'
@@ -111,11 +138,26 @@ export function CaptureNowLedger({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-sm border border-border bg-background-card">
-        <table className="w-full text-[13px]" style={{ minWidth: 720 }}>
+      {/* Desktop shows the whole table; only below md does it scroll, and then
+          it says so (D6 C5 — the Day 2 /gap decision). */}
+      <div className="overflow-x-auto md:overflow-visible rounded-sm border border-border bg-background-card">
+        <table className="w-full table-fixed text-[13px] min-w-[640px] md:min-w-0">
+          <caption className="sr-only">
+            {lang === 'en'
+              ? 'Institutions where one vendor holds the majority of recorded spend'
+              : 'Instituciones donde un proveedor concentra la mayoría del gasto registrado'}
+          </caption>
+          <colgroup>
+            <col style={{ width: 44 }} />
+            <col />
+            <col />
+            <col style={{ width: 168 }} />
+            <col style={{ width: 112 }} />
+            <col className="hidden md:table-column" style={{ width: 104 }} />
+          </colgroup>
           <thead>
             <tr className="border-b border-border font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
-              <th className="px-3 py-2 text-left w-8">#</th>
+              <th className="px-3 py-2 text-left">#</th>
               <th className="px-3 py-2 text-left">{lang === 'en' ? 'Institution' : 'Institución'}</th>
               <th className="px-3 py-2 text-left">{lang === 'en' ? '№1 vendor' : 'Proveedor №1'}</th>
               <SortHeaderTh field="share" label={lang === 'en' ? 'Share' : 'Participación'} activeField={sort} order={order} onSort={onSort} className="px-3 py-2" />
@@ -136,11 +178,11 @@ export function CaptureNowLedger({
                       {sector && (
                         <span className="inline-block h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: SECTOR_COLORS[sector.code] }} aria-hidden="true" />
                       )}
-                      <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="md" />
+                      <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="md" fullName />
                     </span>
                   </td>
                   <td className="px-3 py-2">
-                    <EntityIdentityChip type="vendor" id={r.top1_vendor_id} name={r.top1_vendor_name} size="md" />
+                    <EntityIdentityChip type="vendor" id={r.top1_vendor_id} name={r.top1_vendor_name} size="md" fullName />
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     <span className="inline-flex items-center gap-2">
@@ -178,11 +220,17 @@ export function CaptureNowLedger({
           </tbody>
         </table>
       </div>
-      {!filtering && !showAll && rows.length > 12 && (
+      <p
+        aria-hidden="true"
+        className="md:hidden mt-1.5 font-mono text-[12px] uppercase tracking-[0.12em] text-text-muted"
+      >
+        {lang === 'en' ? '← scroll →' : '← desliza →'}
+      </p>
+      {!filtering && !showAll && rows.length > TRUNCATE_AT && (
         <button
           type="button"
-          onClick={() => setShowAll(true)}
-          className="mt-3 font-mono text-[12px] font-bold uppercase tracking-[0.14em] hover:opacity-80 transition-opacity"
+          onClick={() => setParam('todas', '1')}
+          className="mt-3 min-h-6 inline-flex items-center font-mono text-[12px] font-bold uppercase tracking-[0.14em] rounded-sm hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
           style={{ color: 'var(--color-accent)' }}
         >
           {lang === 'en' ? `See all ${total} →` : `Ver las ${total} →`}
@@ -201,7 +249,7 @@ export function CaptureNowLedger({
           )}{' '}
           <span className="inline-flex flex-wrap gap-1.5 align-middle ml-1">
             {landscape.antesala_top.slice(0, 3).map((a) => (
-              <EntityIdentityChip key={a.institution_id} type="institution" id={a.institution_id} name={a.name} size="xs" />
+              <EntityIdentityChip key={a.institution_id} type="institution" id={a.institution_id} name={a.name} size="sm" />
             ))}
           </span>
         </p>

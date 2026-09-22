@@ -24,6 +24,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CaptureTrajectory } from './CaptureTrajectory'
 import { CaptureExpand } from './CaptureExpand'
 import { captureCaseFor } from '@/lib/capture-cases'
+import { makeSetParam } from './captureAxis'
 
 // Documented + still-held climbers, in lead preference (EDENRED then TOKA).
 const LEAD_PREFERENCE = [44372, 102627]
@@ -69,12 +70,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
     : 'cruce'
   const openKey = searchParams.get('abrir')
 
-  const setParam = (key: string, value: string | null) => {
-    const next = new URLSearchParams(searchParams)
-    if (value === null) next.delete(key)
-    else next.set(key, value)
-    setSearchParams(next, { replace: true })
-  }
+  const setParam = makeSetParam(searchParams, setSearchParams)
 
   const lead = useMemo(() => {
     const held = data.filter((c) => c.latest_share_pct >= ceil)
