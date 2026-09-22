@@ -324,7 +324,7 @@ export function SecondaryCaseCard({
 // ─── AgateLedger ────────────────────────────────────────────────────────────
 
 const AGATE_GRID =
-  'grid grid-cols-[3px_minmax(0,1fr)_96px_24px] sm:grid-cols-[3px_64px_minmax(0,1fr)_72px_118px_96px_24px] md:grid-cols-[3px_64px_minmax(0,1fr)_132px_64px_72px_118px_96px_24px]'
+  'grid grid-cols-[3px_minmax(0,1fr)_96px_24px] sm:grid-cols-[3px_64px_minmax(0,1fr)_72px_118px_96px_24px] md:grid-cols-[3px_64px_minmax(0,1fr)_148px_80px_72px_118px_96px_24px]'
 
 export function AgateLedger({
   cases,

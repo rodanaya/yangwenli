@@ -10,13 +10,13 @@
  *                              + ghost rows for named-but-unlinked vendors.
  *   KeepReadingFooter        — same-sector onward routing.
  */
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { formatCompactMXN } from '@/lib/utils'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { placeLabels, measureLabel, type LabelCandidate } from '@/components/network/plateLabels'
-import { useFontsReady, useMeasuredWidth } from './CasesShared'
+import { useFontsReady, useMeasuredWidth } from './useMeasured'
 import type { KeyActor, LinkedVendor, ScandalDetail, ScandalListItem } from '@/api/types'
 import {
   dispositionFor,
@@ -306,9 +306,12 @@ export function CostInArchive({
   // against, then the archive maximum. THRESHOLD is anchored below the axis
   // (its candidate y IS the label's bottom, with `above: 0`); the other two
   // sit above their dot.
-  const callouts = useMemo(() => {
-    if (measured <= 0) return []
-    void fontsReady // re-seat once the real faces are in
+  // Seated on every render — three measureText calls and a 3-candidate
+  // placement. Manual memoization here is not worth the dependency surface
+  // (the React Compiler covers it), and the layout must re-run when the web
+  // fonts land anyway.
+  const callouts = (() => {
+    if (measured <= 0 || !fontsReady) return []
     const entries: {
       id: string
       text: string
@@ -365,7 +368,7 @@ export function CostInArchive({
     const bounds = { x0: 0, y0: 0, x1: W, y1: COST_VB_H }
     const placed = placeLabels(candidates, [], bounds)
     return placed.map((p) => ({ placed: p, meta: entries.find((e) => e.id === p.id)! }))
-  }, [measured, fontsReady, W, thisX, threshX, maxV, amount, threshold, accentKind, lang, degraded, isThisTheMax])
+  })()
 
   if (!Number.isFinite(multiplier) || multiplier <= 0) return null
 

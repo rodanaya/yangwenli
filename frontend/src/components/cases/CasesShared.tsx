@@ -13,9 +13,10 @@
  *   SeverityScale   — this-case-vs-the-archive severity distribution strip.
  *   PaperGrain      — page-scoped archival grain (dossier only).
  */
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useRef } from 'react'
 import { DotBar } from '@/components/ui/DotBar'
 import { measureLabel } from '@/components/network/plateLabels'
+import { useMeasuredWidth } from './useMeasured'
 import {
   dispositionFor,
   dispositionLabel,
@@ -23,51 +24,6 @@ import {
   SEVERITY_MAX,
   type Lang,
 } from './casesVocab'
-
-// ─── Measurement hooks (PARALLAX D4 mechanic: HTML owns glyphs, SVG owns
-//     geometry — so every figure here needs its RENDERED width in px) ────────
-
-/**
- * Rendered content width of `ref`, via ResizeObserver. 0 until the first tick;
- * callers render measured glyphs only once it is non-zero. State is written
- * only when the width actually changes (React error #301 guard).
- */
-export function useMeasuredWidth(ref: RefObject<HTMLElement | null>): number {
-  const [width, setWidth] = useState(0)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver((entries) => {
-      const next = Math.round(entries[0]?.contentRect.width ?? 0)
-      if (next > 0) setWidth((prev) => (prev === next ? prev : next))
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [ref])
-  return width
-}
-
-/**
- * True once the web fonts have landed. `measureLabel` uses canvas measureText,
- * and a box measured against the fallback face comes out narrow — the label
- * then renders wider than the box reserved for it. Re-run the layout after the
- * fonts are in (the Day 4 lesson).
- */
-export function useFontsReady(): boolean {
-  const [ready, setReady] = useState(
-    () => typeof document !== 'undefined' && document.fonts?.status === 'loaded',
-  )
-  useEffect(() => {
-    let alive = true
-    document.fonts?.ready.then(() => {
-      if (alive) setReady(true)
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
-  return ready
-}
 
 // ─── DispositionSeal ────────────────────────────────────────────────────────
 

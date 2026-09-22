@@ -22,7 +22,7 @@
 import { useRef } from 'react'
 import { RISK_COLORS } from '@/lib/constants'
 import { measureLabel } from '@/components/network/plateLabels'
-import { useMeasuredWidth } from './CasesShared'
+import { useMeasuredWidth } from './useMeasured'
 import {
   CURRENT_YEAR,
   dispositionFor,
