@@ -96,7 +96,7 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
     <section id="la-pelicula" aria-labelledby="pelicula-heading" className="mt-8">
       {/* ── §B′ Exhibit A — the documented climber, shown intimately ── */}
       {lead && (
-        <div className="mb-8">
+        <div className="mb-8 lg:max-w-[760px]">
           <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
             {lang === 'en' ? '§ Exhibit A' : '§ Prueba A'}
           </p>
@@ -124,25 +124,27 @@ export function CaptureFilm({ data, thresholds, landscape, lang }: Props) {
           : '§ LA PELÍCULA · LÁMINA XIV·a — TRECE LÍNEAS QUE CRUZAN UNA LÍNEA'}
       </p>
       {/* Standfirst — the legal-honesty sentence (frozen contract, kept once) */}
-      <p
-        className="mb-2"
-        style={{
-          fontFamily: '"EB Garamond", Georgia, serif',
-          fontStyle: 'normal',
-          fontSize: 13.5,
-          lineHeight: 1.55,
-          color: 'var(--color-text-secondary)',
-        }}
-      >
-        {lang === 'en'
-          ? 'Institutional capture is not proof of wrongdoing. Some legitimate concentrations emerge from technical certification, regional exclusivity, or single-source regulatory dependency. Each line warrants investigation — not accusation.'
-          : 'La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada línea merece investigación — no acusación.'}
-      </p>
-      <p className="mb-3 font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
-        {lang === 'en'
-          ? `dashed line = the ${ceil}% capture ceiling · zinc below · red above`
-          : `línea punteada = el techo de captura del ${ceil}% · zinc abajo · rojo arriba`}
-      </p>
+      <div className="lg:max-w-[640px]">
+        <p
+          className="mb-2"
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontStyle: 'normal',
+            fontSize: 15,
+            lineHeight: 1.55,
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          {lang === 'en'
+            ? 'Institutional capture is not proof of wrongdoing. Some legitimate concentrations emerge from technical certification, regional exclusivity, or single-source regulatory dependency. Each line warrants investigation — not accusation.'
+            : 'La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada línea merece investigación — no acusación.'}
+        </p>
+        <p className="mb-3 font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted">
+          {lang === 'en'
+            ? `dashed line = the ${ceil}% capture ceiling · zinc below · red above`
+            : `línea punteada = el techo de captura del ${ceil}% · zinc abajo · rojo arriba`}
+        </p>
+      </div>
 
       {/* Sort control */}
       <div className="flex items-center gap-3 mb-3 overflow-x-auto">
@@ -380,7 +382,7 @@ function LeadExhibit({
               />
             )}
           </div>
-          <p className="mt-3 text-[12px] text-text-secondary leading-snug" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal' }}>
+          <p className="mt-3 text-[13.5px] text-text-secondary leading-snug" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal' }}>
             {lang === 'en'
               ? `Two methods, one conclusion: the model independently flags ${agreeCount} of these ${total}.`
               : `Dos métodos, una conclusión: el modelo señala de forma independiente ${agreeCount} de estas ${total}.`}

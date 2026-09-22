@@ -78,7 +78,7 @@ export default function Relationships() {
   }, [landscape, capData])
 
   return (
-    <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="relative max-w-[1010px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Paper-grain overlay */}
       <svg
         aria-hidden="true"
@@ -129,7 +129,7 @@ export default function Relationships() {
             )}
           </h1>
           <p
-            className="mt-4 max-w-2xl"
+            className="mt-4 lg:max-w-[640px]"
             style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: '17px', lineHeight: 1.55, color: 'var(--color-text-secondary)' }}
           >
             {lang === 'en'
@@ -146,7 +146,7 @@ export default function Relationships() {
             <Skeleton className="h-6 w-1/4" />
           </div>
         ) : funnelTiers ? (
-          <section className="mb-10" aria-label={lang === 'en' ? 'The funnel' : 'El embudo'}>
+          <section className="mb-10 lg:max-w-[760px]" aria-label={lang === 'en' ? 'The funnel' : 'El embudo'}>
             <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-4">
               {lang === 'en' ? '§ THE FUNNEL' : '§ EL EMBUDO'}
             </p>
@@ -160,7 +160,7 @@ export default function Relationships() {
             <Skeleton className="h-48 w-full" />
           </div>
         ) : landscape ? (
-          <section className="mb-12" aria-label={lang === 'en' ? 'The reckoning' : 'El saldo'}>
+          <section className="mb-12 lg:max-w-[760px]" aria-label={lang === 'en' ? 'The reckoning' : 'El saldo'}>
             <p className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
               {lang === 'en' ? '§ THE RECKONING' : '§ EL SALDO'}
             </p>
@@ -213,7 +213,10 @@ export default function Relationships() {
               <p className="text-[13px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
                 {lang === 'en' ? 'Methodology' : 'Metodología'}
               </p>
-              <p className="text-[12px] leading-[1.7] text-text-secondary max-w-3xl">
+              <p
+                className="lg:max-w-[640px]"
+                style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}
+              >
                 {lang === 'en'
                   ? `Computed over ${capData.total_unfiltered} (institution, vendor) candidates with at least ${capData.thresholds.min_years} years of data. Thresholds: floor ${capData.thresholds.floor_share_pct}%, ceiling ${capData.thresholds.ceil_share_pct}%. Ranking: Δshare × √(captured MXN). Data: COMPRANET federal contracts 2018–2025. The trajectory recolors at the ${capData.thresholds.ceil_share_pct}% ceiling — zinc below, red above — so spikes and reversals read as honestly as clean climbs.`
                   : `Calculado sobre ${capData.total_unfiltered} candidatos (institución, proveedor) con al menos ${capData.thresholds.min_years} años de datos. Umbrales: piso ${capData.thresholds.floor_share_pct}%, techo ${capData.thresholds.ceil_share_pct}%. Ranking: Δparticipación × √(valor MXN capturado). Datos: COMPRANET contratos federales 2018–2025. La trayectoria recolorea en el techo del ${capData.thresholds.ceil_share_pct}% — zinc abajo, rojo arriba — para que los picos y reversiones se lean tan honestamente como los ascensos limpios.`}
@@ -245,13 +248,13 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       >
         § {lang === 'en' ? "What this plate can't tell you" : 'Lo que esta lámina no puede decir'}
       </p>
-      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
+      <p className="lg:max-w-[640px]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
         {lang === 'en'
           ? 'Monotonic concentration reads how spend was awarded — not how it was performed. A high risk indicator marks a publishable geometry, not proof of wrongdoing, which only courts establish.'
           : 'La concentración monótona lee cómo se adjudicó el gasto, no cómo se ejecutó. Un indicador de riesgo alto señala una geometría publicable, no prueba de un delito, que solo los tribunales determinan.'}
       </p>
       <div className="mt-4">
-        <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
+        <p className="lg:max-w-[640px]" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
           {lang === 'en'
             ? 'COMPRANET data 2002–2025; data horizon Sep 28 2025. v0.8.5 risk model trained on 1,417 documented corruption cases. Model signals are statistical indicators, not legal determinations.'
             : 'Datos COMPRANET 2002–2025; horizonte de datos 28 sep 2025. Modelo de riesgo v0.8.5 entrenado con 1,417 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'}

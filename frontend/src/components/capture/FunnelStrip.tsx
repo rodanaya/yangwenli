@@ -73,7 +73,7 @@ export function FunnelStrip({ tiers, lang }: Props) {
               </span>
             </div>
             <p
-              className="mt-1 text-[13.5px] leading-snug"
+              className="mt-1 text-[15px] leading-snug"
               style={{
                 fontFamily: '"EB Garamond", Georgia, serif',
                 color: 'var(--color-text-secondary)',

@@ -120,7 +120,7 @@ export function CaptureExpand({
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
             fontStyle: 'normal',
-            fontSize: 12.5,
+            fontSize: 13.5,
             lineHeight: 1.5,
             color: 'var(--color-text-secondary)',
           }}

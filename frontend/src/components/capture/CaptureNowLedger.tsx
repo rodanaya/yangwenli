@@ -75,11 +75,11 @@ export function CaptureNowLedger({
         {lang === 'en' ? `§ THE LEDGER · ${total}` : `§ EL REGISTRO · ${total}`}
       </p>
       <p
-        className="mb-4"
+        className="mb-4 lg:max-w-[640px]"
         style={{
           fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'normal',
-          fontSize: 13,
+          fontSize: 15,
           lineHeight: 1.55,
           color: 'var(--color-text-secondary)',
         }}

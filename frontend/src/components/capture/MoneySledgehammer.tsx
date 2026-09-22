@@ -53,7 +53,7 @@ export function MoneySledgehammer({
 
       {/* Eyebrow */}
       <div
-        className="font-mono text-[13px] uppercase tracking-[0.18em] mb-4 max-w-[40ch]"
+        className="font-mono text-[13px] uppercase tracking-[0.18em] mb-4 max-w-none"
         style={{ color: 'var(--color-text-muted)' }}
       >
         {eyebrow}
@@ -84,7 +84,7 @@ export function MoneySledgehammer({
 
       {/* Deck */}
       <div
-        className={`text-[18px] md:text-[22px] font-serif leading-[1.3] mb-4 max-w-[42ch] ${valueSub ? '' : 'mt-4'}`}
+        className={`text-[18px] md:text-[22px] font-serif leading-[1.3] mb-4 max-w-none ${valueSub ? '' : 'mt-4'}`}
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           color: 'var(--color-text-secondary)',
