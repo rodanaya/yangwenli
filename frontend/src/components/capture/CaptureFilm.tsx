@@ -285,7 +285,7 @@ function FacetRow({
                 aria-expanded={expanded}
                 className="w-full text-left p-3 cursor-pointer hover:bg-background-elevated transition-colors focus:outline-none focus:ring-1 focus:ring-text-muted rounded-sm"
               >
-                <div className={expanded ? 'max-w-[260px]' : ''}>
+                <div className={expanded ? 'max-w-[380px]' : ''}>
                   <CaptureTrajectory
                     timeline={c.timeline}
                     ceil={ceil}
@@ -348,7 +348,7 @@ function LeadExhibit({
   const holds = c.latest_share_pct >= ceil
   return (
     <div className="rounded-sm border border-border bg-background-card overflow-hidden">
-      <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-[340px_1fr] gap-6 items-start">
+      <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-[minmax(300px,380px)_1fr] gap-6 items-start">
         <div>
           <CaptureTrajectory
             timeline={c.timeline}

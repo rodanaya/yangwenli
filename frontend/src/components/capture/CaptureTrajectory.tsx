@@ -13,10 +13,17 @@
  * multi-crossing handled, years computed from the timeline (never hardcoded).
  */
 
+import { useRef } from 'react'
 import type { CapturePoint } from '@/api/client'
+import { useMeasuredWidth } from '@/components/cases/useMeasured'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
 
 const RED = 'var(--color-risk-critical)'
 const ZINC = '#71717a'
+/** Type ink for the two callouts. The line, dots and ceiling keep RED. */
+const RED_INK = RISK_TEXT_COLORS.critical
+/** Below this px-per-year the card falls back to min/peak/max ticks. */
+const YEAR_TICK_ROOM = 40
 
 interface Props {
   timeline: CapturePoint[]
@@ -38,9 +45,15 @@ export function CaptureTrajectory({
   variant = 'card',
 }: Props) {
   const isLead = variant === 'lead'
-  const W = isLead ? 320 : 150
-  const H = isLead ? 168 : 104
-  const PLOT_H = isLead ? 128 : 72
+  // PARALLAX D6 C2 — 1 SVG unit = 1 px. The figure drew into a fixed 150-wide
+  // viewBox inside a ~300px card, so half the card was empty and every glyph
+  // rendered at its authored size in a box half the width it had. W is now the
+  // measured width of the wrapper and the svg is drawn at 1:1.
+  const box = useRef<HTMLDivElement>(null)
+  const measured = useMeasuredWidth(box)
+  const W = Math.max(measured, isLead ? 280 : 150)
+  const H = isLead ? 176 : 112
+  const PLOT_H = isLead ? 136 : 80
   const PAD = 10
 
   const tl = [...timeline].sort((a, b) => a.year - b.year)
@@ -76,9 +89,10 @@ export function CaptureTrajectory({
   }
 
   const crossYear = tl.find((p) => p.share_pct >= ceil)?.year ?? null
-  const tickYears = isLead
-    ? years
-    : Array.from(new Set([minYear, peakYear, maxYear])).sort((a, b) => a - b)
+  const tickYears =
+    isLead || W / years.length >= YEAR_TICK_ROOM
+      ? years
+      : Array.from(new Set([minYear, peakYear, maxYear])).sort((a, b) => a - b)
 
   /**
    * Keep a centred mono callout inside the plot box (STORY_DAYS.md § 7).
@@ -98,6 +112,14 @@ export function CaptureTrajectory({
     // and let the box grow around it rather than pinning it to one edge.
     return lo > hi ? W / 2 : Math.min(Math.max(cx, lo), hi)
   }
+  /**
+   * Axis-end ticks anchor to the edge they sit on. At 11px a centred `2021`
+   * over x = PAD hangs 3px past the svg's left edge and the browser clips it;
+   * `start` / `end` keep the label attached to its own year AND inside the box.
+   */
+  const tickAnchor = (xp: number): 'start' | 'middle' | 'end' =>
+    xp - PAD < 14 ? 'start' : W - PAD - xp < 14 ? 'end' : 'middle'
+
   const crossLabel =
     crossYear === null
       ? ''
@@ -108,95 +130,101 @@ export function CaptureTrajectory({
         : `'${String(crossYear).slice(2)}`
   const peakLabel = `▲ ${peakSharePct}% (${peakYear})`
 
+  // First paint has no measurement yet; the wrapper alone gives the observer
+  // something to measure and keeps the glyphs from drawing at the wrong scale.
+  if (measured === 0) return <div ref={box} className="w-full" style={{ height: H }} />
+
   return (
-    <svg
-      width={W}
-      height={H}
-      viewBox={`0 0 ${W} ${H}`}
-      style={{ maxWidth: '100%', height: 'auto' }}
-      role="img"
-      aria-label={
-        lang === 'en'
-          ? `Vendor share of institution spend ${minYear}–${maxYear}; ${crossYear ? `crossed the 50% ceiling in ${crossYear}, ` : ''}peaked ${peakSharePct}% in ${peakYear}, ${latestSharePct >= ceil ? `holds ${latestSharePct}%` : `fell to ${latestSharePct}%`}.`
-          : `Participación del proveedor en el gasto institucional ${minYear}–${maxYear}; ${crossYear ? `cruzó el techo del 50% en ${crossYear}, ` : ''}llegó a ${peakSharePct}% en ${peakYear}, ${latestSharePct >= ceil ? `sostiene ${latestSharePct}%` : `cayó a ${latestSharePct}%`}.`
-      }
-    >
-      {/* 50% ceiling — drawn first, behind the path */}
-      <line
-        x1={PAD}
-        x2={W - PAD}
-        y1={y(ceil)}
-        y2={y(ceil)}
-        stroke={RED}
-        strokeWidth={0.75}
-        strokeDasharray="3 3"
-        opacity={0.5}
-      />
-      {/* trajectory segments (recolored at the crossing) */}
-      {segs.map((s, i) => (
+    <div ref={box} className="w-full">
+      <svg
+        width="100%"
+        height={H}
+        viewBox={`0 0 ${W} ${H}`}
+        style={{ display: 'block' }}
+        role="img"
+        aria-label={
+          lang === 'en'
+            ? `Vendor share of institution spend ${minYear}–${maxYear}; ${crossYear ? `crossed the 50% ceiling in ${crossYear}, ` : ''}peaked ${peakSharePct}% in ${peakYear}, ${latestSharePct >= ceil ? `holds ${latestSharePct}%` : `fell to ${latestSharePct}%`}.`
+            : `Participación del proveedor en el gasto institucional ${minYear}–${maxYear}; ${crossYear ? `cruzó el techo del 50% en ${crossYear}, ` : ''}llegó a ${peakSharePct}% en ${peakYear}, ${latestSharePct >= ceil ? `sostiene ${latestSharePct}%` : `cayó a ${latestSharePct}%`}.`
+        }
+      >
+        {/* 50% ceiling — drawn first, behind the path */}
         <line
-          key={i}
-          x1={s.x1}
-          y1={s.y1}
-          x2={s.x2}
-          y2={s.y2}
-          stroke={s.color}
-          strokeWidth={s.color === RED ? (isLead ? 2.4 : 1.8) : isLead ? 1.8 : 1.4}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          x1={PAD}
+          x2={W - PAD}
+          y1={y(ceil)}
+          y2={y(ceil)}
+          stroke={RED}
+          strokeWidth={0.75}
+          strokeDasharray="3 3"
+          opacity={0.5}
         />
-      ))}
-      {/* year dots, colored by their own side of the ceiling */}
-      {tl.map((p) => (
-        <circle
-          key={p.year}
-          cx={x(p.year)}
-          cy={y(p.share_pct)}
-          r={p.share_pct >= ceil ? (isLead ? 3 : 2.2) : isLead ? 2.4 : 1.6}
-          fill={p.share_pct >= ceil ? RED : ZINC}
-        />
-      ))}
-      {/* year ticks */}
-      {tickYears.map((yr) => (
-        <text
-          key={`y-${yr}`}
-          x={x(yr)}
-          y={PLOT_H + (isLead ? 14 : 9)}
-          textAnchor="middle"
-          fontSize={9}
-          fontFamily="JetBrains Mono, monospace"
-          fill="var(--color-text-muted)"
-        >
-          {isLead ? yr : `'${String(yr).slice(2)}`}
-        </text>
-      ))}
-      {/* crossing-year callout */}
-      {crossYear !== null && (
-        <text
-          x={clampX(x(crossYear), crossLabel, isLead ? 10 : 9)}
-          y={y(ceil) - 4}
-          textAnchor="middle"
-          fontSize={isLead ? 10 : 9}
-          fontFamily="JetBrains Mono, monospace"
-          fontWeight={700}
-          fill={RED}
-        >
-          {crossLabel}
-        </text>
-      )}
-      {/* lead-only: peak marker on the line */}
-      {isLead && (
-        <text
-          x={clampX(x(peakYear), peakLabel, 12)}
-          y={y(peakSharePct) - 7}
-          textAnchor="middle"
-          fontSize={12}
-          fontFamily="JetBrains Mono, monospace"
-          fill="var(--color-text-secondary)"
-        >
-          {peakLabel}
-        </text>
-      )}
-    </svg>
+        {/* trajectory segments (recolored at the crossing) */}
+        {segs.map((s, i) => (
+          <line
+            key={i}
+            x1={s.x1}
+            y1={s.y1}
+            x2={s.x2}
+            y2={s.y2}
+            stroke={s.color}
+            strokeWidth={s.color === RED ? (isLead ? 2.4 : 1.8) : isLead ? 1.8 : 1.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ))}
+        {/* year dots, colored by their own side of the ceiling */}
+        {tl.map((p) => (
+          <circle
+            key={p.year}
+            cx={x(p.year)}
+            cy={y(p.share_pct)}
+            r={p.share_pct >= ceil ? (isLead ? 3 : 2.2) : isLead ? 2.4 : 1.6}
+            fill={p.share_pct >= ceil ? RED : ZINC}
+          />
+        ))}
+        {/* year ticks */}
+        {tickYears.map((yr) => (
+          <text
+            key={`y-${yr}`}
+            x={x(yr)}
+            y={PLOT_H + (isLead ? 14 : 11)}
+            textAnchor={tickAnchor(x(yr))}
+            fontSize={11}
+            fontFamily="JetBrains Mono, monospace"
+            fill="var(--color-text-muted)"
+          >
+            {isLead ? yr : `'${String(yr).slice(2)}`}
+          </text>
+        ))}
+        {/* crossing-year callout */}
+        {crossYear !== null && (
+          <text
+            x={clampX(x(crossYear), crossLabel, 11)}
+            y={y(ceil) - 4}
+            textAnchor="middle"
+            fontSize={11}
+            fontFamily="JetBrains Mono, monospace"
+            fontWeight={700}
+            fill={RED_INK}
+          >
+            {crossLabel}
+          </text>
+        )}
+        {/* lead-only: peak marker on the line */}
+        {isLead && (
+          <text
+            x={clampX(x(peakYear), peakLabel, 12)}
+            y={y(peakSharePct) - 7}
+            textAnchor="middle"
+            fontSize={12}
+            fontFamily="JetBrains Mono, monospace"
+            fill="var(--color-text-secondary)"
+          >
+            {peakLabel}
+          </text>
+        )}
+      </svg>
+    </div>
   )
 }
