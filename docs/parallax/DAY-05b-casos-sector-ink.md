@@ -53,3 +53,20 @@ Everything Day 5 shipped. The vivid `SECTOR_COLORS` stay on every **mark**: the 
 - Probes: copy `_parallax_shots/day05/audit5.mjs` → `day05b/audit5b.mjs` with the four dossier routes above (+ `/cases` for regression), tag `after`, EN + `LANG_ES=1`; print for each route the failing-contrast list with the leaf's computed `color`; census (`day04/clipcensus4.mjs`) on the four dossiers × 1440,390 × EN+ES must stay 0. Crops via `day05/crop5.mjs` (adapt routes): Oceanografía hero, § III, rail at 1440 EN; SAGARPA hero at 1440; Oceanografía hero ES. LOOK at them.
 - Review: `rubli-bilingual-audit` on touched TSX; gates from `frontend/`: `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.app.json` · `npm run build` · `npm run lint:tokens` · `npx vitest run` on the vocab test.
 - Do NOT bump BUILD_ID, push, deploy or merge — Fable judges first.
+
+## Result
+
+Built by Opus executor `parallax-day05b` (4 commits, order 2→4→3→1), judged by Fable on `_parallax_shots/day05b/after/` crops (Oceanografía hero + § III EN/ES, SAGARPA hero, Línea 12 § III) and `after/{en,es}-report.json`. No judge fix needed.
+
+| Dossier (sector) | sector-ink leaves < 4.5:1 before | after | ink used |
+|---|---|---|---|
+| Oceanografía (energía) | 31 at 1.82 | **0** | `#854d0e` 6.51 |
+| Línea 12 (infraestructura) | 31 at 3.38 | **0** | `#9a3412` 6.94 |
+| SAGARPA (agricultura) | — | **0** | `#166534` 6.77 (impunity charge keeps `RISK_TEXT_COLORS.critical` 6.15) |
+| IMSS (salud) | — | **0** | `#991b1b` 7.89 |
+
+Charge copy: "the **only conviction** in 43 documented cases" / "la **única condena** en 43 casos documentados" (`casesVocab.test.ts` 3/3). Figure glyph layers under one `aria-hidden` wrapper each; Playwright a11y snapshot shows only the `img` node + figcaption; label geometry unchanged (0 outside, 0 overlaps, min 10.5px). Skeleton stacks at 390. Census 0 on all 16 dossier lines. Gates: tsc 0 · build OK · lint:tokens PASS · vitest 3/3 · bilingual audit clean.
+
+Commits: `7de4b06c` §2 · `3702bc8f` §4 · `250fc96e` §3 · `4b378b89` §1. Deviations accepted: the acceptance selector counted the wrapper's children (3–4) — the ancestor walk and the a11y tree read 0; `ScaleBlock` has exactly one caller, so the "other dossiers" backlog item is void; `renderChargeClause` param renamed and the impunity ternary computed once.
+
+Noticed, not fixed (→ PARALLAX backlog): `EntityIdentityChip` paints critical-risk names in `RISK_COLORS.critical` #ef4444 at 3.57:1 (site-wide; `RISK_TEXT_COLORS` is the AA twin); the § I drop cap is a vivid sector hex at 49.6px (aria-hidden, but a legible letter of the sentence) and its `charAt(0)` split costs AT the first letter; the timeline `svg role=img` still exposes its year ticks after the aria-label.
