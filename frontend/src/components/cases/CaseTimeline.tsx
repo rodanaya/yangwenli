@@ -209,9 +209,9 @@ export function CaseTimeline({
         )}
       </svg>
 
-      {/* ── HTML glyph layer ────────────────────────────────────────────── */}
+      {/* ── HTML glyph layer — decoration for AT; the svg aria-label speaks ── */}
       {showLabels && (
-        <>
+        <div aria-hidden="true" className="contents">
           {start != null && end != null && (
             <span
               className="absolute pointer-events-none whitespace-nowrap"
@@ -293,7 +293,7 @@ export function CaseTimeline({
               {bracketText}
             </span>
           )}
-        </>
+        </div>
       )}
 
       <figcaption

@@ -415,6 +415,7 @@ export function CostInArchive({
       {callouts.map(({ placed, meta }) => (
         <span
           key={placed.id}
+          aria-hidden="true"
           className="absolute pointer-events-none whitespace-nowrap font-mono"
           style={{
             left: placed.box.x0,
