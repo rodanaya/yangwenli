@@ -20,7 +20,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { Link } from 'react-router-dom'
 import { phiApi, analysisApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS, getSectorName } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS, EU_DIRECT_AWARD_LIMIT, getSectorName } from '@/lib/constants'
 import { formatDualCurrency } from '@/lib/utils'
 import { gradeToTierKey, TIER_STYLES, type TierKey } from '@/lib/tiers'
 import { BenchmarkRow } from '@/components/editorial/BenchmarkRow'
@@ -227,7 +227,8 @@ function VerdictBlock({
       key: 'da',
       label: t('oecdDALabel'),
       value: daRate / 100,
-      benchmark: 0.25,
+      // The label's line: EU Single Market Scoreboard 10 % (EU_DIRECT_AWARD_LIMIT).
+      benchmark: EU_DIRECT_AWARD_LIMIT,
       benchmarkLabel: lang === 'es' ? 'línea UE 10%' : 'EU line 10%',
     })
   }

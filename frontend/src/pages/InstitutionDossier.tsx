@@ -244,10 +244,11 @@ export default function InstitutionDossier() {
   const timelineForGrid = (timeline?.timeline ?? []).map((item) => ({
     year: item.year,
     avg_risk_score: item.avg_risk_score,
+    contract_count: item.contract_count,
   }))
-  // Risk-over-time trend ({year, avg}) for the §3 RiskOverTimePanel — finite + sorted.
+  // Risk-over-time trend ({year, avg, n}) for the §3 RiskOverTimePanel — finite + sorted.
   const trendForRecord = timelineForGrid
-    .map((p) => ({ year: p.year, avg: (p.avg_risk_score ?? 0) as number }))
+    .map((p) => ({ year: p.year, avg: (p.avg_risk_score ?? 0) as number, n: p.contract_count }))
     .filter((p) => Number.isFinite(p.avg))
     .sort((a, b) => a.year - b.year)
 
@@ -371,6 +372,7 @@ export default function InstitutionDossier() {
             institution={institution}
             vendorPool={vendorPool ?? null}
             sectorAccent={sectorAccent}
+            span={trendForRecord.length ? [trendForRecord[0].year, trendForRecord[trendForRecord.length - 1].year] : null}
             lang={lang}
           />
         </section>

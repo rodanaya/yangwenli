@@ -18,7 +18,7 @@ import type { RiskLevel } from '@/api/types'
 import { DotBarRow } from '@/components/ui/DotBar'
 import { EditorialAreaChart } from '@/components/charts/editorial'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { RISK_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, PARTIAL_YEAR_NOTE } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 
 // ─── Rate helpers ─────────────────────────────────────────────────────────────
@@ -167,14 +167,22 @@ export function OecdDeviationPanel({ rows, isEs }: { rows: BenchRow[]; isEs: boo
 export interface TrendPoint {
   year: number
   avg: number
+  /** Contracts behind the point, when the caller has it; < 5 is not drawn. */
+  n?: number
 }
 
 /**
  * "Risk over time" — the avg-risk series as an editorial area chart + a peak
  * caption. `trend` must already be filtered to finite avg and sorted by year.
  */
-export function RiskOverTimePanel({ trend, isEs }: { trend: TrendPoint[]; isEs: boolean }) {
+export function RiskOverTimePanel({ trend: rawTrend, isEs }: { trend: TrendPoint[]; isEs: boolean }) {
+  // A year with fewer than 5 contracts is noise, not a point (a 1-contract
+  // year drew a spike); callers without counts keep every year.
+  const trend = rawTrend.filter((p) => p.n == null || p.n >= 5)
+  const omitted = rawTrend.length - trend.length
   const peak = trend.reduce<TrendPoint | null>((mx, p) => (!mx || p.avg > mx.avg ? p : mx), null)
+  const lastYear = trend.length ? trend[trend.length - 1].year : null
+  const partial = lastYear === 2025
   // `avg` arrives as a 0–1 risk fraction. The 'pct' axis formatter renders its
   // value verbatim (no ×100), so on a [0,1] domain the ticks read "0.2%/1.0%"
   // while the peak caption (Math.round(avg*100)) reads "22%" — a 100× mismatch.
@@ -190,19 +198,29 @@ export function RiskOverTimePanel({ trend, isEs }: { trend: TrendPoint[]; isEs: 
             xKey="year"
             yKey="avg"
             colorToken="risk-critical"
-            yFormat="pct"
+            yFormat="integer"
             yDomain={[0, 100]}
+            yTicks={[0, 50, 100]}
+            xTickFormatter={(v) => (partial && Number(v) === lastYear ? `${v}*` : String(v))}
             height={96}
             decorative
             ariaLabel={
               isEs
-                ? `Riesgo en el tiempo: pico ${peak ? Math.round(peak.avg * 100) : 0}% en ${peak?.year ?? ''}, ${trend[0].year}–${trend[trend.length - 1].year}`
-                : `Risk over time: peak ${peak ? Math.round(peak.avg * 100) : 0}% in ${peak?.year ?? ''}, ${trend[0].year}–${trend[trend.length - 1].year}`
+                ? `Riesgo en el tiempo: indicador de riesgo promedio, pico ${peak ? Math.round(peak.avg * 100) : 0} de 100 en ${peak?.year ?? ''}, ${trend[0].year}–${lastYear}`
+                : `Risk over time: average risk indicator, peak ${peak ? Math.round(peak.avg * 100) : 0} of 100 in ${peak?.year ?? ''}, ${trend[0].year}–${lastYear}`
             }
           />
           {peak && (
             <p className="font-mono mt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
-              {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg * 100)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}
+              {isEs ? 'Indicador de riesgo /100' : 'Risk indicator /100'} · {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg * 100)} · {peak.year} · {trend[0].year}–{lastYear}{partial ? '*' : ''}
+            </p>
+          )}
+          {(partial || omitted > 0) && (
+            <p className="font-mono mt-1" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+              {[
+                partial ? `*${isEs ? PARTIAL_YEAR_NOTE.es : PARTIAL_YEAR_NOTE.en}` : null,
+                omitted > 0 ? (isEs ? `${omitted} año${omitted === 1 ? '' : 's'} con menos de 5 contratos sin trazar` : `${omitted} year${omitted === 1 ? '' : 's'} with fewer than 5 contracts not drawn`) : null,
+              ].filter(Boolean).join(' · ')}
             </p>
           )}
         </>

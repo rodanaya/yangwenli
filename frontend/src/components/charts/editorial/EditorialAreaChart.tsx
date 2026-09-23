@@ -20,6 +20,8 @@ export interface EditorialAreaChartProps<T extends object> {
   colorToken: ColorToken
   yFormat?: 'pct' | 'mxn-compact' | 'integer' | 'decimal'
   yDomain?: [number, number]
+  /** Explicit y ticks (e.g. [0, 50, 100] on a /100 scale). */
+  yTicks?: number[]
   annotations?: ChartAnnotation[]
   height?: number
   hideXAxis?: boolean
@@ -35,7 +37,7 @@ export interface EditorialAreaChartProps<T extends object> {
 }
 
 export function EditorialAreaChart<T extends object>({
-  data, xKey, yKey, colorToken, yFormat = 'integer', yDomain,
+  data, xKey, yKey, colorToken, yFormat = 'integer', yDomain, yTicks,
   annotations = [], height = CHART_TOKENS.dims.default,
   hideXAxis, hideYAxis, xTickFormatter, decorative = false, ariaLabel,
 }: EditorialAreaChartProps<T>) {
@@ -85,6 +87,7 @@ export function EditorialAreaChart<T extends object>({
             axisLine={CHART_TOKENS.axis.axisLine}
             width={CHART_TOKENS.axis.width}
             domain={yDomain}
+            ticks={yTicks}
             tickFormatter={(v: number) => formatValue(v, yFormat)}
           />
         )}

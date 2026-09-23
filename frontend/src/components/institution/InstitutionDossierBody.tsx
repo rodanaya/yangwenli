@@ -31,6 +31,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   RISK_COLORS,
   RISK_TEXT_COLORS,
+  FLAG_THRESHOLD,
   EU_DIRECT_AWARD_LIMIT,
   EU_SINGLE_BID_LIMIT,
   MODEL_HR_BASELINE,
@@ -238,11 +239,14 @@ export function InstitutionConcentration({
   institution,
   vendorPool,
   sectorAccent,
+  span,
   lang,
 }: {
   institution: InstitutionDetailResponse
   vendorPool?: VendorPoolResponse | null
   sectorAccent: string
+  /** First–last contract year; the register counts every year. */
+  span?: [number, number] | null
   lang: 'en' | 'es'
 }) {
   const isEs = lang === 'es'
@@ -251,6 +255,12 @@ export function InstitutionConcentration({
   const pool = vendorPool?.data ?? []
   const top1 = vendorPool?.top1_share_pct ?? null
   const top10 = vendorPool?.top10_share_pct ?? null
+  // The strip names its years (PARALLAX D9b § Change 5): "current" is the last
+  // active year, the average spans the five most recent years in the history.
+  const recent = useMemo(() => [...(sd?.history ?? [])].sort((a, b) => b.year - a.year), [sd])
+  const curYear = recent[0]?.year
+  const avgFrom = recent[Math.min(4, recent.length - 1)]?.year
+  const avgSpan = curYear != null && avgFrom != null && avgFrom !== curYear ? `${avgFrom}–${String(curYear).slice(2)}` : `${curYear ?? ''}`
 
   return (
     <div className="space-y-5">
@@ -258,9 +268,9 @@ export function InstitutionConcentration({
         <Panel label={isEs ? 'Concentración de proveedores · HHI' : 'Supplier concentration · HHI'} accent={sectorAccent}>
           {/* Readout strip */}
           <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 mb-3">
-            <HhiStat label={isEs ? 'HHI actual' : 'Current HHI'} value={formatNumber(Math.round(sd.hhi_current_year))} color={hhiInk(sd.hhi_current_year)} />
-            <HhiStat label={isEs ? 'Prom. 5 años' : '5-yr avg'} value={formatNumber(Math.round(sd.hhi_5yr_avg))} color={hhiInk(sd.hhi_5yr_avg)} />
-            <HhiStat label={isEs ? 'Proveedores' : 'Suppliers'} value={formatNumber(sd.unique_vendors_current_year)} color="var(--color-text-primary)" />
+            <HhiStat label={`HHI ${curYear ?? ''}`} value={formatNumber(Math.round(sd.hhi_current_year))} color={hhiInk(sd.hhi_current_year)} />
+            <HhiStat label={isEs ? `Prom. 5 años ${avgSpan}` : `5-yr avg ${avgSpan}`} value={formatNumber(Math.round(sd.hhi_5yr_avg))} color={hhiInk(sd.hhi_5yr_avg)} />
+            <HhiStat label={isEs ? `Proveedores ${curYear ?? ''}` : `Suppliers ${curYear ?? ''}`} value={formatNumber(sd.unique_vendors_current_year)} color="var(--color-text-primary)" />
             <HhiStat
               label={isEs ? 'Tendencia' : 'Trend'}
               value={sd.trend === 'increasing' ? (isEs ? 'en aumento' : 'rising') : sd.trend === 'decreasing' ? (isEs ? 'a la baja' : 'falling') : (isEs ? 'estable' : 'stable')}
@@ -284,7 +294,7 @@ export function InstitutionConcentration({
           </p>
         </Panel>
       )}
-      <ConcentrationRegister pool={pool} top1={top1} top10={top10} totalSpend={institution.total_amount_mxn ?? 0} isEs={isEs} />
+      <ConcentrationRegister pool={pool} top1={top1} top10={top10} span={span} isEs={isEs} />
     </div>
   )
 }
@@ -293,6 +303,8 @@ function HhiStat({ label, value, color }: { label: string; value: string; color:
   return (
     <div>
       <span className="font-mono tabular-nums" style={{ fontSize: 15, fontWeight: 600, color }}>{value}</span>
+      {/* a real separator so assistive tech reads "86, 5-yr avg", not "865-yr avg" */}
+      <span className="sr-only">, </span>
       <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginLeft: 6 }}>{label}</span>
     </div>
   )
@@ -306,13 +318,13 @@ function ConcentrationRegister({
   pool,
   top1,
   top10,
-  totalSpend,
+  span,
   isEs,
 }: {
   pool: VendorPoolItem[]
   top1: number | null
   top10: number | null
-  totalSpend: number
+  span?: [number, number] | null
   isEs: boolean
 }) {
   const [sortBy, setSortBy] = useState<SortKey>('spend')
@@ -330,6 +342,7 @@ function ConcentrationRegister({
   if (pool.length === 0) {
     return <EmptyNote text={isEs ? 'Sin proveedores registrados.' : 'No suppliers on record.'} />
   }
+  const shareMax = Math.max(20, top1 ?? 0, ...pool.map((v) => v.share_of_institution_pct ?? 0))
 
   const FLOORS: Array<{ k: FloorKey; en: string; es: string }> = [
     { k: 'all', en: 'ALL', es: 'TODOS' },
@@ -345,8 +358,8 @@ function ConcentrationRegister({
         <p className="font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}>
           {top1 != null && top10 != null
             ? isEs
-              ? `El mayor proveedor concentra ${Math.round(top1)}%; los 10 mayores, ${Math.round(top10)}% del gasto.`
-              : `Top supplier holds ${Math.round(top1)}%; top 10 hold ${Math.round(top10)}% of spend.`
+              ? `El mayor proveedor concentra ${Math.round(top1)}%; los 10 mayores, ${Math.round(top10)}% del gasto${span ? ` · todos los años ${span[0]}–${span[1]}` : ''}.`
+              : `Top supplier holds ${Math.round(top1)}%; top 10 hold ${Math.round(top10)}% of spend${span ? ` · all years ${span[0]}–${span[1]}` : ''}.`
             : isEs
               ? 'Proveedores por monto contratado.'
               : 'Suppliers by contracted amount.'}
@@ -370,7 +383,9 @@ function ConcentrationRegister({
       <div className="border border-border rounded-sm overflow-hidden">
         <ul>
           {rows.map((v) => {
-            const share = totalSpend > 0 ? ((v.total_value_mxn ?? 0) / totalSpend) * 100 : v.share_of_institution_pct
+            // Rows share the header's base (the pool's institution total) and
+            // one bar scale: max(20 %, the largest share) for every row.
+            const share = v.share_of_institution_pct ?? 0
             const lvl = v.avg_risk_score != null ? getRiskLevelFromScore(v.avg_risk_score) : 'low'
             const riskPct = v.avg_risk_score != null ? Math.round(v.avg_risk_score * 100) : null
             const fmtPct = (n: number | null) => (n == null ? '—' : `${Math.round(n)}%`)
@@ -391,7 +406,7 @@ function ConcentrationRegister({
                     {' · '}{isEs ? 'ÚP' : 'SB'} {fmtPct(v.single_bid_pct)}
                   </div>
                 </div>
-                <DotBar value={share} max={Math.max(20, share)} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} dots={18} ariaLabel={`${Math.round(share)}% share`} className="hidden sm:block flex-shrink-0" />
+                <DotBar value={share} max={shareMax} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} dots={18} ariaLabel={isEs ? `${Math.round(share)}% del gasto` : `${Math.round(share)}% of spend`} className="hidden sm:block flex-shrink-0" />
                 <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 78, fontSize: 13, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</span>
                 <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 30, fontSize: 13, fontWeight: 600, color: riskPct == null ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[lvl] }}>{riskPct ?? '—'}</span>
               </li>
@@ -459,6 +474,13 @@ function Badge({ text, color }: { text: string; color: string }) {
 
 // ─── §3 · The record ───────────────────────────────────────────────────────────
 
+interface CategoryCoverage {
+  data?: CategoryItem[]
+  total_categories?: number
+  total_contracts_categorised?: number
+  total_value_categorised?: number
+}
+
 interface CategoryItem {
   category_id: number | null
   name_es: string | null
@@ -481,7 +503,7 @@ export function InstitutionRecord({
 }: {
   institution: InstitutionDetailResponse
   timeline: TrendPoint[]
-  categories?: { data?: CategoryItem[] } | null
+  categories?: CategoryCoverage | null
   contracts?: ContractListResponse | null
   sectorAccent: string
   lang: 'en' | 'es'
@@ -490,6 +512,12 @@ export function InstitutionRecord({
   const tenured = institution.longest_tenured_vendors ?? []
   const cats = (categories?.data ?? []).slice(0, 6)
   const catMax = Math.max(1, ...cats.map((c) => c.total_value_mxn || 0))
+  // Coverage line: how much of the institution the rows below account for.
+  const catN = categories?.total_categories ?? 0
+  const catContracts = categories?.total_contracts_categorised ?? 0
+  const catValue = categories?.total_value_categorised ?? 0
+  const coverContracts = catContracts > 0 ? Math.round((cats.reduce((s, c) => s + (c.contract_count || 0), 0) / catContracts) * 100) : null
+  const coverValue = catValue > 0 ? Math.round((cats.reduce((s, c) => s + (c.total_value_mxn || 0), 0) / catValue) * 100) : null
   const contractRows = (contracts?.data ?? []).slice(0, 8)
 
   return (
@@ -526,6 +554,13 @@ export function InstitutionRecord({
 
       {/* What they buy */}
       <Panel label={isEs ? 'Qué compra' : 'What they buy'} accent={sectorAccent}>
+        {cats.length > 0 && catN > 0 && (
+          <p className="font-mono tabular-nums mb-3" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+            {isEs
+              ? `${cats.length} de ${formatNumber(catN)} categorías${coverContracts != null ? ` · ${coverContracts}% de los contratos` : ''}${coverValue != null ? ` · ${coverValue}% del gasto` : ''}`
+              : `${cats.length} of ${formatNumber(catN)} categories${coverContracts != null ? ` · ${coverContracts}% of contracts` : ''}${coverValue != null ? ` · ${coverValue}% of spend` : ''}`}
+          </p>
+        )}
         {cats.length > 0 ? (
           <div className="space-y-2.5">
             {cats.map((c, i) => {
@@ -589,7 +624,10 @@ export function InstitutionRecord({
                         {c.vendor_id && c.vendor_name ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" fullName /> : <span style={{ color: 'var(--color-text-muted)' }}>—</span>}
                       </td>
                       <td className="py-2 pr-3 text-right font-mono tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{c.contract_year ?? '—'}</td>
-                      <td className="py-2 pr-3 text-right font-mono tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>{formatCompactMXN(c.amount_mxn ?? 0)}</td>
+                      <td className="py-2 pr-3 text-right font-mono tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>
+                        {formatCompactMXN(c.amount_mxn ?? 0)}
+                        {(c.amount_mxn ?? 0) > FLAG_THRESHOLD && <ReviewFlag isEs={isEs} />}
+                      </td>
                       <td className="py-2 text-right font-mono tabular-nums" style={{ fontWeight: 600, color: c.risk_score != null ? RISK_TEXT_COLORS[lvl] : 'var(--color-text-muted)' }}>{c.risk_score != null ? Math.round(c.risk_score * 100) : '—'}</td>
                     </tr>
                   )
@@ -606,5 +644,16 @@ export function InstitutionRecord({
         )}
       </Panel>
     </div>
+  )
+}
+
+/** Data rule: a contract above 10B MXN is included but flagged for review. */
+function ReviewFlag({ isEs }: { isEs: boolean }) {
+  const title = isEs ? 'Por encima de la línea de revisión de 10 mil millones MXN — se incluye, pero hay que verificarlo' : 'Above the 10B MXN review line — include but verify'
+  return (
+    <span className="block whitespace-nowrap" style={{ fontSize: 12, color: RISK_TEXT_COLORS.high }} title={title}>
+      <span aria-hidden="true">⚑ </span>{isEs ? 'revisar' : 'review'}
+      <span className="sr-only"> — {title}</span>
+    </span>
   )
 }
