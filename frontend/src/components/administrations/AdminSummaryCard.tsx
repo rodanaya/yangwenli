@@ -17,7 +17,7 @@ import { useRef, type KeyboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
-import { formatCompactMXN, formatDualCurrency, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
 import { RISK_TEXT_COLORS } from '@/lib/constants'
 import { useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import { PresidentAvatar } from './PresidentAvatar'
@@ -175,6 +175,12 @@ export function AdminSummaryCard({
     onSelect(name)
     document.getElementById(tabId(name))?.focus()
   }
+
+  // Amounts are one unbreakable unit; long strings ("2.8 billones MXN") step
+  // down (15px; 13px in the phone's half-width cell) so they fit at 390 and lg.
+  const totalMxn = agg ? formatCompactMXN(agg.totalValue) : ''
+  const atRiskMxn = agg ? formatCompactMXN(agg.valueAtRisk) : ''
+  const moneySize = (v: string) => (v.length > 13 ? 'text-[13px] sm:text-[15px]' : 'text-lg')
 
   const verdictSegments = getAdminVerdict({
     adminName: selected,
@@ -340,12 +346,14 @@ export function AdminSummaryCard({
             {t('dossier.procurementFingerprint')}
           </div>
           {agg ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-5 gap-y-4">
+            // A value never breaks (PARALLAX D8 § judge J1): three columns only where the
+            // fingerprint spans the card (sm–lg); two where it shares the card (lg+).
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-x-5 gap-y-4">
               <div>
                 <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.contracts')}
                 </div>
-                <div className="font-mono text-xl tabular-nums font-semibold text-text-primary">
+                <div className="font-mono text-xl tabular-nums font-semibold text-text-primary whitespace-nowrap">
                   {formatNumber(agg.contracts)}
                 </div>
               </div>
@@ -353,23 +361,28 @@ export function AdminSummaryCard({
                 <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.totalValue')}
                 </div>
-                <div className="font-mono text-lg leading-snug tabular-nums font-semibold text-text-primary">
-                  {formatDualCurrency(agg.totalValue)}
+                <div className={`font-mono ${moneySize(totalMxn)} leading-snug tabular-nums font-semibold text-text-primary whitespace-nowrap`}>
+                  {totalMxn}
                 </div>
+                {!isEs && (
+                  <div className="font-mono text-xs tabular-nums text-text-muted whitespace-nowrap">
+                    ≈{formatCompactUSD(agg.totalValue)}
+                  </div>
+                )}
               </div>
               <div>
                 <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {isEs ? 'MXN en riesgo' : 'MXN at risk'}
                 </div>
-                <div className="font-mono text-xl tabular-nums font-semibold text-text-primary">
-                  {formatCompactMXN(agg.valueAtRisk)}
+                <div className={`font-mono ${moneySize(atRiskMxn)} leading-snug tabular-nums font-semibold text-text-primary whitespace-nowrap`}>
+                  {atRiskMxn}
                 </div>
               </div>
               <div>
                 <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.directAward')}
                 </div>
-                <div className="font-mono text-xl tabular-nums font-semibold text-text-primary">
+                <div className="font-mono text-xl tabular-nums font-semibold text-text-primary whitespace-nowrap">
                   {agg.directAwardPct.toFixed(1)}%{isFoxEra ? '*' : ''}
                 </div>
                 <DeltaBadge val={agg.directAwardPct - allTimeAvg.da} unit=" pts" />
@@ -378,7 +391,7 @@ export function AdminSummaryCard({
                 <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.singleBid')}
                 </div>
-                <div className="font-mono text-xl tabular-nums font-semibold text-text-primary">
+                <div className="font-mono text-xl tabular-nums font-semibold text-text-primary whitespace-nowrap">
                   {agg.singleBidPct.toFixed(1)}%
                 </div>
                 <DeltaBadge val={agg.singleBidPct - allTimeAvg.sb} unit=" pts" />
@@ -387,7 +400,7 @@ export function AdminSummaryCard({
                 <div className="text-[13px] uppercase tracking-[0.15em] font-mono text-text-muted mb-0.5">
                   {t('statCards.highRisk')}
                 </div>
-                <div className="font-mono text-xl tabular-nums font-bold" style={{ color: hrColor }}>
+                <div className="font-mono text-xl tabular-nums font-bold whitespace-nowrap" style={{ color: hrColor }}>
                   {agg.highRiskPct.toFixed(1)}%
                 </div>
                 <DeltaBadge val={agg.highRiskPct - allTimeAvg.hr} unit=" pts" />

@@ -45,7 +45,7 @@ const RULE_X = RULE_YEARS.map((y) => ((y - AXIS_START) / AXIS_SPAN) * 100)
  * hides (kept in the row aria-label) and the template drops to 4 columns.
  */
 const ROW_GRID =
-  'grid grid-cols-[minmax(96px,116px)_1fr_36px_58px] sm:grid-cols-[minmax(150px,190px)_1fr_76px_40px_92px] gap-x-2 items-center'
+  'grid grid-cols-[minmax(96px,116px)_1fr_36px_44px] sm:grid-cols-[minmax(150px,190px)_1fr_76px_40px_104px] gap-x-2 items-center'
 
 type SortMode = 'default' | 'institutions' | 'value' | 'directAward'
 
@@ -187,8 +187,11 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
         <span />
         <span className="hidden sm:block text-right">{isEs ? 'Valor' : 'Value'}</span>
         <span className="text-right">{isEs ? 'AD%' : 'DA%'}</span>
-        {/* Spelled out; the soft hyphen lets it break inside the narrow phone column. */}
-        <span className="text-right tracking-normal sm:tracking-[0.04em] leading-tight">{isEs ? 'Insti\u00ADtuciones' : 'Insti\u00ADtutions'}</span>
+        {/* Phone: the abbreviation, expanded by <abbr>; sm+: the full word. Never hyphenated. */}
+        <span className="text-right tracking-normal whitespace-nowrap">
+          <abbr title={isEs ? 'Instituciones' : 'Institutions'} className="sm:hidden no-underline">Inst.</abbr>
+          <span className="hidden sm:inline">{isEs ? 'Instituciones' : 'Institutions'}</span>
+        </span>
       </div>
 
       {/* Rows — each h-20; the track column draws its own rule segments, which
