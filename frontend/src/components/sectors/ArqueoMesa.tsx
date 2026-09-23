@@ -30,7 +30,7 @@ import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
 import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
-import { PlateIndexMark, PlateIndexBadge, PLATE_INDEX_MIN_COL } from './PlateIndex'
+import { PlateIndexMark, PlateIndexBadge, PLATE_INDEX_MIN_COL, ReadoutTokens } from './PlateIndex'
 
 interface ArqueoMesaProps {
   rows: LedgerRow[]
@@ -357,7 +357,7 @@ function DesktopMesa({
       >
         <span className="inline-flex items-center gap-1.5 min-w-0">
           {hoverNarrowIdx >= 0 && <PlateIndexBadge n={hoverNarrowIdx + 1} />}
-          <span role="status" aria-live="polite">{readoutText}</span>
+          <span role="status" aria-live="polite"><ReadoutTokens text={readoutText} /></span>
         </span>
         <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
           {lang === 'es' ? '% del gasto propio observado' : '% of own spend flagged'}
@@ -607,7 +607,7 @@ function MobileMesa({
         className="font-mono tabular-nums mb-2"
         style={{ minHeight: MOBILE_READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
       >
-        <span role="status" aria-live="polite">{readoutText}</span>
+        <span role="status" aria-live="polite"><ReadoutTokens text={readoutText} /></span>
       </div>
       {/* Names the small right-hand figure on every row (the old circled-digit legend
           mapped to nothing here — rows carry their names). */}

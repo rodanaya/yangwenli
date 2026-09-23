@@ -52,3 +52,22 @@ export function PlateIndexBadge({ n }: { n: number }) {
     </span>
   )
 }
+
+/**
+ * A plate's hover readout: " · "-joined "label value" tokens, each kept whole
+ * (whitespace-nowrap) with a break opportunity only after a separator — a value
+ * never breaks from its label (PARALLAX D7b § judge 3).
+ */
+export function ReadoutTokens({ text }: { text: string }) {
+  const tokens = text.split(' · ')
+  return (
+    <>
+      {tokens.map((t, i) => (
+        <span key={i}>
+          <span className="whitespace-nowrap">{t}</span>
+          {i < tokens.length - 1 && <>{' · '}</>}
+        </span>
+      ))}
+    </>
+  )
+}

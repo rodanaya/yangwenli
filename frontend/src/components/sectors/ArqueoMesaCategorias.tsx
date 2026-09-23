@@ -28,7 +28,7 @@ import {
 import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { measureLabel, fitLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
-import { PlateIndexMark, PlateIndexBadge, PLATE_INDEX_MIN_COL } from './PlateIndex'
+import { PlateIndexMark, PlateIndexBadge, PLATE_INDEX_MIN_COL, ReadoutTokens } from './PlateIndex'
 import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -76,6 +76,8 @@ const BAND_H = 300
 const LEFT_GUTTER = 34
 const RIGHT_PAD = 8
 const READOUT_H = 20
+// Desktop readout: a fixed two-line slot; tokens wrap whole, hover never moves the plate (judge 3).
+const DESK_READOUT_H = 36
 const STRIP_H = 4
 // Room for a two-line 11px label under the strip (PARALLAX D7b § Change 5).
 const LABEL_H = 36
@@ -282,7 +284,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
   const reserveH =
     typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
       ? MOBILE_READOUT_H + columns.reduce((acc, c) => acc + mobileRowH(totalValue > 0 ? c.total_value / totalValue : 0) + 1, 0)
-      : READOUT_H + svgH + LEGEND_RESERVE_H
+      : DESK_READOUT_H + svgH + LEGEND_RESERVE_H
   const hoveredIdx = hoveredKey === null ? -1 : laidOut.findIndex(({ col }) => col.key === hoveredKey)
 
   // ── The two computed annotations — HTML glyphs over the svg geometry ──
@@ -375,7 +377,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
             style={{
               // Fixed on desktop (no layout jump on hover); on a phone the
               // sentence wraps instead of clipping (PARALLAX D7 § Change 2).
-              ...(isMobile ? { minHeight: READOUT_H } : { height: READOUT_H }),
+              ...(isMobile ? { minHeight: READOUT_H } : { height: DESK_READOUT_H, lineHeight: '18px' }),
               fontFamily: 'var(--font-family-mono, monospace)',
               fontSize: 12,
               color: 'var(--color-text-secondary, var(--color-text-muted))',
@@ -393,7 +395,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
             {/* Polite live region: hover/focus fills it, AT hears it (a11y X3). */}
             <span className="inline-flex items-center gap-1.5 min-w-0">
               {hoveredNarrowIdx >= 0 && <PlateIndexBadge n={hoveredNarrowIdx + 1} />}
-              <span role="status" aria-live="polite" style={isMobile ? undefined : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+              <span role="status" aria-live="polite"><ReadoutTokens text={readoutText} /></span>
             </span>
             <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase', ...(isMobile ? { flexBasis: '100%', textAlign: 'right' as const } : {}) }}>
               {lang === 'es' ? `riesgo promedio · indicador 0–${domainMax}%` : `mean risk · indicator 0–${domainMax}%`}
