@@ -11,7 +11,7 @@
  * is better, vs the default ("direct award rate") where higher is worse.
  */
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
 
 interface Props {
   val: number
@@ -23,22 +23,15 @@ export function DeltaBadge({ val, unit, invertColor }: Props) {
   const abs = Math.abs(val)
   const isUp = val > 0.01
   const isDown = val < -0.01
-  const color = invertColor
-    ? isUp
-      ? 'text-risk-low'
-      : isDown
-        ? 'text-risk-critical'
-        : 'text-text-muted'
-    : isUp
-      ? 'text-risk-critical'
-      : isDown
-        ? 'text-risk-low'
-        : 'text-text-muted'
+  // AA-safe type inks (PARALLAX D8 § Change 4): worse → RISK_TEXT_COLORS.critical,
+  // better or flat → muted (never green, Bible §3.10).
+  const worse = invertColor ? isDown : isUp
+  const color = worse ? RISK_TEXT_COLORS.critical : 'var(--color-text-muted)'
   const Icon = isUp ? TrendingUp : isDown ? TrendingDown : Minus
 
   return (
-    <span className={cn('inline-flex items-center gap-0.5 text-xs font-mono', color)}>
-      <Icon className="h-3 w-3" />
+    <span className="inline-flex items-center gap-0.5 text-xs font-mono" style={{ color }}>
+      <Icon className="h-3 w-3" aria-hidden="true" />
       {abs < 0.01 ? '--' : `${val > 0 ? '+' : ''}${abs.toFixed(1)}${unit}`}
     </span>
   )

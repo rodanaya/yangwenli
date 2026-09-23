@@ -13,15 +13,17 @@
  * AdminDossierPanel header (2026-06-07 reorganization — "the dossier IS the
  * page": pick a sexenio first, everything below answers to that choice).
  */
+import { useRef, type KeyboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import { formatCompactMXN, formatDualCurrency, formatNumber } from '@/lib/utils'
-import { RISK_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
+import { useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import { PresidentAvatar } from './PresidentAvatar'
 import { ProcurementGradeCard } from './ProcurementGradeCard'
 import { DeltaBadge } from './DeltaBadge'
-import { ADMINISTRATIONS, DOSSIER_DATA, PARTY_COLORS, SEVERITY_COLORS, termRange } from './data'
+import { ADMINISTRATIONS, DATA_LAST_YEAR, DOSSIER_DATA, PARTY_COLORS, SEVERITY_COLORS, termRange } from './data'
 import { getAdminVerdict } from './verdict'
 import type { AdminAgg, AdminName } from './types'
 
@@ -41,7 +43,12 @@ export interface AdminSummaryCardProps {
   embedded?: boolean
 }
 
-/** Tiny inline sparkline — high-risk % across the term's years. */
+/**
+ * Tiny inline sparkline — high-risk % across the term's years. Drawn at 1:1
+ * (PARALLAX D8 § Change 4): the svg is exactly as wide as its column, so the
+ * geometry never scales; the year and value labels are HTML under the plot,
+ * so they can never clip or overprint each other.
+ */
 function TermSparkline({
   years,
   color,
@@ -54,87 +61,73 @@ function TermSparkline({
   /** National-average HR% — dashed reference hrule when within scale. */
   referencePct?: number
 }) {
+  const box = useRef<HTMLDivElement>(null)
+  const W = useMeasuredWidth(box)
   if (years.length === 0) return null
-  const W = 220
-  const H = 54
-  const PAD = 6
+  const H = 40
+  const PAD = 4
   const max = Math.max(...years.map((y) => y.high_risk_pct), 1) * 1.15
   const x = (i: number) =>
     years.length === 1 ? W / 2 : PAD + (i / (years.length - 1)) * (W - PAD * 2)
   const y = (v: number) => H - PAD - (v / max) * (H - PAD * 2)
+  const firstYear = years[0]
   const lastYear = years[years.length - 1]
-  // End-value label y; nudged up to clear the dot. Guard against clipping the top.
-  const endValY = Math.max(y(lastYear.high_risk_pct) - 8, 9)
-  // End-year label collides with the value if both anchor right at the last point;
-  // drop the year a little when the value sits high.
-  const endYearY = y(lastYear.high_risk_pct) - 6
-  const labelsClose = Math.abs(endValY - endYearY) < 9
+  const star = (yr: number) => (yr === DATA_LAST_YEAR ? `${yr}*` : String(yr))
   return (
     <div>
       <div className="text-[13px] uppercase tracking-[0.18em] font-mono text-text-muted mb-1">
         {isEs ? 'Alto riesgo % por año' : 'High-risk % by year'}
       </div>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        width="100%"
-        height={H}
-        role="img"
-        aria-label={isEs ? 'Tendencia de alto riesgo durante el sexenio' : 'High-risk trend across the term'}
-      >
-        <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--color-border)" strokeWidth={1} />
-        {referencePct != null && referencePct < max && (
-          <line
-            x1={PAD}
-            y1={y(referencePct)}
-            x2={W - PAD}
-            y2={y(referencePct)}
-            stroke="var(--color-text-muted)"
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            opacity={0.55}
-          />
-        )}
-        {years.length > 1 && (
-          <polyline
-            points={years.map((yr, i) => `${x(i)},${y(yr.high_risk_pct)}`).join(' ')}
-            fill="none"
-            stroke={color}
-            strokeWidth={1.8}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-        )}
-        {years.map((yr, i) => (
-          <circle key={yr.year} cx={x(i)} cy={y(yr.high_risk_pct)} r={2.4} fill={color} />
-        ))}
-        <text x={PAD} y={H - PAD + 1} dy={-((H - PAD) - y(years[0].high_risk_pct)) - 6} fill="var(--color-text-muted)" fontSize={13} fontFamily="monospace">
-          {years[0].year}
-        </text>
-        {years.length > 1 && (
-          <text
-            x={W - PAD}
-            y={labelsClose ? endYearY + 9 : endYearY}
-            fill="var(--color-text-muted)"
-            fontSize={13}
-            fontFamily="monospace"
-            textAnchor="end"
+      <div ref={box} style={{ height: H }}>
+        {W > 0 && (
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            role="img"
+            aria-label={
+              isEs
+                ? `Alto riesgo por año, ${star(firstYear.year)}–${star(lastYear.year)}: último ${lastYear.high_risk_pct.toFixed(1)}%`
+                : `High-risk rate by year, ${star(firstYear.year)}–${star(lastYear.year)}: latest ${lastYear.high_risk_pct.toFixed(1)}%`
+            }
+            style={{ display: 'block' }}
           >
-            {lastYear.year}
-          </text>
+            <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--color-border)" strokeWidth={1} />
+            {referencePct != null && referencePct < max && (
+              <line
+                x1={PAD}
+                y1={y(referencePct)}
+                x2={W - PAD}
+                y2={y(referencePct)}
+                stroke="var(--color-text-muted)"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                opacity={0.55}
+              />
+            )}
+            {years.length > 1 && (
+              <polyline
+                points={years.map((yr, i) => `${x(i)},${y(yr.high_risk_pct)}`).join(' ')}
+                fill="none"
+                stroke={color}
+                strokeWidth={1.8}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            )}
+            {years.map((yr, i) => (
+              <circle key={yr.year} cx={x(i)} cy={y(yr.high_risk_pct)} r={2.4} fill={color} />
+            ))}
+          </svg>
         )}
-        {/* End-of-term value label — admin color, mono, anchored right of final dot. */}
-        <text
-          x={W - PAD}
-          y={endValY}
-          fill={color}
-          fontSize={13}
-          fontFamily="monospace"
-          fontWeight={600}
-          textAnchor="end"
-        >
-          {lastYear.high_risk_pct.toFixed(1)}%
-        </text>
-      </svg>
+      </div>
+      <div className="mt-1 flex items-baseline justify-between gap-2 text-[13px] font-mono tabular-nums text-text-muted">
+        <span>{years.length > 1 ? star(firstYear.year) : ''}</span>
+        <span className="whitespace-nowrap">
+          {star(lastYear.year)} ·{' '}
+          <span className="font-semibold text-text-primary">{lastYear.high_risk_pct.toFixed(1)}%</span>
+        </span>
+      </div>
     </div>
   )
 }
@@ -159,10 +152,29 @@ export function AdminSummaryCard({
 
   const hrColor =
     agg && agg.highRiskPct > 12
-      ? RISK_COLORS.critical
+      ? RISK_TEXT_COLORS.critical
       : agg && agg.highRiskPct > 7
-        ? RISK_COLORS.high
+        ? RISK_TEXT_COLORS.high
         : 'var(--color-text-secondary)'
+
+  // Tabs (WAI-ARIA tabs pattern): roving tabindex, ←/→ + Home/End move and
+  // select; Tab itself is never intercepted.
+  const tabId = (name: string) => `admin-tab-${name.toLowerCase().replace(/\s+/g, '-')}`
+  const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = ADMINISTRATIONS.findIndex((a) => a.name === selected)
+    const n = ADMINISTRATIONS.length
+    const next =
+      e.key === 'ArrowRight' ? (i + 1) % n
+        : e.key === 'ArrowLeft' ? (i - 1 + n) % n
+          : e.key === 'Home' ? 0
+            : e.key === 'End' ? n - 1
+              : -1
+    if (next < 0) return
+    e.preventDefault()
+    const name = ADMINISTRATIONS[next].name
+    onSelect(name)
+    document.getElementById(tabId(name))?.focus()
+  }
 
   const verdictSegments = getAdminVerdict({
     adminName: selected,
@@ -196,6 +208,7 @@ export function AdminSummaryCard({
         role="tablist"
         aria-label={isEs ? 'Seleccionar administración' : 'Select administration'}
         className="grid grid-cols-5 border-b border-border/40 bg-background-elevated/30"
+        onKeyDown={onTabKey}
       >
         {ADMINISTRATIONS.map((admin) => {
           const isActive = admin.name === selected
@@ -212,11 +225,15 @@ export function AdminSummaryCard({
           return (
             <button
               key={admin.name}
+              id={tabId(admin.name)}
+              type="button"
               role="tab"
               aria-selected={isActive}
+              aria-controls="admin-tabpanel"
+              tabIndex={isActive ? 0 : -1}
               onClick={() => onSelect(admin.name)}
               className={
-                'relative px-2 py-2 text-center transition-colors min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ' +
+                'relative px-1 sm:px-2 py-2 text-center transition-colors min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ' +
                 (isActive ? 'bg-background-card' : 'hover:bg-background-card/60')
               }
               style={{ borderBottom: isActive ? `3px solid ${tabParty}` : '3px solid transparent' }}
@@ -224,20 +241,21 @@ export function AdminSummaryCard({
               <span
                 style={{ fontFamily: 'var(--font-family-serif)' }}
                 className={
-                  'block text-xs sm:text-sm leading-tight truncate ' +
+                  'block text-[11px] sm:text-sm leading-tight ' +
                   (isActive ? 'font-bold text-text-primary' : 'font-medium text-text-muted')
                 }
               >
                 {displayNames[admin.name] ?? admin.name}
               </span>
-              <span className="block text-[8.5px] sm:text-[13px] font-mono text-text-muted mt-0.5 truncate">
-                {admin.party} · {termRange(admin, true)}
+              {/* Phone: years only (the party badge heads the file itself). */}
+              <span className="block text-[11px] sm:text-[13px] leading-tight font-mono text-text-muted mt-0.5">
+                <span className="hidden sm:inline">{admin.party} · </span>
+                <span className="whitespace-nowrap">{termRange(admin, true)}</span>
               </span>
               {aggs.length > 0 && tabHr != null && (
                 <span
                   className="hidden sm:block text-[13px] font-mono tabular-nums mt-0.5"
                   style={{ color: tabHrColor }}
-                  title={isEs ? 'Alto riesgo' : 'High risk'}
                 >
                   {isEs ? 'AR' : 'HR'} {tabHr.toFixed(1)}%
                 </span>
@@ -250,6 +268,9 @@ export function AdminSummaryCard({
       {/* ── Body — animated on switch ── */}
       <motion.div
         key={selected}
+        id="admin-tabpanel"
+        role="tabpanel"
+        aria-labelledby={tabId(selected)}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
@@ -296,7 +317,7 @@ export function AdminSummaryCard({
             >
               {verdictSegments.map((s, i) =>
                 s.accent ? (
-                  <span key={i} style={{ color: 'var(--color-accent)', fontWeight: 600 }}>
+                  <span key={i} style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>
                     {s.text}
                   </span>
                 ) : (
