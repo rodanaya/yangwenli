@@ -42,7 +42,7 @@ import {
   type WayfindingLinkState,
 } from '@/lib/nav/wayfinding'
 import { formatEntityName } from '@/lib/entity/format'
-import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, SECTORS, RISK_COLORS, RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { toTitleCase } from '@/lib/utils'
 
 // ─── Reference-section header — tight, left-aligned (mirrors VendorDossier) ──
@@ -286,7 +286,9 @@ export default function InstitutionDossier() {
             />
             {(() => {
               const tierKey = gradeToTierKey(scorecard.grade)
+              // 56px score keeps the mark colour (large text, >= 3:1); the pill is text.
               const boletaColor = TIER_STYLES[tierKey].color
+              const boletaInk = TIER_STYLES[tierKey].ink
               const TIER_LABEL_EN: Record<string, string> = {
                 Excelente: 'Excellent', Satisfactorio: 'Satisfactory', Regular: 'Adequate', Deficiente: 'Deficient', 'Crítico': 'Critical',
               }
@@ -305,7 +307,7 @@ export default function InstitutionDossier() {
                     </div>
                     <span
                       className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] self-start"
-                      style={{ backgroundColor: `color-mix(in srgb, ${boletaColor} 12%, transparent)`, border: `1px solid color-mix(in srgb, ${boletaColor} 35%, transparent)`, color: boletaColor }}
+                      style={{ backgroundColor: `color-mix(in srgb, ${boletaColor} 12%, transparent)`, border: `1px solid color-mix(in srgb, ${boletaColor} 35%, transparent)`, color: boletaInk }}
                     >
                       {tierLabel}
                     </span>
@@ -434,7 +436,7 @@ export default function InstitutionDossier() {
                         <td className="py-2 pl-3 text-right tabular-nums">
                           <span className="inline-flex items-center gap-1.5 justify-end">
                             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: RISK_COLORS[level] }} aria-hidden="true" />
-                            <span style={{ color: RISK_COLORS[level] }}>{o.avg_risk_score.toFixed(2)}</span>
+                            <span style={{ color: RISK_TEXT_COLORS[level] }}>{o.avg_risk_score.toFixed(2)}</span>
                           </span>
                         </td>
                       </tr>

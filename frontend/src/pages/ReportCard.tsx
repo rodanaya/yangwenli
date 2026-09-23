@@ -18,9 +18,9 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { phiApi, analysisApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS, getSectorName } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS, getSectorName } from '@/lib/constants'
 import { formatDualCurrency } from '@/lib/utils'
 import { gradeToTierKey, TIER_STYLES, type TierKey } from '@/lib/tiers'
 import { BenchmarkRow } from '@/components/editorial/BenchmarkRow'
@@ -111,7 +111,8 @@ interface TrendYear {
 // TIER_STYLES via gradeToTierKey (Steel & Ember — no green anywhere).
 // ---------------------------------------------------------------------------
 
-const OCHRE = '#a06820'
+// Ochre as type failed AA at 12–13px; the accent-hover token is the AA ochre.
+const OCHRE = 'var(--color-accent-hover)'
 
 function NationalHero({
   national,
@@ -253,7 +254,7 @@ function VerdictBlock({
 
   return (
     <section className="mb-10">
-      <p className="font-mono text-[12px] uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--color-oecd)' }}>
+      <p className="font-mono text-[12px] uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--color-accent-hover)' }}>
         {t('oecdContextTitle')}
       </p>
       <h2 className="text-lg font-serif font-bold mb-3 text-text-primary">
@@ -307,7 +308,7 @@ function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 
 
       <div className="flex-1 relative min-w-0" style={{ height: 20 }} aria-hidden="true">
         {/* Track */}
-        <div className="absolute left-0 right-0" style={{ top: '50%', height: 3, transform: 'translateY(-50%)', background: '#27272a', borderRadius: 2 }} />
+        <div className="absolute left-0 right-0" style={{ top: '50%', height: 3, transform: 'translateY(-50%)', background: 'var(--color-border)', borderRadius: 2 }} />
         {/* EU 10% anchor tick — center of the diverging scale */}
         <div className="absolute" style={{ left: '50%', top: 2, bottom: 2, width: 1.5, background: 'var(--color-oecd)', opacity: 0.7 }} />
         {barWidthPct > 0 && (
@@ -326,7 +327,7 @@ function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 
         )}
       </div>
 
-      <span className="text-[12px] font-mono shrink-0 text-right tabular-nums leading-tight w-16" style={{ color: isAbove ? '#c41e3a' : '#52525b' }}>
+      <span className="text-[12px] font-mono shrink-0 text-right tabular-nums leading-tight w-16" style={{ color: isAbove ? RISK_TEXT_COLORS.critical : 'var(--color-text-muted)' }}>
         {arrow} {absPp}pp
       </span>
 
@@ -336,7 +337,7 @@ function SectorDeviationRow({ sector, lang }: { sector: PHISector; lang: 'en' | 
 
       <span
         className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-semibold shrink-0"
-        style={{ color: tierStyle.color, backgroundColor: tierStyle.bg, border: `1px solid ${tierStyle.border}` }}
+        style={{ color: tierStyle.ink, backgroundColor: tierStyle.bg, border: `1px solid ${tierStyle.border}` }}
       >
         {Math.round(sector.phi_composite_score ?? 0)}
       </span>
@@ -398,9 +399,9 @@ function TrendLine({ years, lang }: { years: TrendYear[]; lang: 'en' | 'es' }) {
   }, [points])
 
   const trendConfig = {
-    improving: { color: '#5e7fa8', labelKey: 'trendImproving' as const },
+    improving: { color: TIER_STYLES.Satisfactorio.ink, labelKey: 'trendImproving' as const },
     stable: { color: 'var(--color-text-muted)', labelKey: 'trendStable' as const },
-    worsening: { color: 'var(--color-risk-critical)', labelKey: 'trendWorsening' as const },
+    worsening: { color: RISK_TEXT_COLORS.critical, labelKey: 'trendWorsening' as const },
   }[trendDirection]
 
   if (points.length < 2) return null
@@ -501,7 +502,6 @@ function TrendSection() {
 
 function MethodologyFooter() {
   const { t } = useTranslation('reportcard')
-  const navigate = useNavigate()
 
   return (
     <section className="mt-12 mb-8">
@@ -513,12 +513,12 @@ function MethodologyFooter() {
           <p className="text-[12px] font-mono text-text-muted">
             {t('sourcesLabel')}
           </p>
-          <button
-            onClick={() => navigate('/methodology')}
-            className="text-[12px] font-mono font-bold uppercase tracking-wide transition-colors text-risk-high hover:text-accent"
+          <Link
+            to="/methodology"
+            className="min-h-6 inline-flex items-center rounded-sm text-[12px] font-mono font-bold uppercase tracking-wide transition-colors text-accent-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
           >
             {t('viewFullMethodology')}
-          </button>
+          </Link>
         </div>
       </div>
     </section>
@@ -647,7 +647,7 @@ function ReportCard() {
         <header className="mb-8 pb-5 border-b border-border">
           <div className="flex items-center gap-2 mb-2">
             <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
-            <p className="text-[12px] font-mono font-bold tracking-[0.2em] uppercase text-risk-high">
+            <p className="text-[12px] font-mono font-bold tracking-[0.2em] uppercase" style={{ color: RISK_TEXT_COLORS.high }}>
               {t('heroKicker')}
             </p>
           </div>

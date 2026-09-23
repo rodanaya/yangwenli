@@ -198,6 +198,14 @@ function hhiColor(h: number): string {
   return 'var(--color-text-muted)'
 }
 
+/** hhiColor's text twin (PARALLAX D9 § Change 5) — marks keep hhiColor. */
+function hhiInk(h: number): string {
+  if (h >= 4000) return RISK_TEXT_COLORS.critical
+  if (h >= 2500) return RISK_TEXT_COLORS.high
+  if (h >= 1000) return RISK_TEXT_COLORS.medium
+  return 'var(--color-text-muted)'
+}
+
 export function InstitutionConcentration({
   institution,
   vendorPool,
@@ -222,8 +230,8 @@ export function InstitutionConcentration({
         <Panel label={isEs ? 'Concentración de proveedores · HHI' : 'Supplier concentration · HHI'} accent={sectorAccent}>
           {/* Readout strip */}
           <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 mb-3">
-            <HhiStat label={isEs ? 'HHI actual' : 'Current HHI'} value={formatNumber(Math.round(sd.hhi_current_year))} color={hhiColor(sd.hhi_current_year)} />
-            <HhiStat label={isEs ? 'Prom. 5 años' : '5-yr avg'} value={formatNumber(Math.round(sd.hhi_5yr_avg))} color={hhiColor(sd.hhi_5yr_avg)} />
+            <HhiStat label={isEs ? 'HHI actual' : 'Current HHI'} value={formatNumber(Math.round(sd.hhi_current_year))} color={hhiInk(sd.hhi_current_year)} />
+            <HhiStat label={isEs ? 'Prom. 5 años' : '5-yr avg'} value={formatNumber(Math.round(sd.hhi_5yr_avg))} color={hhiInk(sd.hhi_5yr_avg)} />
             <HhiStat label={isEs ? 'Proveedores' : 'Suppliers'} value={formatNumber(sd.unique_vendors_current_year)} color="var(--color-text-primary)" />
             <HhiStat
               label={isEs ? 'Tendencia' : 'Trend'}
@@ -237,7 +245,7 @@ export function InstitutionConcentration({
               <div key={h.year} className="flex items-center gap-3">
                 <span className="font-mono tabular-nums flex-shrink-0" style={{ width: 32, fontSize: 13, color: 'var(--color-text-muted)' }}>{h.year}</span>
                 <DotBar value={h.hhi} max={10000} color={hhiColor(h.hhi)} thresholds={[{ value: 4000 }]} dots={32} ariaLabel={`HHI ${h.year}: ${Math.round(h.hhi)}`} className="flex-shrink-0" />
-                <span className="font-mono tabular-nums flex-shrink-0 text-right ml-auto" style={{ width: 52, fontSize: 13, fontWeight: 600, color: hhiColor(h.hhi) }}>{formatNumber(Math.round(h.hhi))}</span>
+                <span className="font-mono tabular-nums flex-shrink-0 text-right ml-auto" style={{ width: 52, fontSize: 13, fontWeight: 600, color: hhiInk(h.hhi) }}>{formatNumber(Math.round(h.hhi))}</span>
               </div>
             ))}
           </div>

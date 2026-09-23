@@ -165,7 +165,6 @@ export function InstitutionHero({
                   fontSize: 16,
                   fontWeight: 400,
                   color: 'var(--color-text-secondary)',
-                  opacity: 0.6,
                   letterSpacing: '0.02em',
                 }}
               >
@@ -448,7 +447,7 @@ function InstitutionMetaRule({
           {siglasCopied && (
             <span
               className="font-mono ml-1"
-              style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-accent)', opacity: 0.8 }}
+              style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-accent-hover)' }}
               role="status"
             >
               {lang === 'es' ? 'Copiado' : 'Copied'}
@@ -464,7 +463,7 @@ function InstitutionMetaRule({
           {tags.map((tag, i) => (
             <span key={i}>
               {i > 0 && (
-                <span className="mx-2" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>
+                <span aria-hidden="true" className="mx-2" style={{ color: 'var(--color-text-muted)' }}>·</span>
               )}
               {tag}
             </span>
@@ -512,7 +511,7 @@ function OnThePageStrip({ sectorAccent, lang }: { sectorAccent: string; lang: 'e
             }}
           >
             {i > 0 && (
-              <span aria-hidden="true" className="-ml-1.5 mr-1" style={{ color: 'var(--color-text-muted)', opacity: 0.4 }}>·</span>
+              <span aria-hidden="true" className="-ml-1.5 mr-1" style={{ color: 'var(--color-text-muted)' }}>·</span>
             )}
             {a.numeral && (
               <span style={{ color: sectorAccent, fontWeight: 700, fontVariant: 'small-caps' }}>{a.numeral}.</span>

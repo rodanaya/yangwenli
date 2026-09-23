@@ -16,7 +16,7 @@
  * espectro-del-padron P2 § 3.3
  */
 import { useTranslation } from 'react-i18next'
-import { INSTITUTION_PILLARS, pillarLabel, pillarShort, type InstitutionPillar } from '@/lib/institution-pillars'
+import { INSTITUTION_PILLARS, pillarLabel, pillarShort, pillarDeficitInk, type InstitutionPillar } from '@/lib/institution-pillars'
 import { TIER_STYLES } from '@/lib/tiers'
 import { formatCompactMXN } from '@/lib/utils'
 
@@ -133,7 +133,7 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
               </div>
               <span
                 className="text-[12px] font-mono tabular-nums w-14 text-right shrink-0"
-                style={{ color }}
+                style={{ color: pillarDeficitInk(frac) }}
               >
                 {row.value.toFixed(0)}/{row.max}
               </span>

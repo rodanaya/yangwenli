@@ -43,7 +43,7 @@ import {
   Flag,
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS, getSectorName } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS, getSectorName } from '@/lib/constants'
 import {
   INSTITUTION_PILLARS,
   pillarLabel,
@@ -54,7 +54,8 @@ import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import { useLeagueField } from '@/hooks/useLeagueField'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { SpectralRegister, SpectralRegisterUnavailableNote } from '@/components/institution/SpectralRegister'
-import { PillarBoleta, getWeakestPillar, pillarDeficitColor } from '@/components/institution/PillarBoleta'
+import { PillarBoleta, getWeakestPillar } from '@/components/institution/PillarBoleta'
+import { pillarDeficitInk } from '@/lib/institution-pillars'
 
 // Reverse-lookup: sector display name (Spanish or English) → canonical code,
 // so we can resolve a SECTOR_COLORS swatch from the `sector_name` returned by
@@ -190,7 +191,7 @@ function WeakPillarCell({ item }: { item: InstitutionScorecardItem }) {
   const { i18n } = useTranslation('institutionleague')
   const lang = i18n.language
   const weakest = getWeakestPillar(item, lang)
-  const color = pillarDeficitColor(weakest.frac)
+  const color = pillarDeficitInk(weakest.frac)
   return (
     <span
       className="font-mono text-[13px] tabular-nums whitespace-nowrap"
@@ -258,7 +259,7 @@ function ChampionCard({
       {/* Tier — caption mono in tier color (no big italic) */}
       <span
         className="text-[13px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0 w-24 text-right"
-        style={{ color: tier.color }}
+        style={{ color: tier.ink }}
       >
         {tier.label}
       </span>
@@ -288,7 +289,7 @@ function ActaCard({
   const tier = getTier(item.grade)
   const sectorColor = getSectorColorFromName(item.sector_name)
   const weakest = getWeakestPillar(item, lang)
-  const weakestColor = pillarDeficitColor(weakest.frac)
+  const weakestColor = pillarDeficitInk(weakest.frac)
 
   const agateParts: string[] = [
     t('weakestPillarLine', { label: weakest.label, value: weakest.value.toFixed(0), max: weakest.pillar.max }),
@@ -331,7 +332,7 @@ function ActaCard({
               fontWeight: 700,
               fontStyle: 'normal',
               fontSize: '60px',
-              color: 'var(--color-risk-critical)',
+              color: RISK_TEXT_COLORS.critical,
               letterSpacing: '-0.04em',
             }}
           >
@@ -360,7 +361,7 @@ function ActaCard({
               style={{
                 backgroundColor: `color-mix(in srgb, ${tier.color} 12%, transparent)`,
                 border: `1px solid color-mix(in srgb, ${tier.color} 35%, transparent)`,
-                color: tier.color,
+                color: tier.ink,
               }}
             >
               <span
@@ -706,7 +707,7 @@ export default function InstitutionLeague() {
               fontWeight: 400,
             }}
           >
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>
+            <span style={{ color: 'var(--color-accent-hover)', fontStyle: 'normal', fontWeight: 500 }}>
               Folio·VII
             </span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
@@ -829,8 +830,8 @@ export default function InstitutionLeague() {
             className="text-[12px] font-mono font-bold uppercase tracking-[0.18em] mb-1.5"
             style={{
               color: failingCount > 0
-                ? 'var(--color-risk-critical)'
-                : 'var(--color-accent)',
+                ? RISK_TEXT_COLORS.critical
+                : 'var(--color-accent-hover)',
             }}
           >
             {t('hallazgo')}
@@ -881,7 +882,7 @@ export default function InstitutionLeague() {
         {!hasFilters && redFlagItems.length >= 3 && (
           <section aria-labelledby="redflags-heading" className="space-y-4">
             <div className="border-l-2 border-risk-critical pl-4">
-              <p className="text-[12px] font-mono font-bold tracking-[0.15em] uppercase text-risk-critical mb-1 flex items-center gap-2">
+              <p className="text-[12px] font-mono font-bold tracking-[0.15em] uppercase mb-1 flex items-center gap-2" style={{ color: RISK_TEXT_COLORS.critical }}>
                 <Flag className="h-3 w-3" aria-hidden="true" />
                 {t('redFlags.kicker')}
               </p>
@@ -1001,7 +1002,7 @@ export default function InstitutionLeague() {
                   style={{
                     borderColor: isActive ? tier.color : 'var(--color-border)',
                     backgroundColor: isActive ? `${tier.color}1f` : 'transparent',
-                    color: isActive ? tier.color : 'var(--color-text-muted)',
+                    color: isActive ? tier.ink : 'var(--color-text-muted)',
                   }}
                 >
                   <span
@@ -1171,11 +1172,13 @@ export default function InstitutionLeague() {
                     // This is the editorial promise: a reader scrolling past
                     // a Critico row cannot miss it.
                     const isCritico = item.grade === 'F' || item.grade === 'F-'
-                    const rankColor = isTopMedalist
-                      ? (rank === 1 ? '#facc15' : rank === 2 ? '#d4d4d8' : '#d97706')
-                      : isWorstPerformer || isCritico
-                        ? '#dc2626'
-                        : tier.color
+                    // Medal colours are marks (the crown only); the numeral is text.
+                    const medalColor = rank === 1 ? '#facc15' : rank === 2 ? '#d4d4d8' : '#d97706'
+                    const rankInk = isWorstPerformer || isCritico
+                      ? RISK_TEXT_COLORS.critical
+                      : isTopMedalist
+                        ? 'var(--color-text-primary)'
+                        : 'var(--color-text-secondary)'
                     const isExpanded = expandedRowId === item.institution_id
                     const panelId = `boleta-${item.institution_id}`
                     const toggleExpand = () => setExpandedRowId(isExpanded ? null : item.institution_id)
@@ -1197,13 +1200,13 @@ export default function InstitutionLeague() {
                             {isTopMedalist && (
                               <Crown
                                 className="h-3 w-3 flex-shrink-0"
-                                style={{ color: rankColor }}
+                                style={{ color: medalColor }}
                                 aria-hidden="true"
                               />
                             )}
                             <span
                               className="text-[13px] font-mono font-bold leading-none tabular-nums"
-                              style={{ color: rankColor, opacity: isWorstPerformer || isTopMedalist ? 1 : 0.65 }}
+                              style={{ color: rankInk }}
                             >
                               {rank}
                             </span>
@@ -1273,7 +1276,7 @@ export default function InstitutionLeague() {
                           <div className="flex items-baseline gap-1">
                             <span
                               className="text-[14px] font-mono tabular-nums leading-none"
-                              style={{ color: tier.color, fontWeight: isCritico ? 700 : 600, opacity: isCritico ? 1 : 0.85 }}
+                              style={{ color: tier.ink, fontWeight: isCritico ? 700 : 600 }}
                             >
                               {item.total_score.toFixed(1)}
                             </span>
@@ -1297,7 +1300,7 @@ export default function InstitutionLeague() {
                             <span
                               className="font-mono uppercase tabular-nums leading-none"
                               style={{
-                                color: tier.color,
+                                color: tier.ink,
                                 fontSize: '11px',
                                 fontWeight: 800,
                                 letterSpacing: '0.08em',

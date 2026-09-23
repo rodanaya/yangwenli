@@ -23,6 +23,7 @@
  * NOTE: this fixes only the PRESENTATION. The stored scorecard VALUES are
  * correct (verified MAX/AVG per column) — no rescore is required.
  */
+import { TIER_STYLES } from '@/lib/tiers'
 
 export type InstitutionPillarField =
   | 'pillar_openness'
@@ -65,3 +66,14 @@ export function pillarShort(p: InstitutionPillar, lang: string): string {
 
 /** Compact legend string, e.g. "A P R E I". */
 export const INSTITUTION_PILLAR_LETTERS = INSTITUTION_PILLARS.map((p) => p.letter).join(' ')
+
+/**
+ * PillarBoleta's pillarDeficitColor bands (>0.65 / >0.35 / rest) as text
+ * ink (PARALLAX D9 § Change 5). The mid band uses the Regular tier ink, not RISK_TEXT_COLORS.high (#b45309 measures
+ * 4.45 on elevated paper — the ActaCard and the expanded row sit on it).
+ */
+export function pillarDeficitInk(frac: number): string {
+  if (frac > 0.65) return TIER_STYLES.Excelente.ink
+  if (frac > 0.35) return TIER_STYLES.Regular.ink
+  return TIER_STYLES.Critico.ink
+}

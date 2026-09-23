@@ -23,8 +23,14 @@ export type TierKey =
 
 export interface TierStyle {
   key: TierKey
-  /** Hex color used for chips, dots, and accent text. */
+  /** Mark colour — strokes, bands, borders, dots, tints. Not for text. */
   color: string
+  /**
+   * Text ink — the AA twin of `color` (PARALLAX D9 § Change 5). Measured
+   * >= 4.5:1 on --color-background, --color-background-elevated and on the
+   * tier's own `bg` tint over either paper. Use for any type in tier colour.
+   */
+  ink: string
   /** Background fill (rgba with low alpha). */
   bg: string
   /** Border color (rgba). */
@@ -48,30 +54,35 @@ export const TIER_STYLES: Record<TierKey, TierStyle> = {
   Excelente: {
     key: 'Excelente',
     color: '#3d5a80',  // steel blue (deep) — measured, not a certification
+    ink: '#3d5a80',  // already AA: 6.71 page / 6.26 elevated / 5.44 tint
     bg: 'rgba(61,90,128,0.10)',
     border: 'rgba(61,90,128,0.32)',
   },
   Satisfactorio: {
     key: 'Satisfactorio',
     color: '#5e7fa8',  // steel blue (light) — one step up the cool ramp
+    ink: '#3f5f86',  // 6.25 / 5.83 / 5.25
     bg: 'rgba(94,127,168,0.10)',
     border: 'rgba(94,127,168,0.32)',
   },
   Regular: {
     key: 'Regular',
     color: '#d97706',
+    ink: '#9a4a0c',  // 5.94 / 5.54 / 4.91
     bg: 'rgba(217,119,6,0.12)',
     border: 'rgba(217,119,6,0.30)',
   },
   Deficiente: {
     key: 'Deficiente',
     color: '#ea580c',
+    ink: '#a83c0e',  // 6.01 / 5.61 / 4.90
     bg: 'rgba(234,88,12,0.12)',
     border: 'rgba(234,88,12,0.30)',
   },
   Critico: {
     key: 'Critico',
     color: '#dc2626',
+    ink: '#b91c1c',  // = RISK_TEXT_COLORS.critical — 6.15 / 5.73 / 4.80
     bg: 'rgba(220,38,38,0.12)',
     border: 'rgba(220,38,38,0.30)',
   },

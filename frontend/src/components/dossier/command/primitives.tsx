@@ -80,7 +80,7 @@ export function StatStrip({ cells }: { cells: Array<StatCell | null> }) {
             {c.value}
           </div>
           {c.sub && (
-            <div className="font-mono tabular-nums" style={{ fontSize: 13, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, opacity: c.color ? 0.85 : 1, whiteSpace: 'nowrap' }}>
+            <div className="font-mono tabular-nums" style={{ fontSize: 13, color: c.color ?? 'var(--color-text-muted)', marginTop: 4, whiteSpace: 'nowrap' }}>
               {c.sub}
             </div>
           )}

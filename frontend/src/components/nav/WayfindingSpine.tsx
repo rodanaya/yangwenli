@@ -100,7 +100,7 @@ export function WayfindingSpine({
         <Tooltip>
           <TooltipTrigger asChild>
             <span
-              className="flex items-center gap-2.5 flex-shrink-0 text-text-muted/40 cursor-default"
+              className="flex items-center gap-2.5 flex-shrink-0 text-text-muted cursor-default"
               aria-disabled="true"
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
