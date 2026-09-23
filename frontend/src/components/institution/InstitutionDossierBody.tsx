@@ -524,7 +524,7 @@ export function InstitutionRecord({
                     </div>
                   </div>
                   <DotBar value={c.total_value_mxn || 0} max={catMax} color={sectorAccent} dots={24} ariaLabel={name} className="hidden sm:block flex-shrink-0" />
-                  <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 76, fontSize: 13, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(c.total_value_mxn || 0)}</span>
+                  <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ minWidth: 90, fontSize: 13, color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>{formatCompactMXN(c.total_value_mxn || 0)}</span>
                 </div>
               )
             })}

@@ -1349,7 +1349,7 @@ export default function InstitutionLeague() {
                               variant="name"
                               fullName
                               size="sm"
-                              className="flex-[1_1_12rem] min-w-0 py-1 text-[13px] text-text-secondary hover:text-text-primary hover:underline underline-offset-2 transition-colors font-medium whitespace-normal break-words leading-tight"
+                              className="flex-[1_1_8rem] min-w-0 py-1 text-[13px] text-text-secondary hover:text-text-primary hover:underline underline-offset-2 transition-colors font-medium whitespace-normal break-words leading-tight"
                             />
                             {renderThin(item)}
                             {item.sector_name && (
@@ -1393,7 +1393,7 @@ export default function InstitutionLeague() {
 
                         {/* Money at risk — the exposure the integrity score can't see */}
                         <td className="px-2 py-0 text-right align-middle">
-                          <span className="text-text-secondary text-[13px] font-mono tabular-nums">{renderMoney(item)}</span>
+                          <span className="text-text-secondary text-[13px] font-mono tabular-nums whitespace-nowrap">{renderMoney(item)}</span>
                         </td>
                       </tr>
                       {m.isExpanded && (

@@ -549,7 +549,8 @@ function buildInstitutionLede({
 }): string {
   const name = formatEntityName('institution', institution.name, 'full')
   const spend = formatCompactMXN(institution.total_amount_mxn ?? 0)
-  const usd = formatCompactUSD(institution.total_amount_mxn ?? 0)
+  // ES reads MXN natively (CLAUDE.md currency rule): the USD aside is EN-only.
+  const usdAside = lang === 'es' ? '' : ` (≈${formatCompactUSD(institution.total_amount_mxn ?? 0)})`
   const contracts = formatNumber(institution.total_contracts ?? 0)
   const vendors = institution.vendor_count ? formatNumber(institution.vendor_count) : null
   const hr = Math.round(institution.high_risk_pct ?? institution.high_risk_percentage ?? 0)
@@ -558,11 +559,11 @@ function buildInstitutionLede({
   // Frame 1: high HR% — flag the institution as a procurement-pathology surface
   if (hr >= 20 && vendors) {
     return lang === 'es'
-      ? `${name} concentra ${spend} (≈${usd}) repartidos en ${contracts} contratos entre ${vendors} proveedores. ${hr}% de esos contratos fueron marcados de alto riesgo por el modelo, ${da}% adjudicados sin licitación pública${sectorName ? ` — dentro del sector ${sectorName}` : ''}.`
-      : `${name} concentrates ${spend} (≈${usd}) spread across ${contracts} contracts among ${vendors} suppliers. ${hr}% of those contracts were flagged high-risk by the model, ${da}% awarded without an open bid${sectorName ? ` — within the ${sectorName} sector` : ''}.`
+      ? `${name} concentra ${spend}${usdAside} repartidos en ${contracts} contratos entre ${vendors} proveedores. ${hr}% de esos contratos fueron marcados de alto riesgo por el modelo, ${da}% adjudicados sin licitación pública${sectorName ? ` — dentro del sector ${sectorName}` : ''}.`
+      : `${name} concentrates ${spend}${usdAside} spread across ${contracts} contracts among ${vendors} suppliers. ${hr}% of those contracts were flagged high-risk by the model, ${da}% awarded without an open bid${sectorName ? ` — within the ${sectorName} sector` : ''}.`
   }
   // Frame 2: standard
   return lang === 'es'
-    ? `${name} ha contratado ${spend} (≈${usd}) en ${contracts} contratos${vendors ? ` con ${vendors} proveedores` : ''}${sectorName ? `, dentro del sector ${sectorName}` : ''}. ${da}% adjudicación directa.`
-    : `${name} has contracted ${spend} (≈${usd}) across ${contracts} contracts${vendors ? ` with ${vendors} suppliers` : ''}${sectorName ? `, within the ${sectorName} sector` : ''}. ${da}% direct-award.`
+    ? `${name} ha contratado ${spend}${usdAside} en ${contracts} contratos${vendors ? ` con ${vendors} proveedores` : ''}${sectorName ? `, dentro del sector ${sectorName}` : ''}. ${da}% adjudicación directa.`
+    : `${name} has contracted ${spend}${usdAside} across ${contracts} contracts${vendors ? ` with ${vendors} suppliers` : ''}${sectorName ? `, within the ${sectorName} sector` : ''}. ${da}% direct-award.`
 }
