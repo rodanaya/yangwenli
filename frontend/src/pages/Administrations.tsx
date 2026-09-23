@@ -20,7 +20,7 @@
  *   compare tool (collapsed) · credibility line (the shell colophon is the footer)
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useQueryStates, parseAsStringLiteral } from 'nuqs'
 import { AdminSummaryCard } from '@/components/administrations/AdminSummaryCard'
 import { ComparePeriodView } from '@/components/administrations/ComparePeriodView'
@@ -37,6 +37,7 @@ import {
   ADMIN_DISPLAY_NAMES,
   DATA_LAST_YEAR,
   PARTY_COLORS,
+  compactCount,
   termRange,
 } from '@/components/administrations/data'
 import type {
@@ -47,7 +48,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber } from '@/lib/utils'
-import { SECTORS, CURRENT_MODEL_VERSION, PARTIAL_YEAR_NOTE } from '@/lib/constants'
+import { SECTORS, CURRENT_MODEL_VERSION, PARTIAL_YEAR_NOTE, RISK_TEXT_COLORS } from '@/lib/constants'
 import { analysisApi, officialsApi } from '@/api/client'
 import type { YearOverYearChange } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -158,6 +159,18 @@ const ADMIN_SLUGS = ['fox', 'calderon', 'pena-nieto', 'amlo', 'sheinbaum'] as co
  * `adminTag`/`tagColor` bind the chapter to the selected administration
  * (M7c cohesion: every per-admin chapter announces WHOSE file it belongs to).
  */
+/** § I panel row: decorative sparkline + its first→last reading in AA-safe ink. */
+function SparkRow({ children, reading, ink }: { children: ReactNode; reading: string; ink: string }) {
+  return (
+    <div className="flex items-center gap-2 w-full">
+      <div className="flex-1 min-w-0">{children}</div>
+      <span className="flex-shrink-0 text-[13px] font-mono tabular-nums whitespace-nowrap" style={{ color: ink }}>
+        {reading}
+      </span>
+    </div>
+  )
+}
+
 function ChapterKicker({
   numeral, es, en, isEs, adminTag, tagColor,
 }: {
@@ -592,8 +605,8 @@ export default function Administrations() {
               const renderDelta = (delta: number, worseWhenPositive: boolean) => {
                 const up = delta >= 0
                 const color = worseWhenPositive && up
-                  ? tokenColor('risk-critical')
-                  : tokenColor('text-muted')
+                  ? RISK_TEXT_COLORS.critical
+                  : 'var(--color-text-muted)'
                 return (
                   <span className="text-[12px] font-mono tabular-nums whitespace-nowrap" style={{ color }}>
                     {up ? '▲ +' : '▼ −'}{Math.abs(delta).toFixed(1)}
@@ -628,21 +641,16 @@ export default function Administrations() {
                           <span className="text-[12px] font-mono text-text-muted/70 tabular-nums whitespace-nowrap">{yrSpan}</span>
                         </div>
                         <div className="flex items-baseline gap-2">
-                          <span className="font-serif font-extrabold tabular-nums leading-none text-[24px]" style={{ color: tokenColor('risk-critical') }}>
+                          <span className="font-serif font-extrabold tabular-nums leading-none text-[24px]" style={{ color: RISK_TEXT_COLORS.critical }}>
                             {formatValue(daAvg, 'pct')}
                           </span>
                           <span className="text-[12px] font-mono text-text-muted">{isEs ? 'prom. sexenio' : 'term avg'}</span>
                           {renderDelta(daDelta, true)}
                         </div>
                         {multiYear && (
-                          <EditorialSparkline
-                            data={years}
-                            yKey="direct_award_pct"
-                            colorToken="risk-critical"
-                            kind="area"
-                            height={32}
-                            lastValue={`${formatValue(first.direct_award_pct, 'pct')}→${formatValue(last.direct_award_pct, 'pct')}`}
-                          />
+                          <SparkRow ink={RISK_TEXT_COLORS.critical} reading={`${formatValue(first.direct_award_pct, 'pct')}→${formatValue(last.direct_award_pct, 'pct')}`}>
+                            <EditorialSparkline data={years} yKey="direct_award_pct" colorToken="risk-critical" kind="area" height={32} decorative />
+                          </SparkRow>
                         )}
                         <p className="text-[12px] font-mono text-text-muted">
                           {isEs ? 'vs. nacional ' : 'vs. national '}{allTimeAvg.da.toFixed(1)}%
@@ -664,14 +672,9 @@ export default function Administrations() {
                           {renderDelta(hrDelta, true)}
                         </div>
                         {multiYear && (
-                          <EditorialSparkline
-                            data={years}
-                            yKey="high_risk_pct"
-                            colorToken="risk-medium"
-                            kind="line"
-                            height={32}
-                            lastValue={`${formatValue(first.high_risk_pct, 'pct')}→${formatValue(last.high_risk_pct, 'pct')}`}
-                          />
+                          <SparkRow ink={RISK_TEXT_COLORS.medium} reading={`${formatValue(first.high_risk_pct, 'pct')}→${formatValue(last.high_risk_pct, 'pct')}`}>
+                            <EditorialSparkline data={years} yKey="high_risk_pct" colorToken="risk-medium" kind="line" height={32} decorative />
+                          </SparkRow>
                         )}
                         <p className="text-[12px] font-mono text-text-muted">
                           {isEs ? 'máx ' : 'peak '}{worstYear} · <span style={{ color: tokenColor('risk-medium'), fontWeight: 700 }}>{formatValue(maxHR, 'pct')}</span>
@@ -686,14 +689,9 @@ export default function Administrations() {
                       </span>
                       <div className="flex-1 min-w-0">
                         {multiYear ? (
-                          <EditorialSparkline
-                            data={years}
-                            yKey="single_bid_pct"
-                            colorToken="text-muted"
-                            kind="line"
-                            height={24}
-                            lastValue={`${formatValue(first.single_bid_pct, 'pct')}→${formatValue(last.single_bid_pct, 'pct')}`}
-                          />
+                          <SparkRow ink="var(--color-text-muted)" reading={`${formatValue(first.single_bid_pct, 'pct')}→${formatValue(last.single_bid_pct, 'pct')}`}>
+                            <EditorialSparkline data={years} yKey="single_bid_pct" colorToken="text-muted" kind="line" height={24} decorative />
+                          </SparkRow>
                         ) : (
                           <span className="text-[13px] font-mono text-text-muted tabular-nums">{formatValue(last.single_bid_pct, 'pct')}</span>
                         )}
@@ -788,11 +786,13 @@ export default function Administrations() {
                         const isPeak = yr.year === peak.year
                         return (
                           <div key={yr.year} className={cn(barCol, 'flex flex-col items-center justify-end h-full')}>
+                            {/* 11px floor: the full count from sm, a compact count in the phone's ~44px columns. */}
                             <span
-                              className="text-[8.5px] font-mono tabular-nums mb-1 whitespace-nowrap"
-                              style={{ color: isPeak ? selectedMeta.color : 'var(--color-text-muted)', fontWeight: isPeak ? 700 : 400 }}
+                              className="text-[11px] font-mono tabular-nums mb-1 whitespace-nowrap"
+                              style={{ color: isPeak ? 'var(--color-text-primary)' : 'var(--color-text-muted)', fontWeight: isPeak ? 700 : 400 }}
                             >
-                              {formatNumber(yr.contracts)}
+                              <span className="hidden sm:inline">{formatNumber(yr.contracts)}</span>
+                              <span className="sm:hidden">{compactCount(yr.contracts, isEs)}</span>
                             </span>
                             <div
                               className="w-full rounded-t-sm"
@@ -943,7 +943,7 @@ export default function Administrations() {
                         )
                       })}
                     </div>
-                    <p className="text-[12px] font-mono text-text-muted/60 mt-1.5">
+                    <p className="text-[12px] font-mono text-text-muted mt-1.5">
                       {isEs ? '1 ● ≈ 5% del sector líder' : '1 ● ≈ 5% of the leading sector'}
                     </p>
                   </div>

@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
+import { contractCount } from './data'
 import type { AdminInstitutionBuyer } from '@/api/types'
 
 // ── Token-or-hex guard (verbatim copy from AdminVendorBreakdown lines 53–56) ─
@@ -213,9 +214,8 @@ export function AdminBuyersSection({
                 <span
                   className={[
                     'w-[1.6rem] shrink-0 text-right text-[12px] font-mono tabular-nums',
-                    isTopThree ? 'font-semibold' : 'text-text-muted/70',
+                    isTopThree ? 'font-semibold text-text-primary' : 'text-text-muted',
                   ].join(' ')}
-                  style={isTopThree ? { color: eraColorResolved } : undefined}
                 >
                   {i + 1}
                 </span>
@@ -226,7 +226,7 @@ export function AdminBuyersSection({
                     type="institution"
                     id={inst.institution_id}
                     name={displayName}
-                    size="xs"
+                    size="sm"
                     fullName
                     sectorCode={inst.top_sector_code ?? undefined}
                     className="w-auto"
@@ -258,16 +258,15 @@ export function AdminBuyersSection({
                   )}
                   {inst.is_federal === 1 && (
                     <span
-                      className="text-[10px] uppercase tracking-[0.14em] text-text-muted/70 border border-border/50 rounded-sm px-1 leading-tight shrink-0"
+                      className="text-[11px] uppercase tracking-[0.14em] text-text-muted border border-border/50 rounded-sm px-1 leading-tight shrink-0"
                       title={isEs ? 'Dependencia federal' : 'Federal entity'}
                     >
                       FED
                     </span>
                   )}
-                  <span className="truncate">
-                    {inst.contracts.toLocaleString()}{' '}
-                    {isEs ? 'contratos' : 'contracts'}
-                    {' · '}
+                  <span className="break-words">
+                    {contractCount(inst.contracts, isEs)}
+                    <span aria-hidden="true">{' · '}</span>
                     {inst.direct_award_pct.toFixed(0)}%{' '}
                     {isEs ? 'adj. dir.' : 'direct'}
                   </span>
@@ -323,20 +322,20 @@ export function AdminBuyersSection({
           </span>
         </div>
       </div>
-      <p className="text-[13px] font-mono text-text-muted/70">
+      <p className="text-[13px] font-mono text-text-muted">
         {institutionCount.toLocaleString()}{' '}
         {isEs ? 'dependencias compradoras en el periodo' : 'buying agencies in the term'}
       </p>
 
       {/* Footer legend */}
-      <p className="text-[13px] font-mono text-text-muted/70 mt-2">
+      <p className="text-[13px] font-mono text-text-muted mt-2">
         {isEs
           ? '● = sector dominante · FED = dependencia federal · barra = % del gasto (escala: líder)'
           : '● = agency top sector · FED = federal agency · bar = % of spend (scaled to leader)'}
       </p>
 
       {/* Source attribution */}
-      <p className="text-[13px] font-mono text-text-muted/70 mt-1">
+      <p className="text-[13px] font-mono text-text-muted mt-1">
         {selectedDisplay}
       </p>
     </div>

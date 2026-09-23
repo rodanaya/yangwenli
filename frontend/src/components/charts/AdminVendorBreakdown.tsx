@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { contractCount } from '@/components/administrations/data'
 import type { ColorToken } from '@/components/charts/editorial'
 
 interface AdminVendorEntry {
@@ -27,7 +28,8 @@ interface Props {
 }
 
 export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
-  const { t } = useTranslation('administrations')
+  const { t, i18n } = useTranslation('administrations')
+  const isEs = i18n.language?.startsWith('es') ?? false
 
   if (loading) {
     return (
@@ -77,12 +79,12 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
                   className="min-w-0"
                 />
               ) : (
-                <span className="text-xs font-medium text-text-primary truncate block" title={v.name}>
+                <span className="text-xs font-medium text-text-primary break-words block">
                   {formattedName}
                 </span>
               )}
               <div className="text-[13px] text-text-muted mt-0.5">
-                <span className="font-mono tabular-nums">{v.contracts.toLocaleString()}</span> {t('vendorSection.contracts')} &middot; <span className="font-mono tabular-nums">{v.risk_pct.toFixed(0)}%</span> {t('vendorSection.riskScore')}
+                <span className="font-mono tabular-nums">{contractCount(v.contracts, isEs)}</span> <span aria-hidden="true">&middot;</span> <span className="font-mono tabular-nums">{v.risk_pct.toFixed(0)}%</span> {t('vendorSection.riskScore')}
               </div>
             </div>
             <DotBar

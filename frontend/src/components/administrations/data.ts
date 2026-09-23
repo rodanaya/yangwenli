@@ -33,6 +33,20 @@ export const ADMINISTRATIONS: readonly AdminMeta[] = [
   { name: 'Sheinbaum',  fullName: 'Claudia Sheinbaum Pardo',    ...term('Sheinbaum'),  color: '#14b8a6', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
 ]
 
+/** "1 contract" / "12,345 contracts" (ES "1 contrato" / "12,345 contratos"). */
+export function contractCount(n: number, isEs: boolean): string {
+  const num = n.toLocaleString(isEs ? 'es-MX' : 'en-US')
+  if (isEs) return `${num} ${n === 1 ? 'contrato' : 'contratos'}`
+  return `${num} ${n === 1 ? 'contract' : 'contracts'}`
+}
+
+/** Compact count for tight columns: 217,139 -> "217K" (ES "217 mil"). */
+export function compactCount(n: number, isEs: boolean): string {
+  if (n < 1000) return String(n)
+  const k = n >= 100_000 ? Math.round(n / 1000) : Math.round(n / 100) / 10
+  return isEs ? `${k.toLocaleString('es-MX')} mil` : `${k}K`
+}
+
 /**
  * Printed range of a term's data years: "2019–2024", short "2019–24"; a term
  * still running past the data horizon prints open-ended ("2025–").

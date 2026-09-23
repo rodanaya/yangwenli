@@ -15,6 +15,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { FileText, AlertTriangle, Shield, Activity, ExternalLink } from 'lucide-react'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
 import { DOSSIER_DATA, SEVERITY_COLORS, SCANDAL_YEARS } from './data'
 import type { AdminName } from './types'
 
@@ -44,6 +45,20 @@ const EVENT_TYPE_COLOR: Record<EventType, string> = {
   scandal: '#f87171',
   audit: '#fbbf24',
   crisis: '#fb923c',
+}
+
+/** Type ink (PARALLAX D8 § Change 5): the vivid hexes above stay on the marks
+ *  (dot, chip tint); printed text takes the AA-safe risk text ramp. */
+const EVENT_TYPE_TEXT: Record<EventType, string> = {
+  reform: 'var(--color-text-secondary)',
+  scandal: RISK_TEXT_COLORS.critical,
+  audit: RISK_TEXT_COLORS.medium,
+  crisis: RISK_TEXT_COLORS.high,
+}
+const SEVERITY_TEXT: Record<Severity, string> = {
+  critical: RISK_TEXT_COLORS.critical,
+  high: RISK_TEXT_COLORS.high,
+  medium: RISK_TEXT_COLORS.medium,
 }
 
 const EVENT_TYPE_ICON: Record<EventType, typeof FileText> = {
@@ -122,7 +137,8 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
         key={adminName}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+
       >
         <p className="py-8 text-center text-xs text-text-secondary">{t('eventsNoData')}</p>
         {groundTruthNote}
@@ -152,6 +168,7 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
             ? t(`dossier.severityLabels.${entry.severity}`)
             : t(`eventTypes.${entry.type}`)
           const chipColor = markerColor
+          const inkColor = isScandal ? SEVERITY_TEXT[entry.severity] : EVENT_TYPE_TEXT[entry.type]
 
           const EventIcon = isScandal ? null : EVENT_TYPE_ICON[entry.type]
 
@@ -176,20 +193,20 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
               {/* Year */}
               <span
                 className="shrink-0 w-10 pt-px font-mono text-[12px] font-bold tabular-nums"
-                style={{ color: markerColor }}
+                style={{ color: inkColor }}
               >
                 {yearLabel}
               </span>
 
               {/* Chip */}
               <span
-                className="shrink-0 mt-px inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wide leading-none"
+                className="shrink-0 mt-px inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wide leading-none"
                 style={{
-                  color: chipColor,
+                  color: inkColor,
                   backgroundColor: `${chipColor}33`,
                 }}
               >
-                {EventIcon ? <EventIcon size={8} strokeWidth={2.5} aria-hidden /> : null}
+                {EventIcon ? <EventIcon size={10} strokeWidth={2.5} aria-hidden /> : null}
                 {chipLabel}
               </span>
 
@@ -207,7 +224,7 @@ export function ExpedienteSpine(props: ExpedienteSpineProps): JSX.Element {
                     {' '}
                     <Link
                       to={`/cases/${entry.caseId}`}
-                      className="inline-flex items-center gap-0.5 align-baseline text-[13px] font-mono text-accent hover:underline"
+                      className="inline-flex items-center gap-0.5 align-baseline text-[13px] font-mono text-accent hover:underline rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                     >
                       <ExternalLink size={9} aria-hidden />
                       {t('dossier.linkToCases')}

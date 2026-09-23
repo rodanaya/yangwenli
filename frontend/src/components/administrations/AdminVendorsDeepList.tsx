@@ -20,6 +20,7 @@ import { DotBar } from '@/components/ui/DotBar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { formatCompactMXN } from '@/lib/utils'
+import { contractCount } from './data'
 import type { AdminVendorDeep } from '@/api/types'
 
 // ── Token-or-hex guard (verbatim copy from AdminVendorBreakdown lines 53–56) ─
@@ -213,7 +214,7 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
       <div className="flex items-center justify-between gap-3 py-2 flex-wrap">
         <span className="text-[12px] font-mono text-text-muted tabular-nums">
           {vendorCount.toLocaleString()}{' '}
-          {isEs ? 'proveedores activos' : 'active vendors'} ·{' '}
+          {isEs ? 'proveedores activos' : 'active vendors'}<span aria-hidden="true"> ·</span>{' '}
           {vendors.length}{' '}
           {isEs ? 'mostrados' : 'shown'}
         </span>
@@ -231,13 +232,13 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
                 onClick={() => setSortKey(tab.key)}
                 aria-pressed={sortKey === tab.key}
                 className={[
-                  'px-2 py-1 text-[12px] font-mono uppercase tracking-[0.12em] transition-colors',
+                  'px-2 py-1 min-h-6 text-[12px] font-mono uppercase tracking-[0.12em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
                   idx > 0 ? 'border-l border-border/40' : '',
                   sortKey === tab.key
-                    ? 'bg-background-elevated font-semibold'
+                    ? 'bg-background-elevated font-semibold text-text-primary'
                     : 'text-text-muted hover:bg-background-elevated/40',
                 ].join(' ')}
-                style={sortKey === tab.key ? { color: eraColorResolved } : undefined}
+                style={sortKey === tab.key ? { boxShadow: `inset 0 -2px 0 ${eraColorResolved}` } : undefined}
               >
                 {isEs ? tab.es : tab.en}
               </button>
@@ -268,9 +269,8 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
                 <span
                   className={[
                     'w-[1.6rem] text-right text-[12px] font-mono tabular-nums',
-                    isTopThree ? 'font-semibold' : 'text-text-muted/70',
+                    isTopThree ? 'font-semibold text-text-primary' : 'text-text-muted',
                   ].join(' ')}
-                  style={isTopThree ? { color: eraColorResolved } : undefined}
                 >
                   {i + 1}
                 </span>
@@ -281,19 +281,18 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
                     type="vendor"
                     id={v.vendor_id}
                     name={v.vendor_name}
-                    size="xs"
+                    size="sm"
                     fullName
                     riskScore={v.avg_risk ?? undefined}
                     hideIcon={false}
                     className="min-w-0"
                   />
                   <div className="text-[12px] text-text-muted mt-0.5 font-mono tabular-nums">
-                    {v.contracts.toLocaleString()}{' '}
-                    {isEs ? 'contratos' : 'contracts'}
-                    {' · '}
+                    {contractCount(v.contracts, isEs)}
+                    <span aria-hidden="true">{' · '}</span>
                     {v.high_risk_pct.toFixed(0)}%{' '}
                     {isEs ? 'alto riesgo' : 'high risk'}
-                    {' · '}
+                    <span aria-hidden="true">{' · '}</span>
                     {v.direct_award_pct.toFixed(0)}%{' '}
                     {isEs ? 'adj. dir.' : 'direct'}
                   </div>
@@ -339,7 +338,7 @@ export function AdminVendorsDeepList({ era, eraColor, isEs, selectedDisplay }: P
       </div>
 
       {/* Footer legend */}
-      <p className="text-[13px] font-mono text-text-muted/70 mt-2 leading-relaxed">
+      <p className="text-[13px] font-mono text-text-muted mt-2 leading-relaxed">
         {isEs
           ? `Participación = % del gasto del sexenio (${formatCompactMXN(termTotalMxn)} total, atípicos excluidos). La trayectoria autoescala por proveedor — compare la forma, no la altura entre filas.`
           : `Share = % of term spend (${formatCompactMXN(termTotalMxn)} total, outliers excluded). The trajectory auto-scales per vendor — compare the shape, not height across rows.`}
