@@ -212,7 +212,7 @@ function LedgerRowItem({
 
         {/* Intensity dot + score (size-independent) */}
         <span
-          className="hidden sm:flex shrink-0 w-[92px] items-center justify-end gap-1.5"
+          className="hidden sm:flex shrink-0 w-32 items-center justify-end gap-1.5"
           role="img"
           aria-label={lang === 'es' ? `Intensidad de riesgo ${intensity.toFixed(2)}` : `Risk intensity ${intensity.toFixed(2)}`}
         >
@@ -370,7 +370,7 @@ export function ExposureLedger({
             {lang === 'es' ? 'AD · UE' : 'DA · EU'} ≤{EU_DA_LINE.toFixed(0)}%
           </span>
           {sortHeader('var', 'VaR', 'w-20 sm:w-32')}
-          {sortHeader('intensity', lang === 'es' ? 'Intensidad' : 'Intensity', 'w-[92px]')}
+          {sortHeader('intensity', lang === 'es' ? 'Intensidad' : 'Intensity', 'w-32 whitespace-nowrap')}
           <span className="hidden lg:inline font-mono w-28 text-right shrink-0" style={KICKER_STYLE} aria-hidden="true">
             {lang === 'es' ? 'Trayectoria' : 'Trajectory'}
           </span>

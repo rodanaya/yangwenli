@@ -183,7 +183,7 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
         left: anchorX + 12,
         top: anchorY - 20,
         minWidth: 220,
-        maxWidth: 300,
+        maxWidth: 360,
       }}
     >
       {/* Category */}
@@ -192,9 +192,10 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
       </div>
 
       {/* #1 vendor */}
-      <div className="flex items-center gap-2 mb-1.5">
+      {/* Full names, wrapped — a vendor name never truncates here (D7b judge J4). */}
+      <div className="flex items-start gap-2 mb-1.5">
         <span
-          className="font-bold text-[12px] font-mono uppercase tracking-wide"
+          className="font-bold text-[12px] font-mono uppercase tracking-wide shrink-0"
           style={{ color: textColor }}
         >
           #1
@@ -205,6 +206,8 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
           name={row.top1.vendor_name}
           size="xs"
           hideIcon
+          fullName
+          className="min-w-0 flex-1"
         />
         <span className="ml-auto font-mono tabular-nums font-bold" style={{ color: textColor }}>
           {row.top1.market_share_pct.toFixed(1)}%
@@ -217,8 +220,8 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
       {/* #2 vendor */}
       {row.top2 && (
         <>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="font-bold text-[12px] font-mono uppercase tracking-wide text-text-muted">
+          <div className="flex items-start gap-2 mb-1.5">
+            <span className="font-bold text-[12px] font-mono uppercase tracking-wide text-text-muted shrink-0">
               #2
             </span>
             <EntityIdentityChip
@@ -227,6 +230,8 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
               name={row.top2.vendor_name}
               size="xs"
               hideIcon
+              fullName
+              className="min-w-0 flex-1"
             />
             <span className="ml-auto font-mono tabular-nums text-text-secondary">
               {row.top2.market_share_pct.toFixed(1)}%

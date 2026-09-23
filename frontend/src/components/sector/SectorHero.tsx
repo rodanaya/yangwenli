@@ -141,11 +141,12 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 className="font-mono"
                 style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}
               >
-                <span>{formatNumber(stats.total_contracts)} {lang === 'es' ? 'contratos' : 'contracts'}</span>
-                <span className="mx-2" aria-hidden="true" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>
-                <span>{Math.round(stats.direct_award_pct)}% {lang === 'es' ? 'adj. directa' : 'direct award'}</span>
-                <span className="mx-2" aria-hidden="true" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>
-                <span>{Math.round(stats.single_bid_pct)}% {lang === 'es' ? 'único postor' : 'single bid'}</span>
+                {/* Each "N label" unit is one nowrap span: a value never breaks (D7b judge J1). */}
+                <span className="whitespace-nowrap">{formatNumber(stats.total_contracts)} {lang === 'es' ? 'contratos' : 'contracts'}</span>
+                <span className="mx-2" aria-hidden="true" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>{' '}
+                <span className="whitespace-nowrap">{Math.round(stats.direct_award_pct)}% {lang === 'es' ? 'adj. directa' : 'direct award'}</span>
+                <span className="mx-2" aria-hidden="true" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>{' '}
+                <span className="whitespace-nowrap">{Math.round(stats.single_bid_pct)}% {lang === 'es' ? 'único postor' : 'single bid'}</span>
               </div>
             </div>
           </div>
@@ -210,7 +211,11 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 className="font-mono text-center mt-1"
                 style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}
               >
-                {lang === 'es' ? `riesgo prom. ${Math.round(avgRisk * 100)} de 100` : `avg risk ${Math.round(avgRisk * 100)} of 100`}
+                {/* label · value+unit (one nowrap unit) · band — D7b judge J2 */}
+                <span className="block">{lang === 'es' ? 'riesgo prom.' : 'avg risk'}</span>
+                <span className="block whitespace-nowrap">
+                  {lang === 'es' ? `${Math.round(avgRisk * 100)} de 100` : `${Math.round(avgRisk * 100)} of 100`}
+                </span>
                 <span className="block" style={{ fontSize: 11 }}>
                   {lang === 'es' ? `banda ${BAND_ES[riskLevel]}` : `${riskLevel} band`}
                 </span>
@@ -435,7 +440,9 @@ function ExposureLedger({
       {(hiCritMxn != null || critMxn != null) && (
         <div
           className="mt-4 grid gap-x-6 gap-y-3"
-          style={{ gridTemplateColumns: hiCritMxn != null && critMxn != null ? '1fr 1fr' : '1fr' }}
+          // Spanish amounts ("1.7 billones MXN") do not fit a half column at any
+          // width, and an amount never breaks: ES stacks the two cells (D7b judge J1).
+          style={{ gridTemplateColumns: hiCritMxn != null && critMxn != null && lang === 'en' ? '1fr 1fr' : '1fr' }}
         >
           {hiCritMxn != null && (
             <ExposureStat
@@ -545,7 +552,7 @@ function ExposureStat({
   return (
     <div className="min-w-0">
       <div
-        className="tabular-nums"
+        className="tabular-nums whitespace-nowrap"
         style={{
           fontFamily: '"Playfair Display", Georgia, serif',
           fontStyle: 'normal',

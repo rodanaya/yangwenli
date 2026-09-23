@@ -114,7 +114,8 @@ export function formatValue(
   if (v === null || v === undefined || Number.isNaN(v)) return '—'
   switch (fmt) {
     case 'pct':
-      return `${v.toFixed(1)}%`
+      // Integer values (axis ticks 0/50/100) print without ".0"; others keep one decimal.
+      return Number.isInteger(v) ? `${v}%` : `${v.toFixed(1)}%`
     case 'mxn-compact':
       if (Math.abs(v) >= 1e12) return `${(v / 1e12).toFixed(1)}T`
       if (Math.abs(v) >= 1e9) return `${(v / 1e9).toFixed(1)}B`
