@@ -14,12 +14,14 @@
  *
  * Spec: institutions_fable_spec.md §3.1(I) · §4-P1.
  */
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type CSSProperties } from 'react'
+import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { TIER_STYLES, gradeToTierKey, type TierKey } from '@/lib/tiers'
 import { formatEntityName } from '@/lib/entity/format'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { placeLabels, fitLabel, type LabelBox } from '@/lib/plateLabels'
+import { useMeasuredWidth, useFontsReady } from '@/hooks/useMeasuredWidth'
 import type { LeagueFieldItem } from '@/hooks/useLeagueField'
 
 interface SpectralRegisterProps {
@@ -36,6 +38,16 @@ const PAD_R = 28
 const BASELINE_Y = HEIGHT - 58 // room for the axis + band-name row below
 const MAX_STROKE_H = 64
 const MOBILE_BREAK = 640
+
+// Callout labels are HTML over the svg (PARALLAX D9 § Change 4 — "HTML owns
+// glyphs, SVG owns geometry"): measured with canvas in the face they render
+// in, seated by placeLabels on real boxes, never a per-character estimate.
+const LABEL_FONT = '11px "IBM Plex Mono", "JetBrains Mono", monospace'
+const LABEL_FACES = ['11px "IBM Plex Mono"', '11px "EB Garamond"'] as const
+const LABEL_LINE = 14
+const LABEL_PAD = 2 // px of paper around the text
+const LEADER_GAP = 8 // px between a stroke's top and its label
+const NOTE_FONT = '11px "EB Garamond", Georgia, serif'
 
 // The plate's 4 bands — boundaries at 40/60/80 only. There is no drawn
 // Critico band: under the reformed absolute grading no federal buyer
@@ -55,28 +67,27 @@ interface PlacedStroke extends LeagueFieldItem {
   color: string
 }
 
+interface Callout {
+  stroke: PlacedStroke
+  nameLines: string[]
+  amount: string
+  box: LabelBox
+}
+
 export function SpectralRegister({ items, median, totalScored, failingCount }: SpectralRegisterProps) {
   const { t, i18n } = useTranslation('institutionleague')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(960)
+  const width = useMeasuredWidth(containerRef)
+  const fontsReady = useFontsReady(LABEL_FACES)
   const [hoverId, setHoverId] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width
-      if (w && w > 0) setWidth(w)
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
+  const emptyNote = t('plate.emptyExcelente')
 
   const isMobile = width < MOBILE_BREAK
 
   const layout = useMemo(() => {
-    if (!items.length) return null
+    if (!items.length || width <= 0) return null
 
     const scores = items.map((i) => i.total_score)
     const domainMin = Math.floor(Math.min(...scores)) - 2
@@ -94,29 +105,51 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
       return { ...it, x: xScale(it.total_score), h, tierKey, color: TIER_STYLES[tierKey].color }
     })
 
-    // Named-outlier callouts (NYT Upshot mechanic): top by exposure, greedy
-    // top-down de-collision (AABB), capped at 8 (6 on mobile).
+    // Named-outlier callouts (NYT Upshot mechanic): top by exposure, capped
+    // at 8 (3 on phones). Full names on up to two lines (a wider column is
+    // tried before a name is skipped), the amount on its own line; each label
+    // tries three heights above its stroke before it gives way.
     const cap = isMobile ? 3 : 8
     const candidates = [...strokes]
       .filter((s) => (s.money_at_risk_mxn ?? 0) > 0)
       .sort((a, b) => (b.money_at_risk_mxn ?? 0) - (a.money_at_risk_mxn ?? 0))
       .slice(0, 12)
-    const CH_W = isMobile ? 5.4 : 5.2
-    const LABEL_H = 12
-    const PAD_BOX = 3
-    const placedBoxes: { x0: number; x1: number; y0: number; y1: number }[] = []
-    const annotations: { stroke: PlacedStroke; label: string }[] = []
+    const columns = isMobile ? [150, 200] : [200, 260]
+    const bounds: LabelBox = { x0: 0, y0: isMobile ? 2 : 20, x1: width, y1: BASELINE_Y - 2 }
+    const taken: LabelBox[] = []
+    // The empty-Excellent note is svg text the callouts must not cover.
+    if (!strokes.some((s) => s.tierKey === 'Excelente')) {
+      const noteRight = xScale(Math.min(100, domainMax)) - 8
+      const noteY = BASELINE_Y / 2 + 6
+      const noteW = fitLabel(emptyNote, NOTE_FONT, 2000, { maxLines: 1 })?.width ?? emptyNote.length * 6
+      taken.push({ x0: noteRight - noteW - 4, y0: noteY - 12, x1: noteRight + 2, y1: noteY + 4 })
+    }
+    const callouts: Callout[] = []
     for (const s of candidates) {
-      if (annotations.length >= cap) break
-      const label = `${formatEntityName('institution', s.institution_name, 'sm')} · ${formatCompactMXN(s.money_at_risk_mxn ?? 0)}`
-      const w = label.length * CH_W
-      const cx = s.x
-      const cy = BASELINE_Y - s.h - 10
-      const box = { x0: cx - w / 2 - PAD_BOX, x1: cx + w / 2 + PAD_BOX, y0: cy - LABEL_H, y1: cy + PAD_BOX }
-      const clear = placedBoxes.every((b) => box.x1 < b.x0 || box.x0 > b.x1 || box.y1 < b.y0 || box.y0 > b.y1)
-      if (clear) {
-        placedBoxes.push(box)
-        annotations.push({ stroke: s, label })
+      if (callouts.length >= cap) break
+      const name = formatEntityName('institution', s.institution_name, 'full')
+      const amount = formatCompactMXN(s.money_at_risk_mxn ?? 0)
+      let fitted = null
+      for (const col of columns) {
+        fitted = fitLabel(name, LABEL_FONT, col, { maxLines: 2, lineHeight: LABEL_LINE })
+        if (fitted) break
+      }
+      if (!fitted) continue
+      const amountW = fitLabel(amount, LABEL_FONT, 400, { maxLines: 1, lineHeight: LABEL_LINE })?.width ?? amount.length * 7
+      const w = Math.max(fitted.width, amountW) + LABEL_PAD * 2
+      const h = fitted.height + LABEL_LINE + LABEL_PAD * 2
+      const top = BASELINE_Y - s.h
+      for (const lift of [0, h + 6, 2 * (h + 6)]) {
+        const [seat] = placeLabels(
+          [{ id: s.institution_id, x: s.x, y: top, width: w, height: h, above: LEADER_GAP + lift }],
+          taken,
+          bounds,
+        )
+        if (seat) {
+          taken.push(seat.box)
+          callouts.push({ stroke: s, nameLines: fitted.lines, amount, box: seat.box })
+          break
+        }
       }
     }
 
@@ -124,8 +157,10 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
     // the empty-band annotation.
     const excelenteCount = strokes.filter((s) => s.tierKey === 'Excelente').length
 
-    return { strokes, annotations, domainMin, domainMax, xScale, maxExposure, excelenteCount, innerW }
-  }, [items, width, isMobile])
+    return { strokes, callouts, domainMin, domainMax, xScale, maxExposure, excelenteCount, innerW }
+    // fontsReady: re-measure once the label face has landed (Day 4 lesson).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, width, isMobile, fontsReady, emptyNote])
 
   const nearestStroke = useMemo(() => {
     if (!layout || hoverId == null) return null
@@ -149,13 +184,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
     else setHoverId(null)
   }
 
-  if (!layout) return null
-
-  const { strokes, annotations, domainMin, domainMax, xScale, excelenteCount } = layout
-
-  const ariaLabel = lang === 'en'
-    ? `Spectral register: ${totalScored} federal institutions plotted by integrity score, ${domainMin} to ${domainMax}. Stroke height is money at risk. Median score ${median != null ? median.toFixed(1) : 'unknown'}. ${failingCount} institutions operate at Deficient or worse. ${excelenteCount === 0 ? 'No institution reaches the Excellent band.' : `${excelenteCount} institutions reach the Excellent band.`}`
-    : `Espectro del padrón: ${totalScored} instituciones federales trazadas por indicador de riesgo, de ${domainMin} a ${domainMax}. La altura del trazo es el dinero en riesgo. Mediana ${median != null ? median.toFixed(1) : 'desconocida'}. ${failingCount} instituciones operan en deficiencia o peor. ${excelenteCount === 0 ? 'Ninguna institución alcanza la banda Excelente.' : `${excelenteCount} instituciones alcanzan la banda Excelente.`}`
+  if (!items.length) return null
 
   const captionText = lang === 'en'
     ? `${formatNumber(totalScored)} federal institutions evaluated · median ${median != null ? median.toFixed(1) : '—'} · ${formatNumber(failingCount)} at Deficient or worse · stroke height = money at risk`
@@ -181,19 +210,26 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
         className="mb-3 flex items-center gap-2 flex-wrap"
         style={{
           fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-          fontSize: '9.5px',
+          fontSize: '11px',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--color-text-muted)',
           fontWeight: 400,
         }}
       >
-        <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>
+        <span style={{ color: 'var(--color-accent-hover)', fontStyle: 'normal', fontWeight: 500 }}>
           {t('plate.eyebrow')}
         </span>
       </div>
 
-      <div ref={containerRef} className="relative w-full">
+      <div ref={containerRef} className="relative w-full" style={{ minHeight: HEIGHT }}>
+        {layout && (() => {
+          const { strokes, callouts, domainMin, domainMax, xScale, excelenteCount } = layout
+          const ariaLabel = lang === 'en'
+            ? `Spectral register: ${totalScored} federal institutions plotted by integrity score, ${domainMin} to ${domainMax}. Stroke height is money at risk. Median score ${median != null ? median.toFixed(1) : 'unknown'}. ${failingCount} institutions operate at Deficient or worse. ${excelenteCount === 0 ? 'No institution reaches the Excellent band.' : `${excelenteCount} institutions reach the Excellent band.`}`
+            : `Espectro del padrón: ${totalScored} instituciones federales trazadas por indicador de riesgo, de ${domainMin} a ${domainMax}. La altura del trazo es el dinero en riesgo. Mediana ${median != null ? median.toFixed(1) : 'desconocida'}. ${failingCount} instituciones operan en deficiencia o peor. ${excelenteCount === 0 ? 'Ninguna institución alcanza la banda Excelente.' : `${excelenteCount} instituciones alcanzan la banda Excelente.`}`
+          return (
+          <>
         <svg
           width={width}
           height={HEIGHT}
@@ -242,7 +278,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
                     fontSize={13}
                     fontWeight={700}
                     letterSpacing="0.1em"
-                    fill={style.color}
+                    fill={style.ink}
                     style={{ textTransform: 'uppercase' }}
                   >
                     {t(`tiers.${band.tier}`)}
@@ -255,10 +291,10 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
                     textAnchor="end"
                     fontFamily='"EB Garamond", Georgia, serif'
                     fontStyle="normal"
-                    fontSize={isMobile ? 9.5 : 11}
+                    fontSize={11}
                     fill="var(--color-text-muted)"
                   >
-                    {t('plate.emptyExcelente')}
+                    {emptyNote}
                   </text>
                 )}
               </g>
@@ -303,10 +339,13 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
                 y={BASELINE_Y + 14}
                 textAnchor="middle"
                 fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-                fontSize={8.5}
+                fontSize={11}
                 fontWeight={700}
                 letterSpacing="0.08em"
-                fill="var(--color-accent)"
+                fill="var(--color-accent-hover)"
+                paintOrder="stroke"
+                stroke="var(--color-background-elevated)"
+                strokeWidth={4}
                 style={{ textTransform: 'uppercase' }}
               >
                 {t('plate.medianTag', { score: median.toFixed(1) })}
@@ -314,39 +353,26 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
             </g>
           )}
 
-          {/* Named annotations — leader lines + labels (NYT Upshot mechanic) */}
-          {annotations.map(({ stroke: s, label }) => {
-            const labelY = BASELINE_Y - s.h - 10
-            return (
-              <g key={`ann-${s.institution_id}`}>
-                <line
-                  x1={s.x}
-                  x2={s.x}
-                  y1={BASELINE_Y - s.h}
-                  y2={labelY + 3}
-                  stroke="var(--color-accent)"
-                  strokeWidth={0.75}
-                  opacity={0.5}
-                />
-                <text
-                  x={s.x}
-                  y={labelY}
-                  textAnchor="middle"
-                  fontFamily='"IBM Plex Mono", "JetBrains Mono", monospace'
-                  fontSize={isMobile ? 9 : 10}
-                  fill="var(--color-text-secondary)"
-                  paintOrder="stroke"
-                  stroke="var(--color-background-elevated)"
-                  strokeWidth={3}
-                >
-                  {label}
-                </text>
-              </g>
-            )
-          })}
+          {/* Leader lines — the labels themselves are HTML (below the svg). */}
+          {callouts.map(({ stroke: s, box }) => (
+            <line
+              key={`lead-${s.institution_id}`}
+              x1={s.x}
+              x2={s.x}
+              y1={BASELINE_Y - s.h}
+              y2={box.y1}
+              stroke="var(--color-accent)"
+              strokeWidth={0.75}
+              opacity={0.5}
+            />
+          ))}
 
           {/* Axis ticks */}
-          {[domainMin, 40, 60, 80, domainMax].filter((v, idx, arr) => arr.indexOf(v) === idx).map((tick) => (
+          {[domainMin, 40, 60, 80, domainMax]
+            .filter((v, idx, arr) => arr.indexOf(v) === idx)
+            // a tick within 28px of the previous one is dropped (80/86 on phones)
+            .filter((v, idx, arr) => idx === 0 || xScale(v) - xScale(arr[idx - 1]) >= 28)
+            .map((tick) => (
             <text
               key={tick}
               x={xScale(tick)}
@@ -361,8 +387,40 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
           ))}
         </svg>
 
+        {/* Callout layer — full names, 11px, on plate paper. Each label is the
+            plate's keyboard path: a link to that institution's dossier. */}
+        <div className="absolute inset-0 pointer-events-none" style={{ width, height: HEIGHT }}>
+          {callouts.map(({ stroke: s, nameLines, amount, box }) => (
+            <Link
+              key={`ann-${s.institution_id}`}
+              to={`/institutions/${s.institution_id}`}
+              aria-label={`${nameLines.join(' ')} · ${amount}`}
+              data-callout
+              className="absolute pointer-events-auto rounded-sm hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+              style={{
+                left: box.x0,
+                top: box.y0,
+                width: box.x1 - box.x0,
+                padding: LABEL_PAD,
+                font: LABEL_FONT,
+                lineHeight: `${LABEL_LINE}px`,
+                whiteSpace: 'nowrap',
+                textAlign: s.x - box.x0 < 4 ? 'left' : box.x1 - s.x < 4 ? 'right' : 'center',
+                color: 'var(--color-text-secondary)',
+                background: 'var(--color-background-elevated)',
+              }}
+            >
+              {nameLines.map((line) => <span key={line} className="block">{line}</span>)}
+              <span className="block tabular-nums text-text-muted">{amount}</span>
+            </Link>
+          ))}
+        </div>
+          </>
+          )
+        })()}
+
         {/* Pointer tooltip */}
-        {nearestStroke && (
+        {nearestStroke && layout && (
           <div
             className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background px-2.5 py-2 text-[13px] shadow-lg"
             style={{
