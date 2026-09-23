@@ -17,7 +17,7 @@
  * institution ChapterShell primitives are no longer imported here. Legacy
  * /print/institutions/:id retains InstitutionThread.
  */
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { institutionApi, scorecardApi } from '@/api/client'
@@ -80,32 +80,30 @@ function DossierSectionHeader({
 }
 
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
-  const navigate = useNavigate()
   return (
     <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
       <p className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
       </p>
-      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
+      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5. Las señales agregadas a nivel institucional son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. v0.8.5 risk model. Institution-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
       </p>
-      <button
-        type="button"
-        onClick={() => navigate('/methodology')}
-        className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+      <Link
+        to="/methodology"
+        className="mt-3 inline-block font-mono rounded-sm hover:text-accent-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}
       >
-        {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
-      </button>
+        {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} <span aria-hidden="true">↗</span>
+      </Link>
     </section>
   )
 }
 
 function DossierSkeleton() {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-[1010px] mx-auto px-4 sm:px-6 py-10 space-y-8">
       <Skeleton className="h-2 w-full" />
       <Skeleton className="h-12 w-96" />
       <div className="grid grid-cols-3 gap-4">
@@ -265,7 +263,7 @@ export default function InstitutionDossier() {
 
   return (
     <DossierOriginProvider value={{ route: `/institutions/${institutionId}`, label: formatEntityName('institution', institution.name, 'sm') }}>
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div data-frame className="max-w-[1010px] mx-auto px-4 sm:px-6 py-6">
       <WayfindingSpine nav={wf} lang={lang} accent={sectorAccent} origin={wfOrigin} />
 
       {/* HERO */}
@@ -446,7 +444,7 @@ export default function InstitutionDossier() {
               </table>
             </div>
             {officialsData?.note && (
-              <p className="mt-3 text-[13px] leading-relaxed text-text-muted">{officialsData.note}</p>
+              <p className="mt-3 text-[15px] leading-relaxed text-text-muted" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>{officialsData.note}</p>
             )}
           </section>
         </div>

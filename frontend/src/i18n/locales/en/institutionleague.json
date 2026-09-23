@@ -138,7 +138,7 @@
   "sortAriaLabel": "Sort by {{label}}",
   "dossierLinkAriaLabel": "Open full institution dossier for {{name}}",
   "dossierLinkTitle": "Open full dossier",
-  "methodologyFootnote": "RUBLI Procurement Health Index v0.8.5 · COMPRANET 2002–2025 · OECD / IMF methodology",
+  "methodologyFootnote": "RUBLI Procurement Health Index v0.8.5 · COMPRANET 2002–2025 · OECD / IMF methodology · Source: COMPRANET / SHCP",
   "tabs": {
     "ranking": "Ranking",
     "fichas": "Scorecards",
@@ -157,5 +157,6 @@
     "tooltipContracts": "{{n}} contracts",
     "unavailableSubnational": "The Spectral Register plots only the federal board — state and municipal institutions have incomparable sample sizes and procedures. Switch to Federal scope to see the plate.",
     "unavailableAll": "The Spectral Register plots only the federal board. Switch to Federal scope to see the plate."
-  }
+  },
+  "methodologyLink": "Methodology"
 }

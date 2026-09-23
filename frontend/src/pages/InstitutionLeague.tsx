@@ -52,7 +52,6 @@ import {
 import { formatNumber, formatDualCurrency, formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
-import { PageFooter } from '@/components/layout/PageFooter'
 import { useLeagueField } from '@/hooks/useLeagueField'
 import { SpectralRegister, SpectralRegisterUnavailableNote } from '@/components/institution/SpectralRegister'
 import { PillarBoleta, getWeakestPillar, pillarDeficitColor } from '@/components/institution/PillarBoleta'
@@ -561,8 +560,6 @@ export default function InstitutionLeague() {
 
   // Row expansion for pillar radar
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
-  // Act III "Methodology" collapsible — closed by default to keep the page lean
-  const [methodologyOpen, setMethodologyOpen] = useState(false)
   const items = listData?.data ?? []
   const total = listData?.total ?? 0
   const totalPages = listData?.total_pages ?? 1
@@ -669,7 +666,7 @@ export default function InstitutionLeague() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       <TabBar activeTab={activeTab} setTab={setTab} />
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6">
+      <div data-frame className="max-w-[1010px] mx-auto px-4 sm:px-6 pt-6">
         {/* Utility header — same pattern as /aria, /workspace, /cases,
             /sectors. Institution Ranking is a working surface
             (compare 100+ institutions, drill into one). */}
@@ -785,7 +782,7 @@ export default function InstitutionLeague() {
                 </div>
               </div>
             </div>
-            <p className="text-[12px] font-mono leading-relaxed text-text-muted mt-2">
+            <p className="text-[13px] font-mono leading-relaxed text-text-muted mt-2">
               {t(scope === 'federal'
                 ? 'scope.disclaimerFederal'
                 : scope === 'subnational'
@@ -1395,47 +1392,19 @@ export default function InstitutionLeague() {
       </div>
       </Act>
 
-      {/* ─── ACT III — METHODOLOGY ────────────────────────────────────────
-          Collapsible (closed by default) — holds the distribution and
-          histogram, which used to break Act I's editorial rhythm. */}
-      <section
-        aria-labelledby="methodology-heading"
-        className="border-t border-border pt-6 mt-2"
-      >
-        <button
-          type="button"
-          onClick={() => setMethodologyOpen((v) => !v)}
-          aria-expanded={methodologyOpen}
-          className="w-full flex items-center justify-between gap-3 text-left group"
+      {/* One footer (PARALLAX D9 § Change 6): the methodology footnote that
+          ACT III used to hide is the page's colophon paragraph inside main;
+          the shell colophon is the page's only <footer>. */}
+      <p className="mt-6 pt-8 pb-8 border-t border-border text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted leading-relaxed">
+        {t('methodologyFootnote')}
+        <span aria-hidden="true"> · </span>
+        <Link
+          to="/methodology"
+          className="text-text-secondary underline underline-offset-2 hover:text-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 rounded-sm"
         >
-          <div>
-            <p className="text-[12px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
-              ACT III
-            </p>
-            <h2
-              id="methodology-heading"
-              className="text-lg font-serif font-bold text-text-primary leading-tight group-hover:text-accent transition-colors"
-            >
-              {t('histogram.kicker')}
-            </h2>
-          </div>
-          <ChevronDown
-            className={`h-5 w-5 text-text-muted flex-shrink-0 transition-transform ${methodologyOpen ? 'rotate-180' : ''}`}
-            aria-hidden="true"
-          />
-        </button>
-
-        {methodologyOpen && (
-          <div className="space-y-6 mt-5">
-
-            {/* Source footnote */}
-            <p className="text-[12px] text-text-muted font-mono pt-4 border-t border-border">
-              {t('methodologyFootnote')}
-            </p>
-          </div>
-        )}
-      </section>
-      <PageFooter />
+          {t('methodologyLink')}
+        </Link>
+      </p>
       </div>
       </div>
     </div>
@@ -1454,7 +1423,7 @@ function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string
   ]
   return (
     <div className="border-b border-border bg-background/50 px-4 sm:px-6">
-      <div className="max-w-screen-xl mx-auto flex items-center gap-0">
+      <div className="max-w-[1010px] mx-auto flex items-center gap-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
