@@ -17,7 +17,16 @@
  *
  * Renders: type icon · formatted name · right-aligned context badge.
  * Click → navigates to the canonical dossier route /{type}/:id.
+ *
+ * `variant="name"` — the one sanctioned rule-1 exception (PARALLAX D7b § Change 7):
+ * a bare Link with the formatted full name, the canonical href and the
+ * wayfinding state, no icon/dot/badge/padding/hover tint, inheriting the
+ * caller's font. Used where the name column IS the figure's typography — the
+ * /sectors Confound Plate and Audited Register (Garamond names). Everything
+ * else renders the chip (the default), so `to={`/sectors/…`}` literals stay
+ * grep-enforceable at 0.
  */
+import type { CSSProperties, FocusEventHandler, MouseEventHandler, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -178,6 +187,20 @@ export interface EntityIdentityChipProps {
   fullName?: boolean
 
   className?: string
+
+  /** 'chip' (default) or 'name' — see the file header. */
+  variant?: 'chip' | 'name'
+  /** name variant only: the link's accessible name (e.g. the row's full reading). */
+  ariaLabel?: string
+  /** name variant only: the caller's inline type (the chip ignores it). */
+  style?: CSSProperties
+  onFocus?: FocusEventHandler<HTMLAnchorElement>
+  onBlur?: FocusEventHandler<HTMLAnchorElement>
+  onMouseEnter?: MouseEventHandler<HTMLAnchorElement>
+  onMouseLeave?: MouseEventHandler<HTMLAnchorElement>
+  /** name variant only: content other than the name (a "view dossier ↗" line,
+   *  a phone row's figure) — the link stays the canonical dossier link. */
+  children?: ReactNode
 }
 
 export function EntityIdentityChip({
@@ -192,6 +215,14 @@ export function EntityIdentityChip({
   hideIcon = false,
   fullName = false,
   className,
+  variant = 'chip',
+  ariaLabel,
+  style,
+  onFocus,
+  onBlur,
+  onMouseEnter,
+  onMouseLeave,
+  children,
 }: EntityIdentityChipProps) {
   const { i18n } = useTranslation()
   const isEs = i18n.language?.startsWith('es')
@@ -205,6 +236,26 @@ export function EntityIdentityChip({
   const origin = useDossierOrigin()
   const linkState: WayfindingLinkState | undefined =
     origin && origin.route !== href ? { wfOrigin: origin } : undefined
+
+  if (variant === 'name') {
+    const fullDisplay = formatEntityName(type, name, 'full')
+    return (
+      <Link
+        to={href}
+        state={linkState}
+        title={fullDisplay}
+        aria-label={ariaLabel}
+        className={cn('rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60', className)}
+        style={style}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {children ?? fullDisplay}
+      </Link>
+    )
+  }
 
   // fullName mode lets the chip grow vertically (2-line wrap) rather than
   // forcing a fixed single-line height that triggers ellipsis.

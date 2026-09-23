@@ -14,7 +14,6 @@
  * rank-delta chip ochre when the jump ≥ 2.
  */
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { LedgerRow } from './ExposureLedger'
 import { OwnSpendTrack } from './ConfoundPlate'
@@ -120,13 +119,16 @@ export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' 
                       </span>
                     </span>
                   )}
-                  <Link
-                    to={`/sectors/${row.sectorId}`}
-                    className="py-1 font-mono underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity whitespace-nowrap rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                  <EntityIdentityChip
+                    type="sector"
+                    id={row.sectorId}
+                    name={row.name}
+                    variant="name"
+                    className="py-1 font-mono underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity whitespace-nowrap focus-visible:ring-accent focus-visible:ring-offset-1"
                     style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
                   >
                     {isEs ? 'ver sector ↗' : 'view sector ↗'}
-                  </Link>
+                  </EntityIdentityChip>
                 </div>
                 <OwnSpendTrack share={share} ringColor={ringColor} height={22} />
               </div>

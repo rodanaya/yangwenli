@@ -26,6 +26,7 @@
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { SECTOR_COLORS, RISK_TEXT_COLORS, PARTIAL_YEAR_NOTE } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
@@ -179,14 +180,15 @@ function LedgerRowItem({
         </span>
 
         <div className="flex-1 min-w-0 flex items-baseline gap-0.5">
-          <Link
-            to={`/sectors/${row.sectorId}`}
-            aria-label={dirWord ? `${ariaLabel} · ${dirWord}` : ariaLabel}
-            className="truncate py-0.5 group-hover:underline decoration-1 underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+          <EntityIdentityChip
+            type="sector"
+            id={row.sectorId}
+            name={row.name}
+            variant="name"
+            ariaLabel={dirWord ? `${ariaLabel} · ${dirWord}` : ariaLabel}
+            className="truncate py-0.5 underline decoration-1 underline-offset-[3px] decoration-border group-hover:decoration-current focus-visible:decoration-current"
             style={{ ...SERIF_NAME_STYLE, fontSize: 15, color: 'var(--color-text-primary)' }}
-          >
-            {row.name}
-          </Link>
+          />
           {hasDagger && (
             <sup className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }} aria-hidden="true">†</sup>
           )}
@@ -272,13 +274,16 @@ function LedgerRowItem({
             </span>
           </div>
           <SectorDossierCard row={row} rankVar={rankVar} totalRows={totalRows} lang={lang} active={expanded} />
-          <Link
-            to={`/sectors/${row.sectorId}`}
-            className="mt-2 inline-block font-mono underline decoration-1 underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          <EntityIdentityChip
+            type="sector"
+            id={row.sectorId}
+            name={row.name}
+            variant="name"
+            className="mt-2 inline-block font-mono underline decoration-1 underline-offset-2 focus-visible:ring-accent"
             style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-secondary)' }}
           >
             {lang === 'es' ? 'ver dossier del sector ↗' : 'view sector dossier ↗'}
-          </Link>
+          </EntityIdentityChip>
         </div>
       )}
     </div>

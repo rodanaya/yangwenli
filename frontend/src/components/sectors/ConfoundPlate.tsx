@@ -24,7 +24,7 @@
  * FLIP reorder.
  */
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
@@ -373,28 +373,27 @@ export function ConfoundPlate({
                     {String(idx + 1).padStart(2, '0')}
                   </span>
 
-                  {/* name + sector rule — the row's link. Rule-1 note: a Garamond
-                      Link, not an EntityIdentityChip; the plate's name column is
-                      the loved centrepiece (PARALLAX D7 § Change 3). */}
-                  <Link
-                    to={`/sectors/${r.sectorId}`}
-                    aria-label={aria}
-                    className="truncate py-0.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                  {/* name + sector rule — the row's link: the chip primitive's
+                      `name` variant (a bare Garamond link; the rule-1 exception
+                      lives in the primitive — PARALLAX D7b § Change 7). A
+                      border-coloured hairline at rest, full ink on hover/focus. */}
+                  <EntityIdentityChip
+                    type="sector"
+                    id={r.sectorId}
+                    name={r.name}
+                    variant="name"
+                    ariaLabel={aria}
+                    className={`truncate py-0.5 underline decoration-1 underline-offset-[3px] ${isHover ? 'decoration-current' : 'decoration-border'} focus-visible:decoration-current`}
                     style={{
                       ...SERIF_NAME,
                       fontSize: 15,
                       color: 'var(--color-text-primary)',
                       borderLeft: `3px solid ${sector}`,
                       paddingLeft: 8,
-                      textDecoration: isHover ? 'underline' : 'none',
-                      textUnderlineOffset: 2,
-                      textDecorationThickness: 1,
                     }}
                     onFocus={() => setHovered(r.sectorId)}
                     onBlur={() => setHovered(null)}
-                  >
-                    {r.name}
-                  </Link>
+                  />
 
                   {/* Lane 1 — log VaR */}
                   <span className="relative h-full block">
@@ -591,18 +590,19 @@ export function ConfoundPlate({
                   <span className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                     {String(idx + 1).padStart(2, '0')}
                   </span>
-                  <Link
-                    to={`/sectors/${r.sectorId}`}
-                    aria-label={
+                  <EntityIdentityChip
+                    type="sector"
+                    id={r.sectorId}
+                    name={r.name}
+                    variant="name"
+                    ariaLabel={
                       isEs
                         ? `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% del gasto propio`
                         : `${r.name} — ${formatCompactMXN(r.varMxn)} · ${(share * 100).toFixed(0)}% of own spend`
                     }
-                    className="min-w-0 py-0.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                    className="min-w-0 py-0.5 underline decoration-1 underline-offset-[3px] decoration-border focus-visible:decoration-current"
                     style={{ ...SERIF_NAME, fontSize: 14, color: 'var(--color-text-primary)' }}
-                  >
-                    {r.name}
-                  </Link>
+                  />
                   <span
                     className="tabular-nums"
                     style={{

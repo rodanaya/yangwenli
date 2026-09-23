@@ -21,7 +21,8 @@
  *   §2.1 Act I «La Mesa del Arqueo» + §3 NEW 1 — ArqueoMesa.tsx
  */
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { LedgerRow } from './ExposureLedger'
 import { ownSpendShare } from './confoundScales'
 import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS } from '@/lib/constants'
@@ -621,11 +622,14 @@ function MobileMesa({
               ? `${row.name} — ${formatCompactMXN(row.totalMxn)} de gasto, ${formatCompactMXN(row.varMxn)} observado (${(share * 100).toFixed(0)}% del gasto propio) · crítico ${(critShare * 100).toFixed(0)}% del valor · adjudicación directa ${row.daPct.toFixed(0)}%`
               : `${row.name} — ${formatCompactMXN(row.totalMxn)} spend, ${formatCompactMXN(row.varMxn)} flagged (${(share * 100).toFixed(0)}% of own spend) · critical ${(critShare * 100).toFixed(0)}% of value · direct award ${row.daPct.toFixed(0)}%`
           return (
-            <Link
+            <EntityIdentityChip
               key={row.sectorId}
-              to={`/sectors/${row.sectorId}`}
-              aria-label={ariaLabel}
-              className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+              type="sector"
+              id={row.sectorId}
+              name={row.name}
+              variant="name"
+              ariaLabel={ariaLabel}
+              className="block focus-visible:ring-inset focus-visible:ring-accent"
               style={{ height: h, position: 'relative', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}
               onMouseEnter={() => setHoverId(row.sectorId)}
               onMouseLeave={() => setHoverId(null)}
@@ -669,7 +673,7 @@ function MobileMesa({
               >
                 {(spendShare * 100).toFixed(1)}%
               </span>
-            </Link>
+            </EntityIdentityChip>
           )
         })}
       </div>
