@@ -406,7 +406,7 @@ export default function InstitutionDossier() {
               accent={sectorAccent}
             />
             <div className="overflow-x-auto">
-              <table className="w-full text-xs border-collapse">
+              <table className="w-full text-xs border-collapse" aria-label={lang === 'es' ? 'Responsables de la unidad compradora' : 'Procurement officers'}>
                 <thead>
                   <tr className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">
                     <th className="text-left font-medium py-2 pr-3">{lang === 'es' ? 'Funcionario' : 'Officer'}</th>
@@ -423,7 +423,7 @@ export default function InstitutionDossier() {
                     const locale = lang === 'es' ? 'es-MX' : 'en-US'
                     return (
                       <tr key={o.official_name} className="border-b border-border/40 hover:bg-background-card/50">
-                        <td className="py-2 pr-3 text-text-primary font-medium max-w-[22rem] whitespace-normal break-words leading-tight" title={toTitleCase(o.official_name)}>
+                        <td className="py-2 pr-3 text-text-primary font-medium max-w-[22rem] whitespace-normal break-words leading-tight">
                           {toTitleCase(o.official_name)}
                           {(o.first_contract_year || o.last_contract_year) && (
                             <span className="ml-2 text-[12px] font-mono text-text-muted">{o.first_contract_year}–{o.last_contract_year}</span>

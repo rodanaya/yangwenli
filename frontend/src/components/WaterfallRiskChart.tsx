@@ -81,9 +81,8 @@ export function WaterfallRiskChart({
                 className="tabular-nums"
                 style={{
                   fontFamily: 'var(--font-family-mono, monospace)',
-                  fontSize: 8.5,
+                  fontSize: 11,
                   color: 'var(--color-text-muted)',
-                  opacity: 0.7,
                   lineHeight: 1.2,
                 }}
               >

@@ -347,7 +347,9 @@ function ConcentrationRegister({
             const riskPct = v.avg_risk_score != null ? Math.round(v.avg_risk_score * 100) : null
             const fmtPct = (n: number | null) => (n == null ? '—' : `${Math.round(n)}%`)
             return (
-              <li key={v.vendor_id} className="flex items-center gap-3 px-3 py-2 border-t border-border/30 first:border-t-0">
+              // inline maxWidth: the Day 2c `main :where(li)` 68ch measure is
+              // unlayered — a max-w-none utility loses to it (Day 5 escape).
+              <li key={v.vendor_id} className="flex items-center gap-3 px-3 py-2 border-t border-border/30 first:border-t-0" style={{ maxWidth: 'none' }}>
                 <span className="font-mono tabular-nums flex-shrink-0 text-text-muted" style={{ width: 22, fontSize: 13 }}>{v.rank}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -385,8 +387,8 @@ function ControlGroup({
   onPick: (k: string) => void
 }) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="font-mono" style={{ fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{label}</span>
+    <div className="flex items-center gap-1.5" role="group" aria-label={label}>
+      <span aria-hidden="true" className="font-mono" style={{ fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{label}</span>
       <div className="flex items-center">
         {options.map((o) => (
           <button
@@ -394,11 +396,10 @@ function ControlGroup({
             type="button"
             onClick={() => onPick(o.k)}
             aria-pressed={active === o.k}
-            className="font-mono cursor-pointer transition-colors"
+            className="min-h-6 px-2 rounded-sm font-mono cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             style={{
               fontSize: 12,
               letterSpacing: '0.08em',
-              padding: '2px 6px',
               color: active === o.k ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
               fontWeight: active === o.k ? 700 : 400,
               borderBottom: active === o.k ? '1.5px solid var(--color-accent)' : '1.5px solid transparent',
@@ -473,7 +474,7 @@ export function InstitutionRecord({
               {tenured.slice(0, 6).map((v) => {
                 const lvl = v.avg_risk_score != null ? getRiskLevelFromScore(v.avg_risk_score) : 'low'
                 return (
-                  <li key={v.vendor_id} className="flex items-center justify-between gap-3">
+                  <li key={v.vendor_id} className="flex items-center justify-between gap-3" style={{ maxWidth: 'none' }}>
                     <div className="min-w-0">
                       <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" fullName />
                       <div className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 1 }}>

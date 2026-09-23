@@ -55,8 +55,10 @@ export interface StatCell {
 
 /**
  * The decisive numbers in one aligned readout. `cells` may contain nulls (an
- * absent metric) — they're filtered out. auto-fit wraps on narrow viewports
- * instead of clipping labels; ~116px min keeps each mono label on one line.
+ * absent metric) — they're filtered out. auto-fit wraps on narrow viewports.
+ * Labels wrap instead of ellipsising (PARALLAX D9 § Change 7: at the 1,010
+ * frame "DIRECT AWARD" was cut); each cell is a 3-row subgrid (label · value ·
+ * sub) so a two-line label moves the whole value row, never one value.
  */
 export function StatStrip({ cells }: { cells: Array<StatCell | null> }) {
   const shown = cells.filter(Boolean) as StatCell[]
@@ -66,10 +68,10 @@ export function StatStrip({ cells }: { cells: Array<StatCell | null> }) {
       style={{ borderColor: 'var(--color-border)', gridTemplateColumns: 'repeat(auto-fit, minmax(116px, 1fr))' }}
     >
       {shown.map((c, i) => (
-        <div key={c.label} className="px-3 py-3 sm:px-4 sm:py-4" style={{ borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)' }}>
+        <div key={c.label} className="px-3 py-3 sm:px-4 sm:py-4" style={{ borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)', display: 'grid', gridRow: 'span 3', gridTemplateRows: 'subgrid', alignContent: 'start' }}>
           <div
             className="font-mono"
-            style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+            style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 6, lineHeight: 1.25, alignSelf: 'end' }}
           >
             {c.label}
           </div>
@@ -183,7 +185,21 @@ export function RiskOverTimePanel({ trend, isEs }: { trend: TrendPoint[]; isEs: 
     <Panel label={isEs ? 'Riesgo en el tiempo' : 'Risk over time'} accent={RISK_COLORS.critical}>
       {trend.length > 1 ? (
         <>
-          <EditorialAreaChart data={scaled} xKey="year" yKey="avg" colorToken="risk-critical" yFormat="pct" yDomain={[0, 100]} height={96} />
+          <EditorialAreaChart
+            data={scaled}
+            xKey="year"
+            yKey="avg"
+            colorToken="risk-critical"
+            yFormat="pct"
+            yDomain={[0, 100]}
+            height={96}
+            decorative
+            ariaLabel={
+              isEs
+                ? `Riesgo en el tiempo: pico ${peak ? Math.round(peak.avg * 100) : 0}% en ${peak?.year ?? ''}, ${trend[0].year}–${trend[trend.length - 1].year}`
+                : `Risk over time: peak ${peak ? Math.round(peak.avg * 100) : 0}% in ${peak?.year ?? ''}, ${trend[0].year}–${trend[trend.length - 1].year}`
+            }
+          />
           {peak && (
             <p className="font-mono mt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
               {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg * 100)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}

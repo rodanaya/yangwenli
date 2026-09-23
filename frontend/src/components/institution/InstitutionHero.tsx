@@ -17,6 +17,7 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Copy, Check } from 'lucide-react'
 import type { InstitutionDetailResponse } from '@/api/types'
+import { formatEntityName } from '@/lib/entity/format'
 import {
   RISK_COLORS,
   RISK_TEXT_COLORS,
@@ -89,7 +90,7 @@ export function InstitutionHero({
   const sectorAccent = SECTOR_COLORS[sectorCode] ?? SECTOR_COLORS.otros ?? '#64748b'
   const sectorName = lang === 'es' ? SECTORS.find((s) => s.code === sectorCode)?.name : SECTORS.find((s) => s.code === sectorCode)?.nameEN
 
-  const editorialName = toTitleCase(institution.name)
+  const editorialName = formatEntityName('institution', institution.name, 'full')
   const lede = buildInstitutionLede({ institution, sectorName, lang })
 
   return (
@@ -437,7 +438,7 @@ function InstitutionMetaRule({
           <button
             type="button"
             onClick={copySiglas}
-            className="inline-flex items-center gap-1 hover:text-text-primary transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 min-h-6 rounded-sm hover:text-text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             aria-label={lang === 'es' ? 'Copiar siglas' : 'Copy siglas'}
             style={{ background: 'none', border: 'none', padding: 0, color: 'inherit' }}
           >
@@ -529,11 +530,6 @@ function OnThePageStrip({ sectorAccent, lang }: { sectorAccent: string; lang: 'e
 
 // ───────────────────── helpers ──────────────────────────────────────────────
 
-function toTitleCase(raw: string): string {
-  if (!raw) return raw
-  return raw.replace(/[A-ZÁÉÍÓÚÑ]{2,}/g, (m) => m.charAt(0) + m.slice(1).toLowerCase())
-}
-
 function localizeLevel(level: 'critical' | 'high' | 'medium' | 'low', lang: 'en' | 'es'): string {
   if (lang !== 'es') return level.toUpperCase()
   return level === 'critical' ? 'CRÍTICO'
@@ -551,7 +547,7 @@ function buildInstitutionLede({
   sectorName?: string
   lang: 'en' | 'es'
 }): string {
-  const name = toTitleCase(institution.name)
+  const name = formatEntityName('institution', institution.name, 'full')
   const spend = formatCompactMXN(institution.total_amount_mxn ?? 0)
   const usd = formatCompactUSD(institution.total_amount_mxn ?? 0)
   const contracts = formatNumber(institution.total_contracts ?? 0)
