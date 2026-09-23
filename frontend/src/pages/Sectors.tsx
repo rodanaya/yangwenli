@@ -808,7 +808,7 @@ export function Sectors() {
                           <span className="flex-1">{lang === 'es' ? 'Categoría' : 'Category'}</span>
                           <span className="flex-shrink-0 min-w-[72px] sm:min-w-[90px] text-right">{lang === 'es' ? 'Gasto' : 'Spend'}</span>
                           <span className="flex-shrink-0 min-w-[56px] sm:min-w-[80px] text-right">{lang === 'es' ? 'Riesgo' : 'Risk'}</span>
-                          <span className="flex-shrink-0 min-w-[48px] sm:min-w-[80px] text-right">DA%</span>
+                          <span className="flex-shrink-0 min-w-[48px] sm:min-w-[80px] text-right">{lang === 'es' ? 'AD%' : 'DA%'}</span>
                         </div>
                         {catRows.map((cat, idx) => {
                           const riskLevel = getRiskLevelFromScore(cat.avg_risk)

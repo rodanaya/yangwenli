@@ -38,7 +38,9 @@ interface ArqueoMesaProps {
 }
 
 // ── Geometry constants ──────────────────────────────────────────────────────
-const READOUT_H = 20
+// Desktop readout: a fixed two-line slot, so the longest hovered reading (ES,
+// Change 6) wraps instead of clipping and hover never moves the plate (judge J6).
+const DESK_READOUT_H = 36
 // Headroom inside the svg for the top tick and the annotation leaders, so the
 // plate no longer needs `overflow: visible` (PARALLAX D7 § Change 2).
 const TOP_PAD = 28
@@ -172,7 +174,7 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
   const reserveH =
     typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
       ? MOBILE_READOUT_H + 8 + MOBILE_HEADER_H + ordered.reduce((acc, r) => acc + mobileRowH(r.totalMxn, totalSpend), 0)
-      : READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H + LEGEND_RESERVE_H + KEY_RESERVE_H
+      : DESK_READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H + LEGEND_RESERVE_H + KEY_RESERVE_H
 
   const goToSector = useCallback((sectorId: number) => navigate(`/sectors/${sectorId}`), [navigate])
 
@@ -298,7 +300,7 @@ function DesktopMesa({
       const x0 = xOffsets[i]
       const x1 = xOffsets[i] + colWidths[i]
       // The readout strip is a sibling <div>, NOT part of this SVG, so the
-      // waterline sits at the hatch top (TOP_PAD headroom, no READOUT_H).
+      // waterline sits at the hatch top (TOP_PAD headroom, no readout height).
       const y = bandY(share)
       return `${x0.toFixed(1)},${y.toFixed(1)} ${x1.toFixed(1)},${y.toFixed(1)}`
     })
@@ -351,11 +353,11 @@ function DesktopMesa({
       {/* Fixed readout strip — hover data on the left, persistent axis label on the right */}
       <div
         className="font-mono tabular-nums"
-        style={{ height: READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+        style={{ height: DESK_READOUT_H, fontSize: 12, lineHeight: '18px', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
       >
         <span className="inline-flex items-center gap-1.5 min-w-0">
           {hoverNarrowIdx >= 0 && <PlateIndexBadge n={hoverNarrowIdx + 1} />}
-          <span role="status" aria-live="polite" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+          <span role="status" aria-live="polite">{readoutText}</span>
         </span>
         <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
           {lang === 'es' ? '% del gasto propio observado' : '% of own spend flagged'}
