@@ -52,6 +52,7 @@ import { formatNumber, formatDualCurrency, formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import { useLeagueField } from '@/hooks/useLeagueField'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { SpectralRegister, SpectralRegisterUnavailableNote } from '@/components/institution/SpectralRegister'
 import { PillarBoleta, getWeakestPillar } from '@/components/institution/PillarBoleta'
@@ -187,7 +188,7 @@ function TrendIcon({ direction }: { direction: string | null }) {
  * Weak-pillar cell — the single legible fact that replaced PillarSparkBars'
  * five illegible 14px heat cells. `{letter} {v}/{max}`, deficit-band colored.
  */
-function WeakPillarCell({ item }: { item: InstitutionScorecardItem }) {
+function WeakPillarCell({ item, long = false }: { item: InstitutionScorecardItem; long?: boolean }) {
   const { i18n } = useTranslation('institutionleague')
   const lang = i18n.language
   const weakest = getWeakestPillar(item, lang)
@@ -196,9 +197,9 @@ function WeakPillarCell({ item }: { item: InstitutionScorecardItem }) {
     <span
       className="font-mono text-[13px] tabular-nums whitespace-nowrap"
       style={{ color }}
-      title={weakest.label}
+      title={long ? undefined : weakest.label}
     >
-      {weakest.pillar.letter} {weakest.value.toFixed(0)}/{weakest.pillar.max}
+      {long ? weakest.label : weakest.pillar.letter} {weakest.value.toFixed(0)}/{weakest.pillar.max}
     </span>
   )
 }
@@ -226,7 +227,7 @@ function ChampionCard({
       id={item.institution_id}
       name={item.institution_name}
       variant="name"
-      className="relative w-full text-left group transition-colors flex items-center gap-4 px-3 py-2.5 hover:bg-background-elevated/60"
+      className="relative w-full text-left group transition-colors grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-4 gap-y-0.5 sm:flex sm:items-center px-3 py-2.5 hover:bg-background-elevated/60"
       ariaLabel={t('podiumAriaLabel', { rank, name: formatEntityName('institution', item.institution_name, 'full'), score: item.total_score })}
     >
       {/* Rank — quiet mono caption */}
@@ -245,23 +246,22 @@ function ChampionCard({
       {item.sector_name && (
         <span
           aria-hidden="true"
-          className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+          className="hidden sm:block h-1.5 w-1.5 rounded-full flex-shrink-0"
           style={{ backgroundColor: sectorColor }}
-          title={item.sector_name}
         />
       )}
 
-      {/* Score — tabular mono */}
-      <span className="font-mono tabular-nums text-[13px] text-text-muted flex-shrink-0 w-12 text-right">
-        {item.total_score.toFixed(1)}
-      </span>
-
-      {/* Tier — caption mono in tier color (no big italic) */}
-      <span
-        className="text-[13px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0 w-24 text-right"
-        style={{ color: tier.ink }}
-      >
-        {tier.label}
+      {/* Score · tier — a second mono line on phones, fixed columns from sm */}
+      <span className="col-start-2 flex items-baseline gap-3 sm:contents">
+        <span className="font-mono tabular-nums text-[13px] text-text-muted flex-shrink-0 sm:w-12 sm:text-right">
+          {item.total_score.toFixed(1)}
+        </span>
+        <span
+          className="text-[13px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0 sm:w-24 sm:text-right"
+          style={{ color: tier.ink }}
+        >
+          {tier.label}
+        </span>
       </span>
     </EntityIdentityChip>
   )
@@ -343,7 +343,7 @@ function ActaCard({
         {/* Identity column — institution name in Garamond italic, sector chip below */}
         <div className="min-w-0 flex flex-col gap-1.5">
           <p
-            className="text-text-primary leading-snug line-clamp-2"
+            className="text-text-primary leading-snug"
             style={{
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'normal',
@@ -580,6 +580,102 @@ export default function InstitutionLeague() {
 
   // Row rank calculation: rank of first item on current page
   const firstItemRank = (page - 1) * PER_PAGE + 1
+
+  // Below lg the ranking renders as cards (PARALLAX D9 § Change 8); one
+  // rowModel feeds both layouts so they print the same fields.
+  const cardRows = useIsMobile(1023)
+  const rowModel = (item: InstitutionScorecardItem, idx: number) => {
+    const rank = firstItemRank + idx
+    const tier = getTier(item.grade)
+    // Worst performers: bottom 5 when sorted by score ascending
+    const isWorstPerformer = sortBy === 'total_score' && sortOrder === 'asc' && idx < 5
+    // Top 3 medals (only when sorted by score descending on the first page)
+    const isTopMedalist = sortBy === 'total_score' && sortOrder === 'desc' && rank <= 3
+    // Critico always reads as dominant — red wash, thicker left border.
+    const isCritico = item.grade === 'F' || item.grade === 'F-'
+    const isExpanded = expandedRowId === item.institution_id
+    return {
+      item,
+      rank,
+      tier,
+      isWorstPerformer,
+      isTopMedalist,
+      isCritico,
+      isExpanded,
+      panelId: `boleta-${item.institution_id}`,
+      tint: `${isWorstPerformer || isCritico ? 'bg-risk-critical/10' : ''} ${isExpanded ? 'bg-background-elevated' : ''}`,
+      // Medal colours are marks (the crown only); the numeral is text.
+      medalColor: rank === 1 ? '#facc15' : rank === 2 ? '#d4d4d8' : '#d97706',
+      rankInk: isWorstPerformer || isCritico
+        ? RISK_TEXT_COLORS.critical
+        : isTopMedalist
+          ? 'var(--color-text-primary)'
+          : 'var(--color-text-secondary)',
+    }
+  }
+  type RowModel = ReturnType<typeof rowModel>
+  const renderRank = (m: RowModel) => (
+    <>
+      <div className="flex items-center justify-end gap-1">
+        {m.isTopMedalist && (
+          <Crown className="h-3 w-3 flex-shrink-0" style={{ color: m.medalColor }} aria-hidden="true" />
+        )}
+        <span className="text-[13px] font-mono font-bold leading-none tabular-nums" style={{ color: m.rankInk }}>
+          {m.rank}
+        </span>
+      </div>
+      {m.isWorstPerformer && (
+        <div className="mt-0.5 text-[11px] font-mono font-bold uppercase tracking-[0.12em] whitespace-nowrap leading-none" style={{ color: RISK_TEXT_COLORS.critical }}>
+          {t('worstPerformerBadge')}
+        </div>
+      )}
+    </>
+  )
+  const renderExpand = (m: RowModel) => (
+    <button
+      type="button"
+      onClick={() => setExpandedRowId(m.isExpanded ? null : m.item.institution_id)}
+      className="flex-shrink-0 inline-flex items-center justify-center min-h-6 min-w-6 rounded hover:bg-background-elevated text-text-muted hover:text-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+      aria-label={m.isExpanded ? t('collapseRow') : t('expandRow')}
+      aria-expanded={m.isExpanded}
+      aria-controls={m.isExpanded ? m.panelId : undefined}
+    >
+      <ChevronDown className={`h-3 w-3 transition-transform ${m.isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+    </button>
+  )
+  const renderThin = (item: InstitutionScorecardItem) =>
+    item.total_contracts != null && item.total_contracts < RELIABLE_MIN ? (
+      // Thin sample: listed, never hidden — the reader sees why it ranks here.
+      <span className="font-mono text-[12px] tabular-nums text-text-muted whitespace-nowrap flex-shrink-0" title={t('thinSample', { n: RELIABLE_MIN })}>
+        n = {item.total_contracts}<span className="sr-only">: {t('thinSample', { n: RELIABLE_MIN })}</span>
+      </span>
+    ) : null
+  const renderMoney = (item: InstitutionScorecardItem) =>
+    item.money_at_risk_mxn == null
+      ? '—'
+      : item.money_at_risk_mxn > 0
+        ? formatCompactMXN(item.money_at_risk_mxn)
+        : (
+          // A zero is a fact (no high/critical-risk contracts), not missing data.
+          <span className="text-text-muted" title={t('zeroMoneyAtRisk')}>
+            0<span className="sr-only"> — {t('zeroMoneyAtRisk')}</span>
+          </span>
+        )
+  const renderTierTile = (m: RowModel) => (
+    <span
+      className="inline-flex items-center justify-center px-2 py-1 rounded-sm font-mono uppercase tabular-nums leading-none"
+      style={{
+        backgroundColor: m.tier.bg,
+        border: `1px solid ${m.tier.border}`,
+        color: m.tier.ink,
+        fontSize: '11px',
+        fontWeight: 800,
+        letterSpacing: '0.08em',
+      }}
+    >
+      {m.tier.label}
+    </span>
+  )
 
   // ── Wayfinding (El Hilo P1+) — publish the current league page as the
   // institution sibling list (Prev/Next steps within the loaded page, honouring
@@ -974,7 +1070,7 @@ export default function InstitutionLeague() {
           <p className="text-[13px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
             {t('filters.tier')}
           </p>
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+          <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={() => updateParams({ grade: undefined, page: '1' })}
@@ -1022,7 +1118,7 @@ export default function InstitutionLeague() {
           <p className="text-[13px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
             {t('filters.sectorLabel')}
           </p>
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+          <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={() => updateParams({ sector: undefined, page: '1' })}
@@ -1100,9 +1196,67 @@ export default function InstitutionLeague() {
             </div>
           )}
 
-          {items.length > 0 && (
-            <div className="overflow-x-auto rounded-sm border border-border">
-              <table className="w-full text-sm min-w-[900px]" aria-label={t('tableAriaLabel')}>
+          {items.length > 0 && cardRows && (
+            // Phones and tablets (< lg): one card per institution — the same
+            // fields from the same rowModel as the table, no inner scroller.
+            <ol className="rounded-sm border border-border divide-y divide-border" aria-label={t('tableAriaLabel')}>
+              {items.map((item, idx) => {
+                const m = rowModel(item, idx)
+                return (
+                  <li
+                    key={item.institution_id}
+                    data-wf-row={item.institution_id}
+                    data-league-card
+                    className={`px-3 py-3 ${m.tint}`}
+                    style={{ maxWidth: 'none', borderLeft: `${m.isCritico ? '4px' : '3px'} solid ${m.tier.color}` }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 flex-shrink-0 pt-1 text-right">{renderRank(m)}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-x-2">
+                          <span
+                            aria-hidden="true"
+                            className="h-2 w-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: getSectorColorFromName(item.sector_name) }}
+                          />
+                          <EntityIdentityChip
+                            type="institution"
+                            id={item.institution_id}
+                            name={item.institution_name}
+                            variant="name"
+                            fullName
+                            size="sm"
+                            className="flex-[1_1_10rem] min-w-0 py-1 text-[14px] text-text-primary hover:underline underline-offset-2 font-medium whitespace-normal break-words leading-snug"
+                          />
+                          {renderThin(item)}
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-[13px] tabular-nums">
+                          {renderTierTile(m)}
+                          <span>
+                            <span style={{ color: m.tier.ink, fontWeight: m.isCritico ? 700 : 600 }}>{item.total_score.toFixed(1)}</span>
+                            <span className="text-text-muted"> /100</span>
+                          </span>
+                          <WeakPillarCell item={item} long />
+                          <span className="text-text-secondary">{renderMoney(item)} <span className="text-text-muted">{t('columns.moneyAtRisk').toLowerCase()}</span></span>
+                          {item.trend_direction && item.trend_direction !== 'stable' && <TrendIcon direction={item.trend_direction} />}
+                        </div>
+                      </div>
+                      {renderExpand(m)}
+                    </div>
+                    {m.isExpanded && (
+                      <div id={m.panelId} className="mt-3">
+                        <PillarBoleta item={item} />
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+          )}
+
+          {items.length > 0 && !cardRows && (
+            <div className="rounded-sm border border-border">
+              <table className="w-full text-sm" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border bg-background/80">
                     <th scope="col" className="px-2 py-2 text-left w-12">
@@ -1131,12 +1285,13 @@ export default function InstitutionLeague() {
                         {t('columns.grade')}
                       </span>
                     </th>
-                    <th scope="col" className="px-2 py-2 text-left hidden sm:table-cell w-28" title={pillarLegendTitle}>
+                    <th scope="col" className="px-2 py-2 text-left w-28" title={pillarLegendTitle}>
                       <span className="text-[12px] font-mono font-bold text-text-muted uppercase tracking-[0.06em]">
                         {t('columns.weakPillar')}
                       </span>
                     </th>
-                    <th scope="col" className="px-2 py-2 text-center w-12 hidden sm:table-cell">
+                    {/* Trend from xl: at lg the 1,010 frame is 880px wide. */}
+                    <th scope="col" className="px-2 py-2 text-center w-12 hidden xl:table-cell">
                       <span className="text-[12px] font-mono font-bold text-text-muted uppercase tracking-[0.06em]">
                         {t('columns.trend')}
                       </span>
@@ -1147,7 +1302,7 @@ export default function InstitutionLeague() {
                       currentKey={sortBy}
                       currentDir={sortOrder}
                       onSort={handleSort}
-                      thClassName="text-left hidden md:table-cell w-28"
+                      thClassName="text-left w-28"
                     />
                     <SortTh
                       label={t('columns.moneyAtRisk')}
@@ -1155,90 +1310,32 @@ export default function InstitutionLeague() {
                       currentKey={sortBy}
                       currentDir={sortOrder}
                       onSort={handleSort}
-                      thClassName="text-right hidden lg:table-cell w-28" className="justify-end"
+                      thClassName="text-right w-28" className="justify-end"
                     />
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, idx) => {
-                    const rank = firstItemRank + idx
-                    const tier = getTier(item.grade)
-                    // Worst performers: bottom 5 when sorted by score ascending
-                    const isWorstPerformer = sortBy === 'total_score' && sortOrder === 'asc' && idx < 5
-                    // Top 3 medals (only visible when sorted by score descending on first page)
-                    const isTopMedalist = sortBy === 'total_score' && sortOrder === 'desc' && rank <= 3
-                    // Critico tier always reads as dominant — red wash on the
-                    // row, thicker left border, stronger left-border weight.
-                    // This is the editorial promise: a reader scrolling past
-                    // a Critico row cannot miss it.
-                    const isCritico = item.grade === 'F' || item.grade === 'F-'
-                    // Medal colours are marks (the crown only); the numeral is text.
-                    const medalColor = rank === 1 ? '#facc15' : rank === 2 ? '#d4d4d8' : '#d97706'
-                    const rankInk = isWorstPerformer || isCritico
-                      ? RISK_TEXT_COLORS.critical
-                      : isTopMedalist
-                        ? 'var(--color-text-primary)'
-                        : 'var(--color-text-secondary)'
-                    const isExpanded = expandedRowId === item.institution_id
-                    const panelId = `boleta-${item.institution_id}`
-                    const toggleExpand = () => setExpandedRowId(isExpanded ? null : item.institution_id)
+                    const m = rowModel(item, idx)
                     return (
                       <React.Fragment key={item.institution_id}>
                       <tr
                         data-wf-row={item.institution_id}
-                        className={`border-b border-border hover:bg-background-elevated transition-colors group ${
-                          isWorstPerformer || isCritico ? 'bg-risk-critical/10' : ''
-                        } ${isExpanded ? 'bg-background-elevated' : ''}`}
+                        className={`border-b border-border hover:bg-background-elevated transition-colors group ${m.tint}`}
                         style={{
-                          borderLeft: `${isCritico ? '4px' : '3px'} solid ${tier.color}`,
+                          borderLeft: `${m.isCritico ? '4px' : '3px'} solid ${m.tier.color}`,
                           height: '44px',
                         }}
                       >
-                        {/* Rank — compact mono, ARIA-style */}
                         <td className="px-2 py-0 font-mono tabular-nums text-right w-12 align-middle">
-                          <div className="flex items-center justify-end gap-1">
-                            {isTopMedalist && (
-                              <Crown
-                                className="h-3 w-3 flex-shrink-0"
-                                style={{ color: medalColor }}
-                                aria-hidden="true"
-                              />
-                            )}
-                            <span
-                              className="text-[13px] font-mono font-bold leading-none tabular-nums"
-                              style={{ color: rankInk }}
-                            >
-                              {rank}
-                            </span>
-                          </div>
-                          {isWorstPerformer && (
-                            <div className="mt-0.5 text-[11px] font-mono font-bold uppercase tracking-[0.12em] text-risk-critical whitespace-nowrap leading-none">
-                              {t('worstPerformerBadge')}
-                            </div>
-                          )}
+                          {renderRank(m)}
                         </td>
 
-                        {/* Sector color dot + institution name + sector label
-                            + risk-driver pill — all on one line. The dot is
-                            the sector-palette accent (SECTOR_COLORS), the
-                            tier color stays on the left border. */}
+                        {/* flex-wrap: the sector label and the n-marker drop under the
+                            name instead of summing into the column's min-content. */}
                         <td className="px-2 py-0 align-middle">
-                          {/* flex-wrap: the sector label and the n-marker drop under the
-                              name instead of summing into the column's min-content. */}
                           <div className="flex flex-wrap items-center gap-x-2 min-w-0">
-                            <button
-                              type="button"
-                              onClick={toggleExpand}
-                              className="flex-shrink-0 inline-flex items-center justify-center min-h-6 min-w-6 rounded hover:bg-background-elevated text-text-muted hover:text-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
-                              aria-label={isExpanded ? t('collapseRow') : t('expandRow')}
-                              aria-expanded={isExpanded}
-                              aria-controls={isExpanded ? panelId : undefined}
-                            >
-                              <ChevronDown
-                                className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                                aria-hidden="true"
-                              />
-                            </button>
+                            {renderExpand(m)}
                             <span
                               aria-hidden="true"
                               className="h-2 w-2 rounded-full flex-shrink-0"
@@ -1254,29 +1351,20 @@ export default function InstitutionLeague() {
                               size="sm"
                               className="flex-[1_1_12rem] min-w-0 py-1 text-[13px] text-text-secondary hover:text-text-primary hover:underline underline-offset-2 transition-colors font-medium whitespace-normal break-words leading-tight"
                             />
-                            {item.total_contracts != null && item.total_contracts < RELIABLE_MIN && (
-                              // Thin sample: listed, never hidden — the reader sees why it ranks here.
-                              <span className="font-mono text-[12px] tabular-nums text-text-muted whitespace-nowrap flex-shrink-0" title={t('thinSample', { n: RELIABLE_MIN })}>
-                                n = {item.total_contracts}<span className="sr-only">: {t('thinSample', { n: RELIABLE_MIN })}</span>
-                              </span>
-                            )}
+                            {renderThin(item)}
                             {item.sector_name && (
-                              <span className="text-text-muted text-[13px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">
+                              <span className="text-text-muted text-[13px] font-mono uppercase tracking-[0.1em] flex-shrink-0">
                                 · {localizedSectorName(item.sector_name, lang)}
                               </span>
                             )}
                           </div>
                         </td>
 
-                        {/* Score — secondary numeric, demoted from primary
-                            anchor. The tier label below is now the
-                            editorial verdict; the score is the supporting
-                            measurement. */}
                         <td className="px-2 py-0 align-middle">
                           <div className="flex items-baseline gap-1">
                             <span
                               className="text-[14px] font-mono tabular-nums leading-none"
-                              style={{ color: tier.ink, fontWeight: isCritico ? 700 : 600 }}
+                              style={{ color: m.tier.ink, fontWeight: m.isCritico ? 700 : 600 }}
                             >
                               {item.total_score.toFixed(1)}
                             </span>
@@ -1284,45 +1372,18 @@ export default function InstitutionLeague() {
                           </div>
                         </td>
 
-                        {/* Tier — now the primary editorial verdict. Rendered
-                            as a bold mono label, not a small pill. Critico
-                            gets the dominant red-bar treatment to match the
-                            row tint. */}
-                        <td className="px-2 py-0 text-center align-middle">
-                          <div
-                            className="inline-flex flex-col items-center justify-center px-2 py-1 rounded-sm"
-                            style={{
-                              backgroundColor: tier.bg,
-                              border: `1px solid ${tier.border}`,
-                              minWidth: '92px',
-                            }}
-                          >
-                            <span
-                              className="font-mono uppercase tabular-nums leading-none"
-                              style={{
-                                color: tier.ink,
-                                fontSize: '11px',
-                                fontWeight: 800,
-                                letterSpacing: '0.08em',
-                              }}
-                            >
-                              {tier.label}
-                            </span>
-                          </div>
-                        </td>
+                        {/* Tier — the editorial verdict */}
+                        <td className="px-2 py-0 text-center align-middle">{renderTierTile(m)}</td>
 
-                        {/* Weak pillar — the single legible pillar fact */}
-                        <td className="px-2 py-0 hidden sm:table-cell align-middle">
+                        <td className="px-2 py-0 align-middle">
                           <WeakPillarCell item={item} />
                         </td>
 
-                        {/* Trend icon */}
-                        <td className="px-2 py-0 text-center hidden sm:table-cell align-middle">
+                        <td className="px-2 py-0 text-center hidden xl:table-cell align-middle">
                           <TrendIcon direction={item.trend_direction} />
                         </td>
 
-                        {/* National percentile */}
-                        <td className="px-2 py-0 hidden md:table-cell align-middle">
+                        <td className="px-2 py-0 align-middle">
                           <span className="text-text-secondary text-[13px] font-mono tabular-nums whitespace-nowrap">
                             {item.national_percentile !== null
                               ? t('percentileLabel', { n: Math.round(item.national_percentile * 100) })
@@ -1331,27 +1392,15 @@ export default function InstitutionLeague() {
                         </td>
 
                         {/* Money at risk — the exposure the integrity score can't see */}
-                        <td className="px-2 py-0 text-right hidden lg:table-cell align-middle">
-                          <span className="text-text-secondary text-[13px] font-mono tabular-nums">
-                            {item.money_at_risk_mxn == null
-                              ? '—'
-                              : item.money_at_risk_mxn > 0
-                                ? formatCompactMXN(item.money_at_risk_mxn)
-                                : (
-                                  // A zero is a fact (no high/critical-risk contracts), not missing data.
-                                  <span className="text-text-muted" title={t('zeroMoneyAtRisk')}>
-                                    0<span className="sr-only"> — {t('zeroMoneyAtRisk')}</span>
-                                  </span>
-                                )}
-                          </span>
+                        <td className="px-2 py-0 text-right align-middle">
+                          <span className="text-text-secondary text-[13px] font-mono tabular-nums">{renderMoney(item)}</span>
                         </td>
-
                       </tr>
-                      {isExpanded && (
+                      {m.isExpanded && (
                         <tr
-                          id={panelId}
+                          id={m.panelId}
                           className="border-b border-border bg-background/60"
-                          style={{ borderLeft: `3px solid ${tier.color}` }}
+                          style={{ borderLeft: `3px solid ${m.tier.color}` }}
                         >
                           <td colSpan={8} className="px-5 py-4">
                             <PillarBoleta item={item} />

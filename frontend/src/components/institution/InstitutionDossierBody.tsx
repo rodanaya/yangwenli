@@ -537,6 +537,7 @@ export function InstitutionRecord({
       {/* The contracts */}
       <Panel label={isEs ? 'Los contratos más grandes' : 'The largest contracts'} accent={RISK_COLORS.high}>
         {contractRows.length > 0 ? (
+          <div>
           <div className="overflow-x-auto">
             <table className="w-full" style={{ fontSize: 12 }}>
               <thead>
@@ -567,6 +568,10 @@ export function InstitutionRecord({
                 })}
               </tbody>
             </table>
+          </div>
+            <p className="md:hidden font-mono mt-1.5" aria-hidden="true" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+              {isEs ? '← desliza →' : '← scroll →'}
+            </p>
           </div>
         ) : (
           <EmptyNote text={isEs ? 'Sin contratos registrados.' : 'No contracts on record.'} />

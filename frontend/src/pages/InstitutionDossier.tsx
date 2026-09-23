@@ -445,6 +445,9 @@ export default function InstitutionDossier() {
                 </tbody>
               </table>
             </div>
+            <p className="md:hidden font-mono mt-1.5" aria-hidden="true" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+              {lang === 'es' ? '← desliza →' : '← scroll →'}
+            </p>
             {officialsData?.note && (
               <p className="mt-3 text-[15px] leading-relaxed text-text-muted" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>{officialsData.note}</p>
             )}
