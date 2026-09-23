@@ -5,16 +5,42 @@
  * and grade-card components can be split out of the page module without
  * circular imports.
  */
+import { ADMINISTRATIONS as CANONICAL_TERMS } from '@/lib/administrations'
 import type { DossierEntry, AdminMeta } from './types'
+
+/** First and last calendar years in the contract data (2025 partial, to Sep 28). */
+export const DATA_FIRST_YEAR = 2002
+export const DATA_LAST_YEAR = 2025
+
+// Term years come from the canonical table (lib/administrations.ts, the same
+// outgoing-president convention as backend/api/administrations.py): a year
+// belongs to the president in office for most of it. `end` is inclusive.
+const TERM_KEY: Record<AdminMeta['name'], string> = {
+  Fox: 'fox', Calderon: 'calderon', 'Pena Nieto': 'epn', AMLO: 'amlo', Sheinbaum: 'sheinbaum',
+}
+const term = (name: AdminMeta['name']) => {
+  const t = CANONICAL_TERMS.find((a) => a.key === TERM_KEY[name])
+  if (!t) throw new Error(`no canonical term for ${name}`)
+  return { start: t.yearStart, end: t.yearEnd, dataStart: Math.max(t.yearStart, DATA_FIRST_YEAR) }
+}
 
 /** The 5 modern federal administrations covered by RUBLI's data window. */
 export const ADMINISTRATIONS: readonly AdminMeta[] = [
-  { name: 'Fox',        fullName: 'Vicente Fox Quesada',             start: 2001, end: 2006, dataStart: 2002, color: '#3b82f6', party: 'PAN',    wikiArticle: 'Vicente_Fox_Quesada' },
-  { name: 'Calderon',  fullName: 'Felipe Calderón Hinojosa',         start: 2006, end: 2012, dataStart: 2006, color: '#22c55e', party: 'PAN',    wikiArticle: 'Felipe_Calderón_Hinojosa' },
-  { name: 'Pena Nieto',fullName: 'Enrique Peña Nieto',               start: 2012, end: 2018, dataStart: 2012, color: '#ef4444', party: 'PRI',    wikiArticle: 'Enrique_Peña_Nieto' },
-  { name: 'AMLO',      fullName: 'Andrés Manuel López Obrador',      start: 2018, end: 2024, dataStart: 2018, color: '#a16207', party: 'MORENA', wikiArticle: 'Andrés_Manuel_López_Obrador' },
-  { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum Pardo',          start: 2024, end: 2030, dataStart: 2024, color: '#14b8a6', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
-] as const
+  { name: 'Fox',        fullName: 'Vicente Fox Quesada',        ...term('Fox'),        color: '#3b82f6', party: 'PAN',    wikiArticle: 'Vicente_Fox_Quesada' },
+  { name: 'Calderon',   fullName: 'Felipe Calderón Hinojosa',   ...term('Calderon'),   color: '#22c55e', party: 'PAN',    wikiArticle: 'Felipe_Calderón_Hinojosa' },
+  { name: 'Pena Nieto', fullName: 'Enrique Peña Nieto',         ...term('Pena Nieto'), color: '#ef4444', party: 'PRI',    wikiArticle: 'Enrique_Peña_Nieto' },
+  { name: 'AMLO',       fullName: 'Andrés Manuel López Obrador', ...term('AMLO'),      color: '#a16207', party: 'MORENA', wikiArticle: 'Andrés_Manuel_López_Obrador' },
+  { name: 'Sheinbaum',  fullName: 'Claudia Sheinbaum Pardo',    ...term('Sheinbaum'),  color: '#14b8a6', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
+]
+
+/**
+ * Printed range of a term's data years: "2019–2024", short "2019–24"; a term
+ * still running past the data horizon prints open-ended ("2025–").
+ */
+export function termRange(meta: AdminMeta, short = false): string {
+  if (meta.end > DATA_LAST_YEAR) return `${meta.dataStart}–`
+  return `${meta.dataStart}–${short ? String(meta.end).slice(2) : meta.end}`
+}
 
 /**
  * Display names with correct diacritics, keyed on the ASCII `name`

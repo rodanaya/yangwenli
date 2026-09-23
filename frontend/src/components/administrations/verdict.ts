@@ -67,11 +67,11 @@ export function getAdminVerdict(args: VerdictArgs): VerdictSegment[] {
   if (adminName === 'Sheinbaum') {
     // 1. Partial term in progress.
     if (isEs) {
-      segments.push({ text: 'Sexenio en curso — registros parciales desde octubre de 2024; ' })
+      segments.push({ text: 'Sexenio en curso — registros parciales de 2025 (al 28 sep); ' })
       segments.push({ text: 'comparaciones preliminares', accent: true })
       segments.push({ text: '.' })
     } else {
-      segments.push({ text: 'Term in progress — partial records since October 2024; ' })
+      segments.push({ text: 'Term in progress — partial records for 2025 (to Sep 28); ' })
       segments.push({ text: 'preliminary comparisons', accent: true })
       segments.push({ text: '.' })
     }

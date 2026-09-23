@@ -21,7 +21,7 @@ import { RISK_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
 import { PresidentAvatar } from './PresidentAvatar'
 import { ProcurementGradeCard } from './ProcurementGradeCard'
 import { DeltaBadge } from './DeltaBadge'
-import { ADMINISTRATIONS, DOSSIER_DATA, PARTY_COLORS, SEVERITY_COLORS } from './data'
+import { ADMINISTRATIONS, DOSSIER_DATA, PARTY_COLORS, SEVERITY_COLORS, termRange } from './data'
 import { getAdminVerdict } from './verdict'
 import type { AdminAgg, AdminName } from './types'
 
@@ -231,7 +231,7 @@ export function AdminSummaryCard({
                 {displayNames[admin.name] ?? admin.name}
               </span>
               <span className="block text-[8.5px] sm:text-[13px] font-mono text-text-muted mt-0.5 truncate">
-                {admin.party} · {admin.dataStart}–{String(Math.min(admin.end, 2025)).slice(2)}
+                {admin.party} · {termRange(admin, true)}
               </span>
               {aggs.length > 0 && tabHr != null && (
                 <span
@@ -283,7 +283,7 @@ export function AdminSummaryCard({
                   {meta.party}
                 </span>
                 <span className="text-xs text-text-muted font-mono">
-                  {meta.dataStart}–{Math.min(meta.end, 2025)}
+                  {termRange(meta)}
                 </span>
               </div>
             </div>

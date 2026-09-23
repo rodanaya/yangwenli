@@ -82,7 +82,7 @@
   },
   "contracts": "contratos",
   "incompleteDataset": "Conjunto de Datos Incompleto",
-  "incompleteDatasetDescription": "La administración de Sheinbaum inicio en octubre de 2024. Estos datos cubren ~4 meses vs. terminos completos de 6 años para otros presidentes. Las comparaciones directas pueden ser engañosas.",
+  "incompleteDatasetDescription": "Sheinbaum asumió el 1 de octubre de 2024; este expediente cuenta su sexenio desde 2025, el primer año calendario completo, con datos al 28 de septiembre de 2025 (~9 meses) frente a sexenios de seis años para los demás presidentes. Las comparaciones directas pueden ser engañosas.",
   "aiDetectedAnomalies": "Anomalías Detectadas por IA",
   "anomaliesNote": "años que se desvían >1.8σ de la línea base 2002–2025",
   "sectorCorrelations": "Correlaciones de Riesgo Sectorial",

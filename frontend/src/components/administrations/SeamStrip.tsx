@@ -214,8 +214,10 @@ export function SeamStrip({ series, nationalAvgPct, admins, seams, isEs, onSelec
           <svg viewBox={`0 0 ${VB_W} ${VB_H}`} style={{ width: '100%', height: 'auto', display: 'block' }} role="img" aria-label={ariaLabel}>
             {/* Party bands — political context as background fill; each is a real button. */}
             {admins.map((a) => {
-              const x1 = xScale(Math.max(a.start, YEAR_MIN))
-              const x2 = xScale(Math.min(a.end, YEAR_MAX))
+              // A term owns its calendar years (outgoing-president convention):
+              // its band runs half a year either side of its first and last year.
+              const x1 = xScale(Math.max(a.start - 0.5, YEAR_MIN))
+              const x2 = xScale(Math.min(a.end + 0.5, YEAR_MAX))
               const w = Math.max(0, x2 - x1)
               const mobileAbbr = MOBILE_BAND_ABBR[a.name.toLowerCase()] ?? a.abbr.charAt(0)
               return (
@@ -307,8 +309,8 @@ export function SeamStrip({ series, nationalAvgPct, admins, seams, isEs, onSelec
       {/* Footnote — Structure-A caveat, handover-window definition, Sheinbaum partial term. */}
       <p className="mt-2 text-[13px] font-mono leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
         {isEs
-          ? '† Estructura A (2002–2010): cobertura de RFC 0.1% — el indicador subestima el riesgo temprano. Ventanas de relevo: promedio simple de 2 años a cada lado del traspaso; tolerancia ±0.25 pp. Sheinbaum: mandato parcial (2024–2025) — ventana de entrada limitada a los años disponibles.'
-          : '† Structure A (2002–2010): 0.1% RFC coverage — the indicator understates early risk. Handover windows: 2-year simple average on each side of the transfer; ±0.25 pp tolerance. Sheinbaum: partial term (2024–2025) — entry window limited to the years available.'}
+          ? '† Estructura A (2002–2010): cobertura de RFC 0.1% — el indicador subestima el riesgo temprano. Ventanas de relevo: promedio simple de 2 años a cada lado del traspaso; tolerancia ±0.25 pp. Sheinbaum: mandato parcial (2025, datos al 28 sep) — ventana de entrada limitada a los años disponibles.'
+          : '† Structure A (2002–2010): 0.1% RFC coverage — the indicator understates early risk. Handover windows: 2-year simple average on each side of the transfer; ±0.25 pp tolerance. Sheinbaum: partial term (2025, data to Sep 28) — entry window limited to the years available.'}
       </p>
     </div>
   )

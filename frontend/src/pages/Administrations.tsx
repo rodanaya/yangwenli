@@ -35,7 +35,9 @@ import { GapRecoveryPanel } from '@/components/gap/GapRecoveryPanel'
 import {
   ADMINISTRATIONS,
   ADMIN_DISPLAY_NAMES,
+  DATA_LAST_YEAR,
   PARTY_COLORS,
+  termRange,
 } from '@/components/administrations/data'
 import type {
   AdminName,
@@ -45,7 +47,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber } from '@/lib/utils'
-import { SECTORS, CURRENT_MODEL_VERSION } from '@/lib/constants'
+import { SECTORS, CURRENT_MODEL_VERSION, PARTIAL_YEAR_NOTE } from '@/lib/constants'
 import { analysisApi, officialsApi } from '@/api/client'
 import type { YearOverYearChange } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -95,7 +97,7 @@ const ANOMALY_METRIC_LABELS: Record<string, { en: string; es: string }> = {
 function aggregateByAdmin(yoyData: YearOverYearChange[]): AdminAgg[] {
   return ADMINISTRATIONS.map((admin) => {
     const years = yoyData.filter(
-      (y) => y.year >= admin.dataStart && y.year < admin.end
+      (y) => y.year >= admin.dataStart && y.year <= admin.end
     )
     const totalContracts = years.reduce((s, y) => s + y.contracts, 0)
     const totalValue = years.reduce((s, y) => s + y.total_value, 0)
@@ -271,7 +273,7 @@ export default function Administrations() {
   const sectorHeatmap = useMemo(() => {
     if (!selectedMeta || sectorYearData.length === 0) return []
     const filtered = sectorYearData.filter(
-      (sy) => sy.year >= selectedMeta.dataStart && sy.year < selectedMeta.end
+      (sy) => sy.year >= selectedMeta.dataStart && sy.year <= selectedMeta.end
     )
     return SECTORS.map((sector) => {
       const sectorRows = filtered.filter((r) => r.sector_id === sector.id)
@@ -370,7 +372,7 @@ export default function Administrations() {
   // administration's party color; the PATRÓN folder carries the platform ochre.
   const folderColor = PARTY_COLORS[selectedMeta.party] || '#64748b'
   const selectedDisplay = ADMIN_DISPLAY_NAMES[selectedAdmin] ?? selectedAdmin
-  const adminTag = `${selectedDisplay} · ${selectedMeta.dataStart}–${Math.min(selectedMeta.end, 2025)}`
+  const adminTag = `${selectedDisplay} · ${termRange(selectedMeta)}`
   // ── Fable-remake §8 «LOS SOBREVIVIENTES» — ACTO I/III data. All derived from
   //    the 4 eager payloads already in memory: 0 new endpoints, 0 new eager calls.
   const PARTY_ABBR: Record<string, string> = { PAN: 'PAN', PRI: 'PRI', MORENA: 'MOR' }
@@ -379,7 +381,7 @@ export default function Administrations() {
     return {
       adminName: a.name,
       displayName: ADMIN_DISPLAY_NAMES[a.name] ?? a.name,
-      yearsLabel: `${a.dataStart}–${Math.min(a.end, 2025)}`,
+      yearsLabel: termRange(a),
       party: a.party,
       color: PARTY_COLORS[a.party] ?? a.color,
       seats: (era?.top_vendors ?? []).slice(0, 6).map((v) => ({
@@ -401,7 +403,7 @@ export default function Administrations() {
     party: a.party,
     color: PARTY_COLORS[a.party] ?? a.color,
     start: a.dataStart,
-    end: Math.min(a.end, 2025),
+    end: Math.min(a.end, DATA_LAST_YEAR),
   }))
   const seams: Seam[] = [
     { xYear: 2006.92, fromAdmin: 'Fox', toAdmin: 'Calderon', structureA: true },
@@ -587,7 +589,9 @@ export default function Administrations() {
               const daDelta = daAvg - allTimeAvg.da
               const sbDelta = sbAvg - allTimeAvg.sb
               const hrDelta = hrAvg - allTimeAvg.hr
-              const yrSpan = `${first.year} → ${last.year}`
+              // 2025 is a partial year (data to Sep 28): starred wherever it is printed.
+              const yrLabel = (yr: number) => (yr === DATA_LAST_YEAR ? `${yr}*` : String(yr))
+              const yrSpan = first.year === last.year ? yrLabel(first.year) : `${first.year} → ${yrLabel(last.year)}`
               const multiYear = years.length >= 2
               // Δ vs national average. Above-national is *worse* for DA/HR
               // (→ risk-critical); SB is neutral (→ muted). NEVER green (Bible §3.10).
@@ -765,11 +769,14 @@ export default function Administrations() {
                   rebuilt from the old floating skeleton-strip: a full-width row
                   of labelled era-coloured bars (honest linear-from-zero scale),
                   every year named, the peak emphasised. */}
-              {selectedAgg && selectedAgg.years.length > 1 && (() => {
+              {selectedAgg && selectedAgg.years.length > 0 && (() => {
                 const years = selectedAgg.years
                 const maxC = Math.max(...years.map((y) => y.contracts), 1)
                 const peak = years.reduce((m, y) => (y.contracts > m.contracts ? y : m), years[0])
                 const total = years.reduce((s, y) => s + y.contracts, 0)
+                const hasPartial = years.some((y) => y.year === DATA_LAST_YEAR)
+                // A single (partial) year keeps a bar-sized column instead of spanning the row.
+                const barCol = years.length === 1 ? 'flex-1 min-w-0 max-w-[96px]' : 'flex-1 min-w-0'
                 return (
                   <div className="mt-4 pt-3 border-t border-border/20">
                     <div className="flex items-baseline justify-between gap-2 mb-2.5">
@@ -786,7 +793,7 @@ export default function Administrations() {
                         const h = Math.max(3, (yr.contracts / maxC) * 72)
                         const isPeak = yr.year === peak.year
                         return (
-                          <div key={yr.year} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full">
+                          <div key={yr.year} className={cn(barCol, 'flex flex-col items-center justify-end h-full')}>
                             <span
                               className="text-[8.5px] font-mono tabular-nums mb-1 whitespace-nowrap"
                               style={{ color: isPeak ? selectedMeta.color : 'var(--color-text-muted)', fontWeight: isPeak ? 700 : 400 }}
@@ -809,8 +816,8 @@ export default function Administrations() {
                     {/* Year axis — aligned 1:1 under the bars */}
                     <div className="flex gap-1.5 sm:gap-2 mt-1 pt-1 border-t border-border/30">
                       {years.map((yr) => (
-                        <span key={yr.year} className="flex-1 min-w-0 text-center text-[13px] font-mono text-text-muted tabular-nums">
-                          {yr.year}
+                        <span key={yr.year} className={cn(barCol, 'text-center text-[13px] font-mono text-text-muted tabular-nums')}>
+                          {yr.year === DATA_LAST_YEAR ? `${yr.year}*` : yr.year}
                         </span>
                       ))}
                     </div>
@@ -818,6 +825,7 @@ export default function Administrations() {
                       {isEs
                         ? `Volumen anual de contratos · escala lineal desde cero. Pico en ${peak.year} (${formatNumber(peak.contracts)}).`
                         : `Annual contract volume · linear scale from zero. Peak in ${peak.year} (${formatNumber(peak.contracts)}).`}
+                      {hasPartial && <> * {isEs ? PARTIAL_YEAR_NOTE.es : PARTIAL_YEAR_NOTE.en}.</>}
                     </p>
                   </div>
                 )
@@ -870,7 +878,7 @@ export default function Administrations() {
                 <div className="min-w-0">
                   <ChapterKicker numeral="III" es="EL EXPEDIENTE" en="THE CASE FILE" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
                   <h3 className="text-sm font-mono text-text-primary">
-                    {t('keyEvents', { admin: selectedDisplay, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
+                    {t('keyEvents', { admin: selectedDisplay, start: selectedMeta.dataStart, end: selectedMeta.end > DATA_LAST_YEAR ? '' : selectedMeta.end })}
                   </h3>
                   <p className="text-xs text-text-muted mt-1">{t('keyEventsSubtitle')}</p>
                 </div>
