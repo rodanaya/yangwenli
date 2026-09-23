@@ -29,8 +29,7 @@ import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { LedgerRow } from './ExposureLedger'
-import { intensityColor } from './ExposureLedger'
-import { intensityTextColor, makeLogFrac, ownSpendShare, orderForLens } from './confoundScales'
+import { intensityColor, intensityTextColor, makeLogFrac, ownSpendShare, orderForLens } from './confoundScales'
 import type { PlateLens } from './confoundScales'
 
 const ROW_H = 44

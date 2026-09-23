@@ -40,7 +40,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
   const isEs = i18n.language?.startsWith('es')
   const lang: 'en' | 'es' = isEs ? 'es' : 'en'
 
-  const sectorAccent = SECTOR_COLORS[sector.code] ?? '#64748b'
+  const sectorAccent = SECTOR_COLORS[sector.code] ?? SECTOR_COLORS.otros
   const stats = sector.statistics
 
   // Verdict = HR%. Tier tiers tuned for sector aggregates (higher than

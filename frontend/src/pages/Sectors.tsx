@@ -111,7 +111,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
     <div className="rounded-sm border border-border overflow-hidden">
       {orderedSectors.map((sectorCode) => {
         const cats = sectorGroups.get(sectorCode) ?? []
-        const color = SECTOR_COLORS[sectorCode] ?? '#64748b'
+        const color = SECTOR_COLORS[sectorCode] ?? SECTOR_COLORS.otros
         const sectorData = sectorMap.get(sectorCode)
         const isOpen = !collapsed.has(sectorCode)
 
@@ -818,7 +818,7 @@ export function Sectors() {
                         {catRows.map((cat, idx) => {
                           const riskLevel = getRiskLevelFromScore(cat.avg_risk)
                           const sectorColor =
-                            cat.sector_code ? SECTOR_COLORS[cat.sector_code] ?? '#64748b' : '#64748b'
+                            cat.sector_code ? SECTOR_COLORS[cat.sector_code] ?? SECTOR_COLORS.otros : SECTOR_COLORS.otros
 
                           const prevSectorCode = idx > 0 ? catRows[idx - 1].sector_code : null
                           const sectorChanged = idx > 0 && prevSectorCode !== cat.sector_code

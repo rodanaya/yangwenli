@@ -26,12 +26,12 @@
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { SECTOR_COLORS, RISK_COLORS, EU_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
 import type { SectorTrajectoryPoint } from '@/api/types'
 import { SectorDossierCard } from './SectorHoverDossier'
-import { orderForLens } from './confoundScales'
+import { orderForLens, intensityColor, trajectoryDirection, EU_DA_LINE } from './confoundScales'
 import type { PlateLens } from './confoundScales'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,22 +58,6 @@ export interface LedgerRow {
 
 // Sectors that carry a marginalia dagger (†) on the index.
 const DAGGER_SECTORS = new Set(['salud', 'agricultura', 'trabajo'])
-
-// OECD direct-award ceiling, as a percentage (0–100) for this surface's copy.
-// Single source: constants.ts EU_DIRECT_AWARD_LIMIT (anti-pattern A7 — never
-// retype the limit per surface).
-const EU_DA_LINE = EU_DIRECT_AWARD_LIMIT * 100
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Tiny local helpers (intensityColor / compactCount shared with §B/§C/dossier)
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Compact integer count: 1.08M · 65.7k · 942. Local per spec (not currency). */
-export function compactCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
-  return `${Math.round(n)}`
-}
 
 const sectorFill = (code: string): string => SECTOR_COLORS[code] ?? SECTOR_COLORS.otros
 
@@ -112,22 +96,6 @@ const MARGIN_NOTE_STYLE: CSSProperties = {
   lineHeight: 1.45,
   color: 'var(--color-text-secondary)',
 }
-
-// Direction of a risk trajectory over its series — rising risk is the signal we tint.
-function trajectoryDirection(traj: SectorTrajectoryPoint[]): { glyph: string; rising: boolean } {
-  if (!traj || traj.length < 2) return { glyph: '·', rising: false }
-  const delta = traj[traj.length - 1].avg_risk - traj[0].avg_risk
-  if (delta > 0.02) return { glyph: '↑', rising: true }
-  if (delta < -0.02) return { glyph: '↓', rising: false }
-  return { glyph: '→', rising: false }
-}
-
-// Intensity dot colour — RISK_COLORS by level, but never green for low (Bible §3.10).
-export function intensityColor(score: number): string {
-  const level = getRiskLevelFromScore(score)
-  return level === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[level]
-}
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Marginalia note strings — caveat register (Hacienda note promoted to §A/§B).

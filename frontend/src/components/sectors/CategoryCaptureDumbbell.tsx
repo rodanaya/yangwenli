@@ -33,7 +33,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { formatCompactMXN } from '@/lib/utils'
 import { useMeasuredWidth, useFontsReady } from '@/hooks/useMeasuredWidth'
-import { measureLabel } from '@/components/network/plateLabels'
+import { measureLabel } from '@/lib/plateLabels'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -297,7 +297,7 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
             name_es: cat.name_es,
             name_en: cat.name_en,
             sector_code: sectorCode,
-            color: SECTOR_COLORS[sectorCode] ?? '#64748b',
+            color: SECTOR_COLORS[sectorCode] ?? SECTOR_COLORS.otros,
             total_value: cats.total_value,
             total_contracts: cats.total_contracts,
             top1,

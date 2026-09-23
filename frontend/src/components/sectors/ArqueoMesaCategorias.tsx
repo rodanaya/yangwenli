@@ -27,7 +27,7 @@ import {
 } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
-import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/components/network/plateLabels'
+import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
 import { useFontsReady } from '@/hooks/useMeasuredWidth'
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -262,7 +262,6 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
       ? 'pase el cursor por una columna · clic → dossier de la categoría'
       : 'hover a column · click → category dossier'
 
-  const totalHeightDesktop = READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H + LEGEND_H
   const svgH = TOP_PAD + BAND_H + LABEL_H
   const hoveredIdx = hoveredKey === null ? -1 : laidOut.findIndex(({ col }) => col.key === hoveredKey)
 
@@ -398,7 +397,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
 
               {/* y-axis ticks */}
               {axisTicks.map(tick => {
-                const ty = LEFT_GUTTER ? yFor(tick) : 0
+                const ty = yFor(tick)
                 return (
                   <g key={`tick-${tick}`}>
                     <line
@@ -431,7 +430,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 const hatchTop = yFor(col.avg_risk * 100)
                 const level = getRiskLevelFromScore(col.avg_risk)
                 const waterColor = RISK_LEVEL_COLOR[level]
-                const color = SECTOR_COLORS[col.sector_code ?? 'otros'] ?? '#64748b'
+                const color = SECTOR_COLORS[col.sector_code ?? 'otros'] ?? SECTOR_COLORS.otros
                 const textColor = SECTOR_TEXT_COLORS[col.sector_code ?? 'otros'] ?? color
                 const isHovered = hoveredKey === col.key
                 const isDimmed = hoveredKey !== null && !isHovered
@@ -672,8 +671,6 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
           </div>
         )}
 
-        <div style={{ height: isMobile ? 0 : 0 }} />
-        <span className="sr-only">{totalHeightDesktop}</span>
       </div>
     </PlateFrame>
   )
@@ -709,7 +706,7 @@ function MobileMesa({
       {laidOut.map(({ col, w }) => {
         const shareFrac = w / totalW
         const rowH = Math.max(ROW_MIN_H, shareFrac * 420)
-        const color = SECTOR_COLORS[col.sector_code ?? 'otros'] ?? '#64748b'
+        const color = SECTOR_COLORS[col.sector_code ?? 'otros'] ?? SECTOR_COLORS.otros
         const level = getRiskLevelFromScore(col.avg_risk)
         const waterColor = RISK_LEVEL_COLOR[level]
         const name = lang === 'es' ? col.name_es : col.name_en

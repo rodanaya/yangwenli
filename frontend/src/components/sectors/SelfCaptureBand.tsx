@@ -17,9 +17,8 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { LedgerRow } from './ExposureLedger'
-import { intensityColor } from './ExposureLedger'
 import { OwnSpendTrack } from './ConfoundPlate'
-import { intensityTextColor, ownSpendShare, rankDeltas } from './confoundScales'
+import { intensityColor, intensityTextColor, ownSpendShare, rankDeltas } from './confoundScales'
 
 export function SelfCaptureBand({ rows, lang }: { rows: LedgerRow[]; lang: 'en' | 'es' }) {
   const isEs = lang === 'es'

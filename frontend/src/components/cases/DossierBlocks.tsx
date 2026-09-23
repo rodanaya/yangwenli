@@ -15,7 +15,7 @@ import { Link } from 'react-router-dom'
 import { formatCompactMXN } from '@/lib/utils'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { placeLabels, measureLabel, type LabelCandidate } from '@/components/network/plateLabels'
+import { placeLabels, measureLabel, type LabelCandidate } from '@/lib/plateLabels'
 import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import type { KeyActor, LinkedVendor, ScandalDetail, ScandalListItem } from '@/api/types'
 import {

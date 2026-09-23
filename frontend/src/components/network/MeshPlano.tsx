@@ -20,7 +20,7 @@ import { RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/const
 import { formatCompactMXN, formatDualCurrency, formatNumber } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
-import { placeLabels, measureLabel, type LabelBox, type LabelCandidate } from './plateLabels'
+import { placeLabels, measureLabel, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
 
 interface MeshPlanoProps {
   communities: CommunityIndexItem[]

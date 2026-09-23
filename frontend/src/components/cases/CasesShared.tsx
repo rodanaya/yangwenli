@@ -15,7 +15,7 @@
  */
 import { useRef } from 'react'
 import { DotBar } from '@/components/ui/DotBar'
-import { measureLabel } from '@/components/network/plateLabels'
+import { measureLabel } from '@/lib/plateLabels'
 import { useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import {
   dispositionFor,

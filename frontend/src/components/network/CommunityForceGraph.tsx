@@ -35,7 +35,7 @@ import { RISK_COLORS, RISK_TEXT_COLORS, PATTERN_COLORS, getRiskLevelFromScore } 
 import { formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 import type { EvidenceMark } from '@/lib/network/evidence'
-import { placeLabels, measureLabel, type LabelCandidate } from './plateLabels'
+import { placeLabels, measureLabel, type LabelCandidate } from '@/lib/plateLabels'
 
 const VIEW_W = 920
 const VIEW_H = 600

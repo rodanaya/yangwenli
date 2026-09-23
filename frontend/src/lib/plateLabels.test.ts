@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { placeLabels, measureLabel, type LabelCandidate } from './plateLabels'
+import { placeLabels, measureLabel, type LabelCandidate } from '@/lib/plateLabels'
 
 const BOUNDS = { x0: 0, y0: 0, x1: 400, y1: 200 }
 

@@ -21,7 +21,7 @@
  */
 import { useRef } from 'react'
 import { RISK_COLORS } from '@/lib/constants'
-import { measureLabel } from '@/components/network/plateLabels'
+import { measureLabel } from '@/lib/plateLabels'
 import { useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import {
   CURRENT_YEAR,

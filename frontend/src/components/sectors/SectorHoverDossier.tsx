@@ -19,24 +19,10 @@ import { useQuery } from '@tanstack/react-query'
 import { sectorApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
-import { RISK_COLORS, RISK_TEXT_COLORS, EU_DIRECT_AWARD_LIMIT } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
-import type { SectorTrajectoryPoint } from '@/api/types'
 import type { LedgerRow } from './ExposureLedger'
-import { compactCount } from './ExposureLedger'
-import { intensityTextColor, ownSpendShare } from './confoundScales'
-
-// OECD direct-award ceiling as a percentage (0–100). Single source: constants.
-const EU_DA_LINE = EU_DIRECT_AWARD_LIMIT * 100
-
-// Direction of a risk trajectory — rising risk is the signal we tint amber.
-function trajectoryDirection(traj: SectorTrajectoryPoint[]): { glyph: string; rising: boolean } {
-  if (!traj || traj.length < 2) return { glyph: '·', rising: false }
-  const delta = traj[traj.length - 1].avg_risk - traj[0].avg_risk
-  if (delta > 0.02) return { glyph: '↑', rising: true }
-  if (delta < -0.02) return { glyph: '↓', rising: false }
-  return { glyph: '→', rising: false }
-}
+import { intensityTextColor, ownSpendShare, compactCount, trajectoryDirection, EU_DA_LINE } from './confoundScales'
 
 export function SectorDossierCard({
   row,

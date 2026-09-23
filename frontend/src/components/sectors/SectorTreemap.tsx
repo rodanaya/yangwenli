@@ -42,7 +42,7 @@ function hexToRgb(hex: string): [number, number, number] {
 
 /** Compute fill rgba for a treemap cell */
 function cellFill(sectorCode: string, avgRiskScore: number): string {
-  const baseHex = SECTOR_COLORS[sectorCode] ?? '#64748b'
+  const baseHex = SECTOR_COLORS[sectorCode] ?? SECTOR_COLORS.otros
   const [r, g, b] = hexToRgb(baseHex)
   const clamped = Math.max(0, Math.min(1, (avgRiskScore - 0.10) / 0.30))
   const opacity = 0.35 + 0.55 * clamped
@@ -89,7 +89,7 @@ function Tooltip({
   const s = data.sector
   const daPct = s.direct_award_pct ?? 0
   const riskLevel = getRiskLevelFromScore(s.avg_risk_score)
-  const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+  const color = SECTOR_COLORS[s.sector_code] ?? SECTOR_COLORS.otros
 
   // Risk color (no green — text-text-muted for low, same as bible §3.10)
   const riskTextColor =
@@ -304,7 +304,7 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
           const displayName = getSectorName(s.sector_code, lang === 'es' ? 'es' : 'en')
           const spendLabel = formatCompactMXN(s.total_value_mxn)
           const isAgri = s.sector_code === 'agricultura'
-          const sectorColor = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+          const sectorColor = SECTOR_COLORS[s.sector_code] ?? SECTOR_COLORS.otros
           // Adaptive label color: dark text on low-opacity cells, white on saturated cells
           const { fill: labelFill, filter: labelFilter } = cellLabelColor(s.avg_risk_score)
 

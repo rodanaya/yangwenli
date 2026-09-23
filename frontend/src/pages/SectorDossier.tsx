@@ -262,7 +262,7 @@ export default function SectorDossier() {
     )
   }
 
-  const sectorAccent = SECTOR_COLORS[sector.code] ?? '#64748b'
+  const sectorAccent = SECTOR_COLORS[sector.code] ?? SECTOR_COLORS.otros
   const sectorAccentText = getSectorTextColor(sector.code)
   const institutions = institutionsResp?.institutions ?? []
   const totalSpend = sector.statistics.total_value_mxn ?? 0

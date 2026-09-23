@@ -3,7 +3,6 @@
  * dossier + risk-rank band). One source of truth so the three sub-components
  * stay in lockstep with `categoriesApi.getSummary()`.
  */
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 
 export interface CategoryTopVendor {
   id: number
@@ -31,12 +30,5 @@ export const CONTRACT_FLOOR = 200
 /** Concentration / risk lens for the centerpiece plate. */
 export type PlateLens = 'concentration' | 'risk'
 
-/**
- * intensityColor — RISK_COLORS by level, but NEVER green for low (Bible §3.10).
- * Local reimplementation per spec (the /sectors confoundScales helper is not
- * importable across the sector boundary for a category surface).
- */
-export function intensityColor(score: number): string {
-  const level = getRiskLevelFromScore(score)
-  return level === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[level]
-}
+/** intensityColor — one home: the /sectors confoundScales helper (PARALLAX D7b STEP 0). */
+export { intensityColor } from '@/components/sectors/confoundScales'

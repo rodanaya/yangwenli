@@ -8,10 +8,36 @@
  * the components own the pixel mapping.
  */
 import type { LedgerRow } from './ExposureLedger'
-import { RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import type { SectorTrajectoryPoint } from '@/api/types'
+import { RISK_COLORS, RISK_TEXT_COLORS, EU_DIRECT_AWARD_LIMIT, getRiskLevelFromScore } from '@/lib/constants'
+
+/** EU direct-award line as a percentage (0–100). Single source: constants. */
+export const EU_DA_LINE = EU_DIRECT_AWARD_LIMIT * 100
+
+/** Intensity dot/ring colour — RISK_COLORS by level, never green for low (Bible §3.10). */
+export function intensityColor(score: number): string {
+  const level = getRiskLevelFromScore(score)
+  return level === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[level]
+}
+
+/** Compact integer count: 1.08M · 65.7k · 942 (not currency). */
+export function compactCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
+  return `${Math.round(n)}`
+}
+
+/** Direction of a risk trajectory over its series — rising risk is the signal we tint. */
+export function trajectoryDirection(traj: SectorTrajectoryPoint[]): { glyph: string; rising: boolean } {
+  if (!traj || traj.length < 2) return { glyph: '·', rising: false }
+  const delta = traj[traj.length - 1].avg_risk - traj[0].avg_risk
+  if (delta > 0.02) return { glyph: '↑', rising: true }
+  if (delta < -0.02) return { glyph: '↓', rising: false }
+  return { glyph: '→', rising: false }
+}
 
 /**
- * Intensity as TYPE — the AA-safe twin of ExposureLedger's intensityColor for
+ * Intensity as TYPE — the AA-safe twin of intensityColor (above) for
  * every % numeral (rings and dots keep intensityColor). Never green for low.
  * PARALLAX D7 § Change 3 (lives here, not in the component file, so that file
  * does not grow another non-component export — react-refresh).

@@ -27,7 +27,7 @@ import { ownSpendShare } from './confoundScales'
 import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
-import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/components/network/plateLabels'
+import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
 import { useFontsReady } from '@/hooks/useMeasuredWidth'
 
 interface ArqueoMesaProps {

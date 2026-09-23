@@ -17,7 +17,7 @@ import type { InstitutionStarResponse } from '@/api/client'
 import { RISK_COLORS, RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
-import { placeLabels, measureLabel, type LabelBox, type LabelCandidate } from './plateLabels'
+import { placeLabels, measureLabel, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
 
 const VIEW_W = 920
 const VIEW_H = 600
