@@ -17,7 +17,7 @@
  *     § IV  Los Beneficiarios — top vendors + top sectors + top-100 ledger
  *     § V   Los Compradores  — top spending institutions for the term (the buyers)
  *   ACT III · AdminSurvivorsSlope «Los Sobrevivientes» + OfficialTenureBands
- *   compare tool (collapsed) · PageFooter
+ *   compare tool (collapsed) · credibility line (the shell colophon is the footer)
  */
 
 import { useMemo, useState, useEffect } from 'react'
@@ -45,14 +45,14 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber } from '@/lib/utils'
-import { SECTORS } from '@/lib/constants'
+import { SECTORS, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { analysisApi, officialsApi } from '@/api/client'
 import type { YearOverYearChange } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
 import { AlertTriangle } from 'lucide-react'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
-import { PageFooter } from '@/components/layout/PageFooter'
+import { useExecutiveSummary } from '@/hooks/useExecutiveSummary'
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 import { ShareButton } from '@/components/ShareButton'
 import { DotBar } from '@/components/ui/DotBar'
@@ -182,6 +182,7 @@ export default function Administrations() {
     return (match?.name ?? 'AMLO') as AdminName
   })
   const [compareOpen, setCompareOpen] = useState(false)
+  const { totalContracts } = useExecutiveSummary()
 
   // Keep ?admin= synced with the selection so a chosen administration is a
   // shareable, reload-safe deep link (e.g. /administrations?admin=amlo).
@@ -438,7 +439,7 @@ export default function Administrations() {
         </filter>
         <rect width="100%" height="100%" filter="url(#administrations-page-paper-grain)" />
       </svg>
-      <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8" style={{ zIndex: 1 }}>
+      <div className="relative max-w-[1010px] mx-auto px-4 sm:px-6 py-6 sm:py-8" style={{ zIndex: 1 }}>
 
         {/* ── Compact folio header — no sledgehammer ── */}
         <header className="mb-6 pb-5 border-b border-border">
@@ -484,13 +485,13 @@ export default function Administrations() {
               </h1>
               <p
                 style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
-                className="mt-2 text-[15px] leading-relaxed text-text-secondary"
+                className="mt-2 max-w-[640px] text-[16px] leading-relaxed text-text-secondary"
               >
                 {isEs
                   ? 'Tres millones de contratos federales bajo cinco presidentes. Elija una administración — el expediente responde.'
                   : 'Three million federal contracts under five presidents. Choose an administration — the file answers.'}
               </p>
-              <p style={{ fontFamily: '"EB Garamond", Georgia, serif' }} className="mt-2 text-[15px] leading-relaxed text-text-secondary">
+              <p style={{ fontFamily: '"EB Garamond", Georgia, serif' }} className="mt-2 max-w-[640px] text-[15px] leading-relaxed text-text-secondary">
                 {isEs ? (
                   <><span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nDaOver50}</span> de 5 administraciones adjudicaron más de la mitad de sus contratos sin competencia · <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nHrOverNatl}</span> de 5 por encima del promedio nacional de alto riesgo.</>
                 ) : (
@@ -514,11 +515,11 @@ export default function Administrations() {
           {/* ==== ACTO I - EL PATRON: the thesis proven above the fold, no tab
               needed. Sec.A named survivors across party turnover; Sec.B the risk
               line across four handovers. Both computed from payloads in memory. ==== */}
-          <div className="mb-2 text-[12px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="mb-2 text-[12px] font-mono font-normal leading-normal uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
             <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{isEs ? 'Acto I' : 'Act I'}</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'El patrón' : 'The pattern'}
-          </div>
+          </h2>
           <section
             aria-label={isEs ? 'El patrón — riesgo a través de cuatro relevos' : 'The pattern — risk across four handovers'}
             className="rounded-sm border border-border/50 bg-background-card overflow-hidden mb-6"
@@ -529,11 +530,11 @@ export default function Administrations() {
             </div>
           </section>
           {/* ==== ACTO II - EL EXPEDIENTE: the selected administration's file ==== */}
-          <div className="mb-2 text-[12px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="mb-2 text-[12px] font-mono font-normal leading-normal uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
             <span style={{ color: folderColor, fontWeight: 600 }}>{isEs ? 'Acto II' : 'Act II'}</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'El expediente' : 'The file'}
-          </div>
+          </h2>
           <section
             id="expediente-file"
             aria-label={isEs ? `Expediente · ${selectedDisplay}` : `Case file · ${selectedDisplay}`}
@@ -756,7 +757,7 @@ export default function Administrations() {
                   </div>
                 </div>
               )}
-              <p className="mt-3 pt-3 border-t border-border/20 text-[12px] text-text-muted leading-relaxed">
+              <p className="mt-3 pt-3 border-t border-border/20 text-[13.5px] text-text-muted leading-relaxed">
                 {t('evidenceSection.inflationNote')}
               </p>
 
@@ -1011,11 +1012,11 @@ export default function Administrations() {
           </section>
           {/* ==== ACTO III - LOS QUE PERMANECEN: officials who kept signing across
               a change of government, + the on-demand two-period compare. ==== */}
-          <div className="mt-8 mb-2 text-[12px] font-mono uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
+          <h2 className="mt-8 mb-2 text-[12px] font-mono font-normal leading-normal uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
             <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{isEs ? 'Acto III' : 'Act III'}</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'Los que permanecen' : 'The ones who remain'}
-          </div>
+          </h2>
           <section
             aria-label={isEs ? 'Los sobrevivientes — proveedores que permanecen entre sexenios' : 'The survivors — suppliers that persist across terms'}
             className="rounded-sm border border-border/50 bg-background-card overflow-hidden mb-6"
@@ -1048,7 +1049,22 @@ export default function Administrations() {
             )}
           </div>
 
-          <PageFooter />
+          {/* One footer (PARALLAX D8 § Change 2): the credibility line is a
+              paragraph inside main; the shell colophon is the page's only <footer>. */}
+          <p className="mt-16 pt-8 pb-8 border-t border-border text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted leading-relaxed">
+            {isEs ? 'Fuente' : 'Source'}: <span className="text-text-secondary">COMPRANET / SHCP</span>
+            <span aria-hidden="true"> · </span>
+            {isEs ? 'Modelo de riesgo' : 'Risk model'} <span className="text-text-secondary tabular-nums">{CURRENT_MODEL_VERSION}</span>
+            <span aria-hidden="true"> · </span>
+            {isEs ? 'AUC prueba' : 'Test AUC'} <span className="text-text-secondary tabular-nums">0.785</span>
+            {totalContracts > 0 && (
+              <>
+                <span aria-hidden="true"> · </span>
+                <span className="text-text-secondary tabular-nums">{totalContracts.toLocaleString(isEs ? 'es-MX' : 'en-US')}</span>{' '}
+                {isEs ? 'contratos analizados' : 'contracts analyzed'}
+              </>
+            )}
+          </p>
         </div>
       </div>
     </div>

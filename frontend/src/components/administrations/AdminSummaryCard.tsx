@@ -292,8 +292,7 @@ export function AdminSummaryCard({
           {verdictSegments.length > 0 && (
             <p
               style={{ fontFamily: 'var(--font-family-serif)' }}
-              className="text-[15px] leading-relaxed text-text-primary mb-2.5 line-clamp-4"
-              title={verdictSegments.map((s) => s.text).join('')}
+              className="max-w-[640px] text-[15px] leading-relaxed text-text-primary mb-2.5"
             >
               {verdictSegments.map((s, i) =>
                 s.accent ? (
@@ -308,7 +307,7 @@ export function AdminSummaryCard({
           )}
           <p
             style={{ fontFamily: 'var(--font-family-serif)' }}
-            className="text-[13px] text-text-secondary leading-relaxed"
+            className="max-w-[640px] text-[15px] text-text-secondary leading-relaxed"
           >
             {t(`dossier.contexts.${dossier.contextKey}`)}
           </p>
@@ -425,7 +424,7 @@ export function AdminSummaryCard({
       {(isFoxEra || isPartialTerm) && (
         <div className="px-5 py-2.5 border-t border-border/30 bg-background-elevated/20 flex items-start gap-2">
           <AlertTriangle className="h-3 w-3 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
-          <p className="text-[12px] text-text-muted leading-relaxed">
+          <p className="text-[13.5px] text-text-muted leading-relaxed">
             {isFoxEra &&
               (isEs
                 ? '* Estructura A (2002–2010): la adjudicación directa se registró de forma incompleta — el riesgo está subestimado.'
