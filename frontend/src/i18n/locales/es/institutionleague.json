@@ -50,7 +50,6 @@
   "peerPercentileLine": "Peor que el {{pct}}% de su sector",
   "confidenceLine": "Confianza: {{band}}",
   "p90Line": "Indicador de riesgo P90 {{score}}",
-  "redSignalsLine": "{{n}} señales en rojo",
   "moneyAtRiskLine": "{{money}} en riesgo",
   "weakestPillarLine": "Peor pilar: {{label}} — {{value}}/{{max}}",
   "expandRow": "Mostrar desglose de pilares",
@@ -126,7 +125,8 @@
   "trend": {
     "improving": "Mejorando",
     "stable": "Estable",
-    "declining": "Deteriorando"
+    "declining": "Deteriorando",
+    "none": "Sin datos de tendencia"
   },
   "percentileLabel": "Percentil {{n}}",
   "worstPerformerBadge": "Peor Desempeño",
@@ -163,11 +163,15 @@
   "zeroMoneyAtRisk": "Sin contratos de riesgo alto o crítico",
   "thinSample": "Debajo del piso de confiabilidad de {{n}} contratos — se lista aquí, pero queda fuera del titular, la placa, el cuadro de honor y las banderas rojas",
   "confidenceBands": {
-    "high": "alta",
-    "narrow": "estrecha",
+    "wide": "baja",
     "medium": "media",
-    "wide": "amplia"
+    "narrow": "alta",
+    "high": "muy alta"
   },
   "lastContract": "último contrato {{year}}",
-  "lastContractTitle": "Sin contratos desde {{year}} — fuera de la ventana de funcionarios 2018+"
+  "lastContractTitle": "Sin contratos desde {{year}} — fuera de la ventana de funcionarios 2018+",
+  "lowestInSector": "La más baja de su sector",
+  "weakestShort": "Más débil",
+  "redSignalsLine_one": "{{count}} señal en rojo",
+  "redSignalsLine_other": "{{count}} señales en rojo"
 }

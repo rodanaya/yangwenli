@@ -16,7 +16,7 @@
  * espectro-del-padron P2 § 3.3
  */
 import { useTranslation } from 'react-i18next'
-import { INSTITUTION_PILLARS, pillarLabel, pillarShort, pillarDeficitInk, type InstitutionPillar } from '@/lib/institution-pillars'
+import { INSTITUTION_PILLARS, pillarLabel, pillarShort, pillarDeficitInk, worseThanSectorPct, type InstitutionPillar } from '@/lib/institution-pillars'
 import { TIER_STYLES } from '@/lib/tiers'
 import { formatCompactMXN } from '@/lib/utils'
 
@@ -80,16 +80,18 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
 
   const agateParts: string[] = []
   if (item.peer_percentile_sector != null) {
-    agateParts.push(t('peerPercentileLine', { pct: Math.round((1 - item.peer_percentile_sector) * 100) }))
+    const worse = worseThanSectorPct(item.peer_percentile_sector)
+    agateParts.push(worse == null ? t('lowestInSector') : t('peerPercentileLine', { pct: worse }))
   }
   if (item.confidence_band) {
     agateParts.push(t('confidenceLine', { band: t(`confidenceBands.${item.confidence_band}`, { defaultValue: item.confidence_band }) }))
   }
   if (item.p90_risk_score != null) {
-    agateParts.push(t('p90Line', { score: item.p90_risk_score.toFixed(0) }))
+    // p90_risk_score is 0–1 like every model score; the page prints /100.
+    agateParts.push(t('p90Line', { score: Math.round(item.p90_risk_score * 100) }))
   }
   if (item.signal_count_red != null) {
-    agateParts.push(t('redSignalsLine', { n: item.signal_count_red }))
+    agateParts.push(t('redSignalsLine', { count: item.signal_count_red }))
   }
   if (item.money_at_risk_mxn != null) {
     // A zero is worded once, site-wide: the sentence, never "MX$0 at risk".

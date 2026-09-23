@@ -27,6 +27,7 @@ import { InstitutionHero } from '@/components/institution/InstitutionHero'
 import { InstitutionStatStrip } from '@/components/institution/InstitutionCommandPanel'
 import { PillarBoleta } from '@/components/institution/PillarBoleta'
 import { TIER_STYLES, gradeToTierKey } from '@/lib/tiers'
+import { displayPercentile, worseThanSectorPct } from '@/lib/institution-pillars'
 import {
   InstitutionReading,
   InstitutionConcentration,
@@ -314,15 +315,17 @@ export default function InstitutionDossier() {
                     {scorecard.national_percentile != null && (
                       <p className="text-[13px] font-mono text-text-muted tabular-nums">
                         {lang === 'es'
-                          ? `Percentil nacional ${Math.round(scorecard.national_percentile * 100)}`
-                          : `National percentile ${Math.round(scorecard.national_percentile * 100)}`}
+                          ? `Percentil nacional ${displayPercentile(scorecard.national_percentile)}`
+                          : `National percentile ${displayPercentile(scorecard.national_percentile)}`}
                       </p>
                     )}
                     {scorecard.peer_percentile_sector != null && (
                       <p className="text-[13px] font-mono text-text-muted tabular-nums">
-                        {lang === 'es'
-                          ? `Peor que el ${Math.round((1 - scorecard.peer_percentile_sector) * 100)}% de su sector`
-                          : `Worse than ${Math.round((1 - scorecard.peer_percentile_sector) * 100)}% of its sector`}
+                        {(() => {
+                          const worse = worseThanSectorPct(scorecard.peer_percentile_sector)
+                          if (worse == null) return lang === 'es' ? 'La más baja de su sector' : 'Lowest in its sector'
+                          return lang === 'es' ? `Peor que el ${worse}% de su sector` : `Worse than ${worse}% of its sector`
+                        })()}
                       </p>
                     )}
                   </div>

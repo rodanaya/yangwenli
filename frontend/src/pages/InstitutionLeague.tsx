@@ -33,7 +33,7 @@ import {
   ArrowUpDown,
   TrendingUp,
   TrendingDown,
-  Minus,
+  MoveRight,
   Crown,
   AlertTriangle,
   ChevronLeft,
@@ -56,7 +56,7 @@ import { useIsMobile } from '@/hooks/useIsMobile'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { SpectralRegister, SpectralRegisterUnavailableNote } from '@/components/institution/SpectralRegister'
 import { PillarBoleta, getWeakestPillar } from '@/components/institution/PillarBoleta'
-import { pillarDeficitInk } from '@/lib/institution-pillars'
+import { pillarDeficitInk, displayPercentile, worseThanSectorPct } from '@/lib/institution-pillars'
 
 // Reverse-lookup: sector display name (Spanish or English) → canonical code,
 // so we can resolve a SECTOR_COLORS swatch from the `sector_name` returned by
@@ -101,7 +101,7 @@ interface InstitutionScorecardItem {
   grade: string
   grade_label: string
   grade_color: string
-  national_percentile: number
+  national_percentile: number | null
   pillar_openness: number
   pillar_price: number
   pillar_vendors: number
@@ -182,7 +182,9 @@ function TrendIcon({ direction }: { direction: string | null }) {
   if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-accent-data" aria-label={t('trend.improving')} />
   // The API emits 'deteriorating' (compute_scorecards.py); 'declining' kept for old rows.
   if (direction === 'deteriorating' || direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-risk-critical" aria-label={t('trend.declining')} />
-  return <Minus className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
+  if (direction === 'stable') return <MoveRight className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
+  // The dash means missing data only — never "stable".
+  return <span className="font-mono text-[13px] text-text-muted"><span aria-hidden="true">—</span><span className="sr-only">{t('trend.none')}</span></span>
 }
 
 /**
@@ -190,17 +192,19 @@ function TrendIcon({ direction }: { direction: string | null }) {
  * five illegible 14px heat cells. `{letter} {v}/{max}`, deficit-band colored.
  */
 function WeakPillarCell({ item, long = false }: { item: InstitutionScorecardItem; long?: boolean }) {
-  const { i18n } = useTranslation('institutionleague')
+  const { t, i18n } = useTranslation('institutionleague')
   const lang = i18n.language
   const weakest = getWeakestPillar(item, lang)
   const color = pillarDeficitInk(weakest.frac)
   return (
     <span
-      className="font-mono text-[13px] tabular-nums whitespace-nowrap"
+      className={`font-mono text-[13px] tabular-nums ${long ? 'whitespace-normal' : 'whitespace-nowrap'}`}
       style={{ color }}
       title={long ? undefined : weakest.label}
     >
-      {long ? weakest.label : weakest.pillar.letter} {weakest.value.toFixed(0)}/{weakest.pillar.max}
+      {/* The long (card) form wraps between words; the value never splits. */}
+      {long ? `${t('weakestShort')} · ${weakest.label}` : weakest.pillar.letter}{' '}
+      <span className="whitespace-nowrap">{weakest.value.toFixed(0)}/{weakest.pillar.max}</span>
     </span>
   )
 }
@@ -296,13 +300,14 @@ function ActaCard({
     t('weakestPillarLine', { label: weakest.label, value: weakest.value.toFixed(0), max: weakest.pillar.max }),
   ]
   if (item.peer_percentile_sector != null) {
-    agateParts.push(t('peerPercentileLine', { pct: Math.round((1 - item.peer_percentile_sector) * 100) }))
+    const worse = worseThanSectorPct(item.peer_percentile_sector)
+    agateParts.push(worse == null ? t('lowestInSector') : t('peerPercentileLine', { pct: worse }))
   }
   if (item.money_at_risk_mxn != null) {
     agateParts.push(item.money_at_risk_mxn === 0 ? t('zeroMoneyAtRisk') : t('moneyAtRiskLine', { money: formatCompactMXN(item.money_at_risk_mxn) }))
   }
   if (item.signal_count_red != null) {
-    agateParts.push(t('redSignalsLine', { n: item.signal_count_red }))
+    agateParts.push(t('redSignalsLine', { count: item.signal_count_red }))
   }
 
   return (
@@ -1243,6 +1248,11 @@ export default function InstitutionLeague() {
                             className="flex-[1_1_10rem] min-w-0 py-1 text-[14px] text-text-primary hover:underline underline-offset-2 font-medium whitespace-normal break-words leading-snug"
                           />
                           {renderThin(item)}
+                          {item.sector_name && (
+                            <span className="text-text-muted text-[12px] font-mono uppercase tracking-[0.1em] flex-shrink-0">
+                              · {localizedSectorName(item.sector_name, lang)}
+                            </span>
+                          )}
                         </div>
                         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-[13px] tabular-nums">
                           {renderTierTile(m)}
@@ -1403,9 +1413,12 @@ export default function InstitutionLeague() {
 
                         <td className="px-2 py-0 align-middle">
                           <span className="text-text-secondary text-[13px] font-mono tabular-nums whitespace-nowrap">
-                            {item.national_percentile !== null
-                              ? t('percentileLabel', { n: Math.round(item.national_percentile * 100) })
-                              : '--'}
+                            {item.total_contracts != null && item.total_contracts < RELIABLE_MIN && item.confidence_band
+                              // Thin sample: the percentile is noise; print how sure the score is.
+                              ? t('confidenceLine', { band: t(`confidenceBands.${item.confidence_band}`, { defaultValue: item.confidence_band }) })
+                              : item.national_percentile != null
+                                ? t('percentileLabel', { n: displayPercentile(item.national_percentile) })
+                                : '—'}
                           </span>
                         </td>
 

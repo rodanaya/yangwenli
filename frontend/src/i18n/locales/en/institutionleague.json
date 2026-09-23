@@ -50,7 +50,6 @@
   "peerPercentileLine": "Worse than {{pct}}% of its sector",
   "confidenceLine": "Confidence: {{band}}",
   "p90Line": "P90 risk indicator {{score}}",
-  "redSignalsLine": "{{n}} red signals",
   "moneyAtRiskLine": "{{money}} at risk",
   "weakestPillarLine": "Weakest pillar: {{label}} — {{value}}/{{max}}",
   "expandRow": "Show pillar breakdown",
@@ -126,7 +125,8 @@
   "trend": {
     "improving": "Improving",
     "stable": "Stable",
-    "declining": "Declining"
+    "declining": "Declining",
+    "none": "No trend data"
   },
   "percentileLabel": "Percentile {{n}}",
   "worstPerformerBadge": "Worst",
@@ -163,11 +163,15 @@
   "zeroMoneyAtRisk": "No high- or critical-risk contracts",
   "thinSample": "Below the {{n}}-contract reliability floor — listed here, excluded from the headline, the plate, the honor roll and the red flags",
   "confidenceBands": {
-    "high": "high",
-    "narrow": "narrow",
+    "wide": "low",
     "medium": "medium",
-    "wide": "wide"
+    "narrow": "high",
+    "high": "very high"
   },
   "lastContract": "last contract {{year}}",
-  "lastContractTitle": "No contracts since {{year}} — outside the 2018+ officials window"
+  "lastContractTitle": "No contracts since {{year}} — outside the 2018+ officials window",
+  "lowestInSector": "Lowest in its sector",
+  "weakestShort": "Weakest",
+  "redSignalsLine_one": "{{count}} red signal",
+  "redSignalsLine_other": "{{count}} red signals"
 }

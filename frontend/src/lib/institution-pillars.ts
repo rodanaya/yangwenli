@@ -77,3 +77,18 @@ export function pillarDeficitInk(frac: number): string {
   if (frac > 0.35) return TIER_STYLES.Regular.ink
   return TIER_STYLES.Critico.ink
 }
+
+/**
+ * Percentiles for display (PARALLAX D9b § Change 3). The field includes the
+ * institution itself, so a raw 1.0 is capped at 99 ("Percentile 100" read as
+ * "better than everyone, itself included").
+ */
+export function displayPercentile(p: number): number {
+  return Math.min(99, Math.round(p * 100))
+}
+
+/** "Worse than N % of its sector"; null when it is the lowest in its sector. */
+export function worseThanSectorPct(peerPercentile: number): number | null {
+  const v = Math.round((1 - peerPercentile) * 100)
+  return v >= 100 ? null : v
+}
