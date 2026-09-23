@@ -17,7 +17,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { OfficialMover } from '@/api/types'
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { cn, formatCompactMXN, toTitleCase } from '@/lib/utils'
 import { DotBar } from '@/components/ui/DotBar'
 
@@ -45,7 +45,7 @@ const RULE_X = RULE_YEARS.map((y) => ((y - AXIS_START) / AXIS_SPAN) * 100)
  * hides (kept in the row aria-label) and the template drops to 4 columns.
  */
 const ROW_GRID =
-  'grid grid-cols-[minmax(110px,140px)_1fr_40px_34px] sm:grid-cols-[minmax(150px,190px)_1fr_76px_40px_34px] gap-x-2 items-center'
+  'grid grid-cols-[minmax(96px,116px)_1fr_36px_58px] sm:grid-cols-[minmax(150px,190px)_1fr_76px_40px_92px] gap-x-2 items-center'
 
 type SortMode = 'default' | 'institutions' | 'value' | 'directAward'
 
@@ -135,7 +135,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
               onClick={() => setSortMode(active ? 'default' : opt.key)}
               aria-pressed={active}
               className={cn(
-                'px-1.5 py-0.5 rounded-sm border transition-colors',
+                'px-1.5 py-0.5 min-h-6 rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
                 active ? 'border-text-primary text-text-primary' : 'border-border text-text-muted hover:text-text-secondary'
               )}
             >
@@ -145,8 +145,17 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
         })}
       </div>
 
-      {/* Rule-label strip — sits above the row stack, aligned to the track column */}
-      <div className={cn(ROW_GRID, 'mt-4')} aria-hidden="true">
+      {/* Below xl the track is too narrow for both rule labels to sit on their
+          rules without overprinting: they become one line above the grid. */}
+      <p className="xl:hidden mt-4 font-mono text-[12px] uppercase tracking-[0.04em] text-text-muted">
+        {isEs ? 'Cambio de gobierno' : 'Change of government'}: PEÑA→AMLO · {isEs ? 'dic' : 'Dec'} 2018
+        <span aria-hidden="true"> | </span>
+        AMLO→SHEINBAUM · {isEs ? 'oct' : 'Oct'} 2024
+      </p>
+
+      {/* Rule-label strip (xl+) — sits above the row stack, aligned to the track
+          column; the first label starts at its rule, the second ends at its rule. */}
+      <div className={cn(ROW_GRID, 'hidden xl:grid mt-4')} aria-hidden="true">
         <span />
         <span className="relative h-4">
           {RULE_X.map((x, i) => (
@@ -173,12 +182,13 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
       </div>
 
       {/* Header row */}
-      <div className={cn(ROW_GRID, 'mt-1 pb-1.5 border-b border-border font-mono text-[13px] uppercase tracking-[0.12em] text-text-muted')}>
+      <div className={cn(ROW_GRID, 'mt-1 pb-1.5 border-b border-border font-mono text-[12px] uppercase tracking-[0.12em] text-text-muted')}>
         <span>{isEs ? 'Funcionario' : 'Officer'}</span>
         <span />
         <span className="hidden sm:block text-right">{isEs ? 'Valor' : 'Value'}</span>
         <span className="text-right">AD%</span>
-        <span className="text-right">{isEs ? 'Inst.' : 'Inst.'}</span>
+        {/* Spelled out; the soft hyphen lets it break inside the narrow phone column. */}
+        <span className="text-right tracking-normal sm:tracking-[0.04em] leading-tight">{isEs ? 'Insti\u00ADtuciones' : 'Insti\u00ADtutions'}</span>
       </div>
 
       {/* Rows — each h-20; the track column draws its own rule segments, which
@@ -198,6 +208,8 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
           const width = Math.min(rawWidth, 100 - left)
           const displayName = toTitleCase(m.official_name)
           const locale = isEs ? 'es-MX' : 'en-US'
+          const panelId = `tenure-panel-${m.official_name.replace(/[^A-Za-z0-9]+/g, '-')}`
+          const toggle = () => setExpandedName(isExpanded ? null : m.official_name)
 
           const ariaLabel = isEs
             ? `${displayName}, ${hasYears ? `${m.first_contract_year}–${m.last_contract_year}` : 'sin fechas registradas'}, ${m.institution_count} instituciones, cruza cambio de gobierno: ${crosses ? 'sí' : 'no'}`
@@ -205,26 +217,26 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
 
           return (
             <div key={m.official_name}>
+              {/* Disclosure (Day 6 pattern): the officer name is the button; the row is plain layout. */}
               <div
-                role="button"
-                tabIndex={0}
-                aria-expanded={isExpanded}
-                aria-label={ariaLabel}
-                onClick={() => setExpandedName(isExpanded ? null : m.official_name)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    setExpandedName(isExpanded ? null : m.official_name)
-                  }
-                }}
                 className={cn(
                   ROW_GRID,
-                  'group h-20 cursor-pointer border-b border-border/40 hover:bg-background-elevated/40 transition-colors'
+                  'group min-h-20 py-1 border-b border-border/40 hover:bg-background-elevated/40 transition-colors'
                 )}
               >
-                <span className="min-w-0 truncate text-[12px] font-medium text-text-primary group-hover:underline">
+                <button
+                  type="button"
+                  aria-expanded={isExpanded}
+                  aria-controls={panelId}
+                  aria-label={ariaLabel}
+                  onClick={toggle}
+                  className={cn(
+                    'min-w-0 min-h-6 text-left break-words text-[12px] leading-snug font-medium text-text-primary rounded-sm cursor-pointer hover:underline',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1'
+                  )}
+                >
                   {displayName}
-                </span>
+                </button>
 
                 <span className="relative h-full">
                   {RULE_X.map((x, i) => (
@@ -260,7 +272,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
               </div>
 
               {isExpanded && (
-                <div className="border-b border-border/40 bg-background-elevated/20 px-1 pb-4 pt-3 sm:pl-[158px]">
+                <div id={panelId} className="border-b border-border/40 bg-background-elevated/20 px-1 pb-4 pt-3 sm:pl-[158px]">
                   <div className="flex flex-wrap gap-x-8 gap-y-3">
                     <div className="font-mono text-[12px] text-text-muted">
                       <div className="mb-0.5 uppercase tracking-[0.1em]">{isEs ? 'Contratos' : 'Contracts'}</div>
@@ -290,14 +302,13 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
                       <div className="mb-0.5 uppercase tracking-[0.1em]">{isEs ? 'Indicador de riesgo' : 'Risk indicator'}</div>
                       <div className="flex items-center gap-1.5 text-[13px] tabular-nums">
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
-                        <span style={{ color }}>{m.avg_risk_score.toFixed(2)}</span>
+                        <span style={{ color: RISK_TEXT_COLORS[level] }}>{m.avg_risk_score.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
                   <Link
                     to={`/officials/${encodeURIComponent(m.official_name)}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="mt-3 inline-flex items-center gap-1 font-mono text-[13px] text-text-secondary transition-colors hover:text-text-primary"
+                    className="mt-3 inline-flex items-center gap-1 min-h-6 font-mono text-[13px] text-text-secondary transition-colors hover:text-text-primary rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   >
                     {isEs ? 'ver ficha' : 'see file'} <span aria-hidden="true">→</span>
                   </Link>
@@ -315,7 +326,8 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
           {Array.from({ length: AXIS_SPAN + 1 }, (_, i) => AXIS_START + i).map((yr) => (
             <span
               key={yr}
-              className="absolute font-mono tabular-nums"
+              // Phone: the end years only — eight labels cannot share a ~100px track.
+              className={cn('absolute font-mono tabular-nums', yr !== AXIS_START && yr !== AXIS_END && 'hidden sm:inline')}
               style={{ left: `${((yr - AXIS_START) / AXIS_SPAN) * 100}%`, transform: 'translateX(-50%)', fontSize: 13, color: 'var(--color-text-muted)' }}
             >
               {yr}
