@@ -120,15 +120,19 @@ export interface BenchRow {
   pct: number
   limit: number
   over: boolean
+  /** Replaces the "/ N%" reference text — for a line that is not an EU line
+   *  (the model's own mean hit-rate), so it is never read as an external one. */
+  note?: string
 }
 
 /**
- * "Deviation · OECD" — bullet bars of actual-vs-limit with a reference tick.
+ * "Deviation · EU scoreboard" — bullet bars (the DA / single-bid lines are the
+ * EU Single Market Scoreboard's, never OECD's — PARALLAX D7b § Change 3) of actual-vs-limit with a reference tick.
  * Over-limit values colour the numeral + fill RISK_TEXT_COLORS.critical.
  */
 export function OecdDeviationPanel({ rows, isEs }: { rows: BenchRow[]; isEs: boolean }) {
   return (
-    <Panel label={isEs ? 'Desviación · OCDE' : 'Deviation · OECD'} accent={RISK_COLORS.high}>
+    <Panel label={isEs ? 'Desviación · cuadro UE' : 'Deviation · EU scoreboard'} accent={RISK_COLORS.high}>
       {rows.length > 0 ? (
         <div className="space-y-3">
           {rows.map((r) => {
@@ -138,7 +142,7 @@ export function OecdDeviationPanel({ rows, isEs }: { rows: BenchRow[]; isEs: boo
                 <div className="flex items-baseline justify-between mb-1">
                   <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>{r.label}</span>
                   <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 600, color }}>
-                    {Math.round(r.pct)}%<span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> / {r.limit}%</span>
+                    {Math.round(r.pct)}%<span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> / {r.note ?? `${r.limit}%`}</span>
                   </span>
                 </div>
                 <div style={{ position: 'relative', height: 4, background: 'var(--color-border)', borderRadius: 999 }}>

@@ -155,7 +155,7 @@ export function SectorDossierCard({
           </span>
           <span
             className="font-mono shrink-0"
-            style={{ fontSize: 13, color: dir.rising ? RISK_COLORS.high : 'var(--color-text-muted)' }}
+            style={{ fontSize: 13, color: dir.rising ? RISK_TEXT_COLORS.high : 'var(--color-text-muted)' }}
             aria-hidden="true"
           >
             {dir.glyph}

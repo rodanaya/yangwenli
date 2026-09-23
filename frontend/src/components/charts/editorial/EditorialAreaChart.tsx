@@ -6,7 +6,7 @@
 
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
-  CartesianGrid, Tooltip, ReferenceLine, ReferenceArea,
+  CartesianGrid, Tooltip, ReferenceLine, ReferenceArea, DefaultTooltipContent,
 } from 'recharts'
 import {
   CHART_TOKENS, tokenColor, formatValue,
@@ -25,19 +25,30 @@ export interface EditorialAreaChartProps<T extends object> {
   hideXAxis?: boolean
   hideYAxis?: boolean
   xTickFormatter?: (v: string | number) => string
+  /**
+   * Opt-in (default false = today's markup): the chart is one image with a
+   * sentence for a name. No focusable `role=application` svg, no assertive
+   * live tooltip (PARALLAX D7b § Change 3, a11y X6). Pass `ariaLabel` with it.
+   */
+  decorative?: boolean
+  ariaLabel?: string
 }
 
 export function EditorialAreaChart<T extends object>({
   data, xKey, yKey, colorToken, yFormat = 'integer', yDomain,
   annotations = [], height = CHART_TOKENS.dims.default,
-  hideXAxis, hideYAxis, xTickFormatter,
+  hideXAxis, hideYAxis, xTickFormatter, decorative = false, ariaLabel,
 }: EditorialAreaChartProps<T>) {
   const fillColor = tokenColor(colorToken)
   const gradId = `grad-${colorToken}-${String(yKey)}`
 
-  return (
+  const chart = (
     <ResponsiveContainer width="100%" minWidth={0} height={height}>
-      <AreaChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+      <AreaChart
+        data={data}
+        margin={{ top: 8, right: 12, left: 4, bottom: 4 }}
+        {...(decorative ? { accessibilityLayer: false } : {})}
+      >
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={fillColor} stopOpacity={CHART_TOKENS.area.fillOpacityTop} />
@@ -93,6 +104,9 @@ export function EditorialAreaChart<T extends object>({
             typeof value === 'number' ? formatValue(value, yFormat) : String(value ?? ''),
             '',
           ]}
+          {...(decorative
+            ? { content: (props: React.ComponentProps<typeof DefaultTooltipContent>) => <div aria-hidden="true"><DefaultTooltipContent {...props} /></div> }
+            : {})}
         />
         {annotations.map((a, idx) => {
           if (a.kind === 'vrule') {
@@ -143,5 +157,11 @@ export function EditorialAreaChart<T extends object>({
         />
       </AreaChart>
     </ResponsiveContainer>
+  )
+  if (!decorative) return chart
+  return (
+    <div role="img" aria-label={ariaLabel}>
+      {chart}
+    </div>
   )
 }

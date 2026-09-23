@@ -71,9 +71,11 @@ interface DenseCell {
 function DenseReadout({ cells }: { cells: Array<DenseCell | null> }) {
   const shown = cells.filter(Boolean) as DenseCell[]
   return (
+    // Explicit tracks that divide the strip's 12 units (3 two-track anchors +
+    // 6 cells) at every width: 0 empty cells (PARALLAX D7b § Change 3, Q3).
     <div
-      className="grid border-t border-b"
-      style={{ borderColor: 'var(--color-border)', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}
+      className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 border-t border-b"
+      style={{ borderColor: 'var(--color-border)' }}
     >
       {shown.map((c, i) => {
         const isRange = c.value.includes('–')
@@ -171,11 +173,9 @@ function FullBarRow({ label, readout, pct, color, readoutColor }: { label: strin
 
 export function SectorStatStrip({
   stats,
-  trends,
   lang,
 }: {
   stats: SectorStatistics
-  trends: SectorTrend[]
   lang: 'en' | 'es'
 }) {
   const isEs = lang === 'es'
@@ -183,11 +183,6 @@ export function SectorStatStrip({
   const da = clampPct(stats.direct_award_pct)
   const sb = clampPct(stats.single_bid_pct)
   const avgRisk = stats.avg_risk_score != null ? Math.round(stats.avg_risk_score * 100) : null
-
-  const years = trends.map((t) => t.year).filter((y) => Number.isFinite(y))
-  const minY = years.length ? Math.min(...years) : null
-  const maxY = years.length ? Math.max(...years) : null
-  const span = minY != null && maxY != null ? maxY - minY + 1 : null
 
   const daLimit = EU_DIRECT_AWARD_LIMIT * 100
   const sbLimit = EU_SINGLE_BID_LIMIT * 100
@@ -199,7 +194,9 @@ export function SectorStatStrip({
 
   const totalVal = stats.total_value_mxn ?? 0
   const exposure = stats.high_critical_value_mxn
-  // Anchors = the decisive numbers (total spend, high+crit exposure, high-risk %).
+  // Anchors = the decisive numbers (total spend, high+crit exposure, high-risk %),
+  // first, so the 12 units pack row by row at 2 / 4 / 6 tracks. The period span
+  // cell went: the range prints under "Risk over time" (D7b § Change 3).
   const cells: Array<DenseCell | null> = [
     {
       label: isEs ? 'Gasto total' : 'Total spend',
@@ -214,9 +211,6 @@ export function SectorStatStrip({
       color: RISK_TEXT_COLORS.high,
       anchor: true,
     },
-    { label: isEs ? 'Contratos' : 'Contracts', value: formatNumber(stats.total_contracts ?? 0) },
-    !stats.total_institutions ? null : { label: isEs ? 'Instituciones' : 'Institutions', value: formatNumber(stats.total_institutions) },
-    !stats.total_vendors ? null : { label: isEs ? 'Proveedores' : 'Suppliers', value: formatNumber(stats.total_vendors) },
     hr == null ? null : {
       label: isEs ? 'Alto riesgo' : 'High-risk',
       value: `${Math.round(hr)}%`,
@@ -224,6 +218,9 @@ export function SectorStatStrip({
       color: hrColor,
       anchor: true,
     },
+    { label: isEs ? 'Contratos' : 'Contracts', value: formatNumber(stats.total_contracts ?? 0) },
+    !stats.total_institutions ? null : { label: isEs ? 'Instituciones' : 'Institutions', value: formatNumber(stats.total_institutions) },
+    !stats.total_vendors ? null : { label: isEs ? 'Proveedores' : 'Suppliers', value: formatNumber(stats.total_vendors) },
     da == null ? null : {
       label: isEs ? 'Adj. directa' : 'Direct award',
       value: `${Math.round(da)}%`,
@@ -241,11 +238,6 @@ export function SectorStatStrip({
       value: `${avgRisk}`,
       sub: isEs ? 'de 100' : 'of 100',
       color: avgRiskColor,
-    },
-    span == null ? null : {
-      label: isEs ? 'Periodo' : 'Span',
-      value: `${minY}–${maxY}`,
-      sub: isEs ? `${span} año${span === 1 ? '' : 's'}` : `${span} yr${span === 1 ? '' : 's'}`,
     },
   ]
 
@@ -294,17 +286,25 @@ export function SectorDiagnosticGrid({
   const benchRows: BenchRow[] = []
   if (da != null) benchRows.push({ label: isEs ? 'Adjudicación directa' : 'Direct award', pct: da, limit: daLim, over: da > daLim })
   if (sb != null && sb > 0) benchRows.push({ label: isEs ? 'Único postor' : 'Single bid', pct: sb, limit: sbLim, over: sb > sbLim })
-  if (hr != null) benchRows.push({ label: isEs ? 'Alto riesgo' : 'High-risk', pct: hr, limit: hrLim, over: hr > hrLim })
+  if (hr != null) benchRows.push({ label: isEs ? 'Alto riesgo' : 'High-risk', pct: hr, limit: hrLim, over: hr > hrLim, note: isEs ? `media del modelo ${hrLim}%` : `model mean ${hrLim}%` })
 
   const totalSpend = stats.total_value_mxn || 0
   const topInstitutions = [...institutions].sort(bySpend).slice(0, 4)
   const maxInstSpend = topInstitutions.reduce((m, inst) => Math.max(m, inst.total_amount_mxn ?? 0), 0)
 
   const trend = useMemo(
-    () => trends.map((p) => ({ year: p.year, avg: (p.avg_risk_score ?? 0) as number })).filter((p) => Number.isFinite(p.avg) && p.avg > 0).sort((a, b) => a.year - b.year),
+    // Percentage units on a [0,100] domain so axis, tooltip and caption agree
+    // (the pct formatter prints its value verbatim — B2).
+    () => trends.map((p) => ({ year: p.year, avg: ((p.avg_risk_score ?? 0) as number) * 100 })).filter((p) => Number.isFinite(p.avg) && p.avg > 0).sort((a, b) => a.year - b.year),
     [trends],
   )
   const peak = trend.reduce<{ year: number; avg: number } | null>((mx, p) => (!mx || p.avg > mx.avg ? p : mx), null)
+  const last = trend[trend.length - 1]
+  const riskSentence = peak && last
+    ? isEs
+      ? `Riesgo en el tiempo, ${trend[0].year}–${last.year}: pico ${Math.round(peak.avg)}% en ${peak.year}, último ${Math.round(last.avg)}%`
+      : `Risk over time, ${trend[0].year}–${last.year}: peak ${Math.round(peak.avg)}% in ${peak.year}, latest ${Math.round(last.avg)}%`
+    : undefined
 
   return (
     <div className="grid gap-3 md:grid-cols-2">
@@ -370,10 +370,14 @@ export function SectorDiagnosticGrid({
       <DensePanel label={isEs ? 'Riesgo en el tiempo' : 'Risk over time'} accent={RISK_COLORS.critical}>
         {trend.length > 1 ? (
           <>
-            <EditorialAreaChart data={trend} xKey="year" yKey="avg" colorToken="risk-critical" yFormat="pct" yDomain={[0, 1]} height={108} />
+            <EditorialAreaChart
+              data={trend} xKey="year" yKey="avg" colorToken="risk-critical" yFormat="pct" yDomain={[0, 100]} height={108}
+              decorative
+              ariaLabel={riskSentence}
+            />
             {peak && (
               <p className="font-mono mt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
-                {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg * 100)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}
+                {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}
               </p>
             )}
           </>

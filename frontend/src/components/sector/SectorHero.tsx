@@ -200,13 +200,20 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
               }}
             >
               {lang === 'es' ? localizeLevel(hrLevel, 'es') : hrLevel.toUpperCase()}
+              {/* Two ladders on one seal — each names its basis (D7b § Change 3). */}
+              <span className="block" style={{ fontSize: 11, fontWeight: 400, letterSpacing: '0.06em', textTransform: 'none', color: 'var(--color-text-muted)' }}>
+                {lang === 'es' ? 'banda de tasa' : 'hit-rate band'}
+              </span>
             </div>
             {avgRisk > 0 && (
               <div
                 className="font-mono text-center mt-1"
                 style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}
               >
-                {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {Math.round(avgRisk * 100)} ({lang === 'es' ? localizeLevel(riskLevel, 'es').toLowerCase() : riskLevel})
+                {lang === 'es' ? `riesgo prom. ${Math.round(avgRisk * 100)} de 100` : `avg risk ${Math.round(avgRisk * 100)} of 100`}
+                <span className="block" style={{ fontSize: 11 }}>
+                  {lang === 'es' ? `banda ${BAND_ES[riskLevel]}` : `${riskLevel} band`}
+                </span>
               </div>
             )}
           </aside>
@@ -414,8 +421,13 @@ function ExposureLedger({
         }}
       >
         {lang === 'es' ? 'Gasto total del sector' : 'Total sector spend'}
-        <span className="mx-1.5" aria-hidden="true" style={{ opacity: 0.5 }}>·</span>
-        ≈{formatCompactUSD(totalMxn)}
+        {/* USD for the EN reader only; ES surfaces are MXN-only (CLAUDE.md currency table). */}
+        {lang === 'en' && (
+          <>
+            <span className="mx-1.5" aria-hidden="true" style={{ opacity: 0.5 }}>·</span>
+            ≈{formatCompactUSD(totalMxn)}
+          </>
+        )}
       </div>
 
       {/* Exposure tiers — two stat lines, gated when the backend leaves the
@@ -568,6 +580,9 @@ function ExposureStat({
   )
 }
 
+// "banda" is feminine: baja / media / alta / crítica.
+const BAND_ES: Record<'critical' | 'high' | 'medium' | 'low', string> = { critical: 'crítica', high: 'alta', medium: 'media', low: 'baja' }
+
 function localizeLevel(level: 'critical' | 'high' | 'medium' | 'low', lang: 'en' | 'es'): string {
   if (lang !== 'es') return level.toUpperCase()
   return level === 'critical' ? 'CRÍTICO'
@@ -590,7 +605,7 @@ function buildSectorLede({
   const name = getSectorName(sector.code, lang)
   const stats = sector.statistics
   const spend = formatCompactMXN(stats.total_value_mxn)
-  const usd = formatCompactUSD(stats.total_value_mxn)
+  const usd = formatCompactUSD(stats.total_value_mxn) // EN only — ES reads MXN natively
   const inst = formatNumber(stats.total_institutions)
   const vendors = formatNumber(stats.total_vendors)
   const da = Math.round(stats.direct_award_pct)
@@ -607,15 +622,15 @@ function buildSectorLede({
 
   if (hrPct >= 15) {
     return lang === 'es'
-      ? `${name} mueve ${spend} (≈${usd}) repartidos ${scaleEs}. ${hrPct.toFixed(0)}% de los contratos del sector fueron marcados por el modelo, ${da}% adjudicados sin licitación pública — un perfil sectorial con tensión.`
+      ? `${name} mueve ${spend} repartidos ${scaleEs}. ${hrPct.toFixed(0)}% de los contratos del sector fueron marcados por el modelo, ${da}% adjudicados sin licitación pública — un perfil sectorial con tensión.`
       : `${name} moves ${spend} (≈${usd}) ${scaleEn}. ${hrPct.toFixed(0)}% of the sector's contracts are flagged by the model, ${da}% direct-award — a sector profile under tension.`
   }
   if (avgRisk > 0 && getRiskLevelFromScore(avgRisk) !== 'low') {
     return lang === 'es'
-      ? `${name} agrupa ${spend} (≈${usd}) ${acrossEs}, con un riesgo promedio ${Math.round(avgRisk * 100)} y ${da}% de adjudicación directa.`
+      ? `${name} agrupa ${spend} ${acrossEs}, con un riesgo promedio ${Math.round(avgRisk * 100)} y ${da}% de adjudicación directa.`
       : `${name} aggregates ${spend} (≈${usd}) ${acrossEn}, with an average risk of ${Math.round(avgRisk * 100)} and ${da}% direct-award.`
   }
   return lang === 'es'
-    ? `${name} es un agregado sectorial de ${spend} (≈${usd}) distribuido ${scaleEs}. ${da}% adjudicación directa.`
+    ? `${name} es un agregado sectorial de ${spend} distribuido ${scaleEs}. ${da}% adjudicación directa.`
     : `${name} is a sector aggregate of ${spend} (≈${usd}) distributed ${scaleEn}. ${da}% direct-award.`
 }

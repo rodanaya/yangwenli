@@ -413,23 +413,31 @@ export function SectorConcentrationPanel({
     .map((h) => ({ year: h.year, share: (h.top_vendor_share ?? 0) * 100 }))
     .filter((h) => Number.isFinite(h.year) && h.share > 0)
     .sort((a, b) => a.year - b.year)
+  const first = series[0]
+  const last = series[series.length - 1]
+  const lo = series.length ? Math.min(...series.map((s) => s.share)) : 0
+  const hi = series.length ? Math.max(...series.map((s) => s.share)) : 0
 
   return (
     <Panel label={t(lang, 'Concentración en el tiempo', 'Concentration over time')} accent={RISK_COLORS.high}>
       {series.length > 1 ? (
         <>
-          <EditorialAreaChart data={series} xKey="year" yKey="share" colorToken="risk-high" yFormat="pct" height={96} />
+          {/* risk-critical like its sibling chart: the risk-high series ink measured 2.04:1 (a11y X4). */}
+          <EditorialAreaChart
+            data={series} xKey="year" yKey="share" colorToken="risk-critical" yFormat="pct" height={96}
+            decorative
+            ariaLabel={t(
+              lang,
+              `Concentración en el tiempo, ${first.year}–${last.year}: cuota del mayor proveedor entre ${lo.toFixed(1)}% y ${hi.toFixed(1)}%, última ${last.share.toFixed(1)}%`,
+              `Concentration over time, ${first.year}–${last.year}: largest-vendor share between ${lo.toFixed(1)}% and ${hi.toFixed(1)}%, latest ${last.share.toFixed(1)}%`,
+            )}
+          />
           <p className="font-mono mt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
-            {(() => {
-              const last = series[series.length - 1]
-              const lo = Math.min(...series.map((s) => s.share))
-              const hi = Math.max(...series.map((s) => s.share))
-              return t(
-                lang,
-                `Cuota del mayor proveedor · ${last.share.toFixed(1)}% en ${last.year} (rango ${lo.toFixed(1)}–${hi.toFixed(1)}%). Cuota baja = mercado atomizado.`,
-                `Largest-vendor share · ${last.share.toFixed(1)}% in ${last.year} (range ${lo.toFixed(1)}–${hi.toFixed(1)}%). Low share = atomized market.`,
-              )
-            })()}
+            {t(
+              lang,
+              `Cuota del mayor proveedor · ${last.share.toFixed(1)}% en ${last.year} (rango ${lo.toFixed(1)}–${hi.toFixed(1)}%). Cuota baja = mercado atomizado.`,
+              `Largest-vendor share · ${last.share.toFixed(1)}% in ${last.year} (range ${lo.toFixed(1)}–${hi.toFixed(1)}%). Low share = atomized market.`,
+            )}
           </p>
         </>
       ) : (
@@ -801,7 +809,7 @@ export function SectorLargestContracts({
             {/* Line 3 — buyer institution (full name) */}
             {c.institution_id != null && c.institution_name && (
               <div className="flex items-center gap-1.5 min-w-0 mt-0.5 pl-8">
-                <span className="font-mono shrink-0" style={{ fontSize: 13, color: 'var(--color-text-muted)', opacity: 0.6 }} aria-hidden="true">→</span>
+                <span className="font-mono shrink-0" style={{ fontSize: 13, color: 'var(--color-text-muted)' }} aria-hidden="true">→</span>
                 <div className="min-w-0">
                   <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="xs" fullName />
                 </div>

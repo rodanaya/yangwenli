@@ -26,7 +26,7 @@
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
 import type { SectorTrajectoryPoint } from '@/api/types'
@@ -229,7 +229,7 @@ function LedgerRowItem({
               </span>
               <span
                 className="font-mono shrink-0"
-                style={{ fontSize: 12, color: dir.rising ? RISK_COLORS.high : 'var(--color-text-muted)' }}
+                style={{ fontSize: 12, color: dir.rising ? RISK_TEXT_COLORS.high : 'var(--color-text-muted)' }}
                 aria-hidden="true"
               >
                 {dir.glyph}
@@ -240,10 +240,11 @@ function LedgerRowItem({
           )}
         </span>
 
-        {/* Mobile expand toggle (the dossier becomes an inline block on touch) */}
+        {/* Expand toggle — every width: on touch it is the dossier; on desktop it
+            is the keyboard route to it (the floating card is an inert mouse preview). */}
         <button
           type="button"
-          className="sm:hidden shrink-0 min-h-6 min-w-6 font-mono px-1.5 py-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="shrink-0 min-h-6 min-w-6 font-mono px-1.5 py-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           style={{ fontSize: 13, color: 'var(--color-text-muted)' }}
           aria-expanded={expanded}
           aria-controls={dossierId}
@@ -260,7 +261,7 @@ function LedgerRowItem({
 
       {/* Mobile inline dossier */}
       {expanded && (
-        <div id={dossierId} className="sm:hidden px-3 pb-3">
+        <div id={dossierId} className="px-3 pb-3">
           <div className="flex items-center gap-1.5 mb-2">
             <span className="font-mono shrink-0" style={{ fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
               {lang === 'es' ? 'AD · UE' : 'DA · EU'} ≤{EU_DA_LINE.toFixed(0)}%

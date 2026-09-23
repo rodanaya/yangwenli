@@ -1398,21 +1398,27 @@ def get_sector_model_coefficients(
                 (sector_id,),
             )
             row = cursor.fetchone()
-            uses_global = False
+            # The newest global model (sector_id 0 / NULL).
+            cursor.execute(
+                """
+                SELECT sector_id, intercept, coefficients, pu_correction_factor,
+                       auc_roc, test_auc, model_version, run_id
+                FROM model_calibration
+                WHERE (sector_id = 0 OR sector_id IS NULL)
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+            )
+            global_row = cursor.fetchone()
             if not row:
-                # Fall back to global model (sector_id IS NULL)
-                cursor.execute(
-                    """
-                    SELECT sector_id, intercept, coefficients, pu_correction_factor,
-                           auc_roc, test_auc, model_version, run_id
-                    FROM model_calibration
-                    WHERE (sector_id = 0 OR sector_id IS NULL)
-                    ORDER BY created_at DESC
-                    LIMIT 1
-                    """,
-                )
-                row = cursor.fetchone()
+                # No per-sector row: fall back to the global model.
+                row = global_row
                 uses_global = True
+            else:
+                # A calibration run can write the global model once per sector_id
+                # (CAL-v8 did): a per-sector row from the global run is the global
+                # model, not a sector-specific one (PARALLAX D7b § Change 3, B4).
+                uses_global = global_row is not None and row[7] is not None and row[7] == global_row[7]
 
             if not row:
                 raise HTTPException(status_code=404, detail="Model calibration data not found")

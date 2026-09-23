@@ -349,7 +349,7 @@ export default function SectorDossier() {
 
       {/* COMMAND PANEL */}
       <div className="mt-5">
-        <SectorStatStrip stats={sector.statistics} trends={sector.trends ?? []} lang={lang} />
+        <SectorStatStrip stats={sector.statistics} lang={lang} />
       </div>
       <div className="mt-6">
         <SectorDiagnosticGrid

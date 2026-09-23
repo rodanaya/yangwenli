@@ -66,6 +66,34 @@ class TestSectorTrends:
         assert "data" in data
 
 
+class TestSectorModelCoefficients:
+    """GET /sectors/{id}/model-coefficients names a global model honestly (PARALLAX D7b § Change 3, B4)."""
+
+    def test_global_run_written_per_sector_reads_as_global(self, client, base_url):
+        from api.dependencies import get_db
+
+        with get_db() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT run_id FROM model_calibration WHERE sector_id = ? ORDER BY created_at DESC LIMIT 1", (1,)
+            )
+            sector_row = cur.fetchone()
+            cur.execute(
+                "SELECT run_id FROM model_calibration WHERE (sector_id = 0 OR sector_id IS NULL) "
+                "ORDER BY created_at DESC LIMIT 1"
+            )
+            global_row = cur.fetchone()
+        if not sector_row or not global_row:
+            pytest.skip("model_calibration has no per-sector or global row")
+        expected = sector_row[0] is not None and sector_row[0] == global_row[0]
+
+        response = client.get(f"{base_url}/sectors/1/model-coefficients")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["uses_global_model"] is expected
+        assert data["run_id"] == sector_row[0]
+
+
 class TestAnalysisEndpoints:
     """Tests for analysis endpoints in sectors router."""
 
