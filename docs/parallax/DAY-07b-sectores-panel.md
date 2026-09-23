@@ -166,4 +166,4 @@ Deviations accepted: stat strip keeps High-risk as the third anchor with anchors
 
 Noticed, not fixed (→ PARALLAX backlog): `what@390` constant 0.81 layout-shift entry on the dumbbell anchor (pre-existing); serif `display=swap` reflow; `analysis.py::get_sector_year_breakdown` still returns 2001 (other pages); dumbbell uses the slow `/top-vendors` (12 × ~15s under load); `/vendors/:id` "Annual risk indicator" plots 0–1 on a percent axis (same bug as B2); `DenseReadout` range branch unused; `primitives.tsx` react-refresh errors; the full pytest run starves the local backend (run with no probes in flight); route-change focus (X1, shell).
 
-Shipped: _pending_
+Shipped 2026-09-23 14:13Z: origin/main + VPS HEAD `9f43aa44` (branch `parallax/day07b-sectores-panel` rebased onto `0e5dbb36`), BUILD_ID `2026-09-23-parallax-d7b-sectores-panel`, entry `index-I07brbKL.js` → `index-DtRJEv3t.js` (BUILD_ID string verified in the served entry), health OK (3,058,286 contracts), `/sectors/4/trends` first year 2002 and `/sectors/1/model-coefficients` `uses_global_model: true` live; deployed via `deploy-safe.sh`.
