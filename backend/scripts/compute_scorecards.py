@@ -249,12 +249,23 @@ def _load_institution_efos(conn: sqlite3.Connection) -> dict:
         return {}
 
 
-def _load_institution_aria(conn: sqlite3.Connection) -> dict:
+def _load_institution_aria(conn: sqlite3.Connection, distinct: bool = True) -> dict:
+    """ARIA T1/T2 vendors per institution — DISTINCT vendors (PARALLAX D9b § Change 0).
+
+    The pillar divides these by the institution's vendor_count, so they must
+    count vendors, like the EFOS / GT loaders beside it. The old SUM over the
+    contracts join counted CONTRACTS (IMSS 42,128 "T1 vendors" against ~107
+    distinct), which saturated the 4-point T1 penalty for every large buyer —
+    the same size bias the 2026-06 rate reform removed one join higher.
+    distinct=False reproduces the old count for the dry-run comparison only.
+    """
+    t1 = "COUNT(DISTINCT CASE WHEN aq.ips_tier = 1 THEN c.vendor_id END)" if distinct \
+        else "SUM(CASE WHEN aq.ips_tier = 1 THEN 1 ELSE 0 END)"
+    t2 = "COUNT(DISTINCT CASE WHEN aq.ips_tier = 2 THEN c.vendor_id END)" if distinct \
+        else "SUM(CASE WHEN aq.ips_tier = 2 THEN 1 ELSE 0 END)"
     try:
-        rows = conn.execute("""
-            SELECT c.institution_id,
-                   SUM(CASE WHEN aq.ips_tier = 1 THEN 1 ELSE 0 END) AS t1,
-                   SUM(CASE WHEN aq.ips_tier = 2 THEN 1 ELSE 0 END) AS t2
+        rows = conn.execute(f"""
+            SELECT c.institution_id, {t1} AS t1, {t2} AS t2
             FROM contracts c
             JOIN aria_queue aq ON c.vendor_id = aq.vendor_id
             GROUP BY c.institution_id
@@ -546,6 +557,11 @@ def score_institution(inst: dict, cm: dict, hhi: float, hhi_peer_pct: float,
 
 
 def compute_institution_scorecards(conn: sqlite3.Connection) -> list:
+    return score_institutions(load_institution_inputs(conn))
+
+
+def load_institution_inputs(conn: sqlite3.Connection) -> dict:
+    """Every per-institution input the scorer reads (read-only)."""
     log.info("Loading institution base data ...")
     base = _load_institution_base(conn)
     log.info("  %d institutions (>=10 contracts)", len(base))
@@ -576,6 +592,19 @@ def compute_institution_scorecards(conn: sqlite3.Connection) -> list:
 
     log.info("Computing HHI peer percentiles ...")
     hhi_peer_map = _compute_hhi_peer_percentiles(base, hhi_map)
+
+    return {
+        "base": base, "cm_map": cm_map, "hhi_map": hhi_map, "efos_map": efos_map,
+        "aria_map": aria_map, "gt_map": gt_map, "p90_map": p90_map,
+        "vw_comp_map": vw_comp_map, "trend_map": trend_map, "hhi_peer_map": hhi_peer_map,
+    }
+
+
+def score_institutions(inputs: dict) -> list:
+    """Pure: pillars, total, grade and percentiles from load_institution_inputs()."""
+    base, cm_map, hhi_map, efos_map = inputs["base"], inputs["cm_map"], inputs["hhi_map"], inputs["efos_map"]
+    aria_map, gt_map, p90_map = inputs["aria_map"], inputs["gt_map"], inputs["p90_map"]
+    vw_comp_map, trend_map, hhi_peer_map = inputs["vw_comp_map"], inputs["trend_map"], inputs["hhi_peer_map"]
 
     results = []
     for inst in base:
@@ -1076,6 +1105,118 @@ def upsert_vendors(conn: sqlite3.Connection, rows: list) -> None:
 
 
 # ---------------------------------------------------------------------------
+# DRY RUN (PARALLAX D9b § Change 0) — no writes, ever
+# ---------------------------------------------------------------------------
+
+def scorecard_checksum(conn: sqlite3.Connection) -> tuple:
+    """(row count, SUM(total_score), SUM(institution_id * total_score)) of the stored table."""
+    r = conn.execute(
+        "SELECT COUNT(*), ROUND(SUM(total_score), 4), ROUND(SUM(institution_id * total_score), 4) "
+        "FROM institution_scorecards"
+    ).fetchone()
+    return tuple(r)
+
+
+def dry_run_institutions(db_path: str, out_path: str) -> dict:
+    """Score every institution with the distinct-vendor ARIA loader, compare with
+    the stored table and with the old contract-count loader, write a markdown
+    report. Opens the DB read-only (mode=ro): a write would raise."""
+    conn = sqlite3.connect(f"file:{Path(db_path).as_posix()}?mode=ro", uri=True, timeout=60)
+    conn.execute("PRAGMA temp_store = MEMORY")
+    before = scorecard_checksum(conn)
+    stored = {r[0]: {"total": r[1], "grade": r[2], "p_ext": r[3]} for r in conn.execute(
+        "SELECT institution_id, total_score, grade, pillar_process FROM institution_scorecards")}
+    meta = {r[0]: (r[1], int(r[2] or 0), r[3]) for r in conn.execute(
+        "SELECT i.id, i.name, COALESCE(i.is_federal, 0), ist.total_contracts FROM institutions i "
+        "LEFT JOIN institution_stats ist ON ist.institution_id = i.id")}
+
+    inputs = load_institution_inputs(conn)                      # distinct-vendor loader
+    new_rows = score_institutions(inputs)
+    old_inputs = dict(inputs, aria_map=_load_institution_aria(conn, distinct=False))
+    old_rows = score_institutions(old_inputs)                   # today's code, today's data
+    after = scorecard_checksum(conn)
+    conn.close()
+    assert before == after, f"institution_scorecards changed during the dry run: {before} -> {after}"
+
+    old = {r["institution_id"]: r for r in old_rows}
+    new = {r["institution_id"]: r for r in new_rows}
+
+    def dist(rows, federal=None):
+        d = defaultdict(int)
+        for r in rows:
+            if federal is None or r.get("is_federal") == federal:
+                d[r["grade"]] += 1
+        return d
+
+    grades = [g for _, g, _, _ in GRADE_TIERS]
+    moves = defaultdict(int)          # stored -> new (what a rescore would publish)
+    moves_fix = defaultdict(int)      # old code -> new code on the same data (the fix alone)
+    for iid, r in new.items():
+        s = stored.get(iid)
+        if s and s["grade"] != r["grade"]:
+            moves[(s["grade"], r["grade"])] += 1
+        o = old.get(iid)
+        if o and o["grade"] != r["grade"]:
+            moves_fix[(o["grade"], r["grade"])] += 1
+    movers = sorted(
+        (r for r in new_rows if r["institution_id"] in stored),
+        key=lambda r: abs(r["total_score"] - stored[r["institution_id"]]["total"]), reverse=True)[:20]
+
+    lines = [
+        "# Change 0 dry run — External Flags counts distinct ARIA vendors",
+        "",
+        f"Generated {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} by "
+        "`python -m scripts.compute_scorecards --dry-run` on a read-only connection to "
+        f"`{Path(db_path).name}`. **No row was written.**",
+        "",
+        f"- `institution_scorecards` before: rows {before[0]} · Σ total_score {before[1]} · Σ id×score {before[2]}",
+        f"- `institution_scorecards` after:  rows {after[0]} · Σ total_score {after[1]} · Σ id×score {after[2]} "
+        f"→ {'UNCHANGED' if before == after else 'CHANGED'}",
+        f"- Institutions scored: {len(new_rows)} (stored: {len(stored)})",
+        f"- Grade changes if rescored (stored → new): **{sum(moves.values())}** "
+        f"(federal {sum(1 for r in new_rows if r.get('is_federal') == 1 and stored.get(r['institution_id'], {}).get('grade') not in (None, r['grade']))})",
+        f"- Grade changes from the fix alone (old loader → new loader, same data): **{sum(moves_fix.values())}**",
+        "",
+        "## Grade moves (stored → new)",
+        "",
+        "| from → to | institutions |",
+        "|---|---|",
+    ]
+    for (a, b), n in sorted(moves.items(), key=lambda kv: -kv[1]):
+        lines.append(f"| {a} → {b} | {n} |")
+    lines += ["", "## IMSS and CENSIDA", "",
+              "| id | institution | stored total · grade · ext | new total · grade · ext | T1 vendors old → new |",
+              "|---|---|---|---|---|"]
+    for iid in (251, 1425):
+        if iid in new and iid in stored:
+            n, o = new[iid], old[iid]
+            s = stored[iid]
+            t1_old = json.loads(o["key_metrics"])["aria_t1_vendors"]
+            t1_new = json.loads(n["key_metrics"])["aria_t1_vendors"]
+            lines.append(f"| {iid} | {meta.get(iid, ('?',))[0]} | {s['total']:.1f} · {s['grade']} · {s['p_ext']:.1f} | "
+                         f"{n['total_score']:.1f} · {n['grade']} · {n['pillar_process']:.1f} | {t1_old:,} → {t1_new:,} |")
+    lines += ["", "## The 20 largest movers (|new − stored|)", "",
+              "| id | institution | federal | contracts | stored total → new | grade |", "|---|---|---|---|---|---|"]
+    for r in movers:
+        iid = r["institution_id"]
+        s = stored[iid]
+        name, fed, nc = meta.get(iid, ("?", 0, None))
+        lines.append(f"| {iid} | {name} | {'yes' if fed else 'no'} | {nc if nc is not None else '—'} | "
+                     f"{s['total']:.1f} → {r['total_score']:.1f} | {s['grade']} → {r['grade']} |")
+    stored_rows = [{"grade": v["grade"], "is_federal": meta.get(k, ('', 0))[1]} for k, v in stored.items()]
+    lines += ["", "## Grade distribution — stored vs new", "",
+              "| grade | stored (all) | new (all) | stored (federal) | new (federal) |", "|---|---|---|---|---|"]
+    ds, dn = dist(stored_rows), dist(new_rows)
+    dsf, dnf = dist(stored_rows, 1), dist(new_rows, 1)
+    for g in grades:
+        lines.append(f"| {g} | {ds.get(g, 0)} | {dn.get(g, 0)} | {dsf.get(g, 0)} | {dnf.get(g, 0)} |")
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(out_path).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    log.info("Dry run written to %s — %d grade changes, table unchanged %s", out_path, sum(moves.values()), before == after)
+    return {"before": before, "after": after, "moves": dict(moves), "moves_fix": dict(moves_fix)}
+
+
+# ---------------------------------------------------------------------------
 # MAIN
 # ---------------------------------------------------------------------------
 
@@ -1085,7 +1226,16 @@ def main() -> None:
     p.add_argument("--institutions-only", action="store_true")
     p.add_argument("--vendors-only",      action="store_true")
     p.add_argument("--db",                default=str(DB_PATH))
+    p.add_argument("--dry-run", action="store_true",
+                   help="Institutions only: compute in memory on a READ-ONLY connection, "
+                        "write no row, save a before/after report (PARALLAX D9b § Change 0).")
+    p.add_argument("--dry-run-out", default=str(Path(__file__).resolve().parents[2]
+                                                / "_parallax_shots" / "day09b" / "rescore-dryrun.md"))
     args = p.parse_args()
+
+    if args.dry_run:
+        dry_run_institutions(args.db, args.dry_run_out)
+        return
 
     conn = sqlite3.connect(args.db, timeout=60)
     conn.execute("PRAGMA journal_mode = WAL")
