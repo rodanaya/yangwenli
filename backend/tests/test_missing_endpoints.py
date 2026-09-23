@@ -65,6 +65,16 @@ class TestSectorTrends:
         data = response.json()
         assert "data" in data
 
+    def test_sector_trends_start_in_2002(self, client, base_url):
+        """The series starts at the first COMPRANET year (no 2001 stub) — PARALLAX D7b § Change 2."""
+        response = client.get(f"{base_url}/sectors/4/trends")
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert data, "sector 4 has trend points"
+        assert data[0]["year"] >= 2002
+        bundle = client.get(f"{base_url}/sectors/trends-bundle").json()["sectors"]
+        assert all(pts[0]["year"] >= 2002 for pts in bundle.values() if pts)
+
 
 class TestSectorModelCoefficients:
     """GET /sectors/{id}/model-coefficients names a global model honestly (PARALLAX D7b § Change 3, B4)."""

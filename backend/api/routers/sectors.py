@@ -372,6 +372,13 @@ def get_sectors_treemap():
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+# First year of the COMPRANET series every surface names ("COMPRANET 2002–2025").
+# The precomputed sector_year_breakdown also carries a 2001 row of 1–7 contracts
+# per sector, which anchored every trajectory and flipped four risers to "falling"
+# (PARALLAX D7b § Change 2, B3). All three year-series readers below drop it.
+DATA_MIN_YEAR = 2002
+
+
 @router.get("/sectors/trends-bundle")
 def get_sectors_trends_bundle():
     """
@@ -403,7 +410,7 @@ def get_sectors_trends_bundle():
             sectors: Dict[str, List[Dict[str, Any]]] = {}
             for r in breakdown:
                 sid = r.get("sector_id")
-                if sid is None or r.get("year") is None:
+                if sid is None or r.get("year") is None or r["year"] < DATA_MIN_YEAR:
                     continue
                 sectors.setdefault(str(sid), []).append({
                     "year": r["year"],
@@ -549,7 +556,10 @@ def get_sector(
                 try:
                     syb = json.loads(syb_row[0])
                     # Format: list of {sector_id, year, total_contracts, total_value_mxn, avg_risk_score, ...}
-                    yr_items = [r for r in syb if r.get("sector_id") == sector_id]
+                    yr_items = [
+                        r for r in syb
+                        if r.get("sector_id") == sector_id and (r.get("year") or 0) >= DATA_MIN_YEAR
+                    ]
                     if yr_items:
                         trends = [
                             SectorTrend(
@@ -725,7 +735,10 @@ def get_sector_trends(
                 if precomp_row:
                     all_breakdown = json.loads(precomp_row[0])
                     sector_rows = sorted(
-                        [r for r in all_breakdown if r.get("sector_id") == sector_id],
+                        [
+                            r for r in all_breakdown
+                            if r.get("sector_id") == sector_id and (r.get("year") or 0) >= DATA_MIN_YEAR
+                        ],
                         key=lambda r: r["year"],
                     )
                     trends = [
@@ -744,12 +757,8 @@ def get_sector_trends(
                     return result
 
             # safe: conditions list contains only hardcoded column names, values are parameterized
-            conditions = ["sector_id = ?", "contract_year IS NOT NULL"]
-            params: list = [sector_id]
-
-            if start_year:
-                conditions.append("contract_year >= ?")
-                params.append(start_year)
+            conditions = ["sector_id = ?", "contract_year IS NOT NULL", "contract_year >= ?"]
+            params: list = [sector_id, max(start_year or DATA_MIN_YEAR, DATA_MIN_YEAR)]
 
             if end_year:
                 conditions.append("contract_year <= ?")

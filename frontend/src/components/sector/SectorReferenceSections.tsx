@@ -35,6 +35,7 @@ import {
   RISK_COLORS,
   RISK_TEXT_COLORS,
   getRiskLevelFromScore,
+  PARTIAL_YEAR_NOTE,
 } from '@/lib/constants'
 import { ADMIN_ORDER, ADMIN_DISPLAY_ACCENTED, type AdministrationKey } from '@/lib/administrations'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -304,7 +305,8 @@ interface TrendLike {
 }
 
 const ADMIN_YEARS: Record<AdministrationKey, string> = {
-  fox: '2002–06', calderon: '2007–12', epn: '2013–18', amlo: '2019–24', sheinbaum: '2025–',
+  // Six-year terms; Sheinbaum's reads as one partial year (the feed froze 2025-09-28).
+  fox: '2002–06', calderon: '2007–12', epn: '2013–18', amlo: '2019–24', sheinbaum: '2025–*',
 }
 
 function adminForYear(y: number): AdministrationKey {
@@ -389,6 +391,9 @@ export function SectorSexenioStrip({
           `Pico de gasto · ${ADMIN_DISPLAY_ACCENTED[peak.key]} (${ADMIN_YEARS[peak.key]}). Última columna = indicador de riesgo medio.`,
           `Peak spend · ${ADMIN_DISPLAY_ACCENTED[peak.key]} (${ADMIN_YEARS[peak.key]}). Last column = mean risk indicator.`,
         )}
+      </p>
+      <p className="font-mono" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+        {t(lang, `* ${PARTIAL_YEAR_NOTE.es}: una fracción de año frente a sexenios completos.`, `* ${PARTIAL_YEAR_NOTE.en}: a fraction of a year against full six-year terms.`)}
       </p>
     </div>
   )

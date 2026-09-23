@@ -39,6 +39,7 @@ import {
   EU_DIRECT_AWARD_LIMIT,
   EU_SINGLE_BID_LIMIT,
   MODEL_HR_BASELINE,
+  PARTIAL_YEAR_NOTE,
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
@@ -378,6 +379,7 @@ export function SectorDiagnosticGrid({
             {peak && (
               <p className="font-mono mt-2" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
                 {isEs ? 'Pico' : 'Peak'} {Math.round(peak.avg)}% · {peak.year} · {trend[0].year}–{trend[trend.length - 1].year}
+                {trend[trend.length - 1].year === 2025 && <>* · *{isEs ? PARTIAL_YEAR_NOTE.es : PARTIAL_YEAR_NOTE.en}</>}
               </p>
             )}
           </>

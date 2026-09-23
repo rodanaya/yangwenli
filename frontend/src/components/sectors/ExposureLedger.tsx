@@ -26,7 +26,7 @@
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { SECTOR_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_TEXT_COLORS, PARTIAL_YEAR_NOTE } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
 import type { SectorTrajectoryPoint } from '@/api/types'
@@ -472,8 +472,8 @@ export function ExposureLedger({
           style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
         >
           {lang === 'es'
-            ? `regla = adjudicación directa vs línea UE ${EU_DA_LINE.toFixed(0)}% (excedente en ámbar) · ● = intensidad · línea = trayectoria de riesgo`
-            : `rule = direct award vs the EU ${EU_DA_LINE.toFixed(0)}% line (overshoot in amber) · ● = intensity · line = risk trajectory`}
+            ? `regla = adjudicación directa vs línea UE ${EU_DA_LINE.toFixed(0)}% (excedente en ámbar) · ● = intensidad · línea = trayectoria de riesgo 2002–2025 · ${PARTIAL_YEAR_NOTE.es}`
+            : `rule = direct award vs the EU ${EU_DA_LINE.toFixed(0)}% line (overshoot in amber) · ● = intensity · line = risk trajectory 2002–2025 · ${PARTIAL_YEAR_NOTE.en}`}
         </p>
 
         {/* Footnote register — caveat notes, shown at all breakpoints. */}

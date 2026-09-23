@@ -20,7 +20,7 @@ import { useQuery } from '@tanstack/react-query'
 import { sectorApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { EditorialSparkline, DABullet } from '@/components/charts/editorial'
-import { RISK_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, PARTIAL_YEAR_NOTE } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { LedgerRow } from './ExposureLedger'
 import { intensityTextColor, ownSpendShare, compactCount, trajectoryDirection, EU_DA_LINE } from './confoundScales'
@@ -161,6 +161,11 @@ export function SectorDossierCard({
             {dir.glyph}
           </span>
         </div>
+      )}
+      {hasTraj && (
+        <p className="font-mono mt-0.5" style={{ fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+          {row.trajectory[0].year}–{row.trajectory[row.trajectory.length - 1].year} · {isEs ? PARTIAL_YEAR_NOTE.es : PARTIAL_YEAR_NOTE.en}
+        </p>
       )}
 
       {/* top institution */}

@@ -231,6 +231,9 @@ export const EU_DIRECT_AWARD_LIMIT = 0.10
 export const EU_SINGLE_BID_LIMIT = 0.20
 export const MODEL_HR_BASELINE = 0.11
 
+/** The COMPRANET feed froze on 2025-09-28: 2025 is a partial year on every series. */
+export const PARTIAL_YEAR_NOTE = { en: '2025 partial (to Sep 28)', es: '2025 parcial (al 28 sep)' } as const
+
 // Active risk model version (fallback — Dashboard fetches live from /analysis/model/metadata)
 export const CURRENT_MODEL_VERSION = 'v0.8.5'
 
