@@ -134,4 +134,4 @@ Deviations accepted: slope rows grow with the longest name (≤ 4 lines, plate �
 
 Noticed, not fixed (→ backlog): shared chip inks; shared `BenchmarkRow` clips at 390; `TemporalRiskChart`/`TrendsTab` old calendar; § IV "100% avg. risk" data check; no refresh path for the admin precomputes; pre-existing eslint warnings.
 
-Shipped: _pending_
+Shipped 2026-09-23 16:23Z: origin/main + VPS HEAD `9038425b` (branch `parallax/day08-sexenios` rebased onto `4c6acd24`), BUILD_ID `2026-09-23-parallax-d8-sexenios`, entry `index-DtRJEv3t.js` → `index-BdsQq0si.js` (BUILD_ID string verified in the served entry), health OK (3,058,286 contracts); the 13 refreshed `admin_*` precompute rows loaded into `/app/RUBLI_DEPLOY.db` in-container (`wal_checkpoint(TRUNCATE)` → 0,0,0) before the deploy, and prod `/analysis/admin-breakdown` now serves fox 2000–06 · calderon 2007–12 · pena_nieto 2013–18 · amlo 2019–24 · sheinbaum 2025–30; deployed via `deploy-safe.sh`.
