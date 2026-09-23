@@ -152,18 +152,33 @@ def build_largest_contracts(cur, cat_ids) -> None:
 def build_top_institutions(cur, cat_totals) -> None:
     print("[3/4] top institutions -> precomputed_stats[category_top_institutions] ...")
     t0 = time.time()
-    rows = cur.execute(
-        f"""
-        WITH agg AS (
+    # One base with the institution dossier's «What they buy» panel: read the
+    # institution x category precompute when it exists (PARALLAX D9b F9 — the
+    # two surfaces printed 145,131 vs 173,351 IMSS medication contracts).
+    # Fallback: the same filter that table is built with (amount <= 100B).
+    try:
+        cur.execute("SELECT 1 FROM institution_category_stats LIMIT 1")
+        agg_sql = """
+            SELECT category_id, institution_id,
+                   contract_count AS cnt, total_value_mxn AS spend, avg_risk_score AS ar
+            FROM institution_category_stats
+        """
+        agg_params: tuple = ()
+    except sqlite3.OperationalError:
+        agg_sql = """
             SELECT c.category_id, c.institution_id,
-                   COUNT(*)          AS cnt,
-                   SUM(c.amount_mxn) AS spend,
-                   AVG(c.risk_score) AS ar
+                   COUNT(*)                          AS cnt,
+                   SUM(COALESCE(c.amount_mxn, 0))    AS spend,
+                   AVG(c.risk_score)                 AS ar
             FROM contracts c
-            WHERE c.amount_mxn IS NOT NULL AND c.amount_mxn > 0 AND c.amount_mxn < ?
+            WHERE COALESCE(c.amount_mxn, 0) <= ?
               AND c.category_id IS NOT NULL AND c.institution_id IS NOT NULL
             GROUP BY c.category_id, c.institution_id
-        ),
+        """
+        agg_params = (MAX_CONTRACT_VALUE,)
+    rows = cur.execute(
+        f"""
+        WITH agg AS ({agg_sql}),
         ranked AS (
             SELECT *, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY spend DESC) AS rn
             FROM agg
@@ -175,7 +190,7 @@ def build_top_institutions(cur, cat_totals) -> None:
         WHERE r.rn <= {INSTITUTIONS_TOP_N}
         ORDER BY r.category_id, r.spend DESC
         """,
-        (MAX_CONTRACT_VALUE,),
+        agg_params,
     ).fetchall()
     out: dict = {}
     for r in rows:

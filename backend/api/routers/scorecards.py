@@ -31,7 +31,7 @@ class InstitutionScorecardResponse(BaseModel):
     grade: str
     grade_label: str
     grade_color: str
-    national_percentile: float
+    national_percentile: Optional[float]
     pillar_openness: float
     pillar_price: float
     pillar_vendors: float
@@ -77,7 +77,7 @@ class InstitutionScorecardListItem(BaseModel):
     grade: str
     grade_label: str
     grade_color: str
-    national_percentile: float
+    national_percentile: Optional[float]
     pillar_openness: float
     pillar_price: float
     pillar_vendors: float
@@ -91,6 +91,7 @@ class InstitutionScorecardListItem(BaseModel):
     signal_count_red: Optional[int] = None
     money_at_risk_mxn: Optional[float] = None  # exposure axis (high+critical contract value)
     total_contracts: Optional[int] = None      # for the min-N reliability gate
+    last_contract_year: Optional[int] = None   # recency marker (scores span 2002–2025)
 
 
 class VendorScorecardListItem(BaseModel):
@@ -427,34 +428,31 @@ def list_institution_scorecards(
                 grade, sector, min_score, max_score, search, federal_only,
             )
 
-        where_clauses = ["1=1"]
-        params: list = []
+        # (clause, params) pairs — the grade-free distribution query below drops
+        # the grade pair and flattens the rest, so params never misalign.
+        clauses: list[tuple[str, list]] = [("1=1", [])]
 
         # Scope (validated is_federal classifier; federal_only is a legacy alias).
         eff_scope = "federal" if federal_only else scope
         if eff_scope == "federal":
-            where_clauses.append("i.is_federal = 1")
+            clauses.append(("i.is_federal = 1", []))
         elif eff_scope == "subnational":
-            where_clauses.append("COALESCE(i.is_federal, 0) = 0")
+            clauses.append(("COALESCE(i.is_federal, 0) = 0", []))
         if min_contracts > 0:
-            where_clauses.append("COALESCE(ist.total_contracts, 0) >= ?")
-            params.append(min_contracts)
+            clauses.append(("COALESCE(ist.total_contracts, 0) >= ?", [min_contracts]))
         if grade:
-            where_clauses.append("s.grade = ?")
-            params.append(grade)
+            clauses.append(("s.grade = ?", [grade]))
         if sector:
-            where_clauses.append("LOWER(sec.name_es) = LOWER(?)")
-            params.append(sector)
+            clauses.append(("LOWER(sec.name_es) = LOWER(?)", [sector]))
         if min_score is not None:
-            where_clauses.append("s.total_score >= ?")
-            params.append(min_score)
+            clauses.append(("s.total_score >= ?", [min_score]))
         if max_score is not None:
-            where_clauses.append("s.total_score <= ?")
-            params.append(max_score)
+            clauses.append(("s.total_score <= ?", [max_score]))
         if search:
-            where_clauses.append("i.name LIKE ?")
-            params.append(f"%{search}%")
+            clauses.append(("i.name LIKE ?", [f"%{search}%"]))
 
+        where_clauses = [c for c, _ in clauses]
+        params: list = [p for _, ps in clauses for p in ps]
         where_sql = " AND ".join(where_clauses)
         # safe: sort_by is whitelisted by the Query pattern, mapped here to a column.
         _SORT_MAP = {
@@ -489,7 +487,8 @@ def list_institution_scorecards(
                    s.top_risk_driver, s.key_metrics,
                    s.confidence_band, s.p90_risk_score,
                    s.trend_direction, s.peer_percentile_sector,
-                   ist.high_critical_value_mxn, ist.total_contracts
+                   ist.high_critical_value_mxn, ist.total_contracts,
+                   ist.last_contract_year
             FROM institution_scorecards s
             JOIN institutions i ON s.institution_id = i.id
             LEFT JOIN institution_stats ist ON ist.institution_id = s.institution_id
@@ -500,8 +499,9 @@ def list_institution_scorecards(
         """, params + [per_page, offset]).fetchall()
 
         # Grade distribution for current filter (without grade filter)
-        filter_params_no_grade = [p for p, w in zip(params, where_clauses[1:]) if "s.grade" not in w]
-        where_no_grade = " AND ".join([c for c in where_clauses if "s.grade" not in c])
+        no_grade = [(c, ps) for c, ps in clauses if c != "s.grade = ?"]
+        filter_params_no_grade = [p for _, ps in no_grade for p in ps]
+        where_no_grade = " AND ".join(c for c, _ in no_grade)
         dist_rows = conn.execute(f"""
             SELECT s.grade, COUNT(*)
             FROM institution_scorecards s
@@ -518,7 +518,7 @@ def list_institution_scorecards(
             institution_id=r[0], institution_name=r[1], ramo_code=r[2],
             sector_name=r[3], total_score=round(r[4], 1),
             grade=r[5], grade_label=r[6], grade_color=r[7],
-            national_percentile=round(r[8] or 0.5, 3),
+            national_percentile=round(r[8], 3) if r[8] is not None else None,
             pillar_openness=round(r[9], 1), pillar_price=round(r[10], 1),
             pillar_vendors=round(r[11], 1), pillar_process=round(r[12], 1),
             pillar_external=round(r[13], 1),
@@ -530,6 +530,7 @@ def list_institution_scorecards(
             signal_count_red=_extract_signal_count_red(r[15]),
             money_at_risk_mxn=float(r[20]) if r[20] is not None else None,
             total_contracts=int(r[21]) if r[21] is not None else None,
+            last_contract_year=int(r[22]) if r[22] is not None else None,
         )
         for r in rows
     ]
@@ -690,7 +691,7 @@ def get_institution_scorecard(institution_id: int = Path(..., ge=1)):
         institution_id=row[0], institution_name=row[1], ramo_code=row[2],
         sector_name=row[3], total_score=round(row[4], 1),
         grade=row[5], grade_label=row[6], grade_color=row[7],
-        national_percentile=round(row[8] or 0.5, 3),
+        national_percentile=round(row[8], 3) if row[8] is not None else None,
         pillar_openness=round(row[9], 1), pillar_price=round(row[10], 1),
         pillar_vendors=round(row[11], 1), pillar_process=round(row[12], 1),
         pillar_external=round(row[13], 1),

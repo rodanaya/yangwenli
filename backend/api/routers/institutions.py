@@ -329,6 +329,7 @@ def get_institution(institution_id: int):
             geographic_scope=detail["geographic_scope"],
             total_contracts=total_contracts,
             total_amount_mxn=detail["total_amount_mxn"],
+            vendor_count=detail["vendor_count"],
             classification_confidence=detail["classification_confidence"],
             data_quality_grade=detail["data_quality_grade"],
             risk_baseline=detail["type_risk_baseline"],
@@ -976,6 +977,13 @@ def get_institution_top_categories(
                     """,
                     (institution_id, limit),
                 ).fetchall()
+                totals = conn.execute(
+                    """
+                    SELECT COUNT(*), SUM(contract_count), SUM(total_value_mxn)
+                    FROM institution_category_stats WHERE institution_id = ?
+                    """,
+                    (institution_id,),
+                ).fetchone()
                 source = "precomputed"
             except _sqlite3.OperationalError:
                 rows = None  # table absent (fixture DB / before the precompute ran)
@@ -986,6 +994,15 @@ def get_institution_top_categories(
             if year is not None:
                 conditions.append("c.contract_year = ?")
                 params.append(year)
+            totals = conn.execute(
+                f"""
+                SELECT COUNT(DISTINCT c.category_id), COUNT(*), SUM(COALESCE(c.amount_mxn, 0))
+                FROM contracts c
+                JOIN categories cat ON cat.id = c.category_id
+                WHERE {" AND ".join(conditions)}
+                """,
+                params,
+            ).fetchone()
             params.append(limit)
             rows = conn.execute(
                 f"""
@@ -1010,6 +1027,11 @@ def get_institution_top_categories(
             "institution_name": institution["name"],
             "data_note": f"Filtered to year {year}" if year is not None else "All years",
             "source": source,
+            # Coverage of the rows below: how many categories the institution
+            # buys in, and the contracts / value they categorise (PARALLAX D9b F9).
+            "total_categories": int(totals[0] or 0),
+            "total_contracts_categorised": int(totals[1] or 0),
+            "total_value_categorised": float(totals[2] or 0),
             "data": [
                 {
                     "category_id": row["category_id"],
@@ -2284,6 +2306,11 @@ def get_institution_officials(
                 parts.append(f"{r['direct_award_pct']:.0f}% direct awards")
             return ("This official " + ", ".join(parts) + ".") if parts else ""
 
+        note_es = (
+            "Responsable de la Unidad Compradora · 2018+ (COMPRANET, Estructuras C/D). "
+            "Indicador de riesgo del modelo — no es una acusación."
+            + ("" if officials else " Sin funcionarios que alcancen el mínimo de contratos para esta institución.")
+        )
         return {
             "institution_id": institution_id,
             "officials": [
@@ -2301,10 +2328,14 @@ def get_institution_officials(
                 }
                 for r in officials
             ],
-            "note": (
-                "Responsable de la Unidad Compradora · 2018+ (COMPRANET Structure C/D). "
-                "Indicador de riesgo del modelo — no es una acusación."
-                + ("" if officials else " Sin funcionarios que alcancen el mínimo de contratos para esta institución.")
+            # One note per language (PARALLAX D9b F12 — the EN page printed the
+            # Spanish note). `note` stays as the ES text for older clients.
+            "note": note_es,
+            "note_es": note_es,
+            "note_en": (
+                "Head of the Buying Unit · 2018+ (COMPRANET Structures C/D). "
+                "Model risk indicator — not an accusation."
+                + ("" if officials else " No official reaches the contract minimum at this institution.")
             ),
             "data_available": len(officials) > 0,
         }

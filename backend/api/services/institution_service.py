@@ -170,7 +170,11 @@ class InstitutionService(BaseService):
                 i.institution_type, i.institution_type_id,
                 i.size_tier, i.autonomy_level, i.is_legally_decentralized,
                 i.sector_id, i.state_code, i.geographic_scope,
-                i.total_contracts, i.total_amount_mxn,
+                -- institution_stats is the canonical base (CLAUDE rule 4): the
+                -- same contracts every dossier panel below the hero counts.
+                COALESCE(ins.total_contracts, i.total_contracts) as total_contracts,
+                COALESCE(ins.total_value_mxn, i.total_amount_mxn) as total_amount_mxn,
+                ins.vendor_count as vendor_count,
                 i.classification_confidence, i.data_quality_grade,
                 it.risk_baseline as type_risk_baseline,
                 st.risk_adjustment as size_risk_adjustment,
