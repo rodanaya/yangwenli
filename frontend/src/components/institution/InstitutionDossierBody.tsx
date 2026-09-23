@@ -37,6 +37,7 @@ import {
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import { formatCompactMXN, formatNumber, shortenContractName } from '@/lib/utils'
+import { procedureSeal } from '@/lib/institution-seal'
 import {
   ratePct,
   Panel,
@@ -74,11 +75,13 @@ export function InstitutionReading({
   institution,
   riskProfile,
   waterfall,
+  scorecard,
   lang,
 }: {
   institution: InstitutionDetailResponse
   riskProfile?: InstitutionRiskProfile | null
   waterfall?: InstitutionWaterfallResponse | null
+  scorecard?: { total_score: number; grade: string } | null
   lang: 'en' | 'es'
 }) {
   const isEs = lang === 'es'
@@ -94,12 +97,37 @@ export function InstitutionReading({
   const hasWf = wfItems.length > 0
   const topProt = [...wfItems].filter((f) => f.contribution < 0).sort((a, b) => a.contribution - b.contribution)[0]
   const topAdd = [...wfItems].filter((f) => f.contribution > 0).sort((a, b) => b.contribution - a.contribution)[0]
+  // The caption is generated from this institution's numbers only (PARALLAX
+  // D9b § Change 4): the waterfall's top drivers, then the three verdicts —
+  // model risk, the procedure seal's measure, the transparency score.
   const avgRisk = institution.avg_risk_score ?? 0
-  const modelLow = avgRisk > 0 && getRiskLevelFromScore(avgRisk) === 'low'
-
-  const caption = isEs
-    ? `El modelo pondera a la baja${topProt ? ` «${topProt.label_en.toLowerCase()}»` : ' señales protectoras'}${topAdd ? `, al alza «${topAdd.label_en.toLowerCase()}»` : ''}. ${modelLow ? 'La señal de esta institución es de proceso —concentración y adjudicación directa—, no de precio.' : ''}`
-    : `The model weighs${topProt ? ` “${topProt.label_en.toLowerCase()}”` : ' protective signals'} downward${topAdd ? `, “${topAdd.label_en.toLowerCase()}” upward` : ''}. ${modelLow ? 'This institution’s signal is one of process — concentration and direct award — not pricing.' : ''}`
+  const level = getRiskLevelFromScore(avgRisk)
+  const risk100 = Math.round(avgRisk * 100)
+  const seal = procedureSeal(institution)
+  const ratio = `${seal.ratio.toFixed(1)}×`
+  const sealValue = seal.value != null ? Math.round(seal.value) : null
+  const LEVEL_ES = { critical: 'crítico', high: 'alto', medium: 'medio', low: 'bajo' } as const
+  const driversEn = topProt && topAdd
+    ? `The model weighs “${topProt.label_en.toLowerCase()}” downward and “${topAdd.label_en.toLowerCase()}” upward.`
+    : topProt ? `The model weighs “${topProt.label_en.toLowerCase()}” downward.`
+      : topAdd ? `The model weighs “${topAdd.label_en.toLowerCase()}” upward.` : ''
+  const driversEs = topProt && topAdd
+    ? `El modelo pondera a la baja «${topProt.label_en.toLowerCase()}» y al alza «${topAdd.label_en.toLowerCase()}».`
+    : topProt ? `El modelo pondera a la baja «${topProt.label_en.toLowerCase()}».`
+      : topAdd ? `El modelo pondera al alza «${topAdd.label_en.toLowerCase()}».` : ''
+  const procEn = sealValue == null ? ''
+    : seal.key === 'da' ? `it awards ${sealValue}% without an open bid, ${seal.flagged ? `${ratio} the EU line` : 'within the EU line'}`
+      : seal.key === 'sb' ? `${sealValue}% of its competitive procedures drew a single bid, ${seal.flagged ? `${ratio} the EU line` : 'within the EU line'}`
+        : `its five-year supplier HHI is ${formatNumber(sealValue)}, ${seal.flagged ? `${ratio} the 4,000 line` : 'below the 4,000 line'}`
+  const procEs = sealValue == null ? ''
+    : seal.key === 'da' ? `adjudica ${sealValue}% sin licitación abierta, ${seal.flagged ? `${ratio} la línea UE` : 'dentro de la línea UE'}`
+      : seal.key === 'sb' ? `${sealValue}% de sus procedimientos competitivos tuvo un único postor, ${seal.flagged ? `${ratio} la línea UE` : 'dentro de la línea UE'}`
+        : `su HHI de proveedores a cinco años es ${formatNumber(sealValue)}, ${seal.flagged ? `${ratio} el umbral de 4,000` : 'bajo el umbral de 4,000'}`
+  const scoreEn = scorecard ? `the transparency score is ${Math.round(scorecard.total_score)} of 100, grade ${scorecard.grade}` : ''
+  const scoreEs = scorecard ? `el puntaje de transparencia es ${Math.round(scorecard.total_score)} de 100, calificación ${scorecard.grade}` : ''
+  const verdictsEn = [`Its contracts carry a ${level} model risk indicator (${risk100}/100)`, procEn, scoreEn].filter(Boolean).join('; ') + '.'
+  const verdictsEs = [`Sus contratos tienen un indicador de riesgo del modelo ${LEVEL_ES[level]} (${risk100}/100)`, procEs, scoreEs].filter(Boolean).join('; ') + '.'
+  const caption = isEs ? `${driversEs} ${verdictsEs}`.trim() : `${driversEn} ${verdictsEn}`.trim()
 
   // OECD deviation rows
   const da = ratePct(institution.direct_award_pct ?? institution.direct_award_rate)

@@ -310,7 +310,8 @@ export default function InstitutionDossier() {
                       className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-mono font-bold uppercase tracking-[0.12em] self-start"
                       style={{ backgroundColor: `color-mix(in srgb, ${boletaColor} 12%, transparent)`, border: `1px solid color-mix(in srgb, ${boletaColor} 35%, transparent)`, color: boletaInk }}
                     >
-                      {tierLabel}
+                      {/* The letter is unambiguous where the tier word is not. */}
+                      {scorecard.grade} · {tierLabel}
                     </span>
                     {scorecard.national_percentile != null && (
                       <p className="text-[13px] font-mono text-text-muted tabular-nums">
@@ -350,6 +351,7 @@ export default function InstitutionDossier() {
             institution={institution}
             riskProfile={riskProfile ?? null}
             waterfall={waterfall ?? null}
+            scorecard={scorecard ?? null}
             lang={lang}
           />
         </section>
@@ -439,7 +441,7 @@ export default function InstitutionDossier() {
                         <td className="py-2 pl-3 text-right tabular-nums">
                           <span className="inline-flex items-center gap-1.5 justify-end">
                             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: RISK_COLORS[level] }} aria-hidden="true" />
-                            <span style={{ color: RISK_TEXT_COLORS[level] }}>{o.avg_risk_score.toFixed(2)}</span>
+                            <span style={{ color: RISK_TEXT_COLORS[level] }}>{Math.round(o.avg_risk_score * 100)}</span>
                           </span>
                         </td>
                       </tr>
@@ -451,9 +453,13 @@ export default function InstitutionDossier() {
             <p className="md:hidden font-mono mt-1.5" aria-hidden="true" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
               {lang === 'es' ? '← desliza →' : '← scroll →'}
             </p>
-            {officialsData?.note && (
-              <p className="mt-3 text-[15px] leading-relaxed text-text-muted" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>{officialsData.note}</p>
-            )}
+            {(() => {
+              // One note per language (PARALLAX D9b § Change 4 · F12).
+              const note = lang === 'es' ? officialsData?.note_es ?? officialsData?.note : officialsData?.note_en
+              return note ? (
+                <p className="mt-3 text-[15px] leading-relaxed text-text-muted" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>{note}</p>
+              ) : null
+            })()}
           </section>
         </div>
       )}

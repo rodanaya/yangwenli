@@ -23,10 +23,9 @@ import {
   RISK_TEXT_COLORS,
   SECTOR_COLORS,
   SECTORS,
-  EU_DIRECT_AWARD_LIMIT,
-  EU_SINGLE_BID_LIMIT,
   getRiskLevelFromScore,
 } from '@/lib/constants'
+import { procedureSeal } from '@/lib/institution-seal'
 import {
   formatCompactMXN,
   formatCompactUSD,
@@ -238,7 +237,7 @@ export function InstitutionHero({
 /**
  * DualSeal — the two integrity lenses, side by side. The old VerdictCard
  * hardcoded high-risk % (lens 1's quietest derivative) and mis-framed
- * institutions whose pathology is process, not pricing. This shows BOTH:
+ * institutions whose pathology is procedural. This shows BOTH:
  *   1. Model risk  — statistical similarity to known corruption cases.
  *   2. Process integrity — the worst OECD/Prozorro deviation (adaptive).
  * Low model-risk renders muted, never green (a procurement model cannot
@@ -259,21 +258,12 @@ function DualSeal({
   const avgRisk100 = Math.round(avgRisk * 100)
   const hrPct = Math.round(institution.high_risk_pct ?? institution.high_risk_percentage ?? 0)
 
-  // ── Lens 2 · Process integrity — worst OECD/Prozorro deviation ──
-  const da = institution.direct_award_pct ?? institution.direct_award_rate ?? 0
-  const sb = institution.single_bid_pct ?? 0
-  const hhi5 = institution.supplier_diversity?.hhi_5yr_avg ?? null
-  const daLim = EU_DIRECT_AWARD_LIMIT * 100
-  const sbLim = EU_SINGLE_BID_LIMIT * 100
-  const HHI_LIM = 4000 // Prozorro concentrated-purchasing line
-  const dims = [
-    { key: 'da' as const, ratio: daLim > 0 ? da / daLim : 0 },
-    { key: 'sb' as const, ratio: sbLim > 0 ? sb / sbLim : 0 },
-    { key: 'conc' as const, ratio: hhi5 != null ? hhi5 / HHI_LIM : 0 },
-  ]
-  const top = dims.reduce((m, d) => (d.ratio > m.ratio ? d : m), dims[0])
-  const flagged = top.ratio >= 1
-  const critical = top.ratio >= 2
+  // ── Lens 2 · Procedure — worst OECD/EU/Prozorro deviation ──
+  const top = procedureSeal(institution)
+  const { flagged, critical } = top
+  const hhi5 = top.key === 'conc' ? top.value : null
+  const sb = top.key === 'sb' ? top.value ?? 0 : 0
+  const da = top.key === 'da' ? top.value ?? 0 : 0
   const integFill = critical ? RISK_COLORS.critical : flagged ? RISK_COLORS.high : 'var(--color-border)'
   const integText = critical ? RISK_TEXT_COLORS.critical : flagged ? RISK_TEXT_COLORS.high : 'var(--color-text-muted)'
   const integGrade = critical
@@ -314,7 +304,8 @@ function DualSeal({
         ruleColor={integFill}
         textColor={integText}
         big={integBig}
-        label={isEs ? `Integridad · ${integLabel}` : `Process · ${integLabel}`}
+        // "Process" is the boleta's Process-Integrity pillar; this seal is the procedure.
+        label={isEs ? `Procedimiento · ${integLabel}` : `Procedure · ${integLabel}`}
         grade={integGrade}
         sub={integSub}
       />

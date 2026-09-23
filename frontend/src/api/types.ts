@@ -673,6 +673,8 @@ export interface InstitutionOfficialsResponse {
   institution_id: number
   officials: InstitutionOfficial[]
   note: string
+  note_en?: string
+  note_es?: string
   data_available: boolean
 }
 
