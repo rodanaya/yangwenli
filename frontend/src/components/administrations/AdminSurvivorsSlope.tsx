@@ -13,7 +13,9 @@
  * See docs § .claude/designus/administrations-2026-07-02/proposals/data-first.md §6.
  */
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
+import { fitLabel } from '@/lib/plateLabels'
 import { formatDualCurrency, formatCompactMXN } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 
@@ -47,15 +49,19 @@ export interface SurvivorBridge {
   totalMxn: number
 }
 
-// ── Geometry (verbatim per approved spec §A) ──────────────────────────────
-const VIEW_W = 1040
-const VIEW_H = 280
-const COL_W = 140
-const GUTTER = 85
-const COL_STEP = COL_W + GUTTER // 225
-const HEADER_H = 34
-const ROW_H = 38
+// ── Geometry — the approved spec §A proportions (1040 = 5 × 140 columns +
+// 4 × 85 gutters), now resolved against the measured plate width so 1 unit
+// = 1px (PARALLAX D8 § Change 6). Rows grow with the tallest name block.
+const SPEC_W = 1040
+const SPEC_COL_W = 140
+const SPEC_STEP = 225
+const HEADER_H = 38
+const MIN_ROW_H = 38
 const N_ROWS = 6
+const LABEL_FS = 11
+const LINE_H = 14
+const LABEL_INSET = 6
+const LABEL_FACES = ['11px "JetBrains Mono"', '700 11px "JetBrains Mono"'] as const
 
 const OCHRE = 'var(--color-accent)'
 const ZINC = '#71717a'
@@ -132,6 +138,9 @@ interface Edge {
 
 export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvivorsSlopeProps) {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  const plate = useRef<HTMLDivElement>(null)
+  const W = useMeasuredWidth(plate)
+  const fontsReady = useFontsReady(LABEL_FACES)
 
   if (!columns.length) return null
 
@@ -179,6 +188,29 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
     }
     return null
   }
+
+  // Plate geometry from the measured width.
+  const COL_W = (W * SPEC_COL_W) / SPEC_W
+  const COL_STEP = (W * SPEC_STEP) / SPEC_W
+  // Names stop 10px short of the column's right edge, where connectors leave.
+  const LABEL_W = Math.max(0, COL_W - LABEL_INSET - 10)
+  const ready = W > 0 && fontsReady
+  const labelLines: string[][][] = columns.map((col, ci) =>
+    col.seats.slice(0, N_ROWS).map((seat, ri) => {
+      const name = formatVendorName(seat.name, 80)
+      if (!ready) return [name]
+      const font = `${isSeatBridged(ci, ri) ? '700 ' : ''}${LABEL_FS}px "JetBrains Mono"`
+      return (fitLabel(name, font, LABEL_W, { maxLines: 3 }) ?? fitLabel(name, font, LABEL_W, { maxLines: 4 }))?.lines ?? [name]
+    }),
+  )
+  const tallest = Math.max(
+    1,
+    ...labelLines.flatMap((col, ci) => col.map((lines, ri) => lines.length + (isSeatBridged(ci, ri) ? 1 : 0))),
+  )
+  const ROW_H = Math.max(MIN_ROW_H, tallest * LINE_H + 12)
+  const rowTop = (ri: number) => HEADER_H + ri * ROW_H
+  const rowMid = (ri: number) => rowTop(ri) + ROW_H / 2
+  const plateH = HEADER_H + N_ROWS * ROW_H + 4
 
   const seatsCount = 30
   const N = bridges.length
@@ -244,154 +276,152 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
         </p>
       )}
 
-      {/* Desktop — SVG slope chart. */}
-      <div className="hidden md:block mt-4 overflow-x-auto">
-        <div style={{ minWidth: 880 }}>
-          <svg
-            viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-            width="100%"
-            role="img"
-            aria-label={ariaLabel}
-          >
-            {/* Connectors — drawn first so row text sits on top. */}
-            {edges.map((edge, i) => {
-              const x1 = edge.colA * COL_STEP + COL_W - 4
-              const x2 = edge.colB * COL_STEP + 4
-              const y1 = HEADER_H + edge.rowA * ROW_H + 19
-              const y2 = HEADER_H + edge.rowB * ROW_H + 19
-              const bow = edge.isSkip ? -10 : 0
-              const isHovered = hoveredKey === edge.key
-              const dimmed = hoveredKey !== null && !isHovered
-              const stroke = edge.crossParty ? OCHRE : ZINC
-              const path = `M${x1},${y1} C${x1 + 32},${y1 + bow} ${x2 - 32},${y2 + bow} ${x2},${y2}`
-              const mainWidth = edge.crossParty ? (isHovered ? 3 : 2.25) : 1.5
-              const mainOpacity = edge.crossParty ? 1 : 0.6
-              const dotR = edge.crossParty ? (isHovered ? 4 : 2.75) : 2.25
-              const dotOpacity = edge.crossParty ? 1 : 0.7
-              return (
-                // Group opacity dims the whole edge (halo + line + dots) to 20%
-                // when another bridge is hovered — Reuters highlight isolation.
-                <g key={`${edge.key}-${i}`} opacity={dimmed ? 0.2 : 1}>
-                  {edge.crossParty && (
-                    <path d={path} fill="none" style={{ stroke: OCHRE }} strokeWidth={7} opacity={0.14} />
-                  )}
-                  <path
-                    d={path}
-                    fill="none"
-                    style={{ stroke }}
-                    strokeWidth={mainWidth}
-                    opacity={mainOpacity}
-                  />
-                  <circle cx={x1} cy={y1} r={dotR} style={{ fill: stroke }} opacity={dotOpacity} />
-                  <circle cx={x2} cy={y2} r={dotR} style={{ fill: stroke }} opacity={dotOpacity} />
-                </g>
-              )
-            })}
+      {/* Desktop — slope chart drawn at 1:1 (PARALLAX D8 § Change 6): the plate
+          measures its width and every x derives from it, so nothing scales by
+          CSS; names are HTML labels over the svg, full length, ≤ 3 lines. */}
+      <div className="hidden md:block mt-4">
+        <div ref={plate} className="relative" style={{ height: plateH }}>
+          {ready && (
+            <>
+              <svg width={W} height={plateH} viewBox={`0 0 ${W} ${plateH}`} role="img" aria-label={ariaLabel} style={{ display: 'block' }}>
+                {/* Connectors — drawn first so rows sit on top. */}
+                {edges.map((edge, i) => {
+                  const x1 = edge.colA * COL_STEP + COL_W - 4
+                  const x2 = edge.colB * COL_STEP + 4
+                  const y1 = rowMid(edge.rowA)
+                  const y2 = rowMid(edge.rowB)
+                  const bow = edge.isSkip ? -10 : 0
+                  const isHovered = hoveredKey === edge.key
+                  const dimmed = hoveredKey !== null && !isHovered
+                  const stroke = edge.crossParty ? OCHRE : ZINC
+                  const path = `M${x1},${y1} C${x1 + 32},${y1 + bow} ${x2 - 32},${y2 + bow} ${x2},${y2}`
+                  const mainWidth = edge.crossParty ? (isHovered ? 3 : 2.25) : 1.5
+                  const mainOpacity = edge.crossParty ? 1 : 0.6
+                  const dotR = edge.crossParty ? (isHovered ? 4 : 2.75) : 2.25
+                  const dotOpacity = edge.crossParty ? 1 : 0.7
+                  return (
+                    // Group opacity dims the whole edge (halo + line + dots) to 20%
+                    // when another bridge is hovered — Reuters highlight isolation.
+                    <g key={`${edge.key}-${i}`} opacity={dimmed ? 0.2 : 1}>
+                      {edge.crossParty && (
+                        <path d={path} fill="none" style={{ stroke: OCHRE }} strokeWidth={7} opacity={0.14} />
+                      )}
+                      <path data-connector="" d={path} fill="none" style={{ stroke }} strokeWidth={mainWidth} opacity={mainOpacity} />
+                      <circle cx={x1} cy={y1} r={dotR} style={{ fill: stroke }} opacity={dotOpacity} />
+                      <circle cx={x2} cy={y2} r={dotR} style={{ fill: stroke }} opacity={dotOpacity} />
+                    </g>
+                  )
+                })}
 
-            {/* Columns — header button + 6-row roster. */}
-            {columns.map((col, ci) => {
-              const colX = ci * COL_STEP
-              return (
-                <g key={col.adminName}>
-                  <foreignObject x={colX} y={0} width={COL_W} height={HEADER_H}>
-                    <div style={{ width: '100%', height: '100%' }}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectAdmin(col.adminName)}
-                        className="w-full h-full flex flex-col justify-center gap-0.5 text-left"
-                        style={{ cursor: 'pointer' }}
-                        aria-label={isEs ? `Ver expediente de ${col.displayName}` : `Open ${col.displayName}'s file`}
-                      >
-                        <span className="flex items-center gap-1.5 min-w-0">
-                          <span
-                            className="flex-shrink-0"
-                            style={{ width: 8, height: 8, backgroundColor: col.color }}
-                          />
-                          <span
-                            className="truncate"
-                            style={{ fontFamily: SERIF, fontStyle: 'normal', fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.1 }}
+                {/* Columns — header button + 6-row roster (ticks + hover targets). */}
+                {columns.map((col, ci) => {
+                  const colX = ci * COL_STEP
+                  return (
+                    <g key={col.adminName}>
+                      <foreignObject data-slope-col="" x={colX} y={0} width={COL_W} height={HEADER_H}>
+                        <div style={{ width: '100%', height: '100%' }}>
+                          <button
+                            type="button"
+                            onClick={() => onSelectAdmin(col.adminName)}
+                            className="w-full h-full flex flex-col justify-center gap-0.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                            style={{ cursor: 'pointer' }}
+                            aria-label={isEs ? `Ver expediente de ${col.displayName}` : `Open ${col.displayName}'s file`}
                           >
-                            {col.displayName}
-                          </span>
-                        </span>
-                        <span style={{ fontFamily: MONO_ARCHIVAL, fontSize: 13, color: 'var(--color-text-muted)' }}>
-                          {col.yearsLabel}
-                        </span>
-                      </button>
-                    </div>
-                  </foreignObject>
+                            <span className="flex items-center gap-1.5 min-w-0">
+                              <span className="flex-shrink-0" style={{ width: 8, height: 8, backgroundColor: col.color }} />
+                              <span style={{ fontFamily: SERIF, fontStyle: 'normal', fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.1 }}>
+                                {col.displayName}
+                              </span>
+                            </span>
+                            <span style={{ fontFamily: MONO_ARCHIVAL, fontSize: 13, color: 'var(--color-text-muted)' }}>
+                              {col.yearsLabel}
+                            </span>
+                          </button>
+                        </div>
+                      </foreignObject>
 
-                  {col.seats.slice(0, N_ROWS).map((seat, ri) => {
-                    const bridgeKey = isSeatBridged(ci, ri)
-                    const bridge = bridgeKey ? bridgeByKey.get(bridgeKey) : undefined
-                    const rowY = HEADER_H + ri * ROW_H + 19
-                    const isBridged = bridgeKey != null
-                    const tickColor = bridge?.crossParty ? OCHRE : ZINC
-                    const isHovered = bridgeKey != null && hoveredKey === bridgeKey
-                    const isSheinbaumCol = col.adminName.toLowerCase() === 'sheinbaum'
-                    const showDagger = isBridged && isSheinbaumCol
+                      {col.seats.slice(0, N_ROWS).map((seat, ri) => {
+                        const bridgeKey = isSeatBridged(ci, ri)
+                        const bridge = bridgeKey ? bridgeByKey.get(bridgeKey) : undefined
+                        const isBridged = bridgeKey != null
+                        const tickColor = bridge?.crossParty ? OCHRE : ZINC
+                        const isHovered = bridgeKey != null && hoveredKey === bridgeKey
+                        const top = rowTop(ri)
+                        return (
+                          <g
+                            key={`${col.adminName}-${ri}`}
+                            onMouseEnter={() => bridgeKey && setHoveredKey(bridgeKey)}
+                            onMouseLeave={() => setHoveredKey(null)}
+                          >
+                            <title>{`${seat.name} · ${formatCompactMXN(seat.totalMxn)}`}</title>
+                            <rect x={colX} y={top} width={COL_W} height={ROW_H} fill="transparent" />
+                            {isBridged && (
+                              <rect
+                                x={colX}
+                                y={rowMid(ri) - (ROW_H - 12) / 2}
+                                width={3}
+                                height={ROW_H - 12}
+                                style={{ fill: tickColor }}
+                                opacity={isHovered ? 1 : 0.85}
+                              />
+                            )}
+                          </g>
+                        )
+                      })}
+                    </g>
+                  )
+                })}
+              </svg>
 
+              {/* Name layer — HTML glyphs over the svg geometry, never clipped, never scaled. */}
+              <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+                {columns.map((col, ci) =>
+                  col.seats.slice(0, N_ROWS).map((seat, ri) => {
+                    const isBridged = isSeatBridged(ci, ri) != null
+                    const lines = labelLines[ci]?.[ri] ?? [seat.name]
+                    const blockH = lines.length * LINE_H + (isBridged ? LINE_H : 0)
+                    const showDagger = isBridged && col.adminName.toLowerCase() === 'sheinbaum'
                     return (
-                      <g
+                      <div
                         key={`${col.adminName}-${ri}`}
-                        onMouseEnter={() => bridgeKey && setHoveredKey(bridgeKey)}
-                        onMouseLeave={() => setHoveredKey(null)}
+                        data-slope-label=""
+                        className="absolute"
+                        style={{
+                          left: ci * COL_STEP + LABEL_INSET,
+                          top: rowMid(ri) - blockH / 2,
+                          width: LABEL_W,
+                          fontFamily: MONO_DATA,
+                          fontSize: LABEL_FS,
+                          lineHeight: `${LINE_H}px`,
+                        }}
                       >
-                        <title>
-                          {isBridged ? seat.name : `${seat.name} · ${formatCompactMXN(seat.totalMxn)}`}
-                        </title>
-                        {isBridged ? (
-                          <>
-                            {/* Survivor — full-height tick + promoted two-line label. */}
-                            <rect
-                              x={colX}
-                              y={rowY - 13}
-                              width={3}
-                              height={26}
-                              style={{ fill: tickColor }}
-                              opacity={isHovered ? 1 : 0.85}
-                            />
-                            <text
-                              x={colX + 6}
-                              y={rowY - 3}
-                              fontFamily={MONO_DATA}
-                              fontSize={11}
-                              style={{ fontWeight: 700, fill: 'var(--color-text-primary)' }}
-                            >
-                              {formatVendorName(seat.name, 19)}
-                              {showDagger && (
-                                <tspan dy={-4} fontSize={7}>†</tspan>
-                              )}
-                            </text>
-                            <text
-                              x={colX + 6}
-                              y={rowY + 10}
-                              fontFamily={MONO_DATA}
-                              fontSize={9.5}
-                              style={{ fill: 'var(--color-text-secondary)' }}
-                            >
-                              {formatCompactMXN(seat.totalMxn)}
-                            </text>
-                          </>
-                        ) : (
-                          /* Non-survivor — muted single name line; amount lives in the title. */
-                          <text
-                            x={colX + 6}
-                            y={rowY + 2}
-                            fontFamily={MONO_DATA}
-                            fontSize={10}
-                            style={{ fontWeight: 400, fill: 'var(--color-text-muted)', opacity: 0.5 }}
+                        {lines.map((ln, k) => (
+                          <div
+                            key={k}
+                            style={{
+                              whiteSpace: 'nowrap',
+                              fontWeight: isBridged ? 700 : 400,
+                              color: isBridged ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                            }}
                           >
-                            {formatVendorName(seat.name, 20)}
-                          </text>
+                            {ln}
+                            {showDagger && k === lines.length - 1 && (
+                              <sup style={{ fontSize: 9, marginLeft: 1 }}>†</sup>
+                            )}
+                          </div>
+                        ))}
+                        {isBridged && (
+                          <div style={{ whiteSpace: 'nowrap', color: 'var(--color-text-secondary)' }}>
+                            {formatCompactMXN(seat.totalMxn)}
+                          </div>
                         )}
-                      </g>
+                      </div>
                     )
-                  })}
-                </g>
-              )
-            })}
-          </svg>
+                  }),
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Visually-hidden bridge list — the SVG is role="img" and opaque to a screen reader. */}
@@ -416,7 +446,7 @@ export function AdminSurvivorsSlope({ columns, isEs, onSelectAdmin }: AdminSurvi
         </ul>
 
         {/* Legend — desktop only, directly under the plate. */}
-        <p className="mt-2 text-text-muted" style={{ fontFamily: MONO_ARCHIVAL, fontSize: 9 }}>
+        <p className="mt-2 text-text-muted" style={{ fontFamily: MONO_ARCHIVAL, fontSize: 12 }}>
           {isEs
             ? '— ocre = sobrevive un cambio de partido · gris = mismo partido'
             : '— ochre = survives a change of party · grey = same party'}
