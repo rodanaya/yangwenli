@@ -56,6 +56,8 @@ const MOBILE_HEADER_H = 16
 const MOBILE_READOUT_H = 36
 // Desktop legend under the plate: two 13px rows at 1024–1440 (measured, D7b).
 const LEGEND_RESERVE_H = 51
+// …and the key sentence under it: two 13.5px lines + margin, EN = ES (measured).
+const KEY_RESERVE_H = 47
 
 // Glyph faces — the canvas measures exactly what the svg/HTML renders.
 const MONO = "'IBM Plex Mono', monospace"
@@ -66,8 +68,9 @@ const ANNO_LINE_H = 13
 // Every face the canvas measures with — the plate waits for exactly these.
 const MEASURED_FACES = [LABEL_FONT, ANNO_FONT]
 
-const OCHRE_STRONG = 'rgba(160, 104, 32, 0.7)'
-const OCHRE_FAINT = 'rgba(160, 104, 32, 0.35)'
+// The ½ and 80% flag rules: accent-hover at full alpha (the ochre at α .7 /
+// .35 measured 2.56 / 1.55:1 — a11y X4; accent-hover is 6.3:1).
+const FLAG_RULE = 'var(--color-accent-hover)'
 
 /** Mobile row height: spend share of a 440px run, floored at the 24px target. */
 function mobileRowH(totalMxn: number, totalSpend: number): number {
@@ -158,8 +161,8 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
     const share = ownSpendShare(r) * 100
     const criticalPct = r.totalMxn > 0 ? (r.criticalMxn / r.totalMxn) * 100 : 0
     return lang === 'es'
-      ? `${r.name} · total ${formatCompactMXN(r.totalMxn)} · observado ${formatCompactMXN(r.varMxn)} (${share.toFixed(0)}%) · crítico ${criticalPct.toFixed(0)}% · AD ${r.daPct.toFixed(0)}%`
-      : `${r.name} · total ${formatCompactMXN(r.totalMxn)} · flagged ${formatCompactMXN(r.varMxn)} (${share.toFixed(0)}%) · critical ${criticalPct.toFixed(0)}% · DA ${r.daPct.toFixed(0)}%`
+      ? `${r.name} · total ${formatCompactMXN(r.totalMxn)} · observado ${formatCompactMXN(r.varMxn)} (${share.toFixed(0)}%) · crítico ${criticalPct.toFixed(0)}% del valor · AD ${r.daPct.toFixed(0)}%`
+      : `${r.name} · total ${formatCompactMXN(r.totalMxn)} · flagged ${formatCompactMXN(r.varMxn)} (${share.toFixed(0)}%) · critical ${criticalPct.toFixed(0)}% of value · DA ${r.daPct.toFixed(0)}%`
   }, [hoverId, ordered, lang])
 
   // Height held before the first measure, so the figure never pushes the page:
@@ -168,7 +171,7 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
   const reserveH =
     typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
       ? MOBILE_READOUT_H + 8 + MOBILE_HEADER_H + ordered.reduce((acc, r) => acc + mobileRowH(r.totalMxn, totalSpend), 0)
-      : READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H + LEGEND_RESERVE_H
+      : READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H + LEGEND_RESERVE_H + KEY_RESERVE_H
 
   const goToSector = useCallback((sectorId: number) => navigate(`/sectors/${sectorId}`), [navigate])
 
@@ -180,11 +183,11 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
   const headline =
     lang === 'es' ? (
       <>
-        El modelo observa <strong style={{ color: 'var(--color-accent)', fontWeight: 700 }}>{formatCompactMXN(totalVar)} de {formatCompactMXN(totalSpend)}</strong> sobre la mesa — el {overallSharePct.toFixed(1)}% del valor, cargado por apenas el {overallFlaggedRate.toFixed(0)}% de los contratos.
+        El modelo observa <strong style={{ color: 'var(--color-accent)', fontWeight: 700 }}>{formatCompactMXN(totalVar)} de {formatCompactMXN(totalSpend)}</strong> sobre la mesa — el {overallSharePct.toFixed(1)}% del valor, cargado por apenas el {overallFlaggedRate.toFixed(1)}% de los contratos.
       </>
     ) : (
       <>
-        The model flags <strong style={{ color: 'var(--color-accent)', fontWeight: 700 }}>{formatCompactMXN(totalVar)} of {formatCompactMXN(totalSpend)}</strong> on the table — {overallSharePct.toFixed(1)}% of value, carried by just {overallFlaggedRate.toFixed(0)}% of contracts.
+        The model flags <strong style={{ color: 'var(--color-accent)', fontWeight: 700 }}>{formatCompactMXN(totalVar)} of {formatCompactMXN(totalSpend)}</strong> on the table — {overallSharePct.toFixed(1)}% of value, carried by just {overallFlaggedRate.toFixed(1)}% of contracts.
       </>
     )
 
@@ -220,7 +223,7 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
             is sized to this, so it can never overhang the frame's border. */}
         <div ref={containerRef} className="w-full" style={pending ? { minHeight: reserveH } : undefined}>
           {pending ? null : isMobile ? (
-            <MobileMesa rows={ordered} lang={lang} readoutText={readoutText} hoverId={hoverId} setHoverId={setHoverId} />
+            <MobileMesa rows={ordered} lang={lang} readoutText={readoutText} setHoverId={setHoverId} />
           ) : (
             <DesktopMesa
               rows={ordered}
@@ -310,11 +313,14 @@ function DesktopMesa({
   const annoText: Record<string, [string, string]> = {}
   const candidates: LabelCandidate[] = []
   const wIdx = rows.findIndex((r) => r.sectorId === widest.sectorId)
+  const widestTop = bandY(ownSpendShare(widest))
   if (wIdx >= 0) {
     annoText.widest = lang === 'es'
       ? [`mayor volumen — ${widest.name}`, `${formatCompactMXN(widest.varMxn)} de ${formatCompactMXN(widest.totalMxn)}`]
       : [`largest volume — ${widest.name}`, `${formatCompactMXN(widest.varMxn)} of ${formatCompactMXN(widest.totalMxn)}`]
-    candidates.push({ id: 'widest', x: xOffsets[wIdx] + colWidths[wIdx] / 2, y: TOP_PAD + 30, width: annoWidth(annoText.widest), height: 2 * ANNO_LINE_H, above: 2 })
+    // Anchored at the column's hatch top with a ≥ 24px leader (it used to hang
+    // from TOP_PAD + 30 — a 10px stub 92px above the hatch; D7b § Change 6).
+    candidates.push({ id: 'widest', x: xOffsets[wIdx] + colWidths[wIdx] / 2, y: widestTop, width: annoWidth(annoText.widest), height: 2 * ANNO_LINE_H, above: 28, below: 4 })
   }
   const tIdx = rows.findIndex((r) => r.sectorId === tallest.sectorId)
   const tallestTop = bandY(ownSpendShare(tallest))
@@ -348,7 +354,7 @@ function DesktopMesa({
       >
         <span className="inline-flex items-center gap-1.5 min-w-0">
           {hoverNarrowIdx >= 0 && <PlateIndexBadge n={hoverNarrowIdx + 1} />}
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+          <span role="status" aria-live="polite" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
         </span>
         <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
           {lang === 'es' ? '% del gasto propio observado' : '% of own spend flagged'}
@@ -401,8 +407,8 @@ function DesktopMesa({
 
           const ariaLabel =
             lang === 'es'
-              ? `${r.name} — ${formatCompactMXN(r.totalMxn)} de gasto, ${formatCompactMXN(r.varMxn)} observado (${(share * 100).toFixed(0)}% del gasto propio)`
-              : `${r.name} — ${formatCompactMXN(r.totalMxn)} spend, ${formatCompactMXN(r.varMxn)} flagged (${(share * 100).toFixed(0)}% of own spend)`
+              ? `${r.name} — ${formatCompactMXN(r.totalMxn)} de gasto, ${formatCompactMXN(r.varMxn)} observado (${(share * 100).toFixed(0)}% del gasto propio) · crítico ${(critShare * 100).toFixed(0)}% del valor · adjudicación directa ${r.daPct.toFixed(0)}%`
+              : `${r.name} — ${formatCompactMXN(r.totalMxn)} spend, ${formatCompactMXN(r.varMxn)} flagged (${(share * 100).toFixed(0)}% of own spend) · critical ${(critShare * 100).toFixed(0)}% of value · direct award ${r.daPct.toFixed(0)}%`
 
           return (
             <g key={r.sectorId}>
@@ -486,7 +492,7 @@ function DesktopMesa({
         {/* Ruled flags — marks keep the ochre hairlines; their text reads in
             accent-hover. Nothing here takes the pointer (the ½ line used to
             steal hover from the column underneath). */}
-        <line x1={GUTTER_W} y1={bandY(0.5)} x2={GUTTER_W + bandW} y2={bandY(0.5)} stroke={OCHRE_STRONG} strokeWidth={1} pointerEvents="none" />
+        <line x1={GUTTER_W} y1={bandY(0.5)} x2={GUTTER_W + bandW} y2={bandY(0.5)} stroke={FLAG_RULE} strokeWidth={1} pointerEvents="none" />
         <text x={GUTTER_W + 4} y={bandY(0.5) - 4} fontFamily="'EB Garamond', Georgia, serif" fontStyle="normal" fontWeight={700} fontSize={13} fill="var(--color-accent-hover)" pointerEvents="none">
           ½
         </text>
@@ -494,7 +500,7 @@ function DesktopMesa({
           {ownSpendLabel}
         </text>
 
-        <line x1={GUTTER_W} y1={bandY(0.8)} x2={GUTTER_W + bandW} y2={bandY(0.8)} stroke={OCHRE_FAINT} strokeWidth={1} pointerEvents="none" />
+        <line x1={GUTTER_W} y1={bandY(0.8)} x2={GUTTER_W + bandW} y2={bandY(0.8)} stroke={FLAG_RULE} strokeWidth={1} pointerEvents="none" />
         <text x={GUTTER_W + 4} y={bandY(0.8) - 4} fontFamily="'IBM Plex Mono', monospace" fontSize={11} fill="var(--color-accent-hover)" pointerEvents="none">
           80%
         </text>
@@ -520,9 +526,8 @@ function DesktopMesa({
         {placed.map((p) => {
           const c = candidates.find((k) => k.id === p.id)
           if (!c) return null
-          const [y1, y2] = p.id === 'widest'
-            ? [TOP_PAD + 30, TOP_PAD + 40]
-            : p.box.y0 >= tallestTop ? [tallestTop, p.box.y0 - 2] : [p.box.y1 + 2, tallestTop]
+          const top = p.id === 'widest' ? widestTop : tallestTop
+          const [y1, y2] = p.box.y0 >= top ? [top, p.box.y0 - 2] : [p.box.y1 + 2, top]
           return <line key={p.id} x1={c.x} y1={y1} x2={c.x} y2={y2} stroke="var(--color-text-muted)" strokeWidth={0.8} pointerEvents="none" />
         })}
       </svg>
@@ -532,9 +537,14 @@ function DesktopMesa({
           aria-hidden="true"
           className="absolute pointer-events-none whitespace-nowrap"
           style={{
-            left: p.box.x0,
-            top: p.box.y0,
-            width: p.box.x1 - p.box.x0,
+            // Paper behind the glyphs so the hover/focus outline and the
+            // leaders pass under them (Day 4 precedent).
+            left: p.box.x0 - 2,
+            top: p.box.y0 - 2,
+            width: p.box.x1 - p.box.x0 + 4,
+            padding: 2,
+            // The plate's own paper (PlateFrame), not the page's.
+            background: 'var(--color-background-elevated, var(--color-background))',
             textAlign: p.align,
             fontFamily: MONO,
             fontSize: 11,
@@ -559,6 +569,12 @@ function DesktopMesa({
           ))}
         </ul>
       )}
+      {/* The plate's key: the floor and the three marks, declared once (D7b § Change 6). */}
+      <p className="mt-2" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13.5, lineHeight: 1.45, color: 'var(--color-text-secondary)' }}>
+        {lang === 'es'
+          ? 'Las columnas de menos de 6px se ensanchan a un mínimo de 6px · ½ = la mitad del gasto propio del sector, observada · 80% = la línea de saturación del modelo · línea roja = la parte observada del gasto de cada sector.'
+          : "Columns under 6px are widened to a 6px floor · ½ = half of the sector's own spend flagged · 80% = the model's saturation line · red waterline = each sector's flagged share of its own spend."}
+      </p>
     </div>
   )
 }
@@ -568,13 +584,11 @@ function MobileMesa({
   rows,
   lang,
   readoutText,
-  hoverId,
   setHoverId,
 }: {
   rows: LedgerRow[]
   lang: 'en' | 'es'
   readoutText: string
-  hoverId: number | null
   setHoverId: (id: number | null) => void
 }) {
   const totalSpend = rows.reduce((acc, r) => acc + r.totalMxn, 0)
@@ -590,7 +604,7 @@ function MobileMesa({
         className="font-mono tabular-nums mb-2"
         style={{ minHeight: MOBILE_READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
       >
-        {readoutText}
+        <span role="status" aria-live="polite">{readoutText}</span>
       </div>
       {/* Names the small right-hand figure on every row (the old circled-digit legend
           mapped to nothing here — rows carry their names). */}
@@ -600,12 +614,12 @@ function MobileMesa({
       <div>
         {rows2.map(({ row, h, spendShare }) => {
           const share = ownSpendShare(row)
-          const isHover = hoverId === row.sectorId
+          const critShare = row.totalMxn > 0 ? Math.max(0, Math.min(1, row.criticalMxn / row.totalMxn)) : 0
           const fill = sectorFill(row.sectorCode)
           const ariaLabel =
             lang === 'es'
-              ? `${row.name} — ${formatCompactMXN(row.totalMxn)} de gasto, ${formatCompactMXN(row.varMxn)} observado (${(share * 100).toFixed(0)}% del gasto propio)`
-              : `${row.name} — ${formatCompactMXN(row.totalMxn)} spend, ${formatCompactMXN(row.varMxn)} flagged (${(share * 100).toFixed(0)}% of own spend)`
+              ? `${row.name} — ${formatCompactMXN(row.totalMxn)} de gasto, ${formatCompactMXN(row.varMxn)} observado (${(share * 100).toFixed(0)}% del gasto propio) · crítico ${(critShare * 100).toFixed(0)}% del valor · adjudicación directa ${row.daPct.toFixed(0)}%`
+              : `${row.name} — ${formatCompactMXN(row.totalMxn)} spend, ${formatCompactMXN(row.varMxn)} flagged (${(share * 100).toFixed(0)}% of own spend) · critical ${(critShare * 100).toFixed(0)}% of value · direct award ${row.daPct.toFixed(0)}%`
           return (
             <Link
               key={row.sectorId}
@@ -623,10 +637,15 @@ function MobileMesa({
                   <pattern id={`arqueo-m-fine-${row.sectorId}`} width={4} height={4} patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
                     <line x1={0} y1={0} x2={0} y2={4} stroke="var(--color-text-primary)" strokeOpacity={0.38} strokeWidth={1} />
                   </pattern>
+                  <pattern id={`arqueo-m-dense-${row.sectorId}`} width={2} height={2} patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                    <line x1={0} y1={0} x2={0} y2={2} stroke="var(--color-text-primary)" strokeOpacity={0.5} strokeWidth={1} />
+                  </pattern>
                 </defs>
-                <rect x={0} y={0} width={rowW * share} height={h} fill={`url(#arqueo-m-fine-${row.sectorId})`} opacity={isHover ? 1.3 : 1} />
+                <rect x={0} y={0} width={rowW * share} height={h} fill={`url(#arqueo-m-fine-${row.sectorId})`} />
+                {/* dense hatch = critical only, as on the desktop plate and in the caption */}
+                {critShare > 0 && <rect data-dense x={0} y={0} width={rowW * critShare} height={h} fill={`url(#arqueo-m-dense-${row.sectorId})`} />}
                 {/* ½ vertical rule */}
-                <line x1={rowW * 0.5} y1={0} x2={rowW * 0.5} y2={h} stroke={OCHRE_STRONG} strokeWidth={1} />
+                <line x1={rowW * 0.5} y1={0} x2={rowW * 0.5} y2={h} stroke={FLAG_RULE} strokeWidth={1} />
                 <rect x={0} y={0} width={3} height={h} fill={fill} />
               </svg>
               <span

@@ -1070,7 +1070,7 @@ export function Sectors() {
                         <span style={{ fontVariantNumeric: 'tabular-nums' }}>
                           {ledeStats.intLeader.daPct.toFixed(0)}%
                         </span>
-                        {' adjudicado sin competencia.'}
+                        {` de sus contratos adjudicados sin competencia.`}
                       </>
                     ) : (
                       <>
@@ -1090,7 +1090,7 @@ export function Sectors() {
                         <span style={{ fontVariantNumeric: 'tabular-nums' }}>
                           {ledeStats.intLeader.daPct.toFixed(0)}%
                         </span>
-                        {' of it awarded without competition.'}
+                        {` of ${ledeStats.intLeader.name}'s contracts awarded without competition.`}
                       </>
                     )}
                   </h2>

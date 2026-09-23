@@ -29,7 +29,7 @@ import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { LedgerRow } from './ExposureLedger'
-import { intensityColor, intensityTextColor, makeLogFrac, ownSpendShare, orderForLens } from './confoundScales'
+import { intensityColor, intensityTextColor, makeLogFrac, logTicks, ownSpendShare, orderForLens } from './confoundScales'
 import type { PlateLens } from './confoundScales'
 
 const ROW_H = 44
@@ -41,8 +41,8 @@ const GRID: React.CSSProperties = {
   alignItems: 'center',
 }
 
-// Lane-1 axis ticks, in MXN. Labels render as 0.1 · 0.5 · 1 (billones / trillions).
-const VAR_TICKS = [1e11, 5e11, 1e12]
+// Callouts sit just above the lane's hairline on paper, never across a stem.
+const CALLOUT_ABOVE: React.CSSProperties = { bottom: 'calc(50% + 4px)', background: 'var(--color-background-elevated, var(--color-background))', padding: '0 2px' }
 
 const SERIF_NAME: React.CSSProperties = {
   fontFamily: '"EB Garamond", Georgia, serif',
@@ -117,6 +117,9 @@ export function ConfoundPlate({
   const [hovered, setHovered] = useState<number | null>(null)
 
   const logFrac = useMemo(() => makeLogFrac(rows), [rows])
+  // Ruler ticks (MXN, labelled in trillions) recomputed from the log origin.
+  const varTicks = useMemo(() => logTicks(rows, logFrac), [rows, logFrac])
+  const clearHalf = rows.filter((r) => ownSpendShare(r) > 0.5).length
   // The Plate offers VaR and saturation; any other URL lens (the Register's
   // intensity) shows VaR with no pressed button.
   const plateLens: PlateLens = lens === 'saturation' ? 'saturation' : 'var'
@@ -167,8 +170,8 @@ export function ConfoundPlate({
   const isEs = lang === 'es'
 
   const caption = isEs
-    ? 'Dos escalas, una línea: monto observado (●, log) contra saturación del gasto propio (○). Casi todo el registro rebasa la bandera de ½ — el modelo pondera anomalías de monto alto — pero ninguna argolla llega tan lejos como la de mayor saturación. Cambie el orden a saturación y mire la inversión.'
-    : 'Two scales, one line: flagged amount (●, log) against saturation of own spend (○). Nearly the whole registry clears the ½ flag — the model weights high-value anomalies — but no ring reaches as far as the saturation leader. Flip the sort to saturation and watch the inversion.'
+    ? `Dos escalas, una línea: monto observado (●, log) contra saturación del gasto propio (○). ${clearHalf} de ${rows.length} sectores superan la marca ½ — el modelo pondera anomalías de monto alto — pero ninguna argolla llega tan lejos como la de mayor saturación. Cambie el orden a saturación y mire la inversión.`
+    : `Two scales, one line: flagged amount (●, log) against saturation of own spend (○). ${clearHalf} of ${rows.length} sectors clear the ½ flag — the model weights high-value anomalies — but no ring reaches as far as the saturation leader. Flip the sort to saturation and watch the inversion.`
 
   const sortControl = (
     <div className="flex items-center gap-1" role="group" aria-label={isEs ? 'Ordenar el registro' : 'Sort the registry'}>
@@ -227,7 +230,9 @@ export function ConfoundPlate({
               <strong style={{ color: 'var(--color-text-primary)', fontStyle: 'normal', fontWeight: 600 }}>
                 {isEs ? '¿Cuánto dinero?' : 'How much money?'}
               </strong>{' '}
-              {isEs ? 'pesos que el modelo observa. Escala log: cada paso vale 10×.' : 'pesos the model flags for review. Log scale — each step is 10× the last.'}
+              {isEs
+                ? 'pesos que el modelo observa. Escala log: cada paso vale 10×. VaR — monto observado, el valor en riesgo del modelo.'
+                : "pesos the model flags for review. Log scale — each step is 10× the last. VaR — flagged amount, the model's value at risk."}
             </span>
           </span>
           <span className="flex items-baseline gap-2">
@@ -263,7 +268,7 @@ export function ConfoundPlate({
         <div style={GRID} className="mb-1">
           <span />
           <span />
-          <span className="relative self-stretch" style={{ minHeight: 42 }}>
+          <span className="relative self-stretch" style={{ minHeight: 46 }}>
             <span
               className="absolute top-0 left-0 font-mono whitespace-nowrap"
               style={{ ...MONO_MICRO, fontSize: 13, color: 'var(--color-text-muted)' }}
@@ -272,7 +277,7 @@ export function ConfoundPlate({
             </span>
           </span>
           <span />
-          <span className="relative self-stretch" style={{ minHeight: 42 }}>
+          <span className="relative self-stretch" style={{ minHeight: 46 }}>
             <span
               className="absolute top-0 left-0 font-mono whitespace-nowrap"
               style={{ ...MONO_MICRO, fontSize: 13, color: 'var(--color-text-muted)' }}
@@ -305,9 +310,11 @@ export function ConfoundPlate({
               <span style={{ width: 1, height: 5, marginTop: 2, background: 'rgba(160, 104, 32, 0.7)' }} />
             </span>
             {/* 80% flag label */}
+            {/* Start-anchored at its line so it never runs into the ½ label
+                (ES "½ GASTO PROPIO" overprinted it); full ink (a11y X5). */}
             <span
-              className="absolute bottom-0 flex flex-col items-center"
-              style={{ left: '80%', transform: 'translateX(-50%)', opacity: 0.6 }}
+              className="absolute bottom-0 flex flex-col items-start"
+              style={{ left: '80%' }}
               aria-hidden="true"
             >
               <span className="font-mono whitespace-nowrap" style={{ ...MONO_MICRO, fontSize: 11, color: 'var(--color-text-muted)' }}>
@@ -423,8 +430,7 @@ export function ConfoundPlate({
                         style={{
                           left: dotFrac < 0.62 ? `calc(${dotFrac * 100}% + 12px)` : undefined,
                           right: dotFrac >= 0.62 ? `calc(${(1 - dotFrac) * 100}% + 12px)` : undefined,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
+                          ...CALLOUT_ABOVE,
                           fontSize: 12,
                           color: 'var(--color-text-secondary)',
                         }}
@@ -438,8 +444,7 @@ export function ConfoundPlate({
                         className="absolute font-mono whitespace-nowrap"
                         style={{
                           right: `calc(${(1 - dotFrac) * 100}% + 12px)`,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
+                          ...CALLOUT_ABOVE,
                           fontSize: 11,
                           fontStyle: 'normal',
                           letterSpacing: '0.06em',
@@ -481,7 +486,7 @@ export function ConfoundPlate({
                         className="absolute font-mono whitespace-nowrap"
                         style={{
                           right: `calc(${(1 - share) * 100}% + 10px)`,
-                          top: 3,
+                          ...CALLOUT_ABOVE,
                           fontSize: 11,
                           fontStyle: 'normal',
                           letterSpacing: '0.06em',
@@ -516,8 +521,8 @@ export function ConfoundPlate({
         <div style={{ ...GRID, alignItems: 'start' }} className="mt-1" aria-hidden="true">
           <span />
           <span />
-          <span className="relative block" style={{ height: 36 }}>
-            {VAR_TICKS.map((t) => {
+          <span className="relative block" style={{ height: 38 }}>
+            {varTicks.map((t) => {
               const f = logFrac(t)
               if (f <= 0 || f >= 1) return null
               return (
@@ -533,7 +538,7 @@ export function ConfoundPlate({
                 fits beside the 0.5 / 1 tick labels. */}
             <span
               className="absolute right-0 font-mono whitespace-nowrap"
-              style={{ ...MONO_MICRO, top: 20, fontSize: 11, color: 'var(--color-text-muted)' }}
+              style={{ ...MONO_MICRO, top: 22, fontSize: 11, color: 'var(--color-text-muted)' }}
             >
               {isEs ? 'billones MXN' : 'trillions MXN'}
             </span>

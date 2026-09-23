@@ -190,10 +190,10 @@ export function SectorDossierCard({
       <div className="mt-2 font-mono tabular-nums flex items-center gap-x-2.5 gap-y-1 flex-wrap" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
         <span className="inline-flex items-center gap-1 whitespace-nowrap">
           <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 1, background: RISK_COLORS.critical, flexShrink: 0 }} />
-          {isEs ? 'crít' : 'crit'} {critPct.toFixed(1)}%
+          {isEs ? 'crítico · por contratos' : 'critical · by contracts'} {critPct.toFixed(1)}%
         </span>
         <span className="whitespace-nowrap" style={{ color: sbHot ? RISK_TEXT_COLORS.critical : undefined }}>
-          1P {row.sbPct.toFixed(1)}%
+          {isEs ? 'un postor' : 'single bid'} {row.sbPct.toFixed(1)}%
         </span>
         <span className="whitespace-nowrap">
           {compactCount(row.contracts)} {isEs ? 'cont.' : 'contracts'} · {compactCount(row.vendors)} {isEs ? 'prov.' : 'vendors'}

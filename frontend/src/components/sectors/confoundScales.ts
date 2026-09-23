@@ -53,11 +53,15 @@ export function ownSpendShare(row: Pick<LedgerRow, 'varMxn' | 'totalMxn'>): numb
   return Math.max(0, Math.min(1, row.varMxn / row.totalMxn))
 }
 
-/** Log-scale fraction builder over the registry's VaR extremes. */
+/**
+ * Log-scale fraction builder. The origin is the decade at or below the smallest
+ * sector, not the smallest sector itself — otherwise "Other" sat at 0 with no
+ * stem and read as zero (PARALLAX D7b § Change 6, S7).
+ */
 export function makeLogFrac(rows: LedgerRow[]): (varMxn: number) => number {
   const positive = rows.map((r) => r.varMxn).filter((v) => v > 0)
   if (positive.length === 0) return () => 0
-  const lo = Math.log10(Math.min(...positive))
+  const lo = Math.floor(Math.log10(Math.min(...positive)))
   const hi = Math.log10(Math.max(...positive))
   const span = hi - lo
   return (varMxn: number) => {
@@ -108,4 +112,19 @@ export function orderForLens(rows: LedgerRow[], lens: PlateLens): LedgerRow[] {
   if (lens === 'saturation') return [...rows].sort((a, b) => ownSpendShare(b) - ownSpendShare(a))
   if (lens === 'intensity') return [...rows].sort((a, b) => b.avgRiskScore - a.avgRiskScore)
   return [...rows].sort((a, b) => b.varMxn - a.varMxn)
+}
+
+/** Ruler ticks (MXN) for the log lane: 1× and 5× each decade strictly inside (0, 1). */
+export function logTicks(rows: LedgerRow[], frac: (v: number) => number): number[] {
+  const positive = rows.map((r) => r.varMxn).filter((v) => v > 0)
+  if (positive.length === 0) return []
+  const d0 = Math.floor(Math.log10(Math.min(...positive)))
+  const d1 = Math.ceil(Math.log10(Math.max(...positive)))
+  const out: number[] = []
+  for (let d = d0; d <= d1; d++) for (const m of [1, 5]) {
+    const t = m * 10 ** d
+    const f = frac(t)
+    if (f > 0 && f < 1) out.push(t)
+  }
+  return out
 }
