@@ -62,8 +62,9 @@ function DossierSectionHeader({
   accent: string
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 pb-2 mb-5" style={{ borderBottom: `1px solid ${accent}33` }}>
-      <div className="flex items-baseline gap-3 min-w-0">
+    // flex-wrap: on phones the eyebrow, title and meta wrap instead of overlapping.
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2 mb-5" style={{ borderBottom: `1px solid ${accent}33` }}>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 min-w-0">
         <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
           § {eyebrow}
         </span>
