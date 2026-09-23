@@ -20,7 +20,7 @@
  * Spec: docs/../.claude/designs/sectors-fable-2026-07-02-spec.md
  *   §2.1 Act I «La Mesa del Arqueo» + §3 NEW 1 — ArqueoMesa.tsx
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { LedgerRow } from './ExposureLedger'
 import { ownSpendShare } from './confoundScales'
@@ -28,7 +28,7 @@ import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
-import { useFontsReady } from '@/hooks/useMeasuredWidth'
+import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 
 interface ArqueoMesaProps {
   rows: LedgerRow[]
@@ -46,8 +46,6 @@ const LABEL_H = 18
 const GUTTER_W = 34
 const RIGHT_PAD = 8
 const MIN_COL_W = 6
-// Pre-font fallback only; once the faces land every name is measured.
-const NARROW_LABEL_THRESHOLD = 48
 const MOBILE_BREAKPOINT = 768
 // 24px floor: each mobile row is a link, so it is also a 24px target.
 const MOBILE_ROW_MIN_H = 24
@@ -58,9 +56,16 @@ const LABEL_FONT = `13px ${MONO}`
 const LABEL_TRACKING = 0.04 // em — letterSpacing on the column names
 const ANNO_FONT = `11px ${MONO}`
 const ANNO_LINE_H = 13
+// Every face the canvas measures with — the plate waits for exactly these.
+const MEASURED_FACES = [LABEL_FONT, ANNO_FONT]
 
 const OCHRE_STRONG = 'rgba(160, 104, 32, 0.7)'
 const OCHRE_FAINT = 'rgba(160, 104, 32, 0.35)'
+
+/** Mobile row height: spend share of a 440px run, floored at the 24px target. */
+function mobileRowH(totalMxn: number, totalSpend: number): number {
+  return Math.max(MOBILE_ROW_MIN_H, (totalSpend > 0 ? totalMxn / totalSpend : 0) * 440)
+}
 
 function sectorFill(code: string): string {
   return SECTOR_COLORS[code] ?? SECTOR_COLORS.otros
@@ -75,22 +80,11 @@ const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', 
 export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(720)
-  const [isMobile, setIsMobile] = useState(false)
+  // 0 until the first ResizeObserver tick: nothing is drawn at a guessed width
+  // (the old 720px first paint shifted the figure — PARALLAX D7b § Change 8).
+  const width = useMeasuredWidth(containerRef)
+  const isMobile = width > 0 && width < MOBILE_BREAKPOINT
   const [hoverId, setHoverId] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width
-      if (w && w > 0) {
-        setWidth(w)
-        setIsMobile(w < MOBILE_BREAKPOINT)
-      }
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
 
   // Spend-descending order (columns/rows).
   const ordered = useMemo(() => [...rows].sort((a, b) => b.totalMxn - a.totalMxn), [rows])
@@ -130,17 +124,17 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
   }, [ordered, totalSpend, bandW])
 
   // A column shows its full name only when the measured name (+6px) fits the
-  // column; otherwise a circled index + legend entry. Measured in the plate's
-  // mono face once the web fonts are in (a fallback-face measure runs narrow).
-  const fontsReady = useFontsReady()
+  // column; otherwise a circled index + legend entry. The desktop plate is not
+  // drawn until the plate's own faces are in (a fallback-face measure runs
+  // narrow and was never redone), so every measure below runs on the real face.
+  const fontsReady = useFontsReady(MEASURED_FACES)
   const labelFits = useMemo(() => {
-    if (!fontsReady) return colWidths.map((w) => w >= NARROW_LABEL_THRESHOLD)
     return ordered.map((r, i) => {
       const name = r.name.toUpperCase()
       const w = measureLabel(name, LABEL_FONT, Number.POSITIVE_INFINITY, 16).width + name.length * 13 * LABEL_TRACKING
       return w + 6 <= colWidths[i]
     })
-  }, [fontsReady, ordered, colWidths])
+  }, [ordered, colWidths])
 
   const narrowSet = useMemo(
     () => ordered.map((r, i) => ({ row: r, w: colWidths[i] })).filter((_, i) => !labelFits[i]),
@@ -161,6 +155,14 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
       ? `${r.name} · total ${formatCompactMXN(r.totalMxn)} · observado ${formatCompactMXN(r.varMxn)} (${share.toFixed(0)}%) · crítico ${criticalPct.toFixed(0)}% · AD ${r.daPct.toFixed(0)}%`
       : `${r.name} · total ${formatCompactMXN(r.totalMxn)} · flagged ${formatCompactMXN(r.varMxn)} (${share.toFixed(0)}%) · critical ${criticalPct.toFixed(0)}% · DA ${r.daPct.toFixed(0)}%`
   }, [hoverId, ordered, lang])
+
+  // Height held before the first measure, so the figure never pushes the page:
+  // the desktop plate, or the stacked mobile rows (same arithmetic as MobileMesa).
+  const pending = width === 0 || (!isMobile && !fontsReady)
+  const reserveH =
+    typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
+      ? READOUT_H + 8 + ordered.reduce((acc, r) => acc + mobileRowH(r.totalMxn, totalSpend), 0)
+      : READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H
 
   const goToSector = useCallback((sectorId: number) => navigate(`/sectors/${sectorId}`), [navigate])
 
@@ -210,8 +212,8 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
         {/* Ref lives INSIDE the frame so the ResizeObserver measures the
             plate's padded content width — not the full column width. The SVG
             is sized to this, so it can never overhang the frame's border. */}
-        <div ref={containerRef} className="w-full">
-          {isMobile ? (
+        <div ref={containerRef} className="w-full" style={pending ? { minHeight: reserveH } : undefined}>
+          {pending ? null : isMobile ? (
             <MobileMesa rows={ordered} lang={lang} readoutText={readoutText} hoverId={hoverId} setHoverId={setHoverId} />
           ) : (
             <DesktopMesa
@@ -577,7 +579,7 @@ function MobileMesa({
   const rowW = 280
   const rows2 = rows.map((r) => {
     const spendShare = totalSpend > 0 ? r.totalMxn / totalSpend : 0
-    const h = Math.max(MOBILE_ROW_MIN_H, spendShare * 440)
+    const h = mobileRowH(r.totalMxn, totalSpend)
     return { row: r, h, spendShare }
   })
   const narrowSet = rows2

@@ -38,21 +38,37 @@ export function useMeasuredWidth(ref: RefObject<HTMLElement | null>): number {
  * and a box measured against the fallback face comes out narrow — the label
  * then renders wider than the box reserved for it (the Day 4 lesson).
  *
+ * `faces` (CSS font shorthands, e.g. `13px "IBM Plex Mono"`) are the faces the
+ * caller measures with. `document.fonts.status === 'loaded'` only says "no load
+ * in flight" — a face nobody has used yet is not loaded, so a figure measured
+ * at mount ran on the fallback face (PARALLAX D7b § Change 8). With faces, the
+ * hook starts ready only when every face already passes `document.fonts.check`
+ * and otherwise asks for them with `document.fonts.load`. Without faces it
+ * keeps the old behaviour (wait for `document.fonts.ready`).
+ *
  * No Font Loading API (or no DOM) means nothing to wait for, so it starts
- * ready and a caller that gates on this never waits forever.
+ * ready; a failed load also resolves to ready, so a caller never waits forever.
  */
-export function useFontsReady(): boolean {
-  const [ready, setReady] = useState(
-    () => typeof document === 'undefined' || !document.fonts || document.fonts.status === 'loaded',
-  )
+export function useFontsReady(faces: readonly string[] = []): boolean {
+  const key = faces.join('|')
+  const [ready, setReady] = useState(() => {
+    if (typeof document === 'undefined' || !document.fonts) return true
+    if (faces.length === 0) return document.fonts.status === 'loaded'
+    return faces.every((f) => document.fonts.check(f))
+  })
   useEffect(() => {
+    if (typeof document === 'undefined' || !document.fonts) return
     let alive = true
-    document.fonts?.ready.then(() => {
+    const list = key ? key.split('|') : []
+    const done = () => {
       if (alive) setReady(true)
-    })
+    }
+    Promise.all(list.map((f) => document.fonts.load(f)))
+      .then(() => document.fonts.ready)
+      .then(done, done)
     return () => {
       alive = false
     }
-  }, [])
+  }, [key])
   return ready
 }

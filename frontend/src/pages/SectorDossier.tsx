@@ -173,7 +173,8 @@ export default function SectorDossier() {
     staleTime: 5 * 60 * 1000,
   })
   const { data: categoriesResp } = useQuery({
-    queryKey: ['sector-dossier', 'categories-summary'],
+    // Same key as /sectors and the header search: navigation reuses the cache.
+    queryKey: ['categories', 'summary'],
     queryFn: () => categoriesApi.getSummary(),
     staleTime: 5 * 60 * 1000,
   })
@@ -228,7 +229,8 @@ export default function SectorDossier() {
     retry: false,
   })
   const { data: gtLinkageResp } = useQuery({
-    queryKey: ['sector-dossier', sectorId, 'gt-linkage'],
+    // Same key as the /sectors hover card.
+    queryKey: ['sectors', 'gt-linkage', sectorId],
     queryFn: () => sectorApi.getGtLinkage(sectorId),
     enabled: validId,
     staleTime: 10 * 60 * 1000,

@@ -132,6 +132,17 @@ const STACK_BELOW = 560 // container px under which the label sits above the tra
 const DOT_H = 20        // px — the 1:1 svg strip that holds connector + dots
 const TRACK_PAD = 8     // px — keeps the r=7 dot inside the track at 0% / max
 
+// Skeleton geometry = the loaded figure's (measured at 1440/390, D7b § Change 8):
+// anchor stat + axis header, 12 rows, ceiling/legend/honesty footer.
+const SKEL_HEADER_H = 77
+const SKEL_ROW_H = 44
+const SKEL_FOOTER_H = 109
+// Stacked (< STACK_BELOW): the anchor sentence wraps and each row carries its
+// label on its own line — 1,217px measured at 390.
+const SKEL_HEADER_H_STACKED = 95
+const SKEL_ROW_H_STACKED = 81
+const SKEL_FOOTER_H_STACKED = 150
+
 const MIN_SPEND_FILTER = 1_000_000_000 // 1B MXN — skip tiny categories
 const MAX_ROWS = 12
 
@@ -256,7 +267,15 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
   const isEs = i18n.language === 'es'
   const containerRef = useRef<HTMLDivElement>(null)
   const W = useMeasuredWidth(containerRef)
-  const fontsReady = useFontsReady()
+  // The two faces this figure measures with: the vendor chip's sans and the
+  // 13px mono of the ceiling label (D7b § Change 8).
+  const measuredFaces = useMemo(() => {
+    const mono = typeof document === 'undefined'
+      ? 'monospace'
+      : getComputedStyle(document.documentElement).getPropertyValue('--font-family-mono').trim() || 'monospace'
+    return [chipFont(), `13px ${mono}`]
+  }, [])
+  const fontsReady = useFontsReady(measuredFaces)
 
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
@@ -389,14 +408,16 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
   // ResizeObserver is attached from the first paint (useMeasuredWidth observes
   // once, on mount).
   const skeleton = (
-    <div className="w-full animate-pulse">
-      {Array.from({ length: 8 }, (_, i) => (
-        <div key={i} className="flex items-center gap-3 py-2 border-b border-border last:border-b-0">
+    <div className="w-full animate-pulse" aria-hidden="true">
+      <div style={{ height: stacked ? SKEL_HEADER_H_STACKED : SKEL_HEADER_H }} />
+      {Array.from({ length: MAX_ROWS }, (_, i) => (
+        <div key={i} className="flex items-center gap-3 border-b border-border last:border-b-0" style={{ height: stacked ? SKEL_ROW_H_STACKED : SKEL_ROW_H }}>
           <div className="h-3 bg-background-elevated rounded w-32" />
           <div className="flex-1 h-2 bg-background-elevated rounded" />
           <div className="h-3 bg-background-elevated rounded w-16" />
         </div>
       ))}
+      <div style={{ height: stacked ? SKEL_FOOTER_H_STACKED : SKEL_FOOTER_H }} />
     </div>
   )
   const empty = (

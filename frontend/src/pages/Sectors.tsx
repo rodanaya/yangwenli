@@ -47,6 +47,10 @@ function formatSpend(value: number): string {
   return formatCompactMXN(value)
 }
 
+// Same-magnitude stand-in for the masthead anchor before the sectors payload
+// lands (never shown: the slot is visibility-hidden until the real total).
+const ANCHOR_PLACEHOLDER_MXN = 5.5e12
+
 // ── CategoryTreeView ─────────────────────────────────────────────────────────
 // Collapsible sector → category tree for the WHAT tab "Tree" mode.
 
@@ -504,15 +508,20 @@ export function Sectors() {
             </div>
 
             {/* Right: unified monto-observado anchor (both views); dual currency
-                per the hero-surface convention. Guarded on the VaR field. */}
-            {!isLoading && totalVarMxn > 0 && (
-              <div className="text-right">
+                per the hero-surface convention. The slot is always laid out: before
+                the payload lands it holds an invisible same-shape placeholder, so
+                its wrap under the ES h1 never pushes the deck (D7b § Change 8). */}
+            {(() => {
+              const anchorReady = !isLoading && totalVarMxn > 0
+              const anchorMxn = anchorReady ? totalVarMxn : ANCHOR_PLACEHOLDER_MXN
+              return (
+              <div className="text-right" aria-hidden={anchorReady ? undefined : true} style={anchorReady ? undefined : { visibility: 'hidden' }}>
                 <div
                   role="group"
                   aria-label={
                     lang === 'es'
-                      ? `${formatDualCurrency(totalVarMxn)} monto observado`
-                      : `${formatDualCurrency(totalVarMxn)} flagged amount`
+                      ? `${formatDualCurrency(anchorMxn)} monto observado`
+                      : `${formatDualCurrency(anchorMxn)} flagged amount`
                   }
                   style={{
                     fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
@@ -524,7 +533,7 @@ export function Sectors() {
                     color: 'var(--color-text-primary)',
                   }}
                 >
-                  {formatDualCurrency(totalVarMxn)}
+                  {formatDualCurrency(anchorMxn)}
                 </div>
                 <div
                   style={{
@@ -541,7 +550,8 @@ export function Sectors() {
                     : 'flagged amount · risk indicator'}
                 </div>
               </div>
-            )}
+              )
+            })()}
           </div>
 
           {/* Deck paragraph — per-view, under the constant «El Arqueo» headline */}

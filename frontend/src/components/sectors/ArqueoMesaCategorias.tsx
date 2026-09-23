@@ -16,7 +16,7 @@
  * docs/designs/sectors-fable-2026-07-02-spec.md §2.2 Act I / §3 NEW 2).
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react'
+import { useCallback, useMemo, useRef, useState, useId } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   SECTOR_COLORS,
@@ -28,7 +28,7 @@ import {
 import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
-import { useFontsReady } from '@/hooks/useMeasuredWidth'
+import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -75,10 +75,17 @@ const READOUT_H = 20
 const STRIP_H = 4
 const LABEL_H = 22
 const LEGEND_H = 16
-// Pre-font fallback only; once the faces land every name is measured.
-const PRE_FONT_LABEL_W = 56
 const TOP_N = 14
 const MOBILE_ROW_MIN_H = 24
+const MOBILE_BREAKPOINT = 768
+const MOBILE_RUN_H = 420
+// The phone readout wraps: two 12px lines + the axis label (measured at 390).
+const MOBILE_READOUT_H = 55
+
+/** Mobile row height: spend share of a 420px run, floored at the 24px target. */
+function mobileRowH(shareFrac: number): number {
+  return Math.max(MOBILE_ROW_MIN_H, shareFrac * MOBILE_RUN_H)
+}
 
 // Glyph faces — the canvas measures exactly what the svg/HTML renders.
 const MONO = 'var(--font-family-mono, monospace)'
@@ -107,21 +114,12 @@ function monoStack(): string {
 export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasProps) {
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(720)
+  // 0 until the first ResizeObserver tick: nothing is drawn at a guessed width
+  // (the old 720px first paint shifted the figure — PARALLAX D7b § Change 8).
+  const width = useMeasuredWidth(containerRef)
+  const isMobile = width > 0 && width < MOBILE_BREAKPOINT
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
   const uid = useId()
-
-  useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver(entries => {
-      const w = entries[0]?.contentRect.width
-      if (w && w > 0) setWidth(w)
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
-
-  const isMobile = width < 768
 
   // Top 14 + remainder column
   const columns: Column[] = useMemo(() => {
@@ -203,18 +201,20 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
 
   // A column shows its full name (11px) only when the measured name + 6px fits
   // the column; otherwise a circled index + legend entry (columns under 3px
-  // get neither, as before). Measured in the plate's mono face once the fonts
-  // are in — a fallback-face measure runs narrow.
-  const fontsReady = useFontsReady()
-  const mono = useMemo(() => (fontsReady ? monoStack() : 'monospace'), [fontsReady])
+  // get neither, as before). The desktop plate is not drawn until these faces
+  // are in, so the measure never runs on the fallback face.
+  // The plate measures in the resolved mono at 11px (regular + the 700 threshold
+  // label) — wait for exactly those faces, not just "no load in flight".
+  const mono = useMemo(() => monoStack(), [])
+  const measuredFaces = useMemo(() => [`11px ${mono}`, `700 11px ${mono}`], [mono])
+  const fontsReady = useFontsReady(measuredFaces)
   const labelFits = useMemo(
     () =>
       laidOut.map(({ col, w }) => {
-        if (!fontsReady) return w >= PRE_FONT_LABEL_W
         const name = lang === 'es' ? col.name_es : col.name_en
         return measureLabel(name, `11px ${mono}`, Number.POSITIVE_INFINITY, 14).width + 6 <= w
       }),
-    [fontsReady, mono, laidOut, lang],
+    [mono, laidOut, lang],
   )
   const narrowSet = useMemo(
     () => laidOut.filter(({ w }, i) => !labelFits[i] && w >= 3),
@@ -263,6 +263,13 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
       : 'hover a column · click → category dossier'
 
   const svgH = TOP_PAD + BAND_H + LABEL_H
+  // Height held before the first measure, so the figure never pushes the page:
+  // readout + plate + legend on desktop, or the stacked mobile rows.
+  const pending = width === 0 || (!isMobile && !fontsReady)
+  const reserveH =
+    typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
+      ? MOBILE_READOUT_H + columns.reduce((acc, c) => acc + mobileRowH(totalValue > 0 ? c.total_value / totalValue : 0) + 1, 0)
+      : READOUT_H + svgH + LEGEND_H
   const hoveredIdx = hoveredKey === null ? -1 : laidOut.findIndex(({ col }) => col.key === hoveredKey)
 
   // ── The two computed annotations — HTML glyphs over the svg geometry ──
@@ -332,7 +339,8 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
           </h2>
         </div>
 
-        <div ref={containerRef} className="relative w-full">
+        <div ref={containerRef} className="relative w-full" style={pending ? { minHeight: reserveH } : undefined}>
+          {!pending && (<>
           {/* Hover readout strip — hover data on the left, persistent axis label on the right */}
           <div
             style={{
@@ -653,6 +661,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 .join('  ·  ')}
             </div>
           )}
+          </>)}
         </div>
 
         {/* dagger footnote */}
@@ -698,14 +707,10 @@ function MobileMesa({
   domainMax: number
 }) {
   const totalW = laidOut.reduce((s, { w }) => s + w, 0) || 1
-  // 24px floor: each row is a link, so it is also a 24px target.
-  const ROW_MIN_H = MOBILE_ROW_MIN_H
-
   return (
     <div className="flex flex-col gap-[1px]">
       {laidOut.map(({ col, w }) => {
-        const shareFrac = w / totalW
-        const rowH = Math.max(ROW_MIN_H, shareFrac * 420)
+        const rowH = mobileRowH(w / totalW)
         const color = SECTOR_COLORS[col.sector_code ?? 'otros'] ?? SECTOR_COLORS.otros
         const level = getRiskLevelFromScore(col.avg_risk)
         const waterColor = RISK_LEVEL_COLOR[level]

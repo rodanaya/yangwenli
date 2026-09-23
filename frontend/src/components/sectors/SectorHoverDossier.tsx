@@ -15,6 +15,7 @@
  * showed inline — the DA-vs-OECD process bullet and the per-row risk
  * trajectory sparkline — so nothing was lost when the table folded in.
  */
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { sectorApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -46,21 +47,32 @@ export function SectorDossierCard({
   const hasTraj = Boolean(row.trajectory && row.trajectory.length > 1)
   const dir = trajectoryDirection(row.trajectory)
 
+  // Arm the lazy fetches only after the card has rested on one row for 300ms,
+  // so a pointer sweeping the 12 rows does not fire 24 requests (D7b § Change 8).
+  const [armedId, setArmedId] = useState<number | null>(null)
+  useEffect(() => {
+    if (!active) return
+    const t = window.setTimeout(() => setArmedId(row.sectorId), 300)
+    return () => window.clearTimeout(t)
+  }, [active, row.sectorId])
+  const fetchOn = active && armedId === row.sectorId
+
   const { data: topContracts, isLoading: tcLoading } = useQuery({
     queryKey: ['sectors', 'top-contracts', row.sectorId],
     queryFn: () => sectorApi.getTopContracts(row.sectorId, 5),
     staleTime: 10 * 60 * 1000,
-    enabled: active,
+    enabled: fetchOn,
   })
   const { data: gt, isLoading: gtLoading } = useQuery({
     queryKey: ['sectors', 'gt-linkage', row.sectorId],
     queryFn: () => sectorApi.getGtLinkage(row.sectorId),
     staleTime: 10 * 60 * 1000,
-    enabled: active,
+    enabled: fetchOn,
   })
 
   const top = topContracts?.contracts?.[0]
-  const lazyPending = tcLoading || gtLoading
+  // Cached rows render at once; an unarmed, uncached row shows the placeholder.
+  const lazyPending = (!topContracts || !gt) && (!fetchOn || tcLoading || gtLoading)
 
   return (
     <div>
