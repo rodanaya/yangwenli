@@ -75,7 +75,7 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
     <div ref={ref} className={`relative inline-block ${className}`}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-secondary transition-colors px-2.5 py-1.5 rounded border border-border hover:border-border"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-secondary transition-colors px-2.5 py-1.5 rounded border border-border hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
         aria-label={t('share.title')}
         aria-expanded={open}
         aria-haspopup="menu"

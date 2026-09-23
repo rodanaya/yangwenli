@@ -20,8 +20,8 @@
  *   compare tool (collapsed) · credibility line (the shell colophon is the footer)
  */
 
-import { useMemo, useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useQueryStates, parseAsStringLiteral } from 'nuqs'
 import { AdminSummaryCard } from '@/components/administrations/AdminSummaryCard'
 import { ComparePeriodView } from '@/components/administrations/ComparePeriodView'
 import { AdminSurvivorsSlope, type SurvivorColumn } from '@/components/administrations/AdminSurvivorsSlope'
@@ -151,6 +151,7 @@ function computeZScore(values: number[], value: number): number {
 
 /** URL-friendly slug for ?admin= deep links: "Pena Nieto" → "pena-nieto". */
 const adminSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-')
+const ADMIN_SLUGS = ['fox', 'calderon', 'pena-nieto', 'amlo', 'sheinbaum'] as const
 
 /**
  * Chapter kicker — Spanish § kicker with Roman numeral, editorial accent.
@@ -177,26 +178,19 @@ function ChapterKicker({
 export default function Administrations() {
   const { t, i18n } = useTranslation('administrations')
   const { t: ts } = useTranslation('sectors')
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [selectedAdmin, setSelectedAdmin] = useState<AdminName>(() => {
-    const p = searchParams.get('admin')
-    const match = p ? ADMINISTRATIONS.find((a) => adminSlug(a.name) === p) : undefined
-    return (match?.name ?? 'AMLO') as AdminName
-  })
+  // ?admin= is the selected file: a shareable, reload-safe deep link
+  // (/administrations?admin=fox). The default (AMLO) is never written.
+  const [q, setQ] = useQueryStates(
+    { admin: parseAsStringLiteral(ADMIN_SLUGS).withDefault('amlo') },
+    { history: 'replace', clearOnDefault: true },
+  )
+  const selectedAdmin = (ADMINISTRATIONS.find((a) => adminSlug(a.name) === q.admin)?.name ?? 'AMLO') as AdminName
+  const setSelectedAdmin = (name: AdminName) => {
+    const slug = ADMIN_SLUGS.find((s) => s === adminSlug(name))
+    if (slug) void setQ({ admin: slug })
+  }
   const [compareOpen, setCompareOpen] = useState(false)
   const { totalContracts } = useExecutiveSummary()
-
-  // Keep ?admin= synced with the selection so a chosen administration is a
-  // shareable, reload-safe deep link (e.g. /administrations?admin=amlo).
-  useEffect(() => {
-    const want = adminSlug(selectedAdmin)
-    if (searchParams.get('admin') !== want) {
-      const next = new URLSearchParams(searchParams)
-      next.set('admin', want)
-      setSearchParams(next, { replace: true })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAdmin])
 
   // Data queries
   const { data: yoyResp, isLoading: yoyLoading, isError: yoyError } = useQuery({
@@ -457,8 +451,8 @@ export default function Administrations() {
             }}
           >
             <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
-              <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XI</span>
-              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+              <span style={{ color: 'var(--color-accent-hover)', fontWeight: 500 }}>Folio·XI</span>
+              <span aria-hidden="true" style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               <span>
                 {isEs
                   ? 'Análisis sexenal · 2002–2025'
@@ -495,9 +489,9 @@ export default function Administrations() {
               </p>
               <p style={{ fontFamily: '"EB Garamond", Georgia, serif' }} className="mt-2 max-w-[640px] text-[15px] leading-relaxed text-text-secondary">
                 {isEs ? (
-                  <><span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nDaOver50}</span> de 5 administraciones adjudicaron más de la mitad de sus contratos sin competencia · <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nHrOverNatl}</span> de 5 por encima del promedio nacional de alto riesgo.</>
+                  <><span style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>{nDaOver50}</span> de 5 administraciones adjudicaron más de la mitad de sus contratos sin competencia · <span style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>{nHrOverNatl}</span> de 5 por encima del promedio nacional de alto riesgo.</>
                 ) : (
-                  <><span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nDaOver50}</span> of 5 administrations awarded over half their contracts without competition · <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{nHrOverNatl}</span> of 5 above the national high-risk average.</>
+                  <><span style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>{nDaOver50}</span> of 5 administrations awarded over half their contracts without competition · <span style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>{nHrOverNatl}</span> of 5 above the national high-risk average.</>
                 )}
               </p>
             </div>
@@ -518,8 +512,8 @@ export default function Administrations() {
               needed. Sec.A named survivors across party turnover; Sec.B the risk
               line across four handovers. Both computed from payloads in memory. ==== */}
           <h2 className="mb-2 text-[12px] font-mono font-normal leading-normal uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
-            <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{isEs ? 'Acto I' : 'Act I'}</span>
-            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            <span style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>{isEs ? 'Acto I' : 'Act I'}</span>
+            <span aria-hidden="true" style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'El patrón' : 'The pattern'}
           </h2>
           <section
@@ -534,7 +528,7 @@ export default function Administrations() {
           {/* ==== ACTO II - EL EXPEDIENTE: the selected administration's file ==== */}
           <h2 className="mb-2 text-[12px] font-mono font-normal leading-normal uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
             <span style={{ color: folderColor, fontWeight: 600 }}>{isEs ? 'Acto II' : 'Act II'}</span>
-            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            <span aria-hidden="true" style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'El expediente' : 'The file'}
           </h2>
           <section
@@ -807,7 +801,6 @@ export default function Administrations() {
                                 backgroundColor: selectedMeta.color,
                                 opacity: isPeak ? 0.95 : 0.5,
                               }}
-                              title={`${yr.year}: ${formatNumber(yr.contracts)} ${isEs ? 'contratos' : 'contracts'}`}
                             />
                           </div>
                         )
@@ -1021,8 +1014,8 @@ export default function Administrations() {
           {/* ==== ACTO III - LOS QUE PERMANECEN: officials who kept signing across
               a change of government, + the on-demand two-period compare. ==== */}
           <h2 className="mt-8 mb-2 text-[12px] font-mono font-normal leading-normal uppercase tracking-[0.25em]" style={{ color: 'var(--color-text-muted)' }}>
-            <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{isEs ? 'Acto III' : 'Act III'}</span>
-            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            <span style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>{isEs ? 'Acto III' : 'Act III'}</span>
+            <span aria-hidden="true" style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             {isEs ? 'Los que permanecen' : 'The ones who remain'}
           </h2>
           <section
@@ -1041,7 +1034,8 @@ export default function Administrations() {
           {/* Period Comparison tool (collapsed footer utility, relocated from the retired MODULO 2) */}
           <div className="mt-6 border border-border/50 rounded-sm bg-background-card overflow-hidden">
             <button
-              className="w-full flex items-center justify-between px-4 sm:px-5 py-3 text-left hover:bg-background-elevated/40 transition-colors"
+              type="button"
+              className="w-full flex items-center justify-between px-4 sm:px-5 py-3 text-left hover:bg-background-elevated/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               onClick={() => setCompareOpen((v) => !v)}
               aria-expanded={compareOpen}
             >

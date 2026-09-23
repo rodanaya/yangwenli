@@ -36,14 +36,24 @@ export function MetodologiaTooltip({ title, body, link, className }: Metodologia
         onMouseLeave={() => setOpen(false)}
         aria-label={title}
         aria-expanded={open}
+        // 24px target around the 16px glyph (PARALLAX D8 § Change 5): same look, larger hit area.
         className={cn(
-          'inline-flex items-center justify-center w-4 h-4 rounded-full text-xs',
-          'border border-border text-text-muted',
-          'hover:border-border-hover hover:text-text-primary',
-          'cursor-pointer ml-1 transition-colors duration-150'
+          'group inline-flex items-center justify-center min-w-6 min-h-6 rounded-full ml-0.5',
+          'cursor-pointer',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1'
         )}
       >
-        ?
+        <span
+          aria-hidden="true"
+          className={cn(
+            'inline-flex items-center justify-center w-4 h-4 rounded-full text-xs',
+            'border border-border text-text-muted',
+            'group-hover:border-border-hover group-hover:text-text-primary',
+            'transition-colors duration-150'
+          )}
+        >
+          ?
+        </span>
       </button>
       {open && (
         <div

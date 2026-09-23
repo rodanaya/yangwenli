@@ -112,12 +112,12 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
       <p className="mt-1.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 15, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
         {isEs ? (
           <>
-            <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{crossers} de {total}</span>
+            <span style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>{crossers} de {total}</span>
             {' '}siguieron firmando después de un cambio de gobierno.
           </>
         ) : (
           <>
-            <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{crossers} of {total}</span>
+            <span style={{ color: 'var(--color-accent-hover)', fontWeight: 600 }}>{crossers} of {total}</span>
             {' '}kept signing after a change of government.
           </>
         )}

@@ -22,7 +22,7 @@
  */
 
 import { useState } from 'react'
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
 
 export interface SeamPoint {
   year: number
@@ -144,7 +144,7 @@ function niceMax(raw: number): number {
 function SeamChipBody({ sc, isEs }: { sc: SeamCalc; isEs: boolean }) {
   const caveat = sc.seam.structureA || sc.seam.partial
   const rose = sc.delta != null && sc.delta >= 0
-  const deltaColor = sc.delta == null ? 'var(--color-text-muted)' : rose ? RISK_COLORS.critical : 'var(--color-text-muted)'
+  const deltaColor = sc.delta == null ? 'var(--color-text-muted)' : rose ? RISK_TEXT_COLORS.critical : 'var(--color-text-muted)'
   const deltaStr = sc.delta == null ? '—' : `${rose ? '▲+' : '▼−'}${Math.abs(sc.delta).toFixed(1)}pp`
   const exitStr = sc.exit == null ? '—' : `${sc.exit.toFixed(1)}%`
   const entryStr = sc.entry == null ? '—' : `${sc.entry.toFixed(1)}%`
@@ -156,7 +156,6 @@ function SeamChipBody({ sc, isEs }: { sc: SeamCalc; isEs: boolean }) {
       style={{
         borderColor: 'var(--color-border)',
         backgroundColor: 'var(--color-background-card)',
-        opacity: caveat ? 0.75 : 1,
       }}
       title={windowTitle}
     >
@@ -236,7 +235,7 @@ export function SeamStrip({ series, nationalAvgPct, admins, seams, isEs, onSelec
                       onMouseEnter={() => setHoveredAdmin(a.name)}
                       onMouseLeave={() => setHoveredAdmin(null)}
                       aria-label={a.displayName}
-                      className="w-full h-full flex items-end justify-center pb-2"
+                      className="w-full h-full flex items-end justify-center pb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                       style={{ cursor: 'pointer', background: 'transparent', border: 'none' }}
                     >
                       <span

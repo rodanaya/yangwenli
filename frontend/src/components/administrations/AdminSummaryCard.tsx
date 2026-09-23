@@ -216,7 +216,7 @@ export function AdminSummaryCard({
               aria-selected={isActive}
               onClick={() => onSelect(admin.name)}
               className={
-                'relative px-2 py-2 text-center transition-colors min-w-0 ' +
+                'relative px-2 py-2 text-center transition-colors min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ' +
                 (isActive ? 'bg-background-card' : 'hover:bg-background-card/60')
               }
               style={{ borderBottom: isActive ? `3px solid ${tabParty}` : '3px solid transparent' }}
@@ -394,7 +394,7 @@ export function AdminSummaryCard({
           {dossier.scandals.length > 0 ? (
             <a
               href="#expediente"
-              className="flex items-center gap-2 text-[13px] font-mono text-text-secondary hover:text-accent transition-colors"
+              className="flex items-center gap-2 text-[13px] font-mono text-text-secondary hover:text-accent transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             >
               <span className="flex items-center gap-1" aria-hidden="true">
                 {dossier.scandals.slice(0, 5).map((s) => (

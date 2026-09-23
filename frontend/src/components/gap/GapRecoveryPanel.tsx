@@ -148,7 +148,7 @@ export function GapRecoveryPanel({ isEs, variant = 'full', className }: GapRecov
 
       <Link
         to="/gap"
-        className="group mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-accent hover:underline"
+        className="group mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-accent hover:underline rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
       >
         {isEs ? 'Ver el registro completo de El Apagón' : 'See the full El Apagón register'}
         <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
