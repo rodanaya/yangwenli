@@ -298,7 +298,7 @@ function ActaCard({
     agateParts.push(t('peerPercentileLine', { pct: Math.round((1 - item.peer_percentile_sector) * 100) }))
   }
   if (item.money_at_risk_mxn != null) {
-    agateParts.push(t('moneyAtRiskLine', { money: formatCompactMXN(item.money_at_risk_mxn) }))
+    agateParts.push(item.money_at_risk_mxn === 0 ? t('zeroMoneyAtRisk') : t('moneyAtRiskLine', { money: formatCompactMXN(item.money_at_risk_mxn) }))
   }
   if (item.signal_count_red != null) {
     agateParts.push(t('redSignalsLine', { n: item.signal_count_red }))
@@ -1045,8 +1045,9 @@ export default function InstitutionLeague() {
             below. Result count anchors the table headline. */}
 
         {/* Search input — full-width above the pill rows */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
+        {/* Below sm the count drops under the input so the placeholder is never cut. */}
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+          <div className="relative w-full sm:flex-1">
             <label htmlFor="league-search" className="sr-only">{t('filters.search')}</label>
             <input
               id="league-search"
@@ -1237,7 +1238,11 @@ export default function InstitutionLeague() {
                             <span className="text-text-muted"> /100</span>
                           </span>
                           <WeakPillarCell item={item} long />
-                          <span className="text-text-secondary">{renderMoney(item)} <span className="text-text-muted">{t('columns.moneyAtRisk').toLowerCase()}</span></span>
+                          {item.money_at_risk_mxn === 0 ? (
+                            <span className="text-text-muted">0 · {t('zeroMoneyAtRisk')}</span>
+                          ) : (
+                            <span className="text-text-secondary">{renderMoney(item)} <span className="text-text-muted">{t('columns.moneyAtRisk').toLowerCase()}</span></span>
+                          )}
                           {item.trend_direction && item.trend_direction !== 'stable' && <TrendIcon direction={item.trend_direction} />}
                         </div>
                       </div>

@@ -83,7 +83,7 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
     agateParts.push(t('peerPercentileLine', { pct: Math.round((1 - item.peer_percentile_sector) * 100) }))
   }
   if (item.confidence_band) {
-    agateParts.push(t('confidenceLine', { band: item.confidence_band }))
+    agateParts.push(t('confidenceLine', { band: t(`confidenceBands.${item.confidence_band}`, { defaultValue: item.confidence_band }) }))
   }
   if (item.p90_risk_score != null) {
     agateParts.push(t('p90Line', { score: item.p90_risk_score.toFixed(0) }))
@@ -92,7 +92,8 @@ export function PillarBoleta({ item }: { item: PillarBoletaItem }) {
     agateParts.push(t('redSignalsLine', { n: item.signal_count_red }))
   }
   if (item.money_at_risk_mxn != null) {
-    agateParts.push(t('moneyAtRiskLine', { money: formatCompactMXN(item.money_at_risk_mxn) }))
+    // A zero is worded once, site-wide: the sentence, never "MX$0 at risk".
+    agateParts.push(item.money_at_risk_mxn === 0 ? t('zeroMoneyAtRisk') : t('moneyAtRiskLine', { money: formatCompactMXN(item.money_at_risk_mxn) }))
   }
 
   return (

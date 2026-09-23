@@ -161,5 +161,11 @@
   },
   "methodologyLink": "Methodology",
   "zeroMoneyAtRisk": "No high- or critical-risk contracts",
-  "thinSample": "Below the {{n}}-contract reliability floor — the headline excludes it"
+  "thinSample": "Below the {{n}}-contract reliability floor — the headline excludes it",
+  "confidenceBands": {
+    "high": "high",
+    "narrow": "narrow",
+    "medium": "medium",
+    "wide": "wide"
+  }
 }
