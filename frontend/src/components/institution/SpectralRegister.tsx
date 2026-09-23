@@ -226,8 +226,8 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
         {layout && (() => {
           const { strokes, callouts, domainMin, domainMax, xScale, excelenteCount } = layout
           const ariaLabel = lang === 'en'
-            ? `Spectral register: ${totalScored} federal institutions plotted by integrity score, ${domainMin} to ${domainMax}. Stroke height is money at risk. Median score ${median != null ? median.toFixed(1) : 'unknown'}. ${failingCount} institutions operate at Deficient or worse. ${excelenteCount === 0 ? 'No institution reaches the Excellent band.' : `${excelenteCount} institutions reach the Excellent band.`}`
-            : `Espectro del padrón: ${totalScored} instituciones federales trazadas por indicador de riesgo, de ${domainMin} a ${domainMax}. La altura del trazo es el dinero en riesgo. Mediana ${median != null ? median.toFixed(1) : 'desconocida'}. ${failingCount} instituciones operan en deficiencia o peor. ${excelenteCount === 0 ? 'Ninguna institución alcanza la banda Excelente.' : `${excelenteCount} instituciones alcanzan la banda Excelente.`}`
+            ? `Spectral register: ${totalScored} federal institutions plotted by integrity score, ${domainMin} to ${domainMax} (further right is better). Stroke height is money at risk. Median score ${median != null ? median.toFixed(1) : 'unknown'}. ${failingCount} institutions operate at Deficient or worse. ${excelenteCount === 0 ? 'No institution reaches the Excellent band.' : `${excelenteCount} institutions reach the Excellent band.`}`
+            : `Espectro del padrón: ${totalScored} instituciones federales trazadas por puntaje de integridad, de ${domainMin} a ${domainMax} (más a la derecha, mejor). La altura del trazo es el dinero en riesgo. Mediana ${median != null ? median.toFixed(1) : 'desconocida'}. ${failingCount} instituciones operan en deficiencia o peor. ${excelenteCount === 0 ? 'Ninguna institución alcanza la banda Excelente.' : `${excelenteCount} instituciones alcanzan la banda Excelente.`}`
           return (
           <>
         <svg

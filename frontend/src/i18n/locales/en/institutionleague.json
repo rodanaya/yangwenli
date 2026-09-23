@@ -1,6 +1,6 @@
 {
   "kicker": "INSTITUTIONS · WHERE THE HIGH-RISK MONEY IS",
-  "meta": "FEDERAL · 2018–2025 · v0.8.5",
+  "meta": "FEDERAL · 2002–2025 · v0.8.5",
   "headline": {
     "beforeNone": "Of {{total}} federal buyers, ",
     "accentNone": "none reaches Excellent",
@@ -161,11 +161,13 @@
   },
   "methodologyLink": "Methodology",
   "zeroMoneyAtRisk": "No high- or critical-risk contracts",
-  "thinSample": "Below the {{n}}-contract reliability floor — the headline excludes it",
+  "thinSample": "Below the {{n}}-contract reliability floor — listed here, excluded from the headline, the plate, the honor roll and the red flags",
   "confidenceBands": {
     "high": "high",
     "narrow": "narrow",
     "medium": "medium",
     "wide": "wide"
-  }
+  },
+  "lastContract": "last contract {{year}}",
+  "lastContractTitle": "No contracts since {{year}} — outside the 2018+ officials window"
 }

@@ -1,6 +1,6 @@
 {
   "kicker": "INSTITUCIONES · DÓNDE ESTÁ EL DINERO DE ALTO RIESGO",
-  "meta": "FEDERAL · 2018–2025 · v0.8.5",
+  "meta": "FEDERAL · 2002–2025 · v0.8.5",
   "headline": {
     "beforeNone": "De {{total}} compradores federales, ",
     "accentNone": "ninguno alcanza Excelente",
@@ -9,7 +9,7 @@
     "accentSome": "{{n}} alcanzan Excelente",
     "afterSome": " — y {{failing}} operan en deficiencia o peor."
   },
-  "lede": "El {{name}} concentra {{money}} en contratos de riesgo alto y crítico — la exposición más alta del padrón federal. La posición en la placa de abajo es el indicador de riesgo; la altura del trazo es el dinero en riesgo.",
+  "lede": "El {{name}} concentra {{money}} en contratos de riesgo alto y crítico — la exposición más alta del padrón federal. La posición en la placa de abajo es el puntaje de integridad (más a la derecha, mejor); la altura del trazo es el dinero en riesgo.",
   "podiumAriaLabel": "#{{rank}}: {{name}}, puntuación {{score}}",
   "tableKicker": "Tabla general",
   "tableHeadline": "Clasificación completa — {{total}} instituciones",
@@ -161,11 +161,13 @@
   },
   "methodologyLink": "Metodología",
   "zeroMoneyAtRisk": "Sin contratos de riesgo alto o crítico",
-  "thinSample": "Debajo del piso de confiabilidad de {{n}} contratos — el titular la excluye",
+  "thinSample": "Debajo del piso de confiabilidad de {{n}} contratos — se lista aquí, pero queda fuera del titular, la placa, el cuadro de honor y las banderas rojas",
   "confidenceBands": {
     "high": "alta",
     "narrow": "estrecha",
     "medium": "media",
     "wide": "amplia"
-  }
+  },
+  "lastContract": "último contrato {{year}}",
+  "lastContractTitle": "Sin contratos desde {{year}} — fuera de la ventana de funcionarios 2018+"
 }

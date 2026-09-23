@@ -115,6 +115,7 @@ interface InstitutionScorecardItem {
   signal_count_red: number | null
   money_at_risk_mxn: number | null
   total_contracts: number | null
+  last_contract_year?: number | null
 }
 
 interface ScorecardListResponse {
@@ -517,11 +518,12 @@ export default function InstitutionLeague() {
     }
   }
 
-  // Data fetching — every query is federal-aware so the headline numbers
-  // (median, total_scored, top/worst) match the table population below.
+  // Data fetching — the headline numbers (h1, FINDING, plate caption/median)
+  // count the same floored population the plate draws and the honor roll /
+  // red flags use (PARALLAX D9b § Change 2); the table below lists everyone.
   const { data: statsData } = useQuery<InstitutionStats>({
-    queryKey: ['institution-scorecard-stats', scope],
-    queryFn: () => scorecardApi.getInstitutionStats({ scope }),
+    queryKey: ['institution-scorecard-stats', scope, RELIABLE_MIN],
+    queryFn: () => scorecardApi.getInstitutionStats({ scope, min_contracts: RELIABLE_MIN }),
     staleTime: 10 * 60 * 1000,
   })
 
@@ -643,13 +645,24 @@ export default function InstitutionLeague() {
       <ChevronDown className={`h-3 w-3 transition-transform ${m.isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" />
     </button>
   )
-  const renderThin = (item: InstitutionScorecardItem) =>
-    item.total_contracts != null && item.total_contracts < RELIABLE_MIN ? (
-      // Thin sample: listed, never hidden — the reader sees why it ranks here.
-      <span className="font-mono text-[12px] tabular-nums text-text-muted whitespace-nowrap flex-shrink-0" title={t('thinSample', { n: RELIABLE_MIN })}>
-        n = {item.total_contracts}<span className="sr-only">: {t('thinSample', { n: RELIABLE_MIN })}</span>
-      </span>
-    ) : null
+  // Scores span every contract 2002–2025; a buyer silent since before the
+  // 2018+ officials window is marked so its grade is read as history.
+  const RECENT_FROM = 2018
+  const renderThin = (item: InstitutionScorecardItem) => (
+    <>
+      {item.total_contracts != null && item.total_contracts < RELIABLE_MIN && (
+        // Thin sample: listed, never hidden — the reader sees why it ranks here.
+        <span className="font-mono text-[12px] tabular-nums text-text-muted whitespace-nowrap flex-shrink-0" title={t('thinSample', { n: RELIABLE_MIN })}>
+          n = {item.total_contracts}<span className="sr-only">: {t('thinSample', { n: RELIABLE_MIN })}</span>
+        </span>
+      )}
+      {item.last_contract_year != null && item.last_contract_year < RECENT_FROM && (
+        <span className="font-mono text-[12px] tabular-nums text-text-muted whitespace-nowrap flex-shrink-0" title={t('lastContractTitle', { year: item.last_contract_year })}>
+          {t('lastContract', { year: item.last_contract_year })}<span className="sr-only">: {t('lastContractTitle', { year: item.last_contract_year })}</span>
+        </span>
+      )}
+    </>
+  )
   const renderMoney = (item: InstitutionScorecardItem) =>
     item.money_at_risk_mxn == null
       ? '—'
