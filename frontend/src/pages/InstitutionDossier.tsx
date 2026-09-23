@@ -412,7 +412,13 @@ export default function InstitutionDossier() {
               meta={lang === 'es' ? `Los ${topOfficials.length} más activos · 2018+` : `Top ${topOfficials.length} by volume · 2018+`}
               accent={sectorAccent}
             />
-            <div className="overflow-x-auto">
+            {/* A keyboard stop so the scroller can be scrolled with arrows at 390. */}
+            <div
+              className="overflow-x-auto rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+              tabIndex={0}
+              role="region"
+              aria-label={lang === 'es' ? 'Tabla de responsables — desliza para ver todas las columnas' : 'Officers table — scroll for every column'}
+            >
               <table className="w-full text-xs border-collapse" aria-label={lang === 'es' ? 'Responsables de la unidad compradora' : 'Procurement officers'}>
                 <thead>
                   <tr className="text-[12px] font-mono uppercase tracking-[0.12em] text-text-muted border-b border-border">

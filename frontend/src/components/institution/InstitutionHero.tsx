@@ -32,6 +32,8 @@ import {
   formatNumber,
 } from '@/lib/utils'
 
+const NBSP = String.fromCharCode(160) // no-break space
+
 // Dossier section anchors — the five narrative chapters were removed in the
 // 2026-06-03 operational rebuild; these are the real reference sections.
 const TOC_ANCHORS: Array<{ id: string; en: string; es: string; numeral?: string }> = [
@@ -193,33 +195,20 @@ export function InstitutionHero({
             name-splice drop-cap that read as a typo). Drop-cap now lands on the
             lede's own first letter (the institution name). */}
         <div className="mt-6" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '66ch' }}>
+          {/* Drop cap via ::first-letter (PARALLAX D9b § Change 7): the text
+              node stays whole, so assistive tech reads "Instituto", not "nstituto". */}
           <p
+            className="lede-dropcap"
             style={{
               fontFamily: '"EB Garamond", Georgia, serif',
               fontSize: 18,
               lineHeight: 1.6,
               color: 'var(--color-text-secondary)',
               letterSpacing: '0.003em',
+              ['--dropcap-color' as string]: sectorAccent,
             }}
           >
-            <span
-              aria-hidden="true"
-              style={{
-                fontFamily: '"Playfair Display", Georgia, serif',
-                fontStyle: 'normal',
-                fontWeight: 800,
-                fontSize: '3.2em',
-                float: 'left',
-                lineHeight: 0.82,
-                color: sectorAccent,
-                marginRight: '0.09em',
-                marginTop: '0.04em',
-                marginBottom: '-0.04em',
-              }}
-            >
-              {lede.charAt(0)}
-            </span>
-            {lede.slice(1)}
+            {lede}
           </p>
         </div>
 
@@ -290,7 +279,7 @@ function DualSeal({
   }
 
   return (
-    <aside className="flex-shrink-0 flex flex-row md:flex-col gap-3 w-full md:w-[188px]">
+    <aside aria-label={isEs ? 'Veredictos' : 'Verdicts'} className="flex-shrink-0 flex flex-row md:flex-col gap-3 w-full md:w-[188px]">
       <SealCard
         ruleColor={RISK_COLORS[modelLevel]}
         textColor={RISK_TEXT_COLORS[modelLevel]}
@@ -305,7 +294,8 @@ function DualSeal({
         textColor={integText}
         big={integBig}
         // "Process" is the boleta's Process-Integrity pillar; this seal is the procedure.
-        label={isEs ? `Procedimiento · ${integLabel}` : `Procedure · ${integLabel}`}
+        // The measure never splits across lines ("NO / OPEN BID"); the wrap falls after "·".
+        label={`${isEs ? 'Procedimiento' : 'Procedure'} · ${integLabel.replace(/ /g, NBSP)}`}
         grade={integGrade}
         sub={integSub}
       />

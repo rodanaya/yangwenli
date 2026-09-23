@@ -13,7 +13,7 @@
  * crimson accent for accountability.
  */
 
-import React, { useMemo, useCallback, lazy, Suspense, useState } from 'react'
+import React, { useMemo, useCallback, lazy, Suspense, useState, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
@@ -43,7 +43,7 @@ import {
   Flag,
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS, getSectorName } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, RISK_TEXT_COLORS, getSectorName, getSectorTextColor } from '@/lib/constants'
 import {
   INSTITUTION_PILLARS,
   pillarLabel,
@@ -515,7 +515,24 @@ export default function InstitutionLeague() {
     [searchParams, setSearchParams],
   )
 
+  // After a pill / sort / page click the list re-renders (and Act I unmounts
+  // above it when a filter is set): move focus to the results heading so it
+  // is never left off-screen (PARALLAX D9b § Change 7).
+  const focusResultsNext = useRef(false)
+  useEffect(() => {
+    if (!focusResultsNext.current) return
+    focusResultsNext.current = false
+    document.getElementById('league-table-heading')?.focus()
+  }, [searchParams])
+  const updateAndFocus = (updates: Record<string, string | undefined>) => {
+    // Only arm the focus move when the URL will actually change — a stale flag
+    // would steal focus from the search box on the next keystroke.
+    focusResultsNext.current = Object.entries(updates).some(([k, v]) => (searchParams.get(k) ?? '') !== (v ?? ''))
+    updateParams(updates)
+  }
+
   const handleSort = (key: SortKey) => {
+    focusResultsNext.current = true // a sort click always changes sort or order
     if (key === sortBy) {
       updateParams({ order: sortOrder === 'desc' ? 'asc' : 'desc', page: '1' })
     } else {
@@ -584,6 +601,13 @@ export default function InstitutionLeague() {
   const items = listData?.data ?? []
   const total = listData?.total ?? 0
   const totalPages = listData?.total_pages ?? 1
+  const SORT_LABEL_KEY: Partial<Record<SortKey, string>> = {
+    total_score: 'columns.score',
+    national_percentile: 'columns.percentile',
+    institution_name: 'columns.institution',
+    money_at_risk: 'columns.moneyAtRisk',
+  }
+  const sortLabel = t(SORT_LABEL_KEY[sortBy] ?? 'columns.score')
 
   // Row rank calculation: rank of first item on current page
   const firstItemRank = (page - 1) * PER_PAGE + 1
@@ -643,7 +667,7 @@ export default function InstitutionLeague() {
       type="button"
       onClick={() => setExpandedRowId(m.isExpanded ? null : m.item.institution_id)}
       className="flex-shrink-0 inline-flex items-center justify-center min-h-6 min-w-6 rounded hover:bg-background-elevated text-text-muted hover:text-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
-      aria-label={m.isExpanded ? t('collapseRow') : t('expandRow')}
+      aria-label={t(m.isExpanded ? 'collapseRow' : 'expandRow', { name: formatEntityName('institution', m.item.institution_name, 'full') })}
       aria-expanded={m.isExpanded}
       aria-controls={m.isExpanded ? m.panelId : undefined}
     >
@@ -896,18 +920,29 @@ export default function InstitutionLeague() {
                   aria-label={t('scope.label')}
                   className="inline-flex rounded-sm border border-border bg-background overflow-hidden"
                 >
-                  {(['federal', 'subnational', 'all'] as const).map((sc, i) => (
+                  {(['federal', 'subnational', 'all'] as const).map((sc, i, all) => (
                     <button
                       key={sc}
                       type="button"
                       role="radio"
                       aria-checked={scope === sc}
+                      // One Tab stop; ←/→ move the selection (roving tabindex).
+                      tabIndex={scope === sc ? 0 : -1}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+                        e.preventDefault()
+                        const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1
+                        const j = (i + step + all.length) % all.length
+                        const next = all[j]
+                        updateParams({ scope: next === 'federal' ? undefined : next, all: undefined, page: '1' })
+                        ;(e.currentTarget.parentElement?.children[j] as HTMLElement | undefined)?.focus()
+                      }}
                       onClick={() => updateParams({ scope: sc === 'federal' ? undefined : sc, all: undefined, page: '1' })}
                       className={`px-3 py-1 text-[12px] font-mono uppercase tracking-[0.12em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
                         i < 2 ? 'border-r border-border' : ''
                       } ${
                         scope === sc
-                          ? 'bg-accent-data/15 text-accent-data'
+                          ? 'bg-accent-data/15 text-text-primary font-bold'
                           : 'text-text-muted hover:text-text-secondary'
                       }`}
                     >
@@ -1092,10 +1127,11 @@ export default function InstitutionLeague() {
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              onClick={() => updateParams({ grade: undefined, page: '1' })}
+              aria-pressed={!activeTierName}
+              onClick={() => updateAndFocus({ grade: undefined, page: '1' })}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
                 !activeTierName
-                  ? 'bg-accent-data/15 border-accent-data/40 text-accent-data'
+                  ? 'bg-accent-data/15 border-accent-data/40 text-text-primary font-bold'
                   : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
               }`}
             >
@@ -1108,10 +1144,11 @@ export default function InstitutionLeague() {
                 <button
                   key={tierName}
                   type="button"
+                  aria-pressed={isActive}
                   onClick={() => {
                     const grades = TIER_GRADE_MAP[tierName]
                     const gradeVal = grades ? grades[0] : undefined
-                    updateParams({ grade: gradeVal || undefined, page: '1' })
+                    updateAndFocus({ grade: gradeVal || undefined, page: '1' })
                   }}
                   className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   style={{
@@ -1140,10 +1177,11 @@ export default function InstitutionLeague() {
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              onClick={() => updateParams({ sector: undefined, page: '1' })}
+              aria-pressed={!sectorFilter}
+              onClick={() => updateAndFocus({ sector: undefined, page: '1' })}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
                 !sectorFilter
-                  ? 'bg-accent-data/15 border-accent-data/40 text-accent-data'
+                  ? 'bg-accent-data/15 border-accent-data/40 text-text-primary font-bold'
                   : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
               }`}
             >
@@ -1156,12 +1194,14 @@ export default function InstitutionLeague() {
                 <button
                   key={s.value}
                   type="button"
-                  onClick={() => updateParams({ sector: isActive ? undefined : s.value, page: '1' })}
+                  aria-pressed={isActive}
+                  onClick={() => updateAndFocus({ sector: isActive ? undefined : s.value, page: '1' })}
                   className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   style={{
                     borderColor: isActive ? color : 'var(--color-border)',
                     backgroundColor: isActive ? `${color}1f` : 'transparent',
-                    color: isActive ? color : 'var(--color-text-muted)',
+                    // Marks keep the sector hex (dot, border); the label is text.
+                    color: isActive ? getSectorTextColor(s.value) : 'var(--color-text-muted)',
                   }}
                 >
                   <span
@@ -1182,13 +1222,20 @@ export default function InstitutionLeague() {
             <p className="text-[12px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
               {t('tableKicker')}
             </p>
-            <h2 id="league-table-heading" className="text-lg font-serif font-bold text-text-primary leading-tight">
+            <h2 id="league-table-heading" tabIndex={-1} className="text-lg font-serif font-bold text-text-primary leading-tight scroll-mt-24 focus:outline-none">
               {isLoading ? t('tableKicker') : t('tableHeadline', { total: formatNumber(total) })}
             </h2>
           </div>
 
+          {/* One polite status line for every list change (count, page, sort). */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {listData && !isLoading
+              ? t('listStatus', { num: formatNumber(total), page, total: totalPages, label: sortLabel })
+              : ''}
+          </p>
+
           {isError && (
-            <div className="flex items-center gap-3 p-4 rounded-sm bg-risk-critical/10/40 border border-red-800/40 text-risk-critical text-sm">
+            <div role="alert" className="flex items-center gap-3 p-4 rounded-sm bg-risk-critical/10 border border-risk-critical/40 text-sm" style={{ color: RISK_TEXT_COLORS.critical }}>
               <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
               {t('error')}
             </div>
@@ -1363,7 +1410,6 @@ export default function InstitutionLeague() {
                             name instead of summing into the column's min-content. */}
                         <td className="px-2 py-0 align-middle">
                           <div className="flex flex-wrap items-center gap-x-2 min-w-0">
-                            {renderExpand(m)}
                             <span
                               aria-hidden="true"
                               className="h-2 w-2 rounded-full flex-shrink-0"
@@ -1379,6 +1425,9 @@ export default function InstitutionLeague() {
                               size="sm"
                               className="flex-[1_1_8rem] min-w-0 py-1 text-[13px] text-text-secondary hover:text-text-primary hover:underline underline-offset-2 transition-colors font-medium whitespace-normal break-words leading-tight"
                             />
+                            {/* After the name: the name is the row's first stop, the
+                                breakdown button its second (never 50 identical names first). */}
+                            {renderExpand(m)}
                             {renderThin(item)}
                             {item.sector_name && (
                               <span className="text-text-muted text-[13px] font-mono uppercase tracking-[0.1em] flex-shrink-0">
@@ -1455,7 +1504,7 @@ export default function InstitutionLeague() {
               <button
                 type="button"
                 disabled={page <= 1}
-                onClick={() => updateParams({ page: String(page - 1) })}
+                onClick={() => updateAndFocus({ page: String(page - 1) })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-background border border-border text-text-secondary text-sm hover:bg-background-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                 aria-label={t('pagination.previousAriaLabel')}
               >
@@ -1468,7 +1517,7 @@ export default function InstitutionLeague() {
               <button
                 type="button"
                 disabled={page >= totalPages}
-                onClick={() => updateParams({ page: String(page + 1) })}
+                onClick={() => updateAndFocus({ page: String(page + 1) })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-background border border-border text-text-secondary text-sm hover:bg-background-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                 aria-label={t('pagination.nextAriaLabel')}
               >

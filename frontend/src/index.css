@@ -343,6 +343,21 @@
     color: #d4922a;
   }
 
+  /* Dossier lede drop cap — the colour comes from --dropcap-color (the
+     sector accent); ::first-letter keeps the word whole for AT (D9b § 7). */
+  .lede-dropcap::first-letter {
+    font-family: "Playfair Display", Georgia, serif;
+    font-style: normal;
+    font-weight: 800;
+    font-size: 3.2em;
+    float: left;
+    line-height: 0.82;
+    color: var(--dropcap-color, var(--color-accent));
+    margin-right: 0.09em;
+    margin-top: 0.04em;
+    margin-bottom: -0.04em;
+  }
+
   /* Pull-quote — large serif blockquote */
   .text-pullquote {
     font-family: var(--font-family-serif);

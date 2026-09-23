@@ -380,6 +380,10 @@ function ConcentrationRegister({
         </div>
       </div>
 
+      {/* Announces the FLOOR / SORT result to assistive tech. */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {isEs ? `${rows.length} proveedores mostrados` : `${rows.length} suppliers shown`}
+      </p>
       <div className="border border-border rounded-sm overflow-hidden">
         <ul>
           {rows.map((v) => {
@@ -408,7 +412,9 @@ function ConcentrationRegister({
                 </div>
                 <DotBar value={share} max={shareMax} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} dots={18} ariaLabel={isEs ? `${Math.round(share)}% del gasto` : `${Math.round(share)}% of spend`} className="hidden sm:block flex-shrink-0" />
                 <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 78, fontSize: 13, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</span>
-                <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 30, fontSize: 13, fontWeight: 600, color: riskPct == null ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[lvl] }}>{riskPct ?? '—'}</span>
+                <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 30, fontSize: 13, fontWeight: 600, color: riskPct == null ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[lvl] }}>
+                  <span className="sr-only">{isEs ? 'indicador de riesgo ' : 'risk indicator '}</span>{riskPct ?? '—'}
+                </span>
               </li>
             )
           })}
@@ -601,8 +607,13 @@ export function InstitutionRecord({
       <Panel label={isEs ? 'Los contratos más grandes' : 'The largest contracts'} accent={RISK_COLORS.high}>
         {contractRows.length > 0 ? (
           <div>
-          <div className="overflow-x-auto">
-            <table className="w-full" style={{ fontSize: 12 }}>
+          <div
+            className="overflow-x-auto rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+            tabIndex={0}
+            role="region"
+            aria-label={isEs ? 'Contratos más grandes — desliza para ver todas las columnas' : 'Largest contracts — scroll for every column'}
+          >
+            <table className="w-full" style={{ fontSize: 12 }} aria-label={isEs ? 'Los contratos más grandes' : 'The largest contracts'}>
               <thead>
                 <tr className="text-left font-mono" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                   <th className="font-medium py-1.5 pr-3">{isEs ? 'Contrato' : 'Contract'}</th>

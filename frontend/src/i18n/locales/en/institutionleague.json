@@ -52,8 +52,8 @@
   "p90Line": "P90 risk indicator {{score}}",
   "moneyAtRiskLine": "{{money}} at risk",
   "weakestPillarLine": "Weakest pillar: {{label}} — {{value}}/{{max}}",
-  "expandRow": "Show pillar breakdown",
-  "collapseRow": "Hide pillar breakdown",
+  "expandRow": "Show pillar breakdown — {{name}}",
+  "collapseRow": "Hide pillar breakdown — {{name}}",
   "openDossier": "Open full dossier",
   "finding": {
     "critical": "Only {{pct}}% of institutions reach Satisfactory or better. {{failing}} are flagged at the Critical level.",
@@ -175,5 +175,6 @@
   "lowestInSector": "Lowest in its sector",
   "weakestShort": "Weakest",
   "redSignalsLine_one": "{{count}} red signal",
-  "redSignalsLine_other": "{{count}} red signals"
+  "redSignalsLine_other": "{{count}} red signals",
+  "listStatus": "{{num}} institutions · page {{page}} of {{total}} · sorted by {{label}}"
 }

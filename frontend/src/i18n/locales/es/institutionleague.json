@@ -52,8 +52,8 @@
   "p90Line": "Indicador de riesgo P90 {{score}}",
   "moneyAtRiskLine": "{{money}} en riesgo",
   "weakestPillarLine": "Peor pilar: {{label}} — {{value}}/{{max}}",
-  "expandRow": "Mostrar desglose de pilares",
-  "collapseRow": "Ocultar desglose de pilares",
+  "expandRow": "Mostrar desglose de pilares — {{name}}",
+  "collapseRow": "Ocultar desglose de pilares — {{name}}",
   "openDossier": "Abrir expediente completo",
   "finding": {
     "critical": "Solo el {{pct}}% de instituciones alcanza nivel Satisfactorio o superior. {{failing}} se encuentran en nivel Crítico.",
@@ -175,5 +175,6 @@
   "lowestInSector": "La más baja de su sector",
   "weakestShort": "Más débil",
   "redSignalsLine_one": "{{count}} señal en rojo",
-  "redSignalsLine_other": "{{count}} señales en rojo"
+  "redSignalsLine_other": "{{count}} señales en rojo",
+  "listStatus": "{{num}} instituciones · página {{page}} de {{total}} · ordenadas por {{label}}"
 }
