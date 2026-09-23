@@ -133,7 +133,7 @@ export function SectorDossierCard({
           className="font-mono shrink-0"
           style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}
         >
-          DA · {isEs ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
+          {isEs ? 'AD · UE' : 'DA · EU'} ≤{EU_DA_LINE.toFixed(0)}%
         </span>
         <DABullet daPct={row.daPct} />
         <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>

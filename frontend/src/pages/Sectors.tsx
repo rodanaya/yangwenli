@@ -11,7 +11,8 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { useQueryStates, parseAsStringLiteral } from 'nuqs'
 import { categoriesApi } from '@/api/client'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -50,6 +51,13 @@ function formatSpend(value: number): string {
 // Same-magnitude stand-in for the masthead anchor before the sectors payload
 // lands (never shown: the slot is visibility-hidden until the real total).
 const ANCHOR_PLACEHOLDER_MXN = 5.5e12
+
+// URL literals for the page's five query keys (see the nuqs block in Sectors).
+const VIEW_KEYS = ['sectors', 'categories'] as const
+const REG_KEYS = ['plate', 'register'] as const
+const LENS_KEYS = ['var', 'saturation', 'intensity'] as const
+const CVIEW_KEYS = ['list', 'tree'] as const
+const CAT_SORT_KEYS = ['risk', 'spend', 'name', 'capture'] as const
 
 // ── CategoryTreeView ─────────────────────────────────────────────────────────
 // Collapsible sector → category tree for the WHAT tab "Tree" mode.
@@ -216,61 +224,43 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
 export function Sectors() {
   const { t, i18n } = useTranslation('sectors')
 
-  // WHO / WHAT tab — URL-synced.
-  const [searchParams, setSearchParams] = useSearchParams()
-  const view: 'sectors' | 'categories' =
-    searchParams.get('view') === 'categories' ? 'categories' : 'sectors'
+  // ── URL state — one nuqs writer for the five keys (PARALLAX D7b § Change 1;
+  // the platform pattern since Day 6b). `clearOnDefault` keeps defaults out of
+  // the URL; switching view clears the other view's keys, so ?lens= never
+  // leaks into WHAT and ?sort= / ?cview= never into WHO.
+  //   view  WHO (default) / WHAT        reg   Plate (default) / Register
+  //   lens  var · saturation (Plate) · intensity (Register)
+  //   cview list / tree (WHAT)          sort  risk · spend · name · capture (WHAT)
+  const [q, setQ] = useQueryStates(
+    {
+      view: parseAsStringLiteral(VIEW_KEYS).withDefault('sectors'),
+      reg: parseAsStringLiteral(REG_KEYS).withDefault('plate'),
+      lens: parseAsStringLiteral(LENS_KEYS).withDefault('var'),
+      cview: parseAsStringLiteral(CVIEW_KEYS).withDefault('list'),
+      sort: parseAsStringLiteral(CAT_SORT_KEYS).withDefault('risk'),
+    },
+    { history: 'replace', clearOnDefault: true },
+  )
+  const view = q.view
+  const setView = (v: (typeof VIEW_KEYS)[number]) =>
+    setQ(v === 'categories' ? { view: v, lens: null, reg: null } : { view: v, sort: null, cview: null })
 
-  // cat-P3: quiet ?sort= for the categories list (no visible chooser — power users only).
-  // Values: risk (default) | spend | name | capture
-  type CatSortKey = 'risk' | 'spend' | 'name' | 'capture'
-  const CAT_SORT_KEYS: ReadonlyArray<CatSortKey> = ['risk', 'spend', 'name', 'capture']
-  const catSortParam = searchParams.get('sort') as CatSortKey | null
-  const catSortKey: CatSortKey =
-    view === 'categories' && catSortParam && CAT_SORT_KEYS.includes(catSortParam)
-      ? catSortParam
-      : 'risk'
-
-  const setView = (v: 'sectors' | 'categories') => {
-    const next = new URLSearchParams(searchParams)
-    if (v === 'sectors') next.delete('view')
-    else next.set('view', v)
-    setSearchParams(next, { replace: true })
-  }
+  // cat-P3: quiet ?sort= for the categories list.
+  const catSortKey = view === 'categories' ? q.sort : 'risk'
 
   // Category list display: 'list' (ranked flat) or 'tree' (grouped by sector)
-  const cviewParam = searchParams.get('cview') as 'list' | 'tree' | null
-  const cview: 'list' | 'tree' = cviewParam === 'tree' ? 'tree' : 'list'
-  const setCview = (v: 'list' | 'tree') => {
-    const next = new URLSearchParams(searchParams)
-    if (v === 'list') next.delete('cview')
-    else next.set('cview', v)
-    setSearchParams(next, { replace: true })
-  }
+  const cview = q.cview
+  const setCview = (v: (typeof CVIEW_KEYS)[number]) => setQ({ cview: v })
 
-  // Confounded Ledger sort lens — URL-synced (?lens=intensity); shared by the
-  // §B plate's FLIP reorder and the §D register's sortable headers.
-  const lens: PlateLens = searchParams.get('lens') === 'intensity' ? 'intensity' : 'var'
-  const setLens = (l: PlateLens) => {
-    const next = new URLSearchParams(searchParams)
-    if (l === 'var') next.delete('lens')
-    else next.set('lens', l)
-    setSearchParams(next, { replace: true })
-  }
+  // Registry sort lens — each view orders by the lens it offers (the Plate:
+  // VaR / saturation; the Register: VaR / intensity) and shows VaR otherwise.
+  const lens: PlateLens = q.lens
+  const setLens = (l: PlateLens) => setQ({ lens: l })
 
   // Registry display mode — the Plate and the Register render the SAME
-  // 12-sector data; show one at a time behind a toggle instead of stacking
-  // both. Default 'plate' (the innovative visual — the page centrepiece);
-  // 'register' = the legible table. URL-synced (?reg=register). Lens
-  // (VaR/Intensity) stays shared across views.
-  const regView: 'register' | 'plate' =
-    searchParams.get('reg') === 'register' ? 'register' : 'plate'
-  const setRegView = (v: 'register' | 'plate') => {
-    const next = new URLSearchParams(searchParams)
-    if (v === 'plate') next.delete('reg')
-    else next.set('reg', v)
-    setSearchParams(next, { replace: true })
-  }
+  // 12-sector data; one at a time behind a toggle. Default 'plate'.
+  const regView = q.reg
+  const setRegView = (v: (typeof REG_KEYS)[number]) => setQ({ reg: v })
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['sectors', 'list'],
@@ -380,7 +370,7 @@ export function Sectors() {
   // ── Wayfinding (El Hilo P1+) — publish the exposure ledger as the sector
   // sibling list (Prev/Next stepper honours this VaR order); flash the origin
   // row on browser-back.
-  const sectorSearch = searchParams.toString()
+  const sectorSearch = useLocation().search.replace(/^\?/, '')
   usePublishSiblingList(
     ledgerRows.length
       ? {
@@ -723,12 +713,7 @@ export function Sectors() {
                             <button
                               key={key}
                               type="button"
-                              onClick={() => {
-                                const next = new URLSearchParams(searchParams)
-                                if (key === 'risk') next.delete('sort')
-                                else next.set('sort', key)
-                                setSearchParams(next, { replace: true })
-                              }}
+                              onClick={() => setQ({ sort: key })}
                               className={cn(
                                 'min-h-6 px-2 py-1 text-[13px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
                                 catSortKey === key

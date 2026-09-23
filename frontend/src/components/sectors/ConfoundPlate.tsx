@@ -20,7 +20,7 @@
  *
  * Per the judge's directives: NO cross-gutter "disagreement connector"
  * (its length encoded inverse-VaR garbage), solid Lane-1 dot (no two-tone
- * core at r=5), sort lens URL-synced (?lens=var|intensity) with a ~280ms
+ * core at r=5), sort lens URL-synced (?lens=var|saturation) with a ~280ms
  * FLIP reorder.
  */
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -117,7 +117,10 @@ export function ConfoundPlate({
   const [hovered, setHovered] = useState<number | null>(null)
 
   const logFrac = useMemo(() => makeLogFrac(rows), [rows])
-  const ordered = useMemo(() => orderForLens(rows, lens), [rows, lens])
+  // The Plate offers VaR and saturation; any other URL lens (the Register's
+  // intensity) shows VaR with no pressed button.
+  const plateLens: PlateLens = lens === 'saturation' ? 'saturation' : 'var'
+  const ordered = useMemo(() => orderForLens(rows, plateLens), [rows, plateLens])
   const orderIndex = useMemo(
     () => new Map(ordered.map((r, i) => [r.sectorId, i])),
     [ordered],
@@ -125,7 +128,7 @@ export function ConfoundPlate({
 
   // FLIP. Rows render in lens order (DOM/Tab order == visual order), but a
   // node React physically moves loses its CSS transform transition — measured:
-  // 8 of 12 rows jumped on VaR → Intensity. Replay the slide with WAAPI for
+  // 8 of 12 rows jumped on VaR → saturation. Replay the slide with WAAPI for
   // every row whose slot changed; the inline transition stays for the rest.
   const rowRefs = useRef(new Map<number, HTMLDivElement>())
   const prevIndex = useRef(orderIndex)
@@ -164,8 +167,8 @@ export function ConfoundPlate({
   const isEs = lang === 'es'
 
   const caption = isEs
-    ? 'Dos escalas, una línea: monto observado (●, log) contra saturación del gasto propio (○). Casi todo el registro rebasa la bandera de ½ — el modelo pondera anomalías de monto alto — pero ninguna argolla llega tan lejos como la de mayor saturación. Cambie el orden a intensidad y mire la inversión.'
-    : 'Two scales, one line: flagged amount (●, log) against saturation of own spend (○). Nearly the whole registry clears the ½ flag — the model weights high-value anomalies — but no ring reaches as far as the saturation leader. Flip the sort to intensity and watch the inversion.'
+    ? 'Dos escalas, una línea: monto observado (●, log) contra saturación del gasto propio (○). Casi todo el registro rebasa la bandera de ½ — el modelo pondera anomalías de monto alto — pero ninguna argolla llega tan lejos como la de mayor saturación. Cambie el orden a saturación y mire la inversión.'
+    : 'Two scales, one line: flagged amount (●, log) against saturation of own spend (○). Nearly the whole registry clears the ½ flag — the model weights high-value anomalies — but no ring reaches as far as the saturation leader. Flip the sort to saturation and watch the inversion.'
 
   const sortControl = (
     <div className="flex items-center gap-1" role="group" aria-label={isEs ? 'Ordenar el registro' : 'Sort the registry'}>
@@ -175,7 +178,7 @@ export function ConfoundPlate({
       {(
         [
           { key: 'var' as PlateLens, es: 'VaR ↓', en: 'VaR ↓' },
-          { key: 'intensity' as PlateLens, es: 'Intensidad ↓', en: 'Intensity ↓' },
+          { key: 'saturation' as PlateLens, es: 'Saturación ↓', en: 'Saturation ↓' },
         ]
       ).map((b) => (
         <button

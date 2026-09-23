@@ -200,9 +200,9 @@ function LedgerRowItem({
           </span>
         </span>
 
-        {/* VaR readout */}
+        {/* VaR readout — a value never breaks across lines */}
         <span
-          className="shrink-0 w-20 sm:w-24 text-right tabular-nums"
+          className="shrink-0 min-w-20 sm:min-w-32 whitespace-nowrap text-right tabular-nums"
           style={{ ...BIGNUM_STYLE, fontSize: 16, color: 'var(--color-text-primary)' }}
         >
           {formatCompactMXN(row.varMxn)}
@@ -221,7 +221,7 @@ function LedgerRowItem({
         </span>
 
         {/* Trajectory sparkline + direction glyph */}
-        <span className="hidden lg:flex shrink-0 w-24 items-center gap-1">
+        <span className="hidden lg:flex shrink-0 w-28 items-center gap-1">
           {hasTraj ? (
             <>
               <span className="flex-1 min-w-0">
@@ -263,7 +263,7 @@ function LedgerRowItem({
         <div id={dossierId} className="sm:hidden px-3 pb-3">
           <div className="flex items-center gap-1.5 mb-2">
             <span className="font-mono shrink-0" style={{ fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-              DA · {lang === 'es' ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
+              {lang === 'es' ? 'AD · UE' : 'DA · EU'} ≤{EU_DA_LINE.toFixed(0)}%
             </span>
             <DABullet daPct={row.daPct} />
             <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
@@ -306,7 +306,10 @@ export function ExposureLedger({
   // VaR as share of all spend, for the ∑ rule.
   const varSharePct = totalSpend > 0 ? (totalVaR / totalSpend) * 100 : 0
 
-  const display = useMemo(() => orderForLens(rows, lens), [rows, lens])
+  // The Register offers VaR and intensity (model mean risk); any other URL
+  // lens (the Plate's saturation) shows VaR with no pressed header.
+  const regLens: PlateLens = lens === 'intensity' ? 'intensity' : 'var'
+  const display = useMemo(() => orderForLens(rows, regLens), [rows, regLens])
   const rankVarById = useMemo(() => new Map(rows.map((r, i) => [r.sectorId, i + 1])), [rows])
 
   // Hover dossier state (desktop) + tap-to-expand state (mobile).
@@ -358,11 +361,11 @@ export function ExposureLedger({
           <span className="font-mono w-6 text-right shrink-0" style={KICKER_STYLE} aria-hidden="true">#</span>
           <span className="font-mono flex-1" style={KICKER_STYLE} aria-hidden="true">{lang === 'es' ? 'Sector' : 'Sector'}</span>
           <span className="font-mono w-[120px] shrink-0" style={KICKER_STYLE} aria-hidden="true">
-            DA · {lang === 'es' ? 'UE' : 'EU'} ≤{EU_DA_LINE.toFixed(0)}%
+            {lang === 'es' ? 'AD · UE' : 'DA · EU'} ≤{EU_DA_LINE.toFixed(0)}%
           </span>
-          {sortHeader('var', 'VaR', 'w-20 sm:w-24')}
+          {sortHeader('var', 'VaR', 'w-20 sm:w-32')}
           {sortHeader('intensity', lang === 'es' ? 'Intensidad' : 'Intensity', 'w-[92px]')}
-          <span className="hidden lg:inline font-mono w-24 text-right truncate shrink-0" style={KICKER_STYLE} aria-hidden="true">
+          <span className="hidden lg:inline font-mono w-28 text-right shrink-0" style={KICKER_STYLE} aria-hidden="true">
             {lang === 'es' ? 'Trayectoria' : 'Trajectory'}
           </span>
         </div>
@@ -437,7 +440,7 @@ export function ExposureLedger({
               </>
             ) : (
               <>
-                ∑ {rows.length} SECTORS · {formatCompactMXN(totalVaR)} flagged amount (model) (
+                ∑ {rows.length} SECTORS · {formatCompactMXN(totalVaR)} flagged amount (model,{' '}
                 {varSharePct.toFixed(1)}% of value) · {formatCompactMXN(totalSpend)} spend ·{' '}
                 {totalContracts.toLocaleString('en-US')} contracts
               </>
@@ -451,8 +454,8 @@ export function ExposureLedger({
           style={{ fontSize: 12, letterSpacing: '0.02em', color: 'var(--color-text-muted)', lineHeight: 1.5 }}
         >
           {lang === 'es'
-            ? 'Modelo v0.8.5 · monto observado = MXN vía contratos alto+crítico · intensidad = riesgo medio del sector · indicador estadístico, no determinación legal · clic en fila → dossier · '
-            : 'Model v0.8.5 · flagged amount = MXN via high+critical contracts · intensity = sector mean risk · statistical indicator, not a legal determination · click a row → dossier · '}
+            ? 'Modelo v0.8.5 · monto observado = MXN vía contratos alto+crítico · intensidad = riesgo medio del sector · indicador estadístico, no determinación legal · clic en un nombre → dossier · '
+            : 'Model v0.8.5 · flagged amount = MXN via high+critical contracts · intensity = sector mean risk · statistical indicator, not a legal determination · click a name → dossier · '}
           <Link
             to="/methodology"
             className="underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"

@@ -94,12 +94,18 @@ export function rankDeltas(rows: LedgerRow[]): Map<number, RankDelta> {
   return out
 }
 
-/** Display order for the active lens. Rows arrive varMxn-descending. */
-export type PlateLens = 'var' | 'intensity'
+/**
+ * The registry's sort lenses — one word per measure (PARALLAX D7b § Change 1):
+ *   var        flagged amount (both views)
+ *   saturation own-spend share — the Plate's second lens
+ *   intensity  model mean risk (avgRiskScore) — the Register's second column
+ * A view that does not offer the URL's lens shows `var`.
+ */
+export type PlateLens = 'var' | 'saturation' | 'intensity'
 
+/** Display order for a lens. Rows arrive varMxn-descending. */
 export function orderForLens(rows: LedgerRow[], lens: PlateLens): LedgerRow[] {
-  if (lens === 'intensity') {
-    return [...rows].sort((a, b) => ownSpendShare(b) - ownSpendShare(a))
-  }
+  if (lens === 'saturation') return [...rows].sort((a, b) => ownSpendShare(b) - ownSpendShare(a))
+  if (lens === 'intensity') return [...rows].sort((a, b) => b.avgRiskScore - a.avgRiskScore)
   return [...rows].sort((a, b) => b.varMxn - a.varMxn)
 }
