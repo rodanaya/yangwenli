@@ -184,9 +184,9 @@ export default function InstitutionDossier() {
 
   const { data: categories } = useQuery({
     queryKey: ['institution-dossier', institutionId, 'top-categories'],
-    // 404s for institutions with thin partida coverage — swallow to null so the
-    // section renders a graceful empty note instead of erroring.
-    queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 8 }).catch(() => null),
+    // 200 with data: [] when nothing is categorised (PARALLAX D9 § Change 1);
+    // a real error now surfaces instead of reading as an empty list.
+    queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 8 }),
     enabled: validId,
     staleTime: 5 * 60 * 1000,
     retry: false,

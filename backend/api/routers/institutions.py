@@ -469,25 +469,25 @@ def get_institution_risk_waterfall(
         if not conn.execute("SELECT id FROM institutions WHERE id = ?", (institution_id,)).fetchone():
             raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
-        import json
-        # safe: _INST_Z_COLS is a hardcoded module-level constant, not from user input
-        avg_cols = ", ".join(f"AVG(czf.{col}) as {col}" for col in _INST_Z_COLS)
-        try:
-            row = conn.execute(f"""
-                SELECT {avg_cols}, COUNT(*) as cnt
-                FROM contract_z_features czf
-                JOIN contracts c ON czf.contract_id = c.id
-                WHERE c.institution_id = ?
-            """, (institution_id,)).fetchone()
-        except _sqlite3.OperationalError:
-            row = None  # prod deploy DB omits contract_z_features → fall back below
+        # Precompute FIRST (PARALLAX D9 § Change 1): institution_z_means ships
+        # to the deploy DB and answers in milliseconds; the live AVG over
+        # contract_z_features joined to contracts is a 662K-row walk for IMSS
+        # (> 280s cold on the local disk). The live path only runs when the
+        # precompute row is missing. See scripts/_precompute_institution_z_means.py.
+        row = _load_inst_z_means(conn, institution_id)
 
         if not row or not row["cnt"]:
-            # Fallback to precomputed per-institution z-means (ships to the deploy
-            # DB, which lacks the 3M-row contract_z_features table). Keeps the
-            # institution waterfall non-empty on prod. See
-            # scripts/_precompute_institution_z_means.py.
-            row = _load_inst_z_means(conn, institution_id)
+            # safe: _INST_Z_COLS is a hardcoded module-level constant, not from user input
+            avg_cols = ", ".join(f"AVG(czf.{col}) as {col}" for col in _INST_Z_COLS)
+            try:
+                row = conn.execute(f"""
+                    SELECT {avg_cols}, COUNT(*) as cnt
+                    FROM contract_z_features czf
+                    JOIN contracts c ON czf.contract_id = c.id
+                    WHERE c.institution_id = ?
+                """, (institution_id,)).fetchone()
+            except _sqlite3.OperationalError:
+                row = None  # prod deploy DB omits contract_z_features
 
         if not row or not row["cnt"]:
             result = InstitutionWaterfallResponse(institution_id=institution_id, items=[], total_contracts=0)
@@ -934,83 +934,100 @@ def get_institution_top_categories(
     limit: int = Query(10, ge=5, le=50),
 ):
     """
-    Get top spending categories for an institution based on partida_codes.
+    Top spending categories for an institution on the canonical `categories`
+    taxonomy (contracts.category_id), with contract count, value, mean risk
+    indicator, direct-award % and high/critical-risk count.
 
-    Returns categories ranked by total contract value with risk and direct-award stats.
+    Reads the precomputed `institution_category_stats` first (see
+    scripts/precompute_institution_categories.py); falls back to a live
+    GROUP BY when the table is absent or a `year` filter is requested.
+    An institution without categorised contracts returns 200 with `data: []`.
+
+    PARALLAX D9 § Change 1: the previous query filtered on
+    `c.institution_name`, a column `contracts` does not have; the swallowed
+    OperationalError made every institution 404.
     """
-    with get_db() as conn:
-        cursor = conn.cursor()
+    cache_key = f"inst_topcat:{institution_id}:{year}:{limit}"
+    cached = _get_top_cache(cache_key)
+    if cached is not None:
+        return cached
 
-        # Verify institution exists and get name
-        cursor.execute("SELECT name FROM institutions WHERE id = ?", (institution_id,))
-        institution = cursor.fetchone()
+    with get_db() as conn:
+        institution = conn.execute(
+            "SELECT name FROM institutions WHERE id = ?", (institution_id,)
+        ).fetchone()
         if not institution:
             raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
-        institution_name = institution["name"]
+        rows = None
+        source = "live"
+        if year is None:
+            try:
+                rows = conn.execute(
+                    """
+                    SELECT ics.category_id, cat.name_es, cat.name_en, cat.code, cat.sector_id,
+                           ics.contract_count, ics.total_value_mxn, ics.avg_risk_score,
+                           ics.direct_award_pct, ics.high_risk_count
+                    FROM institution_category_stats ics
+                    JOIN categories cat ON cat.id = ics.category_id
+                    WHERE ics.institution_id = ?
+                    ORDER BY ics.total_value_mxn DESC
+                    LIMIT ?
+                    """,
+                    (institution_id, limit),
+                ).fetchall()
+                source = "precomputed"
+            except _sqlite3.OperationalError:
+                rows = None  # table absent (fixture DB / before the precompute ran)
 
-        conditions = ["c.institution_name = ?"]
-        params: List[Any] = [institution_name]
+        if rows is None:
+            conditions = ["c.institution_id = ?", "COALESCE(c.amount_mxn, 0) <= ?"]
+            params: List[Any] = [institution_id, MAX_CONTRACT_VALUE]
+            if year is not None:
+                conditions.append("c.contract_year = ?")
+                params.append(year)
+            params.append(limit)
+            rows = conn.execute(
+                f"""
+                SELECT c.category_id, cat.name_es, cat.name_en, cat.code, cat.sector_id,
+                       COUNT(*) AS contract_count,
+                       SUM(COALESCE(c.amount_mxn, 0)) AS total_value_mxn,
+                       AVG(c.risk_score) AS avg_risk_score,
+                       ROUND(100.0 * SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) AS direct_award_pct,
+                       SUM(CASE WHEN c.risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) AS high_risk_count
+                FROM contracts c
+                JOIN categories cat ON cat.id = c.category_id
+                WHERE {" AND ".join(conditions)}
+                GROUP BY c.category_id
+                ORDER BY total_value_mxn DESC
+                LIMIT ?
+                """,
+                params,
+            ).fetchall()
 
-        if year is not None:
-            conditions.append("c.contract_year = ?")
-            params.append(year)
-
-        where_clause = " AND ".join(conditions)
-
-        query = f"""
-            SELECT
-                pc.id as category_id,
-                pc.name_es,
-                pc.name_en,
-                pc.code,
-                COUNT(*) as contract_count,
-                SUM(c.amount_mxn) as total_value_mxn,
-                AVG(COALESCE(c.risk_score, 0)) as avg_risk_score,
-                ROUND(100.0 * SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) as direct_award_pct
-            FROM contracts c
-            LEFT JOIN partida_codes pc ON c.partida_especifica = pc.code
-            WHERE {where_clause}
-            GROUP BY pc.id, pc.name_es, pc.name_en, pc.code
-            HAVING COUNT(*) > 0
-            ORDER BY total_value_mxn DESC
-            LIMIT ?
-        """
-        params.append(limit)
-        try:
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-        except _sqlite3.OperationalError:
-            # partida_codes table not in this DB — return empty
-            rows = []
-
-        if not rows:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No contracts found for institution {institution_id}"
-                + (f" in year {year}" if year is not None else ""),
-            )
-
-        data_note = f"Filtered to year {year}" if year is not None else "All years"
-
-        return {
+        result = {
             "institution_id": institution_id,
-            "institution_name": institution_name,
-            "data_note": data_note,
+            "institution_name": institution["name"],
+            "data_note": f"Filtered to year {year}" if year is not None else "All years",
+            "source": source,
             "data": [
                 {
                     "category_id": row["category_id"],
                     "name_es": row["name_es"],
                     "name_en": row["name_en"],
                     "code": row["code"],
+                    "sector_id": row["sector_id"],
                     "contract_count": row["contract_count"],
                     "total_value_mxn": row["total_value_mxn"],
                     "avg_risk_score": round(row["avg_risk_score"], 4) if row["avg_risk_score"] is not None else None,
                     "direct_award_pct": row["direct_award_pct"],
+                    "high_risk_count": row["high_risk_count"],
                 }
                 for row in rows
             ],
         }
+        _set_top_cache(cache_key, result)
+        return result
 
 
 @router.get("/{institution_id:int}/contracts", response_model=ContractListResponse)

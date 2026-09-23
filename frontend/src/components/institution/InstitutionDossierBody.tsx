@@ -439,6 +439,8 @@ interface CategoryItem {
   total_value_mxn: number
   avg_risk_score: number | null
   direct_award_pct: number | null
+  sector_id?: number | null
+  high_risk_count?: number | null
 }
 
 export function InstitutionRecord({
@@ -500,17 +502,35 @@ export function InstitutionRecord({
           <div className="space-y-2.5">
             {cats.map((c, i) => {
               const name = (isEs ? c.name_es : c.name_en) || c.name_es || c.name_en || (isEs ? 'Sin categoría' : 'Uncategorized')
+              const riskPct = c.avg_risk_score != null ? Math.round(c.avg_risk_score * 100) : null
+              const lvl = c.avg_risk_score != null ? getRiskLevelFromScore(c.avg_risk_score) : 'low'
               return (
                 <div key={c.category_id ?? `cat-${i}`} className="flex items-center gap-3">
-                  <span className="min-w-0 flex-1 whitespace-normal break-words leading-tight" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }} title={name}>{name}</span>
-                  <DotBar value={c.total_value_mxn || 0} max={catMax} color={sectorAccent} dots={24} ariaLabel={name} className="flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    {c.category_id != null ? (
+                      <EntityIdentityChip type="category" id={c.category_id} name={name} size="sm" fullName className="text-[13px]" />
+                    ) : (
+                      <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{name}</span>
+                    )}
+                    <div className="font-mono tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                      {formatNumber(c.contract_count ?? 0)} {isEs ? 'contratos' : 'contracts'}
+                      {c.direct_award_pct != null && <>{' · '}{isEs ? 'AD' : 'DA'} {Math.round(c.direct_award_pct)}%</>}
+                      {riskPct != null && (
+                        <>
+                          {' · '}{isEs ? 'indicador de riesgo' : 'risk indicator'}{' '}
+                          <span style={{ color: RISK_TEXT_COLORS[lvl], fontWeight: 600 }}>{riskPct}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <DotBar value={c.total_value_mxn || 0} max={catMax} color={sectorAccent} dots={24} ariaLabel={name} className="hidden sm:block flex-shrink-0" />
                   <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 76, fontSize: 13, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(c.total_value_mxn || 0)}</span>
                 </div>
               )
             })}
           </div>
         ) : (
-          <EmptyNote text={isEs ? 'Sin desglose por categoría para esta institución (cobertura de partidas limitada).' : 'No category breakdown for this institution (limited partida coverage).'} />
+          <EmptyNote text={isEs ? 'Sin contratos categorizados para esta institución.' : 'No categorised contracts for this institution.'} />
         )}
       </Panel>
 
