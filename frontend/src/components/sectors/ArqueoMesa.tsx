@@ -29,6 +29,7 @@ import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
 import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
+import { PlateIndexMark, PlateIndexBadge, PLATE_INDEX_MIN_COL } from './PlateIndex'
 
 interface ArqueoMesaProps {
   rows: LedgerRow[]
@@ -49,6 +50,12 @@ const MIN_COL_W = 6
 const MOBILE_BREAKPOINT = 768
 // 24px floor: each mobile row is a link, so it is also a 24px target.
 const MOBILE_ROW_MIN_H = 24
+const MOBILE_HEADER_H = 16
+// Phone readout: a two-line slot in both languages (ES wraps, hover text wraps),
+// so neither the first paint nor a hover moves the rows.
+const MOBILE_READOUT_H = 36
+// Desktop legend under the plate: two 13px rows at 1024–1440 (measured, D7b).
+const LEGEND_RESERVE_H = 51
 
 // Glyph faces — the canvas measures exactly what the svg/HTML renders.
 const MONO = "'IBM Plex Mono', monospace"
@@ -74,7 +81,6 @@ function sectorText(code: string): string {
   return SECTOR_TEXT_COLORS[code] ?? SECTOR_TEXT_COLORS.otros ?? '#475569'
 }
 
-const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫']
 
 // ── Component ────────────────────────────────────────────────────────────────
 export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
@@ -161,8 +167,8 @@ export function ArqueoMesa({ rows, lang }: ArqueoMesaProps) {
   const pending = width === 0 || (!isMobile && !fontsReady)
   const reserveH =
     typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
-      ? READOUT_H + 8 + ordered.reduce((acc, r) => acc + mobileRowH(r.totalMxn, totalSpend), 0)
-      : READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H
+      ? MOBILE_READOUT_H + 8 + MOBILE_HEADER_H + ordered.reduce((acc, r) => acc + mobileRowH(r.totalMxn, totalSpend), 0)
+      : READOUT_H + TOP_PAD + BAND_H + STRIP_H + LABEL_H + LEGEND_RESERVE_H
 
   const goToSector = useCallback((sectorId: number) => navigate(`/sectors/${sectorId}`), [navigate])
 
@@ -269,6 +275,7 @@ function DesktopMesa({
   const svgH = TOP_PAD + BAND_H + STRIP_H + LABEL_H
   const bandY = (share: number) => TOP_PAD + BAND_H * (1 - share)
   const hoverIdx = hoverId === null ? -1 : rows.findIndex((r) => r.sectorId === hoverId)
+  const hoverNarrowIdx = hoverId === null ? -1 : narrowSet.findIndex((d) => d.row.sectorId === hoverId)
 
   // x-offsets per column
   const xOffsets: number[] = []
@@ -293,12 +300,6 @@ function DesktopMesa({
     })
     .join(' ')
 
-  const legendLine =
-    narrowSet.length > 0
-      ? narrowSet
-          .map((d, i) => `${CIRCLED[i] ?? '·'} ${d.row.name} ${(ownSpendShare(d.row) * 100).toFixed(0)}%`)
-          .join(' · ')
-      : ''
 
   // ── The two computed annotations — HTML glyphs over the svg geometry ──
   // Seated with placeLabels (bounded to the plate, re-anchored at the edges,
@@ -345,7 +346,10 @@ function DesktopMesa({
         className="font-mono tabular-nums"
         style={{ height: READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
       >
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+        <span className="inline-flex items-center gap-1.5 min-w-0">
+          {hoverNarrowIdx >= 0 && <PlateIndexBadge n={hoverNarrowIdx + 1} />}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+        </span>
         <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
           {lang === 'es' ? '% del gasto propio observado' : '% of own spend flagged'}
         </span>
@@ -444,16 +448,9 @@ function DesktopMesa({
                   {r.name}
                 </text>
               ) : (
-                <text
-                  x={x + w / 2}
-                  y={TOP_PAD + BAND_H + STRIP_H + 12}
-                  textAnchor="middle"
-                  fontFamily="'IBM Plex Mono', monospace"
-                  fontSize={13}
-                  fill="var(--color-text-muted)"
-                >
-                  {CIRCLED[narrowIdx] ?? '·'}
-                </text>
+                w >= PLATE_INDEX_MIN_COL ? (
+                  <PlateIndexMark n={narrowIdx + 1} cx={x + w / 2} cy={TOP_PAD + BAND_H + STRIP_H + 9} />
+                ) : null
               )}
 
               {/* hit target — focus is drawn by the accent outline below */}
@@ -552,10 +549,15 @@ function DesktopMesa({
       ))}
       </div>
 
-      {legendLine && (
-        <p className="mt-2 font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
-          {legendLine}
-        </p>
+      {narrowSet.length > 0 && (
+        <ul className="mt-2 font-mono flex flex-wrap gap-x-4 gap-y-1" style={{ listStyle: 'none', padding: 0, fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+          {narrowSet.map((d, i) => (
+            <li key={d.row.sectorId} className="inline-flex items-center gap-1.5">
+              <PlateIndexBadge n={i + 1} />
+              {d.row.name} {(ownSpendShare(d.row) * 100).toFixed(0)}%
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   )
@@ -582,15 +584,18 @@ function MobileMesa({
     const h = mobileRowH(r.totalMxn, totalSpend)
     return { row: r, h, spendShare }
   })
-  const narrowSet = rows2
-
   return (
     <div>
       <div
         className="font-mono tabular-nums mb-2"
-        style={{ minHeight: READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
+        style={{ minHeight: MOBILE_READOUT_H, fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
       >
         {readoutText}
+      </div>
+      {/* Names the small right-hand figure on every row (the old circled-digit legend
+          mapped to nothing here — rows carry their names). */}
+      <div className="flex justify-end font-mono" style={{ height: MOBILE_HEADER_H, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+        {lang === 'es' ? 'parte del gasto' : 'share of spend'}
       </div>
       <div>
         {rows2.map(({ row, h, spendShare }) => {
@@ -649,13 +654,6 @@ function MobileMesa({
           )
         })}
       </div>
-      {narrowSet.length > 0 && (
-        <p className="mt-2 font-mono" style={{ fontSize: 13, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
-          {narrowSet
-            .map(({ row }, i) => `${CIRCLED[i] ?? '·'} ${row.name} ${(ownSpendShare(row) * 100).toFixed(0)}%`)
-            .join(' · ')}
-        </p>
-      )}
     </div>
   )
 }

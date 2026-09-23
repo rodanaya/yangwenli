@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { placeLabels, measureLabel, type LabelCandidate } from '@/lib/plateLabels'
+import { placeLabels, measureLabel, fitLabel, type LabelCandidate } from '@/lib/plateLabels'
 
 const BOUNDS = { x0: 0, y0: 0, x1: 400, y1: 200 }
 
@@ -93,5 +93,24 @@ describe('measureLabel', () => {
     expect(m.lines).toBeGreaterThan(1)
     expect(m.width).toBeLessThanOrEqual(80)
     expect(m.height).toBe(m.lines * 14)
+  })
+})
+
+// No canvas under vitest: widths come from the 0.6 × size monospace estimate
+// (11px → 6.6px per character).
+describe('fitLabel', () => {
+  it('keeps a name that fits on one line', () => {
+    expect(fitLabel('Fuels', '11px mono', 60, { pad: 6 })?.lines).toEqual(['Fuels'])
+  })
+  it('breaks at a space into two lines', () => {
+    const f = fitLabel('Food & Provisions', '11px mono', 80, { pad: 6 })
+    expect(f?.lines).toEqual(['Food &', 'Provisions'])
+    expect(f?.height).toBe(28)
+  })
+  it('returns null when a single word is wider than the column', () => {
+    expect(fitLabel('Infrastructure', '11px mono', 60, { pad: 6 })).toBeNull()
+  })
+  it('returns null past maxLines', () => {
+    expect(fitLabel('a b c d e f', '11px mono', 16, { maxLines: 2 })).toBeNull()
   })
 })

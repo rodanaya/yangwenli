@@ -27,7 +27,8 @@ import {
 } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
-import { measureLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
+import { measureLabel, fitLabel, placeLabels, type LabelBox, type LabelCandidate } from '@/lib/plateLabels'
+import { PlateIndexMark, PlateIndexBadge, PLATE_INDEX_MIN_COL } from './PlateIndex'
 import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -76,7 +77,9 @@ const LEFT_GUTTER = 34
 const RIGHT_PAD = 8
 const READOUT_H = 20
 const STRIP_H = 4
-const LABEL_H = 22
+// Room for a two-line 11px label under the strip (PARALLAX D7b § Change 5).
+const LABEL_H = 36
+const LABEL_LINE_H = 14
 const LEGEND_H = 16
 const TOP_N = 14
 const MOBILE_ROW_MIN_H = 24
@@ -84,6 +87,8 @@ const MOBILE_BREAKPOINT = 768
 const MOBILE_RUN_H = 420
 // The phone readout wraps: two 12px lines + the axis label (measured at 390).
 const MOBILE_READOUT_H = 55
+// Desktop legend: three 13px badge rows at 1024–1440 (measured, D7b § Change 5).
+const LEGEND_RESERVE_H = 67
 
 /** Mobile row height: spend share of a 420px run, floored at the 24px target. */
 function mobileRowH(shareFrac: number): number {
@@ -215,17 +220,17 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
   const mono = useMemo(() => monoStack(), [])
   const measuredFaces = useMemo(() => [`11px ${mono}`, `700 11px ${mono}`], [mono])
   const fontsReady = useFontsReady(measuredFaces)
-  const labelFits = useMemo(
+  // Up to two 11px lines, broken at spaces, each line + 6px inside the column.
+  const fitted = useMemo(
     () =>
-      laidOut.map(({ col, w }) => {
-        const name = lang === 'es' ? col.name_es : col.name_en
-        return measureLabel(name, `11px ${mono}`, Number.POSITIVE_INFINITY, 14).width + 6 <= w
-      }),
+      laidOut.map(({ col, w }) =>
+        fitLabel(lang === 'es' ? col.name_es : col.name_en, `11px ${mono}`, w, { maxLines: 2, pad: 6, lineHeight: LABEL_LINE_H }),
+      ),
     [mono, laidOut, lang],
   )
   const narrowSet = useMemo(
-    () => laidOut.filter(({ w }, i) => !labelFits[i] && w >= 3),
-    [laidOut, labelFits]
+    () => laidOut.filter(({ w }, i) => !fitted[i] && w >= 3),
+    [laidOut, fitted]
   )
 
   // Two computed annotations: tallest hatch + big-and-hot
@@ -260,6 +265,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
   )
 
   const hoveredCol = laidOut.find(({ col }) => col.key === hoveredKey)?.col ?? null
+  const hoveredNarrowIdx = hoveredKey === null ? -1 : narrowSet.findIndex(({ col }) => col.key === hoveredKey)
 
   const readoutText = hoveredCol
     ? lang === 'es'
@@ -276,7 +282,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
   const reserveH =
     typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
       ? MOBILE_READOUT_H + columns.reduce((acc, c) => acc + mobileRowH(totalValue > 0 ? c.total_value / totalValue : 0) + 1, 0)
-      : READOUT_H + svgH + LEGEND_H
+      : READOUT_H + svgH + LEGEND_RESERVE_H
   const hoveredIdx = hoveredKey === null ? -1 : laidOut.findIndex(({ col }) => col.key === hoveredKey)
 
   // ── The two computed annotations — HTML glyphs over the svg geometry ──
@@ -385,7 +391,10 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
             }}
           >
             {/* Polite live region: hover/focus fills it, AT hears it (a11y X3). */}
-            <span role="status" aria-live="polite" style={isMobile ? undefined : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+            <span className="inline-flex items-center gap-1.5 min-w-0">
+              {hoveredNarrowIdx >= 0 && <PlateIndexBadge n={hoveredNarrowIdx + 1} />}
+              <span role="status" aria-live="polite" style={isMobile ? undefined : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+            </span>
             <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase', ...(isMobile ? { flexBasis: '100%', textAlign: 'right' as const } : {}) }}>
               {lang === 'es' ? `riesgo promedio · indicador 0–${domainMax}%` : `mean risk · indicator 0–${domainMax}%`}
             </span>
@@ -467,7 +476,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 const isHovered = hoveredKey === col.key
                 const isDimmed = hoveredKey !== null && !isHovered
                 const name = lang === 'es' ? col.name_es : col.name_en
-                const showLabel = labelFits[laidOut.findIndex((d) => d.col.key === col.key)]
+                const fit = fitted[laidOut.findIndex((d) => d.col.key === col.key)]
 
                 return (
                   <g key={col.key}>
@@ -535,17 +544,19 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                       height={STRIP_H}
                       fill={color}
                     />
-                    {/* label — the full name, shown only when it fits */}
-                    {showLabel && (
+                    {/* label — the full name on one or two lines, only when it fits */}
+                    {fit && (
                       <text
-                        x={x + w / 2}
                         y={TOP_PAD + BAND_H + STRIP_H + 13}
                         textAnchor="middle"
                         fontSize={11}
                         fontFamily={mono}
                         fill={textColor}
+                        aria-label={name}
                       >
-                        {name}
+                        {fit.lines.map((line, li) => (
+                          <tspan key={li} x={x + w / 2} dy={li === 0 ? 0 : LABEL_LINE_H}>{line}</tspan>
+                        ))}
                       </text>
                     )}
                     {/* dagger */}
@@ -565,20 +576,13 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 )
               })}
 
-              {/* circled-number ticks for narrow columns */}
-              {narrowSet.map(({ col, x, w }, idx) => (
-                <text
-                  key={`narrow-${col.key}`}
-                  x={x + w / 2}
-                  y={TOP_PAD + BAND_H + STRIP_H + 14}
-                  textAnchor="middle"
-                  fontSize={13}
-                  fontFamily={mono}
-                  fill="var(--color-text-muted)"
-                >
-                  {String.fromCharCode(9312 + Math.min(idx, 19))}
-                </text>
-              ))}
+              {/* drawn index for narrow columns; under 16px a column holds no
+                  glyph (the legend keeps its index, the hover readout its name) */}
+              {narrowSet.map(({ col, x, w }, idx) =>
+                w >= PLATE_INDEX_MIN_COL ? (
+                  <PlateIndexMark key={`narrow-${col.key}`} n={idx + 1} cx={x + w / 2} cy={TOP_PAD + BAND_H + STRIP_H + 10} />
+                ) : null,
+              )}
 
               {/* medium threshold rule */}
               <line
@@ -679,12 +683,14 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 color: 'var(--color-text-muted)',
               }}
             >
-              {narrowSet
-                .map(
-                  ({ col }, idx) =>
-                    `${String.fromCharCode(9312 + Math.min(idx, 19))} ${lang === 'es' ? col.name_es : col.name_en}`
-                )
-                .join('  ·  ')}
+              <ul className="flex flex-wrap gap-x-4 gap-y-1" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {narrowSet.map(({ col }, idx) => (
+                  <li key={col.key} className="inline-flex items-center gap-1.5">
+                    <PlateIndexBadge n={idx + 1} />
+                    {lang === 'es' ? col.name_es : col.name_en}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
           </>)}

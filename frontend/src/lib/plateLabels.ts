@@ -168,3 +168,49 @@ export function measureLabel(
   for (const l of lines) widest = Math.max(widest, widthOf(l))
   return { width: Math.ceil(Math.min(widest, maxWidth)), height: lines.length * lineHeight, lines: lines.length }
 }
+
+export interface Fitted {
+  lines: string[]
+  /** Widest line, tracking included, pad excluded. */
+  width: number
+  height: number
+}
+
+/**
+ * Fit `text` into a column `maxWidth` px wide on at most `maxLines` lines,
+ * breaking greedily at spaces. Returns null when it cannot: a single word, or
+ * any line plus `pad`, wider than the column, or more lines than allowed.
+ * `tracking` is letter-spacing in em (added per character); `lineHeight`
+ * defaults to 1.25 × the font size. PARALLAX D7b § Change 5 (Q2).
+ */
+export function fitLabel(
+  text: string,
+  font: string,
+  maxWidth: number,
+  opts: { maxLines?: number; pad?: number; tracking?: number; lineHeight?: number } = {},
+): Fitted | null {
+  const { maxLines = 2, pad = 0, tracking = 0 } = opts
+  const size = parseFloat(font.replace(/^\s*\d{3}\s+/, '')) || 11
+  const lineHeight = opts.lineHeight ?? Math.round(size * 1.25)
+  const c = sharedCtx()
+  if (c) c.font = font
+  const widthOf = (s: string) => (c ? c.measureText(s).width : s.length * size * 0.6) + s.length * size * tracking
+  const fits = (s: string) => widthOf(s) + pad <= maxWidth
+
+  const lines: string[] = []
+  let line = ''
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const next = line ? `${line} ${word}` : word
+    if (fits(next)) {
+      line = next
+      continue
+    }
+    if (!line || !fits(word)) return null
+    lines.push(line)
+    line = word
+  }
+  if (line) lines.push(line)
+  if (lines.length === 0 || lines.length > maxLines) return null
+  const width = Math.max(...lines.map(widthOf))
+  return { lines, width: Math.ceil(width), height: lines.length * lineHeight }
+}
