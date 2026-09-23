@@ -159,5 +159,7 @@
     "unavailableSubnational": "The Spectral Register plots only the federal board — state and municipal institutions have incomparable sample sizes and procedures. Switch to Federal scope to see the plate.",
     "unavailableAll": "The Spectral Register plots only the federal board. Switch to Federal scope to see the plate."
   },
-  "methodologyLink": "Methodology"
+  "methodologyLink": "Methodology",
+  "zeroMoneyAtRisk": "No high- or critical-risk contracts",
+  "thinSample": "Below the {{n}}-contract reliability floor — the headline excludes it"
 }

@@ -177,7 +177,8 @@ function useTierByKey() {
 function TrendIcon({ direction }: { direction: string | null }) {
   const { t } = useTranslation('institutionleague')
   if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-accent-data" aria-label={t('trend.improving')} />
-  if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-risk-critical" aria-label={t('trend.declining')} />
+  // The API emits 'deteriorating' (compute_scorecards.py); 'declining' kept for old rows.
+  if (direction === 'deteriorating' || direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-risk-critical" aria-label={t('trend.declining')} />
   return <Minus className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
 }
 
@@ -370,7 +371,7 @@ function ActaCard({
               {tier.label}
             </span>
             <span className="text-text-muted text-[12px] font-mono tabular-nums tracking-wide">
-              {item.total_score.toFixed(1)}<span className="opacity-50"> / 100</span>
+              {item.total_score.toFixed(1)}<span> / 100</span>
             </span>
             {item.sector_name && (
               <span
@@ -446,7 +447,7 @@ function SortTh({
       className={`flex items-center gap-1 min-h-6 rounded-sm hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${active ? 'text-accent-data' : 'text-text-muted'} ${className}`}
       aria-label={t('sortAriaLabel', { label })}
     >
-      <span className="text-[12px] font-mono font-bold tracking-[0.1em] uppercase">{label}</span>
+      <span className="text-[12px] font-mono font-bold tracking-[0.06em] uppercase">{label}</span>
       {active ? (
         currentDir === 'desc' ? (
           <ArrowDown className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
@@ -1104,7 +1105,7 @@ export default function InstitutionLeague() {
                 <thead>
                   <tr className="border-b border-border bg-background/80">
                     <th scope="col" className="px-2 py-2 text-left w-12">
-                      <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
+                      <span className="text-[12px] font-mono font-bold text-text-muted uppercase tracking-[0.06em]">
                         #
                       </span>
                     </th>
@@ -1125,17 +1126,17 @@ export default function InstitutionLeague() {
                       thClassName="text-left w-24"
                     />
                     <th scope="col" className="px-2 py-2 text-center w-24">
-                      <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
+                      <span className="text-[12px] font-mono font-bold text-text-muted uppercase tracking-[0.06em]">
                         {t('columns.grade')}
                       </span>
                     </th>
                     <th scope="col" className="px-2 py-2 text-left hidden sm:table-cell w-28" title={pillarLegendTitle}>
-                      <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
+                      <span className="text-[12px] font-mono font-bold text-text-muted uppercase tracking-[0.06em]">
                         {t('columns.weakPillar')}
                       </span>
                     </th>
                     <th scope="col" className="px-2 py-2 text-center w-12 hidden sm:table-cell">
-                      <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
+                      <span className="text-[12px] font-mono font-bold text-text-muted uppercase tracking-[0.06em]">
                         {t('columns.trend')}
                       </span>
                     </th>
@@ -1145,7 +1146,7 @@ export default function InstitutionLeague() {
                       currentKey={sortBy}
                       currentDir={sortOrder}
                       onSort={handleSort}
-                      thClassName="text-left hidden md:table-cell w-24"
+                      thClassName="text-left hidden md:table-cell w-28"
                     />
                     <SortTh
                       label={t('columns.moneyAtRisk')}
@@ -1208,7 +1209,7 @@ export default function InstitutionLeague() {
                             </span>
                           </div>
                           {isWorstPerformer && (
-                            <div className="mt-0.5 text-[7px] font-mono font-bold uppercase tracking-[0.12em] text-risk-critical whitespace-nowrap leading-none">
+                            <div className="mt-0.5 text-[11px] font-mono font-bold uppercase tracking-[0.12em] text-risk-critical whitespace-nowrap leading-none">
                               {t('worstPerformerBadge')}
                             </div>
                           )}
@@ -1219,7 +1220,9 @@ export default function InstitutionLeague() {
                             the sector-palette accent (SECTOR_COLORS), the
                             tier color stays on the left border. */}
                         <td className="px-2 py-0 align-middle">
-                          <div className="flex items-center gap-2 min-w-0">
+                          {/* flex-wrap: the sector label and the n-marker drop under the
+                              name instead of summing into the column's min-content. */}
+                          <div className="flex flex-wrap items-center gap-x-2 min-w-0">
                             <button
                               type="button"
                               onClick={toggleExpand}
@@ -1246,8 +1249,14 @@ export default function InstitutionLeague() {
                               variant="name"
                               fullName
                               size="sm"
-                              className="py-1 text-[13px] text-text-secondary hover:text-text-primary hover:underline underline-offset-2 transition-colors font-medium whitespace-normal break-words leading-tight"
+                              className="flex-[1_1_12rem] min-w-0 py-1 text-[13px] text-text-secondary hover:text-text-primary hover:underline underline-offset-2 transition-colors font-medium whitespace-normal break-words leading-tight"
                             />
+                            {item.total_contracts != null && item.total_contracts < RELIABLE_MIN && (
+                              // Thin sample: listed, never hidden — the reader sees why it ranks here.
+                              <span className="font-mono text-[12px] tabular-nums text-text-muted whitespace-nowrap flex-shrink-0" title={t('thinSample', { n: RELIABLE_MIN })}>
+                                n = {item.total_contracts}<span className="sr-only">: {t('thinSample', { n: RELIABLE_MIN })}</span>
+                              </span>
+                            )}
                             {item.sector_name && (
                               <span className="text-text-muted text-[13px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">
                                 · {localizedSectorName(item.sector_name, lang)}
@@ -1289,7 +1298,7 @@ export default function InstitutionLeague() {
                               className="font-mono uppercase tabular-nums leading-none"
                               style={{
                                 color: tier.color,
-                                fontSize: isCritico ? '11px' : '10px',
+                                fontSize: '11px',
                                 fontWeight: 800,
                                 letterSpacing: '0.08em',
                               }}
@@ -1311,7 +1320,7 @@ export default function InstitutionLeague() {
 
                         {/* National percentile */}
                         <td className="px-2 py-0 hidden md:table-cell align-middle">
-                          <span className="text-text-secondary text-[13px] font-mono tabular-nums">
+                          <span className="text-text-secondary text-[13px] font-mono tabular-nums whitespace-nowrap">
                             {item.national_percentile !== null
                               ? t('percentileLabel', { n: Math.round(item.national_percentile * 100) })
                               : '--'}
@@ -1321,9 +1330,16 @@ export default function InstitutionLeague() {
                         {/* Money at risk — the exposure the integrity score can't see */}
                         <td className="px-2 py-0 text-right hidden lg:table-cell align-middle">
                           <span className="text-text-secondary text-[13px] font-mono tabular-nums">
-                            {item.money_at_risk_mxn != null && item.money_at_risk_mxn > 0
-                              ? formatCompactMXN(item.money_at_risk_mxn)
-                              : '—'}
+                            {item.money_at_risk_mxn == null
+                              ? '—'
+                              : item.money_at_risk_mxn > 0
+                                ? formatCompactMXN(item.money_at_risk_mxn)
+                                : (
+                                  // A zero is a fact (no high/critical-risk contracts), not missing data.
+                                  <span className="text-text-muted" title={t('zeroMoneyAtRisk')}>
+                                    0<span className="sr-only"> — {t('zeroMoneyAtRisk')}</span>
+                                  </span>
+                                )}
                           </span>
                         </td>
 

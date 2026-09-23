@@ -159,5 +159,7 @@
     "unavailableSubnational": "El Espectro del Padrón solo grafica el tablero federal — las instituciones estatales y municipales tienen tamaños de muestra y procedimientos incomparables. Cambia al alcance Federal para ver la placa.",
     "unavailableAll": "El Espectro del Padrón solo grafica el tablero federal. Cambia al alcance Federal para ver la placa."
   },
-  "methodologyLink": "Metodología"
+  "methodologyLink": "Metodología",
+  "zeroMoneyAtRisk": "Sin contratos de riesgo alto o crítico",
+  "thinSample": "Debajo del piso de confiabilidad de {{n}} contratos — el titular la excluye"
 }
