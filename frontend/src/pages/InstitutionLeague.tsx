@@ -24,7 +24,7 @@ import {
   type TierKey,
   type TierStyle,
 } from '@/lib/tiers'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Act } from '@/components/layout/Act'
 import {
@@ -41,7 +41,6 @@ import {
   ChevronDown,
   Trophy,
   Flag,
-  ExternalLink,
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS, getSectorName } from '@/lib/constants'
@@ -53,6 +52,7 @@ import { formatNumber, formatDualCurrency, formatCompactMXN } from '@/lib/utils'
 import { formatEntityName } from '@/lib/entity/format'
 import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import { useLeagueField } from '@/hooks/useLeagueField'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { SpectralRegister, SpectralRegisterUnavailableNote } from '@/components/institution/SpectralRegister'
 import { PillarBoleta, getWeakestPillar, pillarDeficitColor } from '@/components/institution/PillarBoleta'
 
@@ -209,11 +209,9 @@ function WeakPillarCell({ item }: { item: InstitutionScorecardItem }) {
 function ChampionCard({
   rank,
   item,
-  onNavigate,
 }: {
   rank: number
   item: InstitutionScorecardItem
-  onNavigate: (id: number) => void
 }) {
   const { t } = useTranslation('institutionleague')
   const getTier = useTierInfo()
@@ -221,10 +219,13 @@ function ChampionCard({
   const sectorColor = getSectorColorFromName(item.sector_name)
 
   return (
-    <button
-      onClick={() => onNavigate(item.institution_id)}
-      className="relative w-full text-left group transition-colors flex items-center gap-4 px-3 py-2.5 border-b border-border/40 last:border-b-0 hover:bg-background-elevated/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/40"
-      aria-label={t('podiumAriaLabel', { rank, name: item.institution_name, score: item.total_score })}
+    <EntityIdentityChip
+      type="institution"
+      id={item.institution_id}
+      name={item.institution_name}
+      variant="name"
+      className="relative w-full text-left group transition-colors flex items-center gap-4 px-3 py-2.5 hover:bg-background-elevated/60"
+      ariaLabel={t('podiumAriaLabel', { rank, name: formatEntityName('institution', item.institution_name, 'full'), score: item.total_score })}
     >
       {/* Rank — quiet mono caption */}
       <span
@@ -260,7 +261,7 @@ function ChampionCard({
       >
         {tier.label}
       </span>
-    </button>
+    </EntityIdentityChip>
   )
 }
 
@@ -276,11 +277,9 @@ function ChampionCard({
 function ActaCard({
   rank,
   item,
-  onNavigate,
 }: {
   rank: number
   item: InstitutionScorecardItem
-  onNavigate: (id: number) => void
 }) {
   const { t, i18n } = useTranslation('institutionleague')
   const lang = i18n.language
@@ -304,19 +303,21 @@ function ActaCard({
   }
 
   return (
-    <button
-      onClick={() => onNavigate(item.institution_id)}
-      className="relative w-full text-left group transition-all
+    <EntityIdentityChip
+      type="institution"
+      id={item.institution_id}
+      name={item.institution_name}
+      variant="name"
+      className="relative block w-full text-left group transition-colors
         border border-border bg-background-elevated/40
         hover:bg-risk-critical/8
-        hover:border-risk-critical/40
-        focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-risk-critical)]/50"
+        hover:border-risk-critical/40"
       style={{
         borderLeft: '4px solid var(--color-risk-critical)',
         borderTopLeftRadius: 0,
         borderBottomLeftRadius: 0,
       }}
-      aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
+      ariaLabel={t('rowAriaLabel', { rank, name: formatEntityName('institution', item.institution_name, 'full'), score: item.total_score, tier: tier.label })}
     >
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 sm:gap-6 px-4 sm:px-6 py-4">
 
@@ -402,7 +403,7 @@ function ActaCard({
           <ChevronRight className="h-4 w-4 opacity-60 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
         </div>
       </div>
-    </button>
+    </EntityIdentityChip>
   )
 }
 
@@ -411,12 +412,16 @@ function ActaCard({
 // Sort header button
 // ---------------------------------------------------------------------------
 
-function SortHeader({
+// The shared SortHeaderTh sets its own sans 13px label; this table's headers
+// are mono bold, so the page keeps its own th with the same contract:
+// aria-sort on the <th>, a 24px ringed <button> inside.
+function SortTh({
   label,
   sortKey,
   currentKey,
   currentDir,
   onSort,
+  thClassName = '',
   className = '',
 }: {
   label: string
@@ -424,14 +429,21 @@ function SortHeader({
   currentKey: SortKey
   currentDir: 'asc' | 'desc'
   onSort: (k: SortKey) => void
+  thClassName?: string
   className?: string
 }) {
   const { t } = useTranslation('institutionleague')
   const active = sortKey === currentKey
   return (
+    <th
+      scope="col"
+      className={`px-2 py-2 ${thClassName}`}
+      aria-sort={active ? (currentDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+    >
     <button
+      type="button"
       onClick={() => onSort(sortKey)}
-      className={`flex items-center gap-1 hover:text-text-primary transition-colors ${active ? 'text-accent-data' : 'text-text-muted'} ${className}`}
+      className={`flex items-center gap-1 min-h-6 rounded-sm hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${active ? 'text-accent-data' : 'text-text-muted'} ${className}`}
       aria-label={t('sortAriaLabel', { label })}
     >
       <span className="text-[12px] font-mono font-bold tracking-[0.1em] uppercase">{label}</span>
@@ -445,6 +457,7 @@ function SortHeader({
         <ArrowUpDown className="h-3 w-3 flex-shrink-0 opacity-40" aria-hidden="true" />
       )}
     </button>
+    </th>
   )
 }
 
@@ -461,7 +474,6 @@ export default function InstitutionLeague() {
   const pillarLegendTitle = INSTITUTION_PILLARS
     .map((p) => `${p.letter}=${pillarLabel(p, lang)}`)
     .join(' · ')
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const getTier = useTierInfo()
   const getTierByKey = useTierByKey()
@@ -646,12 +658,19 @@ export default function InstitutionLeague() {
   // TabBar always reflects a valid tab.
   const tabParam = searchParams.get('tab') || ''
   const activeTab = ['ranking', 'reporte'].includes(tabParam) ? tabParam : 'ranking'
-  const setTab = (tab: string) => updateParams({ tab, page: undefined })
+  const tabHref = (tab: string) => {
+    const next = new URLSearchParams(searchParams)
+    next.delete('page')
+    if (tab === 'ranking') next.delete('tab')
+    else next.set('tab', tab)
+    const qs = next.toString()
+    return qs ? `/institutions?${qs}` : '/institutions'
+  }
 
   if (activeTab === 'reporte') {
     return (
       <div className="min-h-screen bg-background text-text-primary">
-        <TabBar activeTab={activeTab} setTab={setTab} />
+        <TabBar activeTab={activeTab} hrefFor={tabHref} />
         <ErrorBoundary fallback={null}>
           <Suspense fallback={<div className="flex items-center justify-center h-64 text-text-muted text-sm">{t('loadingShort')}</div>}>
             <ReportCard />
@@ -665,7 +684,7 @@ export default function InstitutionLeague() {
 
   return (
     <div className="min-h-screen bg-background text-text-primary">
-      <TabBar activeTab={activeTab} setTab={setTab} />
+      <TabBar activeTab={activeTab} hrefFor={tabHref} />
       <div data-frame className="max-w-[1010px] mx-auto px-4 sm:px-6 pt-6">
         {/* Utility header — same pattern as /aria, /workspace, /cases,
             /sectors. Institution Ranking is a working surface
@@ -768,7 +787,7 @@ export default function InstitutionLeague() {
                       role="radio"
                       aria-checked={scope === sc}
                       onClick={() => updateParams({ scope: sc === 'federal' ? undefined : sc, all: undefined, page: '1' })}
-                      className={`px-3 py-1 text-[12px] font-mono uppercase tracking-[0.12em] transition-colors ${
+                      className={`px-3 py-1 text-[12px] font-mono uppercase tracking-[0.12em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
                         i < 2 ? 'border-r border-border' : ''
                       } ${
                         scope === sc
@@ -878,12 +897,7 @@ export default function InstitutionLeague() {
             </div>
             <div className="space-y-1">
               {redFlagItems.slice(0, 5).map((item, idx) => (
-                <ActaCard
-                  key={item.institution_id}
-                  rank={idx + 1}
-                  item={item}
-                  onNavigate={(id) => navigate(`/institutions/${id}`, { state: { institutionName: item.institution_name } })}
-                />
+                <ActaCard key={item.institution_id} rank={idx + 1} item={item} />
               ))}
             </div>
           </section>
@@ -908,19 +922,15 @@ export default function InstitutionLeague() {
                 {t('champions.headline')}
               </h2>
             </div>
-            <div
-              className="rounded-sm border border-border/60 bg-background-elevated/20 divide-y divide-border/40"
-              role="list"
-            >
+            <ol className="rounded-sm border border-border/60 bg-background-elevated/20 divide-y divide-border/40">
               {championItems.slice(0, 5).map((item, idx) => (
-                <ChampionCard
-                  key={item.institution_id}
-                  rank={idx + 1}
-                  item={item}
-                  onNavigate={(id) => navigate(`/institutions/${id}`, { state: { institutionName: item.institution_name } })}
-                />
+                // inline maxWidth: the Day 2c `main :where(li)` measure is
+                // unlayered, so a max-w-none utility would lose to it.
+                <li key={item.institution_id} style={{ maxWidth: 'none' }}>
+                  <ChampionCard rank={idx + 1} item={item} />
+                </li>
               ))}
-            </div>
+            </ol>
           </section>
         )}
 
@@ -943,6 +953,9 @@ export default function InstitutionLeague() {
             <input
               id="league-search"
               type="search"
+              name="q"
+              autoComplete="off"
+              spellCheck={false}
               value={search}
               onChange={(e) => updateParams({ q: e.target.value || undefined, page: '1' })}
               placeholder={t('filters.searchPlaceholder')}
@@ -963,7 +976,7 @@ export default function InstitutionLeague() {
             <button
               type="button"
               onClick={() => updateParams({ grade: undefined, page: '1' })}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
                 !activeTierName
                   ? 'bg-accent-data/15 border-accent-data/40 text-accent-data'
                   : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
@@ -983,7 +996,7 @@ export default function InstitutionLeague() {
                     const gradeVal = grades ? grades[0] : undefined
                     updateParams({ grade: gradeVal || undefined, page: '1' })
                   }}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-all whitespace-nowrap flex items-center gap-1.5"
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   style={{
                     borderColor: isActive ? tier.color : 'var(--color-border)',
                     backgroundColor: isActive ? `${tier.color}1f` : 'transparent',
@@ -1011,7 +1024,7 @@ export default function InstitutionLeague() {
             <button
               type="button"
               onClick={() => updateParams({ sector: undefined, page: '1' })}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
                 !sectorFilter
                   ? 'bg-accent-data/15 border-accent-data/40 text-accent-data'
                   : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
@@ -1027,7 +1040,7 @@ export default function InstitutionLeague() {
                   key={s.value}
                   type="button"
                   onClick={() => updateParams({ sector: isActive ? undefined : s.value, page: '1' })}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-all whitespace-nowrap flex items-center gap-1.5"
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[13px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   style={{
                     borderColor: isActive ? color : 'var(--color-border)',
                     backgroundColor: isActive ? `${color}1f` : 'transparent',
@@ -1087,7 +1100,7 @@ export default function InstitutionLeague() {
 
           {items.length > 0 && (
             <div className="overflow-x-auto rounded-sm border border-border">
-              <table className="w-full text-sm min-w-[900px]" role="grid" aria-label={t('tableAriaLabel')}>
+              <table className="w-full text-sm min-w-[900px]" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border bg-background/80">
                     <th scope="col" className="px-2 py-2 text-left w-12">
@@ -1095,24 +1108,22 @@ export default function InstitutionLeague() {
                         #
                       </span>
                     </th>
-                    <th scope="col" className="px-2 py-2 text-left">
-                      <SortHeader
-                        label={t('columns.institution')}
-                        sortKey="institution_name"
-                        currentKey={sortBy}
-                        currentDir={sortOrder}
-                        onSort={handleSort}
-                      />
-                    </th>
-                    <th scope="col" className="px-2 py-2 text-left w-24">
-                      <SortHeader
-                        label={t('columns.score')}
-                        sortKey="total_score"
-                        currentKey={sortBy}
-                        currentDir={sortOrder}
-                        onSort={handleSort}
-                      />
-                    </th>
+                    <SortTh
+                      label={t('columns.institution')}
+                      sortKey="institution_name"
+                      currentKey={sortBy}
+                      currentDir={sortOrder}
+                      onSort={handleSort}
+                      thClassName="text-left"
+                    />
+                    <SortTh
+                      label={t('columns.score')}
+                      sortKey="total_score"
+                      currentKey={sortBy}
+                      currentDir={sortOrder}
+                      onSort={handleSort}
+                      thClassName="text-left w-24"
+                    />
                     <th scope="col" className="px-2 py-2 text-center w-24">
                       <span className="text-[13px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.grade')}
@@ -1128,26 +1139,22 @@ export default function InstitutionLeague() {
                         {t('columns.trend')}
                       </span>
                     </th>
-                    <th scope="col" className="px-2 py-2 text-left hidden md:table-cell w-24">
-                      <SortHeader
-                        label={t('columns.percentile')}
-                        sortKey="national_percentile"
-                        currentKey={sortBy}
-                        currentDir={sortOrder}
-                        onSort={handleSort}
-                      />
-                    </th>
-                    <th scope="col" className="px-2 py-2 text-right hidden lg:table-cell w-28">
-                      <SortHeader
-                        label={t('columns.moneyAtRisk')}
-                        sortKey="money_at_risk"
-                        currentKey={sortBy}
-                        currentDir={sortOrder}
-                        onSort={handleSort}
-                        className="justify-end"
-                      />
-                    </th>
-                    <th scope="col" className="px-2 py-2 w-8" aria-label="Dossier" />
+                    <SortTh
+                      label={t('columns.percentile')}
+                      sortKey="national_percentile"
+                      currentKey={sortBy}
+                      currentDir={sortOrder}
+                      onSort={handleSort}
+                      thClassName="text-left hidden md:table-cell w-24"
+                    />
+                    <SortTh
+                      label={t('columns.moneyAtRisk')}
+                      sortKey="money_at_risk"
+                      currentKey={sortBy}
+                      currentDir={sortOrder}
+                      onSort={handleSort}
+                      thClassName="text-right hidden lg:table-cell w-28" className="justify-end"
+                    />
                   </tr>
                 </thead>
                 <tbody>
@@ -1169,27 +1176,15 @@ export default function InstitutionLeague() {
                         ? '#dc2626'
                         : tier.color
                     const isExpanded = expandedRowId === item.institution_id
-                    const toggleExpand = (e: React.MouseEvent) => {
-                      e.stopPropagation()
-                      setExpandedRowId(isExpanded ? null : item.institution_id)
-                    }
+                    const panelId = `boleta-${item.institution_id}`
+                    const toggleExpand = () => setExpandedRowId(isExpanded ? null : item.institution_id)
                     return (
                       <React.Fragment key={item.institution_id}>
                       <tr
                         data-wf-row={item.institution_id}
-                        className={`border-b border-border hover:bg-background-elevated transition-colors cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] ${
+                        className={`border-b border-border hover:bg-background-elevated transition-colors group ${
                           isWorstPerformer || isCritico ? 'bg-risk-critical/10' : ''
                         } ${isExpanded ? 'bg-background-elevated' : ''}`}
-                        onClick={() => navigate(`/institutions/${item.institution_id}`, { state: { institutionName: item.institution_name } })}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            navigate(`/institutions/${item.institution_id}`, { state: { institutionName: item.institution_name } })
-                          }
-                        }}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
                         style={{
                           borderLeft: `${isCritico ? '4px' : '3px'} solid ${tier.color}`,
                           height: '44px',
@@ -1228,9 +1223,10 @@ export default function InstitutionLeague() {
                             <button
                               type="button"
                               onClick={toggleExpand}
-                              className="flex-shrink-0 p-0.5 rounded hover:bg-background-elevated text-text-muted hover:text-text-secondary transition-colors"
+                              className="flex-shrink-0 inline-flex items-center justify-center min-h-6 min-w-6 rounded hover:bg-background-elevated text-text-muted hover:text-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                               aria-label={isExpanded ? t('collapseRow') : t('expandRow')}
                               aria-expanded={isExpanded}
+                              aria-controls={isExpanded ? panelId : undefined}
                             >
                               <ChevronDown
                                 className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -1243,11 +1239,15 @@ export default function InstitutionLeague() {
                               style={{ backgroundColor: getSectorColorFromName(item.sector_name) }}
                               title={localizedSectorName(item.sector_name, lang)}
                             />
-                            <span
-                              className="text-[13px] text-text-secondary group-hover:text-text-primary transition-colors font-medium whitespace-normal break-words leading-tight"
-                            >
-                              {formatEntityName('institution', item.institution_name, 'full')}
-                            </span>
+                            <EntityIdentityChip
+                              type="institution"
+                              id={item.institution_id}
+                              name={item.institution_name}
+                              variant="name"
+                              fullName
+                              size="sm"
+                              className="py-1 text-[13px] text-text-secondary hover:text-text-primary hover:underline underline-offset-2 transition-colors font-medium whitespace-normal break-words leading-tight"
+                            />
                             {item.sector_name && (
                               <span className="text-text-muted text-[13px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">
                                 · {localizedSectorName(item.sector_name, lang)}
@@ -1327,25 +1327,14 @@ export default function InstitutionLeague() {
                           </span>
                         </td>
 
-                        {/* Dossier icon link */}
-                        <td className="px-1 py-0 align-middle">
-                          <Link
-                            to={`/institutions/${item.institution_id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="shrink-0 p-1 rounded text-text-muted hover:text-accent-data hover:bg-accent-data/10 transition-colors inline-flex"
-                            title={t('openDossier')}
-                            aria-label={t('openDossier')}
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                          </Link>
-                        </td>
                       </tr>
                       {isExpanded && (
                         <tr
+                          id={panelId}
                           className="border-b border-border bg-background/60"
                           style={{ borderLeft: `3px solid ${tier.color}` }}
                         >
-                          <td colSpan={9} className="px-5 py-4">
+                          <td colSpan={8} className="px-5 py-4">
                             <PillarBoleta item={item} />
                           </td>
                         </tr>
@@ -1365,9 +1354,10 @@ export default function InstitutionLeague() {
               aria-label={t('pagination.ariaLabel')}
             >
               <button
+                type="button"
                 disabled={page <= 1}
                 onClick={() => updateParams({ page: String(page - 1) })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-background border border-border text-text-secondary text-sm hover:bg-background-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-background border border-border text-text-secondary text-sm hover:bg-background-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                 aria-label={t('pagination.previousAriaLabel')}
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -1377,9 +1367,10 @@ export default function InstitutionLeague() {
                 {t('pagination.pageOf', { page, total: totalPages })}
               </span>
               <button
+                type="button"
                 disabled={page >= totalPages}
                 onClick={() => updateParams({ page: String(page + 1) })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-background border border-border text-text-secondary text-sm hover:bg-background-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-background border border-border text-text-secondary text-sm hover:bg-background-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                 aria-label={t('pagination.nextAriaLabel')}
               >
                 {t('pagination.next')}
@@ -1415,30 +1406,31 @@ export default function InstitutionLeague() {
 // Tab bar — shared between ranking/reporte views
 // ---------------------------------------------------------------------------
 
-function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string) => void }) {
+// URL tabs are links (history, Cmd-click); the active one carries aria-current.
+function TabBar({ activeTab, hrefFor }: { activeTab: string; hrefFor: (tab: string) => string }) {
   const { t } = useTranslation('institutionleague')
   const tabs = [
     { id: 'ranking', label: t('tabs.ranking') },
     { id: 'reporte', label: t('tabs.reporte') },
   ]
   return (
-    <div className="border-b border-border bg-background/50 px-4 sm:px-6">
+    <nav aria-label={t('tabs.ariaLabel')} className="border-b border-border bg-background/50 px-4 sm:px-6">
       <div className="max-w-[1010px] mx-auto flex items-center gap-0">
         {tabs.map((tab) => (
-          <button
+          <Link
             key={tab.id}
-            onClick={() => setTab(tab.id)}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            to={hrefFor(tab.id)}
+            aria-current={activeTab === tab.id ? 'page' : undefined}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 ${
               activeTab === tab.id
-                ? 'border-accent text-accent'
-                : 'border-transparent text-text-secondary hover:text-text-secondary'
+                ? 'border-accent text-accent-hover'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
-          </button>
+          </Link>
         ))}
       </div>
-    </div>
+    </nav>
   )
 }
-

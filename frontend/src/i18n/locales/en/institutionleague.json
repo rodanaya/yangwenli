@@ -142,7 +142,8 @@
   "tabs": {
     "ranking": "Ranking",
     "fichas": "Scorecards",
-    "reporte": "Report"
+    "reporte": "Report",
+    "ariaLabel": "Institution views"
   },
   "exposure": {
     "kicker": "Money-at-Risk",

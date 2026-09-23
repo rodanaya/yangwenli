@@ -142,7 +142,8 @@
   "tabs": {
     "ranking": "Ranking",
     "fichas": "Fichas",
-    "reporte": "Reporte"
+    "reporte": "Reporte",
+    "ariaLabel": "Vistas de instituciones"
   },
   "exposure": {
     "kicker": "Dinero en riesgo",
