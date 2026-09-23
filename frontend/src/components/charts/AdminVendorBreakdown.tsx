@@ -67,8 +67,10 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
           // Single row — name (flex, absorbs the slack) · bar · value. The bar
           // and value cluster on the right at a fixed width, so there's no dead
           // gutter between a short left-aligned bar and a far-right value.
-          <div key={v.vendor_id ?? i} className="group flex items-center gap-3">
-            <div className="min-w-0 flex-1">
+          // Phone: the name + facts take the full width, the bar and value drop below
+          // (a fixed-width DotBar left ~70px for the name at 390).
+          <div key={v.vendor_id ?? i} className="group flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1">
+            <div className="min-w-0 basis-full sm:basis-0 sm:flex-1">
               {v.vendor_id != null ? (
                 <EntityIdentityChip
                   type="vendor"
@@ -97,7 +99,7 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
               dotR={3}
               dotGap={8}
             />
-            <span className="font-mono tabular-nums text-xs text-text-muted shrink-0 w-[78px] text-right">
+            <span className="font-mono tabular-nums text-xs text-text-muted shrink-0 w-[78px] text-right ml-auto sm:ml-0">
               {formatCompactMXN(v.total_mxn)}
             </span>
           </div>

@@ -186,7 +186,7 @@ export function OfficialTenureBands({ movers, isEs }: OfficialTenureBandsProps) 
         <span>{isEs ? 'Funcionario' : 'Officer'}</span>
         <span />
         <span className="hidden sm:block text-right">{isEs ? 'Valor' : 'Value'}</span>
-        <span className="text-right">AD%</span>
+        <span className="text-right">{isEs ? 'AD%' : 'DA%'}</span>
         {/* Spelled out; the soft hyphen lets it break inside the narrow phone column. */}
         <span className="text-right tracking-normal sm:tracking-[0.04em] leading-tight">{isEs ? 'Insti\u00ADtuciones' : 'Insti\u00ADtutions'}</span>
       </div>

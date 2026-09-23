@@ -120,7 +120,7 @@ export function AdminSectorDeviation({ rows, termBenchmarkFraction, isEs, onExpo
         {sorted.map((r) => (
           <BenchmarkRow
             key={r.sectorId}
-            label={`${r.name} · AD ${Math.round(r.daPct)}%`}
+            label={`${r.name} · ${isEs ? 'AD' : 'DA'} ${Math.round(r.daPct)}%`}
             value={r.hrFraction}
             benchmark={termBenchmarkFraction}
             benchmarkLabel={benchmarkLabel}

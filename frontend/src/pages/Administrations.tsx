@@ -508,7 +508,7 @@ export default function Administrations() {
                 )}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
+            <div className="flex flex-wrap items-center gap-3 flex-shrink-0 max-w-full">
               <FuentePill source="COMPRANET" verified={true} />
               <MetodologiaTooltip
                 title={t('narrative')}
@@ -683,11 +683,12 @@ export default function Administrations() {
                     </div>
 
                     {/* ── SUPPORT · Single Bid ── */}
-                    <div className="flex items-center gap-3 pt-2 border-t border-border/20">
+                    {/* Wraps on a phone: label + average on one line, the sparkline row below. */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 border-t border-border/20">
                       <span className="w-28 shrink-0 text-[12px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
                         {isEs ? 'LICITACIÓN ÚNICA' : 'SINGLE BID'}
                       </span>
-                      <div className="flex-1 min-w-0">
+                      <div className="order-last basis-full sm:order-none sm:basis-auto sm:flex-1 min-w-0">
                         {multiYear ? (
                           <SparkRow ink="var(--color-text-muted)" reading={`${formatValue(first.single_bid_pct, 'pct')}→${formatValue(last.single_bid_pct, 'pct')}`}>
                             <EditorialSparkline data={years} yKey="single_bid_pct" colorToken="text-muted" kind="line" height={24} decorative />
@@ -867,8 +868,8 @@ export default function Administrations() {
           {/* ── § III · EL EXPEDIENTE — chronological case-file spine (R3) ── */}
           <div className="border-t border-border/40 px-4 sm:px-5 py-4" id="expediente">
             <div className="mb-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+              <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                <div className="min-w-0 flex-1 basis-[280px]">
                   <ChapterKicker numeral="III" es="EL EXPEDIENTE" en="THE CASE FILE" isEs={isEs} adminTag={adminTag} tagColor={folderColor} />
                   <h3 className="text-sm font-mono text-text-primary">
                     {t('keyEvents', { admin: selectedDisplay, start: selectedMeta.dataStart, end: selectedMeta.end > DATA_LAST_YEAR ? '' : selectedMeta.end })}
