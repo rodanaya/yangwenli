@@ -54,14 +54,16 @@ export const TIER_STYLES: Record<TierKey, TierStyle> = {
   Excelente: {
     key: 'Excelente',
     color: '#3d5a80',  // steel blue (deep) — measured, not a certification
-    ink: '#3d5a80',  // already AA: 6.71 page / 6.26 elevated / 5.44 tint
+    // PARALLAX D9b § Change 8: the ink darkens toward L* 29 so Excelente and
+    // Satisfactorio read as two inks in type (ΔE76 2.1 → 15.7).
+    ink: '#2c4566',  // L* 28.8 · 9.28 page / 8.65 elevated / 8.02 tint
     bg: 'rgba(61,90,128,0.10)',
     border: 'rgba(61,90,128,0.32)',
   },
   Satisfactorio: {
     key: 'Satisfactorio',
     color: '#5e7fa8',  // steel blue (light) — one step up the cool ramp
-    ink: '#3f5f86',  // 6.25 / 5.83 / 5.25
+    ink: '#466994',  // L* 43.6 · 5.38 page / 5.02 elevated / 4.81 tint (4.52 tint on elevated)
     bg: 'rgba(94,127,168,0.10)',
     border: 'rgba(94,127,168,0.32)',
   },
