@@ -43,6 +43,8 @@ interface MesaCategory {
   avg_risk: number
   direct_award_pct: number
   single_bid_pct: number
+  /** high + critical share of contracts (0–100), from /categories/summary */
+  high_risk_pct?: number
 }
 
 interface ArqueoMesaCategoriasProps {
@@ -60,6 +62,7 @@ interface Column {
   avg_risk: number
   direct_award_pct: number
   single_bid_pct: number
+  high_risk_pct: number
   isRemainder: boolean
 }
 
@@ -138,15 +141,17 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
       avg_risk: c.avg_risk,
       direct_award_pct: c.direct_award_pct,
       single_bid_pct: c.single_bid_pct,
+      high_risk_pct: c.high_risk_pct ?? 0,
       isRemainder: false,
     }))
 
     if (tail.length) {
+      // Contract-weighted, like the 14 per-category means it stands beside
+      // (each is a mean over its own contracts) — PARALLAX D7b § Change 4.
       const tailValueSum = tail.reduce((s, c) => s + c.total_value, 0)
-      const weightedRiskSum = tail.reduce((s, c) => s + c.avg_risk * c.total_value, 0)
-      const tailAvgRisk = tailValueSum > 0 ? weightedRiskSum / tailValueSum : 0
-      const tailDaSum = tail.reduce((s, c) => s + c.direct_award_pct * c.total_value, 0)
-      const tailSbSum = tail.reduce((s, c) => s + c.single_bid_pct * c.total_value, 0)
+      const tailContracts = tail.reduce((s, c) => s + c.total_contracts, 0)
+      const perContract = (pick: (c: MesaCategory) => number) =>
+        tailContracts > 0 ? tail.reduce((s, c) => s + pick(c) * c.total_contracts, 0) / tailContracts : 0
       topCols.push({
         key: 'remainder',
         category_id: null,
@@ -154,9 +159,10 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
         name_en: `the other ${tail.length}`,
         sector_code: 'otros',
         total_value: tailValueSum,
-        avg_risk: tailAvgRisk,
-        direct_award_pct: tailValueSum > 0 ? tailDaSum / tailValueSum : 0,
-        single_bid_pct: tailValueSum > 0 ? tailSbSum / tailValueSum : 0,
+        avg_risk: perContract((c) => c.avg_risk),
+        direct_award_pct: perContract((c) => c.direct_award_pct),
+        single_bid_pct: perContract((c) => c.single_bid_pct),
+        high_risk_pct: perContract((c) => c.high_risk_pct ?? 0),
         isRemainder: true,
       })
     }
@@ -165,6 +171,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
   }, [categories])
 
   const totalValue = useMemo(() => columns.reduce((s, c) => s + c.total_value, 0), [columns])
+  const remainderCol = columns.find((c) => c.isRemainder)
 
   // y-domain: 0..max(50, snap5(maxRisk*100*1.08))
   const domainMax = useMemo(() => {
@@ -286,25 +293,41 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
   if (tallest && tallestFound) {
     const name = lang === 'es' ? tallest.name_es : tallest.name_en
     const pct = (tallest.avg_risk * 100).toFixed(1)
-    annoText.tallest = lang === 'es' ? ['mayor riesgo —', `${name} · ${pct}%`] : ['highest risk —', `${name} · ${pct}%`]
+    // "on the table": the plate is the top 14 + the rest; the h2 above keeps
+    // the catalog-wide superlative (PARALLAX D7b § Change 4, B5).
+    annoText.tallest = lang === 'es' ? ['mayor riesgo en la mesa —', `${name} · ${pct}%`] : ['highest risk on the table —', `${name} · ${pct}%`]
     candidates.push({ id: 'tallest', x: tallestFound.x + tallestFound.w / 2, y: tallestTop, width: annoWidth(annoText.tallest), height: 2 * ANNO_LINE_H, above: 14, below: 4 })
   }
   const bigFound = bigAndHot ? laidOut.find(({ col }) => col.key === bigAndHot.key) : undefined
   if (bigAndHot && bigFound) {
     const name = lang === 'es' ? bigAndHot.name_es : bigAndHot.name_en
     annoText.bigAndHot = lang === 'es' ? ['grande y caliente —', name] : ['big and hot —', name]
-    const w = annoWidth(annoText.bigAndHot)
-    // Start-anchored just inside the column, sitting under the waterline.
-    candidates.push({ id: 'bigAndHot', x: bigFound.x + Math.min(8, bigFound.w / 2) + w / 2, y: yFor(bigAndHot.avg_risk * 100) + 4 + 2 * ANNO_LINE_H, width: w, height: 2 * ANNO_LINE_H, above: 0 })
+    // Seated above the column top with a leader down, never inside the hatch.
+    candidates.push({ id: 'bigAndHot', x: bigFound.x + bigFound.w / 2, y: yFor(bigAndHot.avg_risk * 100), width: annoWidth(annoText.bigAndHot), height: 2 * ANNO_LINE_H, above: 14 })
   }
   const thresholdLabel = lang === 'es' ? 'UMBRAL MEDIO · 25% (modelo)' : 'MEDIUM THRESHOLD · 25% (model)'
   const thresholdW = measureLabel(thresholdLabel, `700 ${annoFont}`, Number.POSITIVE_INFINITY, ANNO_LINE_H).width + thresholdLabel.length * 11 * 0.05
   const daggerFound = daggerCol ? laidOut.find(({ col }) => col.key === daggerCol.key) : undefined
+  // The threshold label sits on the rule at the right end — unless a column's
+  // hatch (its waterline included) reaches into that box, as the remainder's
+  // 25.3% did. Then it slides to the first column start where the box is clear
+  // (PARALLAX D7b § Change 4, S5); if none is, it keeps the right end.
+  const thresholdBoxAt = (x0: number): LabelBox => ({ x0, y0: mediumRuleY - 16, x1: x0 + thresholdW + 2, y1: mediumRuleY + 2 })
+  const hatchHits = (b: LabelBox) =>
+    laidOut.some(({ col, x, w }) => x < b.x1 && x + w > b.x0 && yFor(col.avg_risk * 100) - 1 < b.y1)
+  const endX0 = width - RIGHT_PAD - thresholdW - 2
+  const thresholdX0 = [endX0, ...laidOut.map(({ x }) => x + 4)]
+    .find((x0) => x0 + thresholdW + 2 <= width - RIGHT_PAD && !hatchHits(thresholdBoxAt(x0))) ?? endX0
+  const thresholdEnd = thresholdX0 === endX0
+  const thresholdBox = thresholdBoxAt(thresholdX0)
   const obstacles: LabelBox[] = [
     { x0: 0, y0: 0, x1: LEFT_GUTTER, y1: svgH },
-    { x0: width - RIGHT_PAD - thresholdW - 2, y0: mediumRuleY - 16, x1: width, y1: mediumRuleY + 2 },
+    thresholdBox,
   ]
   if (daggerFound) obstacles.push({ x0: daggerFound.x, y0: TOP_PAD, x1: daggerFound.x + 12, y1: TOP_PAD + 16 })
+  // Every column's hatch is an obstacle: an annotation never prints on a hatch
+  // (a wide label over a narrow column used to land on its neighbour's).
+  for (const { col, x, w } of laidOut) obstacles.push({ x0: x, y0: yFor(col.avg_risk * 100), x1: x + w, y1: TOP_PAD + BAND_H })
   const placed = isMobile ? [] : placeLabels(candidates, obstacles, { x0: 0, y0: 0, x1: width, y1: TOP_PAD + BAND_H })
 
   const caption =
@@ -361,7 +384,8 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            <span style={isMobile ? undefined : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
+            {/* Polite live region: hover/focus fills it, AT hears it (a11y X3). */}
+            <span role="status" aria-live="polite" style={isMobile ? undefined : { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{readoutText}</span>
             <span style={{ flexShrink: 0, fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)', textTransform: 'uppercase', ...(isMobile ? { flexBasis: '100%', textAlign: 'right' as const } : {}) }}>
               {lang === 'es' ? `riesgo promedio · indicador 0–${domainMax}%` : `mean risk · indicator 0–${domainMax}%`}
             </span>
@@ -469,13 +493,10 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                       tabIndex={0}
                       role="button"
                       aria-label={
-                        col.isRemainder
-                          ? lang === 'es'
-                            ? 'agregado — sin dossier'
-                            : 'aggregate — no dossier'
-                          : lang === 'es'
-                            ? `${col.name_es} — ${formatCompactMXN(col.total_value)}, riesgo ${(col.avg_risk * 100).toFixed(1)}%`
-                            : `${col.name_en} — ${formatCompactMXN(col.total_value)}, risk ${(col.avg_risk * 100).toFixed(1)}%`
+                        (lang === 'es'
+                          ? `${col.name_es} — ${formatCompactMXN(col.total_value)}, riesgo ${(col.avg_risk * 100).toFixed(1)}% · alto riesgo ${col.high_risk_pct.toFixed(0)}% · adjudicación directa ${col.direct_award_pct.toFixed(0)}%`
+                          : `${col.name_en} — ${formatCompactMXN(col.total_value)}, risk ${(col.avg_risk * 100).toFixed(1)}% · high-risk ${col.high_risk_pct.toFixed(0)}% · direct award ${col.direct_award_pct.toFixed(0)}%`) +
+                        (col.isRemainder ? (lang === 'es' ? ' · agregado, sin dossier' : ' · aggregate, no dossier') : '')
                       }
                       onMouseEnter={() => setHoveredKey(col.key)}
                       onMouseLeave={() => setHoveredKey(null)}
@@ -565,16 +586,15 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                 y1={mediumRuleY}
                 x2={width - RIGHT_PAD}
                 y2={mediumRuleY}
-                stroke={RISK_COLORS.high}
+                stroke={RISK_COLORS.medium}
                 strokeWidth={1.5}
                 strokeDasharray="5 3"
-                strokeOpacity={0.85}
                 pointerEvents="none"
               />
               <text
-                x={width - RIGHT_PAD}
+                x={thresholdEnd ? width - RIGHT_PAD : thresholdX0}
                 y={mediumRuleY - 4}
-                textAnchor="end"
+                textAnchor={thresholdEnd ? 'end' : 'start'}
                 fontSize={11}
                 fontFamily={mono}
                 fontWeight={700}
@@ -610,6 +630,12 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                   <line x1={cx} y1={y1} x2={cx} y2={y2} stroke="var(--color-text-muted)" strokeWidth={0.8} strokeOpacity={0.7} pointerEvents="none" />
                 )
               })()}
+              {placed.some((p) => p.id === 'bigAndHot') && bigFound && (() => {
+                const p = placed.find((q) => q.id === 'bigAndHot')!
+                const cx = bigFound.x + bigFound.w / 2
+                const top = yFor(bigFound.col.avg_risk * 100)
+                return <line x1={cx} y1={p.box.y1 + 2} x2={cx} y2={top} stroke="var(--color-text-muted)" strokeWidth={0.8} strokeOpacity={0.7} pointerEvents="none" />
+              })()}
             </svg>
             {placed.map((p) => (
               <div
@@ -620,7 +646,7 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
                   left: p.box.x0,
                   top: p.box.y0,
                   width: p.box.x1 - p.box.x0,
-                  textAlign: p.id === 'bigAndHot' && p.align === 'center' ? 'left' : p.align,
+                  textAlign: p.align,
                   fontFamily: MONO,
                   fontSize: 11,
                   lineHeight: `${ANNO_LINE_H}px`,
@@ -679,6 +705,11 @@ export function ArqueoMesaCategorias({ categories, lang }: ArqueoMesaCategoriasP
               : `† ${daggerCol.name_en}: ${daggerCol.direct_award_pct.toFixed(0)}% direct award — the highest on the table`}
           </div>
         )}
+        <div style={{ fontFamily: 'var(--font-family-mono, monospace)', fontSize: 13, color: 'var(--color-text-muted)' }}>
+          {lang === 'es'
+            ? `riesgo medio por contrato${remainderCol ? ` · «${remainderCol.name_es}» = ponderado por contrato` : ''}`
+            : `mean risk per contract${remainderCol ? ` · "${remainderCol.name_en}" = contract-weighted` : ''}`}
+        </div>
 
       </div>
     </PlateFrame>

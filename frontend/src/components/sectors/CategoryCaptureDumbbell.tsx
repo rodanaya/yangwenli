@@ -28,10 +28,10 @@ import { useState, useMemo, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/client'
-import { SECTOR_COLORS, SECTOR_TEXT_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, HHI_CONCENTRATED } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatVendorName } from '@/lib/vendor/formatName'
-import { formatCompactMXN } from '@/lib/utils'
+import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { useMeasuredWidth, useFontsReady } from '@/hooks/useMeasuredWidth'
 import { measureLabel } from '@/lib/plateLabels'
 
@@ -241,14 +241,19 @@ function DumbbellTooltip({ data, isEs }: { data: TooltipData; isEs: boolean }) {
       {/* Total */}
       <div className="mt-2 pt-2 border-t border-border font-mono tabular-nums text-[12px] text-text-muted">
         {isEs ? 'Mercado total:' : 'Total market:'} {formatCompactMXN(row.total_value)}
-        {' · '}{row.total_contracts} {isEs ? 'contratos' : 'contracts'}
+        {' · '}{formatNumber(row.total_contracts)} {isEs ? 'contratos' : 'contracts'}
       </div>
 
       {/* Top-3 combined + HHI — the fragmentation reading on inspection */}
       {row.top3_share_pct > 0 && (
         <div className="mt-1 font-mono tabular-nums text-[12px] text-text-muted">
           {isEs ? 'Top-3 combinado:' : 'Top-3 combined:'} {row.top3_share_pct.toFixed(0)}%
-          {row.hhi > 0 && <>{' · HHI '}{Math.round(row.hhi)}</>}
+          {row.hhi > 0 && <>{' · HHI '}{formatNumber(Math.round(row.hhi * 10000))}</>}
+        </div>
+      )}
+      {row.hhi > 0 && (
+        <div className="font-mono tabular-nums text-[12px] text-text-muted">
+          {isEs ? `HHI 0–10,000 · ≥ ${formatNumber(HHI_CONCENTRATED)} = concentrado` : `HHI 0–10,000 · ≥ ${formatNumber(HHI_CONCENTRATED)} = concentrated`}
         </div>
       )}
 
@@ -318,7 +323,9 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
             sector_code: sectorCode,
             color: SECTOR_COLORS[sectorCode] ?? SECTOR_COLORS.otros,
             total_value: cats.total_value,
-            total_contracts: cats.total_contracts,
+            // The fast endpoint returns total_contracts 0; the summary row
+            // carries the true count (PARALLAX D7b § Change 4, S6).
+            total_contracts: cat.total_contracts,
             top1,
             top2,
             gap,
@@ -395,7 +402,9 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
 
   // The ceiling label ends 4px left of the dashed ceiling (measured in the
   // resolved mono face once the fonts are in).
-  const ceilingText = isEs ? `techo de concentración · ${maxTop1.toFixed(0)}%` : `concentration ceiling · ${maxTop1.toFixed(0)}%`
+  const ceilingText = isEs
+    ? `techo de concentración · ${maxTop1.toFixed(0)}% · 12 mayores por gasto`
+    : `concentration ceiling · ${maxTop1.toFixed(0)}% · 12 largest by spend`
   const monoStack = useMemo(
     () => (fontsReady && typeof document !== 'undefined'
       ? getComputedStyle(document.documentElement).getPropertyValue('--font-family-mono').trim() || 'monospace'
@@ -452,9 +461,10 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
       onMouseMove={handleMouseMove}
     >
       {isLoading || !captureRows ? skeleton : rows.length === 0 ? empty : (<>
-      {/* Anchor stat — the sharpest thesis on the page: the most dominant vendor
-          in ANY federal category holds barely 1 peso in N. Computed from the live
-          max, never hardcoded, so it stays honest across rescores. */}
+      {/* Anchor stat: the most dominant vendor among the 12 largest categories
+          by spend holds barely 1 peso in N (26 of 71 categories ≥ 1B exceed this
+          ceiling — it is a claim about the big 12, not the catalog). Computed
+          from the live max, never hardcoded. */}
       <div className="flex items-baseline gap-3 mb-3">
         <span
           className="tabular-nums shrink-0"
@@ -472,8 +482,8 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
         </span>
         <span className="text-[13px] leading-snug text-text-secondary" style={{ maxWidth: '46ch' }}>
           {isEs
-            ? `el proveedor más dominante de cualquier categoría federal controla apenas 1 peso de cada ${fragDenom} — el resto se reparte entre miles`
-            : `the most dominant vendor in any federal category controls barely 1 peso in ${fragDenom} — the rest splits across thousands`}
+            ? `el proveedor más dominante entre las 12 categorías más grandes controla apenas 1 peso de cada ${fragDenom} — el resto se reparte entre miles`
+            : `the most dominant vendor among the 12 largest categories controls barely 1 peso in ${fragDenom} — the rest splits across thousands`}
         </span>
       </div>
 
@@ -575,9 +585,10 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                           y1={cy}
                           x2={Math.max(x1, x2)}
                           y2={cy}
-                          stroke={row.color}
+                          // text-muted at full ink so the mark clears 3:1 (a11y X4);
+                          // the dots keep the sector colour.
+                          stroke="var(--color-text-muted)"
                           strokeWidth={connectorThickness(row.total_value)}
-                          strokeOpacity={0.4}
                           strokeLinecap="round"
                         />
                       )}
