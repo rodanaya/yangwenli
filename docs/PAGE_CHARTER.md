@@ -72,7 +72,7 @@ An optional `§ HALLAZGOS` card row (2–4 finding cards: claim + number + refer
 |---|---|---|
 | Share-of-total / "how concentrated" | Concentration ribbon / proportion bar | `ConcentrationExhibit` · `DotBar` (single, N=22) |
 | Ranked comparison ("who's biggest/worst") | Ledger of ranked dots | `DotStrip` (multi-row, N=50/R=3/gap=8, from `@/components/charts/editorial`) |
-| Trend over time | Term/year sparkline | `EditorialSparkline` · `AdminCycleSmallMultiples` |
+| Trend over time | Term/year sparkline | `EditorialSparkline` |
 | Distribution vs threshold | Threshold / era template | `DataPullquote` threshold/era family |
 | Single anchor number | Playfair Italic 800 stat | `StatRow` · `ProseStat` · `DataPullquote` |
 | Two-cohort split | Dumbbell / swimlane | `CategoryCaptureDumbbell` · `CategorySectorSwimlane` |

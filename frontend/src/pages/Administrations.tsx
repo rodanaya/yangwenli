@@ -8,13 +8,15 @@
  *
  * Layout:
  *   Compact folio header (no sledgehammer)
- *   █ AdminSummaryCard — switcher + identity + fingerprint + verdict
- *   § I   La Trayectoria   — yearly chart + anomalies + inflation note
- *   § II  La Huella Sectorial — sector risk table
- *   § III El Expediente    — documented scandals + key events
- *   § IV  Los Beneficiarios — top vendors + top sectors (+ top-100 drill-down)
- *   § V   Los Compradores  — top spending institutions for the term (the buyers)
- *   § VI  El Ciclo del Sexenio — term-year trajectory + sector scorecard
+ *   ACT I  · SeamStrip — high-risk line across four handovers + handover cards
+ *   ACT II · the file for the selected administration (?admin=)
+ *     █ AdminSummaryCard — switcher + identity + fingerprint + verdict
+ *     § I   La Trayectoria   — yearly panels + anomalies + inflation note + § VOLUMEN
+ *     § II  La Desviación Sectorial — sector risk vs the term's own average
+ *     § III El Expediente    — documented scandals + key events
+ *     § IV  Los Beneficiarios — top vendors + top sectors + top-100 ledger
+ *     § V   Los Compradores  — top spending institutions for the term (the buyers)
+ *   ACT III · AdminSurvivorsSlope «Los Sobrevivientes» + OfficialTenureBands
  *   compare tool (collapsed) · PageFooter
  */
 
