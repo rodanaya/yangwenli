@@ -36,9 +36,6 @@ const ExploreLegacy = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
 const VendorDossier = lazy(() => import('@/pages/VendorDossier'))
-// InstitutionProfile import removed M5 2026-05-18: route replaced by InstitutionThread.
-// File preserved on disk at pages/InstitutionProfile.tsx for reference.
-// const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
 const InstitutionThread = lazy(() => import('@/pages/InstitutionThread'))
 const InstitutionDossier = lazy(() => import('@/pages/InstitutionDossier'))
 const OfficialProfile = lazy(() => import('@/pages/OfficialProfile'))
@@ -70,7 +67,6 @@ const Administrations = lazy(() => import('@/pages/Administrations'))
 //   Investigation/Case       → /aria
 //   YearInReview             → /
 //   VendorCompare            → /sectors
-//   InstitutionCompare       → /institutions
 //   CorruptionClusters       → /atlas
 //   ProcurementCalendar      → /
 const Executive = lazy(() => import('@/pages/Executive'))
@@ -545,9 +541,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              {/* M5 2026-05-18: InstitutionThread promoted to canonical dossier.
-                  InstitutionProfile (2,312-line card grid) retired from this
-                  route; file preserved on disk for reference only. */}
+              {/* M5 2026-05-18: InstitutionThread promoted to canonical dossier. */}
               <Route
                 path="print/institutions/:id"
                 element={
@@ -638,7 +632,7 @@ function App() {
               <Route path="stories/the-decade-of-risk" element={<Navigate to="/stories/el-sexenio-del-riesgo" replace />} />
               <Route path="stories/the-300k-threshold" element={<Navigate to="/stories/el-umbral-de-los-300k" replace />} />
 
-              {/* v1.0 launch cut — InstitutionCompare deferred to v1.1. */}
+              {/* Retired compare route — redirects to the league. */}
               <Route path="institutions/compare" element={<Navigate to="/institutions" replace />} />
 
               {/* Route aliases — singular/plural spelling variants */}

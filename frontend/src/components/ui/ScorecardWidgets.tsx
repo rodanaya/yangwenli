@@ -1,6 +1,6 @@
 /**
  * Shared scorecard UI components for the Procurement Integrity grading system.
- * Used by ReportCard, VendorProfile, and InstitutionProfile pages.
+ * Used by ReportCard and the vendor dossier.
  *
  * The underlying backend still returns 10 letter grades (S/A/B+/B/C+/C/D/D-/
  * F/F-), but the UI renders 5 global-audience tier labels (Excelente/
@@ -209,7 +209,7 @@ export function VendorScorecardCard({ sc }: { sc: VendorScorecardData }) {
 }
 
 // ---------------------------------------------------------------------------
-// InstitutionScorecardCard — compact pillar card for InstitutionProfile
+// InstitutionScorecardCard — compact pillar card (currently unused)
 // ---------------------------------------------------------------------------
 
 export interface InstitutionScorecardData {

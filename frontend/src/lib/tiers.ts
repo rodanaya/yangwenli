@@ -2,17 +2,16 @@
  * Shared 5-tier transparency system.
  *
  * Single source of truth for the Excelente / Satisfactorio / Regular /
- * Deficiente / Critico tiers used by InstitutionLeague + InstitutionScorecards
- * (and any future entity scorecard pages).
+ * Deficiente / Critico tiers used by InstitutionLeague, the institution
+ * dossier and ReportCard.
  *
  * Backend still emits the 10-letter grade ladder (S/A/B+/B/C+/C/D/D-/F/F-);
  * `gradeToTierKey` collapses it for UI use. Labels are not stored here —
  * each consumer pulls them from i18n via `t('tiers.<key>')`.
  *
  * NOTE: PILLAR_MAXES remain page-local for now — three sources of truth
- * disagree on per-pillar max values (ScorecardWidgets all /20, InstitutionLeague
- * O:20/P:25/V:20/R:15/E:20, InstitutionScorecards O:25/P:25/V:20/R:20/E:10).
- * Reconciliation requires backend verification — see Batch C critique.
+ * disagreed on per-pillar max values; `lib/institution-pillars.ts` is now
+ * the authoritative mapping.
  */
 
 export type TierKey =

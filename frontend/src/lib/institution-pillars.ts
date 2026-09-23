@@ -14,7 +14,7 @@
  *   pillar_external   Vendor Independence        (10)   ← NOT "external"
  *
  * The June 2026 audit found FOUR divergent, wrong label/max tables across
- * InstitutionLeague, InstitutionScorecards and ScorecardWidgets — every one
+ * InstitutionLeague, a retired scorecards page and ScorecardWidgets — every one
  * mislabeled and several mis-normalized (e.g. pillar_external ÷20 when its max
  * is 10, halving the Vendor-Independence axis for every institution). This
  * constant is now the only authoritative mapping; all consumers import it so
