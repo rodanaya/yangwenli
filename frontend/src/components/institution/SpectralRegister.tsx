@@ -48,6 +48,7 @@ const LABEL_LINE = 14
 const LABEL_PAD = 2 // px of paper around the text
 const LEADER_GAP = 8 // px between a stroke's top and its label
 const NOTE_FONT = '11px "EB Garamond", Georgia, serif'
+const NOTE_LINE = 13
 
 // The plate's 4 bands — boundaries at 40/60/80 only. There is no drawn
 // Critico band: under the reformed absolute grading no federal buyer
@@ -91,7 +92,9 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
 
     const scores = items.map((i) => i.total_score)
     const domainMin = Math.floor(Math.min(...scores)) - 2
-    const domainMax = 86
+    // The full scale (PARALLAX D9b § Change 6): the Excellent band is 80–100,
+    // wide enough to seat its own empty-band note.
+    const domainMax = 100
     const span = Math.max(1, domainMax - domainMin)
     const maxExposure = Math.max(...items.map((i) => i.money_at_risk_mxn ?? 0), 1)
     const innerW = Math.max(100, width - PAD_L - PAD_R)
@@ -100,7 +103,8 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
 
     const strokes: PlacedStroke[] = items.map((it) => {
       const money = it.money_at_risk_mxn ?? 0
-      const h = Math.max(3, MAX_STROKE_H * Math.sqrt(money / maxExposure))
+      // A true zero is not a floored stroke: h = 0 draws a rug tick under the baseline.
+      const h = money > 0 ? Math.max(3, MAX_STROKE_H * Math.sqrt(money / maxExposure)) : 0
       const tierKey = gradeToTierKey(it.grade)
       return { ...it, x: xScale(it.total_score), h, tierKey, color: TIER_STYLES[tierKey].color }
     })
@@ -117,12 +121,19 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
     const columns = isMobile ? [150, 200] : [200, 260]
     const bounds: LabelBox = { x0: 0, y0: isMobile ? 2 : 20, x1: width, y1: BASELINE_Y - 2 }
     const taken: LabelBox[] = []
-    // The empty-Excellent note is svg text the callouts must not cover.
-    if (!strokes.some((s) => s.tierKey === 'Excelente')) {
-      const noteRight = xScale(Math.min(100, domainMax)) - 8
-      const noteY = BASELINE_Y / 2 + 6
-      const noteW = fitLabel(emptyNote, NOTE_FONT, 2000, { maxLines: 1 })?.width ?? emptyNote.length * 6
-      taken.push({ x0: noteRight - noteW - 4, y0: noteY - 12, x1: noteRight + 2, y1: noteY + 4 })
+    // The empty-Excellent note is seated INSIDE the Excellent band (right-
+    // anchored, wrapped to the band's width); on phones it is a caption line
+    // under the plate instead. The callouts must not cover it.
+    let note: { x: number; y: number; lines: string[] } | null = null
+    if (!isMobile && !strokes.some((s) => s.tierKey === 'Excelente')) {
+      const bandW = xScale(100) - xScale(80) - 12
+      const fitted = fitLabel(emptyNote, NOTE_FONT, bandW, { maxLines: 3, lineHeight: NOTE_LINE })
+      if (fitted) {
+        const noteRight = xScale(100) - 6
+        const noteTop = BASELINE_Y / 2 - (fitted.lines.length * NOTE_LINE) / 2
+        note = { x: noteRight, y: noteTop, lines: fitted.lines }
+        taken.push({ x0: noteRight - fitted.width - 4, y0: noteTop - 2, x1: noteRight + 2, y1: noteTop + fitted.lines.length * NOTE_LINE + 4 })
+      }
     }
     const callouts: Callout[] = []
     for (const s of candidates) {
@@ -157,7 +168,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
     // the empty-band annotation.
     const excelenteCount = strokes.filter((s) => s.tierKey === 'Excelente').length
 
-    return { strokes, callouts, domainMin, domainMax, xScale, maxExposure, excelenteCount, innerW }
+    return { strokes, callouts, domainMin, domainMax, xScale, maxExposure, excelenteCount, innerW, note }
     // fontsReady: re-measure once the label face has landed (Day 4 lesson).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, width, isMobile, fontsReady, emptyNote])
@@ -187,8 +198,8 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
   if (!items.length) return null
 
   const captionText = lang === 'en'
-    ? `${formatNumber(totalScored)} federal institutions evaluated · median ${median != null ? median.toFixed(1) : '—'} · ${formatNumber(failingCount)} at Deficient or worse · stroke height = money at risk`
-    : `${formatNumber(totalScored)} instituciones federales evaluadas · mediana ${median != null ? median.toFixed(1) : '—'} · ${formatNumber(failingCount)} en deficiencia o peor · altura del trazo = dinero en riesgo`
+    ? `${formatNumber(totalScored)} federal institutions evaluated · median ${median != null ? median.toFixed(1) : '—'} · ${formatNumber(failingCount)} at Deficient or worse · stroke height = money at risk · a tick under the line = no high- or critical-risk contracts`
+    : `${formatNumber(totalScored)} instituciones federales evaluadas · mediana ${median != null ? median.toFixed(1) : '—'} · ${formatNumber(failingCount)} en deficiencia o peor · altura del trazo = dinero en riesgo · marca bajo la línea = sin contratos de riesgo alto o crítico`
 
   return (
     <figure
@@ -224,7 +235,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
 
       <div ref={containerRef} className="relative w-full" style={{ minHeight: HEIGHT }}>
         {layout && (() => {
-          const { strokes, callouts, domainMin, domainMax, xScale, excelenteCount } = layout
+          const { strokes, callouts, domainMin, domainMax, xScale, excelenteCount, note } = layout
           const ariaLabel = lang === 'en'
             ? `Spectral register: ${totalScored} federal institutions plotted by integrity score, ${domainMin} to ${domainMax} (further right is better). Stroke height is money at risk. Median score ${median != null ? median.toFixed(1) : 'unknown'}. ${failingCount} institutions operate at Deficient or worse. ${excelenteCount === 0 ? 'No institution reaches the Excellent band.' : `${excelenteCount} institutions reach the Excellent band.`}`
             : `Espectro del padrón: ${totalScored} instituciones federales trazadas por puntaje de integridad, de ${domainMin} a ${domainMax} (más a la derecha, mejor). La altura del trazo es el dinero en riesgo. Mediana ${median != null ? median.toFixed(1) : 'desconocida'}. ${failingCount} instituciones operan en deficiencia o peor. ${excelenteCount === 0 ? 'Ninguna institución alcanza la banda Excelente.' : `${excelenteCount} instituciones alcanzan la banda Excelente.`}`
@@ -255,7 +266,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
             const x0 = xScale(bandFrom)
             const x1 = xScale(bandTo)
             const style = TIER_STYLES[band.tier]
-            const isEmptyExcelente = band.tier === 'Excelente' && excelenteCount === 0
+            const isEmptyExcelente = band.tier === 'Excelente' && excelenteCount === 0 && note != null
             return (
               <g key={band.tier}>
                 <rect x={x0} y={16} width={Math.max(0, x1 - x0)} height={BASELINE_Y - 16} fill={style.bg} />
@@ -284,17 +295,20 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
                     {t(`tiers.${band.tier}`)}
                   </text>
                 )}
-                {isEmptyExcelente && (
+                {isEmptyExcelente && note && (
                   <text
-                    x={x1 - 8}
-                    y={BASELINE_Y / 2 + 6}
+                    x={note.x}
+                    y={note.y}
                     textAnchor="end"
                     fontFamily='"EB Garamond", Georgia, serif'
                     fontStyle="normal"
                     fontSize={11}
                     fill="var(--color-text-muted)"
+                    data-empty-note
                   >
-                    {emptyNote}
+                    {note.lines.map((line, i) => (
+                      <tspan key={line} x={note.x} dy={i === 0 ? NOTE_LINE - 2 : NOTE_LINE}>{line}</tspan>
+                    ))}
                   </text>
                 )}
               </g>
@@ -307,6 +321,23 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
           {/* Strokes — the register itself. Zero <circle> marks by design. */}
           {strokes.map((s) => {
             const isHover = s.institution_id === hoverId
+            if (s.h === 0) {
+              // No high/critical-risk money: a 1px rug tick under the baseline,
+              // never a stroke that reads as a small amount.
+              return (
+                <line
+                  key={s.institution_id}
+                  x1={s.x}
+                  x2={s.x}
+                  y1={BASELINE_Y + 1}
+                  y2={BASELINE_Y + 5}
+                  stroke="var(--color-text-muted)"
+                  strokeWidth={1}
+                  opacity={isHover ? 1 : 0.8}
+                  data-zero-stroke
+                />
+              )
+            }
             return (
               <line
                 key={s.institution_id}
@@ -316,7 +347,8 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
                 y2={BASELINE_Y - s.h}
                 stroke={s.color}
                 strokeWidth={isMobile ? 1.75 : 1.25}
-                opacity={isHover ? 0.95 : 0.55}
+                opacity={isHover ? 1 : 0.8}
+                data-stroke
               />
             )
           })}
@@ -370,7 +402,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
           {/* Axis ticks */}
           {[domainMin, 40, 60, 80, domainMax]
             .filter((v, idx, arr) => arr.indexOf(v) === idx)
-            // a tick within 28px of the previous one is dropped (80/86 on phones)
+            // a tick within 28px of the previous one is dropped
             .filter((v, idx, arr) => idx === 0 || xScale(v) - xScale(arr[idx - 1]) >= 28)
             .map((tick) => (
             <text
@@ -444,6 +476,23 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
           </div>
         )}
       </div>
+
+      {/* Phones: the band names return as a one-line legend in their inks,
+          and the empty-Excellent note is a caption line, not svg text. */}
+      {isMobile && layout && (
+        <ul className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono uppercase" style={{ fontSize: 12, letterSpacing: '0.06em' }} data-band-legend aria-label={t('plate.bandsLegend')}>
+          {BAND_STOPS.map((band) => (
+            <li key={band.tier} className="whitespace-nowrap" style={{ color: TIER_STYLES[band.tier].ink, fontWeight: 700 }}>
+              {t(`tiers.${band.tier}`)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {isMobile && layout && layout.excelenteCount === 0 && (
+        <p className="mt-1" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13, color: 'var(--color-text-muted)' }}>
+          {t('plate.emptyExcelenteBand')}
+        </p>
+      )}
 
       {/* Plate caption — serif agate line, absorbs the old HeroStatRail
           numbers + the ScoreHistogram median/total facts. */}

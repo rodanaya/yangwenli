@@ -157,7 +157,9 @@
     "tooltipScore": "Puntuación {{score}}/100",
     "tooltipContracts": "{{n}} contratos",
     "unavailableSubnational": "El Espectro del Padrón solo grafica el tablero federal — las instituciones estatales y municipales tienen tamaños de muestra y procedimientos incomparables. Cambia al alcance Federal para ver la placa.",
-    "unavailableAll": "El Espectro del Padrón solo grafica el tablero federal. Cambia al alcance Federal para ver la placa."
+    "unavailableAll": "El Espectro del Padrón solo grafica el tablero federal. Cambia al alcance Federal para ver la placa.",
+    "emptyExcelenteBand": "Ninguna institución federal alcanza la banda Excelente (80–100).",
+    "bandsLegend": "Bandas, de izquierda a derecha"
   },
   "methodologyLink": "Metodología",
   "zeroMoneyAtRisk": "Sin contratos de riesgo alto o crítico",

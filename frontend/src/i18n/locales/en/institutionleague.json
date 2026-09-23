@@ -157,7 +157,9 @@
     "tooltipScore": "Score {{score}}/100",
     "tooltipContracts": "{{n}} contracts",
     "unavailableSubnational": "The Spectral Register plots only the federal board — state and municipal institutions have incomparable sample sizes and procedures. Switch to Federal scope to see the plate.",
-    "unavailableAll": "The Spectral Register plots only the federal board. Switch to Federal scope to see the plate."
+    "unavailableAll": "The Spectral Register plots only the federal board. Switch to Federal scope to see the plate.",
+    "emptyExcelenteBand": "No federal institution reaches the Excellent band (80–100).",
+    "bandsLegend": "Bands, left to right"
   },
   "methodologyLink": "Methodology",
   "zeroMoneyAtRisk": "No high- or critical-risk contracts",
