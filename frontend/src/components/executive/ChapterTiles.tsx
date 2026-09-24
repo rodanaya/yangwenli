@@ -145,7 +145,7 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
   headlineSpend: string
   headlineSpendUSD: string | null
 }) {
-  const spendCurrencyLabel = 'MXN'
+  const spendCurrencyLabel = lang === 'es' ? 'billones MXN' : 'MXN'
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
 
@@ -172,7 +172,7 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
           </div>
         )}
         <div className="font-mono text-[12px] tracking-[0.1em] text-text-muted mt-1">
-          {spendCurrencyLabel} {lang === 'en' ? '· over 23 years' : '· en 23 años'}
+          {spendCurrencyLabel} <span className="whitespace-nowrap">{lang === 'en' ? '· over 23 years' : '· en 23 años'}</span>
         </div>
         <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
           {lang === 'en' ? 'ANALYZED SPEND' : 'GASTO ANALIZADO'}
@@ -188,7 +188,7 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
           })}
         </svg>
         <div className="mt-2.5 pt-1.5 text-[13px] font-mono text-text-muted leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
-          {lang === 'en' ? '3.05M contracts · 12 sectors · post-outlier' : '3.05M contratos · 12 sectores · post-atípicos'}
+          <span className="whitespace-nowrap">{lang === 'en' ? '3.05M contracts' : '3.05M contratos'}</span>{' · '}<span className="whitespace-nowrap">{lang === 'en' ? '12 sectors' : '12 sectores'}</span>{' · '}<span className="whitespace-nowrap">{lang === 'en' ? 'post-outlier' : 'post-atípicos'}</span>
         </div>
       </ColumnFrame>
 
@@ -210,7 +210,7 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
           75<span className="text-[26px] align-baseline" style={{ fontFamily: 'inherit' }}>%</span>
         </div>
         <div className="font-mono text-[12px] tracking-[0.1em] text-text-muted mt-1.5">
-          {lang === 'en' ? '· vs the EU 10% line' : '· vs la línea UE del 10%'}
+          {lang === 'en' ? <>· vs the EU <span className="whitespace-nowrap">10% line</span></> : <>· vs la línea UE <span className="whitespace-nowrap">del 10%</span></>}
         </div>
         <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
           {lang === 'en' ? 'DIRECT AWARDS' : 'ADJUDICACIÓN DIRECTA'}
@@ -257,12 +257,12 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
           {formatNumber(stats.highCriticalCount)}
         </div>
         <div className="font-mono text-[13px] tracking-[0.04em] tabular-nums mt-1" style={{ color: RISK_TEXT_COLORS.high }}>
-          {formatCompactMXN(stats.valueAtRisk)} {lang === 'en' ? 'at stake' : 'en juego'} · {stats.valueAtRiskPct}%
+          <span className="whitespace-nowrap">{formatCompactMXN(stats.valueAtRisk)}</span> {lang === 'en' ? 'at stake' : 'en juego'}{' · '}<span className="whitespace-nowrap">{stats.valueAtRiskPct}%</span>
         </div>
         <div className="font-mono text-[12px] tracking-[0.1em] text-text-muted mt-1">
           {lang === 'en'
-            ? `· ${stats.highCriticalRate}% of contracts · calibration target 2–15%`
-            : `· ${stats.highCriticalRate}% de contratos · meta de calibración 2–15%`}
+            ? <>· <span className="whitespace-nowrap">{stats.highCriticalRate}% of contracts</span> · calibration target <span className="whitespace-nowrap">2–15%</span></>
+            : <>· <span className="whitespace-nowrap">{stats.highCriticalRate}% de contratos</span> · meta de calibración <span className="whitespace-nowrap">2–15%</span></>}
         </div>
         <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
           {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}
@@ -273,10 +273,10 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
           <div style={{ width: '16.20%', background: '#a06820', opacity: 0.40 }} />
           <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
         </div>
-        <div className="flex items-center justify-between gap-2 text-[11px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
-          <span style={{ color: RISK_TEXT_COLORS.critical }}><span aria-hidden="true" style={{ color: RISK_COLORS.critical }}>●</span> {lang === 'en' ? 'crit' : 'crít'} 5%</span>
-          <span style={{ color: RISK_TEXT_COLORS.high }}><span aria-hidden="true" style={{ color: RISK_COLORS.high }}>●</span> {lang === 'en' ? 'high' : 'alto'} 6%</span>
-          <span style={{ color: RISK_TEXT_COLORS.medium }}><span aria-hidden="true" style={{ color: RISK_COLORS.medium }}>●</span> {lang === 'en' ? 'med' : 'med'} 16%</span>
+        <div data-tile-legend className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[11px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+          <span className="whitespace-nowrap" style={{ color: RISK_TEXT_COLORS.critical }}><span aria-hidden="true" style={{ color: RISK_COLORS.critical }}>●</span> {lang === 'en' ? 'crit' : 'crít'} 5%</span>
+          <span className="whitespace-nowrap" style={{ color: RISK_TEXT_COLORS.high }}><span aria-hidden="true" style={{ color: RISK_COLORS.high }}>●</span> {lang === 'en' ? 'high' : 'alto'} 6%</span>
+          <span className="whitespace-nowrap" style={{ color: RISK_TEXT_COLORS.medium }}><span aria-hidden="true" style={{ color: RISK_COLORS.medium }}>●</span> {lang === 'en' ? 'med' : 'med'} 16%</span>
         </div>
       </ColumnFrame>
 
@@ -298,7 +298,9 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
           0.785
         </div>
         <div className="font-mono text-[12px] tracking-[0.1em] text-text-muted mt-1.5">
-          {lang === 'en' ? '· test set · random = 0.5 · perfect = 1.0' : '· conjunto de prueba · azar = 0.5 · perfecto = 1.0'}
+          {lang === 'en'
+            ? <>· test set · <span className="whitespace-nowrap">random = 0.5</span> · <span className="whitespace-nowrap">perfect = 1.0</span></>
+            : <>· conjunto de prueba · <span className="whitespace-nowrap">azar = 0.5</span> · <span className="whitespace-nowrap">perfecto = 1.0</span></>}
         </div>
         <div className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
           {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
@@ -322,10 +324,10 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
             style={{ left: '57%', background: 'var(--color-text-primary)' }}
           />
         </div>
-        <div className="flex items-center justify-between gap-2 text-[11px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
-          <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
-          <span style={{ color: 'var(--color-accent-hover)' }}><span aria-hidden="true" style={{ color: 'var(--color-accent)' }}>●</span> v0.8.5</span>
-          <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
+        <div data-tile-legend className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[11px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+          <span className="whitespace-nowrap">0.5 {lang === 'en' ? '· random' : '· azar'}</span>
+          <span className="whitespace-nowrap" style={{ color: 'var(--color-accent-hover)' }}><span aria-hidden="true" style={{ color: 'var(--color-accent)' }}>●</span> v0.8.5</span>
+          <span className="whitespace-nowrap">1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
         </div>
       </ColumnFrame>
 

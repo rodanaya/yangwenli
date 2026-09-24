@@ -10,7 +10,7 @@
  * plate measures its own width (useMeasuredWidth) and draws at 1:1; every
  * glyph (ticks, era labels, edge labels, callouts, the hover value) is an
  * absolutely positioned HTML label, measured with measureLabel and seated
- * with placeLabels. Marks (bands, line, area, dots, leaders, box frames)
+ * with collision checks. Marks (bands, line, area, dots, leaders, box frames)
  * stay in the svg.
  */
 
@@ -20,7 +20,7 @@ import { useYearOverYear } from '@/components/stories/live/useEmergencyData'
 import { RISK_TEXT_COLORS } from '@/lib/constants'
 import { ADMINISTRATIONS, ADMIN_DISPLAY_ACCENTED, type AdministrationKey } from '@/lib/administrations'
 import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
-import { measureLabel, placeLabels, type LabelBox } from '@/lib/plateLabels'
+import { measureLabel, type LabelBox } from '@/lib/plateLabels'
 
 // Structure B (2010) is the first COMPRANET structure that codes the
 // procedure type; Structure A (2002–2009) reads 0.0–0.05 %, which drawn as a
@@ -37,10 +37,6 @@ const ERA_HUE: Record<AdministrationKey, string> = {
   amlo: '#7b2d8b',
   sheinbaum: '#7b2d8b',
 }
-// Initials when a phone cannot seat the full term name.
-const ERA_SHORT: Record<AdministrationKey, string> = {
-  fox: 'F', calderon: 'C', epn: 'EPN', amlo: 'AMLO', sheinbaum: 'S',
-}
 
 // FT-style annotation callouts BELOW the data line, zigzag depths so
 // adjacent callouts cannot share Y space.
@@ -55,7 +51,7 @@ const MONO = '"JetBrains Mono", monospace'
 const SERIF = "'Playfair Display', Georgia, serif"
 const H_WIDE = 260
 const H_NARROW = 300 // phones: a deeper plot so the callouts find a depth
-const PAD_T = 36 // era labels above the plot
+const PAD_T_ONE_ROW = 36 // era labels above the plot (a second row adds one line)
 const PAD_B = 32 // x ticks
 
 interface Props {
@@ -102,12 +98,8 @@ export function MacroArc({ lang }: Props) {
   // the plot (right-aligned) so the line keeps the width.
   const PAD_R = narrow ? 12 : Math.ceil(edgeW) + 16
   const CW = Math.max(1, W - PAD_L - PAD_R)
-  const CH = H - PAD_T - PAD_B
 
   const xOf = (year: number) => PAD_L + ((year - Y_MIN_YR) / Math.max(1, Y_MAX_YR - Y_MIN_YR)) * CW
-  const yOf = (pct: number) => PAD_T + CH * (1 - pct / Y_MAX_PCT)
-  const EU_Y = yOf(EU_LINE)
-  const AXIS_Y = PAD_T + CH
 
   // Bands clipped to the drawn window (Calderón → 2010–12; Fox leaves).
   const eraBands = ADMINISTRATIONS
@@ -124,6 +116,39 @@ export function MacroArc({ lang }: Props) {
       const x2 = b.end > b.start ? xOf(b.end) : Math.min(x1 + 16, PAD_L + CW)
       return { ...b, x1, x2 }
     })
+
+  // Era labels — full names at every width (Day 7/8 rule). Centred on the
+  // band, clamped to the plate edge (a narrow band's label overhangs its band
+  // leftwards, the last one sits right-anchored to the plate); a label that
+  // still meets its neighbour drops to a second row. Placement depends on x
+  // only, so the plot's top (PAD_T) follows the row count.
+  const ERA_FS = narrow ? 11 : 13
+  const ERA_FONT = `700 ${ERA_FS}px ${MONO}`
+  const eraTrack = narrow ? 0 : 0.08
+  const ERA_LH = ERA_FS + 4
+  const eraPlaced = new Map<string, { text: string; left: number; row: number }>()
+  {
+    const taken: LabelBox[] = []
+    const hits = (a: LabelBox) => taken.some((t) => !(a.x1 <= t.x0 - 6 || a.x0 >= t.x1 + 6 || a.y1 <= t.y0 || a.y0 >= t.y1))
+    for (const b of eraBands) {
+      const w = measure(b.label, ERA_FONT).width + b.label.length * ERA_FS * eraTrack
+      const x0 = Math.min(Math.max(0, (b.x1 + b.x2) / 2 - w / 2), W - w)
+      for (const row of [0, 1]) {
+        const box = { x0, y0: row * (ERA_LH + 2), x1: x0 + w, y1: row * (ERA_LH + 2) + ERA_LH }
+        if (row === 1 || !hits(box)) {
+          taken.push(box)
+          eraPlaced.set(b.key, { text: b.label, left: x0, row })
+          break
+        }
+      }
+    }
+  }
+  const eraRows = Math.max(1, ...[...eraPlaced.values()].map((e) => e.row + 1))
+  const PAD_T = PAD_T_ONE_ROW + (eraRows - 1) * (ERA_LH + 2)
+  const CH = H - PAD_T - PAD_B
+  const yOf = (pct: number) => PAD_T + CH * (1 - pct / Y_MAX_PCT)
+  const EU_Y = yOf(EU_LINE)
+  const AXIS_Y = PAD_T + CH
 
   // The measured plate div stays mounted through loading (useMeasuredWidth
   // attaches its observer once, on mount).
@@ -158,29 +183,6 @@ export function MacroArc({ lang }: Props) {
   const xTicks: number[] = []
   for (const yr of [...tickCandidates].sort((a, b) => b - a)) {
     if (!xTicks.length || xOf(xTicks[xTicks.length - 1]) - xOf(yr) >= tickW) xTicks.push(yr)
-  }
-
-  // Era labels — a mono row above the plot, full names first, initials when a
-  // name cannot be seated.
-  const ERA_FS = narrow ? 11 : 13
-  const ERA_FONT = `700 ${ERA_FS}px ${MONO}`
-  const eraTrack = narrow ? 0 : 0.08
-  const eraBounds: LabelBox = { x0: 0, y0: 0, x1: W, y1: PAD_T }
-  const eraPlaced = new Map<string, { text: string; left: number }>()
-  {
-    const taken: LabelBox[] = []
-    for (const b of eraBands) {
-      for (const text of [b.label, ERA_SHORT[b.key]]) {
-        const w = measure(text, ERA_FONT).width + text.length * ERA_FS * eraTrack
-        const cx = (b.x1 + b.x2) / 2
-        const [p] = placeLabels([{ id: b.key, x: cx, y: PAD_T - 4, width: w, height: ERA_FS + 4, above: 6 }], taken, eraBounds)
-        if (p) {
-          taken.push(p.box)
-          eraPlaced.set(b.key, { text, left: p.box.x0 })
-          break
-        }
-      }
-    }
   }
 
   // Edge labels (Mexico · %, EU 10%).
@@ -414,8 +416,8 @@ export function MacroArc({ lang }: Props) {
               const p = eraPlaced.get(b.key)
               if (!p) return null
               return label({
-                left: p.left, top: PAD_T - ERA_FS - 14, fontFamily: MONO, fontSize: ERA_FS, fontWeight: 700,
-                lineHeight: `${ERA_FS + 4}px`, letterSpacing: `${eraTrack}em`, color: b.color,
+                left: p.left, top: 9 + p.row * (ERA_LH + 2), fontFamily: MONO, fontSize: ERA_FS, fontWeight: 700,
+                lineHeight: `${ERA_LH}px`, letterSpacing: `${eraTrack}em`, color: b.color,
               }, p.text, `era-${b.key}`, { 'data-era-label': '' })
             })}
             {yTicks.map((t) => label({

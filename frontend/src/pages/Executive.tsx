@@ -293,7 +293,8 @@ export default function Executive() {
   // ─── Headline numbers — each tile has a unique editorial micro-viz ──────
   // Localized: Spanish uses "billones" for 10¹² and "MDP" for millions.
   const TOTAL_SPEND_MXN = 9_900_000_000_000
-  const headlineSpend = lang === 'es' ? '9.9 billones' : '9.9T'
+  // ES: the unit word (billones) moves to the unit line so the value token never breaks.
+  const headlineSpend = lang === 'es' ? '9.9' : '9.9T'
   // English-only USD companion — surfaces foreign-reader scale alongside MXN.
   // Spanish stays MXN-only (Mexican audience reads pesos natively).
   const headlineSpendUSD = lang === 'en' ? `≈${formatCompactUSD(TOTAL_SPEND_MXN)}` : null
@@ -1386,7 +1387,7 @@ export default function Executive() {
                     <div className="order-first sm:order-none basis-full sm:basis-auto flex-1 min-w-0">
                       <div>
                         {c.vendor_id
-                          ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} size="sm" fullName />
+                          ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} riskScore={c.risk_score ?? undefined} size="sm" fullName />
                           : <span className="text-sm font-semibold text-text-primary">{formatVendorName(c.vendor_name) || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}</span>
                         }
                       </div>
@@ -1513,6 +1514,7 @@ export default function Executive() {
                   type="vendor"
                   id={codaChips.vendor.id}
                   name={codaChips.vendor.name}
+                  riskScore={codaChips.vendor.riskScore}
                   size="md"
                 />
               )}
@@ -1521,6 +1523,7 @@ export default function Executive() {
                   type="vendor"
                   id={codaChips.wireVendor.id}
                   name={codaChips.wireVendor.name}
+                  riskScore={codaChips.wireVendor.riskScore}
                   size="md"
                 />
               )}

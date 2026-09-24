@@ -14,7 +14,7 @@ import { useRef } from 'react'
 import { SECTOR_COLORS, getSectorTextColor } from '@/lib/constants'
 import { ADMINISTRATIONS, ADMIN_COLORS, ADMIN_DISPLAY_ACCENTED } from '@/lib/administrations'
 import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
-import { measureLabel, placeLabels, type LabelBox } from '@/lib/plateLabels'
+import { measureLabel, type LabelBox } from '@/lib/plateLabels'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data + types
@@ -75,8 +75,9 @@ interface CaseTimelineProps {
 const MONO = '"JetBrains Mono", monospace'
 const ERA_FONT = `600 11px ${MONO}`
 const TICK_FONT = `11px ${MONO}`
-const H = 160
-const AXIS_Y = 130
+const H_BASE = 160
+const AXIS_BASE = 130
+const ERA_ROW = 16 // one era-label row
 const PAD_X = 24
 const SPIKE_CRIT = 82
 const SPIKE_HIGH = 46
@@ -99,26 +100,27 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
     return { x1, x2 }
   }
 
-  // Era labels centred on their band (a narrow band's label may run left
-  // over its neighbour's paper, never over another label); initials when the
-  // name cannot be seated.
-  const eraLabels: Array<{ key: string; text: string; left: number }> = []
+  // Era labels — full names at every width (Day 7/8 rule): centred on the
+  // band, clamped to the plate edge (a narrow band's label overhangs its band
+  // leftwards, the last one sits right-anchored to the plate); a label that
+  // still meets its neighbour drops to a second row, and the drawing moves
+  // down by that row.
+  const eraLabels: Array<{ key: string; text: string; left: number; row: number }> = []
   // Tick years kept left-to-right while a label width apart (phones thin them).
   const ticks: number[] = []
   if (ready) {
     const taken: LabelBox[] = []
+    const hits = (a: LabelBox) => taken.some((t) => !(a.x1 <= t.x0 - 6 || a.x0 >= t.x1 + 6 || a.y1 <= t.y0 || a.y0 >= t.y1))
     for (const era of ERA_BANDS) {
       const { x1, x2 } = bandX(era)
-      for (const text of [era.label.toUpperCase(), era.label.charAt(0).toUpperCase()]) {
-        const w = measureLabel(text, ERA_FONT, 999, 14).width + text.length * 11 * 0.06
-        const [p] = placeLabels(
-          [{ id: era.key, x: (x1 + x2) / 2, y: 26, width: w, height: 14, above: 0 }],
-          taken,
-          { x0: 0, y0: 0, x1: W, y1: 30 },
-        )
-        if (p) {
-          taken.push(p.box)
-          eraLabels.push({ key: era.key, text, left: p.box.x0 })
+      const text = era.label.toUpperCase()
+      const w = measureLabel(text, ERA_FONT, 999, 14).width + text.length * 11 * 0.06
+      const left = Math.min(Math.max(0, (x1 + x2) / 2 - w / 2), W - w)
+      for (const row of [0, 1]) {
+        const box = { x0: left, y0: row * ERA_ROW, x1: left + w, y1: row * ERA_ROW + 14 }
+        if (row === 1 || !hits(box)) {
+          taken.push(box)
+          eraLabels.push({ key: era.key, text, left, row })
           break
         }
       }
@@ -129,6 +131,10 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
       if (prev === undefined || yearToX(y) - yearToX(prev) >= tw + 8) ticks.push(y)
     }
   }
+
+  const extra = (Math.max(1, ...eraLabels.map((e) => e.row + 1)) - 1) * ERA_ROW
+  const H = H_BASE + extra
+  const AXIS_Y = AXIS_BASE + extra
 
   // Badge centres: over their spike, spread apart (half the deficit each)
   // where two same-height neighbours one year apart would overlap on a phone.
@@ -202,7 +208,7 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
                 key={e.key}
                 data-era-label=""
                 className="absolute whitespace-nowrap font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-text-secondary leading-[14px]"
-                style={{ left: e.left, top: 12 }}
+                style={{ left: e.left, top: 12 + e.row * ERA_ROW }}
               >
                 {e.text}
               </div>
