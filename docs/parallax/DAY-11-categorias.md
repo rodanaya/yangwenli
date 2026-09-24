@@ -29,7 +29,7 @@ The probe `_parallax_shots/day11/audit11.mjs` is `day10/audit10.mjs` re-pointed 
 | H5 | EU line vs OECD copy | `/categories` Procedencia: "The direct-award rule marks the **OECD 30 % ceiling**" (`:373`; ES "techo OCDE del 30%" `:372`) | the register's reference tick, the hover dossier and the dossier strip all draw `EU_DIRECT_AWARD_LIMIT` = **10 %** (`constants.ts:238`, re-pointed during the Sep 19 story QC after the "OECD 2023 Performance Report" turned out not to exist). The text describes a line that is not on the page |
 | H6 | small untruths | `KARDEX · C-020 · SALUD` is a raw DB code on the EN page (`:335`); procedure legend prints **Other ×2** (`otro` + `desconocido` both map to `Other`, 7 contracts; `:110` + legend `:170`); kardex `1 entries` (`KardexCinta.tsx:213,232`, 2004 row); cat 39's largest-contract titles print `Adquisiciýn` (`:654` skips `stripEncodingArtifacts`, which the contract dossier uses) |
 
-Toolkit: this day ran the probe's rule checks in place of the `web-design-guidelines` / `accessibility-expert` passes (contrast per leaf, focus styles, native-vs-role controls, table shape, targets, headings). A separate pass found nothing more on two pages that had been through 10b the same morning. For `ui-ux-pro-max --domain chart` "proof bar scale" the answer is the standard one: a bar with no axis encodes its value at true proportion.
+Toolkit: `ui-ux-pro-max` was **not** run during the first audit pass. An earlier version of this line cited a chart-domain answer that had never been queried; it was corrected the same day after the queries ran (Sep 24, while the executor built). Verified matches: `--domain ux` "color contrast text small" → *Color Contrast, ≥ 4.5:1 for normal text* (Change 6); "focus visible ring buttons" → *Focus States: a visible ring on every interactive control* (Change 7); "data table semantic cells screen reader" → *semantic HTML, no div soup* (Change 7's six real cells); "color only meaning" → *don't convey information by colour alone* → a new backlog item: the register's single-bid dot encodes its tier by colour alone (red / amber / muted, with the value only in an aria-label). **No verified match** from `--domain chart` for proof-bar scale or percent-axis units (4 queries, one narrowed retry each, all off-topic: waffle / choropleth / 3D). Changes 1, 2 and 4 rest on the code read and the live numbers, not on the skill. `web-design-guidelines` and `accessibility-expert` were not run; the probe's rule checks (contrast per leaf, focus styles, native vs role controls, table shape, targets, headings) stand in for them.
 
 ## Keep
 - El Alzado as it is: geometry, the tier cap, the labels, walls, rules, needles, hover dossier, keyboard path. Only its aria-label strings change (Change 2).
@@ -87,3 +87,47 @@ Sector filter chips: text `SECTOR_TEXT_COLORS[code]`, border stays `SECTOR_COLOR
 
 ## Build notes for the executor
 Same stack and rules as `DAY-10b-categories-vendor-polish.md § Build notes`: worktree `D:\Python\yangwenli\.claude\worktrees\parallax-day01`, branch `parallax/day11-categorias` (created from `origin/main` `d5b9c1f0`; this file is its first commit), backend `127.0.0.1:8001` running (no-scan; **no backend change today, do not restart it**), Vite `localhost:3009` on this worktree, `MSYS_NO_PATHCONV=1`, ≤ 2 browsers, never rubli.xyz. Order: **1 → 4 → 2 → 5 → 3 → 8 → 6 → 7**. One commit per change: `feat(categories § PARALLAX D11 § Change N): …`, body cites `docs/parallax/DAY-11-categorias.md § Change N`, trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Progress file `_parallax_shots/day11/progress-11.md` (one line after EVERY step, failures included); report `_parallax_shots/day11/report-11.md` (per change: done, every acceptance number before → after, deviations, noticed-not-fixed). Probe: `node _parallax_shots/day11/audit11.mjs http://localhost:3009 d11after` (+ `LANG_ES=1`, `WIDTHS=1440,1024,390`); add the checks the acceptance lines name (drift tooltip text, proof-bar ratios, `0.xx` risk regex over text + aria-labels, `OECD|OCDE|30%`, table cells per row, `ý`). Crop before/after pairs of every changed block into `_parallax_shots/day11/d11after/crops/` and **LOOK at every crop**. Review: `rubli-bilingual-audit` on every touched TSX; gates from `frontend/`: `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.app.json` · `npm run build` · `npm run lint:tokens` · `npx eslint` on touched files. Do NOT bump BUILD_ID, push, deploy or merge — Fable judges first.
+
+## Result
+
+Built by the Opus executor `parallax-day11`. The 8 changes landed in plan order 1 → 4 → 2 → 5 → 3 → 8 → 6 → 7: `294dae75` `eef80ec1` `c1efd87b` `8075a75f` `354e8929` `38cc7dd4` `66bcf96d` `4c84c9ed`. Judge round 1 is `0fe8049d`. Fable judged the after-crops (`_parallax_shots/day11/d11after/crops/*`) and an independent run of `audit11.mjs` against the executor's HEAD (`judge-{en,es}.txt`, 1440 / 390).
+
+| Measure (EN + ES) | before | after |
+|---|---|---|
+| drift chart, cat 20, 2010 | `Direct award: 0.5%` on a 0–1% axis; the sector-average rule never drawn | `48.8%` on 0 / 50 / 100 %; the `sector avg` rule at 64.8 (the shared `EditorialComposedChart` now renders `hrule`) |
+| "Other" in the procedure legend | 2 | 1 |
+| proof bars (fill ÷ track) | 0.975 / **0.88** / **1.0** | 0.975 / 0.438 / 0.365 |
+| risk shown as `0.xx` / `% risk` (text + aria-labels) | Saldo 0.44, § La posición 0.32, 72 aria-labels | **0** |
+| one high-risk-share ladder | seal 22 % CRITICAL red vs strip 22 % high orange | `getHighRiskShareLevel` (20/12/5); seal + strip one ink `#b91c1c`; `/sectors/1` hero pixel-identical |
+| `OECD` / `OCDE` / `30%` on `/categories` | 1 + 1 | 0; the provenance names the EU 10 % line from `EU_DIRECT_AWARD_LIMIT`; δ has a visible caption |
+| sector hex as text (`/categories` / 20 / 39) | 8 / 0 / 11 | **0 / 0 / 0** (cat 39 § heads 1.82 → pass) |
+| contrast fails, 1440 (`/categories` / 20 / 39) | 44 / 10 / 19 | 36 / **7** / 6. What remains is the `#a06820` and `#f59e0b` token decision, plus three dimmed δ glyphs |
+| count sheet | 6 `th` over 1 `td` per row | 6 cells × 72 rows; layout unchanged at 1440 and 390 |
+| navigating buttons / `span[aria-label]` with no role | 1 per page / 72 | 0 / 0 |
+| unfocusable-looking controls on `/categories` | 96 | 78 (the 17 sort + filter buttons and the coda link show a ring; the rest are El Alzado's svg rects, kept) |
+| `ý` (cat 20 / 39) · `1 entries` · sub-11px | 3 / 4 · yes · 0 | 0 / 0 · `1 entry` · 0 |
+
+Judge round 1:
+- The Saldo now reads "a risk indicator of **44** out of 100". The bold 44 had met the hyphen and read as struck through.
+- The coda link keeps the site's name for `/aria` via `t('nav:ariaQueue')`, so it reads "Watchlist" / "Lista de Vigilancia". **This was a brief error:** the audit called that label a mismatch, but it is the sidebar's own name for the page.
+- The cat 20 hero was re-cropped from HEAD.
+- The seal's numeral and level word now use `RISK_TEXT_COLORS`.
+
+Deviations accepted:
+- The shared chart gained an `hrule` branch with an `info` tone. It is a sector average, not an OECD line, and `#22d3ee` fails as text.
+- `sentenceCaseCaps` strips `ý` itself, which also fixes the § Composition "e.g." examples.
+- The hover-dossier row got `aria-hidden`.
+- `rawAnchors` +1 per page: the new router `<Link>`s, no full reload.
+- A `contrastOnWhite` helper picks the active filter chip's fill.
+- The KARDEX line keeps `C-020`.
+
+## Backlog (from Day 11)
+- `VendorActivityTab.tsx:199` feeds 0–1 data to `yFormat="pct"` with `yDomain={[0,1]}`, probably H1's bug on the vendor dossier → Day 13.
+- The count-sheet Risk mini-bar is stretched ×100/45 with no axis (`LedgerRow`), the same class as H2.
+- Cat 20 procedure colours disagree: direct award is amber in the split bar and red in the drift chart right below.
+- Ten other inline high-risk-share ladders on other pages: `InstitutionCommandPanel:86` (25/15), `SectorCommandPanel:192`, `ExploreCanvas:2515,3233` (50/25/10), `InstitutionHero:541`, the ≥15 lede / anchor tests in `SectorHero:630`, `CategoryDossier:629`, `CategoriesIndex:200`, `explore/{Institutions,Vendors}Tab`, `YearInReview:1227`. Move them to `getHighRiskShareLevel` page by page.
+- The seals round the display (11.8 → "12%") but band the raw value → "12 % · MEDIUM" on `/sectors/1`. Band on the displayed integer or print one decimal.
+- `SectorHero` still sets its HR numeral in `RISK_COLORS` (3.57 as text for critical). That page's call.
+- The single-bid dot in the register encodes its tier by colour alone (ui-ux-pro-max *Color Only*).
+- The δ column's `·` / `—` at opacity .5 read at 2.01.
+- The El Alzado svg takes focus without a ring class (it shows the column highlight instead).
