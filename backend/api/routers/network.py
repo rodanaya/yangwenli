@@ -13,6 +13,7 @@ from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Path, Request
 from pydantic import BaseModel, Field
 
+from ..pii import public_rfc
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
 from ..services.network_service import network_service
@@ -463,7 +464,7 @@ def get_related_vendors(
                     related.append({
                         "vendor_id": row["id"],
                         "vendor_name": row["name"],
-                        "rfc": row["rfc"],
+                        "rfc": public_rfc(row["rfc"]),
                         "relationship": row["relationship"],
                         "confidence": row["confidence"],
                         "contracts": row["contracts"],
@@ -494,7 +495,7 @@ def get_related_vendors(
                         related.append({
                             "vendor_id": row["id"],
                             "vendor_name": row["name"],
-                            "rfc": row["rfc"],
+                            "rfc": public_rfc(row["rfc"]),
                             "relationship": row["relationship"],
                             "confidence": row["confidence"],
                             "contracts": row["contracts"],
@@ -522,7 +523,7 @@ def get_related_vendors(
                         related.append({
                             "vendor_id": row["id"],
                             "vendor_name": row["name"],
-                            "rfc": row["rfc"],
+                            "rfc": public_rfc(row["rfc"]),
                             "relationship": row["relationship"],
                             "confidence": row["confidence"],
                             "contracts": row["contracts"],

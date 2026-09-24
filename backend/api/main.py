@@ -577,6 +577,11 @@ async def cache_control(request: Request, call_next):
     response.headers["Cache-Control"] = "no-cache"
     return response
 
+# RFC privacy net — redacts persona-física RFCs from every JSON body.
+# Added before GZip so it runs inside it and sees uncompressed JSON.
+from .pii import RfcRedactionMiddleware
+app.add_middleware(RfcRedactionMiddleware)
+
 # GZip compression for responses > 1KB
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 

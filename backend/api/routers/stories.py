@@ -8,6 +8,7 @@ import logging
 import threading
 import time
 from fastapi import APIRouter, HTTPException, Query
+from ..pii import public_rfc
 from ..dependencies import get_db
 
 logger = logging.getLogger(__name__)
@@ -826,6 +827,8 @@ def _build_efos_vendors_package(conn, lang: str = "es") -> dict:
         cols = ["vendor_id", "vendor_name", "total_value_mxn", "primary_sector_name",
                 "avg_risk_score", "total_contracts", "efos_rfc"]
         all_data = _safe_rows_to_dicts(rows, cols)
+        for r in all_data:
+            r["efos_rfc"] = public_rfc(r["efos_rfc"])
         count = len(all_data)
         total_value = sum(r["total_value_mxn"] or 0 for r in all_data)
         examples = all_data[:5]

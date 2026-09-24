@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import type { SanctionMatchBasis } from '@/api/types'
 
 interface SanctionRecord {
   list_type: 'sfp' | 'efos' | 'efos_definitivo' | 'efos_presunto'
-  match_method: 'rfc' | 'name_fuzzy'
-  match_confidence: number
+  match_method: SanctionMatchBasis
   sanction_type?: string
 }
 
@@ -20,6 +21,13 @@ const LIST_LABELS: Record<string, string> = {
   efos: 'SAT EFOS',
   efos_definitivo: 'SAT EFOS Definitivo (Confirmed)',
   efos_presunto: 'SAT EFOS Presunto (Alleged)',
+}
+
+// Name matches are NOT identity-confirmed: RFC is missing at source for most records.
+const MATCH_LABEL: Record<SanctionMatchBasis, { en: string; es: string }> = {
+  rfc: { en: 'RFC match', es: 'Coincide el RFC' },
+  name: { en: 'Name match · RFC not provided', es: 'Coincide el nombre · sin RFC en la fuente' },
+  name_ambiguous: { en: 'Ambiguous name match', es: 'Nombre ambiguo' },
 }
 
 // Tooltip explanation for EFOS stages
@@ -39,6 +47,8 @@ export function SanctionsAlertBanner({
   className,
 }: SanctionsAlertBannerProps) {
   const [expanded, setExpanded] = useState(false)
+  const { i18n } = useTranslation()
+  const es = i18n.language?.startsWith('es') ?? false
 
   if (!sanctions.length) return null
 
@@ -76,8 +86,7 @@ export function SanctionsAlertBanner({
                 )}
                 title={s.list_type.startsWith('efos') ? EFOS_TOOLTIP : undefined}
               >
-                {s.match_method === 'rfc' ? 'RFC' : 'Name'} match (
-                {Math.round(s.match_confidence * 100)}%)
+                {MATCH_LABEL[s.match_method][es ? 'es' : 'en']}
               </span>
             ))}
           </div>
@@ -123,8 +132,7 @@ export function SanctionsAlertBanner({
               </span>
               <span>
                 {s.sanction_type && <span className="mr-2">{s.sanction_type}</span>}
-                {s.match_method === 'rfc' ? 'RFC' : 'Name fuzzy'} -{' '}
-                {Math.round(s.match_confidence * 100)}%
+                {MATCH_LABEL[s.match_method][es ? 'es' : 'en']}
               </span>
             </div>
           ))}

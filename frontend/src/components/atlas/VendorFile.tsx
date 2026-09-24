@@ -306,6 +306,7 @@ export function VendorFile({
                 {(flagsQ.data?.sfp_sanctions?.length ?? 0) > 0 && (
                   <span className="font-mono" style={{ fontSize: 13, fontWeight: 700, color: RISK_COLORS.high, border: `1px solid ${RISK_COLORS.high}`, padding: '2px 6px', borderRadius: 3 }}>
                     {flagsQ.data!.sfp_sanctions.length} {es ? 'sanciones SFP' : 'SFP sanctions'}
+                    {!flagsQ.data!.sfp_sanctions.some((s) => s.match_basis === 'rfc') && (es ? ' · solo por nombre' : ' · name match only')}
                   </span>
                 )}
                 {(flagsQ.data?.asf_cases?.length ?? 0) > 0 && (

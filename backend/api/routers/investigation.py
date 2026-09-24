@@ -14,6 +14,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+from ..pii import public_rfc
+from ..sanctions import match_asf
 from ..dependencies import get_db_connection, get_db, require_write_key
 from ..config.constants import get_risk_level
 from ..models.asf import ASFCase, ASFMatchesResponse
@@ -426,7 +428,7 @@ def get_case(case_id: str = Path(..., description="Case ID (e.g., CASE-SAL-2026-
             VendorSummary(
                 vendor_id=v['vendor_id'],
                 name=v['name'],
-                rfc=v['rfc'],
+                rfc=public_rfc(v['rfc']),
                 role=v['role'],
                 contract_count=v['contract_count'],
                 contract_value_mxn=v['contract_value_mxn'],
@@ -556,39 +558,11 @@ def get_case_asf_matches(
         seen_ids: set[int] = set()
 
         for vendor_row in vendors:
-            vendor_name = vendor_row["name"]
-            vendor_rfc = vendor_row["rfc"]
-
-            conditions = []
-            params = []
-
-            if vendor_rfc:
-                conditions.append("vendor_rfc = ?")
-                params.append(vendor_rfc)
-
-            if vendor_name:
-                name_prefix = vendor_name[:20].strip()
-                conditions.append("vendor_name LIKE ?")
-                params.append(f"%{name_prefix}%")
-                conditions.append("entity_name LIKE ?")
-                params.append(f"%{name_prefix}%")
-
-            if not conditions:
-                continue
-
-            # Safe: where_clause is built from hardcoded column names only;
-            # all values are parameterized via params list.
-            where_clause = " OR ".join(conditions)
-            rows = cursor.execute(
-                f"SELECT * FROM asf_cases WHERE {where_clause} LIMIT 20",
-                params,
-            ).fetchall()
-
-            for row in rows:
-                row_dict = dict(row)
+            # Strict full-name / RFC match (api/sanctions.py) — never a name prefix.
+            for row_dict in match_asf(conn, vendor_row["name"], vendor_row["rfc"], limit=20):
                 if row_dict["id"] not in seen_ids:
                     seen_ids.add(row_dict["id"])
-                    all_matches.append(ASFCase(**row_dict))
+                    all_matches.append(ASFCase(**{k: v for k, v in row_dict.items() if k != "match_basis"}))
 
         return ASFMatchesResponse(
             case_id=internal_id, matches=all_matches, total=len(all_matches)

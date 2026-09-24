@@ -11,6 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
+from ..pii import public_rfc
 from ..dependencies import get_db
 
 logger = logging.getLogger(__name__)
@@ -94,7 +95,7 @@ def _search_vendors(q: str, limit: int) -> list[VendorResult]:
             VendorResult(
                 id=r["id"],
                 name=r["name"],
-                rfc=r["rfc"],
+                rfc=public_rfc(r["rfc"]),
                 contracts=r["contracts"] or 0,
                 risk_score=r["avg_risk_score"],
                 is_efos=bool(r["is_efos"]),

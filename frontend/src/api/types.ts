@@ -1098,8 +1098,13 @@ export interface FactorAnalysisValidationResponse {
 // External Registry Types (SFP Sanctions + RUPC + ASF)
 // ============================================================================
 
+/** How a registry record was tied to a vendor (backend api/sanctions.py).
+ *  RFC is absent at source for most records, so most matches are by name. */
+export type SanctionMatchBasis = 'rfc' | 'name' | 'name_ambiguous'
+
 export interface SFPSanction {
   id: number
+  match_basis?: SanctionMatchBasis
   rfc: string | null
   company_name: string
   sanction_type: string | null

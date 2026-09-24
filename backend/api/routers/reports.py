@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
 
+from ..pii import public_rfc
 from ..dependencies import get_db
 from ..services.report_service import report_service
 
@@ -320,7 +321,7 @@ def get_institution_report(
                 TopVendor(
                     vendor_id=row['id'],
                     name=row['name'],
-                    rfc=row['rfc'],
+                    rfc=public_rfc(row['rfc']),
                     contract_count=row['contract_count'],
                     total_value_mxn=row['total_value'] or 0,
                     avg_risk_score=row['avg_risk'] or 0
@@ -598,7 +599,7 @@ def get_thematic_report(
                 TopVendor(
                     vendor_id=row['id'],
                     name=row['name'],
-                    rfc=row['rfc'],
+                    rfc=public_rfc(row['rfc']),
                     contract_count=row['contract_count'],
                     total_value_mxn=row['total_value'] or 0,
                     avg_risk_score=row['avg_risk'] or 0

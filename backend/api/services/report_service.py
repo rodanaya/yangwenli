@@ -12,6 +12,7 @@ from typing import Any
 
 import structlog
 
+from ..pii import public_rfc
 from .base_service import BaseService
 
 logger = structlog.get_logger("rubli.services.report")
@@ -59,7 +60,7 @@ class ReportService(BaseService):
         profile = {
             "vendor_id": vendor["id"],
             "name": vendor["name"],
-            "rfc": vendor["rfc"],
+            "rfc": public_rfc(vendor["rfc"]),
             "name_normalized": vendor["name_normalized"],
             "first_contract_date": first_date,
             "last_contract_date": last_date,
@@ -406,7 +407,7 @@ class ReportService(BaseService):
             {
                 "vendor_id": row["id"],
                 "name": row["name"],
-                "rfc": row["rfc"],
+                "rfc": public_rfc(row["rfc"]),
                 "contract_count": row["contract_count"],
                 "total_value_mxn": row["total_value"] or 0,
                 "avg_risk_score": row["avg_risk"] or 0,

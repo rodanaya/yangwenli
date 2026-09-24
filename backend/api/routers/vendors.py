@@ -24,21 +24,10 @@ from ..dependencies import get_db, require_write_key
 from ..config.constants import MAX_CONTRACT_VALUE
 
 
-def _mask_personal_rfc(rfc: Optional[str]) -> Optional[str]:
-    """Mask 13-character RFCs (persona física = personal PII).
-
-    Mexican RFC format:
-      - 12 chars (4 letters + 6 digits + 2 alphanumeric) = persona moral (company, public)
-      - 13 chars (4 letters + 6 digits + 3 alphanumeric) = persona física (individual, PII)
-
-    Returns None for personal RFCs, passes through company RFCs and empty values.
-    """
-    if not rfc:
-        return rfc
-    cleaned = rfc.strip().upper()
-    if len(cleaned) == 13:
-        return None
-    return rfc
+# Whitelist: only a well-formed company RFC is ever returned (see api/pii.py).
+from ..pii import public_rfc
+from ..sanctions import match_asf, match_sfp, summarize_basis
+_mask_personal_rfc = public_rfc
 from ..models.vendor import (
     VendorClassificationResponse,
     VerifiedVendorResponse,
@@ -112,7 +101,7 @@ class ExternalFlagsResponse(BaseModel):
     rupc: Optional[Dict[str, Any]]
     asf_cases: List[Dict[str, Any]]
     sat_efos: Optional[Dict[str, Any]]
-    match_method: Optional[str] = None  # 'rfc' | 'name_fuzzy'
+    match_method: Optional[str] = None  # strongest SFP basis: 'rfc' | 'name' | 'name_ambiguous'
     match_confidence: Optional[int] = None  # 0-100
 
 
@@ -1653,33 +1642,9 @@ def get_vendor_asf_cases(
         if not vendor_row:
             raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
-        vendor_name = vendor_row["name"]
-        vendor_rfc = vendor_row["rfc"]
-
-        conditions = []
-        params = []
-
-        if vendor_rfc:
-            conditions.append("vendor_rfc = ?")
-            params.append(vendor_rfc)
-
-        # Fuzzy name match: use LIKE with first 20 chars
-        if vendor_name:
-            name_prefix = vendor_name[:20].strip()
-            conditions.append("vendor_name LIKE ?")
-            params.append(f"%{name_prefix}%")
-
-        if not conditions:
-            return []
-
-        # safe: column names are hardcoded ('vendor_rfc', 'vendor_name'), not from user input
-        where_clause = " OR ".join(conditions)
-        rows = cursor.execute(
-            f"SELECT * FROM asf_cases WHERE {where_clause} ORDER BY report_year DESC LIMIT 50",
-            params,
-        ).fetchall()
-
-        return [ASFCase(**dict(row)) for row in rows]
+        # Strict full-name / RFC match (api/sanctions.py) — never a name prefix.
+        rows = match_asf(conn, vendor_row["name"], vendor_row["rfc"])
+        return [ASFCase(**{k: v for k, v in row.items() if k != "match_basis"}) for row in rows]
 
 
 # =============================================================================
@@ -1702,37 +1667,25 @@ def get_vendor_external_flags(
         vendor_name = vendor_row["name"]
         vendor_rfc = vendor_row["rfc"]
 
-        # Determine match method based on RFC availability
-        has_rfc = bool(vendor_rfc)
         result = {
             "vendor_id": vendor_id,
             "sfp_sanctions": [],
             "rupc": None,
             "asf_cases": [],
             "sat_efos": None,
-            "match_method": "rfc" if has_rfc else "name_fuzzy",
-            "match_confidence": 99 if has_rfc else 75,
+            "match_method": None,
+            "match_confidence": None,
         }
 
         # --- SFP Sanctions ---
+        # Strict match (api/sanctions.py): same RFC, or identical full normalized
+        # name. RFC is absent at source for most records, so each hit carries
+        # match_basis ('rfc' | 'name' | 'name_ambiguous') and the UI says which.
         try:
-            # safe: column names are hardcoded ('rfc', 'company_name'), not from user input
-            conditions, params = [], []
-            if vendor_rfc:
-                conditions.append("rfc = ?")
-                params.append(vendor_rfc)
-            if vendor_name:
-                conditions.append("company_name LIKE ?")
-                params.append(f"%{vendor_name[:20].strip()}%")
-            if not conditions:
-                rows = []
-            else:
-                where_clause = ' OR '.join(conditions)
-                rows = cursor.execute(
-                    f"SELECT id, rfc, company_name, sanction_type, sanction_start, sanction_end, amount_mxn, authority FROM sfp_sanctions WHERE {where_clause} LIMIT 20",
-                    params,
-                ).fetchall()
-            result["sfp_sanctions"] = [dict(r) for r in rows]
+            result["sfp_sanctions"] = match_sfp(conn, vendor_name, vendor_rfc)
+            basis = summarize_basis(result["sfp_sanctions"])
+            result["match_method"] = basis
+            result["match_confidence"] = {"rfc": 99, "name": 75, "name_ambiguous": 40}.get(basis)
         except Exception as e:
             logger.debug("SFP sanctions table unavailable: %s", e)
 
@@ -1762,23 +1715,11 @@ def get_vendor_external_flags(
 
         # --- ASF cases (existing table) ---
         try:
-            # safe: column names are hardcoded ('vendor_rfc', 'vendor_name'), not from user input
-            conditions, params = [], []
-            if vendor_rfc:
-                conditions.append("vendor_rfc = ?")
-                params.append(vendor_rfc)
-            if vendor_name:
-                conditions.append("vendor_name LIKE ?")
-                params.append(f"%{vendor_name[:20].strip()}%")
-            if not conditions:
-                rows = []
-            else:
-                where_clause = ' OR '.join(conditions)
-                rows = cursor.execute(
-                    f"SELECT id, asf_report_id, entity_name, finding_type, amount_mxn, report_year, report_url, summary FROM asf_cases WHERE {where_clause} ORDER BY report_year DESC LIMIT 20",
-                    params,
-                ).fetchall()
-            result["asf_cases"] = [dict(r) for r in rows]
+            keep = ("id", "asf_report_id", "entity_name", "finding_type", "amount_mxn",
+                    "report_year", "report_url", "summary", "match_basis")
+            result["asf_cases"] = [
+                {k: r.get(k) for k in keep} for r in match_asf(conn, vendor_name, vendor_rfc, limit=20)
+            ]
         except Exception as e:
             logger.debug("ASF cases table unavailable: %s", e)
 
@@ -2779,7 +2720,7 @@ def get_vendor_qqw(
                 qqw_contract_id=r["qqw_contract_id"],
                 qqw_supplier_id=r["qqw_supplier_id"],
                 qqw_supplier_name=r["qqw_supplier_name"],
-                supplier_rfc=r["supplier_rfc"] or None,
+                supplier_rfc=public_rfc(r["supplier_rfc"]),
                 buyer_name=r["buyer_name"],
                 buyer_institution=r["buyer_institution"],
                 contact_person_id=r["contact_person_id"],

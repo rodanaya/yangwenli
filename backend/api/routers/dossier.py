@@ -27,6 +27,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
+from ..pii import public_rfc
 from ..dependencies import get_db
 
 logger = logging.getLogger(__name__)
@@ -283,7 +284,7 @@ def export_vendor_dossier(vendor_id: int):
                 f"<strong>{hr_count:,}</strong> contracts flagged high or critical."
             )
 
-            rfc = vendor["rfc"] if "rfc" in vendor.keys() else None
+            rfc = public_rfc(vendor["rfc"]) if "rfc" in vendor.keys() else None
 
             ctx = {
                 "dossier_type": "VENDOR DOSSIER",

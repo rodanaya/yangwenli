@@ -14,6 +14,7 @@ from typing import Any
 
 import structlog
 
+from ..pii import public_rfc
 from .base_service import BaseService
 from .query_builder import QueryBuilder
 from .pagination import paginate_query, PaginatedResult
@@ -97,15 +98,8 @@ def parse_risk_factors(factors_str: str | None) -> list[str]:
     return [f.strip() for f in factors_str.split(",") if f.strip()]
 
 
-def _mask_personal_rfc(rfc: str | None) -> str | None:
-    """Mask 13-char persona física RFCs (PII under LFPDPPP).
-
-    12-char = persona moral (company) → public, pass through.
-    13-char = persona física (individual) → null out.
-    """
-    if not rfc:
-        return rfc
-    return None if len(rfc.strip()) == 13 else rfc
+# Whitelist: only a well-formed company RFC is ever returned (see api/pii.py).
+_mask_personal_rfc = public_rfc
 
 
 class ContractService(BaseService):
@@ -444,7 +438,9 @@ class ContractService(BaseService):
         if row is None:
             return None
         # Convert Row to dict using cursor description
-        return dict(row)
+        d = dict(row)
+        d["vendor_rfc"] = public_rfc(d.get("vendor_rfc"))
+        return d
 
     def get_contracts_by_ids(
         self,
@@ -476,7 +472,10 @@ class ContractService(BaseService):
             contract_ids,
         )
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        out = [dict(row) for row in rows]
+        for d in out:
+            d["vendor_rfc"] = public_rfc(d.get("vendor_rfc"))
+        return out
 
     # Z-feature column names matching the v5.0 pipeline
     Z_COLS = [

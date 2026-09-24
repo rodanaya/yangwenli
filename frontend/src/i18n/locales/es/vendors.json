@@ -73,7 +73,10 @@
     },
     "sfp": {
       "headline": "{{n}} sanción(es) de la SFP en registro",
-      "detail": "Sancionada por la Secretaría de la Función Pública."
+      "detail": "Sancionada por la Secretaría de la Función Pública.",
+      "headlineName": "{{n}} posible(s) coincidencia(s) con sanciones de la SFP — solo por nombre",
+      "detailName": "Mismo nombre que una entidad sancionada por la Secretaría de la Función Pública. La fuente no proporcionó el RFC, así que la identidad no está confirmada.",
+      "detailAmbiguous": "Este nombre lo comparten varios proveedores del padrón; la sanción podría corresponder a otra empresa."
     },
     "ariaT1": {
       "headline": "ARIA Nivel 1 — bajo investigación activa",

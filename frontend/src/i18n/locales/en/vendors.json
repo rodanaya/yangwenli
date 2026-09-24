@@ -73,7 +73,10 @@
     },
     "sfp": {
       "headline": "{{n}} SFP sanction record(s) on file",
-      "detail": "Sanctioned by the Secretaría de la Función Pública."
+      "detail": "Sanctioned by the Secretaría de la Función Pública.",
+      "headlineName": "{{n}} possible SFP sanction match(es) — by name only",
+      "detailName": "Same company name as an entity sanctioned by the Secretaría de la Función Pública. The RFC was not provided at source, so identity is not confirmed.",
+      "detailAmbiguous": "This name is shared by several vendors in the registry; the sanction may belong to a different company."
     },
     "ariaT1": {
       "headline": "ARIA Tier 1 — under active investigation",

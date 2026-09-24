@@ -272,8 +272,7 @@ export default function ContractDetail() {
             sanctions={[
               ...externalFlags.sfp_sanctions.map((s) => ({
                 list_type: 'sfp' as const,
-                match_method: 'rfc' as const,
-                match_confidence: 1,
+                match_method: s.match_basis ?? ('name' as const),
                 sanction_type: s.sanction_type ?? undefined,
               })),
               ...(externalFlags.sat_efos
@@ -283,7 +282,6 @@ export default function ContractDetail() {
                         ? 'efos_definitivo'
                         : 'efos_presunto') as 'efos_definitivo' | 'efos_presunto',
                       match_method: 'rfc' as const,
-                      match_confidence: 1,
                     },
                   ]
                 : []),

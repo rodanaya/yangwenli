@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, Query
 import sqlite3
 
+from ..pii import public_rfc
 from ..dependencies import get_db_dep
 
 logger = logging.getLogger(__name__)
@@ -145,7 +146,7 @@ def gap_contracts(
             "exception_article": x["exception_article"],
             "cucop": x["cucop_primary"],
             "vendor": x["vendor"],
-            "vendor_rfc": x["vendor_rfc"],
+            "vendor_rfc": public_rfc(x["vendor_rfc"]),
             "vendor_incorp_year": x["vendor_incorp_year"],
             "is_young_vendor": bool(int(x["is_young_vendor"] or 0)),
             "efos_flag": bool(int(x["efos_flag"] or 0)),

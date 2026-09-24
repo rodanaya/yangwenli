@@ -92,13 +92,23 @@ export function buildVendorFlags(input: BuildFlagsInput): PriorityFlag[] {
   }
 
   // ─── SFP sanctions ──────────────────────────────────────────────────────
-  const sfpCount = externalFlags?.sfp_sanctions?.length ?? 0
-  if (sfpCount > 0) {
+  // Critical only when the RFC confirms identity. RFC is missing at source for
+  // most records, so a name-only match is surfaced as "possible", never as fact.
+  const sfp = externalFlags?.sfp_sanctions ?? []
+  if (sfp.length > 0) {
+    const rfcVerified = sfp.some((s) => s.match_basis === 'rfc')
+    const allAmbiguous = sfp.every((s) => s.match_basis === 'name_ambiguous')
     flags.push({
       key: 'sfp',
-      severity: 'critical',
-      headline: t('vendorFlags.sfp.headline', { n: sfpCount }),
-      detail: t('vendorFlags.sfp.detail'),
+      severity: rfcVerified ? 'critical' : 'high',
+      headline: rfcVerified
+        ? t('vendorFlags.sfp.headline', { n: sfp.length })
+        : t('vendorFlags.sfp.headlineName', { n: sfp.length }),
+      detail: rfcVerified
+        ? t('vendorFlags.sfp.detail')
+        : allAmbiguous
+          ? t('vendorFlags.sfp.detailAmbiguous')
+          : t('vendorFlags.sfp.detailName'),
     })
   }
 
