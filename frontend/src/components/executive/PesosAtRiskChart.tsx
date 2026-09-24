@@ -221,7 +221,7 @@ export function PesosAtRiskChart({ lang, patternCounts }: PesosAtRiskChartProps)
             {/* ── HTML label layer ── */}
             <div
               className="absolute font-mono text-[11px] text-text-muted leading-[14px]"
-              style={{ left: narrow ? 0 : Math.max(0, PLOT_X0 - measureLabel(unit, TICK_FONT, 999, 14).width - 14), top: AXIS_H - 21 }}
+              style={{ left: narrow ? 0 : Math.max(0, xPos(AXIS_TICKS[0]) - tickW(AXIS_TICKS[0]) / 2 - measureLabel(unit, TICK_FONT, 999, 14).width - 10), top: AXIS_H - 21 }}
             >
               {narrow ? `${unit}:` : unit}
             </div>

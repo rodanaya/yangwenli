@@ -1157,7 +1157,7 @@ export default function Executive() {
                           {/* Rung row */}
                           <Link
                             to={r.href}
-                            className="group grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_92px] items-baseline gap-x-4 gap-y-1 py-2 rounded-sm transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                            className="group grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_120px] items-baseline gap-x-4 gap-y-1 py-2 rounded-sm transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                             aria-label={`${formatNumber(r.count)} — ${r.label[lang]}`}
                           >
                             {/* Count — Playfair Italic 800 anchor */}
@@ -1199,7 +1199,7 @@ export default function Executive() {
 
                           {/* Filter-operation caption between this rung and next */}
                           {r.operation && (
-                            <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_92px] gap-x-4 py-1.5">
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_120px] gap-x-4 py-1.5">
                               <span className="hidden sm:block" /> {/* spacer for count column */}
                               <div className="flex items-center gap-2 min-w-0">
                                 <span
@@ -1217,7 +1217,7 @@ export default function Executive() {
                                   Color tints toward the destination rung so the
                                   eye reads "this drop lands in critical territory". */}
                               {rungs[i + 1]?.drop != null && (
-                                <span className="font-mono tabular-nums text-[13px] text-right" style={{ color: rungInks[i + 1], letterSpacing: '0.06em' }}>
+                                <span className="font-mono tabular-nums text-[13px] text-right whitespace-nowrap" style={{ color: rungInks[i + 1], letterSpacing: '0.06em' }}>
                                   ··· {fmtDrop(rungs[i + 1].drop as number)} {lang === 'en' ? 'drop' : 'caída'}
                                 </span>
                               )}
@@ -1241,7 +1241,7 @@ export default function Executive() {
                       ? `43 named cases · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} GT vendors — training corpus`
                       : `43 casos con nombre · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} proveedores GT — corpus de entrenamiento`}
                   >
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_92px] items-baseline gap-x-4 gap-y-1">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_120px] items-baseline gap-x-4 gap-y-1">
                       {/* Eyebrow + count, indented to align under count column
                           (on phones one line above the text) */}
                       <div className="col-span-2 sm:col-span-1 flex flex-row sm:flex-col items-baseline sm:items-end gap-2 sm:gap-1 pr-1">
