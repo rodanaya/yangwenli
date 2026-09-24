@@ -41,7 +41,7 @@ import {
 } from '@/components/categories/types'
 import {
   formatCompactMXN,
-  formatDualCurrency,
+  formatCompactUSD,
   formatNumber,
   cn,
 } from '@/lib/utils'
@@ -69,6 +69,15 @@ const SORT_KEYS: SortKey[] = ['spend', 'risk', 'contracts', 'direct_award']
 
 const ALL_SECTOR_CODES = SECTORS.map((s) => s.code)
 const DA_LIMIT_PCT = Math.round(EU_DIRECT_AWARD_LIMIT * 100) // 10 — the EU single-market scoreboard line
+
+const COUNT_WORDS: Record<'en' | 'es', string[]> = {
+  en: ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'],
+  es: ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce'],
+}
+/** Spell 1–12 as a word (editorial style); numerals above 12. */
+function countWord(n: number, lang: 'en' | 'es'): string {
+  return n >= 1 && n <= 12 ? COUNT_WORDS[lang][n] : String(n)
+}
 
 /** WCAG contrast of a #rrggbb fill against white text — picks the active chip's fill. */
 function contrastOnWhite(hex: string): number {
@@ -411,6 +420,14 @@ export default function CategoriesIndex() {
     () => (data?.data ? data.data.reduce((s, c) => s + c.total_contracts, 0) : 0),
     [data],
   )
+  // Folio stat rail: `number word` pairs. The contract count is the sum over the
+  // categories, i.e. *classified* contracts. USD only on EN (currency rule).
+  const railItems: [string, string][] = [
+    [formatNumber(totalContracts), isEs ? 'contratos clasificados' : 'contracts classified'],
+    [String(data?.data?.length ?? 0), isEs ? 'categorías' : 'categories'],
+    ['99.73%', isEs ? 'del gasto' : 'of spend'],
+    ...(isEs ? [] : [[`≈${formatCompactUSD(totalValue)}`, ''] as [string, string]]),
+  ]
 
   const findings = useMemo(
     () => (data?.data ? computeFindings(data.data) : []),
@@ -529,50 +546,47 @@ export default function CategoriesIndex() {
   return (
     <div className="min-h-screen bg-background">
       {/* ── B0 · Folio ───────────────────────────────────────────────────────── */}
-      <header className="border-b border-border px-4 sm:px-6 lg:px-8 py-7">
+      <header className="border-b border-border px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-3 flex items-center gap-3 font-mono" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>{isEs ? 'El Inventario' : 'The Stocktake'}</span>
-            <span aria-hidden="true" style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-            <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
-              {isEs ? 'levantamiento físico del gasto' : 'a physical count of federal spend'}
-              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>COMPRANET 2002–2025
-              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>v0.8.5
-            </span>
+          <div className="mb-3 font-mono" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+            <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>{isEs ? 'El Inventario' : 'The Stocktake'}</span>
+            <span aria-hidden="true" style={{ margin: '0 8px' }}>·</span>COMPRANET 2002–2025
           </div>
 
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <h1
-              className="text-text-primary"
-              style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.05, letterSpacing: '-0.012em' }}
-            >
-              {isEs ? 'Setenta y dos anaqueles guardan' : 'Seventy-two shelves hold'}
-              {saldo && totalValue > 0 ? (
-                <>
-                  {' '}
-                  <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 400 }}>{formatDualCurrency(totalValue)}</span>
-                  {isEs ? `; la mitad cabe en ${saldo.k50}.` : `; half of it fits on ${saldo.k50}.`}
-                </>
-              ) : (
-                isEs ? ' el gasto federal.' : ' federal spend.'
-              )}
-            </h1>
-            {totalContracts > 0 && (
-              <div className="text-right">
-                <div className="tabular-nums" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 'clamp(1.25rem, 2vw, 1.5rem)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
-                  {formatNumber(totalContracts)}
-                </div>
-                <div className="font-mono mt-1" style={{ fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                  {isEs ? 'contratos validados' : 'validated contracts'}
-                </div>
-              </div>
+          <h1
+            className="text-text-primary"
+            style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.05, letterSpacing: '-0.012em', textWrap: 'balance' }}
+          >
+            {isEs ? 'Setenta y dos anaqueles guardan' : 'Seventy-two shelves hold'}
+            {saldo && totalValue > 0 ? (
+              <>
+                {' '}
+                <span className="whitespace-nowrap" style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 400 }}>{formatCompactMXN(totalValue)}</span>
+                {isEs ? `; la mitad cabe en ${countWord(saldo.k50, 'es')}.` : `; half of it fits on ${countWord(saldo.k50, 'en')}.`}
+              </>
+            ) : (
+              isEs ? ' el gasto federal.' : ' federal spend.'
             )}
-          </div>
-          <p className="mt-3" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 16, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
+          </h1>
+          <p className="mt-3" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 17, lineHeight: 1.55, maxWidth: '62ch', color: 'var(--color-text-secondary)' }}>
             {isEs
-              ? 'Las categorías agrupan qué compró el gobierno —medicamentos, obra, software— sin importar quién. Aquí, el conteo físico: cada anaquel con su valor en libros, su surtidor dominante y su columna de descuadres.'
-              : 'Categories group what the government bought — medicines, civil works, software — regardless of who. Here, the physical count: every shelf with its book value, its dominant supplier, and its column of discrepancies.'}
+              ? 'Las categorías ordenan las compras federales por lo que se compró —medicamentos, obra carretera, software—, no por quién lo compró. Cada anaquel lleva su gasto, su proveedor dominante y su indicador de riesgo; el alzado muestra dónde se separan el dinero y el riesgo.'
+              : 'Categories sort federal purchases by what was bought — medicines, road works, software — not by who bought them. Each shelf carries its spend, its dominant supplier and its risk indicator; the elevation below shows where the money and the risk part ways.'}
           </p>
+          {totalContracts > 0 && (
+            <p
+              className="mt-3 pt-2.5 font-mono flex flex-wrap gap-x-2 gap-y-1"
+              style={{ borderTop: '1px solid var(--color-border)', fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)', maxWidth: 'none' }}
+            >
+              {railItems.map((item, i) => (
+                <span key={i} className="whitespace-nowrap">
+                  <span className="tabular-nums text-text-primary" style={{ fontWeight: 600 }}>{item[0]}</span>{item[1] && ` ${item[1]}`}
+                  {/* trailing separator: a wrapped line never starts with "·" */}
+                  {i < railItems.length - 1 && <span aria-hidden="true" style={{ marginLeft: 8 }}>·</span>}
+                </span>
+              ))}
+            </p>
+          )}
         </div>
       </header>
 
