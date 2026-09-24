@@ -88,3 +88,35 @@ El Alzado; the count sheet; the rest of the dossier; the `#a06820` token decisio
 
 ## Build notes for the executor
 Same stack as `DAY-11-categorias.md § Build notes`: worktree `D:\Python\yangwenli\.claude\worktrees\parallax-day01`, branch `parallax/day11b-polish` (this file is its first commit), backend `127.0.0.1:8001` (do not restart), Vite `localhost:3009` on this worktree, `MSYS_NO_PATHCONV=1`, ≤ 2 browsers, never rubli.xyz. Order: **1 → 2 → 3**. One commit per change: `feat(categories § PARALLAX D11b § Change N): …`, body cites `docs/parallax/DAY-11b-categorias-polish.md § Change N`, trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Progress: `_parallax_shots/day11b/progress.md` (one line per step). Crops: `_parallax_shots/day11b/after/` (reuse `shots.mjs` with `TAG=after LANGS=en,es`, plus the state crops for Change 3). LOOK at every crop. Report in your reply (subagents cannot write report files): per change, done, every acceptance number before → after, deviations, noticed-not-fixed. **React review (added after the brief shipped — it was missing):** invoke `vercel-react-best-practices` before Change 3's selector is written and before committing Changes 2 and 3; report the rules it flagged per component. Gates from `frontend/`: `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.app.json` · `npm run build` · `npm run lint:tokens` · `npx eslint` on touched files; bilingual check on every string and aria-label. Do NOT bump BUILD_ID, push, deploy or merge.
+
+## Result
+
+Built by the Opus executor `parallax-day11`. After the rebase onto `196694b3` (the RFC-mask hotfix), the commits are:
+
+| Commit | What it is |
+|---|---|
+| `40f99592` | Change 1 |
+| `19b1ec90` | Change 2 |
+| `4b15f6a7` | Change 3 |
+| `35601423` | Judge round 1 |
+
+Judged on `_parallax_shots/day11b/after/*`. The user reviewed the before/after page `_parallax_shots/day11b/review-11b.html` and said to continue.
+
+| Measure | before | after |
+|---|---|---|
+| `/categories` header | counter floating at x=1210, ~380px from the h1; h1 amount split across 2 lines (line 2 began `· ≈US$492B`); kicker 4 lines at 390; "validated contracts" (wrong: that number is the classified sum) | one left edge for kicker / h1 / lede / stat rail at every width; the amount on one line; kicker 1 line; `3,051,294 contracts classified · 72 categories · 99.73% of spend · ≈US$492B`; lede rewritten. Height 257 → 323 (accepted: the 62ch lede + rail) |
+| § La posición | 5 unlabelled tracks, 7px dot, readout ~500px from its dot, median label colliding with ticks, EU tick pinned at x≈0 | label + Garamond readout + rank in a 200px left column, endpoints and median under the track, 11px ringed dot with a `#N` flag, EU 10% on a 0-based direct-award scale, top/bottom-5 accent rule; overlaps 0 / 54 rows; the `#a06820` readout dropped |
+| § La cinta kardex | 24 rows under 5 banners, ~1,253px at 1440 / 1,930 at 390 | a term selector (All · Fox · Calderón · Peña Nieto · AMLO · Sheinbaum) over a **linear** 24-bar strip. All shows a 5-row term table with risk /100 (27 · 33 · 39 · 31 · 27 for cat 20); a term shows its year rows. 442 EN / 461 ES at 1440, 588 at 390. Term sums checked 5/5; 2025 marked partial (data to 28 Sep 2025) |
+
+Judge round 1:
+- the strip went from √ to linear, because √ flattened 7B and 90B into similar blocks;
+- 16px and a hairline between the strip and the readout, and "Sheinb." at 390;
+- the identical amber risk squares became integers /100;
+- 2025 marked partial.
+
+`vercel-react-best-practices` was **not** in the first brief. The user asked, and it was added mid-build. It ran after Changes 2 and 3 were committed: KardexPosicion passed as built; in KardexCinta, 36 inline handlers became one stable `onSelect` with `data-term`.
+
+Noticed, not fixed:
+- `DossierSectionHeader` titles wrap to 2 lines at 390.
+- The term-view year rows at 390 take 2 lines.
+- The aria-hidden `│` dividers are drawn at 1.28 contrast.
