@@ -20,6 +20,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useYearOverYear } from '@/components/stories/live/useEmergencyData'
 import { RISK_TEXT_COLORS } from '@/lib/constants'
+import { ADMINISTRATIONS, ADMIN_DISPLAY_ACCENTED, type AdministrationKey } from '@/lib/administrations'
 
 // Per-year direct-award rates come from /analysis/year-over-year. The hardcoded
 // 2002-2025 series this component used to carry read 58-73% for 2002-2009 and
@@ -27,14 +28,21 @@ import { RISK_TEXT_COLORS } from '@/lib/constants'
 // reads 0.0%) and 2020 closes at 78.09%. Years the register cannot score are
 // dropped rather than drawn.
 
-// Era bands behind the line (presidential terms)
-const ERA_BANDS: Array<{ label: string; start: number; end: number; color: string }> = [
-  { label: 'FOX',        start: 2002, end: 2006, color: '#1a5276' },
-  { label: 'CALDERÓN',   start: 2007, end: 2012, color: '#1a5276' },
-  { label: 'PEÑA NIETO', start: 2013, end: 2018, color: '#c41e3a' },
-  { label: 'AMLO',       start: 2019, end: 2024, color: '#7b2d8b' },
-  { label: 'SHEINBAUM',  start: 2025, end: 2025, color: '#7b2d8b' },
-]
+// Structure B (2010) is the first COMPRANET structure that codes the
+// procedure type; Structure A (2002–2009) reads 0.0–0.05 %, which drawn as a
+// rate would say Mexico had no direct awards for eight years.
+const DA_SERIES_FLOOR = 2010
+
+// Era wash hues (plate marks, this plate's own palette); years and labels
+// come from the one calendar in lib/administrations. At full alpha each hue
+// clears 4.5:1 on the plate paper, so the labels use them directly.
+const ERA_HUE: Record<AdministrationKey, string> = {
+  fox: '#1a5276',
+  calderon: '#1a5276',
+  epn: '#c41e3a',
+  amlo: '#7b2d8b',
+  sheinbaum: '#7b2d8b',
+}
 
 // FT-style annotation callouts BELOW the data line. Stagger pattern is
 // HIGH/LOW/HIGH/LOW (zigzag) so adjacent callouts in years can't share Y space.
@@ -56,7 +64,7 @@ export function MacroArc({ lang }: Props) {
   const isEs = lang === 'es'
   const yoy = useYearOverYear()
   const series = (yoy.data ?? [])
-    .filter((d) => d.direct_award_pct > 0)
+    .filter((d) => d.year >= DA_SERIES_FLOOR && d.direct_award_pct > 0)
     .map((d) => ({ year: d.year, da: d.direct_award_pct }))
     .sort((a, b) => a.year - b.year)
 
@@ -70,7 +78,7 @@ export function MacroArc({ lang }: Props) {
   const CW = W - PAD_L - PAD_R
   const CH = H - PAD_T - PAD_B
 
-  const Y_MIN_YR = series.length ? series[0].year : 2010
+  const Y_MIN_YR = series.length ? series[0].year : DA_SERIES_FLOOR
   const Y_MAX_YR = series.length ? series[series.length - 1].year : 2025
   const Y_MAX_PCT = 100
   // European Commission, Single Market Scoreboard: a direct-award share at or
@@ -88,6 +96,16 @@ export function MacroArc({ lang }: Props) {
     .join(' ')
 
   const areaPath = `${linePath} L ${xOf(Y_MAX_YR).toFixed(2)} ${AXIS_Y} L ${xOf(Y_MIN_YR).toFixed(2)} ${AXIS_Y} Z`
+
+  // Bands clipped to the drawn window (Calderón → 2010–12; Fox leaves).
+  const eraBands = ADMINISTRATIONS
+    .filter((a) => a.yearEnd >= Y_MIN_YR && a.yearStart <= Y_MAX_YR)
+    .map((a) => ({
+      label: ADMIN_DISPLAY_ACCENTED[a.key].toUpperCase(),
+      start: Math.max(a.yearStart, Y_MIN_YR),
+      end: Math.min(a.yearEnd, Y_MAX_YR),
+      color: ERA_HUE[a.key],
+    }))
 
   const yTicks = [0, 25, 50, 75, 100]
   const xTicks = series
@@ -135,7 +153,7 @@ export function MacroArc({ lang }: Props) {
         </defs>
 
         {/* Admin wash bands behind the chart */}
-        {ERA_BANDS.map((era) => {
+        {eraBands.map((era) => {
           const x1 = xOf(era.start)
           const x2 = era.end > era.start ? xOf(era.end) : Math.min(xOf(era.start) + 16, PAD_L + CW)
           return (
@@ -399,8 +417,8 @@ export function MacroArc({ lang }: Props) {
       {/* Caption — minimal, methodology-only */}
       <p className="mt-2 text-[12px] font-mono text-text-muted leading-relaxed">
         {isEs
-          ? `Tasa de adjudicación directa anual · bandas administrativas · el Tablero UE considera insatisfactorio ≥ ${EU_LINE}%. Fuente: COMPRANET ${Y_MIN_YR}–${Y_MAX_YR}.`
-          : `Yearly direct-award rate · admin wash bands · the EU scoreboard rates ≥ ${EU_LINE}% unsatisfactory. Source: COMPRANET ${Y_MIN_YR}–${Y_MAX_YR}.`}
+          ? `Tasa de adjudicación directa anual · bandas administrativas · el Tablero UE considera insatisfactorio ≥ ${EU_LINE}%. Fuente: COMPRANET ${Y_MIN_YR}–${Y_MAX_YR} · 2002–2009 no se dibujan — la Estructura A no codifica el tipo de procedimiento.`
+          : `Yearly direct-award rate · admin wash bands · the EU scoreboard rates ≥ ${EU_LINE}% unsatisfactory. Source: COMPRANET ${Y_MIN_YR}–${Y_MAX_YR} · 2002–2009 not drawn — Structure A does not code the procedure type.`}
       </p>
     </div>
   )

@@ -13,10 +13,13 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import type { CaptureLeadersResponse } from '@/api/types'
+import { formatNumber } from '@/lib/utils'
 
-export function CaptureLeaders({ lang, leaders }: {
+export function CaptureLeaders({ lang, leaders, p6Count }: {
   lang: 'en' | 'es'
   leaders: CaptureLeadersResponse['leaders'] | undefined
+  /** Live P6 vendor count (aria_stats.pattern_counts.P6). */
+  p6Count: number
 }) {
   // Which capture-leader row is under the cursor (data-only detail strip).
   const [capDetail, setCapDetail] = useState<{ label: string; top: number; second: number } | null>(null)
@@ -53,7 +56,7 @@ export function CaptureLeaders({ lang, leaders }: {
         </p>
 
         <div className="flex items-end gap-3 mb-4">
-          <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: 'var(--color-accent-hover)' }}>15,923</span>
+          <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: 'var(--color-accent-hover)' }}>{formatNumber(p6Count)}</span>
           <span className="font-mono text-[13px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors fit\nthe P6 fingerprint' : 'proveedores ajustan\na la huella P6'}</span>
         </div>
         {/* Cleveland pair per institution: filled dot = top vendor share,

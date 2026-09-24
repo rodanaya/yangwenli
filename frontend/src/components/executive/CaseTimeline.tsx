@@ -7,6 +7,7 @@
  */
 
 import { SECTOR_COLORS, getSectorTextColor } from '@/lib/constants'
+import { ADMINISTRATIONS, ADMIN_COLORS, ADMIN_DISPLAY_ACCENTED } from '@/lib/administrations'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data + types
@@ -32,12 +33,20 @@ const TIMELINE_CASES: TimelineCase[] = [
   { year: 2023, label: { en: 'Toka IT monopoly', es: 'Monopolio TIC Toka' }, sector: 'tecnologia', severity: 'critical' },
 ]
 
-export const ERA_BANDS = [
-  { label: 'Calderón',    start: 2008, end: 2012, color: '#8b5cf6' },
-  { label: 'Peña Nieto',  start: 2012, end: 2018, color: '#f97316' },
-  { label: 'AMLO',        start: 2018, end: 2024, color: 'var(--color-risk-critical)' },
-  { label: 'Sheinbaum',   start: 2024, end: 2025, color: '#10b981' },
-]
+const YEAR_MIN = 2008
+const YEAR_MAX = 2025
+
+// One calendar (lib/administrations): each band runs from its term's first
+// year to the next term's first year; Calderón is clipped to the axis start
+// (2008) and Sheinbaum's band starts at the 2025 axis end.
+const ERA_BANDS = ADMINISTRATIONS
+  .filter((a) => a.yearEnd >= YEAR_MIN && a.yearStart <= YEAR_MAX)
+  .map((a) => ({
+    label: ADMIN_DISPLAY_ACCENTED[a.key],
+    start: Math.max(a.yearStart, YEAR_MIN),
+    end: Math.min(a.yearEnd + 1, YEAR_MAX),
+    color: ADMIN_COLORS[a.key],
+  }))
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Component
@@ -51,8 +60,6 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
   const SVG_W = 820
   const SVG_H = 190
   const AXIS_Y = 130
-  const YEAR_MIN = 2008
-  const YEAR_MAX = 2025
   const PAD_X = 24
 
   const yearToX = (year: number) =>
@@ -77,8 +84,9 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
       >
         {/* Administration era bands */}
         {ERA_BANDS.map(era => {
-          const x1 = yearToX(Math.max(era.start, YEAR_MIN))
-          const x2 = yearToX(Math.min(era.end, YEAR_MAX))
+          const x1 = yearToX(era.start)
+          // The last band (Sheinbaum, 2025–) runs from the axis end into the pad.
+          const x2 = era.end > era.start ? yearToX(era.end) : SVG_W - 2
           const midX = (x1 + x2) / 2
           return (
             <g key={era.label}>
@@ -100,7 +108,7 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
                 {era.label.toUpperCase()}
               </text>
               {/* Right-edge divider */}
-              {era.end <= YEAR_MAX && (
+              {era.end > era.start && era.end < YEAR_MAX && (
                 <line x1={x2} x2={x2} y1={8} y2={AXIS_Y} stroke={era.color} strokeWidth={0.5} opacity={0.2} />
               )}
             </g>

@@ -40,13 +40,13 @@ const inkOf = (color: string) => (color === '#b45309' ? RISK_TEXT_COLORS.high : 
 
 // baselineMdp = estimated exposure if pattern operated at sector median price
 // rather than observed price. Gap = pesosBn - baselineMdp = "corruption premium".
-export const PATTERN_RISK: PatternRiskEntry[] = [
-  { code: 'P5', label: { en: 'Systematic Overpricing',   es: 'Sobreprecio Sistemático' }, pesosBn: 240, baselineMdp: 10, vendors: 3985,  color: '#dc2626' },
+const PATTERN_RISK: PatternRiskEntry[] = [
+  { code: 'P5', label: { en: 'Systematic Overpricing',   es: 'Sobreprecio Sistemático' }, pesosBn: 240, baselineMdp: 10, vendors: 3772,  color: '#dc2626' },
   { code: 'P2', label: { en: 'Ghost Companies',          es: 'Empresas Fantasma' },        pesosBn: 95,  baselineMdp: 5,  vendors: 6118,  color: '#dc2626' },
-  { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  baselineMdp: 12, vendors: 15923, color: 'var(--color-risk-critical)' },
+  { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  baselineMdp: 12, vendors: 15939, color: 'var(--color-risk-critical)' },
   { code: 'P1', label: { en: 'Concentrated Monopoly',    es: 'Monopolio Concentrado' },    pesosBn: 64,  baselineMdp: 3,  vendors: 44,    color: '#dc2626' },
-  { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  baselineMdp: 2,  vendors: 2974,  color: '#b45309' },
-  { code: 'P7', label: { en: 'Contractor Network',       es: 'Red de Contratistas' },      pesosBn: 38,  baselineMdp: 8,  vendors: 257,   color: '#dc2626' },
+  { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  baselineMdp: 2,  vendors: 2972,  color: '#b45309' },
+  { code: 'P7', label: { en: 'Contractor Network',       es: 'Red de Contratistas' },      pesosBn: 38,  baselineMdp: 8,  vendors: 285,   color: '#dc2626' },
   { code: 'P4', label: { en: 'Bid Collusion',            es: 'Colusión en Licitaciones' }, pesosBn: 18,  baselineMdp: 4,  vendors: 220,   color: '#b45309' },
 ]
 
@@ -56,9 +56,12 @@ export const PATTERN_RISK: PatternRiskEntry[] = [
 
 interface PesosAtRiskChartProps {
   lang: 'en' | 'es'
+  /** Live ARIA vendor counts per pattern (aria_stats.pattern_counts); the
+   *  typed `vendors` are the fallback. The pesos estimates stay illustrative. */
+  patternCounts?: Record<string, number>
 }
 
-export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
+export function PesosAtRiskChart({ lang, patternCounts }: PesosAtRiskChartProps) {
   // Rank by gap width (the editorial question: which pattern has the largest corruption premium?)
   const sorted = [...PATTERN_RISK].sort((a, b) => (b.pesosBn - b.baselineMdp) - (a.pesosBn - a.baselineMdp))
 
@@ -182,7 +185,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
               <text x={38} y={y + 10}
                 fontSize={7.5} fill="var(--color-text-muted)"
                 fontFamily="var(--font-family-mono, monospace)">
-                {formatNumber(p.vendors)} {lang === 'en' ? 'vendors' : 'proveedores'}
+                {formatNumber(patternCounts?.[p.code] ?? p.vendors)} {lang === 'en' ? 'vendors' : 'proveedores'}
               </text>
 
               {/* Connector line — animates left → right */}

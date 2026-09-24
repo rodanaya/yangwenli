@@ -23,7 +23,7 @@ interface LeadTimeCase {
   href?: string
 }
 
-export const LEAD_TIME_CASES: LeadTimeCase[] = [
+const LEAD_TIME_CASES: LeadTimeCase[] = [
   { name: { en: 'IMSS Ghost Network',  es: 'Red Fantasma IMSS' },     flagYear: 2008, publicYear: 2014, sector: 'salud',         href: '/aria?pattern=P2' },
   { name: { en: 'Estafa Maestra',      es: 'La Estafa Maestra' },     flagYear: 2010, publicYear: 2017, sector: 'gobernacion',   href: '/cases' },
   { name: { en: 'Odebrecht-PEMEX',     es: 'Odebrecht-PEMEX' },       flagYear: 2014, publicYear: 2017, sector: 'energia',       href: '/cases' },
@@ -57,11 +57,13 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
   const SVG_H = TOP + ROW_H * sorted.length + 28
   const trackW = SVG_W - LEFT_LABEL - RIGHT_PAD
   const yearToX = (y: number) => LEFT_LABEL + ((y - yearMin) / yearSpan) * trackW
-  // Median lead-time: 2.7 years (across documented case set)
-  const MEDIAN_YEARS = 2.7
+  // Median lead-time, computed from the rows (never a typed constant).
+  const leads = sorted.map((c) => c.publicYear - c.flagYear).sort((a, b) => a - b)
+  const mid = Math.floor(leads.length / 2)
+  const medianYears = leads.length % 2 ? leads[mid] : (leads[mid - 1] + leads[mid]) / 2
   const medianLabel = lang === 'en'
-    ? `Median RUBLI lead-time: ${MEDIAN_YEARS} years before press`
-    : `Tiempo de detección mediano: ${MEDIAN_YEARS} años antes de la prensa`
+    ? `Median lead-time across these ${sorted.length} cases: ${medianYears} years`
+    : `Ventaja mediana en estos ${sorted.length} casos: ${medianYears} años`
 
   return (
     <div>

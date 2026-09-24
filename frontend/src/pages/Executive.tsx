@@ -166,10 +166,13 @@ export default function Executive() {
   // both surfaces render the identical map.
   const { clusters: scatterClusters, isLoading: scatterLoading } = useScatterClusters(atlasMode, lang)
 
-  // § 1 The Atlas — click navigation: each mode opens the right page
+  // § 1 The Atlas — click navigation: each mode opens the right page. A
+  // pattern orb opens its cohort register on /atlas (?scope=cohorte&code=,
+  // the Sep-17 three-scope keys /atlas reads); /clusters#code redirected to
+  // /atlas and lost the hash.
   const handleAtlasClusterClick = (clusterCode: string) => {
     if (atlasMode === 'patterns') {
-      navigate(`/clusters#${clusterCode}`)
+      navigate(`/atlas?scope=cohorte&code=${encodeURIComponent(clusterCode)}`)
     } else if (atlasMode === 'sectors') {
       navigate(`/sectors?sector=${clusterCode}`)
     } else if (atlasMode === 'categories') {
@@ -186,6 +189,7 @@ export default function Executive() {
   // English-only USD companion — surfaces foreign-reader scale alongside MXN.
   // Spanish stays MXN-only (Mexican audience reads pesos natively).
   const headlineSpendUSD = lang === 'en' ? `≈${formatCompactUSD(TOTAL_SPEND_MXN)}` : null
+  const wireDate = new Intl.DateTimeFormat(lang === 'es' ? 'es-MX' : 'en-US', { dateStyle: 'medium' })
   // Per-tile descriptors below are inlined into the editorial cards JSX
   // so they can each have a distinctive micro-visualization and layout.
 
@@ -318,8 +322,8 @@ export default function Executive() {
             }}
           >
             {lang === 'en'
-              ? 'Built by RUBLI · Data: COMPRANET 2002–2025 · Updated May 2026 · Model v0.8.5'
-              : 'Por RUBLI · Datos: COMPRANET 2002–2025 · Actualizado may 2026 · Modelo v0.8.5'}
+              ? 'Built by RUBLI · Data: COMPRANET 2002–2025 · Data cut 2025·09·28 · Model v0.8.5'
+              : 'Por RUBLI · Datos: COMPRANET 2002–2025 · Corte de datos 2025·09·28 · Modelo v0.8.5'}
           </p>
 
           {/* Live-data status — the whole page loads from ONE bundled request
@@ -360,7 +364,7 @@ export default function Executive() {
           >
             {lang === 'en'
               ? <>
-                  Every administration since 2001 has bypassed competitive procurement at
+                  Every administration the register can score has bypassed competitive procurement at
                   {' '}<em style={{ fontStyle: 'normal', color: 'var(--color-text-primary)' }}>two to three times the OECD recommended ceiling</em>.
                   This is not an aberration — it is the structural condition of Mexican federal spending.
                   RUBLI analyzed <em style={{ fontStyle: 'normal', color: 'var(--color-text-primary)' }}>{formatNumber(stats.totalContracts)} contracts</em> across 23 years,
@@ -369,7 +373,7 @@ export default function Executive() {
                   {' '}These are investigation signals, not verdicts.
                 </>
               : <>
-                  Cada administración desde 2001 ha evitado la licitación competitiva a
+                  Cada administración que el registro puede calificar ha evitado la licitación competitiva a
                   {' '}<em style={{ fontStyle: 'normal', color: 'var(--color-text-primary)' }}>dos o tres veces el límite recomendado por la OCDE</em>.
                   No es una anomalía — es la condición estructural del gasto federal mexicano.
                   RUBLI analizó <em style={{ fontStyle: 'normal', color: 'var(--color-text-primary)' }}>{formatNumber(stats.totalContracts)} contratos</em> en 23 años,
@@ -480,7 +484,7 @@ export default function Executive() {
           aria-labelledby="macro-arc-title"
         >
           <h2 id="macro-arc-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-2">
-            {lang === 'en' ? 'Five administrations · one structural failure' : 'Cinco administraciones · una falla estructural'}
+            {lang === 'en' ? 'Four administrations · one structural failure' : 'Cuatro administraciones · una falla estructural'}
           </h2>
           <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
@@ -494,8 +498,8 @@ export default function Executive() {
             folio="III"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
             caption={lang === 'en'
-              ? 'Plate — Direct-award rate stays six to eight times above the EU scoreboard line across five administrations.'
-              : 'Lámina — La tasa de adjudicación directa permanece de seis a ocho veces sobre la línea del Tablero UE en cinco administraciones.'}
+              ? 'Plate — Direct-award rate stays six to eight times above the EU scoreboard line across four administrations.'
+              : 'Lámina — La tasa de adjudicación directa permanece de seis a ocho veces sobre la línea del Tablero UE en cuatro administraciones.'}
           >
             <MacroArc lang={lang} />
           </PlateFrame>
@@ -939,8 +943,8 @@ export default function Executive() {
                 })()}
                 <div className="text-[8px] font-mono text-text-muted leading-[1.4] mt-1">
                   {lang === 'en'
-                    ? 'Bar height = contract count by amount · spike just below threshold = artificial bunching to avoid public tender'
-                    : 'Altura barra = número de contratos · pico justo bajo umbral = agrupamiento artificial para evitar licitación'}
+                    ? 'Schematic — bar heights are illustrative, not measured counts. The pattern: a spike just below the tender threshold.'
+                    : 'Esquema — las alturas son ilustrativas, no conteos medidos. El patrón: un pico justo bajo el umbral de licitación.'}
                 </div>
               </div>
               <h3 className="font-semibold text-[15px] text-text-primary leading-[1.3] mb-1.5">
@@ -955,7 +959,7 @@ export default function Executive() {
             </motion.article>
 
             {/* Finding 04 — Institutional Capture */}
-            <CaptureLeaders lang={lang} leaders={captureLeadersData?.leaders} />
+            <CaptureLeaders lang={lang} leaders={captureLeadersData?.leaders} p6Count={ariaStats?.pattern_counts?.P6 ?? 15_939} />
 
           </div>
         </section>
@@ -965,14 +969,12 @@ export default function Executive() {
           <h2 id="pesos-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Pesos at risk — estimated exposure by corruption pattern' : 'Pesos en riesgo — exposición estimada por patrón'}
           </h2>
-          {/* U-007: surface the methodological caveat that previously only
-              lived as a code comment. The aggregate scales high+critical
-              contract counts by total spend, assuming each risk band's
-              average ticket equals the population mean. */}
+          {/* The caveat of the method the plate below actually uses:
+              pattern-specific overpayment models, illustrative. */}
           <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mb-2">
             {lang === 'en'
-              ? '(estimated · assumes uniform value distribution across risk bands)'
-              : '(estimado · supone distribución uniforme de valor entre bandas de riesgo)'}
+              ? '(estimates · pattern-specific overpayment models · illustrative, not measured)'
+              : '(estimaciones · modelos de sobrepago por patrón · ilustrativas, no medidas)'}
           </div>
           <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
@@ -989,7 +991,7 @@ export default function Executive() {
               ? 'Plate — Estimated financial exposure by ARIA pattern, computed with pattern-specific overpayment models.'
               : 'Lámina — Exposición financiera estimada por patrón ARIA, calculada con modelos de sobrepago específicos.'}
           >
-            <PesosAtRiskChart lang={lang} />
+            <PesosAtRiskChart lang={lang} patternCounts={ariaStats?.pattern_counts} />
           </PlateFrame>
         </section>
 
@@ -1440,7 +1442,7 @@ export default function Executive() {
                       </div>
                       {c.contract_date && (
                         <div className="text-[12px] font-mono text-text-muted mt-0.5">
-                          {new Date(c.contract_date).toISOString().slice(0, 10)}
+                          {wireDate.format(new Date(c.contract_date))}
                         </div>
                       )}
                     </div>
