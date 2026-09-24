@@ -1,8 +1,13 @@
 /**
  * AriaMemoPanel — displays LLM-generated investigation memos for a vendor
  *
- * Fetches from GET /aria/memos/{vendorId} and renders in a dark editorial card.
- * Shows loading skeleton, error, and empty states.
+ * Fetches from GET /aria/memos/{vendorId} and renders it as a § block in the
+ * dossier's own voice (PARALLAX D10b § Change 3): SubSectionTitle kicker, mono
+ * provenance seals, one EB Garamond reading column at the 640 measure, sources +
+ * actions in a right rail when the panel itself is ≥ 64rem wide (container
+ * query — the same panel also renders inside the narrow /aria row expand).
+ * Chrome is bilingual (`aria` namespace); the memo text stays as written.
+ * The vendor's RFC is never rendered or copied (.claude/rules/security.md § 1).
  */
 
 import { useState, type ReactNode } from 'react'
@@ -11,8 +16,12 @@ import { useQuery } from '@tanstack/react-query'
 import { ariaApi, vendorApi } from '@/api/client'
 import type { AriaMemoResponse, VendorSHAPResponse } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { RISK_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { formatEntityName } from '@/lib/entity/format'
+import { redactRfc } from '@/lib/redact'
 import { Skeleton } from '@/components/ui/skeleton'
-import { FileText, Copy, Check, AlertCircle, Sparkles } from 'lucide-react'
+import { SubSectionTitle } from '@/components/dossier/SubSectionTitle'
+import { Copy, Check, AlertCircle } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -50,28 +59,50 @@ function hasStaleModelReference(text: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Sub-components
+// Shared type
 // ---------------------------------------------------------------------------
 
-// Tier badge — uses canonical risk tokens (v3.0 trust manifest invariant 3).
-// T1=critical, T2=high, T3=medium, T4=low/neutral.
-function TierBadge({ tier }: { tier: number }) {
-  const colors: Record<number, string> = {
-    1: 'bg-risk-critical/15 text-risk-critical border-risk-critical/30',
-    2: 'bg-risk-high/15 text-risk-high border-risk-high/30',
-    3: 'bg-risk-medium/15 text-risk-medium border-risk-medium/30',
-    4: 'bg-text-muted/15 text-text-muted border-border',
-  }
+const SERIF = '"EB Garamond", Georgia, serif'
+const MEMO_OCHRE = 'var(--color-accent)'
+const KICKER_STYLE = { fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 600 } as const
+const BODY_STYLE = { fontFamily: SERIF, fontSize: 15, lineHeight: 1.55, color: 'var(--color-text-secondary)' } as const
+
+// Mono seal — the dossier's provenance stamp (hairline border, ink only).
+function Seal({ children, ink }: { children: ReactNode; ink: string }) {
   return (
-    <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-bold font-mono uppercase tracking-wider border', colors[tier] ?? colors[4])}>
-      T{tier}
+    <span
+      className="inline-flex items-center font-mono font-bold uppercase rounded-sm"
+      style={{ fontSize: 12, letterSpacing: '0.12em', padding: '1px 6px', color: ink, border: '1px solid currentColor', lineHeight: 1.4 }}
+    >
+      {children}
     </span>
+  )
+}
+
+const TIER_INK: Record<number, string> = {
+  1: RISK_TEXT_COLORS.critical,
+  2: RISK_TEXT_COLORS.high,
+  3: RISK_TEXT_COLORS.medium,
+  4: 'var(--color-text-muted)',
+}
+
+// Folio marginal note — mono kicker + serif body, hairline rule on the left.
+function MarginNote({ title, children, rule }: { title?: string; children: ReactNode; rule: string }) {
+  return (
+    <div className="mb-4 max-w-[640px]" style={{ borderLeft: `1px solid ${rule}`, paddingLeft: 12 }}>
+      {title && (
+        <p className="font-mono uppercase mb-1" style={{ fontSize: 12, letterSpacing: '0.12em', color: rule, fontWeight: 600 }}>
+          {title}
+        </p>
+      )}
+      <div style={{ fontFamily: SERIF, fontSize: 14, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>{children}</div>
+    </div>
   )
 }
 
 function MemoSkeleton() {
   return (
-    <div className="space-y-3 py-2">
+    <div className="space-y-3 py-2 max-w-[640px]">
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-11/12" />
       <Skeleton className="h-4 w-4/5" />
@@ -79,29 +110,28 @@ function MemoSkeleton() {
   )
 }
 
-// Risk factor display names (Spanish) — maps SHAP factor keys to editorial labels.
+// Risk factor display names — maps SHAP factor keys to editorial labels.
 // Mirrors the v0.8.5 18-feature set from CLAUDE.md Risk Model section.
-const FACTOR_LABELS: Record<string, string> = {
-  price_volatility: 'Volatilidad de precios',
-  vendor_concentration: 'Concentración en dependencias',
-  price_ratio: 'Ratio precio/referencia',
-  institution_diversity: 'Diversidad institucional',
-  cobid_herfindahl: 'Concentración COBID',
-  recency_z: 'Peso relativo reciente',
-  amount_residual_z: 'Monto fuera de rango esperado',
-  network_member_count: 'Membresía en red de proveedores',
-  amendment_flag: 'Contratos con enmiendas',
-  ad_period_days: 'Plazo de adjudicación breve',
-  direct_award: 'Adjudicaciones directas',
-  pub_delay_z: 'Retraso de publicación',
-  win_rate: 'Tasa de éxito en licitaciones',
-  same_day_count: 'Contratos adjudicados el mismo día',
+const FACTOR_LABELS: Record<string, { es: string; en: string }> = {
+  price_volatility: { es: 'Volatilidad de precios', en: 'Price volatility' },
+  vendor_concentration: { es: 'Concentración en dependencias', en: 'Concentration in buyers' },
+  price_ratio: { es: 'Ratio precio/referencia', en: 'Price-to-reference ratio' },
+  institution_diversity: { es: 'Diversidad institucional', en: 'Institutional diversity' },
+  cobid_herfindahl: { es: 'Concentración COBID', en: 'Co-bidding concentration' },
+  recency_z: { es: 'Peso relativo reciente', en: 'Recent relative weight' },
+  amount_residual_z: { es: 'Monto fuera de rango esperado', en: 'Amount outside expected range' },
+  network_member_count: { es: 'Membresía en red de proveedores', en: 'Vendor-network membership' },
+  amendment_flag: { es: 'Contratos con enmiendas', en: 'Amended contracts' },
+  ad_period_days: { es: 'Plazo de adjudicación breve', en: 'Short award period' },
+  direct_award: { es: 'Adjudicaciones directas', en: 'Direct awards' },
+  pub_delay_z: { es: 'Retraso de publicación', en: 'Publication delay' },
+  win_rate: { es: 'Tasa de éxito en licitaciones', en: 'Tender win rate' },
+  same_day_count: { es: 'Contratos adjudicados el mismo día', en: 'Same-day awards' },
 }
 
 // SHAP-driven analytical stub — shown when no LLM memo exists for a vendor.
-// Fetches top risk factors and renders an editorial reading of the model's
-// signal, making clear this is algorithmic (not investigative) analysis.
-function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName: string }) {
+function MemoEmptyState({ vendorId, vendorName, isEs }: { vendorId: number; vendorName: string; isEs: boolean }) {
+  const { t } = useTranslation('aria')
   const { data: shap, isLoading } = useQuery<VendorSHAPResponse>({
     queryKey: ['vendor-shap', vendorId],
     queryFn: () => vendorApi.getShap(vendorId),
@@ -115,81 +145,63 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
 
   if (isLoading) return <MemoSkeleton />
 
-  // No SHAP data at all — plain placeholder
   if (!shap) {
     return (
-      <div className="flex flex-col items-center gap-2 py-6 text-center">
-        <FileText className="h-8 w-8 text-text-muted/40" aria-hidden="true" />
-        <p className="text-sm text-text-muted">
-          Análisis narrativo no disponible para{' '}
-          <span className="font-semibold text-text-secondary">{vendorName}</span>
+      <div className="max-w-[640px] py-2">
+        <p style={BODY_STYLE}>
+          {t('memo.emptyTitle')}{' '}
+          <span className="font-semibold text-text-primary">{formatEntityName('vendor', vendorName, 'full')}</span>.
         </p>
-        <p className="text-[13px] text-text-muted/70 max-w-xs leading-relaxed">
-          Este proveedor no ha sido analizado aún por el pipeline de investigación.
-        </p>
+        <p className="mt-1" style={{ ...BODY_STYLE, fontSize: 14, color: 'var(--color-text-muted)' }}>{t('memo.emptyBody')}</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {/* Stub disclaimer */}
-      <div className="px-4 py-3 border-l-4 border-border bg-background-elevated/40 rounded-sm">
-        <p className="text-xs font-semibold text-text-primary uppercase tracking-wider mb-1 font-mono">
-          Perfil algorítmico · sin memo investigativo
-        </p>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          No existe memo narrativo para este proveedor. Se muestran las señales
-          del modelo de riesgo v0.8.5 como punto de partida para investigación.{' '}
-          <strong className="text-text-primary">Requiere verificación periodística independiente.</strong>
-        </p>
-      </div>
+    <div className="space-y-4 max-w-[640px]">
+      <MarginNote title={t('memo.stubTitle')} rule="var(--color-text-muted)">
+        {t('memo.stubBody')} <strong className="text-text-primary">{t('memo.stubStrong')}</strong>
+      </MarginNote>
 
-      {/* Model signal summary */}
       {riskScore != null && (
         <div className="flex items-baseline gap-3">
           <span
-            className="text-3xl font-bold tabular-nums leading-none"
-            style={{ fontFamily: 'var(--font-family-serif)', color: riskScore >= 0.60 ? 'var(--color-risk-critical)' : riskScore >= 0.40 ? 'var(--color-risk-high)' : riskScore >= 0.25 ? 'var(--color-risk-medium)' : 'var(--color-text-muted)' }}
+            className="tabular-nums leading-none"
+            style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 30, color: RISK_TEXT_COLORS[getRiskLevelFromScore(riskScore)] }}
           >
             {(riskScore * 100).toFixed(0)}
           </span>
           <div>
-            <p className="text-[12px] font-mono uppercase tracking-wider text-text-muted">
-              Indicador de riesgo · escala 0–100
+            <p className="font-mono uppercase" style={{ fontSize: 12, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              {t('memo.riskScale')}
             </p>
-            <p className="text-[12px] text-text-muted/60">
-              {shap.n_contracts?.toLocaleString('es-MX') ?? '—'} contratos analizados
+            <p className="font-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+              {shap.n_contracts?.toLocaleString(isEs ? 'es-MX' : 'en-US') ?? '—'} {t('memo.contractsAnalyzed')}
             </p>
           </div>
         </div>
       )}
 
-      {/* Top risk factors */}
       {topFactors.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[12px] font-mono uppercase tracking-wider text-text-muted">
-            Factores de riesgo principales
-          </p>
+          <p className="font-mono" style={KICKER_STYLE}>§ {t('memo.topFactors')}</p>
           {topFactors.map((factor, i) => {
-            const label = FACTOR_LABELS[factor.factor] ?? factor.label_es ?? factor.factor
+            const known = FACTOR_LABELS[factor.factor]
+            const label = known ? (isEs ? known.es : known.en) : (isEs ? factor.label_es : null) ?? factor.factor.replace(/_/g, ' ')
             const pct = Math.min(100, Math.abs(factor.shap) * 200)
             return (
               <div key={factor.factor} className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-text-secondary">
-                    <span className="font-mono text-[12px] text-text-muted mr-2">{i + 1}.</span>
+                <div className="flex items-center justify-between gap-3">
+                  <span style={{ ...BODY_STYLE, fontSize: 14 }}>
+                    <span className="font-mono text-text-muted mr-2" style={{ fontSize: 12 }}>{i + 1}.</span>
                     {label}
                   </span>
-                  <span className="text-[12px] font-mono text-risk-high">
+                  <span className="font-mono tabular-nums" style={{ fontSize: 12, color: RISK_TEXT_COLORS.high }}>
                     +{factor.shap.toFixed(3)}
                   </span>
                 </div>
                 <div className="h-1 bg-border/50 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-risk-high/60 rounded-full"
-                    style={{ width: `${pct}%` }}
-                  />
+                  <div className="h-full bg-risk-high/60 rounded-full" style={{ width: `${pct}%` }} />
                 </div>
               </div>
             )
@@ -197,8 +209,8 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
         </div>
       )}
 
-      <p className="text-[12px] text-text-secondary border-t border-border/30 pt-3">
-        Análisis generado por modelo — no sustituye investigación periodística
+      <p className="font-mono pt-3" style={{ fontSize: 12, color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)' }}>
+        {t('memo.modelNote')}
       </p>
     </div>
   )
@@ -206,41 +218,39 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
 
 // ---------------------------------------------------------------------------
 // FormattedMemo — turns the raw ARIA memo text (ALL-CAPS headers underlined with
-// "====", "•" bullets, "Key: value" preamble) into editorial structure instead of
-// a monospaced whitespace-pre-wrap dump.
+// "====", "•" bullets, "Key: value" preamble) into editorial structure. The
+// memo's own first line becomes a mono sub-line under the vendor title; sub-
+// sections become mono § kickers; FUENTES / ACCIONES go to the rail.
 // ---------------------------------------------------------------------------
 
-const MEMO_SERIF = 'var(--font-family-serif)'
-const MEMO_OCHRE = '#a06820'
+const RAIL_SECTION = /^(FUENTES|ACCIONES)/i
 
-function FormattedMemo({ text }: { text: string }) {
+function FormattedMemo({ text, vendorName }: { text: string; vendorName: string }) {
   const lines = text.replace(/\r/g, '').split('\n')
-  const out: ReactNode[] = []
-  let bullets: string[] = []
+  const main: ReactNode[] = []
+  const rail: ReactNode[] = []
+  let target = main
+  let bullets: Array<[string, string]> = []
   let para: string[] = []
   let kvs: Array<[string, string]> = []
+  let memoTitle: string | null = null
   let k = 0
-  let titleDone = false
 
   const isUnderline = (s: string) => /^[=_~–—-]{3,}$/.test(s.trim())
   const flushPara = () => {
     if (para.length) {
-      out.push(
-        <p key={`p${k++}`} style={{ fontFamily: MEMO_SERIF, fontSize: 13.5, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
-          {para.join(' ')}
-        </p>,
-      )
+      target.push(<p key={`p${k++}`} style={BODY_STYLE}>{para.join(' ')}</p>)
       para = []
     }
   }
   const flushBullets = () => {
     if (bullets.length) {
-      out.push(
+      target.push(
         <ul key={`u${k++}`} className="space-y-1.5">
-          {bullets.map((b, i) => (
-            <li key={i} className="flex gap-2.5" style={{ fontFamily: MEMO_SERIF, fontSize: 13.5, lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
-              <span aria-hidden="true" style={{ color: MEMO_OCHRE, flexShrink: 0 }}>›</span>
-              <span>{b}</span>
+          {bullets.map(([mark, b], i) => (
+            <li key={i} className="flex gap-2.5" style={BODY_STYLE}>
+              <span aria-hidden="true" style={{ color: MEMO_OCHRE, flexShrink: 0 }}>{mark}</span>
+              <span className="min-w-0">{b}</span>
             </li>
           ))}
         </ul>,
@@ -250,16 +260,16 @@ function FormattedMemo({ text }: { text: string }) {
   }
   const flushKvs = () => {
     if (kvs.length) {
-      out.push(
+      target.push(
         <dl
           key={`d${k++}`}
-          className="grid gap-x-3 gap-y-1 px-3 py-2.5 rounded-sm"
-          style={{ gridTemplateColumns: 'auto 1fr', background: 'var(--color-background-elevated)', border: '1px solid var(--color-border)' }}
+          className="grid gap-x-4 gap-y-1 font-mono py-2"
+          style={{ gridTemplateColumns: 'max-content minmax(0, 1fr)', fontSize: 12, borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}
         >
           {kvs.map(([kk, vv], i) => (
             <div key={i} className="contents">
-              <dt className="font-mono uppercase" style={{ fontSize: 13, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>{kk}</dt>
-              <dd style={{ fontFamily: MEMO_SERIF, fontSize: 12.5, color: 'var(--color-text-primary)' }}>{vv}</dd>
+              <dt className="uppercase" style={{ letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>{kk}</dt>
+              <dd style={{ color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}>{vv}</dd>
             </div>
           ))}
         </dl>,
@@ -275,53 +285,57 @@ function FormattedMemo({ text }: { text: string }) {
     if (isUnderline(line)) continue
     if (!line) { flushAll(); continue }
 
-    // First non-empty line → the memo's own title.
-    if (!titleDone) {
-      titleDone = true
-      out.push(
-        <p key={`t${k++}`} style={{ fontFamily: MEMO_SERIF, fontSize: 15.5, fontWeight: 600, lineHeight: 1.4, color: 'var(--color-text-primary)', columnSpan: 'all' }}>
-          {line}
-        </p>,
-      )
-      continue
-    }
+    // First non-empty line → the memo's own title (kept verbatim as a sub-line).
+    if (memoTitle == null) { memoTitle = line; continue }
 
     // Section header: ALL-CAPS short line, or any line immediately underlined.
     const looksHeader =
       (next != null && isUnderline(next)) ||
-      (/^[^a-záéíóúñü]+$/.test(line) && line.length >= 3 && line.length <= 46 && !/^[•·\-*]/.test(line))
+      (/^[^a-záéíóúñü]+$/.test(line) && line.length >= 3 && line.length <= 46 && !/^[•·\-*✓→]/.test(line))
     if (looksHeader) {
       flushAll()
-      out.push(
-        <p key={`h${k++}`} className="font-mono uppercase" style={{ fontSize: 12, letterSpacing: '0.14em', fontWeight: 700, color: MEMO_OCHRE, marginTop: 4 }}>
-          {line.replace(/[=_~–—-]+$/, '').trim()}
+      const label = line.replace(/[=_~–—-]+$/, '').trim()
+      target = RAIL_SECTION.test(label) ? rail : main
+      target.push(
+        <p key={`h${k++}`} role="heading" aria-level={4} className="font-mono pt-2" style={KICKER_STYLE}>
+          § {label}
         </p>,
       )
       continue
     }
 
-    // Bullet.
-    if (/^[•·\-*]\s+/.test(line)) { flushPara(); flushKvs(); bullets.push(line.replace(/^[•·\-*]\s+/, '')); continue }
+    // Bullet (• keeps the › mark; ✓ / → keep their own glyph).
+    const bm = /^([•·\-*✓→])\s*(.+)$/.exec(line)
+    if (bm) { flushPara(); flushKvs(); bullets.push([/[✓→]/.test(bm[1]) ? bm[1] : '›', bm[2]]); continue }
 
-    // Key: value preamble (e.g. RFC, Tipo, Confianza) — only before prose/bullets begin.
+    // Key: value preamble (Tipo, Confianza, Vendor ID) — only before prose/bullets begin.
     const kv = /^([A-Za-zÁÉÍÓÚÑ][^:]{1,22}):\s+(.+)$/.exec(line)
-    if (kv && bullets.length === 0 && para.length === 0) { kvs.push([kv[1], kv[2]]); continue }
+    if (kv && bullets.length === 0 && para.length === 0 && main.length === 0) { kvs.push([kv[1], kv[2]]); continue }
 
-    // Prose.
+    // Prose. In the rail (sources, actions) every line stays its own line.
     flushBullets(); flushKvs(); para.push(line)
+    if (target === rail) flushPara()
   }
   flushAll()
-  // Newspaper flow: on wide viewports the memo runs in two balanced columns so
-  // it fills the dossier's full content width instead of stranding the right
-  // half blank (the previous 70ch cap left ~40% of the panel empty). The title
-  // spans both columns; headers / lists / paragraphs never split across a column
-  // break. Single column below lg.
+
   return (
-    <div
-      className="space-y-3 lg:columns-2 [&>*]:break-inside-avoid"
-      style={{ columnGap: '2.75rem' }}
-    >
-      {out}
+    <div data-memo-body className="@container">
+      <div className="max-w-[640px] mb-3">
+        <p className="text-text-primary" style={{ fontFamily: SERIF, fontWeight: 500, fontSize: 21, lineHeight: 1.2, letterSpacing: '-0.005em' }}>
+          {formatEntityName('vendor', vendorName, 'full')}
+        </p>
+        {memoTitle && (
+          <p className="font-mono mt-1" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-muted)', overflowWrap: 'anywhere' }}>
+            {memoTitle}
+          </p>
+        )}
+      </div>
+      <div className="@5xl:grid @5xl:gap-x-10" style={{ gridTemplateColumns: '640px minmax(0, 1fr)' }}>
+        <div className="space-y-3 max-w-[640px] min-w-0">{main}</div>
+        {rail.length > 0 && (
+          <div className="space-y-3 min-w-0 mt-3 @5xl:mt-0 max-w-[640px]">{rail}</div>
+        )}
+      </div>
     </div>
   )
 }
@@ -331,7 +345,8 @@ function FormattedMemo({ text }: { text: string }) {
 // ---------------------------------------------------------------------------
 
 export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpReason, className }: AriaMemoProps) {
-  const { t } = useTranslation('aria')
+  const { t, i18n } = useTranslation('aria')
+  const isEs = (i18n.language ?? 'es').startsWith('es')
   const [copied, setCopied] = useState(false)
 
   const { data: memo, isLoading, error } = useQuery<AriaMemoResponse | null>({
@@ -343,15 +358,16 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
 
   // Provenance — prefer the canonical memo_type column from S.3 classification,
   // fall back to text heuristic if API doesn't return it (e.g. older deploys).
-  const memoText = memo?.memo_text ?? ''
+  const rawText = memo?.memo_text ?? ''
+  const memoText = redactRfc(rawText)
   const memoType = memo?.memo_type
-  const isTemplated = memoType === 'template' || memoType === 'duplicate' || isTemplatedMemo(memoText)
-  const hasStaleScore = hasStaleModelReference(memoText)
+  const isTemplated = memoType === 'template' || memoType === 'duplicate' || isTemplatedMemo(rawText)
+  const hasStaleScore = hasStaleModelReference(rawText)
 
   async function handleCopy() {
-    if (!memo?.memo_text) return
+    if (!memoText) return
     try {
-      await navigator.clipboard.writeText(memo.memo_text)
+      await navigator.clipboard.writeText(memoText)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -360,123 +376,85 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
   }
 
   const effectiveTier = memo?.tier ?? tier
+  const stamp = memo?.generated_at ?? memo?.created_at
+  const dateLabel = stamp
+    ? new Intl.DateTimeFormat(isEs ? 'es-MX' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(stamp))
+    : undefined
+  const titleId = `aria-memo-title-${vendorId}`
 
   return (
-    <div
-      className={cn(
-        'bg-background-card border border-border rounded-sm overflow-hidden',
-        className,
-      )}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-background-elevated/50">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-accent-data" aria-hidden="true" />
-          <span className="text-sm font-semibold text-text-primary">
-            Análisis de Investigación
-          </span>
-          <span className="text-[12px] text-text-muted">Generado por IA</span>
-          {effectiveTier != null && <TierBadge tier={effectiveTier} />}
-          {/* S.3 provenance badge */}
-          {memoType === 'llm_narrative' && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20">
-              LLM
-            </span>
-          )}
-          {(memoType === 'template' || memoType === 'duplicate') && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-mono font-bold uppercase tracking-wider bg-risk-medium/10 text-risk-medium border border-risk-medium/20">
-              PLANTILLA
-            </span>
-          )}
-          {memoType === 'stub' && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-mono font-bold uppercase tracking-wider bg-border/40 text-text-muted border border-border">
-              STUB
-            </span>
-          )}
+    <section data-memo-panel aria-labelledby={titleId} className={cn('min-w-0', className)}>
+      <SubSectionTitle id={titleId} meta={dateLabel}>
+        {t('memo.kicker')}
+      </SubSectionTitle>
+
+      {/* Provenance seals */}
+      <div className="flex flex-wrap items-center gap-1.5 mb-3">
+        {effectiveTier != null && <Seal ink={TIER_INK[effectiveTier] ?? TIER_INK[4]}>T{effectiveTier}</Seal>}
+        {memoType === 'llm_narrative' && <Seal ink="var(--color-accent-data)">LLM</Seal>}
+        {(memoType === 'template' || memoType === 'duplicate') && <Seal ink={RISK_TEXT_COLORS.medium}>{t('memo.template')}</Seal>}
+        {memoType === 'stub' && <Seal ink="var(--color-text-muted)">STUB</Seal>}
+        <span className="font-mono" style={{ fontSize: 12, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+          {t('memo.aiGenerated')}
+          {memo?.memo_text && !isEs && <> · {t('memo.sourceLanguage')}</>}
+        </span>
+      </div>
+
+      {isLoading ? (
+        <MemoSkeleton />
+      ) : error ? (
+        <div className="flex items-center gap-2 text-sm py-2" style={{ color: RISK_TEXT_COLORS.critical }}>
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {t('memo.loadError')}
         </div>
-        {(memo?.generated_at ?? memo?.created_at) && (
-          <span className="text-[12px] text-text-muted font-mono">
-            {new Date((memo.generated_at ?? memo.created_at)!).toLocaleDateString('es-MX', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </span>
-        )}
-      </div>
+      ) : memo?.memo_text ? (
+        <>
+          {/* === Provenance notes (docs/DATA_INTEGRITY_PLAN.md N.2-N.4) === */}
+          {isFalsePositive && (
+            <MarginNote title={t('memo.fpTitle')} rule="var(--color-text-primary)">
+              {t('memo.fpBody')} <strong className="text-text-primary">{t('memo.fpStrong')}</strong> {t('memo.fpTail')}
+              {fpReason && (
+                <span className="block mt-1 font-mono text-text-muted" style={{ fontSize: 12 }}>
+                  {t('memo.fpReason')}: {fpReason}
+                </span>
+              )}
+            </MarginNote>
+          )}
+          {isTemplated && !isFalsePositive && (
+            <MarginNote title={t('memo.tplTitle')} rule={RISK_TEXT_COLORS.medium}>
+              {t('memo.tplBody')} <strong className="text-text-primary">{t('memo.tplStrong')}</strong> {t('memo.tplTail')}
+            </MarginNote>
+          )}
+          {hasStaleScore && (
+            <p
+              className="font-mono mb-4 max-w-[640px]"
+              style={{ fontSize: 12, lineHeight: 1.5, letterSpacing: '0.02em', color: 'var(--color-accent-hover)', borderLeft: '1px solid var(--color-accent-hover)', paddingLeft: 12 }}
+            >
+              ⓘ {t('memo.stale')}
+            </p>
+          )}
+          <FormattedMemo text={memoText} vendorName={vendorName} />
 
-      {/* Body */}
-      <div className="px-5 py-4">
-        {isLoading ? (
-          <MemoSkeleton />
-        ) : error ? (
-          <div className="flex items-center gap-2 text-sm text-risk-critical py-2">
-            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-            {t('memo.loadError')}
+          {/* Actions */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 mt-4 pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="inline-flex items-center gap-1.5 font-mono uppercase text-text-muted hover:text-text-primary transition-colors"
+              style={{ fontSize: 12, letterSpacing: '0.12em' }}
+            >
+              {copied ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
+              {copied ? t('memo.copied') : t('memo.copy')}
+            </button>
+            <span className="font-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+              {t('memo.footer')}
+            </span>
           </div>
-        ) : memo?.memo_text ? (
-          <>
-            {/* === Provenance disclaimer banners (docs/DATA_INTEGRITY_PLAN.md N.2-N.4) === */}
-            {isFalsePositive && (
-              <div className="mb-4 px-4 py-3 border-l-4 border-text-muted bg-text-muted/10 rounded-sm">
-                <p className="text-xs font-semibold text-text-primary uppercase tracking-wider mb-1">
-                  ⚠ Marcado como falso positivo estructural
-                </p>
-                <p className="text-xs text-text-secondary leading-relaxed">
-                  Este vendor es un proveedor multinacional o estructural. La concentración refleja su posición de mercado,
-                  <strong className="text-text-primary"> no evidencia de fraude.</strong> El perfil se mantiene únicamente para transparencia metodológica.
-                  {fpReason && <span className="block mt-1 text-text-muted font-mono text-[12px]">Motivo: {fpReason}</span>}
-                </p>
-              </div>
-            )}
-            {isTemplated && !isFalsePositive && (
-              <div className="mb-4 px-4 py-3 border-l-4 border-risk-medium bg-risk-medium/10 rounded-sm">
-                <p className="text-xs font-semibold text-text-primary uppercase tracking-wider mb-1">
-                  Memo automático · sin verificación humana
-                </p>
-                <p className="text-xs text-text-secondary leading-relaxed">
-                  Este memo fue generado por plantilla, no por análisis investigativo. La sección "FUENTES" sugiere búsquedas manuales
-                  (no son citaciones verificadas). <strong className="text-text-primary">Use solo como punto de partida</strong> para investigación periodística.
-                </p>
-              </div>
-            )}
-            {hasStaleScore && (
-              <div className="mb-4 px-4 py-2 border-l-2 border-risk-medium/50 bg-risk-medium/5 rounded-sm">
-                <p className="text-[13px] text-text-secondary leading-relaxed">
-                  ⓘ Memo escrito antes del modelo activo v0.8.5 (mayo 2026). Las puntuaciones citadas pueden no coincidir con los valores actuales.
-                </p>
-              </div>
-            )}
-            <FormattedMemo text={memo.memo_text} />
-
-            {/* Actions */}
-            <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
-              <button
-                onClick={handleCopy}
-                className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-                    Copiado
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-                    Copiar
-                  </>
-                )}
-              </button>
-              <span className="text-[12px] text-text-secondary">
-                Generado automáticamente — requiere verificación periodística
-              </span>
-            </div>
-          </>
-        ) : (
-          <MemoEmptyState vendorId={vendorId} vendorName={vendorName} />
-        )}
-      </div>
-    </div>
+        </>
+      ) : (
+        <MemoEmptyState vendorId={vendorId} vendorName={vendorName} isEs={isEs} />
+      )}
+    </section>
   )
 }
 
