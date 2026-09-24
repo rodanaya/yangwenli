@@ -199,7 +199,7 @@ export default function Executive() {
         }
       `}</style>
 
-      <div className="executive-page max-w-[1100px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
+      <div data-frame className="executive-page max-w-[1010px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
         {/* ─── E0 folio-v1-P1b: page-scoped paper-grain overlay ───────────────
             SVG fractalNoise at opacity 0.045, multiply blend, ochre tint.
             Pointer-events:none so it never blocks interaction. Content sits
@@ -424,7 +424,7 @@ export default function Executive() {
             </div>
           </div>
 
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+          <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Each orb is a cluster of the federal contract record — positioned left-to-right by vendor count and bottom-to-top by high-risk rate, sized to the Tier-1 priority leads inside. Toggle the lens to re-cluster the same population by pattern, sector, category, or term, and click any orb to fly into its vendors.'
               : 'Cada orbe es un cúmulo del registro de contratación federal — ubicado de izquierda a derecha por número de proveedores y de abajo hacia arriba por tasa de alto riesgo, dimensionado según los líderes prioritarios Tier-1 que contiene. Alterna la lente para reagrupar la misma población por patrón, sector, categoría o sexenio, y haz clic en cualquier orbe para entrar a sus proveedores.'}
@@ -474,13 +474,14 @@ export default function Executive() {
           <div id="macro-arc-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-2">
             {lang === 'en' ? 'Five administrations · one structural failure' : 'Cinco administraciones · una falla estructural'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+          <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Direct award rate — share of contracts awarded without competitive bidding — has stayed six to eight times the EU scoreboard line under every Mexican administration the register can score. The AI model trained on this systemic pattern now detects its variants automatically.'
               : 'La tasa de adjudicación directa — contratos sin licitación — se ha mantenido de seis a ocho veces por encima de la línea del Tablero UE en cada administración que el registro puede calificar. El modelo entrenado en este patrón sistémico lo detecta automáticamente.'}
           </p>
           <PlateFrame
             bleed
+            captionFull
             lang={lang}
             folio="III"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -497,7 +498,7 @@ export default function Executive() {
           <div id="leadtime-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Lead-time advantage — when RUBLI saw it vs. when the press did' : 'Ventaja temporal — cuándo lo vio RUBLI vs. cuándo lo vio la prensa'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+          <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? <>For each documented corruption case, the gap between when the contracts crossed RUBLI's <strong className="text-text-primary">critical-risk threshold</strong> in the data, and when the scandal became public. The bigger the gap, the longer the platform could have flagged it for investigation.</>
               : <>Para cada caso documentado, la distancia entre cuándo los contratos cruzaron el <strong className="text-text-primary">umbral de riesgo crítico</strong> en los datos, y cuándo el escándalo se hizo público. Cuanto mayor la brecha, más tiempo la plataforma habría podido señalarlo.</>
@@ -505,6 +506,7 @@ export default function Executive() {
           </p>
           <PlateFrame
             bleed
+            captionFull
             lang={lang}
             folio="IV"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -523,6 +525,7 @@ export default function Executive() {
         <section className="mb-8">
           <PlateFrame
             bleed
+            captionFull
             lang={lang}
             folio="V"
             contextLabel={{ en: 'Headline numbers', es: 'Cifras clave' }}
@@ -841,7 +844,7 @@ export default function Executive() {
           <div id="findings-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'What the analysis found' : 'Lo que encontró el análisis'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-5 text-pretty">
+          <p className="text-[15px] text-text-secondary leading-[1.6] mb-5 text-pretty">
             {lang === 'en'
               ? 'Four findings that only became visible at scale — impossible to see by auditing contracts one by one.'
               : 'Cuatro hallazgos que solo se volvieron visibles a escala — imposibles de detectar auditando contrato por contrato.'}
@@ -944,10 +947,10 @@ export default function Executive() {
 
                 </div>
               </div>
-              <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
+              <h3 className="font-semibold text-[15px] text-text-primary leading-[1.3] mb-1.5">
                 {lang === 'en' ? 'SAT officially confirmed 42. RUBLI found 145× more.' : 'SAT confirmó 42 oficialmente. RUBLI encontró 145× más.'}
               </h3>
-              <p className="text-xs text-text-secondary leading-[1.6]">
+              <p className="text-sm text-text-secondary leading-[1.6]">
                 {lang === 'en'
                   ? 'No digital footprint, burst activity, RFC anomalies, shared addresses. The 97% detection gap means most ghost-company fraud goes unregistered — and unrecovered.'
                   : 'Sin huella digital, actividad en ráfaga, anomalías RFC, domicilios compartidos. La brecha del 97% significa que la mayoría del fraude fantasma no se registra — y no se recupera.'}
@@ -1047,10 +1050,10 @@ export default function Executive() {
 
                 </div>
               </div>
-              <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
+              <h3 className="font-semibold text-[15px] text-text-primary leading-[1.3] mb-1.5">
                 {lang === 'en' ? 'MX$1.25 trillion above 5B MXN — zero audit coverage.' : 'MX$1.25 billones sobre 5,000 MDP — sin cobertura de auditoría.'}
               </h3>
-              <p className="text-xs text-text-secondary leading-[1.6]">
+              <p className="text-sm text-text-secondary leading-[1.6]">
                 {lang === 'en'
                   ? 'ASF reviews ~5% of contracts above MX$5B annually. At that rate, a high-value contract waits ~25 years for review — long after the money is gone and the vendor dissolved.'
                   : 'La ASF revisa ~5% de contratos sobre 5,000 MDP al año. A ese ritmo, un contrato de alto valor espera ~25 años para ser revisado — mucho después de que el dinero desapareció.'}
@@ -1227,10 +1230,10 @@ export default function Executive() {
                     : 'Altura barra = número de contratos · pico justo bajo umbral = agrupamiento artificial para evitar licitación'}
                 </div>
               </div>
-              <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
+              <h3 className="font-semibold text-[15px] text-text-primary leading-[1.3] mb-1.5">
                 {lang === 'en' ? 'Contracts cluster statistically just below tender thresholds.' : 'Los contratos se agrupan estadísticamente justo debajo de los umbrales.'}
               </h3>
-              <p className="text-xs text-text-secondary leading-[1.6]">
+              <p className="text-sm text-text-secondary leading-[1.6]">
                 {lang === 'en'
                   ? 'Large contracts split into multiple awards just below the legal threshold that triggers public tender. The density spike is detectable only across all 3.1M contracts at once.'
                   : 'Contratos grandes divididos en múltiples adjudicaciones justo bajo el umbral legal. El pico de densidad solo es detectable con los 3.1M contratos a la vez.'}
@@ -1262,7 +1265,7 @@ export default function Executive() {
               </div>
 
               {/* Plain-English explanation of the pattern, before any number */}
-              <p className="text-xs text-text-secondary leading-[1.55] mb-3">
+              <p className="text-sm text-text-secondary leading-[1.55] mb-3">
                 {lang === 'en'
                   ? <>One vendor controls <strong className="text-text-primary">80%+ of one institution's category budget for five-plus years</strong>. RUBLI calls this <span className="font-mono" style={{ color: 'var(--color-accent)' }}>P6 — capture</span>: a monopoly built inside a single agency, often invisible at the national level.</>
                   : <>Un proveedor controla <strong className="text-text-primary">80% o más del presupuesto de una categoría dentro de una institución durante cinco o más años</strong>. RUBLI lo llama <span className="font-mono" style={{ color: 'var(--color-accent)' }}>P6 — captura</span>: un monopolio construido dentro de una sola dependencia, frecuentemente invisible a nivel nacional.</>
@@ -1415,10 +1418,10 @@ export default function Executive() {
                   )
                 })()}
               </div>
-              <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
+              <h3 className="font-semibold text-[15px] text-text-primary leading-[1.3] mb-1.5">
                 {lang === 'en' ? 'One vendor locks one institution — year after year, no competition.' : 'Un proveedor captura una institución — año tras año, sin competencia.'}
               </h3>
-              <p className="text-xs text-text-secondary leading-[1.6]">
+              <p className="text-sm text-text-secondary leading-[1.6]">
                 {lang === 'en'
                   ? 'P6 capture differs from national monopoly: abnormal concentration in one agency with above-threshold risk. Detectable only through cross-institution comparison.'
                   : 'La captura P6 difiere del monopolio nacional: concentración anormal en una sola agencia con riesgo por encima del umbral. Solo detectable comparando entre instituciones.'}
@@ -1442,13 +1445,14 @@ export default function Executive() {
               ? '(estimated · assumes uniform value distribution across risk bands)'
               : '(estimado · supone distribución uniforme de valor entre bandas de riesgo)'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+          <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Risk scores count contracts. This counts pesos. For each ARIA pattern we estimate the financial exposure using pattern-specific overpayment models — direct overcharges (P5), full ghost-network volume (P2), capture premiums, monopoly discounts lost. Estimates are illustrative; methodology in the footnote.'
               : 'Los puntajes cuentan contratos. Esto cuenta pesos. Para cada patrón ARIA estimamos la exposición financiera usando modelos específicos de sobrepago — sobrecargos directos (P5), volumen completo de redes fantasma (P2), premios de captura, descuentos monopólicos perdidos. Las estimaciones son ilustrativas; metodología en la nota.'}
           </p>
           <PlateFrame
             bleed
+            captionFull
             lang={lang}
             folio="VI"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -1476,13 +1480,14 @@ export default function Executive() {
               <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+          <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Cell width = total spend; cell color = sector palette tinted by risk score. The top 8 categories cover the majority of federal spend.'
               : 'Ancho de celda = gasto total; color de celda = paleta sectorial teñida por puntaje de riesgo. Las 8 categorías principales cubren la mayoría del gasto federal.'}
           </p>
           <PlateFrame
             bleed
+            captionFull
             lang={lang}
             folio="VII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -1499,7 +1504,7 @@ export default function Executive() {
           <div id="la-lente-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? '§ 2 · The Lens — narrowing 3.1M to 299' : '§ 2 · La Lente — de 3.1M a 299'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+          <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Four filters in sequence — risk model, then ARIA patterns, then GT match, then manual triage. Each step narrows the population further; the last 299 are hand-investigable today.'
               : 'Cuatro filtros en cadena — modelo de riesgo, patrones ARIA, coincidencia con GT, y triaje manual. Cada paso reduce la población; los últimos 299 son investigables a mano hoy.'}
@@ -1507,6 +1512,7 @@ export default function Executive() {
 
           <PlateFrame
             bleed
+            captionFull
             lang={lang}
             folio="VIII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -1805,13 +1811,14 @@ export default function Executive() {
             <Clock className="h-3 w-3" aria-hidden="true" />
             {lang === 'en' ? 'Documented corruption cases · 2008–2025' : 'Casos documentados de corrupción · 2008–2025'}
           </div>
-          <p className="text-sm text-text-secondary leading-[1.6] mb-4 text-pretty">
+          <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Ten landmark cases — IMSS ghost companies, Segalmex, Odebrecht, COVID-19 emergency procurement — form the backbone of the model\'s ground truth. The model detects these patterns years before the scandal becomes public.'
               : 'Diez casos emblemáticos — empresas fantasma IMSS, Segalmex, Odebrecht, compras de emergencia COVID-19 — forman la base de verdad del modelo. El modelo detecta estos patrones años antes de que el escándalo se haga público.'}
           </p>
           <PlateFrame
             bleed
+            captionFull
             lang={lang}
             folio="IX"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
@@ -1841,7 +1848,7 @@ export default function Executive() {
                 <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
               </button>
             </div>
-            <p className="text-sm text-text-secondary leading-[1.6] mb-4 text-pretty">
+            <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
               {lang === 'en'
                 ? 'Five contracts most recently flagged at critical risk by the live model. Each is an investigation signal — not a verdict.'
                 : 'Los cinco contratos marcados más recientemente en riesgo crítico por el modelo. Cada uno es una señal de investigación — no un veredicto.'}
@@ -1880,7 +1887,7 @@ export default function Executive() {
                           : <span className="text-sm font-semibold text-text-primary">{formatVendorName(c.vendor_name) || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}</span>
                         }
                       </div>
-                      <p className="text-xs text-text-muted truncate mt-0.5">
+                      <p className="text-[13px] text-text-muted truncate mt-0.5">
                         {c.title || c.institution_name || '—'}
                       </p>
                     </div>
@@ -1925,7 +1932,7 @@ export default function Executive() {
             >
               {lang === 'en' ? 'Investigate a vendor.' : 'Investigar un proveedor.'}
             </h3>
-            <p className="text-sm text-text-secondary mb-6 leading-[1.6]">
+            <p className="text-[15px] text-text-secondary mb-6 leading-[1.6]">
               {lang === 'en'
                 ? 'Search by RFC, company name, or browse ARIA Tier 1 — 299 GT-anchored vendors at the top of the investigation queue.'
                 : 'Busca por RFC, nombre de empresa, o explora ARIA Nivel 1 — 299 proveedores anclados en GT al tope de la cola de investigación.'}
@@ -1961,7 +1968,7 @@ export default function Executive() {
             >
               {lang === 'en' ? '§ · WHERE TO GO NEXT' : '§ · ADÓNDE IR'}
             </div>
-            <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+            <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
               {lang === 'en'
                 ? 'The patterns above resolve to specific entities. Open the investigation queue, or pull the most exposed sector and vendors on record — each opens a live dossier with the evidence behind its risk indicator.'
                 : 'Los patrones de arriba se resuelven en entidades concretas. Abre la cola de investigación, o entra al sector y los proveedores más expuestos del registro — cada uno abre un dossier en vivo con la evidencia detrás de su indicador de riesgo.'}
@@ -2014,29 +2021,28 @@ export default function Executive() {
           </section>
         )}
 
-        {/* ─── Credibility strip ─── */}
-        {/* page-footer marker only — PARALLAX D1 § Change 8 */}
-        <footer className="page-footer pt-8 border-t border-border">
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px] font-mono text-text-muted mb-4">
-            <span className="inline-flex items-center gap-1.5">
-              <Shield className="h-3 w-3" aria-hidden="true" />
-              AUC 0.785
-            </span>
-            <span>·</span>
+        {/* ─── Credibility colophon — one colophon (PARALLAX D10 § Change 6):
+            a paragraph inside main; the shell colophon is the page's only
+            <footer>. ─── */}
+        <div className="pt-8 border-t border-border font-mono text-[13px] text-text-muted leading-[1.6]">
+          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <Shield className="h-3 w-3" aria-hidden="true" />
+            <span>AUC 0.785</span>
+            <span aria-hidden="true">·</span>
             <span>{formatNumber(stats.totalContracts)} {lang === 'en' ? 'contracts' : 'contratos'}</span>
-            <span>·</span>
-            <span>{lang === 'en' ? 'OECD compliant' : 'Compatible OCDE'}</span>
-            <span>·</span>
-            <span>{lang === 'en' ? 'Open source' : 'Código abierto'}</span>
-            <span>·</span>
+            <span aria-hidden="true">·</span>
+            <span>{lang === 'en' ? 'EU scoreboard context' : 'contexto del Tablero UE'}</span>
+            <span aria-hidden="true">·</span>
+            <span>{lang === 'en' ? 'open source' : 'código abierto'}</span>
+            <span aria-hidden="true">·</span>
             <span>RUBLI v0.8.5</span>
-          </div>
-          <p className="text-[12px] font-mono text-text-muted text-center max-w-[72ch] mx-auto leading-[1.5]">
+          </p>
+          <p className="mt-2 max-w-[68ch]">
             {lang === 'en'
               ? 'Risk scores are statistical indicators of similarity to documented corruption patterns. A high score does not constitute proof of wrongdoing. All data from COMPRANET 2002–2025 — public records, no FOIA required.'
               : 'Las puntuaciones de riesgo son indicadores estadísticos de similitud con patrones de corrupción documentados. Una puntuación alta no constituye prueba de irregularidad. Todos los datos provienen de COMPRANET 2002–2025 — registros públicos, sin requerir FOIA.'}
           </p>
-        </footer>
+        </div>
         </div>{/* /folio-v1-P1b: end paper-grain content wrapper */}
       </div>
     </>
