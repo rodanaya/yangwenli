@@ -120,3 +120,5 @@ Noticed, not fixed:
 - `DossierSectionHeader` titles wrap to 2 lines at 390.
 - The term-view year rows at 390 take 2 lines.
 - The aria-hidden `│` dividers are drawn at 1.28 contrast.
+
+Shipped 2026-09-24 16:08Z: origin/main + VPS `765d78d5`, BUILD_ID `2026-09-24-parallax-d11b-categorias-polish`, entry `index-DVw7LS1_.js` → `index-Bk7VYWj4.js` (BUILD_ID verified in the served entry). Health OK; `/categories`, `/categories/20` and `/categories/39` return 200. Deployed via `deploy-safe.sh` on top of the already-live RFC hotfix `196694b3`.
