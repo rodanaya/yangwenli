@@ -26,7 +26,7 @@ import {
   RISK_TEXT_COLORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
-import { formatCompactMXN, formatNumber, shortenContractName } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, shortenContractName, stripEncodingArtifacts } from '@/lib/utils'
 
 const t = (lang: 'en' | 'es', es: string, en: string) => (lang === 'es' ? es : en)
 
@@ -388,7 +388,10 @@ export interface SubcatRow {
 
 // COMPRANET titles arrive ALL-CAPS; sentence-case those through the shared
 // caser (no length cap — the line wraps). Mixed-case titles pass untouched.
-function sentenceCaseCaps(title: string): string {
+// The pre-2010 "ý" encoding artifact is stripped first: a lower-case "ý" inside
+// an ALL-CAPS title made the caps test fail, and mixed-case titles kept it.
+function sentenceCaseCaps(raw: string): string {
+  const title = stripEncodingArtifacts(raw)
   return title === title.toUpperCase() ? shortenContractName(title, Infinity) : title
 }
 

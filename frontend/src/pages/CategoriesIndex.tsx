@@ -268,7 +268,7 @@ function LedgerRow({
             {hasDagger && (
               <sup
                 className="font-mono ml-0.5"
-                style={{ fontSize: 8, color: 'var(--color-text-muted)' }}
+                style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
                 aria-hidden="true"
               >
                 †

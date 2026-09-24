@@ -210,7 +210,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
                     className="tabular-nums shrink-0 hidden md:inline text-right"
                     style={{ fontSize: 12, minWidth: 88, color: 'var(--color-text-muted)' }}
                   >
-                    {formatNumber(r.totalContracts)} {isEs ? 'entradas' : 'entries'}
+                    {formatNumber(r.totalContracts)} {r.totalContracts === 1 ? (isEs ? 'entrada' : 'entry') : (isEs ? 'entradas' : 'entries')}
                   </span>
                   <span aria-hidden="true" className="hidden md:inline" style={{ color: 'var(--color-border)' }}>│</span>
                   <span
@@ -229,7 +229,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
             {!r.isZero && (
               <div className="md:hidden flex items-center gap-3 pb-1.5 pl-11">
                 <span className="tabular-nums" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                  {formatNumber(r.totalContracts)} {isEs ? 'entradas' : 'entries'}
+                  {formatNumber(r.totalContracts)} {r.totalContracts === 1 ? (isEs ? 'entrada' : 'entry') : (isEs ? 'entradas' : 'entries')}
                 </span>
                 <span
                   className="tabular-nums"
