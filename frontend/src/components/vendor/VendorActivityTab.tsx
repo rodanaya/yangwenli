@@ -413,25 +413,25 @@ export function VendorActivityTab({
               <table className="w-full text-sm" aria-label={isEs ? 'Contratos del proveedor' : 'Vendor contracts'}>
                 <thead className="bg-background-elevated text-[12px] uppercase tracking-widest text-text-muted">
                   <tr>
-                    <th scope="col" className="w-[72px] text-center px-2 py-2 font-semibold">
+                    <th scope="col" className="w-[56px] xl:w-[72px] text-center px-2 py-2 font-semibold">
                       {isEs ? 'Señal' : 'Flag'}
                     </th>
-                    <th scope="col" className="text-left px-3 py-2 font-semibold min-w-[200px] md:min-w-[280px] xl:min-w-[320px]">
+                    <th scope="col" className="text-left px-3 py-2 font-semibold min-w-[200px] md:min-w-[236px] xl:min-w-[320px]">
                       {isEs ? 'Objeto' : 'Object'}
                     </th>
-                    <th scope="col" className="hidden lg:table-cell text-left px-3 py-2 font-semibold">
+                    <th scope="col" className="hidden lg:table-cell text-left px-3 py-2 font-semibold min-w-[200px]">
                       {isEs ? 'Institución' : 'Institution'}
                     </th>
-                    <th scope="col" className="text-right px-3 py-2 font-semibold">
+                    <th scope="col" className="text-right px-2 xl:px-3 py-2 font-semibold">
                       {isEs ? 'Monto' : 'Amount'}
                     </th>
-                    <th scope="col" className="hidden sm:table-cell text-right px-3 py-2 font-semibold">
+                    <th scope="col" className="hidden sm:table-cell lg:hidden xl:table-cell text-right px-2 xl:px-3 py-2 font-semibold">
                       ≈ USD
                     </th>
-                    <th scope="col" className="text-center px-3 py-2 font-semibold">
+                    <th scope="col" className="text-center px-2 xl:px-3 py-2 font-semibold">
                       {isEs ? 'Fecha' : 'Date'}
                     </th>
-                    <th scope="col" className="text-center px-3 py-2 font-semibold">
+                    <th scope="col" className="text-center px-2 xl:px-3 py-2 font-semibold">
                       {isEs ? 'Riesgo' : 'Risk'}
                     </th>
                   </tr>
@@ -482,24 +482,24 @@ export function VendorActivityTab({
                           )}
                         </div>
                       </td>
-                      <td className="hidden lg:table-cell px-3 py-2 text-text-secondary align-top" style={{ maxWidth: 260 }}>
-                        <span style={{ display: 'block', wordBreak: 'break-word', lineHeight: 1.35 }}>
+                      <td className="hidden lg:table-cell px-3 py-2 text-text-secondary align-top" data-track-inst>
+                        <span className="block max-w-[220px] xl:max-w-[260px]" style={{ wordBreak: 'break-word', lineHeight: 1.35 }}>
                           {c.institution_name ?? '—'}
                         </span>
                       </td>
                       <td
-                        className="px-3 py-2 text-right font-mono tabular-nums whitespace-nowrap align-top"
+                        className="px-2 xl:px-3 py-2 text-right font-mono tabular-nums whitespace-nowrap align-top"
                         style={heavy ? { color: RISK_COLORS.critical } : undefined}
                       >
                         {formatCompactMXN(c.amount_mxn ?? 0)}
                       </td>
-                      <td className="hidden sm:table-cell px-3 py-2 text-right font-mono tabular-nums text-[13px] text-text-muted whitespace-nowrap align-top">
+                      <td className="hidden sm:table-cell lg:hidden xl:table-cell px-2 xl:px-3 py-2 text-right font-mono tabular-nums text-[13px] text-text-muted whitespace-nowrap align-top">
                         {formatCompactUSDByYear(c.amount_mxn ?? 0, c.contract_year)}
                       </td>
-                      <td className="px-3 py-2 text-center font-mono tabular-nums text-text-muted xl:whitespace-nowrap align-top">
+                      <td className="px-2 xl:px-3 py-2 text-center font-mono tabular-nums text-text-muted whitespace-nowrap align-top" data-track-date>
                         {c.contract_date ? formatDate(c.contract_date) : '—'}
                       </td>
-                      <td className="px-3 py-2 text-center align-top">
+                      <td className="px-2 xl:px-3 py-2 text-center align-top">
                         {c.risk_score != null && (
                           <RiskLevelPill level={getRiskLevel(c.risk_score)} score={c.risk_score} />
                         )}

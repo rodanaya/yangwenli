@@ -64,7 +64,7 @@ const PLATE_H_MOBILE = 240
 const MOBILE_BREAKPOINT = 768
 
 const MARGIN_DESKTOP = { top: 98, right: 30, bottom: 44, left: 40 }
-const MARGIN_MOBILE = { top: 84, right: 14, bottom: 36, left: 28 }
+const MARGIN_MOBILE = { top: 76, right: 14, bottom: 36, left: 28 }
 
 // PARALLAX D10b § Change 1: the risk-tier cap — a 3px band in the tier's
 // colour on the top edge of every head column and needle. One line to remove.
@@ -84,6 +84,18 @@ const RULE_FONT = `11px ${MONO}`
 const RULE_H = 14
 const BADGE_FONT = `600 11px ${MONO}`
 const BADGE_D = 14
+const BADGE_GAP = 2
+const BADGE_ROW_H = BADGE_D + 3
+const badgeWidth = (n: number) => Math.max(BADGE_D, Math.ceil(measureLabel(String(n), BADGE_FONT, 99, BADGE_D).width) + 4)
+
+/** 1-D pack: keep order, each box as close to its ideal centre as the row allows. */
+function packRow(items: { cx: number; w: number }[], x0: number, x1: number): number[] {
+  const left = items.map((it) => it.cx - it.w / 2)
+  for (let i = 0; i < left.length; i++) left[i] = Math.max(i === 0 ? x0 : left[i - 1] + items[i - 1].w + BADGE_GAP, left[i])
+  for (let i = left.length - 1; i >= 0; i--) left[i] = Math.min(i === left.length - 1 ? x1 - items[i].w : left[i + 1] - items[i].w - BADGE_GAP, left[i])
+  for (let i = 0; i < left.length; i++) left[i] = Math.max(i === 0 ? x0 : left[i - 1] + items[i - 1].w + BADGE_GAP, left[i])
+  return left
+}
 const TAIL_FONT = `700 13px ${MONO}`
 const AXIS_FONT = `11px ${MONO}`
 const FONTS = [COL_FONT, CALLOUT_FONT, WALL_BIG_FONT] as const
@@ -230,7 +242,7 @@ function firstFree(cands: Box[], taken: Box[], bounds: Box): Box | null {
 }
 
 interface ColLabel { id: number; name: string; lines: string[]; box: Box; dim: boolean; rotated: boolean }
-interface Badge { id: number; n: number; box: Box; sectorCode: string; dim: boolean }
+interface Badge { id: number; n: number; box: Box; sectorCode: string; dim: boolean; leader?: { x1: number; y1: number; x2: number; y2: number } }
 interface LegendItem { id: number; n: number; name: string; sharePct: number; risk: number; sectorCode: string }
 interface Callout { id: number; name: string; sectorCode: string; box: Box; leaderX: number; leaderY1: number; leaderY2: number; dim: boolean }
 interface WallLabel { key: string; big: string; sub: string; box: Box; seamX: number }
@@ -264,11 +276,20 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
 
   const isMobile = width > 0 && width < MOBILE_BREAKPOINT
   const plateH = isMobile ? PLATE_H_MOBILE : PLATE_H_DESKTOP
-  const MARGIN = isMobile ? MARGIN_MOBILE : MARGIN_DESKTOP
+  const model = useMemo(() => buildAlzado(items), [items])
+  // PARALLAX D10b § judge 1: below 768 every head column's badge sits in a
+  // packed row under the x-axis (one row when it fits, else two).
+  const mobileBadgeRows = useMemo(() => {
+    if (!isMobile) return 0
+    void fontsReady
+    const need = model.head.reduce((s, _h, i) => s + badgeWidth(i + 1) + BADGE_GAP, 0)
+    return need <= width - 4 ? 1 : 2
+  }, [isMobile, model.head, width, fontsReady])
+  const badgeBand = isMobile ? mobileBadgeRows * BADGE_ROW_H + 3 : 0
+  const MARGIN = useMemo(() => (isMobile ? { ...MARGIN_MOBILE, bottom: MARGIN_MOBILE.bottom + badgeBand } : MARGIN_DESKTOP), [isMobile, badgeBand])
   const innerW = Math.max(0, width - MARGIN.left - MARGIN.right)
   const innerH = Math.max(0, plateH - MARGIN.top - MARGIN.bottom)
 
-  const model = useMemo(() => buildAlzado(items), [items])
   const { head, tail, needles, total, k50, k80, qualifiedMeanRisk, maxQualifiedRisk, spendRankById, hotCount, hotInK50 } = model
 
   const x = useCallback((pct: number) => (pct / 100) * innerW, [innerW])
@@ -423,21 +444,42 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
     }
     const badges: Badge[] = []
     const legend: LegendItem[] = []
-    badgeCols.forEach((h, i) => {
-      const n = i + 1
-      const w = Math.max(BADGE_D, measureLabel(String(n), BADGE_FONT, 99, BADGE_D).width + 6)
-      const cx = L + x(h.startPct) + Math.max(1.5, x(h.sharePct) - 1) / 2
-      let seated: Box | null = null
-      for (let row = 0; row < 12 && !seated; row++) {
-        const got = placeLabels([{ id: n, x: cx, y: T + innerH, width: w, height: BADGE_D, above: 3 + row * (BADGE_D + 2) }], taken, plot)
-        if (got[0]) seated = got[0].box
-      }
-      if (seated) {
-        taken.push(seated)
-        badges.push({ id: h.item.category_id, n, box: seated, sectorCode: h.item.sector_code, dim: dimOf(h.item.sector_code) })
-      }
-      legend.push({ id: h.item.category_id, n, name: isEs ? h.item.name_es : h.item.name_en, sharePct: h.sharePct, risk: h.item.avg_risk, sectorCode: h.item.sector_code })
-    })
+    if (isMobile) {
+      const rowsN = Math.max(1, mobileBadgeRows)
+      const rowItems: { h: HeadCol; n: number; cx: number; w: number }[][] = Array.from({ length: rowsN }, () => [])
+      badgeCols.forEach((h, i) => {
+        const cx = L + x(h.startPct) + Math.max(1.5, x(h.sharePct) - 1) / 2
+        rowItems[i % rowsN].push({ h, n: i + 1, cx, w: badgeWidth(i + 1) })
+      })
+      rowItems.forEach((row, r) => {
+        const lefts = packRow(row, 2, width - 2)
+        const top = T + innerH + 4 + r * BADGE_ROW_H
+        row.forEach((it, j) => {
+          const box = { x0: lefts[j], y0: top, x1: lefts[j] + it.w, y1: top + BADGE_D }
+          taken.push(box)
+          badges.push({ id: it.h.item.category_id, n: it.n, box, sectorCode: it.h.item.sector_code, dim: dimOf(it.h.item.sector_code), leader: { x1: (box.x0 + box.x1) / 2, y1: top, x2: it.cx, y2: T + innerH } })
+        })
+      })
+      badgeCols.forEach((h, i) => legend.push({ id: h.item.category_id, n: i + 1, name: isEs ? h.item.name_es : h.item.name_en, sharePct: h.sharePct, risk: h.item.avg_risk, sectorCode: h.item.sector_code }))
+    } else {
+      badgeCols.forEach((h, i) => {
+        const n = i + 1
+        const w = badgeWidth(n)
+        const cx = L + x(h.startPct) + Math.max(1.5, x(h.sharePct) - 1) / 2
+        let seated: Box | null = null
+        // seat with a BADGE_GAP margin so two badges never touch
+        for (let row = 0; row < 12 && !seated; row++) {
+          const got = placeLabels([{ id: n, x: cx, y: T + innerH, width: w + BADGE_GAP * 2, height: BADGE_D + BADGE_GAP * 2, above: 1 + row * (BADGE_D + BADGE_GAP * 2) }], taken, plot)
+          if (got[0]) seated = got[0].box
+        }
+        if (seated) {
+          taken.push(seated)
+          const box = { x0: seated.x0 + BADGE_GAP, y0: seated.y0 + BADGE_GAP, x1: seated.x1 - BADGE_GAP, y1: seated.y1 - BADGE_GAP }
+          badges.push({ id: h.item.category_id, n, box, sectorCode: h.item.sector_code, dim: dimOf(h.item.sector_code) })
+        }
+        legend.push({ id: h.item.category_id, n, name: isEs ? h.item.name_es : h.item.name_en, sharePct: h.sharePct, risk: h.item.avg_risk, sectorCode: h.item.sector_code })
+      })
+    }
 
     // 2 · ½ / 80 % wall labels — their own reserved row(s) at the top of the band
     const walls: WallLabel[] = []
@@ -542,7 +584,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
     }
 
     return { colLabels, badges, legend, callouts, walls, rules }
-  }, [width, innerW, innerH, total, fontsReady, MARGIN, tail, tailW, tailXStart, isMobile, isEs, needlesShown, needles, head, x, y, highlightSector, k50, k80, yMax, qualifiedMeanRisk])
+  }, [width, innerW, innerH, total, fontsReady, MARGIN, mobileBadgeRows, tail, tailW, tailXStart, isMobile, isEs, needlesShown, needles, head, x, y, highlightSector, k50, k80, yMax, qualifiedMeanRisk])
 
   // ── floating hover card placement ──────────────────────────────────────
   const cardWidth = 288
@@ -631,6 +673,9 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
               strokeOpacity={c.dim ? 0.12 : 0.45}
               aria-hidden="true"
             />
+          ))}
+          {layout?.badges.map((b) => b.leader && (
+            <line key={`bl-${b.id}`} x1={b.leader.x1} y1={b.leader.y1} x2={b.leader.x2} y2={b.leader.y2} stroke={SECTOR_COLORS[b.sectorCode] ?? SECTOR_COLORS.otros} strokeWidth={0.75} strokeOpacity={b.dim ? 0.2 : 0.7} aria-hidden="true" />
           ))}
           {layout?.walls.map((w) => (
             <line key={`seam-${w.key}`} x1={w.seamX} x2={w.seamX} y1={(w.box.y0 + w.box.y1) / 2} y2={MARGIN.top} stroke="rgba(160, 104, 32, 0.7)" strokeWidth={1} aria-hidden="true" />
@@ -817,13 +862,13 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
               return (
                 <g key={`xt-${t}`} aria-hidden="true">
                   <line x1={tx} x2={tx} y1={innerH} y2={innerH + 4} stroke="var(--color-border)" strokeWidth={0.75} />
-                  <text x={tx} y={innerH + 16} textAnchor={t === 0 ? 'start' : t === 100 ? 'end' : 'middle'} fontFamily="var(--font-family-mono, monospace)" fontSize={isMobile ? 11 : 13} fill="var(--color-text-muted)">
+                  <text x={tx} y={innerH + badgeBand + 16} textAnchor={t === 0 ? 'start' : t === 100 ? 'end' : 'middle'} fontFamily="var(--font-family-mono, monospace)" fontSize={isMobile ? 11 : 13} fill="var(--color-text-muted)">
                     {t}%
                   </text>
                 </g>
               )
             })}
-            <text x={innerW / 2} y={innerH + (isMobile ? 30 : 32)} textAnchor="middle" fontFamily="var(--font-family-mono, monospace)" fontSize={isMobile ? 11 : 13} fill="var(--color-text-muted)" letterSpacing="0.1em" aria-hidden="true">
+            <text x={innerW / 2} y={innerH + badgeBand + (isMobile ? 30 : 32)} textAnchor="middle" fontFamily="var(--font-family-mono, monospace)" fontSize={isMobile ? 11 : 13} fill="var(--color-text-muted)" letterSpacing="0.1em" aria-hidden="true">
               {isEs ? 'GASTO ACUMULADO →' : 'CUMULATIVE SPEND →'}
             </text>
 
