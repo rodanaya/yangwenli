@@ -58,3 +58,30 @@ Vendor dossier Day 13 items beyond the memo and the table (hero, chips inks); `O
 
 ## Build notes for the executor
 Same stack and rules as `DAY-10-panel.md § Build notes`: worktree `D:\Python\yangwenli\.claude\worktrees\parallax-day01`, branch `parallax/day10b-polish` (already created from `origin/main` `b4768840`; this file is its first commit), local backend `127.0.0.1:8001` (no-scan, no backend change today, do not restart), Vite `localhost:3009` on the worktree, `MSYS_NO_PATHCONV=1`, ≤ 2 browsers, never rubli.xyz. Order: **2 → 4 → 5 → 3 → 1**. One commit per change: `feat(categories|vendor § PARALLAX D10b § Change N): …`, body cites `docs/parallax/DAY-10b-categories-vendor-polish.md § Change N`, trailer `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Progress file `_parallax_shots/day11/progress-10b.md` (one line after EVERY step); report `_parallax_shots/day11/report-10b.md` (per change: done, every acceptance number before → after, deviations, noticed-not-fixed). Probes: extend `_parallax_shots/day11/cat11.mjs` (tag `after`, add `alzadoLabels`, `liMeasure`, `nowrapOverflow`, the RFC regex, the Spanish-chrome check) and run EN + ES at 1440/1024/390; crops via the same script's block crops + `memo11.mjs`; put before/after pairs of the Alzado (1440 + 390), the supplier register, the largest contracts, the memo, and the track-record table in the report and **LOOK at every crop**. Review: `rubli-bilingual-audit` on every touched TSX; gates from `frontend/`: `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.app.json` · `npm run build` · `npm run lint:tokens` · `npx eslint` on touched files. Do NOT bump BUILD_ID, push, deploy or merge — Fable judges first.
+
+
+## Result
+
+Built by Opus executor `parallax-day10b`: five changes `9894834b` `23500923` `ca711b8d` `7cd760a2` `69d93248`, plus judge round `65f61331`. Fable judged the change on the after-crops (`_parallax_shots/day11/after/crops/*-N-*.png`).
+
+| Measure (EN + ES, 1440/1024/390) | before | after |
+|---|---|---|
+| `…` on `/categories` | 13 | **0** |
+| `…` on `/categories/20` | 11 | **0** |
+| clipped on `/categories/20` | 3 | **0** |
+| clipped on `/vendors/29277` (1440 / 390) | 18 / 20 | **0** |
+| El Alzado head columns named | 3, all cut | **19 of 19** in full: in-column where they fit, otherwise an index badge plus a legend. Callout, wall-label, rule-label and badge overlaps are all 0 |
+| risk-tier cap | none | 3px cap in the risk palette on every column and needle (`SHOW_TIER_CAP`, approved on the crop) |
+| headings on `/categories` | h1 only | h1 + 6 h2 |
+| Spanish chrome on the EN vendor page | 4 | 0 |
+| RFC on the vendor page | 1 | **0** (`lib/redact.ts` applies to screen and Copy, with a vitest; 141 of 1,902 local memos carried one) |
+| sub-11px on `/categories/20` / `/categories` | 19 / 2 | 0 / 0 |
+| largest-contracts list width | 686 of 1,088 | fills the section at every width |
+| track record | titles cut at 300px | titles wrap to ≤ 2 lines, dates on one line, institution ≤ 3 lines, fits 862 of 864 at 1024 (USD hidden between lg and xl) |
+| ARIA link | `/aria/29277` → 404 | `/aria?q=<vendor>` → the queue row |
+
+Judge round 1: at 390 the badges collided, so they moved to a packed two-row band under the axis. At 1024 the track-record dates wrapped inside the token, so dates and amounts became nowrap and the institution column got a cap.
+
+Deviations accepted: Building Construction gets a level two-line name; callouts are seated right-aligned first; the memo's right rail appears only when the panel is at least 64rem wide; the mobile top margin is 76px; the shared `DossierSectionHeader` now wraps instead of truncating; `cleanContractDescription` takes an optional `maxChars`.
+
+Noticed, not fixed: the shared StatStrip sub-line sits 3px into its padding at 1024; on `/aria` the expanded row's readout runs into the memo band and the factor labels are cut; the ARIA link uses an ExternalLink icon for an internal link; two older ESLint errors remain (`AriaQueue.tsx` set-state-in-effect, `contract-audit.ts` control-character regex).
