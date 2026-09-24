@@ -878,13 +878,13 @@ export default function InstitutionLeague() {
               >
                 {excelenteCount === 0 ? (
                   <>
-                    {t('headline.beforeNone', { total: formatNumber(totalInstitutions) })}
+                    {t('headline.beforeNone', { total: formatNumber(totalInstitutions), who: t(`scopeWho.${scope}`) })}
                     <span style={{ color: 'var(--color-accent)' }}>{t('headline.accentNone')}</span>
                     {t('headline.afterNone', { failing: formatNumber(failingCount) })}
                   </>
                 ) : (
                   <>
-                    {t('headline.beforeSome', { total: formatNumber(totalInstitutions) })}
+                    {t('headline.beforeSome', { total: formatNumber(totalInstitutions), who: t(`scopeWho.${scope}`) })}
                     <span style={{ color: 'var(--color-accent)' }}>{t('headline.accentSome', { n: formatNumber(excelenteCount) })}</span>
                     {t('headline.afterSome', { failing: formatNumber(failingCount) })}
                   </>
@@ -895,6 +895,7 @@ export default function InstitutionLeague() {
                   {t('lede', {
                     name: formatEntityName('institution', topExposure.institution_name, 'md'),
                     money: formatDualCurrency(topExposure.money_at_risk_mxn ?? 0),
+                    where: t(`scopeWhere.${scope}`),
                   })}
                 </p>
               )}

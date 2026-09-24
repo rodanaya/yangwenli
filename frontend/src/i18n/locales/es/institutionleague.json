@@ -2,14 +2,14 @@
   "kicker": "INSTITUCIONES · DÓNDE ESTÁ EL DINERO DE ALTO RIESGO",
   "meta": "FEDERAL · 2002–2025 · v0.8.5",
   "headline": {
-    "beforeNone": "De {{total}} compradores federales, ",
+    "beforeNone": "De {{total}} {{who}}, ",
     "accentNone": "ninguno alcanza Excelente",
     "afterNone": " — y {{failing}} operan en deficiencia o peor.",
-    "beforeSome": "De {{total}} compradores federales, solo ",
+    "beforeSome": "De {{total}} {{who}}, solo ",
     "accentSome": "{{n}} alcanzan Excelente",
     "afterSome": " — y {{failing}} operan en deficiencia o peor."
   },
-  "lede": "El {{name}} concentra {{money}} en contratos de riesgo alto y crítico — la exposición más alta del padrón federal. La posición en la placa de abajo es el puntaje de integridad (más a la derecha, mejor); la altura del trazo es el dinero en riesgo.",
+  "lede": "El {{name}} concentra {{money}} en contratos de riesgo alto y crítico — la exposición más alta {{where}}. La posición en la placa de abajo es el puntaje de integridad (más a la derecha, mejor); la altura del trazo es el dinero en riesgo.",
   "podiumAriaLabel": "#{{rank}}: {{name}}, puntuación {{score}}",
   "tableKicker": "Tabla general",
   "tableHeadline": "Clasificación completa — {{total}} instituciones",
@@ -176,5 +176,15 @@
   "weakestShort": "Más débil",
   "redSignalsLine_one": "{{count}} señal en rojo",
   "redSignalsLine_other": "{{count}} señales en rojo",
-  "listStatus": "{{num}} instituciones · página {{page}} de {{total}} · ordenadas por {{label}}"
+  "listStatus": "{{num}} instituciones · página {{page}} de {{total}} · ordenadas por {{label}}",
+  "scopeWho": {
+    "federal": "compradores federales",
+    "subnational": "compradores estatales y municipales",
+    "all": "compradores en CompraNet"
+  },
+  "scopeWhere": {
+    "federal": "del padrón federal",
+    "subnational": "del padrón subnacional",
+    "all": "en todo CompraNet"
+  }
 }

@@ -2,14 +2,14 @@
   "kicker": "INSTITUTIONS · WHERE THE HIGH-RISK MONEY IS",
   "meta": "FEDERAL · 2002–2025 · v0.8.5",
   "headline": {
-    "beforeNone": "Of {{total}} federal buyers, ",
+    "beforeNone": "Of {{total}} {{who}}, ",
     "accentNone": "none reaches Excellent",
     "afterNone": " — and {{failing}} operate at Deficient or worse.",
-    "beforeSome": "Of {{total}} federal buyers, only ",
+    "beforeSome": "Of {{total}} {{who}}, only ",
     "accentSome": "{{n}} reach Excellent",
     "afterSome": " — and {{failing}} operate at Deficient or worse."
   },
-  "lede": "The {{name}} concentrates {{money}} in high- and critical-risk contracts — the highest exposure on the federal register. Position on the plate below is the integrity score; stroke height is money at risk.",
+  "lede": "The {{name}} concentrates {{money}} in high- and critical-risk contracts — the highest exposure {{where}}. Position on the plate below is the integrity score; stroke height is money at risk.",
   "podiumAriaLabel": "#{{rank}}: {{name}}, score {{score}}",
   "tableKicker": "Full Table",
   "tableHeadline": "Complete ranking — {{total}} institutions",
@@ -176,5 +176,15 @@
   "weakestShort": "Weakest",
   "redSignalsLine_one": "{{count}} red signal",
   "redSignalsLine_other": "{{count}} red signals",
-  "listStatus": "{{num}} institutions · page {{page}} of {{total}} · sorted by {{label}}"
+  "listStatus": "{{num}} institutions · page {{page}} of {{total}} · sorted by {{label}}",
+  "scopeWho": {
+    "federal": "federal buyers",
+    "subnational": "state and municipal buyers",
+    "all": "buyers on CompraNet"
+  },
+  "scopeWhere": {
+    "federal": "on the federal register",
+    "subnational": "on the subnational board",
+    "all": "across CompraNet"
+  }
 }

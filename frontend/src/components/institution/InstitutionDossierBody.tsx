@@ -410,7 +410,8 @@ function ConcentrationRegister({
                     {' · '}{isEs ? 'ÚP' : 'SB'} {fmtPct(v.single_bid_pct)}
                   </div>
                 </div>
-                <DotBar value={share} max={shareMax} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} dots={18} ariaLabel={isEs ? `${Math.round(share)}% del gasto` : `${Math.round(share)}% of spend`} className="hidden sm:block flex-shrink-0" />
+                {/* A share that rounds to 0 % draws no dot (DotBar rounds up to 1). */}
+                <DotBar value={share >= 0.5 ? share : 0} max={shareMax} color={share >= 10 ? RISK_COLORS.high : 'var(--color-text-muted)'} dots={18} ariaLabel={isEs ? `${Math.round(share)}% del gasto` : `${Math.round(share)}% of spend`} className="hidden sm:block flex-shrink-0" />
                 <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 78, fontSize: 13, color: 'var(--color-text-secondary)' }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</span>
                 <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ width: 30, fontSize: 13, fontWeight: 600, color: riskPct == null ? 'var(--color-text-muted)' : RISK_TEXT_COLORS[lvl] }}>
                   <span className="sr-only">{isEs ? 'indicador de riesgo ' : 'risk indicator '}</span>{riskPct ?? '—'}

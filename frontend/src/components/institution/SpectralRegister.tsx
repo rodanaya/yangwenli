@@ -32,7 +32,7 @@ interface SpectralRegisterProps {
 }
 
 // ── geometry ────────────────────────────────────────────────────────────────
-const HEIGHT = 300
+const HEIGHT = 340 // D9b J3: a fourth label band so the top six exposures all seat
 const PAD_L = 44
 const PAD_R = 28
 const BASELINE_Y = HEIGHT - 58 // room for the axis + band-name row below
@@ -118,7 +118,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
       .filter((s) => (s.money_at_risk_mxn ?? 0) > 0)
       .sort((a, b) => (b.money_at_risk_mxn ?? 0) - (a.money_at_risk_mxn ?? 0))
       .slice(0, 12)
-    const columns = isMobile ? [150, 200] : [200, 260]
+    const columns = isMobile ? [150, 200] : [200, 260, 320] // 320: ISSSTE's 74-char name needs it
     const bounds: LabelBox = { x0: 0, y0: isMobile ? 2 : 20, x1: width, y1: BASELINE_Y - 2 }
     const taken: LabelBox[] = []
     // The empty-Excellent note is seated INSIDE the Excellent band (right-
@@ -136,7 +136,7 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
       }
     }
     const callouts: Callout[] = []
-    for (const s of candidates) {
+    for (const [ci, s] of candidates.entries()) {
       if (callouts.length >= cap) break
       const name = formatEntityName('institution', s.institution_name, 'full')
       const amount = formatCompactMXN(s.money_at_risk_mxn ?? 0)
@@ -150,17 +150,34 @@ export function SpectralRegister({ items, median, totalScored, failingCount }: S
       const w = Math.max(fitted.width, amountW) + LABEL_PAD * 2
       const h = fitted.height + LABEL_LINE + LABEL_PAD * 2
       const top = BASELINE_Y - s.h
-      for (const lift of [0, h + 6, 2 * (h + 6)]) {
-        const [seat] = placeLabels(
-          [{ id: s.institution_id, x: s.x, y: top, width: w, height: h, above: LEADER_GAP + lift }],
-          taken,
-          bounds,
-        )
-        if (seat) {
-          taken.push(seat.box)
-          callouts.push({ stroke: s, nameLines: fitted.lines, amount, box: seat.box })
-          break
+      // Seat ladder (PARALLAX D9b judge J3): the top exposures seat before
+      // anything below them. Every lift (four) × every offset (the label off-
+      // centre by up to half its width; the leader stays vertical at the
+      // stroke and must still meet the label) is tried; of the valid seats the
+      // one covering the fewest strokes still waiting to be labelled wins, then
+      // the lowest lift, then the smallest offset — so a big label never walls
+      // off the next exposure's leader.
+      const L = h + 6
+      const waiting = candidates.slice(ci + 1, cap).map((c) => c.x)
+      let best: { box: LabelBox; key: [number, number, number] } | null = null
+      for (const lift of [0, L, 2 * L, 3 * L]) {
+        for (const dx of [0, -w / 4, w / 4, -w / 2 + 4, w / 2 - 4]) {
+          const [seat] = placeLabels(
+            [{ id: s.institution_id, x: s.x + dx, y: top, width: w, height: h, above: LEADER_GAP + lift }],
+            taken,
+            bounds,
+          )
+          if (!seat || seat.box.x0 > s.x || seat.box.x1 < s.x) continue
+          const blocks = waiting.filter((x) => x >= seat.box.x0 && x <= seat.box.x1).length
+          const key: [number, number, number] = [blocks, lift, Math.abs(dx)]
+          if (!best || key[0] < best.key[0] || (key[0] === best.key[0] && (key[1] < best.key[1] || (key[1] === best.key[1] && key[2] < best.key[2])))) {
+            best = { box: seat.box, key }
+          }
         }
+      }
+      if (best) {
+        taken.push(best.box)
+        callouts.push({ stroke: s, nameLines: fitted.lines, amount, box: best.box })
       }
     }
 
