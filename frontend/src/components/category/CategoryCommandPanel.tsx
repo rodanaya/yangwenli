@@ -22,6 +22,7 @@ import {
   EU_SINGLE_BID_LIMIT,
   MODEL_HR_BASELINE,
   getRiskLevelFromScore,
+  getHighRiskShareLevel,
 } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
 import {
@@ -106,7 +107,8 @@ export function CategoryStatStrip({
   const sbLimit = EU_SINGLE_BID_LIMIT * 100
   const daColor = da == null ? undefined : da > daLimit ? RISK_TEXT_COLORS.critical : da > daLimit / 2 ? RISK_TEXT_COLORS.high : undefined
   const sbColor = sb == null ? undefined : sb > sbLimit ? RISK_TEXT_COLORS.critical : sb > sbLimit / 2 ? RISK_TEXT_COLORS.high : undefined
-  const hrColor = hr == null ? undefined : hr >= 25 ? RISK_TEXT_COLORS.critical : hr >= 15 ? RISK_TEXT_COLORS.high : undefined
+  const hrLvl = hr == null ? null : getHighRiskShareLevel(hr)
+  const hrColor = hrLvl === 'critical' || hrLvl === 'high' ? RISK_TEXT_COLORS[hrLvl] : undefined
   const riskLvl = category.avg_risk != null ? getRiskLevelFromScore(category.avg_risk) : 'low'
   const avgRiskColor = avgRisk == null ? undefined : riskLvl === 'critical' ? RISK_TEXT_COLORS.critical : riskLvl === 'high' ? RISK_TEXT_COLORS.high : undefined
 

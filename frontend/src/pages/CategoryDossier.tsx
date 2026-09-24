@@ -62,7 +62,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore, getHighRiskShareLevel } from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { formatCompactMXN } from '@/lib/utils'
 
@@ -304,8 +304,7 @@ export default function CategoryDossier() {
   // high_risk_pct is NULL for Structure-A (2002–2010, 0.1% RFC) categories —
   // there we keep the avg seal rather than render a misleading "0% high-risk".
   const hrAvailable = c.high_risk_pct != null
-  const hrLevel: 'critical' | 'high' | 'medium' | 'low' =
-    hrPct >= 20 ? 'critical' : hrPct >= 12 ? 'high' : hrPct >= 5 ? 'medium' : 'low'
+  const hrLevel = getHighRiskShareLevel(hrPct)
   const sealLevel = hrAvailable ? hrLevel : riskLevel
   const sealNumber = hrAvailable ? Math.round(hrPct) : riskPct
   const verdictColor = RISK_COLORS[sealLevel]

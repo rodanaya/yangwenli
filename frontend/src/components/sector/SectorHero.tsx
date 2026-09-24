@@ -15,6 +15,7 @@ import {
   RISK_TEXT_COLORS,
   SECTOR_COLORS,
   getRiskLevelFromScore,
+  getHighRiskShareLevel,
   getSectorName,
   getSectorTextColor,
 } from '@/lib/constants'
@@ -48,8 +49,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
   const hrPct = stats.high_risk_pct ?? 0
   const avgRisk = stats.avg_risk_score ?? 0
   const riskLevel = avgRisk > 0 ? getRiskLevelFromScore(avgRisk) : 'low'
-  const hrLevel: 'critical' | 'high' | 'medium' | 'low' =
-    hrPct >= 20 ? 'critical' : hrPct >= 12 ? 'high' : hrPct >= 5 ? 'medium' : 'low'
+  const hrLevel = getHighRiskShareLevel(hrPct)
   const verdictColor = RISK_COLORS[hrLevel]
 
   const sectorDisplayName = getSectorName(sector.code, lang)

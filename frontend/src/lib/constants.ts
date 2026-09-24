@@ -294,6 +294,21 @@ export function getRiskLevelFromScore(score: number): 'critical' | 'high' | 'med
 }
 
 /**
+ * High-risk SHARE (% of contracts at high+critical, 0–100) → tier. A different
+ * quantity from a score, so a different ladder: ≥ 20 critical · ≥ 12 high ·
+ * ≥ 5 medium · else low — calibrated to the model's HR baseline of 11 %
+ * (MODEL_HR_BASELINE): "high" starts just above the baseline, "critical" near
+ * twice it. The one ladder for aggregate HR% (category seal + stat strip,
+ * sector hero); do not inline `hrPct >= 20` copies.
+ */
+export function getHighRiskShareLevel(pct: number): 'critical' | 'high' | 'medium' | 'low' {
+  if (pct >= 20) return 'critical'
+  if (pct >= 12) return 'high'
+  if (pct >= 5) return 'medium'
+  return 'low'
+}
+
+/**
  * Canonical risk → color ramp. SINGLE SOURCE OF TRUTH for "color a risk value".
  *
  * Charts MUST use this instead of inline `if (score < x) return green` ladders.
