@@ -36,13 +36,22 @@
  * rects laid across the band. `highlightSector` dims non-matching
  * columns/needles/callouts to 0.25 (tail band floor 0.28).
  *
- * Mobile (<768px): 240px plate, tighter margins, top-3 spend + top-2
- * needle callouts, no floating hover card (tap → dossier), every mark
- * keeps ≥14px hit-slop.
+ * Labels (PARALLAX D10b § Change 1): an HTML layer over the 1:1 svg, every
+ * box measured — a head column carries its full name rotated (≥22px, ≤2
+ * lines) or level (wide + short), else an index badge at its foot and a row
+ * in the legend under the axis; needle callouts, the ½ / 80% wall row and the
+ * rule labels are seated collision-free. SHOW_TIER_CAP draws a 3px risk-tier
+ * cap on every column and needle.
+ *
+ * Mobile (<768px): 240px plate, badges + legend for every head column, top-2
+ * needle callouts, no floating hover card (tap → dossier), every mark keeps
+ * ≥14px hit-slop.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, RISK_COLORS, RISK_TEXT_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
+import { useMeasuredWidth, useFontsReady } from '@/hooks/useMeasuredWidth'
+import { fitLabel, measureLabel, placeLabels, type LabelBox } from '@/lib/plateLabels'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { CategoryHoverDossier } from './CategoryHoverDossier'
 import type { CategorySummaryItem } from './types'
@@ -55,13 +64,31 @@ const PLATE_H_MOBILE = 240
 const MOBILE_BREAKPOINT = 768
 
 const MARGIN_DESKTOP = { top: 98, right: 30, bottom: 44, left: 40 }
-const MARGIN_MOBILE = { top: 66, right: 14, bottom: 36, left: 28 }
+const MARGIN_MOBILE = { top: 84, right: 14, bottom: 36, left: 28 }
 
+// PARALLAX D10b § Change 1: the risk-tier cap — a 3px band in the tier's
+// colour on the top edge of every head column and needle. One line to remove.
+const SHOW_TIER_CAP = true
+const CAP_H = 3
+
+// Label layer faces (measured with canvas once the faces are in).
+const MONO = '"JetBrains Mono", monospace'
+const COL_FONT = `600 11px ${MONO}`
+const COL_LINE = 13
+const CALLOUT_FONT = `12px ${MONO}`
 const CALLOUT_ROW_H = 15
-// Approx px width of a monospace label at 13px — used for width-aware
-// de-collision so long names ("Building Construction") never overprint.
-const MONO_CHAR_PX = 7.2
-const estLabelPx = (s: string): number => s.length * MONO_CHAR_PX + 6
+const WALL_FONT = `11px ${MONO}`
+const WALL_BIG_FONT = '700 13px "EB Garamond", Georgia, serif'
+const WALL_ROW_H = 16
+const RULE_FONT = `11px ${MONO}`
+const RULE_H = 14
+const BADGE_FONT = `600 11px ${MONO}`
+const BADGE_D = 14
+const TAIL_FONT = `700 13px ${MONO}`
+const AXIS_FONT = `11px ${MONO}`
+const FONTS = [COL_FONT, CALLOUT_FONT, WALL_BIG_FONT] as const
+// background-coloured halo so a label stays legible over a fill or a rule
+const HALO = '0 0 2px var(--color-background), 0 0 3px var(--color-background), 0 0 4px var(--color-background)'
 const MIN_NEEDLE_PX = 2.5
 const NEEDLE_TOP_N = 8
 
@@ -186,42 +213,36 @@ function buildAlzado(items: CategorySummaryItem[]): AlzadoModel {
   }
 }
 
-// ── callout layout (greedy row-bump, ported from InventarioAnaquel L115-134) ─
+// ── label layer (PARALLAX D10b § Change 1) ─────────────────────────────
+// "HTML owns glyphs, SVG owns geometry": the svg draws every mark at 1:1
+// (viewBox = measured width) and every name / callout / wall / rule label is
+// an absolutely positioned HTML box seated with measured widths
+// (lib/plateLabels) — no character estimates, no ellipsis.
 
-interface CalloutSrc {
-  id: number
-  name: string // already resolved to the active locale
-  sectorCode: string
-  x: number // screen x, plate coords (label center)
-  isNeedle: boolean
-  sharePct: number
+type Box = LabelBox
+
+const boxIntersects = (a: Box, b: Box): boolean => !(a.x1 <= b.x0 || a.x0 >= b.x1 || a.y1 <= b.y0 || a.y0 >= b.y1)
+const boxInside = (a: Box, o: Box): boolean => a.x0 >= o.x0 && a.x1 <= o.x1 && a.y0 >= o.y0 && a.y1 <= o.y1
+/** First candidate box that is inside `bounds` and clear of `taken`. */
+function firstFree(cands: Box[], taken: Box[], bounds: Box): Box | null {
+  for (const c of cands) if (boxInside(c, bounds) && !taken.some((t) => boxIntersects(c, t))) return c
+  return null
 }
 
-interface CalloutLabel extends CalloutSrc {
-  labelY: number
-}
+interface ColLabel { id: number; name: string; lines: string[]; box: Box; dim: boolean; rotated: boolean }
+interface Badge { id: number; n: number; box: Box; sectorCode: string; dim: boolean }
+interface LegendItem { id: number; n: number; name: string; sharePct: number; risk: number; sectorCode: string }
+interface Callout { id: number; name: string; sectorCode: string; box: Box; leaderX: number; leaderY1: number; leaderY2: number; dim: boolean }
+interface WallLabel { key: string; big: string; sub: string; box: Box; seamX: number }
+interface RuleLabel { key: string; text: string; box: Box; accent: boolean }
 
-// Greedy vertical de-collision that accounts for each label's true WIDTH:
-// two center-anchored labels overlap when their gap is smaller than the sum of
-// their half-widths, so a long name pushes its neighbour to the row above.
-function layoutCalloutLabels(callouts: CalloutSrc[], isMobile = false): CalloutLabel[] {
-  const sorted = [...callouts].sort((a, b) => a.x - b.x)
-  const lastByRow: { x: number; half: number }[] = []
-  // Mobile: row 0 starts higher (-34 vs -22) to clear the ½/80% wall count
-  // sublabels (render at y≈-11) with real vertical headroom — at -22 the two
-  // stacks visually overprinted in the tight MARGIN_MOBILE.top=66 band.
-  const startY = isMobile ? -34 : -22
-  return sorted.map((c) => {
-    const half = estLabelPx(c.name) / 2
-    let row = 0
-    while (
-      lastByRow[row] !== undefined &&
-      c.x - lastByRow[row].x < lastByRow[row].half + half + 6
-    )
-      row++
-    lastByRow[row] = { x: c.x, half }
-    return { ...c, labelY: startY - row * CALLOUT_ROW_H }
-  })
+interface AlzadoLayout {
+  colLabels: ColLabel[]
+  badges: Badge[]
+  legend: LegendItem[]
+  callouts: Callout[]
+  walls: WallLabel[]
+  rules: RuleLabel[]
 }
 
 // ── component ───────────────────────────────────────────────────────────
@@ -236,21 +257,12 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
   const isEs = lang === 'es'
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(960)
+  const width = useMeasuredWidth(containerRef)
+  const fontsReady = useFontsReady(FONTS)
   const [hoveredId, setHoveredId] = useState<number | 'tail' | null>(null)
   const [focusedIdx, setFocusedIdx] = useState<number | null>(null)
 
-  useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width
-      if (w && w > 0) setWidth(w)
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
-
-  const isMobile = width < MOBILE_BREAKPOINT
+  const isMobile = width > 0 && width < MOBILE_BREAKPOINT
   const plateH = isMobile ? PLATE_H_MOBILE : PLATE_H_DESKTOP
   const MARGIN = isMobile ? MARGIN_MOBILE : MARGIN_DESKTOP
   const innerW = Math.max(0, width - MARGIN.left - MARGIN.right)
@@ -262,6 +274,8 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
   const x = useCallback((pct: number) => (pct / 100) * innerW, [innerW])
   const yMax = useMemo(() => Math.max(RISK_THRESHOLDS.high + 0.05, maxQualifiedRisk * 1.08), [maxQualifiedRisk])
   const y = useCallback((risk: number) => innerH - (risk / yMax) * innerH, [innerH, yMax])
+
+  const needlesShown = useMemo(() => needles.slice(0, isMobile ? 2 : 5), [needles, isMobile])
 
   // ── keyboard cycling order: all head cols + needles, left→right in axis order ──
   const cycleOrder = useMemo(() => {
@@ -300,27 +314,6 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
     [cycleOrder, focusedMark, navigate],
   )
 
-  // ── callouts: NEEDLES ONLY (the surprising hot-tail finding). Head columns
-  //    are named IN-COLUMN below, so nothing floats over the fat left slabs. ──
-  const calloutSources = useMemo(() => {
-    const needleCap = isMobile ? 2 : 3
-    const out: CalloutSrc[] = []
-    for (const n of needles.slice(0, needleCap)) {
-      const w = Math.max(MIN_NEEDLE_PX, x(n.sharePct) - 1)
-      out.push({
-        id: n.item.category_id,
-        name: isEs ? n.item.name_es : n.item.name_en,
-        sectorCode: n.item.sector_code,
-        x: x(n.cumStartPct) + w / 2,
-        isNeedle: true,
-        sharePct: n.sharePct,
-      })
-    }
-    return out
-  }, [needles, isMobile, isEs, x])
-
-  const calloutLabels = useMemo(() => layoutCalloutLabels(calloutSources, isMobile), [calloutSources, isMobile])
-
   // ── computed intersection deck (graft: replaces the ported anaquel deck) ──
   const deckSentence = useMemo(() => {
     if (hotCount > 0) {
@@ -346,6 +339,210 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
       ? `Ninguna categoría con muestra suficiente cruza el umbral alto — la concentración sigue siendo la historia: ${k50} categorías retienen la mitad del gasto, ${k80} el 80%.`
       : `No adequately-sampled category crosses the high threshold — concentration remains the story: ${k50} categories hold half of spend, ${k80} hold 80%.`
   }, [hotCount, hotInK50, k50, k80, isEs])
+
+  // per-category invisible hit-slots across the tail band (graft: all-72 hoverable)
+  const tailItemsSorted = useMemo(() => {
+    if (!tail) return []
+    const byValueAll = [...items].sort((a, b) => b.total_value - a.total_value)
+    const headIds = new Set(head.map((h) => h.item.category_id))
+    return byValueAll.filter((c) => !headIds.has(c.category_id))
+  }, [items, head, tail])
+
+  const tailHitSlots = useMemo(() => {
+    if (!tail || tailItemsSorted.length === 0) return []
+    let walk = 0
+    return tailItemsSorted.map((c) => {
+      const sharePct = total > 0 ? (c.total_value / total) * 100 : 0
+      const startPct = tail.startPct + (total > 0 ? (walk / total) * 100 : 0)
+      walk += c.total_value
+      return { item: c, startX: x(startPct), w: Math.max(MIN_NEEDLE_PX, x(sharePct)) }
+    })
+  }, [tail, tailItemsSorted, total, x])
+
+  const tailY = tail ? y(tail.meanRisk) : innerH
+  const tailXStart = tail ? x(tail.startPct) : innerW
+  const tailW = tail ? Math.max(1.5, innerW - tailXStart - 1) : 0
+
+  // ── the label layer, measured (plate px = svg px) ──────────────────────
+  const layout = useMemo<AlzadoLayout | null>(() => {
+    if (width <= 0 || innerW <= 0 || total <= 0) return null
+    void fontsReady // re-measure once the real faces are in
+    const L = MARGIN.left
+    const T = MARGIN.top
+    const plot: Box = { x0: L, y0: T, x1: L + innerW, y1: T + innerH }
+    const taken: Box[] = []
+    const dimOf = (code: string) => !!highlightSector && code !== highlightSector
+
+    // tail count glyph (svg) + y-axis title (svg) are obstacles, measured
+    if (tail && tailW >= 40) {
+      const w = measureLabel(`+${tail.count}${tail.hasSubFloor ? '†' : ''}`, TAIL_FONT, 999, 16).width
+      const cx = L + tailXStart + tailW / 2
+      taken.push({ x0: cx - w / 2 - 2, y0: T + innerH - 20, x1: cx + w / 2 + 2, y1: T + innerH - 2 })
+    }
+    const axisTitle = isMobile ? (isEs ? 'RIESGO ↑' : 'RISK ↑') : isEs ? 'INDICADOR ×100 ↑' : 'RISK INDICATOR ×100 ↑'
+    const axisW = measureLabel(axisTitle, AXIS_FONT, 999, 14).width + axisTitle.length * 11 * 0.08
+    taken.push({ x0: 10, y0: T - 24, x1: 10 + axisW, y1: T - 8 })
+
+    // needles are obstacles for rule labels + callouts (with their cap)
+    const needleBoxes: Box[] = needlesShown.map((n) => {
+      const nX = L + x(n.cumStartPct)
+      const nW = Math.max(MIN_NEEDLE_PX, x(n.sharePct) - 1)
+      return { x0: nX - 1, y0: T + y(n.item.avg_risk) - 2, x1: nX + nW + 1, y1: T + innerH }
+    })
+
+    // 1 · head-column names: in-column (rotated, ≤2 lines, measured) or a badge
+    const colLabels: ColLabel[] = []
+    const badgeCols: HeadCol[] = []
+    for (const h of head) {
+      const name = isEs ? h.item.name_es : h.item.name_en
+      const colW = Math.max(1.5, x(h.sharePct) - 1)
+      const colY = h.subFloor ? innerH : y(h.item.avg_risk)
+      const colH = Math.max(0, innerH - colY)
+      const fit = !isMobile && !h.subFloor && colW >= 22 && colH > 30
+        ? fitLabel(name, COL_FONT, colH - 12, { maxLines: 2, lineHeight: COL_LINE })
+        : null
+      const cx = L + x(h.startPct) + colW / 2
+      if (fit && fit.lines.length * COL_LINE <= colW - 4) {
+        // rung 1 — rotated, reading bottom-to-top
+        const bw = fit.lines.length * COL_LINE
+        const box = { x0: cx - bw / 2, y0: T + innerH - 6 - fit.width, x1: cx + bw / 2, y1: T + innerH - 6 }
+        colLabels.push({ id: h.item.category_id, name, lines: fit.lines, box, dim: dimOf(h.item.sector_code), rotated: true })
+        taken.push(box)
+        continue
+      }
+      // rung 2 — a wide, short column carries the name level, ≤2 lines
+      const flat = !isMobile && !h.subFloor && colW >= 60 ? fitLabel(name, COL_FONT, colW - 10, { maxLines: 2, lineHeight: COL_LINE }) : null
+      if (flat && flat.height <= colH - 12) {
+        const box = { x0: cx - flat.width / 2 - 1, y0: T + innerH - 6 - flat.height, x1: cx + flat.width / 2 + 1, y1: T + innerH - 6 }
+        colLabels.push({ id: h.item.category_id, name, lines: flat.lines, box, dim: dimOf(h.item.sector_code), rotated: false })
+        taken.push(box)
+        continue
+      }
+      // rung 3 — an index badge at the foot + a legend row under the axis
+      badgeCols.push(h)
+    }
+    const badges: Badge[] = []
+    const legend: LegendItem[] = []
+    badgeCols.forEach((h, i) => {
+      const n = i + 1
+      const w = Math.max(BADGE_D, measureLabel(String(n), BADGE_FONT, 99, BADGE_D).width + 6)
+      const cx = L + x(h.startPct) + Math.max(1.5, x(h.sharePct) - 1) / 2
+      let seated: Box | null = null
+      for (let row = 0; row < 12 && !seated; row++) {
+        const got = placeLabels([{ id: n, x: cx, y: T + innerH, width: w, height: BADGE_D, above: 3 + row * (BADGE_D + 2) }], taken, plot)
+        if (got[0]) seated = got[0].box
+      }
+      if (seated) {
+        taken.push(seated)
+        badges.push({ id: h.item.category_id, n, box: seated, sectorCode: h.item.sector_code, dim: dimOf(h.item.sector_code) })
+      }
+      legend.push({ id: h.item.category_id, n, name: isEs ? h.item.name_es : h.item.name_en, sharePct: h.sharePct, risk: h.item.avg_risk, sectorCode: h.item.sector_code })
+    })
+
+    // 2 · ½ / 80 % wall labels — their own reserved row(s) at the top of the band
+    const walls: WallLabel[] = []
+    const wallBand: Box = { x0: 0, y0: 2, x1: width, y1: T - 4 }
+    const wallDefs = [
+      k50 > 0 ? { key: 'k50', big: '½', sub: isEs ? `${k50} categorías` : `${k50} categories`, pct: 50 } : null,
+      k80 > 0 ? { key: 'k80', big: '80%', sub: isEs ? `${k80} categorías` : `${k80} categories`, pct: 80 } : null,
+    ].filter((d): d is { key: string; big: string; sub: string; pct: number } => d !== null)
+    // each wall: 2 rows × (right of its seam | left of it); its seam tick runs
+    // from the label down to the plot, so a tick may cross no other label.
+    const wallCands = wallDefs.map((d) => {
+      const w = Math.ceil(measureLabel(d.big, WALL_BIG_FONT, 999, 16).width + measureLabel(` · ${d.sub}`, WALL_FONT, 999, 16).width) + 2
+      const seamX = L + x(d.pct)
+      const out: { box: Box; tick: Box }[] = []
+      for (let row = 0; row < 2; row++) {
+        const top = 2 + row * (WALL_ROW_H + 2)
+        for (const box of [
+          { x0: seamX + 4, y0: top, x1: seamX + 4 + w, y1: top + WALL_ROW_H },
+          { x0: seamX - 4 - w, y0: top, x1: seamX - 4, y1: top + WALL_ROW_H },
+        ]) {
+          if (boxInside(box, wallBand) && !taken.some((t) => boxIntersects(box, t))) {
+            out.push({ box, tick: { x0: seamX - 1, y0: top + WALL_ROW_H / 2, x1: seamX + 1, y1: T } })
+          }
+        }
+      }
+      return { d, seamX, out }
+    })
+    const ok = (a: { box: Box; tick: Box }, b: { box: Box; tick: Box }) =>
+      !boxIntersects(a.box, b.box) && !boxIntersects(a.tick, b.box) && !boxIntersects(b.tick, a.box)
+    let pick: ({ box: Box; tick: Box } | null)[] = wallCands.map((c) => c.out[0] ?? null)
+    if (wallCands.length === 2) {
+      pick = [null, null]
+      search: for (const a of wallCands[0].out) for (const b of wallCands[1].out) if (ok(a, b)) { pick = [a, b]; break search }
+    }
+    wallCands.forEach((c, i) => {
+      const p = pick[i]
+      if (!p) return
+      walls.push({ key: c.d.key, big: c.d.big, sub: c.d.sub, box: p.box, seamX: c.seamX })
+      // the tick only constrains the other wall; callouts may cross it (their halo masks the 1px line)
+      taken.push(p.box)
+    })
+    const wallBottom = walls.length ? Math.max(...walls.map((w) => w.box.y1)) : 2
+
+    // 3 · needle callouts — measured, seated row by row with placeLabels, a
+    //     leader to the mark; a leader never crosses a seated label.
+    const callouts: Callout[] = []
+    const calloutBand: Box = { x0: 0, y0: wallBottom + 2, x1: width, y1: T - 3 }
+    const calloutSrc = needles.slice(0, isMobile ? 2 : 3)
+      .map((n) => {
+        const nW = Math.max(MIN_NEEDLE_PX, x(n.sharePct) - 1)
+        return { n, cx: L + x(n.cumStartPct) + nW / 2 }
+      })
+      .sort((a, b) => a.cx - b.cx)
+    for (const { n, cx } of calloutSrc) {
+      const name = isEs ? n.item.name_es : n.item.name_en
+      const m = measureLabel(name, CALLOUT_FONT, width, CALLOUT_ROW_H)
+      const needleTop = T + y(n.item.avg_risk)
+      const w = m.width + 2
+      let placed: Callout | null = null
+      // row by row from the plot upward; right-aligned first (the needles sit
+      // at the right end of the axis), then left, then centred. A leader may
+      // cross no seated label.
+      for (let row = 0; row < 6 && !placed; row++) {
+        const top = calloutBand.y1 - CALLOUT_ROW_H - row * (CALLOUT_ROW_H + 1)
+        for (const x0 of [cx - w, cx, cx - w / 2]) {
+          const box: Box = { x0, y0: top, x1: x0 + w, y1: top + CALLOUT_ROW_H }
+          if (!boxInside(box, calloutBand) || taken.some((t) => boxIntersects(box, t))) continue
+          const leader: Box = { x0: cx - 1, y0: box.y1, x1: cx + 1, y1: needleTop }
+          if (taken.some((t) => boxIntersects(leader, t))) continue
+          placed = { id: n.item.category_id, name, sectorCode: n.item.sector_code, box, leaderX: cx, leaderY1: box.y1, leaderY2: needleTop, dim: dimOf(n.item.sector_code) }
+          taken.push(box, leader)
+          break
+        }
+      }
+      if (placed) callouts.push(placed)
+    }
+
+    // 4 · rule labels — right end by default, left end when the right is
+    //     occupied (needles, callouts, names), below the line as a last resort.
+    const rules: RuleLabel[] = []
+    const ruleObstacles = [...taken, ...needleBoxes]
+    const ruleDefs = [
+      RISK_THRESHOLDS.high <= yMax ? { key: 'high', text: isEs ? 'ALTO 40' : 'HIGH 40', v: RISK_THRESHOLDS.high, accent: false } : null,
+      RISK_THRESHOLDS.medium <= yMax ? { key: 'medium', text: isEs ? 'MEDIO 25' : 'MEDIUM 25', v: RISK_THRESHOLDS.medium, accent: false } : null,
+      qualifiedMeanRisk !== null ? { key: 'mean', text: isEs ? 'media del inventario' : 'inventory mean', v: qualifiedMeanRisk, accent: true } : null,
+    ]
+    for (const d of ruleDefs) {
+      if (!d) continue
+      const w = Math.ceil(measureLabel(d.text, RULE_FONT, 999, RULE_H).width + d.text.length * 11 * 0.06) + 4
+      const ly = T + y(d.v)
+      const above = ly - 1 - RULE_H
+      const below = ly + 1
+      const cands: Box[] = [
+        { x0: L + innerW - 2 - w, y0: above, x1: L + innerW - 2, y1: above + RULE_H },
+        { x0: L + 2, y0: above, x1: L + 2 + w, y1: above + RULE_H },
+        { x0: L + innerW - 2 - w, y0: below, x1: L + innerW - 2, y1: below + RULE_H },
+        { x0: L + 2, y0: below, x1: L + 2 + w, y1: below + RULE_H },
+      ]
+      const box = firstFree(cands, ruleObstacles, plot) ?? cands[1]
+      rules.push({ key: d.key, text: d.text, box, accent: d.accent })
+      ruleObstacles.push(box)
+    }
+
+    return { colLabels, badges, legend, callouts, walls, rules }
+  }, [width, innerW, innerH, total, fontsReady, MARGIN, tail, tailW, tailXStart, isMobile, isEs, needlesShown, needles, head, x, y, highlightSector, k50, k80, yMax, qualifiedMeanRisk])
 
   // ── floating hover card placement ──────────────────────────────────────
   const cardWidth = 288
@@ -381,34 +578,15 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
 
   const xTicks = [0, 25, 50, 75, 100]
   const yTicks = isMobile ? [0, 0.2, 0.4] : [0, 0.1, 0.2, 0.3, 0.4]
-
-  const tailY = tail ? y(tail.meanRisk) : innerH
-  const tailXStart = tail ? x(tail.startPct) : innerW
-  const tailW = tail ? Math.max(1.5, innerW - tailXStart - 1) : 0
-
-  // per-category invisible hit-slots across the tail band (graft: all-72 hoverable)
-  const tailItemsSorted = useMemo(() => {
-    if (!tail) return []
-    const byValueAll = [...items].sort((a, b) => b.total_value - a.total_value)
-    const headIds = new Set(head.map((h) => h.item.category_id))
-    return byValueAll.filter((c) => !headIds.has(c.category_id))
-  }, [items, head, tail])
-
-  const tailHitSlots = useMemo(() => {
-    if (!tail || tailItemsSorted.length === 0) return []
-    let walk = 0
-    return tailItemsSorted.map((c) => {
-      const sharePct = total > 0 ? (c.total_value / total) * 100 : 0
-      const startPct = tail.startPct + (total > 0 ? (walk / total) * 100 : 0)
-      walk += c.total_value
-      return { item: c, startX: x(startPct), w: Math.max(MIN_NEEDLE_PX, x(sharePct)) }
-    })
-  }, [tail, tailItemsSorted, total, x])
-
   const totalValueAll = total
+  const capFill = (risk: number): { fill: string; opacity: number } => {
+    const lvl = getRiskLevelFromScore(risk)
+    return lvl === 'low' ? { fill: 'var(--color-text-muted)', opacity: 0.5 } : { fill: RISK_COLORS[lvl], opacity: 1 }
+  }
+  const boxStyle = (b: Box) => ({ position: 'absolute' as const, left: b.x0, top: b.y0, width: b.x1 - b.x0, height: b.y1 - b.y0 })
 
   return (
-    <section aria-label={isEs ? 'El alzado' : 'The elevation'}>
+    <section aria-label={isEs ? 'El alzado' : 'The elevation'} data-alz-figure>
       <h2
         className="font-mono mb-3.5"
         style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700, lineHeight: 1.5, maxWidth: 'none' }}
@@ -423,12 +601,12 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
         {deckSentence}
       </p>
 
-      <div className="relative" ref={containerRef} style={{ width: '100%' }}>
+      <div className="relative" ref={containerRef} style={{ width: '100%', height: plateH }} data-alz-plate>
+        {width > 0 && (
         <svg
           width={width}
           height={plateH}
           viewBox={`0 0 ${width} ${plateH}`}
-          preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={
             isEs
@@ -438,52 +616,36 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onBlur={() => setFocusedIdx(null)}
-          style={{ outline: 'none', display: 'block', margin: '0 auto' }}
+          style={{ outline: 'none', display: 'block' }}
         >
+          {/* callout leaders + wall seam ticks (plate coords) */}
+          {layout?.callouts.map((c) => (
+            <line
+              key={`leader-${c.id}`}
+              x1={c.leaderX}
+              x2={c.leaderX}
+              y1={c.leaderY1}
+              y2={c.leaderY2}
+              stroke={SECTOR_TEXT_COLORS[c.sectorCode] ?? SECTOR_TEXT_COLORS.otros}
+              strokeWidth={0.75}
+              strokeOpacity={c.dim ? 0.12 : 0.45}
+              aria-hidden="true"
+            />
+          ))}
+          {layout?.walls.map((w) => (
+            <line key={`seam-${w.key}`} x1={w.seamX} x2={w.seamX} y1={(w.box.y0 + w.box.y1) / 2} y2={MARGIN.top} stroke="rgba(160, 104, 32, 0.7)" strokeWidth={1} aria-hidden="true" />
+          ))}
           <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-            {/* ── horizontal risk-threshold rules (dashed) + mean (solid) ── */}
-            {RISK_THRESHOLDS.medium <= yMax && (
-              <HRule
-                yPos={y(RISK_THRESHOLDS.medium)}
-                innerW={innerW}
-                label={isEs ? 'MEDIO 25' : 'MEDIUM 25'}
-                dashed
-                isMobile={isMobile}
-              />
-            )}
-            {RISK_THRESHOLDS.high <= yMax && (
-              <HRule yPos={y(RISK_THRESHOLDS.high)} innerW={innerW} label={isEs ? 'ALTO 40' : 'HIGH 40'} dashed isMobile={isMobile} />
-            )}
+            {/* ── horizontal risk-threshold rules (dashed) + mean (solid) — labels in the HTML layer ── */}
+            {RISK_THRESHOLDS.medium <= yMax && <HRule yPos={y(RISK_THRESHOLDS.medium)} innerW={innerW} dashed />}
+            {RISK_THRESHOLDS.high <= yMax && <HRule yPos={y(RISK_THRESHOLDS.high)} innerW={innerW} dashed />}
             {qualifiedMeanRisk !== null && (
-              <g aria-hidden="true">
-                <line x1={0} x2={innerW} y1={y(qualifiedMeanRisk)} y2={y(qualifiedMeanRisk)} stroke="var(--color-accent)" strokeWidth={1} strokeOpacity={0.55} />
-                {/* Mobile: left-anchor at x=2 (left edge is empty) so the
-                    label never overruns the viewBox's right edge. */}
-                <text
-                  x={isMobile ? 2 : innerW - 2}
-                  y={y(qualifiedMeanRisk) - 3}
-                  textAnchor={isMobile ? 'start' : 'end'}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fontSize={isMobile ? 8 : 9}
-                  fill="var(--color-accent)"
-                  fillOpacity={isMobile ? 1 : 0.85}
-                  paintOrder="stroke"
-                  stroke={isMobile ? 'var(--color-background)' : 'none'}
-                  strokeWidth={isMobile ? 3 : 0}
-                  strokeLinejoin="round"
-                >
-                  {isEs ? 'media del inventario' : 'inventory mean'}
-                </text>
-              </g>
+              <line x1={0} x2={innerW} y1={y(qualifiedMeanRisk)} y2={y(qualifiedMeanRisk)} stroke="var(--color-accent)" strokeWidth={1} strokeOpacity={0.55} aria-hidden="true" />
             )}
 
             {/* ── ½ / 80% structural walls (full plate height, ochre seam) ── */}
-            {k50 > 0 && (
-              <StructuralWall xPos={x(50)} innerH={innerH} big="½" sub={isMobile ? `${k50}` : isEs ? `${k50} categorías` : `${k50} categories`} />
-            )}
-            {k80 > 0 && (
-              <StructuralWall xPos={x(80)} innerH={innerH} big="80%" sub={isMobile ? `${k80}` : isEs ? `${k80} categorías` : `${k80} categories`} />
-            )}
+            {k50 > 0 && <StructuralWall xPos={x(50)} innerH={innerH} />}
+            {k80 > 0 && <StructuralWall xPos={x(80)} innerH={innerH} />}
 
             {/* ── zero baseline ─────────────────────────────────────────── */}
             <line x1={0} x2={innerW} y1={innerH} y2={innerH} stroke="var(--color-border)" strokeWidth={1} aria-hidden="true" />
@@ -549,7 +711,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
             )}
 
             {/* ── head columns ─────────────────────────────────────────── */}
-            {head.map((h, hi) => {
+            {head.map((h) => {
               const color = SECTOR_COLORS[h.item.sector_code] ?? SECTOR_COLORS.otros
               const colX = x(h.startPct)
               const colW = Math.max(1.5, x(h.sharePct) - 1)
@@ -561,6 +723,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
               const opacity = isDimmedBySector ? 0.25 : isDimmedByFocus ? 0.35 : 0.9
               const label = isEs ? h.item.name_es : h.item.name_en
               const hitW = Math.max(14, colW)
+              const cap = capFill(h.item.avg_risk)
               return (
                 <g key={h.item.category_id}>
                   {h.subFloor ? (
@@ -576,39 +739,9 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
                       style={{ transition: 'fill-opacity 0.15s' }}
                     />
                   )}
-                  {/* In-column vertical name — only the top-3 slabs, only when the
-                      column is wide + tall enough to read; keeps names off the
-                      crowded top margin (no floating head callouts). */}
-                  {!h.subFloor && hi < 3 && colW >= 30 && colH >= 62 && (() => {
-                    const maxChars = Math.max(4, Math.floor((colH - 12) / 6.6))
-                    const needsTruncation = label.length > maxChars
-                    // Mobile (600-767px band, no sidebar): a truncated name
-                    // reads as broken ("Building…"). Only show the FULL
-                    // name on mobile; suppress cleanly rather than clip.
-                    if (isMobile && needsTruncation) return null
-                    const vName = needsTruncation ? label.slice(0, maxChars - 1).trimEnd() + '…' : label
-                    const cx = colX + colW / 2
-                    const by = innerH - 8
-                    return (
-                      <text
-                        x={cx}
-                        y={by}
-                        transform={`rotate(-90 ${cx} ${by})`}
-                        textAnchor="start"
-                        fontFamily="var(--font-family-mono, monospace)"
-                        fontSize={11}
-                        fontWeight={600}
-                        fill="#ffffff"
-                        stroke="rgba(0,0,0,0.42)"
-                        strokeWidth={2.4}
-                        paintOrder="stroke"
-                        style={{ userSelect: 'none', pointerEvents: 'none', opacity: isDimmedBySector ? 0.25 : 1 }}
-                        aria-hidden="true"
-                      >
-                        {vName}
-                      </text>
-                    )
-                  })()}
+                  {SHOW_TIER_CAP && !h.subFloor && colH > 0 && (
+                    <rect data-alz-cap x={colX} width={colW} y={colY} height={CAP_H} fill={cap.fill} fillOpacity={cap.opacity * (isDimmedBySector ? 0.25 : 1)} aria-hidden="true" />
+                  )}
                   <rect
                     x={colX - Math.max(0, (hitW - colW) / 2)}
                     width={hitW}
@@ -634,7 +767,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
             })}
 
             {/* ── needles: true spend-share width (floored), drawn over the tail band ── */}
-            {needles.slice(0, isMobile ? 2 : 5).map((n) => {
+            {needlesShown.map((n) => {
               const color = SECTOR_COLORS[n.item.sector_code] ?? SECTOR_COLORS.otros
               const nX = x(n.cumStartPct)
               const nW = Math.max(MIN_NEEDLE_PX, x(n.sharePct) - 1)
@@ -646,9 +779,13 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
               const opacity = isDimmedBySector ? 0.25 : isDimmedByFocus ? 0.35 : 1
               const label = isEs ? n.item.name_es : n.item.name_en
               const hitW = Math.max(14, nW)
+              const cap = capFill(n.item.avg_risk)
               return (
                 <g key={`needle-${n.item.category_id}`}>
-                  <rect x={nX} width={nW} y={nY} height={nH} fill={color} fillOpacity={opacity} stroke="var(--color-background)" strokeWidth={0.5} style={{ transition: 'fill-opacity 0.15s' }} />
+                  <rect data-alz-needle x={nX} width={nW} y={nY} height={nH} fill={color} fillOpacity={opacity} stroke="var(--color-background)" strokeWidth={0.5} style={{ transition: 'fill-opacity 0.15s' }} />
+                  {SHOW_TIER_CAP && nH > 0 && (
+                    <rect data-alz-cap x={nX} width={nW} y={nY} height={CAP_H} fill={cap.fill} fillOpacity={cap.opacity * (isDimmedBySector ? 0.25 : 1)} aria-hidden="true" />
+                  )}
                   <rect
                     x={nX - Math.max(0, (hitW - nW) / 2)}
                     width={hitW}
@@ -673,22 +810,6 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
               )
             })}
 
-            {/* ── callout labels + leader lines ─────────────────────────── */}
-            {calloutLabels.map((c) => {
-              const color = SECTOR_TEXT_COLORS[c.sectorCode] ?? SECTOR_TEXT_COLORS.otros
-              const anchor = c.x < 48 ? 'start' : c.x > innerW - 48 ? 'end' : 'middle'
-              const isDimmedBySector = !!highlightSector && c.sectorCode !== highlightSector
-              const opacity = isDimmedBySector ? 0.25 : 1
-              return (
-                <g key={`callout-${c.id}`} aria-hidden="true" style={{ opacity }}>
-                  <line x1={c.x} y1={c.labelY + 4} x2={c.x} y2={0} stroke={color} strokeWidth={0.75} strokeOpacity={0.45} />
-                  <text x={c.x} y={c.labelY} textAnchor={anchor} fontFamily="var(--font-family-mono, monospace)" fontSize={12} fill={color} style={{ userSelect: 'none' }}>
-                    {c.name}
-                  </text>
-                </g>
-              )
-            })}
-
             {/* ── X axis (cumulative spend) ─────────────────────────────── */}
             <line x1={0} x2={innerW} y1={innerH} y2={innerH} stroke="var(--color-border)" strokeWidth={0.75} aria-hidden="true" />
             {xTicks.map((t) => {
@@ -696,13 +817,13 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
               return (
                 <g key={`xt-${t}`} aria-hidden="true">
                   <line x1={tx} x2={tx} y1={innerH} y2={innerH + 4} stroke="var(--color-border)" strokeWidth={0.75} />
-                  <text x={tx} y={innerH + 16} textAnchor="middle" fontFamily="var(--font-family-mono, monospace)" fontSize={13} fill="var(--color-text-muted)" fillOpacity={0.7}>
+                  <text x={tx} y={innerH + 16} textAnchor={t === 0 ? 'start' : t === 100 ? 'end' : 'middle'} fontFamily="var(--font-family-mono, monospace)" fontSize={isMobile ? 11 : 13} fill="var(--color-text-muted)">
                     {t}%
                   </text>
                 </g>
               )
             })}
-            <text x={innerW / 2} y={innerH + (isMobile ? 26 : 32)} textAnchor="middle" fontFamily="var(--font-family-mono, monospace)" fontSize={13} fill="var(--color-text-muted)" fillOpacity={0.6} letterSpacing="0.1em" aria-hidden="true">
+            <text x={innerW / 2} y={innerH + (isMobile ? 30 : 32)} textAnchor="middle" fontFamily="var(--font-family-mono, monospace)" fontSize={isMobile ? 11 : 13} fill="var(--color-text-muted)" letterSpacing="0.1em" aria-hidden="true">
               {isEs ? 'GASTO ACUMULADO →' : 'CUMULATIVE SPEND →'}
             </text>
 
@@ -712,17 +833,90 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
               return (
                 <g key={`yt-${t}`} aria-hidden="true">
                   <line x1={-4} x2={0} y1={ty} y2={ty} stroke="var(--color-border)" strokeWidth={0.75} />
-                  <text x={-8} y={ty + 3} textAnchor="end" fontFamily="var(--font-family-mono, monospace)" fontSize={11} fill="var(--color-text-muted)" fillOpacity={0.7}>
+                  <text x={-8} y={ty + 3} textAnchor="end" fontFamily="var(--font-family-mono, monospace)" fontSize={11} fill="var(--color-text-muted)">
                     {(t * 100).toFixed(0)}
                   </text>
                 </g>
               )
             })}
-            <text x={-MARGIN.left + 10} y={-12} textAnchor="start" fontFamily="var(--font-family-mono, monospace)" fontSize={11} fill="var(--color-text-muted)" fillOpacity={0.6} letterSpacing="0.08em" aria-hidden="true">
+            <text x={-MARGIN.left + 10} y={-12} textAnchor="start" fontFamily="var(--font-family-mono, monospace)" fontSize={11} fill="var(--color-text-muted)" letterSpacing="0.08em" aria-hidden="true">
               {isMobile ? (isEs ? 'RIESGO ↑' : 'RISK ↑') : isEs ? 'INDICADOR ×100 ↑' : 'RISK INDICATOR ×100 ↑'}
             </text>
           </g>
         </svg>
+        )}
+
+        {/* ── the HTML label layer (only once the plate is measured) ── */}
+        {layout && (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 font-mono" style={{ userSelect: 'none' }}>
+            {layout.colLabels.map((c) => (
+              <div
+                key={`col-${c.id}`}
+                data-alz-col-label
+                data-name={c.name}
+                style={{
+                  ...boxStyle(c.box),
+                  ...(c.rotated ? { writingMode: 'vertical-rl' as const, transform: 'rotate(180deg)' } : { textAlign: 'center' as const }),
+                  fontSize: 11,
+                  fontWeight: 600,
+                  lineHeight: `${COL_LINE}px`,
+                  color: '#ffffff',
+                  textShadow: '0 0 2px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.6)',
+                  whiteSpace: 'nowrap',
+                  opacity: c.dim ? 0.25 : 1,
+                }}
+              >
+                {c.lines.map((ln, i) => (
+                  <span key={i} style={{ display: 'block' }}>{ln}</span>
+                ))}
+              </div>
+            ))}
+            {layout.badges.map((b) => (
+              <span
+                key={`badge-${b.id}`}
+                data-alz-badge
+                className="inline-flex items-center justify-center tabular-nums"
+                style={{
+                  ...boxStyle(b.box),
+                  borderRadius: BADGE_D / 2,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  lineHeight: 1,
+                  background: 'var(--color-background)',
+                  color: 'var(--color-text-primary)',
+                  border: `1px solid ${SECTOR_COLORS[b.sectorCode] ?? SECTOR_COLORS.otros}`,
+                  opacity: b.dim ? 0.3 : 1,
+                }}
+              >
+                {b.n}
+              </span>
+            ))}
+            {layout.walls.map((w) => (
+              <span key={`wall-${w.key}`} data-alz-wall-label style={{ ...boxStyle(w.box), whiteSpace: 'nowrap', lineHeight: `${WALL_ROW_H}px` }}>
+                <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontWeight: 700, fontSize: 13, color: 'var(--color-text-primary)' }}>{w.big}</span>
+                <span style={{ fontSize: 11, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}> · {w.sub}</span>
+              </span>
+            ))}
+            {layout.callouts.map((c) => (
+              <span
+                key={`callout-${c.id}`}
+                data-alz-callout
+                style={{ ...boxStyle(c.box), whiteSpace: 'nowrap', fontSize: 12, lineHeight: `${CALLOUT_ROW_H}px`, color: SECTOR_TEXT_COLORS[c.sectorCode] ?? SECTOR_TEXT_COLORS.otros, opacity: c.dim ? 0.25 : 1, textShadow: HALO }}
+              >
+                {c.name}
+              </span>
+            ))}
+            {layout.rules.map((r) => (
+              <span
+                key={`rule-${r.key}`}
+                data-alz-rule-label
+                style={{ ...boxStyle(r.box), whiteSpace: 'nowrap', fontSize: 11, letterSpacing: '0.06em', lineHeight: `${RULE_H}px`, color: r.accent ? 'var(--color-accent)' : 'var(--color-text-muted)', textShadow: HALO }}
+              >
+                {r.text}
+              </span>
+            ))}
+          </div>
+        )}
 
         {!isMobile && activeItem && hoverAnchorX !== null && (
           <div
@@ -754,13 +948,47 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
         )}
       </div>
 
+      {/* ── index legend: the columns too narrow (or too short) to carry their name ── */}
+      {layout && layout.legend.length > 0 && (
+        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono" style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--color-text-secondary)' }} aria-label={isEs ? 'Índice de columnas' : 'Column index'}>
+          {layout.legend.map((l) => (
+            <li key={`leg-${l.id}`} data-alz-legend-item data-name={l.name} className="inline-flex items-center gap-1.5" style={{ opacity: highlightSector && l.sectorCode !== highlightSector ? 0.4 : 1 }}>
+              <span
+                aria-hidden="true"
+                className="inline-flex items-center justify-center tabular-nums"
+                style={{ minWidth: BADGE_D, height: BADGE_D, padding: '0 3px', borderRadius: BADGE_D / 2, fontSize: 11, fontWeight: 600, lineHeight: 1, border: `1px solid ${SECTOR_COLORS[l.sectorCode] ?? SECTOR_COLORS.otros}`, color: 'var(--color-text-primary)' }}
+              >
+                {l.n}
+              </span>
+              <span>
+                {l.name} · <span className="tabular-nums">{l.sharePct.toFixed(1)} %</span> ·{' '}
+                <span className="tabular-nums" style={{ color: RISK_TEXT_COLORS[getRiskLevelFromScore(l.risk)], fontWeight: 600 }}>{Math.round(l.risk * 100)}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* ── the cap's key ── */}
+      {SHOW_TIER_CAP && (
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+          <span>{isEs ? 'remate = nivel de riesgo' : 'cap = risk tier'}</span>
+          {(['low', 'medium', 'high', 'critical'] as const).map((lvl) => (
+            <span key={lvl} className="inline-flex items-center gap-1.5">
+              <span aria-hidden="true" style={{ display: 'inline-block', width: 14, height: CAP_H, background: lvl === 'low' ? 'var(--color-text-muted)' : RISK_COLORS[lvl], opacity: lvl === 'low' ? 0.5 : 1 }} />
+              {isEs ? RISK_LEVEL_ES[lvl] : lvl}
+            </span>
+          ))}
+        </p>
+      )}
+
       <p className="mt-3 font-mono" style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--color-text-muted)' }}>
         {isEs
           ? 'Cada columna: su ancho es su tajada del gasto acumulado; su alto, el indicador de riesgo medio sobre línea base cero. Las agujas son categorías de la cola con indicador alto, dibujadas en su posición real de gasto.'
           : "Each column: its width is its slice of cumulative spend; its height, the average risk indicator on a zero baseline. Needles are tail categories with a high indicator, drawn at their true spend position."}
       </p>
 
-      <p className="mt-2 text-[12px] font-mono text-text-muted opacity-60" aria-live="polite">
+      <p className="mt-2 text-[12px] font-mono text-text-muted" aria-live="polite">
         {focusedMark
           ? isEs
             ? `${focusedMark.item.name_es} seleccionado — Enter para investigar`
@@ -773,48 +1001,18 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
   )
 }
 
-// ── horizontal reference rule (risk threshold) ─────────────────────────────
+const RISK_LEVEL_ES = { low: 'bajo', medium: 'medio', high: 'alto', critical: 'crítico' } as const
 
-function HRule({ yPos, innerW, label, dashed, isMobile }: { yPos: number; innerW: number; label: string; dashed?: boolean; isMobile?: boolean }) {
-  // Mobile: left-anchor at the plot's left edge (x=2), which is otherwise
-  // empty — the desktop right-anchor at innerW-2 clips at narrow widths
-  // because the label text runs past the viewBox's right boundary.
+// ── horizontal reference rule (risk threshold) — the label lives in the HTML layer ──
+
+function HRule({ yPos, innerW, dashed }: { yPos: number; innerW: number; dashed?: boolean }) {
   return (
-    <g aria-hidden="true">
-      <line x1={0} x2={innerW} y1={yPos} y2={yPos} stroke="var(--color-border)" strokeWidth={1} strokeDasharray={dashed ? '4,4' : undefined} strokeOpacity={0.7} />
-      <text
-        x={isMobile ? 2 : innerW - 2}
-        y={yPos - 3}
-        textAnchor={isMobile ? 'start' : 'end'}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontSize={isMobile ? 9 : 11}
-        fill="var(--color-text-muted)"
-        fillOpacity={isMobile ? 1 : 0.75}
-        letterSpacing="0.06em"
-        paintOrder="stroke"
-        stroke={isMobile ? 'var(--color-background)' : 'none'}
-        strokeWidth={isMobile ? 3 : 0}
-        strokeLinejoin="round"
-      >
-        {label}
-      </text>
-    </g>
+    <line aria-hidden="true" x1={0} x2={innerW} y1={yPos} y2={yPos} stroke="var(--color-border)" strokeWidth={1} strokeDasharray={dashed ? '4,4' : undefined} strokeOpacity={0.7} />
   )
 }
 
-// ── structural wall (½ / 80% concentration cut) ────────────────────────────
+// ── structural wall (½ / 80% concentration cut) — the label lives in the HTML layer ──
 
-function StructuralWall({ xPos, innerH, big, sub }: { xPos: number; innerH: number; big: string; sub: string }) {
-  return (
-    <g>
-      <line x1={xPos} x2={xPos} y1={0} y2={innerH} stroke="rgba(160, 104, 32, 0.7)" strokeWidth={2} aria-hidden="true" />
-      <line x1={xPos} x2={xPos} y1={-8} y2={0} stroke="rgba(160, 104, 32, 0.7)" strokeWidth={1} aria-hidden="true" />
-      <text x={xPos + 4} y={-11} fontFamily='"EB Garamond", Georgia, serif' fontStyle="normal" fontWeight={700} fontSize={13} fill="var(--color-text-primary)">
-        {big}
-      </text>
-      <text x={xPos + 4 + (big.length > 1 ? 20 : 12)} y={-11} fontFamily="var(--font-family-mono, monospace)" fontSize={10} letterSpacing="0.04em" fill="var(--color-text-muted)">
-        {sub}
-      </text>
-    </g>
-  )
+function StructuralWall({ xPos, innerH }: { xPos: number; innerH: number }) {
+  return <line x1={xPos} x2={xPos} y1={0} y2={innerH} stroke="rgba(160, 104, 32, 0.7)" strokeWidth={2} aria-hidden="true" />
 }
