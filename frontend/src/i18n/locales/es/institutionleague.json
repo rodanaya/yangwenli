@@ -9,7 +9,7 @@
     "accentSome": "{{n}} alcanzan Excelente",
     "afterSome": " — y {{failing}} operan en deficiencia o peor."
   },
-  "lede": "El {{name}} concentra {{money}} en contratos de riesgo alto y crítico — la exposición más alta {{where}}. La posición en la placa de abajo es el puntaje de integridad (más a la derecha, mejor); la altura del trazo es el dinero en riesgo.",
+  "lede": "{{name}} concentra {{money}} en contratos de riesgo alto y crítico — la exposición más alta {{where}}. La posición en la placa de abajo es el puntaje de integridad (más a la derecha, mejor); la altura del trazo es el dinero en riesgo.",
   "podiumAriaLabel": "#{{rank}}: {{name}}, puntuación {{score}}",
   "tableKicker": "Tabla general",
   "tableHeadline": "Clasificación completa — {{total}} instituciones",
