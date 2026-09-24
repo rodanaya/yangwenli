@@ -121,6 +121,8 @@ Deviations accepted:
 - A `contrastOnWhite` helper picks the active filter chip's fill.
 - The KARDEX line keeps `C-020`.
 
+Shipped 2026-09-24 12:07Z: origin/main + VPS HEAD `0cf31a8d`, BUILD_ID `2026-09-24-parallax-d11-categorias`. The served entry went from `index-CBdWJ8-C.js` to `index-U0ItZ4v0.js`, and the BUILD_ID string was verified in it. Health is OK (3,058,286 contracts). `/categories`, `/categories/20`, `/categories/39` and `/sectors/1` all return 200. Deployed via `deploy-safe.sh`.
+
 ## Backlog (from Day 11)
 - `VendorActivityTab.tsx:199` feeds 0–1 data to `yFormat="pct"` with `yDomain={[0,1]}`, probably H1's bug on the vendor dossier → Day 13.
 - The count-sheet Risk mini-bar is stretched ×100/45 with no axis (`LedgerRow`), the same class as H2.
