@@ -224,14 +224,14 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                     </span>
                   )}
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted">
                   <span style={{ color: getSectorTextColor(cat.sector_code), fontWeight: 600 }}>
                     {sectorName}
                   </span>
                   {caption && (
                     <>
                       <span aria-hidden="true">·</span>
-                      <span className="normal-case tracking-normal text-[12px] text-text-secondary truncate">
+                      <span className="normal-case tracking-normal text-[12px] text-text-secondary">
                         {caption}
                       </span>
                     </>

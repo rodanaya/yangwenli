@@ -23,7 +23,7 @@ import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
-import { SECTOR_COLORS, RISK_COLORS, RISK_INK_ON_PLATE, RISK_TEXT_COLORS, getSectorTextColor, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_NAMES_EN, SECTOR_NAMES_ES, RISK_COLORS, RISK_INK_ON_PLATE, RISK_TEXT_COLORS, getSectorTextColor, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { type ConstellationMode } from '@/components/charts/ConcentrationConstellation'
@@ -40,6 +40,17 @@ import { ChapterTiles } from '@/components/executive/ChapterTiles'
 import { CaptureLeaders } from '@/components/executive/CaptureLeaders'
 
 const MotionLink = motion.create(Link)
+
+// The wire's sector arrives as a Spanish display name ("Medio Ambiente",
+// "Tecnologia"); resolve it to the taxonomy code so it prints localised.
+const fold = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+function sectorCodeOf(name: string | null | undefined): string | null {
+  if (!name) return null
+  const f = fold(name)
+  if (SECTOR_COLORS[f]) return f
+  const hit = Object.entries(SECTOR_NAMES_ES).find(([, es]) => f === fold(es) || f.endsWith(fold(es)))
+  return hit ? hit[0] : null
+}
 
 const ATLAS_LENSES = ['patterns', 'sectors', 'categories', 'sexenios'] as const satisfies readonly ConstellationMode[]
 
@@ -497,7 +508,7 @@ export default function Executive() {
 
             {/* Mode toggle */}
             <div
-              className="flex items-center text-[13px] font-mono uppercase tracking-[0.1em] rounded-sm overflow-hidden"
+              className="flex flex-wrap items-center text-[13px] font-mono uppercase tracking-[0.1em] rounded-sm overflow-hidden"
               role="group"
               aria-label={lang === 'en' ? 'Atlas mode' : 'Modo del Atlas'}
               style={{ border: '1px solid var(--color-border)' }}
@@ -1146,13 +1157,12 @@ export default function Executive() {
                           {/* Rung row */}
                           <Link
                             to={r.href}
-                            className="group grid items-baseline gap-x-4 py-2 rounded-sm transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
-                            style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}
+                            className="group grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_92px] items-baseline gap-x-4 gap-y-1 py-2 rounded-sm transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                             aria-label={`${formatNumber(r.count)} — ${r.label[lang]}`}
                           >
                             {/* Count — Playfair Italic 800 anchor */}
                             <span
-                              className="tabular-nums leading-none text-right pr-1"
+                              className="col-span-2 sm:col-span-1 tabular-nums leading-none text-left sm:text-right pr-1"
                               style={{
                                 fontFamily: "'Playfair Display', Georgia, serif",
                                 fontStyle: 'normal',
@@ -1176,7 +1186,7 @@ export default function Executive() {
                                   style={{ background: rungColors[i], opacity: 0.92 }}
                                 />
                               </div>
-                              <div className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted leading-[1.3] truncate">
+                              <div className="text-[12px] font-mono uppercase tracking-[0.14em] text-text-muted leading-[1.3]">
                                 {r.label[lang]}
                               </div>
                             </div>
@@ -1189,11 +1199,11 @@ export default function Executive() {
 
                           {/* Filter-operation caption between this rung and next */}
                           {r.operation && (
-                            <div className="grid gap-x-4 py-1.5" style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}>
-                              <span /> {/* spacer for count column */}
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_92px] gap-x-4 py-1.5">
+                              <span className="hidden sm:block" /> {/* spacer for count column */}
                               <div className="flex items-center gap-2 min-w-0">
                                 <span
-                                  className="text-[12px] leading-[1.4] truncate"
+                                  className="text-[12px] leading-[1.4]"
                                   style={{
                                     fontFamily: "'Playfair Display', Georgia, serif",
                                     fontStyle: 'normal',
@@ -1231,9 +1241,10 @@ export default function Executive() {
                       ? `43 named cases · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} GT vendors — training corpus`
                       : `43 casos con nombre · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} proveedores GT — corpus de entrenamiento`}
                   >
-                    <div className="grid items-baseline gap-x-4" style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}>
-                      {/* Eyebrow + count, indented to align under count column */}
-                      <div className="flex flex-col gap-1 items-end pr-1">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[136px_minmax(0,1fr)_92px] items-baseline gap-x-4 gap-y-1">
+                      {/* Eyebrow + count, indented to align under count column
+                          (on phones one line above the text) */}
+                      <div className="col-span-2 sm:col-span-1 flex flex-row sm:flex-col items-baseline sm:items-end gap-2 sm:gap-1 pr-1">
                         <span className="text-[11px] font-mono uppercase tracking-[0.18em]" style={{ color: 'var(--color-accent-hover)' }}>
                           {lang === 'en' ? 'Anchor' : 'Ancla'}
                         </span>
@@ -1356,13 +1367,15 @@ export default function Executive() {
             ) : (
             <div className="surface-card rounded-sm overflow-hidden divide-y divide-border/50">
               {recentCritical.slice(0, 5).map((c) => {
-                const sectorColor = c.sector_name
-                  ? SECTOR_COLORS[c.sector_name.toLowerCase()] ?? '#64748b'
-                  : '#64748b'
+                const sectorCode = sectorCodeOf(c.sector_name)
+                const sectorColor = sectorCode ? SECTOR_COLORS[sectorCode] : '#64748b'
+                const sectorLabel = sectorCode
+                  ? (lang === 'en' ? SECTOR_NAMES_EN[sectorCode] : SECTOR_NAMES_ES[sectorCode])
+                  : c.sector_name || '—'
                 return (
                   <div
                     key={c.id}
-                    className="group w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors"
+                    className="group w-full text-left p-4 flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-2 hover:bg-background-elevated transition-colors"
                   >
                     <span
                       className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[12px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"
@@ -1370,14 +1383,14 @@ export default function Executive() {
                     >
                       {lang === 'en' ? 'CRITICAL' : 'CRÍTICO'}
                     </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate">
+                    <div className="order-first sm:order-none basis-full sm:basis-auto flex-1 min-w-0">
+                      <div>
                         {c.vendor_id
-                          ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} size="sm" />
+                          ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} size="sm" fullName />
                           : <span className="text-sm font-semibold text-text-primary">{formatVendorName(c.vendor_name) || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}</span>
                         }
                       </div>
-                      <p className="text-[13px] truncate mt-0.5">
+                      <p className="text-[13px] mt-0.5 text-pretty">
                         <Link
                           to={`/contracts/${c.id}`}
                           className="rounded-sm text-text-primary hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
@@ -1388,14 +1401,15 @@ export default function Executive() {
                     </div>
                     <div className="hidden md:flex flex-shrink-0 w-36 items-center gap-2">
                       <span
+                        aria-hidden="true"
                         className="h-1.5 w-1.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: sectorColor }}
                       />
-                      <span className="text-xs text-text-secondary capitalize truncate">
-                        {c.sector_name || '—'}
+                      <span className="text-xs text-text-secondary">
+                        {sectorLabel}
                       </span>
                     </div>
-                    <div className="flex-shrink-0 text-right">
+                    <div className="flex-shrink-0 text-right ml-auto sm:ml-0">
                       <div className="text-sm font-mono tabular-nums text-text-primary">
                         {formatCompactMXN(c.amount_mxn)}
                       </div>
