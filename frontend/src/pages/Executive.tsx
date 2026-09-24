@@ -1,19 +1,18 @@
 /**
- * Executive Summary — Newspaper-style 1-pager for decision-makers
+ * Dashboard (/dashboard) — the RUBLI executive briefing, Folio·I.
  *
- * Designed to be consumed in 90 seconds by senators, NGO directors,
- * embassy staff, and prosecutors. Editorial weight over data density.
+ * Composition (top to bottom):
+ *   masthead (eyebrow + Print, dateline, h1 with two accent spans, byline, lede)
+ *   § 1 El Atlas (lens toggle + the shared ObservatoryScatter + «Open full Atlas»)
+ *   MacroArc (Folio·III) · lead-time advantage (Folio·IV)
+ *   headline numbers — four chapter tiles I–IV (Folio·V)
+ *   what the analysis found — four FINDING cards
+ *   pesos at risk (Folio·VI) · where the money goes (Folio·VII)
+ *   § 2 La Lente — the Cascade Ledger + GT anchor band (Folio·VIII)
+ *   documented cases seismograph (Folio·IX) · recent critical alerts wire
+ *   «Start Here» CTA · § Adónde ir coda · credibility colophon
  *
- * Composition:
- *   1. Dateline + headline (Playfair Display 800)
- *   2. Lede paragraph
- *   3. 2x2 KPI tile grid (HR rate, value at risk, high+critical, model AUC)
- *   4. Three Signal cards (top model predictors)
- *   5. Documented cases timeline (2002-2025 dot-strip, expanded)
- *   6. Recommendations by audience (investigators / reformers / journalists)
- *   7. Single CTA — "Investigate a vendor"
- *   8. Credibility strip
- *   9. Print button (hides sidebar)
+ * All data blocks load from one bundled request (useExecutiveData).
  */
 
 import { useMemo, useState } from 'react'
@@ -30,22 +29,14 @@ import { type ConstellationMode } from '@/components/charts/ConcentrationConstel
 import { ObservatoryScatter } from '@/components/atlas/ObservatoryScatter'
 import { useScatterClusters } from '@/lib/atlas/useScatterClusters'
 import { useExecutiveData } from '@/hooks/useExecutiveData'
-// DashboardSledgehammer removed 2026-05-05 — duplicated MacroArc's 74% headline
 import { MacroArc } from '@/components/dashboard/MacroArc'
-// LensVisualization/buildLensTiers retired 2026-05-20 — replaced by Cascade
-// Ledger (log-scale rungs + GT anchor band) inline in this file. The legacy
-// concentric-funnel component is still on disk for reference but no longer
-// imported.
 import { CaseTimeline } from '@/components/executive/CaseTimeline'
 import { LeadTimeChart } from '@/components/executive/LeadTimeChart'
 import { TopCategoriesChart } from '@/components/executive/TopCategoriesChart'
 import { PesosAtRiskChart } from '@/components/executive/PesosAtRiskChart'
 
-// § 5 Historias Ejemplares (EXAMPLE_DOSSIERS + ExampleDossier/DossierFlag types)
-// removed 2026-06-04 with the dashboard section that consumed them.
-
 export default function Executive() {
-  const { i18n } = useTranslation('executive')
+  const { i18n } = useTranslation()
   const navigate = useNavigate()
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
@@ -524,11 +515,6 @@ export default function Executive() {
             <LeadTimeChart lang={lang} />
           </PlateFrame>
         </section>
-
-        {/* DashboardSledgehammer DELETED 2026-05-05 per user critique:
-            "delete it. We already have that same figure below." The MacroArc
-            chart above already carries the 74% headline + the trend; the
-            duplicated giant Playfair number was redundant. */}
 
         {/* ─── HEADLINE NUMBERS — investigative sequence (4 chapters)
             Reads as one argument: spend → bypass → flag → catch.
@@ -1809,13 +1795,6 @@ export default function Executive() {
             </div>
           </PlateFrame>
         </section>
-
-        {/* §5 Historias Ejemplares (3 try-it dossier cards) removed 2026-06-04 —
-            its "open a specific case" job is already served by the Observatory
-            (click-into-vendors), every KEY FINDING card (investigate link), the
-            Documented Cases Timeline below, and /casos; the named-case detail
-            lives on the vendor dossiers one click away. EXAMPLE_DOSSIERS + the
-            ExampleDossier/DossierFlag types were removed with it. */}
 
         {/* ─── Amber divider ─── */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-40 mb-10" />

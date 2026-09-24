@@ -17,8 +17,6 @@ import esContracts from './locales/es/contracts.json'
 import enContracts from './locales/en/contracts.json'
 import esInvestigation from './locales/es/investigation.json'
 import enInvestigation from './locales/en/investigation.json'
-import esExecutive from './locales/es/executive.json'
-import enExecutive from './locales/en/executive.json'
 import esWatchlist from './locales/es/watchlist.json'
 import enWatchlist from './locales/en/watchlist.json'
 import esGlossary from './locales/es/glossary.json'
@@ -76,7 +74,7 @@ i18n
       es: {
         common: esCommon, sectors: esSectors, nav: esNav, dashboard: esDashboard,
         explore: esExplore, contracts: esContracts, investigation: esInvestigation,
-        executive: esExecutive, watchlist: esWatchlist,
+        watchlist: esWatchlist,
         glossary: esGlossary,
         procurement: esProcurement, administrations: esAdministrations, price: esPrice,
         cases: esCases, vendors: esVendors, institutions: esInstitutions,
@@ -100,7 +98,7 @@ i18n
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
         explore: enExplore, contracts: enContracts, investigation: enInvestigation,
-        executive: enExecutive, watchlist: enWatchlist,
+        watchlist: enWatchlist,
         glossary: enGlossary,
         procurement: enProcurement, administrations: enAdministrations, price: enPrice,
         cases: enCases, vendors: enVendors, institutions: enInstitutions,
