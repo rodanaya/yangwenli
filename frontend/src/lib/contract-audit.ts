@@ -24,7 +24,10 @@ export type ContractLike = {
   procedure_type?: string | null
 }
 
-export function cleanContractDescription(raw: string): { objeto: string | null; expediente: string | null } {
+// maxChars caps the objeto (default 90, with '…'); pass Infinity where the
+// title wraps instead. `code` / `moreCodes` let a caller print the first
+// expediente code plus a count instead of the ' …' mark.
+export function cleanContractDescription(raw: string, maxChars = 90): { objeto: string | null; expediente: string | null; code: string | null; moreCodes: number } {
   const s = stripEncodingArtifacts(raw ?? '')
     // Strip Excel/CSV escape artifacts (_x000D_ = CR, _x000A_ = LF, etc.) that
     // leak into ~3.6K COMPRANET titles, plus any stray control chars, before
@@ -33,7 +36,7 @@ export function cleanContractDescription(raw: string): { objeto: string | null; 
     .replace(/[\x00-\x1f]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-  if (!s) return { objeto: null, expediente: null }
+  if (!s) return { objeto: null, expediente: null, code: null, moreCodes: 0 }
   const tokens = s.split(' ')
   const core = (t: string) => t.replace(/^[^0-9a-záéíóúñü]+/i, '').replace(/[^0-9a-záéíóúñü]+$/i, '')
   const isWord = (t: string) => /^[a-záéíóúñü]{2,}$/i.test(core(t))
@@ -47,10 +50,10 @@ export function cleanContractDescription(raw: string): { objeto: string | null; 
   // shortenContractName's uppercase pass and then defeats its first-letter
   // capitalisation, rendering '"fletamento…' all-lowercase.
   const objectRaw = objWords.join(' ').trim().replace(/^["'«»¿¡:;,.\-\s]+/, '')
-  const objeto = objectRaw ? shortenContractName(objectRaw, 90) : null
+  const objeto = objectRaw ? shortenContractName(objectRaw, maxChars) : null
   const codeFirst = codeParts[0] ? codeParts[0].toUpperCase().slice(0, 28) : ''
   const expediente = codeFirst ? (codeParts.length > 1 ? `${codeFirst} …` : codeFirst) : null
-  return { objeto, expediente }
+  return { objeto, expediente, code: codeFirst || null, moreCodes: Math.max(0, codeParts.length - 1) }
 }
 
 export type ContractFlags = {

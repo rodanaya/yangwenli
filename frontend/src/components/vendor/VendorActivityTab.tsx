@@ -181,7 +181,7 @@ export function VendorActivityTab({
         }
       })
       .sort((a, b) => a.date.localeCompare(b.date))
-  }, [lifecycle, vendor.primary_sector_name])
+  }, [lifecycle, vendor.primary_sector_name, isEs])
 
   return (
     <div className="space-y-8">
@@ -409,14 +409,14 @@ export function VendorActivityTab({
           </div>
         ) : contracts?.data && contracts.data.length > 0 ? (
           <>
-            <div className="border border-border rounded-sm overflow-x-auto">
+            <div className="border border-border rounded-sm overflow-x-auto" data-track-record>
               <table className="w-full text-sm" aria-label={isEs ? 'Contratos del proveedor' : 'Vendor contracts'}>
                 <thead className="bg-background-elevated text-[12px] uppercase tracking-widest text-text-muted">
                   <tr>
                     <th scope="col" className="w-[72px] text-center px-2 py-2 font-semibold">
                       {isEs ? 'Señal' : 'Flag'}
                     </th>
-                    <th scope="col" className="text-left px-3 py-2 font-semibold">
+                    <th scope="col" className="text-left px-3 py-2 font-semibold min-w-[200px] md:min-w-[280px] xl:min-w-[320px]">
                       {isEs ? 'Objeto' : 'Object'}
                     </th>
                     <th scope="col" className="hidden lg:table-cell text-left px-3 py-2 font-semibold">
@@ -440,7 +440,7 @@ export function VendorActivityTab({
                   {contracts.data.map((c) => {
                     const flags = audit.info.get(c.id)
                     const heavy = (flags?.count ?? 0) >= 2
-                    const clean = cleanContractDescription(c.title ?? '')
+                    const clean = cleanContractDescription(c.title ?? '', Infinity)
                     return (
                     <tr
                       key={c.id}
@@ -464,22 +464,25 @@ export function VendorActivityTab({
                         <FlagGutter flags={flags} isEs={isEs} />
                       </td>
                       <td className="px-3 py-2 align-top">
-                        <div className="max-w-[300px]">
-                          <div className="truncate text-text-primary" title={c.title ?? undefined}>
-                            {clean.objeto ?? (c.title ? shortenContractName(c.title) : '—')}
+                        {/* PARALLAX D10b § 4: the Object column takes the row's slack
+                            (auto layout, 320px floor) and the title wraps — no clip. */}
+                        <div>
+                          <div className="break-words text-text-primary" style={{ lineHeight: 1.35 }}>
+                            {clean.objeto ?? (c.title ? shortenContractName(c.title, Infinity) : '—')}
                           </div>
                           {/* Only show the expediente code as a sub-line when a real
                               objeto was extracted. If objeto cleaning failed (a bare-code
                               title), the line above already shows the code — a second
                               code line would just duplicate it (e.g. "D9p0143 D9P0143"). */}
-                          {clean.objeto && clean.expediente && (
-                            <div className="mt-0.5 text-[12px] font-mono uppercase tracking-wide text-text-muted/70 truncate">
-                              {clean.expediente}
+                          {clean.objeto && clean.code && (
+                            <div className="mt-0.5 text-[12px] font-mono uppercase tracking-wide text-text-muted break-all">
+                              {clean.code}
+                              {clean.moreCodes > 0 && <span className="normal-case"> +{clean.moreCodes}</span>}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="hidden lg:table-cell px-3 py-2 text-text-secondary align-top" style={{ maxWidth: 220 }}>
+                      <td className="hidden lg:table-cell px-3 py-2 text-text-secondary align-top" style={{ maxWidth: 260 }}>
                         <span style={{ display: 'block', wordBreak: 'break-word', lineHeight: 1.35 }}>
                           {c.institution_name ?? '—'}
                         </span>
@@ -493,7 +496,7 @@ export function VendorActivityTab({
                       <td className="hidden sm:table-cell px-3 py-2 text-right font-mono tabular-nums text-[13px] text-text-muted whitespace-nowrap align-top">
                         {formatCompactUSDByYear(c.amount_mxn ?? 0, c.contract_year)}
                       </td>
-                      <td className="px-3 py-2 text-center font-mono tabular-nums text-text-muted align-top">
+                      <td className="px-3 py-2 text-center font-mono tabular-nums text-text-muted xl:whitespace-nowrap align-top">
                         {c.contract_date ? formatDate(c.contract_date) : '—'}
                       </td>
                       <td className="px-3 py-2 text-center align-top">

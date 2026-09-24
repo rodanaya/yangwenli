@@ -25,7 +25,7 @@ export function DossierSectionHeader({
 }) {
   return (
     <div
-      className="flex items-baseline justify-between gap-4 pb-1.5 mb-3.5"
+      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-1.5 mb-3.5"
       style={{ borderBottom: `1px solid ${accent}33` }}
     >
       <div className="flex items-baseline gap-3 min-w-0">
@@ -42,8 +42,9 @@ export function DossierSectionHeader({
         >
           § {eyebrow}
         </span>
+        {/* PARALLAX D10b: wraps rather than clips when a phone row is tight */}
         <h2
-          className="truncate"
+          className="min-w-0 break-words"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
             fontStyle: 'normal',
