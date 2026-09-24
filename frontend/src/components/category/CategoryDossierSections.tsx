@@ -26,7 +26,7 @@ import {
   RISK_TEXT_COLORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, shortenContractName } from '@/lib/utils'
 
 const t = (lang: 'en' | 'es', es: string, en: string) => (lang === 'es' ? es : en)
 
@@ -266,13 +266,16 @@ export function SeasonalityTell({ data, accent, lang }: { data: SeasonalityData;
         </div>
         <div className="flex gap-[3px] mt-1">
           {months.map((m) => (
-            <div key={m.month} className="flex-1 text-center font-mono" style={{ fontSize: 8, color: m.month === 12 ? decColor : 'var(--color-text-muted)', fontWeight: m.month === 12 ? 700 : 400 }}>
+            <div key={m.month} className="flex-1 text-center font-mono" style={{ fontSize: 11, color: m.month === 12 ? decColor : 'var(--color-text-muted)', fontWeight: m.month === 12 ? 700 : 400 }}>
               {initials[m.month - 1]}
             </div>
           ))}
         </div>
         <div className="font-mono mt-1.5" style={{ fontSize: 13, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
-          {t(lang, 'línea = cuota uniforme (8.3%) · altura = % del valor anual', 'line = even share (8.3%) · height = % of annual value')}
+          {/* each clause is one unbreakable token; the line wraps only at the dot */}
+          <span className="whitespace-nowrap">{t(lang, 'línea = cuota uniforme (8.3%)', 'line = even share (8.3%)')}</span>
+          {' · '}
+          <span className="whitespace-nowrap">{t(lang, 'altura = % del valor anual', 'height = % of annual value')}</span>
         </div>
       </div>
 
@@ -334,10 +337,10 @@ export function AriaFingerprint({ data, lang }: { data: PatternsData; lang: 'en'
         {pats.slice(0, 6).map((p) => {
           const label = lang === 'es' ? p.label_es : p.label_en
           return (
-            <div key={p.pattern} className="flex items-center gap-3">
-              <div className="shrink-0 flex items-center gap-2" style={{ width: 168 }}>
+            <div key={p.pattern} className="grid items-center gap-3" style={{ gridTemplateColumns: 'minmax(200px, max-content) minmax(0, 1fr) 88px' }}>
+              <div className="flex items-center gap-2 min-w-0">
                 <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 999, background: p.color, flexShrink: 0 }} />
-                <span className="font-mono truncate" style={{ fontSize: 12, color: 'var(--color-text-primary)' }}>
+                <span className="font-mono" style={{ fontSize: 12, lineHeight: 1.35, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}>
                   <span style={{ color: 'var(--color-text-muted)' }}>{p.pattern}</span> {label}
                 </span>
               </div>
@@ -370,6 +373,12 @@ export interface SubcatRow {
   example_titles: string[]
 }
 
+// COMPRANET titles arrive ALL-CAPS; sentence-case those through the shared
+// caser (no length cap — the line wraps). Mixed-case titles pass untouched.
+function sentenceCaseCaps(title: string): string {
+  return title === title.toUpperCase() ? shortenContractName(title, Infinity) : title
+}
+
 export function SubcategoryComposition({ rows, accent, lang }: { rows: SubcatRow[]; accent: string; lang: 'en' | 'es' }) {
   const items = [...(rows ?? [])].sort((a, b) => b.total_value - a.total_value).slice(0, 8)
   if (items.length === 0) return null
@@ -384,7 +393,7 @@ export function SubcategoryComposition({ rows, accent, lang }: { rows: SubcatRow
         return (
           <div key={r.subcategory_id}>
             <div className="flex items-baseline justify-between gap-3 mb-1">
-              <span className="truncate" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 14, color: 'var(--color-text-primary)' }}>
+              <span className="min-w-0 break-words" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 14, lineHeight: 1.35, color: 'var(--color-text-primary)' }}>
                 {name}
               </span>
               <span className="shrink-0 flex items-baseline gap-2.5 font-mono tabular-nums" style={{ fontSize: 13 }}>
@@ -399,8 +408,8 @@ export function SubcategoryComposition({ rows, accent, lang }: { rows: SubcatRow
               </span>
             </div>
             {example && (
-              <p className="truncate mt-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-muted)' }}>
-                {t(lang, 'p. ej.', 'e.g.')} {example}
+              <p className="mt-0.5 break-words" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, lineHeight: 1.4, color: 'var(--color-text-muted)', maxWidth: 'none' }}>
+                {t(lang, 'p. ej.', 'e.g.')} {sentenceCaseCaps(example)}
               </p>
             )}
           </div>
@@ -471,9 +480,9 @@ export function CapturePairs({
               <tr key={`${r.vendor_id}-${r.institution_id}`} className="border-t border-border/30">
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <EntityIdentityChip type="vendor" id={r.vendor_id} name={r.vendor_name} size="sm" />
+                    <EntityIdentityChip type="vendor" id={r.vendor_id} name={r.vendor_name} size="sm" fullName className="w-auto max-w-full" />
                     <span aria-hidden="true" style={{ color: 'var(--color-text-muted)' }}>→</span>
-                    <EntityIdentityChip type="institution" id={r.institution_id} name={r.institution_name} size="sm" hideIcon />
+                    <EntityIdentityChip type="institution" id={r.institution_id} name={r.institution_name} size="sm" hideIcon fullName className="w-auto max-w-full" />
                   </div>
                 </td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums text-text-muted">{formatNumber(r.contract_count)}</td>
@@ -537,11 +546,11 @@ export function PriceSpread({ data, accent, lang }: { data: PriceSpreadData; acc
           <div className="absolute font-mono tabular-nums" style={{ left: x(p50), top: 0, transform: 'translateX(-50%)', fontSize: 13, color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
             {t(lang, 'mediana', 'median')} {formatCompactMXN(p50)}
           </div>
-          <div className="absolute font-mono tabular-nums" style={{ left: x(mean), top: 44, transform: 'translateX(-50%)', fontSize: 13, color: anchorColor, whiteSpace: 'nowrap', fontWeight: 600 }}>
+          <div className="absolute font-mono tabular-nums" style={{ left: x(mean), top: 44, transform: mean / scaleMax > 0.7 ? 'translateX(-100%)' : 'translateX(-50%)', fontSize: 13, color: anchorColor, whiteSpace: 'nowrap', fontWeight: 600 }}>
             {t(lang, 'promedio', 'mean')} {formatCompactMXN(mean)}
           </div>
         </div>
-        <div className="font-mono mt-1 flex justify-between" style={{ fontSize: 8.5, color: 'var(--color-text-muted)' }}>
+        <div className="font-mono mt-1 flex justify-between" style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
           <span>P25 {p25 != null ? formatCompactMXN(p25) : '—'}</span>
           <span>P75 {formatCompactMXN(p75)}</span>
         </div>
@@ -605,12 +614,12 @@ export function LargestContracts({ rows, accent, lang }: { rows: LargeContractRo
   const maxAmt = Math.max(...items.map((r) => r.amount_mxn))
 
   return (
-    <ol className="space-y-3.5">
+    <ol className="space-y-3.5" style={{ maxWidth: 'none' }}>
       {items.map((r, i) => {
         const lvl = r.risk_score != null && r.risk_score > 0 ? getRiskLevelFromScore(r.risk_score) : 'low'
         const riskPct = r.risk_score != null && r.risk_score > 0 ? Math.round(r.risk_score * 100) : null
         return (
-          <li key={r.contract_id} className="flex gap-3">
+          <li key={r.contract_id} className="flex gap-3" style={{ maxWidth: 'none' }}>
             <span className="font-mono tabular-nums shrink-0" style={{ fontSize: 13, color: 'var(--color-text-muted)', width: 16, lineHeight: '1.5rem' }}>{i + 1}</span>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-3">
@@ -631,18 +640,18 @@ export function LargestContracts({ rows, accent, lang }: { rows: LargeContractRo
               </div>
               <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
                 {r.vendor_id != null && r.vendor_name && (
-                  <EntityIdentityChip type="vendor" id={r.vendor_id} name={r.vendor_name} size="sm" />
+                  <EntityIdentityChip type="vendor" id={r.vendor_id} name={r.vendor_name} size="sm" fullName className="w-auto max-w-full" />
                 )}
                 {r.institution_id != null && r.institution_name && (
                   <>
                     <span aria-hidden="true" style={{ color: 'var(--color-text-muted)' }}>→</span>
-                    <EntityIdentityChip type="institution" id={r.institution_id} name={r.institution_name} size="sm" hideIcon />
+                    <EntityIdentityChip type="institution" id={r.institution_id} name={r.institution_name} size="sm" hideIcon fullName className="w-auto max-w-full" />
                   </>
                 )}
               </div>
               {r.title && (
-                <p className="truncate mt-1" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 12, color: 'var(--color-text-muted)' }}>
-                  {r.title}
+                <p className="mt-1 break-words" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13, lineHeight: 1.4, color: 'var(--color-text-muted)', maxWidth: 'none' }}>
+                  {sentenceCaseCaps(r.title)}
                 </p>
               )}
             </div>
@@ -689,7 +698,7 @@ export function TopBuyers({ rows, lang }: { rows: TopBuyerRow[]; lang: 'en' | 'e
           return (
             <div key={r.institution_id} className="flex items-center gap-3">
               <div className="shrink-0 min-w-0" style={{ width: 188 }}>
-                <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="sm" hideIcon />
+                <EntityIdentityChip type="institution" id={r.institution_id} name={r.name} size="sm" hideIcon fullName />
               </div>
               <FullBar pct={(r.share_pct / maxShare) * 100} color={r.share_pct >= 40 ? RISK_COLORS.high : 'var(--color-text-secondary)'} height={7} ariaLabel={r.name} />
               <span className="shrink-0 text-right font-mono tabular-nums flex items-baseline justify-end gap-2" style={{ fontSize: 13, color: 'var(--color-text-secondary)', width: 132 }}>

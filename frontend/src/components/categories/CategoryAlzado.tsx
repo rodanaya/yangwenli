@@ -409,12 +409,12 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
 
   return (
     <section aria-label={isEs ? 'El alzado' : 'The elevation'}>
-      <p
+      <h2
         className="font-mono mb-3.5"
-        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700, lineHeight: 1.5, maxWidth: 'none' }}
       >
         § {isEs ? 'El alzado · ancho es gasto, alto es riesgo' : 'The elevation · width is spend, height is risk'}
-      </p>
+      </h2>
 
       <p
         className="mb-4"

@@ -282,6 +282,7 @@ function LedgerRow({
                 id={item.top_vendor.id}
                 name={item.top_vendor.name}
                 size="xs"
+                fullName
                 hideIcon
                 sectorCode={item.sector_code ?? null}
               />
@@ -358,12 +359,12 @@ function LedgerRow({
 function ProvenanceNote({ lang }: { lang: 'en' | 'es' }) {
   return (
     <section className="mt-10 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <p
+      <h2
         className="font-mono mb-3"
-        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}
+        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500, lineHeight: 1.5, maxWidth: 'none' }}
       >
         § {lang === 'es' ? 'Procedencia' : 'Provenance'}
-      </p>
+      </h2>
       <p
         style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 14, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}
       >
@@ -592,9 +593,9 @@ export default function CategoriesIndex() {
             {/* ── B1 · § EL SALDO (sentence lede) ──────────────────────────── */}
             {saldo && (
               <section className="mb-6 pb-6 border-b border-border" aria-label={isEs ? 'El saldo' : 'The balance'}>
-                <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+                <h2 className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700, lineHeight: 1.5, maxWidth: 'none' }}>
                   § {isEs ? 'El saldo' : 'The balance'}
-                </p>
+                </h2>
                 <p
                   style={{
                     fontFamily: '"EB Garamond", Georgia, serif',
@@ -704,9 +705,9 @@ export default function CategoriesIndex() {
 
             {/* ── B4 · § EL REGISTRO ───────────────────────────────────────── */}
             <section aria-label={isEs ? 'El registro' : 'The register'}>
-              <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+              <h2 className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700, lineHeight: 1.5, maxWidth: 'none' }}>
                 § {isEs ? 'La hoja de conteo · los 72 anaqueles' : 'The count sheet · all 72 shelves'}
-              </p>
+              </h2>
               <div className="rounded-sm border border-border overflow-hidden">
                 <table className="w-full border-collapse" style={{ display: 'block' }}>
                   <thead style={{ display: 'block' }}>
@@ -821,9 +822,9 @@ export default function CategoriesIndex() {
 
             {/* ── B∞ · § ADÓNDE IR (coda) ──────────────────────────────────── */}
             <section className="mt-8 pt-6" style={{ borderTop: '1px solid var(--color-border)' }} aria-label={isEs ? 'Adónde ir' : 'Where to go next'}>
-              <p className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}>
+              <h2 className="font-mono mb-3" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700, lineHeight: 1.5, maxWidth: 'none' }}>
                 § {isEs ? 'Adónde ir' : 'Where to go next'}
-              </p>
+              </h2>
               <div className="flex items-center flex-wrap gap-x-5 gap-y-3">
                 <button
                   type="button"
@@ -860,6 +861,7 @@ export default function CategoriesIndex() {
                       id={codaRiskiest.top_vendor.id}
                       name={codaRiskiest.top_vendor.name}
                       size="sm"
+                      fullName
                       hideIcon
                       sectorCode={codaRiskiest.sector_code}
                     />

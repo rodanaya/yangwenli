@@ -106,10 +106,11 @@ function Row({ cfg, category, accent, isEs }: { cfg: RowConfig; category: Catego
           {cfg.label}
         </span>
         <span
-          className="font-mono tabular-nums whitespace-nowrap"
+          className="font-mono tabular-nums text-right min-w-0"
           style={{ fontSize: 12, color: top5 ? 'var(--color-accent)' : 'var(--color-text-secondary)', fontWeight: top5 ? 700 : 500 }}
         >
-          {cfg.formatReadout(subjectValue)} · {isEs ? `№ ${rank} de ${cfg.pool.length}` : `no. ${rank} of ${cfg.pool.length}`}
+          {/* two unbreakable tokens — on a phone the rank drops under the readout */}
+          <span className="whitespace-nowrap">{cfg.formatReadout(subjectValue)}</span> · <span className="whitespace-nowrap">{isEs ? `№ ${rank} de ${cfg.pool.length}` : `no. ${rank} of ${cfg.pool.length}`}</span>
         </span>
       </div>
       <div className="relative w-full" style={{ height: TRACK_H }}>
@@ -136,7 +137,7 @@ function Row({ cfg, category, accent, isEs }: { cfg: RowConfig; category: Catego
         <div className="absolute" style={{ left: `${medPos}%`, top: 2, width: 1, height: TRACK_H - 4, background: 'var(--color-text-secondary)' }} aria-hidden="true" />
         <span
           className="absolute font-mono whitespace-nowrap"
-          style={{ left: `calc(${medPos}% + 3px)`, top: -2, fontSize: 8, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}
+          style={{ left: `calc(${medPos}% + 3px)`, top: -5, fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}
         >
           {isEs ? 'mediana' : 'median'}
         </span>

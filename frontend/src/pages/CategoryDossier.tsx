@@ -358,7 +358,7 @@ export default function CategoryDossier() {
             </div>
 
             {/* Verdict seal */}
-            <aside className="flex-shrink-0 relative" style={{ width: 168, paddingTop: 6, paddingBottom: 8, paddingLeft: 18, paddingRight: 18 }}>
+            <aside className="flex-shrink-0 relative" style={{ width: 168, paddingTop: 6, paddingBottom: 8, paddingLeft: 10, paddingRight: 10 }}>
               <div aria-hidden="true" className="absolute top-0 left-0 right-0" style={{ height: 2, background: verdictColor }} />
               <div className="text-center">
                 <div className="tabular-nums" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 46, lineHeight: 1, color: verdictColor, letterSpacing: '-0.02em' }}>
@@ -376,11 +376,11 @@ export default function CategoryDossier() {
                 {lang === 'es' ? localizeLevel(sealLevel, 'es') : sealLevel.toUpperCase()}
               </div>
               {hrAvailable && riskPct > 0 && (
-                <div className="font-mono text-center mt-1" style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
+                <div className="font-mono text-center mt-1 whitespace-nowrap" style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
                   {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {riskPct}
                 </div>
               )}
-              <div className="font-mono text-center mt-1" style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
+              <div className="font-mono text-center mt-1 whitespace-nowrap" style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
                 {Math.round(daPct)}% {lang === 'es' ? 'adj. directa' : 'direct-award'}
               </div>
             </aside>

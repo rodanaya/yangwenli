@@ -122,12 +122,12 @@ export function FindingsBand({
       className="mb-6 pb-6 border-b border-border"
       aria-label={lang === 'es' ? kickerEs : kickerEn}
     >
-      <p
+      <h2
         className="font-mono mb-3"
-        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700 }}
+        style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 700, lineHeight: 1.5, maxWidth: 'none' }}
       >
         § {lang === 'es' ? kickerEs : kickerEn}
-      </p>
+      </h2>
       <div className={`grid grid-cols-1 sm:grid-cols-2 ${cols} gap-3`}>
         {findings.map((f) => (
           <FindingCard key={f.key} finding={f} lang={lang} />
