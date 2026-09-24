@@ -154,10 +154,10 @@ export function VendorNetworkTab({
               third copy here was redundant. The ARIA investigation link stays. */}
 
           <Link
-            to={`/aria/${vendor.id}`}
+            to={`/aria?q=${encodeURIComponent(vendor.name)}`}
             className="text-sm text-accent hover:underline mt-3 inline-flex items-center gap-1"
           >
-            {isEs ? 'Abrir panel de investigación' : 'Open investigation panel'}
+            {isEs ? 'Abrir en la cola ARIA' : 'Open in the ARIA queue'}
             <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
         </section>

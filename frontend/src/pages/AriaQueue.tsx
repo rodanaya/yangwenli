@@ -229,9 +229,11 @@ function SaldoAnchor({
 export default function AriaPage() {
   const { t, i18n } = useTranslation('aria')
   // Debounced server search — the old input fired one fetch per keystroke.
-  const { inputValue: search, setInputValue: setSearch, debouncedValue: debouncedSearch, clear: clearSearch } =
-    useDebouncedSearch('', { delay: 300 })
   const [searchParams, setSearchParams] = useSearchParams()
+  // `?q=` seeds the search once (PARALLAX D10b § 5: the vendor dossier deep-links
+  // to its own row); typing afterwards stays local, as before.
+  const { inputValue: search, setInputValue: setSearch, debouncedValue: debouncedSearch, clear: clearSearch } =
+    useDebouncedSearch(searchParams.get('q') ?? '', { delay: 300 })
   const patternFilter = searchParams.get('pattern')
   const setPatternFilter = (pattern: string | null) => {
     setSearchParams((prev) => {
