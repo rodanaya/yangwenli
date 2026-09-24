@@ -9,7 +9,7 @@
  *
  *   Hero          — identity + verdict seal (high-risk %)
  *   Command panel — CategoryStatStrip + CategoryDiagnosticGrid (decisive
- *                   numbers · market concentration · OECD deviation · top
+ *                   numbers · market concentration · EU-scoreboard deviation · top
  *                   vendors · risk over time)
  *   Vendors       — full-width vendor reference table (EntityIdentityChip)
  *   Methodology   — provenance footer
@@ -456,7 +456,7 @@ export default function CategoryDossier() {
         </div>
       )}
 
-      {/* § II — EL MERCADO · concentration + OECD deviation + top vendors + trend */}
+      {/* § II — EL MERCADO · concentration + EU-scoreboard deviation + top vendors + trend */}
       <div className="mt-12">
         <section id="market" className="scroll-mt-20">
           <DossierSectionHeader

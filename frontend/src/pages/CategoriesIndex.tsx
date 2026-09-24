@@ -68,7 +68,7 @@ type SortKey = 'spend' | 'risk' | 'contracts' | 'direct_award'
 const SORT_KEYS: SortKey[] = ['spend', 'risk', 'contracts', 'direct_award']
 
 const ALL_SECTOR_CODES = SECTORS.map((s) => s.code)
-const DA_LIMIT_PCT = EU_DIRECT_AWARD_LIMIT * 100 // 30
+const DA_LIMIT_PCT = Math.round(EU_DIRECT_AWARD_LIMIT * 100) // 10 — the EU single-market scoreboard line
 // Sectors with a single active category — taxonomy expansion pending (S.10–S.12).
 const DAGGER_SECTOR_CODES = new Set(['educacion', 'gobernacion', 'trabajo'])
 
@@ -331,7 +331,7 @@ function LedgerRow({
         )}
       </div>
 
-      {/* Direct award (with single-bid dot + OECD reference) */}
+      {/* Direct award (with single-bid dot + EU scoreboard reference tick) */}
       <div className="flex-shrink-0 min-w-[78px]">
         <div className="flex items-center justify-end gap-1.5">
           <span
@@ -342,7 +342,7 @@ function LedgerRow({
           />
           <div className="hidden sm:block w-12 h-1 rounded-full bg-background-elevated overflow-hidden relative" aria-hidden="true">
             <div className="h-full rounded-full" style={{ width: `${Math.min(100, item.direct_award_pct)}%`, background: daOver ? RISK_COLORS.high : 'var(--color-text-muted)', opacity: 0.8 }} />
-            <div style={{ position: 'absolute', top: -1, bottom: -1, left: `${DA_LIMIT_PCT}%`, width: 1, background: 'var(--color-text-muted)' }} />
+            <div data-da-tick style={{ position: 'absolute', top: -1, bottom: -1, left: `${DA_LIMIT_PCT}%`, width: 1, background: 'var(--color-text-muted)' }} />
           </div>
           <div className="font-mono text-sm tabular-nums" style={{ color: daOver ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)' }}>
             {item.direct_award_pct.toFixed(0)}%
@@ -369,8 +369,8 @@ function ProvenanceNote({ lang }: { lang: 'en' | 'es' }) {
         style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 14, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}
       >
         {lang === 'es'
-          ? 'El inventario levanta 72 anaqueles activos que cubren el 99.73% del gasto clasificable (códigos Partida/CUCoP); la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La regla de adjudicación directa marca el techo OCDE del 30%; el punto de único postor colorea >25% crítico / ≥15% alto. Indicador de riesgo, no estimación de fraude. RUBLI v0.8.5.'
-          : 'The stocktake counts 72 active shelves covering 99.73% of classifiable spend (Partida/CUCoP codes); reliable coverage is 2023–2025 (Structure D, 100% Partida) — earlier years may be partially classified. The direct-award rule marks the OECD 30% ceiling; the single-bid dot reddens >25% critical / ≥15% high. Risk indicator, not a fraud estimate. RUBLI v0.8.5.'}
+          ? `El inventario levanta 72 anaqueles activos que cubren el 99.73% del gasto clasificable (códigos Partida/CUCoP); la cobertura confiable es 2023–2025 (Estructura D, 100% Partida) — los años previos pueden tener clasificación parcial. La marca de adjudicación directa es la línea del marcador del mercado único de la UE (${DA_LIMIT_PCT} %); el punto de único postor se enrojece >25 % crítico / ≥15 % alto. Indicador de riesgo, no estimación de fraude. RUBLI v0.8.5.`
+          : `The stocktake counts 72 active shelves covering 99.73% of classifiable spend (Partida/CUCoP codes); reliable coverage is 2023–2025 (Structure D, 100% Partida) — earlier years may be partially classified. The direct-award tick marks the EU single-market scoreboard line (${DA_LIMIT_PCT} %); the single-bid dot reddens >25 % critical / ≥15 % high. Risk indicator, not a fraud estimate. RUBLI v0.8.5.`}
       </p>
     </section>
   )
@@ -808,6 +808,13 @@ export default function CategoriesIndex() {
                   )}
                 </table>
               </div>
+
+              {/* δ caption — the header's title is no longer its only carrier */}
+              <p className="font-mono mt-2" style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-muted)', maxWidth: 'none' }}>
+                {isEs
+                  ? 'δ = puesto por gasto − puesto por riesgo · + significa que el anaquel arde más de lo que pesa'
+                  : 'δ = spend rank − risk rank · + means the shelf burns hotter than its size'}
+              </p>
 
               {/* dagger margin note */}
               <p

@@ -3,15 +3,15 @@
  *
  *   CategoryStatStrip      — the decisive numbers in one aligned readout.
  *   CategoryDiagnosticGrid — a 2×2 grid: market concentration (the category's
- *                            distinctive signal — HHI + top-3 capture), OECD
- *                            deviation, top vendors, risk over time.
+ *                            distinctive signal — HHI + top-3 capture), EU
+ *                            scoreboard deviation, top vendors, risk over time.
  *   CategoryVendorTable    — the full-width vendor reference (EntityIdentityChip
  *                            rows — Hard Rule #1).
  *
  * 2026-06-04 (DESIGNUS — P2 convergence): the shared masthead grammar now lives
  * in components/dossier/command/primitives; this file keeps the category
  * computation, the market-concentration panel, and the vendor table. Category
- * rate fields arrive 0–100; avg_risk arrives 0–1. OECD limits via constants.
+ * rate fields arrive 0–100; avg_risk arrives 0–1. EU scoreboard limits via constants.
  */
 import { useMemo } from 'react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -182,7 +182,7 @@ export function CategoryDiagnosticGrid({
   const hhiScaleMax = Math.max(2500, hhi)
   const hhiColor = hhi >= 2500 ? RISK_COLORS.critical : hhi >= 1500 ? RISK_COLORS.high : RISK_COLORS.medium
 
-  // OECD deviation
+  // EU scoreboard deviation
   const da = clampPct(category.direct_award_pct), sb = clampPct(category.single_bid_pct), hr = clampPct(category.high_risk_pct)
   const daLim = EU_DIRECT_AWARD_LIMIT * 100, sbLim = EU_SINGLE_BID_LIMIT * 100, hrLim = MODEL_HR_BASELINE * 100
   const benchRows: BenchRow[] = []
@@ -237,7 +237,7 @@ export function CategoryDiagnosticGrid({
         )}
       </Panel>
 
-      {/* ─ Deviation vs OECD ─ */}
+      {/* ─ Deviation vs EU scoreboard ─ */}
       <OecdDeviationPanel rows={benchRows} isEs={isEs} />
 
       {/* ─ Top vendors ─ */}

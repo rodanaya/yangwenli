@@ -125,7 +125,7 @@ function Row({ cfg, category, accent, isEs }: { cfg: RowConfig; category: Catego
             aria-hidden="true"
           />
         ))}
-        {/* OECD reference tick (direct-award row only) */}
+        {/* EU scoreboard reference tick (direct-award row only) */}
         {cfg.oecdTick != null && (
           <div
             className="absolute"

@@ -7,7 +7,7 @@
  *
  * Content: rank · EntityIdentityChip · spend sledge (Garamond 800) ·
  * share-of-total running bar · top_vendor chip · atom line (avg_risk via
- * intensityColor, DA% vs OCDE, single-bid %, contracts) · "Abrir dossier →".
+ * intensityColor, DA% vs EU scoreboard line, single-bid %, contracts) · "Abrir dossier →".
  *
  * Hex colours ONLY via style={{}} (className hex is stripped). No green for low.
  */
