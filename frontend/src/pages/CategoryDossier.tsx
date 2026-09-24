@@ -20,7 +20,7 @@
  * retains /print/categories/:id.
  */
 import { useMemo } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/client'
@@ -111,25 +111,23 @@ function DossierSectionHeader({
 }
 
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
-  const navigate = useNavigate()
   return (
     <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <p className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+      <h2 className="font-mono mb-2" style={{ fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
-      </p>
+      </h2>
       <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Categorías clasificadas con el modelo automático. Modelo de riesgo v0.8.5. Las señales agregadas a nivel de categoría son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. Categories classified by the auto-model. v0.8.5 risk model. Category-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
       </p>
-      <button
-        type="button"
-        onClick={() => navigate('/methodology')}
-        className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+      <Link
+        to="/methodology"
+        className="mt-3 inline-block py-1 font-mono hover:opacity-70 transition-opacity focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+        style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}
       >
-        {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
-      </button>
+        {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} →
+      </Link>
     </section>
   )
 }

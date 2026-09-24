@@ -25,7 +25,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { usePublishSiblingList, useOriginRowFlash } from '@/lib/nav/wayfinding'
 import { categoriesApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -248,20 +248,20 @@ function LedgerRow({
   return (
     <tr
       data-wf-row={item.category_id}
-      className="border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
+      className="gap-3 sm:gap-4 px-3 sm:px-5 py-2 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
       style={{ display: 'flex', alignItems: 'center', borderLeft: `3px solid ${sectorColor}` }}
       onMouseEnter={(e) => onHover(item.category_id, e.currentTarget)}
       onMouseLeave={onLeave}
       onFocusCapture={(e) => onHover(item.category_id, e.currentTarget)}
       onBlurCapture={onLeave}
     >
-      <td className="flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-2 w-full" style={{ display: 'flex' }}>
-      <span className="flex-shrink-0 w-7 font-mono text-[13px] font-bold text-text-muted tabular-nums">
+      {/* six cells under the six <th>s — each block is a flex item of the row */}
+      <td className="flex-shrink-0 w-7 font-mono text-[13px] font-bold text-text-muted tabular-nums">
         {String(rank).padStart(2, '0')}
-      </span>
+      </td>
 
       {/* Name + magnitude spine + top vendor */}
-      <div className="flex-1 min-w-0">
+      <td className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-baseline">
             <EntityIdentityChip
@@ -300,18 +300,18 @@ function LedgerRow({
         <div className="mt-1 h-1 rounded-full bg-background-elevated overflow-hidden w-full max-w-[220px]" aria-hidden="true">
           <div className="h-full rounded-full" style={{ width: `${Math.max(2, spendPct)}%`, background: sectorColor, opacity: 0.55 }} />
         </div>
-      </div>
+      </td>
 
       {/* Spend + contracts */}
-      <div className="flex-shrink-0 text-right min-w-[92px]">
+      <td className="flex-shrink-0 text-right min-w-[92px]">
         <div className="font-mono text-sm tabular-nums text-text-primary">{formatCompactMXN(item.total_value)}</div>
         <div className="text-[12px] font-mono text-text-muted mt-0.5">
           {formatNumber(item.total_contracts)} {lang === 'es' ? 'cont.' : 'contracts'}
         </div>
-      </div>
+      </td>
 
       {/* Risk */}
-      <div className="flex-shrink-0 min-w-[78px]">
+      <td className="flex-shrink-0 min-w-[78px]">
         <div className="flex items-center justify-end gap-1.5">
           <div className="w-12 h-1 rounded-full bg-background-elevated overflow-hidden hidden sm:block" aria-hidden="true">
             <div className="h-full rounded-full" style={{ width: `${Math.min(100, (item.avg_risk * 100) / 45 * 100)}%`, background: intensityColor(item.avg_risk), opacity: 0.85 }} />
@@ -320,10 +320,10 @@ function LedgerRow({
             {(item.avg_risk * 100).toFixed(0)}
           </div>
         </div>
-      </div>
+      </td>
 
       {/* Descuadre (δ = spend rank − risk rank over the qualified pool) */}
-      <div className="flex-shrink-0 min-w-[44px] text-right">
+      <td className="flex-shrink-0 min-w-[44px] text-right">
         {descuadre == null ? (
           <span className="font-mono text-[13px] tabular-nums" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>—</span>
         ) : descuadre === 0 ? (
@@ -336,17 +336,18 @@ function LedgerRow({
             {descuadre > 0 ? `+${descuadre}` : `−${Math.abs(descuadre)}`}
           </span>
         )}
-      </div>
+      </td>
 
       {/* Direct award (with single-bid dot + EU scoreboard reference tick) */}
-      <div className="flex-shrink-0 min-w-[78px]">
+      <td className="flex-shrink-0 min-w-[78px]">
         <div className="flex items-center justify-end gap-1.5">
           <span
             className="h-1.5 w-1.5 rounded-full flex-shrink-0"
             style={{ background: sbDotColor }}
             title={`${sbPct.toFixed(1)}% ${lang === 'es' ? 'único postor' : 'single bid'}`}
-            aria-label={`${sbPct.toFixed(1)}% ${lang === 'es' ? 'único postor' : 'single bid'}`}
+            aria-hidden="true"
           />
+          <span className="sr-only">{`${sbPct.toFixed(1)}% ${lang === 'es' ? 'único postor' : 'single bid'} ·`}</span>
           <div className="hidden sm:block w-12 h-1 rounded-full bg-background-elevated overflow-hidden relative" aria-hidden="true">
             <div className="h-full rounded-full" style={{ width: `${Math.min(100, item.direct_award_pct)}%`, background: daOver ? RISK_COLORS.high : 'var(--color-text-muted)', opacity: 0.8 }} />
             <div data-da-tick style={{ position: 'absolute', top: -1, bottom: -1, left: `${DA_LIMIT_PCT}%`, width: 1, background: 'var(--color-text-muted)' }} />
@@ -355,7 +356,6 @@ function LedgerRow({
             {item.direct_award_pct.toFixed(0)}%
           </div>
         </div>
-      </div>
       </td>
     </tr>
   )
@@ -389,7 +389,6 @@ export default function CategoriesIndex() {
   const { i18n } = useTranslation('categories')
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
   const isEs = lang === 'es'
-  const navigate = useNavigate()
 
   const { sortKey, activeSector, setSortKey, setActiveSector } = useCategoriesUrlState()
   // Raw query string re-exposed for the wayfinding backTo link (El Hilo P1+).
@@ -665,7 +664,7 @@ export default function CategoriesIndex() {
                     onClick={() => setSortKey(key)}
                     aria-pressed={sortKey === key}
                     className={cn(
-                      'px-2.5 py-1 text-[12px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
+                      'px-2.5 py-1 text-[12px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2',
                       sortKey === key ? 'bg-text-primary text-background border-transparent' : 'text-text-muted border-border hover:text-text-secondary',
                     )}
                   >
@@ -678,7 +677,7 @@ export default function CategoriesIndex() {
                   type="button"
                   onClick={() => setActiveSector(null)}
                   aria-pressed={activeSector === null}
-                  className="font-mono text-[12px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
+                  className="font-mono text-[12px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                   style={activeSector === null
                     ? { background: 'var(--color-text-secondary)', borderColor: 'var(--color-text-secondary)', color: 'var(--color-background)' }
                     : { background: 'transparent', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
@@ -696,7 +695,7 @@ export default function CategoriesIndex() {
                       type="button"
                       onClick={() => setActiveSector(sectorActive ? null : code)}
                       aria-pressed={sectorActive}
-                      className="font-mono text-[12px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
+                      className="font-mono text-[12px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                       style={sectorActive ? { background: fill, borderColor: fill, color: '#ffffff' } : { background: 'transparent', borderColor: hex, color: ink }}
                     >
                       {getSectorName(code, lang)}
@@ -787,7 +786,7 @@ export default function CategoriesIndex() {
 
                       {/* Floating register dossier (desktop only) — edge-flips */}
                       {hoverItem && hover && (
-                        <tr style={{ display: 'block' }}>
+                        <tr style={{ display: 'block' }} aria-hidden="true">
                           <td style={{ display: 'block', padding: 0, border: 0 }}>
                             <div
                               className="hidden md:block pointer-events-none absolute z-20"
@@ -842,14 +841,13 @@ export default function CategoriesIndex() {
                 § {isEs ? 'Adónde ir' : 'Where to go next'}
               </h2>
               <div className="flex items-center flex-wrap gap-x-5 gap-y-3">
-                <button
-                  type="button"
-                  onClick={() => navigate('/aria')}
-                  className="font-mono uppercase tracking-wide transition-opacity hover:opacity-70"
-                  style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-accent)', background: 'none', border: 0, cursor: 'pointer' }}
+                <Link
+                  to="/aria"
+                  className="font-mono uppercase tracking-wide transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+                  style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-accent)' }}
                 >
-                  {isEs ? 'Ver la Lista de Vigilancia →' : 'Open the Watchlist →'}
-                </button>
+                  {isEs ? 'Abrir la cola ARIA →' : 'Open the ARIA queue →'}
+                </Link>
                 <div className="flex items-center flex-wrap gap-2">
                   {codaRiskiest && (
                     <EntityIdentityChip
