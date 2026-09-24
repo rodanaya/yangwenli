@@ -122,7 +122,20 @@ function SegmentedBar({ segments }: { segments: { pct: number; color: string }[]
 
 export function ProcedureSplit({ data, accent, lang }: { data: CompetitionData; accent: string; lang: 'en' | 'es' }) {
   const order = ['directa', 'licitacion', 'invitacion', 'otro']
-  const pb = [...(data.procedure_breakdown ?? [])].sort(
+  // `desconocido` and `otro` both read "Other" — fold them into one row so the
+  // bars and the legend carry a single "Other".
+  const folded: CompetitionData['procedure_breakdown'] = []
+  for (const p of data.procedure_breakdown ?? []) {
+    const type = p.type.toLowerCase() === 'desconocido' ? 'otro' : p.type
+    const into = folded.find((q) => q.type.toLowerCase() === type.toLowerCase())
+    if (into) {
+      into.count += p.count
+      into.pct_contracts += p.pct_contracts
+      into.value += p.value
+      into.pct_value += p.pct_value
+    } else folded.push({ ...p, type })
+  }
+  const pb = folded.sort(
     (a, b) => order.indexOf(a.type.toLowerCase()) - order.indexOf(b.type.toLowerCase()),
   )
   if (pb.length === 0) return <EmptyNote text={t(lang, 'Sin desglose de procedimiento.', 'No procedure breakdown.')} />
@@ -133,13 +146,13 @@ export function ProcedureSplit({ data, accent, lang }: { data: CompetitionData; 
   const tender = pb.find((p) => p.type.toLowerCase().startsWith('licit'))
   const gap = directa ? Math.abs((directa.pct_contracts ?? 0) - (directa.pct_value ?? 0)) : 0
 
-  // Drift: yearly DA / SB, normalized to 0–1 for the 'pct' formatter.
-  const norm = (v: number) => (v > 1 ? v / 100 : v)
+  // Drift: yearly DA / SB in percent (0–100, as the API sends them) — the
+  // shared 'pct' formatter prints its input as-is.
   const drift = (data.yearly_trend ?? [])
     .filter((d) => Number.isFinite(d.year))
-    .map((d) => ({ year: d.year, da: norm(d.da_pct ?? 0), sb: norm(d.sb_pct ?? 0) }))
+    .map((d) => ({ year: d.year, da: d.da_pct ?? 0, sb: d.sb_pct ?? 0 }))
     .sort((a, b) => a.year - b.year)
-  const secDa = data.sector_da_avg != null ? norm(data.sector_da_avg) : null
+  const secDa = data.sector_da_avg
 
   return (
     <div className="space-y-5">
@@ -209,13 +222,13 @@ export function ProcedureSplit({ data, accent, lang }: { data: CompetitionData; 
             data={drift}
             xKey="year"
             yFormat="pct"
-            yDomain={[0, 1]}
+            yDomain={[0, 100]}
             height={120}
             layers={[
               { kind: 'line', key: 'da', label: t(lang, 'Adj. directa', 'Direct award'), colorToken: 'risk-critical', emphasis: 'primary' },
               { kind: 'line', key: 'sb', label: t(lang, 'Único postor', 'Single bid'), colorToken: 'risk-high', emphasis: 'secondary' },
             ]}
-            annotations={secDa != null ? [{ kind: 'hrule', y: secDa, label: t(lang, 'media del sector', 'sector avg'), tone: 'oecd' }] : undefined}
+            annotations={secDa != null ? [{ kind: 'hrule', y: secDa, label: t(lang, 'media del sector', 'sector avg'), tone: 'info' }] : undefined}
           />
         </div>
       )}

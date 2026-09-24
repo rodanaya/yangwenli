@@ -132,6 +132,19 @@ export function EditorialComposedChart<T extends object>({
           ]}
         />
         {annotations.map((a, idx) => {
+          // hrule: y in data units of the left axis (was typed but never drawn — PARALLAX D11 § Change 1).
+          if (a.kind === 'hrule') {
+            return (
+              <ReferenceLine
+                key={idx} y={a.y} yAxisId="left"
+                stroke={annotationStroke(a.tone)} strokeDasharray="2 2"
+                label={{
+                  value: a.label, position: 'insideBottomLeft', fill: annotationStroke(a.tone),
+                  fontSize: 12, fontFamily: 'var(--font-family-mono)',
+                }}
+              />
+            )
+          }
           if (a.kind === 'vrule') {
             return (
               <ReferenceLine
