@@ -17,9 +17,10 @@
  * caller's `accent` (the category's sector color), never intensityColor —
  * this is a position instrument, not a risk-severity one.
  */
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { EU_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
+import { useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import type { CategorySummaryItem } from '@/components/categories/types'
 import { CONTRACT_FLOOR } from '@/components/categories/types'
 
@@ -31,8 +32,18 @@ export interface KardexPosicionProps {
 }
 
 const DA_LIMIT_PCT = EU_DIRECT_AWARD_LIMIT * 100
-const TRACK_H = 22
-const DOT_R = 3.5
+// Track geometry (px): rank flag on top, baseline, labels underneath.
+const FLAG_H = 13
+const BASE_Y = 23
+const TRACK_H = 34 // flag + ticks + rules zone; labels sit under it
+const LABEL_Y = TRACK_H + 1
+const BOX_H = LABEL_Y + 11
+const DOT_D = 11
+const TICK_H = 10
+// JetBrains Mono advances 0.6em; 0.64 leaves room for tabular digits + rounding.
+const LABEL_FS = 11
+const labelW = (text: string) => Math.ceil(text.length * LABEL_FS * 0.64)
+const LABEL_GAP = 6
 
 function median(values: number[]): number {
   if (values.length === 0) return 0
@@ -63,15 +74,44 @@ interface RowConfig {
   pool: CategorySummaryItem[]
   getValue: (c: CategorySummaryItem) => number
   sqrt?: boolean
-  oecdTick?: number
+  euTick?: number
   formatReadout: (v: number) => string
+  /** short form for the endpoints and the median label (row unit, no currency suffix) */
+  formatTick: (v: number) => string
+}
+
+interface PlacedLabel { key: string; text: string; left: number; width: number }
+
+/**
+ * Seat the under-track labels without collisions, from the measured track width
+ * (pure: no DOM reads, no state). Endpoints are fixed at the track ends; then the
+ * EU line's label, then the median's. Each tries centred → start-at-x → end-at-x
+ * (end-at-x first within 60px of the right end) and is dropped when nothing fits.
+ */
+function placeLabels(W: number, ends: [string, string], movable: { key: string; text: string; x: number }[]): PlacedLabel[] {
+  const placed: PlacedLabel[] = [
+    { key: 'min', text: ends[0], left: 0, width: labelW(ends[0]) },
+    { key: 'max', text: ends[1], left: W - labelW(ends[1]), width: labelW(ends[1]) },
+  ]
+  const free = (l: number, w: number) =>
+    l >= 0 && l + w <= W && placed.every((q) => l + w + LABEL_GAP <= q.left || l >= q.left + q.width + LABEL_GAP)
+  for (const m of movable) {
+    const w = labelW(m.text)
+    const centred = m.x - w / 2
+    const start = m.x + 3
+    const end = m.x - 3 - w
+    const tries = W - m.x < 60 ? [end, centred, start] : [centred, start, end]
+    const left = tries.find((l) => free(l, w))
+    if (left != null) placed.push({ key: m.key, text: m.text, left, width: w })
+  }
+  return placed
 }
 
 function GapRow({ label, note }: { label: string; note: string }) {
   return (
-    <div className="py-2.5 border-b border-border last:border-b-0">
+    <div className="py-3.5 border-b border-border last:border-b-0" style={{ borderLeft: '2px solid transparent', paddingLeft: 10 }}>
       <div className="flex items-baseline justify-between">
-        <span className="font-mono uppercase" style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
+        <span className="font-mono uppercase" style={{ fontSize: 12, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
           {label}
         </span>
         <span className="font-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
@@ -83,8 +123,12 @@ function GapRow({ label, note }: { label: string; note: string }) {
 }
 
 function Row({ cfg, category, accent, isEs }: { cfg: RowConfig; category: CategorySummaryItem; accent: string; isEs: boolean }) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const W = useMeasuredWidth(trackRef)
   const values = cfg.pool.map(cfg.getValue)
-  const min = values.length ? Math.min(...values) : 0
+  // The direct-award row starts its scale at 0 so the EU 10 % line has a place
+  // on it (every shelf is above 10 %, so a min-anchored scale pinned it to the edge).
+  const min = cfg.euTick != null ? 0 : values.length ? Math.min(...values) : 0
   const max = values.length ? Math.max(...values) : 0
   const med = median(values)
   const rank = rankOf(cfg.pool, category.category_id, cfg.getValue)
@@ -93,61 +137,87 @@ function Row({ cfg, category, accent, isEs }: { cfg: RowConfig; category: Catego
     return <GapRow label={cfg.label} note={isEs ? 's/d — muestra insuficiente' : 'n/a — sample too small'} />
   }
 
+  const n = cfg.pool.length
   const subjectValue = cfg.getValue(category)
   const sqrt = !!cfg.sqrt
-  const subjectPos = scalePos(subjectValue, min, max, sqrt) * 100
-  const medPos = scalePos(med, min, max, sqrt) * 100
-  const top5 = rank <= 5
+  const pos = (v: number) => scalePos(v, min, max, sqrt) * W
+  // Remarkable = this shelf sits in the top or bottom five of its pool.
+  const emphasis = rank <= 5 || rank > n - 5
+  const rankText = isEs ? `№ ${rank} de ${n}` : `no. ${rank} of ${n}`
+  const medText = `${isEs ? 'mediana' : 'median'} ${cfg.formatTick(med)}`
+
+  const movable: { key: string; text: string; x: number }[] = []
+  if (cfg.euTick != null) movable.push({ key: 'eu', text: `${isEs ? 'UE' : 'EU'} ${cfg.euTick}%`, x: pos(cfg.euTick) })
+  movable.push({ key: 'median', text: medText, x: pos(med) })
+  const labels = W > 0 ? placeLabels(W, [cfg.formatTick(min), cfg.formatTick(max)], movable) : []
+
+  const flagText = `#${rank}`
+  const flagW = labelW(flagText) + 2
+  const dotX = pos(subjectValue)
+  const flagLeft = Math.max(0, Math.min(W - flagW, dotX - flagW / 2))
 
   return (
-    <div className="py-2.5 border-b border-border last:border-b-0">
-      <div className="flex items-baseline justify-between mb-1.5 gap-3">
-        <span className="font-mono uppercase flex-shrink-0" style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
+    <div
+      role="group"
+      aria-label={`${cfg.label}: ${cfg.formatReadout(subjectValue)}, ${rankText}, ${medText}`}
+      className="py-3.5 border-b border-border last:border-b-0 md:grid md:items-center"
+      style={{ gridTemplateColumns: '200px 1fr', columnGap: 24, borderLeft: `2px solid ${emphasis ? accent : 'transparent'}`, paddingLeft: 10 }}
+    >
+      {/* label + readout: stacked at md+, one line on a phone */}
+      <div className="flex items-baseline justify-between gap-3 md:block mb-2 md:mb-0">
+        <div className="font-mono uppercase" style={{ fontSize: 12, lineHeight: 1.1, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
           {cfg.label}
-        </span>
-        <span
-          className="font-mono tabular-nums text-right min-w-0"
-          style={{ fontSize: 12, color: top5 ? 'var(--color-accent)' : 'var(--color-text-secondary)', fontWeight: top5 ? 700 : 500 }}
-        >
-          {/* two unbreakable tokens — on a phone the rank drops under the readout */}
-          <span className="whitespace-nowrap">{cfg.formatReadout(subjectValue)}</span> · <span className="whitespace-nowrap">{isEs ? `№ ${rank} de ${cfg.pool.length}` : `no. ${rank} of ${cfg.pool.length}`}</span>
-        </span>
+        </div>
+        <div className="flex items-baseline gap-2 md:block whitespace-nowrap">
+          <div
+            className="tabular-nums"
+            style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontSize: 22, lineHeight: 1, fontWeight: 600, color: emphasis ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}
+          >
+            {cfg.formatReadout(subjectValue)}
+          </div>
+          <div className="font-mono tabular-nums" style={{ fontSize: 12, lineHeight: 1.1, color: 'var(--color-text-muted)' }}>
+            {rankText}
+          </div>
+        </div>
       </div>
-      <div className="relative w-full" style={{ height: TRACK_H }}>
-        {/* baseline */}
-        <div className="absolute left-0 right-0" style={{ top: TRACK_H / 2, height: 1, background: 'var(--color-border)' }} aria-hidden="true" />
-        {/* peer ticks */}
-        {values.map((v, i) => (
-          <div
-            key={i}
-            className="absolute"
-            style={{ left: `${scalePos(v, min, max, sqrt) * 100}%`, top: TRACK_H / 2 - 4, width: 1, height: 8, background: 'var(--color-text-muted)', opacity: 0.25 }}
-            aria-hidden="true"
-          />
-        ))}
-        {/* EU scoreboard reference tick (direct-award row only) */}
-        {cfg.oecdTick != null && (
-          <div
-            className="absolute"
-            style={{ left: `${scalePos(cfg.oecdTick, min, max, sqrt) * 100}%`, top: 1, width: 1, height: TRACK_H - 2, borderLeft: '1px dashed var(--color-text-muted)', opacity: 0.6 }}
-            aria-hidden="true"
-          />
+
+      {/* the track */}
+      <div ref={trackRef} className="relative w-full" style={{ height: BOX_H }} aria-hidden="true">
+        {W > 0 && (
+          <>
+            <div className="absolute left-0 right-0" style={{ top: BASE_Y, height: 1, background: 'var(--color-border)' }} />
+            {values.map((v, i) => (
+              <div key={i} className="absolute" style={{ left: pos(v), top: BASE_Y - TICK_H / 2, width: 1, height: TICK_H, background: 'var(--color-text-muted)', opacity: 0.35 }} />
+            ))}
+            {cfg.euTick != null && (
+              <div className="absolute" style={{ left: pos(cfg.euTick), top: FLAG_H, width: 0, height: TRACK_H - FLAG_H, borderLeft: '1px dashed var(--color-text-muted)' }} />
+            )}
+            <div className="absolute" style={{ left: pos(med), top: BASE_Y - 8, width: 1, height: 16, background: 'var(--color-text-secondary)' }} />
+            {/* the subject: 11px disc, background ring, accent outer ring */}
+            <div
+              data-subject-dot
+              className="absolute rounded-full"
+              style={{ left: dotX - DOT_D / 2, top: BASE_Y - DOT_D / 2, width: DOT_D, height: DOT_D, background: accent, boxShadow: `0 0 0 3px var(--color-background), 0 0 0 4px ${accent}` }}
+            />
+            <span
+              data-rank-flag
+              className="absolute font-mono tabular-nums text-center"
+              style={{ left: flagLeft, top: 0, width: flagW, fontSize: LABEL_FS, lineHeight: `${FLAG_H - 2}px`, fontWeight: 700, color: 'var(--color-text-primary)' }}
+            >
+              {flagText}
+            </span>
+            {labels.map((l) => (
+              <span
+                key={l.key}
+                data-track-label={l.key}
+                className="absolute font-mono whitespace-nowrap tabular-nums"
+                style={{ left: l.left, top: LABEL_Y, fontSize: LABEL_FS, lineHeight: 1, color: 'var(--color-text-muted)' }}
+              >
+                {l.text}
+              </span>
+            ))}
+          </>
         )}
-        {/* median rule + label */}
-        <div className="absolute" style={{ left: `${medPos}%`, top: 2, width: 1, height: TRACK_H - 4, background: 'var(--color-text-secondary)' }} aria-hidden="true" />
-        <span
-          className="absolute font-mono whitespace-nowrap"
-          style={{ left: `calc(${medPos}% + 3px)`, top: -5, fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}
-        >
-          {isEs ? 'mediana' : 'median'}
-        </span>
-        {/* the subject */}
-        <div
-          className="absolute rounded-full"
-          style={{ left: `calc(${subjectPos}% - ${DOT_R}px)`, top: TRACK_H / 2 - DOT_R, width: DOT_R * 2, height: DOT_R * 2, background: accent }}
-          role="img"
-          aria-label={`${cfg.label}: ${cfg.formatReadout(subjectValue)}`}
-        />
       </div>
     </div>
   )
@@ -167,6 +237,7 @@ export function KardexPosicion({ category, all, accent, lang }: KardexPosicionPr
         getValue: (c) => c.total_value,
         sqrt: true,
         formatReadout: (v) => formatCompactMXN(v),
+        formatTick: (v) => formatCompactMXN(v).replace(/ MXN$/, ''),
       },
       {
         key: 'risk',
@@ -174,14 +245,16 @@ export function KardexPosicion({ category, all, accent, lang }: KardexPosicionPr
         pool: qualified,
         getValue: (c) => c.avg_risk,
         formatReadout: (v) => `${Math.round(v * 100)}`,
+        formatTick: (v) => `${Math.round(v * 100)}`,
       },
       {
         key: 'da',
         label: isEs ? 'Adjudicación directa' : 'Direct award',
         pool: all,
         getValue: (c) => c.direct_award_pct,
-        oecdTick: DA_LIMIT_PCT,
+        euTick: Math.round(DA_LIMIT_PCT),
         formatReadout: (v) => `${v.toFixed(0)}%`,
+        formatTick: (v) => `${v.toFixed(0)}%`,
       },
       {
         key: 'sb',
@@ -189,6 +262,7 @@ export function KardexPosicion({ category, all, accent, lang }: KardexPosicionPr
         pool: all,
         getValue: (c) => c.single_bid_pct,
         formatReadout: (v) => `${v.toFixed(0)}%`,
+        formatTick: (v) => `${v.toFixed(0)}%`,
       },
       {
         key: 'hr',
@@ -196,6 +270,7 @@ export function KardexPosicion({ category, all, accent, lang }: KardexPosicionPr
         pool: hrPool,
         getValue: (c) => c.high_risk_pct ?? 0,
         formatReadout: (v) => `${v.toFixed(0)}%`,
+        formatTick: (v) => `${v.toFixed(0)}%`,
       },
     ]
   }, [all, isEs])
