@@ -218,3 +218,16 @@ From Day 9b (Institutions panel):
 - Memoise `SpectralRegister` (2 re-renders per row expand); `reporte` 390 `BenchmarkRow`; `risk-profile` 16.6 s; `useLeagueField` 5 requests (`per_page` cap); 9 dossier queries on mount; the backend's 100 req/min limiter is per IP — a probe or a shared office NAT trips it (429s on the ES 390 run).
 - The confidence ladder (wide/medium/narrow/high) is an interval width printed as confidence low/medium/high/very high — name it in `/methodology`.
 - `institution_category_stats` and `category_top_institutions` have no shared refresh step — one runbook line after any rescore.
+
+From Day 10 (Panel):
+- **Shared `EntityIdentityChip`** paints risk-scored names in `RISK_COLOR_CLASS` fills (`#ef4444` 3.57–3.76) — the 7 wire/coda names are the only page-level contrast failures left on `/dashboard`; fix in the chip with `RISK_TEXT_COLORS` (the Day 5b/7/8 item, now on five surfaces).
+- `RISK_TEXT_COLORS.high` / `.medium` fail on the elevated plate paper (4.45 / 4.36); `RISK_INK_ON_PLATE` (`constants.ts:211`, amber-800 twins) could fold into the tokens as the on-plate variant.
+- PlateFrame (shared): `Folio·N` 4.14, `·` 1.96, `Indexed` 2.11 — and `Indexed` prints `new Date()` instead of the data cut (Day 7/7b items; 21 leaves on every plated page).
+- `/atlas` ignores `?lens=sexenios` — «Open full Atlas» from the TERMS lens lands on PATTERNS (Day 16).
+- **Data:** the wire's five "most recent critical" rows carry `contract_date` after the Sep 28 2025 cut (Dec 24 / Dec 1 2025) under a kicker that says the feed froze — `contract_date` vs `publication_date` on `/executive/dashboard-bundle` is a backend question.
+- Wire contract titles arrive ALL CAPS from COMPRANET (Day 12 contract-dossier caser).
+- `LeadTimeChart` legend dot is grey while the flag marks are sector-coloured; FINDING 04's hover strip prints the short label (`ASIPONA`) while its rows print the full name.
+- `codaChips` still resolves a separate wire-vendor lookup; the coda could read the wire rows directly.
+- FINDING 02's typed claims (`ASF ~5%`, `MX$1.25T`, `~25 years`) have no source line; three case counts on one page (1,427 / 43 / ten) want one glossary sentence in `/methodology`.
+- `ObservatoryScatter` (Day 16): 7 orbs `g[role=button]` with `outline: none`, axis ticks 4.12 ×21, `HIGH SCALE × HIGH RATE` 6.9px, `10`/`100k` clipped, 2.4–4.5px glyphs at 390.
+- Probe notes: `rawAnchorsFullReload` counts router links too (verify reloads by hand); `nowrapOverflow` keeps the two atlas entries; `document.title` per route still site-wide.
