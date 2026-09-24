@@ -2381,7 +2381,7 @@ def get_institution_ground_truth_status(institution_id: int = Path(..., ge=1)):
 
 @router.get("/{institution_id:int}/asf-findings", response_model=ASFInstitutionResponse)
 def get_institution_asf_findings(institution_id: int = Path(..., ge=1)):
-    """Get ASF audit findings for an institution by its ramo_id."""
+    """ASF audits of this institution, via asf_institution_crosswalk (exact-key entity match)."""
     import sqlite3 as _sqlite3
 
     cache_key = f"asf_inst_{institution_id}"
@@ -2403,43 +2403,37 @@ def get_institution_asf_findings(institution_id: int = Path(..., ge=1)):
         ramo_code = inst["ramo_id"]
         findings = []
 
-        # Get institution name for fuzzy matching against asf_cases.entity_name
-        inst_row = conn.execute(
-            "SELECT name FROM institutions WHERE id = ?",
+        # Exact-key crosswalk (asf_institution_crosswalk). The old bidirectional
+        # 20-char prefix LIKE attached other bodies' audits (IMSS's audits showed
+        # on the Instituto Mexicano del Petróleo); ~2% of attachments were correct.
+        rows = conn.execute(
+            """
+            SELECT a.report_year AS audit_year,
+                   NULL          AS observations_total,
+                   a.amount_mxn,
+                   NULL          AS observations_solved,
+                   a.finding_type
+            FROM asf_institution_crosswalk x
+            JOIN asf_cases a ON a.id = x.asf_case_id
+            WHERE x.institution_id = ?
+              AND x.confidence <> 'low'
+              AND a.amount_mxn IS NOT NULL
+            ORDER BY a.report_year
+            """,
             (institution_id,),
-        ).fetchone()
-        inst_name = inst_row["name"] if inst_row else ""
+        ).fetchall()
 
-        if inst_name:
-            rows = conn.execute(
-                """
-                SELECT report_year AS audit_year,
-                       NULL        AS observations_total,
-                       amount_mxn,
-                       NULL        AS observations_solved,
-                       finding_type
-                FROM asf_cases
-                WHERE amount_mxn IS NOT NULL
-                  AND (
-                      LOWER(entity_name) LIKE '%' || LOWER(SUBSTR(?, 1, 20)) || '%'
-                      OR LOWER(?) LIKE '%' || LOWER(SUBSTR(entity_name, 1, 20)) || '%'
-                  )
-                ORDER BY report_year
-                """,
-                (inst_name, inst_name),
-            ).fetchall()
-
-            for r in rows:
-                findings.append(
-                    ASFInstitutionFinding(
-                        year=r["audit_year"] or 0,
-                        observations_total=r["observations_total"],
-                        amount_mxn=r["amount_mxn"],
-                        observations_solved=r["observations_solved"],
-                        finding_type=r["finding_type"],
-                        recovery_rate=None,
-                    )
+        for r in rows:
+            findings.append(
+                ASFInstitutionFinding(
+                    year=r["audit_year"] or 0,
+                    observations_total=r["observations_total"],
+                    amount_mxn=r["amount_mxn"],
+                    observations_solved=r["observations_solved"],
+                    finding_type=r["finding_type"],
+                    recovery_rate=None,
                 )
+            )
 
         total_amount = sum(f.amount_mxn or 0 for f in findings)
         result = ASFInstitutionResponse(
@@ -2447,7 +2441,7 @@ def get_institution_asf_findings(institution_id: int = Path(..., ge=1)):
             ramo_code=ramo_code,
             findings=findings,
             total_amount_mxn=total_amount,
-            years_audited=len(findings),
+            years_audited=len({f.year for f in findings if f.year}),
         )
 
     with _asf_inst_cache_lock:

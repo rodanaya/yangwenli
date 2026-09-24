@@ -444,35 +444,11 @@ def get_related_vendors(
 
             related = []
 
-            # 1. Same vendor group
-            if vendor["group_id"]:
-                cursor.execute("""
-                    SELECT
-                        v.id, v.name, CASE WHEN v.is_individual THEN NULL ELSE v.rfc END AS rfc,
-                        'same_group' as relationship,
-                        1.0 as confidence,
-                        COUNT(c.id) as contracts,
-                        COALESCE(SUM(c.amount_mxn), 0) as value
-                    FROM vendors v
-                    LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND COALESCE(c.amount_mxn, 0) <= ?
-                    WHERE v.group_id = ? AND v.id != ?
-                    GROUP BY v.id, v.name, v.rfc
-                    LIMIT ?
-                """, (MAX_CONTRACT_VALUE, vendor["group_id"], vendor_id, limit))
-                for row in cursor.fetchall():
-                    related.append({
-                        "vendor_id": row["id"],
-                        "vendor_name": row["name"],
-                        "rfc": public_rfc(row["rfc"]),
-                        "relationship": row["relationship"],
-                        "confidence": row["confidence"],
-                        "contracts": row["contracts"],
-                        "value": row["value"]
-                    })
-
             # 2. Shared RFC root
-            if vendor["rfc"] and len(vendor["rfc"]) >= 10:
+            # Company RFCs only: for personas físicas the root is initials + birth
+            # date and links unrelated people. Fuzzy/phonetic name matching was
+            # removed (≤22% precision on RFC gold, docs/PREPUB_AUDIT_2026-09-24.md).
+            if public_rfc(vendor["rfc"]):
                 rfc_root = vendor["rfc"][:10]
                 cursor.execute("""
                     SELECT
@@ -485,39 +461,9 @@ def get_related_vendors(
                     LEFT JOIN contracts c ON v.id = c.vendor_id
                         AND COALESCE(c.amount_mxn, 0) <= ?
                     WHERE v.rfc LIKE ? AND v.id != ?
-                    AND v.id NOT IN (SELECT id FROM vendors WHERE group_id = ? AND id IS NOT NULL)
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?
-                """, (MAX_CONTRACT_VALUE, f"{rfc_root}%", vendor_id,
-                      vendor["group_id"] or -1, limit - len(related)))
-                for row in cursor.fetchall():
-                    if not any(r["vendor_id"] == row["id"] for r in related):
-                        related.append({
-                            "vendor_id": row["id"],
-                            "vendor_name": row["name"],
-                            "rfc": public_rfc(row["rfc"]),
-                            "relationship": row["relationship"],
-                            "confidence": row["confidence"],
-                            "contracts": row["contracts"],
-                            "value": row["value"]
-                        })
-
-            # 3. Same phonetic code (fuzzy name match)
-            if vendor["phonetic_code"] and len(related) < limit:
-                cursor.execute("""
-                    SELECT
-                        v.id, v.name, CASE WHEN v.is_individual THEN NULL ELSE v.rfc END AS rfc,
-                        'similar_name' as relationship,
-                        0.7 as confidence,
-                        COUNT(c.id) as contracts,
-                        COALESCE(SUM(c.amount_mxn), 0) as value
-                    FROM vendors v
-                    LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND COALESCE(c.amount_mxn, 0) <= ?
-                    WHERE v.phonetic_code = ? AND v.id != ?
-                    GROUP BY v.id, v.name, v.rfc
-                    LIMIT ?
-                """, (MAX_CONTRACT_VALUE, vendor["phonetic_code"], vendor_id, limit - len(related)))
+                """, (MAX_CONTRACT_VALUE, f"{rfc_root}%", vendor_id, limit - len(related)))
                 for row in cursor.fetchall():
                     if not any(r["vendor_id"] == row["id"] for r in related):
                         related.append({

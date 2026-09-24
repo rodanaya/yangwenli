@@ -684,7 +684,9 @@ def get_vendor(
                     v.cobid_clustering_coeff, v.cobid_triangle_count,
                     vc.industry_id, vc.industry_code, vc.industry_confidence,
                     vi.name_es as industry_name, vi.sector_affinity,
-                    vg.canonical_name as group_name,
+                    -- vendor_groups/vendor_aliases retired from display: 19% precision
+                    -- on RFC gold (docs/PREPUB_AUDIT_2026-09-24.md § Entity resolution).
+                    NULL as group_name,
                     COALESCE(vs.institution_count, 0) as total_institutions,
                     vs.avg_mahalanobis, vs.max_mahalanobis,
                     vs.primary_sector_id,
@@ -692,7 +694,6 @@ def get_vendor(
                 FROM vendors v
                 LEFT JOIN vendor_classifications vc ON v.id = vc.vendor_id
                 LEFT JOIN vendor_industries vi ON vc.industry_id = vi.id
-                LEFT JOIN vendor_groups vg ON v.group_id = vg.id
                 LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
                 LEFT JOIN sectors s ON vs.primary_sector_id = s.id
                 WHERE v.id = ?
@@ -927,7 +928,7 @@ def get_vendor(
             industry_name=extra["industry_name"] if extra else None,
             industry_confidence=extra["industry_confidence"] if extra else None,
             sector_affinity=extra["sector_affinity"] if extra else None,
-            vendor_group_id=extra["group_id"] if extra else None,
+            vendor_group_id=None,
             group_name=extra["group_name"] if extra else None,
             total_contracts=total_contracts,
             total_value_mxn=total_value,
@@ -1542,30 +1543,10 @@ def get_vendor_related(
 
         related = []
 
-        # 1. Same group members
-        if vendor["group_id"]:
-            cursor.execute("""
-                SELECT v.id, v.name, v.rfc,
-                       COUNT(c.id) as total_contracts,
-                       COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn
-                FROM vendors v
-                LEFT JOIN contracts c ON v.id = c.vendor_id
-                    AND COALESCE(c.amount_mxn, 0) <= ?
-                WHERE v.group_id = ? AND v.id != ?
-                GROUP BY v.id, v.name, v.rfc
-                LIMIT ?
-            """, (MAX_CONTRACT_VALUE, vendor["group_id"], vendor_id, limit))
-
-            for row in cursor.fetchall():
-                related.append(VendorRelatedItem(
-                    vendor_id=row["id"], vendor_name=row["name"], rfc=_mask_personal_rfc(row["rfc"]),
-                    relationship_type="same_group", similarity_score=1.0,
-                    total_contracts=row["total_contracts"],
-                    total_value_mxn=row["total_value_mxn"],
-                ))
-
         # 2. Shared RFC root (first 10 chars)
-        if vendor["rfc"] and len(vendor["rfc"]) >= 10:
+        # Company RFCs only (a persona física root = initials + birth date).
+        # Name-prefix "similar name" matching was removed (≤22% precision on RFC gold).
+        if _mask_personal_rfc(vendor["rfc"]):
             rfc_root = vendor["rfc"][:10]
             cursor.execute("""
                 SELECT v.id, v.name, v.rfc,
@@ -1575,11 +1556,9 @@ def get_vendor_related(
                 LEFT JOIN contracts c ON v.id = c.vendor_id
                     AND COALESCE(c.amount_mxn, 0) <= ?
                 WHERE v.rfc LIKE ? AND v.id != ?
-                AND v.id NOT IN (SELECT id FROM vendors WHERE group_id = ?)
                 GROUP BY v.id, v.name, v.rfc
                 LIMIT ?
-            """, (MAX_CONTRACT_VALUE, f"{rfc_root}%", vendor_id,
-                  vendor["group_id"] or -1, limit - len(related)))
+            """, (MAX_CONTRACT_VALUE, f"{rfc_root}%", vendor_id, limit - len(related)))
 
             for row in cursor.fetchall():
                 if not any(r.vendor_id == row["id"] for r in related):
@@ -1589,32 +1568,6 @@ def get_vendor_related(
                         total_contracts=row["total_contracts"],
                         total_value_mxn=row["total_value_mxn"],
                     ))
-
-        # 3. Similar normalized names
-        if len(related) < limit and vendor["name_normalized"]:
-            name_parts = vendor["name_normalized"].split()[:2]
-            if name_parts:
-                name_pattern = " ".join(name_parts) + "%"
-                cursor.execute("""
-                    SELECT v.id, v.name, v.rfc,
-                           COUNT(c.id) as total_contracts,
-                           COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn
-                    FROM vendors v
-                    LEFT JOIN contracts c ON v.id = c.vendor_id
-                        AND COALESCE(c.amount_mxn, 0) <= ?
-                    WHERE v.name_normalized LIKE ? AND v.id != ?
-                    GROUP BY v.id, v.name, v.rfc
-                    LIMIT ?
-                """, (MAX_CONTRACT_VALUE, name_pattern, vendor_id, limit - len(related)))
-
-                for row in cursor.fetchall():
-                    if not any(r.vendor_id == row["id"] for r in related):
-                        related.append(VendorRelatedItem(
-                            vendor_id=row["id"], vendor_name=row["name"], rfc=_mask_personal_rfc(row["rfc"]),
-                            relationship_type="similar_name", similarity_score=0.7,
-                            total_contracts=row["total_contracts"],
-                            total_value_mxn=row["total_value_mxn"],
-                        ))
 
         return VendorRelatedListResponse(
             vendor_id=vendor_id,

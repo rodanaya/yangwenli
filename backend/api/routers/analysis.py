@@ -3539,28 +3539,35 @@ def get_asf_institution_summary():
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
             """
-            SELECT
-                TRIM(LOWER(a.entity_name))                                      AS entity_key,
-                MIN(a.entity_name)                                              AS entity_name,
-                COUNT(*)                                                        AS finding_count,
-                SUM(CASE WHEN a.amount_mxn < ? THEN a.amount_mxn
-                         ELSE 0 END)                                           AS total_amount_mxn,
-                MIN(a.report_year)                                              AS earliest_year,
-                MAX(a.report_year)                                              AS latest_year,
-                AVG(ist.avg_risk_score)                                        AS matched_risk_score,
-                MIN(ins.name)                                                  AS matched_institution_name
-            FROM asf_cases a
-            LEFT JOIN institutions ins
-                ON LENGTH(a.entity_name) >= 15
-                AND LENGTH(ins.name) >= 15
-                AND (
-                    LOWER(ins.name) LIKE '%' || LOWER(SUBSTR(a.entity_name, 1, 40)) || '%'
-                    OR LOWER(a.entity_name) LIKE '%' || LOWER(SUBSTR(ins.name, 1, 40)) || '%'
-                )
-            LEFT JOIN institution_stats ist ON ist.institution_id = ins.id
-            WHERE a.amount_mxn IS NOT NULL
-            GROUP BY TRIM(LOWER(a.entity_name))
-            ORDER BY finding_count DESC
+            -- Aggregate per ASF entity first, then attach institutions via the
+            -- exact-key crosswalk (the old 40-char prefix LIKE join was ~2% correct
+            -- and multiplied finding counts). docs/PREPUB_AUDIT_2026-09-24.md.
+            WITH ent AS (
+                SELECT TRIM(LOWER(entity_name)) AS entity_key,
+                       MIN(entity_name)         AS entity_name,
+                       COUNT(*)                 AS finding_count,
+                       SUM(CASE WHEN amount_mxn < ? THEN amount_mxn ELSE 0 END) AS total_amount_mxn,
+                       MIN(report_year)         AS earliest_year,
+                       MAX(report_year)         AS latest_year
+                FROM asf_cases
+                WHERE amount_mxn IS NOT NULL
+                GROUP BY entity_key
+            ),
+            lnk AS (
+                SELECT DISTINCT TRIM(LOWER(a.entity_name)) AS entity_key, x.institution_id
+                FROM asf_cases a
+                JOIN asf_institution_crosswalk x ON x.asf_case_id = a.id
+                WHERE x.confidence <> 'low'
+            )
+            SELECT ent.*,
+                   AVG(ist.avg_risk_score) AS matched_risk_score,
+                   MIN(ins.name)           AS matched_institution_name
+            FROM ent
+            LEFT JOIN lnk ON lnk.entity_key = ent.entity_key
+            LEFT JOIN institutions ins ON ins.id = lnk.institution_id
+            LEFT JOIN institution_stats ist ON ist.institution_id = lnk.institution_id
+            GROUP BY ent.entity_key
+            ORDER BY ent.finding_count DESC
             """,
             (MAX_CONTRACT_VALUE,)
         ).fetchall()
