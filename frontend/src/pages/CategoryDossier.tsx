@@ -62,7 +62,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore, getHighRiskShareLevel, getSectorTextColor } from '@/lib/constants'
+import { RISK_COLORS, RISK_TEXT_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore, getHighRiskShareLevel, getSectorTextColor } from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { formatCompactMXN } from '@/lib/utils'
 
@@ -312,7 +312,8 @@ export default function CategoryDossier() {
   const hrLevel = getHighRiskShareLevel(hrPct)
   const sealLevel = hrAvailable ? hrLevel : riskLevel
   const sealNumber = hrAvailable ? Math.round(hrPct) : riskPct
-  const verdictColor = RISK_COLORS[sealLevel]
+  const verdictColor = RISK_COLORS[sealLevel] // the seal's 2px rule (fill)
+  const verdictInk = RISK_TEXT_COLORS[sealLevel] // the seal's numeral + level word — same ink as the stat strip
 
   // Concentration + vendor rows from the fast endpoint.
   const concentration = topVendorsData
@@ -365,7 +366,7 @@ export default function CategoryDossier() {
             <aside className="flex-shrink-0 relative" style={{ width: 168, paddingTop: 6, paddingBottom: 8, paddingLeft: 10, paddingRight: 10 }}>
               <div aria-hidden="true" className="absolute top-0 left-0 right-0" style={{ height: 2, background: verdictColor }} />
               <div className="text-center">
-                <div className="tabular-nums" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 46, lineHeight: 1, color: verdictColor, letterSpacing: '-0.02em' }}>
+                <div className="tabular-nums" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'normal', fontWeight: 800, fontSize: 46, lineHeight: 1, color: verdictInk, letterSpacing: '-0.02em' }}>
                   {sealNumber || '—'}
                   {hrAvailable && <span className="font-mono" style={{ fontSize: 18, fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: 2 }}>%</span>}
                 </div>
@@ -376,7 +377,7 @@ export default function CategoryDossier() {
                 </div>
               </div>
               <div aria-hidden="true" className="my-3 mx-auto" style={{ height: 1, width: '60%', background: 'var(--color-border)' }} />
-              <div className="font-mono text-center" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: verdictColor, fontWeight: 700 }}>
+              <div className="font-mono text-center" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: verdictInk, fontWeight: 700 }}>
                 {lang === 'es' ? localizeLevel(sealLevel, 'es') : sealLevel.toUpperCase()}
               </div>
               {hrAvailable && riskPct > 0 && (
