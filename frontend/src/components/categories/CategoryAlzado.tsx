@@ -733,7 +733,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
                     fill="transparent"
                     role="button"
                     tabIndex={-1}
-                    aria-label={`${isEs ? slot.item.name_es : slot.item.name_en} — ${(slot.item.avg_risk * 100).toFixed(1)}% ${isEs ? 'riesgo' : 'risk'}, ${formatCompactMXN(slot.item.total_value)}`}
+                    aria-label={`${isEs ? slot.item.name_es : slot.item.name_en} — ${isEs ? 'indicador de riesgo' : 'risk indicator'} ${Math.round(slot.item.avg_risk * 100)} ${isEs ? 'de' : 'of'} 100, ${formatCompactMXN(slot.item.total_value)}`}
                     onMouseEnter={() => setHoveredId(slot.item.category_id)}
                     onMouseLeave={() => setHoveredId(null)}
                     onClick={() => navigate(`/categories/${slot.item.category_id}`)}
@@ -795,7 +795,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
                     fill="transparent"
                     role="button"
                     tabIndex={-1}
-                    aria-label={`${label} — ${(h.item.avg_risk * 100).toFixed(1)}% ${isEs ? 'riesgo' : 'risk'}, ${formatCompactMXN(h.item.total_value)}, ${formatNumber(h.item.total_contracts)} ${isEs ? 'contratos' : 'contracts'}`}
+                    aria-label={`${label} — ${isEs ? 'indicador de riesgo' : 'risk indicator'} ${Math.round(h.item.avg_risk * 100)} ${isEs ? 'de' : 'of'} 100, ${formatCompactMXN(h.item.total_value)}, ${formatNumber(h.item.total_contracts)} ${isEs ? 'contratos' : 'contracts'}`}
                     onMouseEnter={() => setHoveredId(h.item.category_id)}
                     onMouseLeave={() => setHoveredId(null)}
                     onClick={() => navigate(`/categories/${h.item.category_id}`)}
@@ -839,7 +839,7 @@ export function CategoryAlzado({ items, lang, highlightSector }: CategoryAlzadoP
                     fill="transparent"
                     role="button"
                     tabIndex={-1}
-                    aria-label={`${label} — ${(n.item.avg_risk * 100).toFixed(1)}% ${isEs ? 'riesgo' : 'risk'}, ${n.sharePct.toFixed(1)}% ${isEs ? 'del gasto' : 'of spend'}`}
+                    aria-label={`${label} — ${isEs ? 'indicador de riesgo' : 'risk indicator'} ${Math.round(n.item.avg_risk * 100)} ${isEs ? 'de' : 'of'} 100, ${n.sharePct.toFixed(1)}% ${isEs ? 'del gasto' : 'of spend'}`}
                     onMouseEnter={() => setHoveredId(n.item.category_id)}
                     onMouseLeave={() => setHoveredId(null)}
                     onClick={() => navigate(`/categories/${n.item.category_id}`)}

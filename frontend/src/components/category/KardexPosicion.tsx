@@ -173,7 +173,7 @@ export function KardexPosicion({ category, all, accent, lang }: KardexPosicionPr
         label: isEs ? 'Indicador de riesgo' : 'Risk indicator',
         pool: qualified,
         getValue: (c) => c.avg_risk,
-        formatReadout: (v) => v.toFixed(2),
+        formatReadout: (v) => `${Math.round(v * 100)}`,
       },
       {
         key: 'da',

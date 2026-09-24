@@ -613,7 +613,7 @@ export default function CategoriesIndex() {
                       <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontWeight: 600 }}>
                         {saldo.riskiest.name_es}
                       </span>{' '}
-                      marca <SaldoNum>{saldo.riskiest.avg_risk.toFixed(2)}</SaldoNum> de indicador,{' '}
+                      marca <SaldoNum>{Math.round(saldo.riskiest.avg_risk * 100)}</SaldoNum> de 100 en el indicador de riesgo,{' '}
                       {saldo.ratio.toFixed(1)}× el promedio del inventario.
                     </>
                   ) : (
@@ -624,7 +624,7 @@ export default function CategoriesIndex() {
                       <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontWeight: 600 }}>
                         {saldo.riskiest.name_en}
                       </span>{' '}
-                      posts a <SaldoNum>{saldo.riskiest.avg_risk.toFixed(2)}</SaldoNum> indicator,{' '}
+                      posts a <SaldoNum>{Math.round(saldo.riskiest.avg_risk * 100)}</SaldoNum>-of-100 risk indicator,{' '}
                       {saldo.ratio.toFixed(1)}× the inventory average.
                     </>
                   )}
