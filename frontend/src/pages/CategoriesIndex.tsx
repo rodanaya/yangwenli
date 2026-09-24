@@ -69,6 +69,13 @@ const SORT_KEYS: SortKey[] = ['spend', 'risk', 'contracts', 'direct_award']
 
 const ALL_SECTOR_CODES = SECTORS.map((s) => s.code)
 const DA_LIMIT_PCT = Math.round(EU_DIRECT_AWARD_LIMIT * 100) // 10 — the EU single-market scoreboard line
+
+/** WCAG contrast of a #rrggbb fill against white text — picks the active chip's fill. */
+function contrastOnWhite(hex: string): number {
+  const lin = (i: number) => { const c = parseInt(hex.slice(i, i + 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }
+  const l = 0.2126 * lin(1) + 0.7152 * lin(3) + 0.0722 * lin(5)
+  return 1.05 / (l + 0.05)
+}
 // Sectors with a single active category — taxonomy expansion pending (S.10–S.12).
 const DAGGER_SECTOR_CODES = new Set(['educacion', 'gobernacion', 'trabajo'])
 
@@ -681,6 +688,8 @@ export default function CategoriesIndex() {
                 {presentSectorCodes.map((code) => {
                   const sectorActive = activeSector === code
                   const hex = SECTOR_COLORS[code] ?? SECTOR_COLORS.otros
+                  const ink = SECTOR_TEXT_COLORS[code] ?? SECTOR_TEXT_COLORS.otros
+                  const fill = contrastOnWhite(hex) >= 4.5 ? hex : ink
                   return (
                     <button
                       key={code}
@@ -688,7 +697,7 @@ export default function CategoriesIndex() {
                       onClick={() => setActiveSector(sectorActive ? null : code)}
                       aria-pressed={sectorActive}
                       className="font-mono text-[12px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
-                      style={sectorActive ? { background: hex, borderColor: hex, color: '#ffffff' } : { background: 'transparent', borderColor: hex, color: hex }}
+                      style={sectorActive ? { background: fill, borderColor: fill, color: '#ffffff' } : { background: 'transparent', borderColor: hex, color: ink }}
                     >
                       {getSectorName(code, lang)}
                     </button>

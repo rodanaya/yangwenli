@@ -62,7 +62,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore, getHighRiskShareLevel } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS, SECTORS, getRiskLevelFromScore, getHighRiskShareLevel, getSectorTextColor } from '@/lib/constants'
 import { formatEntityName } from '@/lib/entity/format'
 import { formatCompactMXN } from '@/lib/utils'
 
@@ -80,17 +80,21 @@ function DossierSectionHeader({
   title,
   meta,
   accent,
+  ink,
 }: {
   id: string
   eyebrow: string
   title: string
   meta?: string
+  /** sector hex — the header rule (fill) */
   accent: string
+  /** AA sector text ink — the § eyebrow (type) */
+  ink: string
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4 pb-2 mb-5" style={{ borderBottom: `1px solid ${accent}33` }}>
       <div className="flex items-baseline gap-3 min-w-0">
-        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
+        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: ink, fontWeight: 700 }}>
           § {eyebrow}
         </span>
         <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'normal', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
@@ -285,6 +289,9 @@ export default function CategoryDossier() {
   const c = category as CategoryLike
   const sectorCode = c.sector_code ?? null
   const accent = SECTOR_COLORS[sectorCode ?? 'otros'] ?? '#a06820'
+  // Sector hex is a fill (band, rules, drop cap, bars); as type it fails AA
+  // (energía #eab308 = 1.82:1), so kickers take the text ink.
+  const accentInk = getSectorTextColor(sectorCode ?? 'otros')
   const sectorName = sectorCode ? (lang === 'es'
     ? SECTORS.find((s) => s.code === sectorCode)?.name
     : SECTORS.find((s) => s.code === sectorCode)?.nameEN) : null
@@ -331,9 +338,9 @@ export default function CategoryDossier() {
         <div aria-hidden="true" className="absolute left-0 right-0" style={{ top: 0, height: 6, background: accent }} />
         <div className="pt-8 pb-8">
           <div className="font-mono tabular-nums mb-3" style={{ fontSize: 13, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-            KARDEX · C-{String(c.category_id).padStart(3, '0')}{sectorCode && (<> · {sectorCode.toUpperCase()}</>)}
+            KARDEX · C-{String(c.category_id).padStart(3, '0')}{sectorName && (<> · {sectorName}</>)}
           </div>
-          <div className="font-mono mb-4" style={{ fontSize: 12, fontStyle: 'normal', letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 500 }}>
+          <div className="font-mono mb-4" style={{ fontSize: 12, fontStyle: 'normal', letterSpacing: '0.18em', textTransform: 'uppercase', color: accentInk, fontWeight: 500 }}>
             § {lang === 'es' ? 'FICHA DE INVENTARIO · CATEGORÍA' : 'STOCK CARD · CATEGORY DOSSIER'}
           </div>
 
@@ -346,7 +353,7 @@ export default function CategoryDossier() {
                 {displayName}
               </h1>
               <div className="flex items-center gap-2 flex-wrap" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 15, color: 'var(--color-text-secondary)' }}>
-                <span style={{ opacity: 0.7 }}>{lang === 'es' ? 'Categoría de gasto' : 'Spending category'}</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'Categoría de gasto' : 'Spending category'}</span>
                 {sectorName && c.sector_id != null && (
                   <>
                     <span style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>·</span>
@@ -364,7 +371,7 @@ export default function CategoryDossier() {
                   {sealNumber || '—'}
                   {hrAvailable && <span className="font-mono" style={{ fontSize: 18, fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: 2 }}>%</span>}
                 </div>
-                <div className="font-mono mt-1" style={{ fontSize: 13, color: 'var(--color-text-muted)', opacity: 0.6, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+                <div className="font-mono mt-1" style={{ fontSize: 13, color: 'var(--color-text-muted)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
                   {hrAvailable
                     ? (lang === 'es' ? 'contratos de alto riesgo' : 'high-risk contracts')
                     : (lang === 'es' ? 'riesgo prom. · de 100' : 'avg risk · of 100')}
@@ -413,6 +420,7 @@ export default function CategoryDossier() {
               eyebrow={lang === 'es' ? 'La posición' : 'The position'}
               title={lang === 'es' ? 'Este anaquel entre los 72' : 'This shelf among the 72'}
               accent={accent}
+              ink={accentInk}
             />
             <KardexPosicion
               category={c as unknown as CategorySummaryItem}
@@ -433,6 +441,7 @@ export default function CategoryDossier() {
               eyebrow={lang === 'es' ? 'La cinta kardex' : 'The kardex tape'}
               title={lang === 'es' ? 'Movimientos 2002–2025' : 'Movements 2002–2025'}
               accent={accent}
+              ink={accentInk}
             />
             <KardexCinta trend={categoryTrends} accent={accent} lang={lang} />
           </section>
@@ -449,6 +458,7 @@ export default function CategoryDossier() {
               title={lang === 'es' ? 'Cómo se surte el anaquel' : 'How the shelf is filled'}
               meta={lang === 'es' ? 'conteo vs valor' : 'count vs value'}
               accent={accent}
+              ink={accentInk}
             />
             <ProcedureSplit data={competitionData as CompetitionData} accent={accent} lang={lang} />
           </section>
@@ -463,6 +473,7 @@ export default function CategoryDossier() {
             eyebrow={lang === 'es' ? 'Mercado' : 'Market'}
             title={lang === 'es' ? 'Los surtidores dominantes' : 'The dominant suppliers'}
             accent={accent}
+            ink={accentInk}
           />
           <CategoryDiagnosticGrid
             category={c}
@@ -484,6 +495,7 @@ export default function CategoryDossier() {
               eyebrow={lang === 'es' ? 'Señales' : 'Signals'}
               title={lang === 'es' ? 'Las señales' : 'The tells'}
               accent={accent}
+              ink={accentInk}
             />
             <div className="grid gap-8 md:grid-cols-2">
               {seasonalityData && (
@@ -519,6 +531,7 @@ export default function CategoryDossier() {
               title={lang === 'es' ? 'Qué hay en el anaquel' : "What's on the shelf"}
               meta={lang === 'es' ? `${subcatData.data.length} subcategorías` : `${subcatData.data.length} subcategories`}
               accent={accent}
+              ink={accentInk}
             />
             <SubcategoryComposition rows={subcatData.data as SubcatRow[]} accent={accent} lang={lang} />
           </section>
@@ -535,6 +548,7 @@ export default function CategoryDossier() {
               title={lang === 'es' ? 'El precio de lista' : 'The list price'}
               meta={lang === 'es' ? 'mediana vs promedio' : 'median vs mean'}
               accent={accent}
+              ink={accentInk}
             />
             <PriceSpread data={priceData as PriceSpreadData} accent={accent} lang={lang} />
           </section>
@@ -551,6 +565,7 @@ export default function CategoryDossier() {
               title={lang === 'es' ? 'Los grandes contratos' : 'The largest contracts'}
               meta={lang === 'es' ? `Los ${contractsRows.length} mayores` : `Top ${contractsRows.length}`}
               accent={accent}
+              ink={accentInk}
             />
             <LargestContracts rows={contractsRows as LargeContractRow[]} accent={accent} lang={lang} />
           </section>
@@ -566,6 +581,7 @@ export default function CategoryDossier() {
             title={lang === 'es' ? 'El registro de surtidores' : 'The supplier register'}
             meta={vendorRows.length ? (lang === 'es' ? `Los ${vendorRows.length} mayores` : `Top ${vendorRows.length}`) : undefined}
             accent={accent}
+            ink={accentInk}
           />
           <CategoryVendorTable vendors={vendorRows} lang={lang} />
         </section>
@@ -581,6 +597,7 @@ export default function CategoryDossier() {
               title={lang === 'es' ? 'Quién compra' : 'Who buys'}
               meta={lang === 'es' ? 'instituciones · por gasto' : 'institutions · by spend'}
               accent={accent}
+              ink={accentInk}
             />
             <TopBuyers rows={buyersRows as TopBuyerRow[]} lang={lang} />
           </section>
@@ -595,6 +612,7 @@ export default function CategoryDossier() {
             eyebrow={lang === 'es' ? 'Pares de captura' : 'Capture pairs'}
             title={lang === 'es' ? 'Proveedor × institución' : 'Vendor × institution'}
             accent={accent}
+            ink={accentInk}
           />
           <CapturePairs
             rows={pairsData?.data ?? []}
