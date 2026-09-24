@@ -90,7 +90,7 @@ Same stack and rules as `DAY-10b-categories-vendor-polish.md § Build notes`: wo
 
 ## Result
 
-Built by the Opus executor `parallax-day11`. The 8 changes landed in plan order 1 → 4 → 2 → 5 → 3 → 8 → 6 → 7: `294dae75` `eef80ec1` `c1efd87b` `8075a75f` `354e8929` `38cc7dd4` `66bcf96d` `4c84c9ed`. Judge round 1 is `0fe8049d`. Fable judged the after-crops (`_parallax_shots/day11/d11after/crops/*`) and an independent run of `audit11.mjs` against the executor's HEAD (`judge-{en,es}.txt`, 1440 / 390).
+Built by the Opus executor `parallax-day11`. The 8 changes landed in plan order 1 → 4 → 2 → 5 → 3 → 8 → 6 → 7: `294dae75` `eef80ec1` `c1efd87b` `8075a75f` `354e8929` `38cc7dd4` `66bcf96d` `4c84c9ed`. Judge round 1 is `26be19cb` (J1–J3) + `69cc9774` (judge 1b, the seal ink). Fable judged the after-crops (`_parallax_shots/day11/d11after/crops/*`) and an independent run of `audit11.mjs` against the executor's HEAD (`judge-{en,es}.txt`, 1440 / 390).
 
 | Measure (EN + ES) | before | after |
 |---|---|---|
