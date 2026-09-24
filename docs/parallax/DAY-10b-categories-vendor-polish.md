@@ -85,3 +85,5 @@ Judge round 1: at 390 the badges collided, so they moved to a packed two-row ban
 Deviations accepted: Building Construction gets a level two-line name; callouts are seated right-aligned first; the memo's right rail appears only when the panel is at least 64rem wide; the mobile top margin is 76px; the shared `DossierSectionHeader` now wraps instead of truncating; `cleanContractDescription` takes an optional `maxChars`.
 
 Noticed, not fixed: the shared StatStrip sub-line sits 3px into its padding at 1024; on `/aria` the expanded row's readout runs into the memo band and the factor labels are cut; the ARIA link uses an ExternalLink icon for an internal link; two older ESLint errors remain (`AriaQueue.tsx` set-state-in-effect, `contract-audit.ts` control-character regex).
+
+Shipped 2026-09-24 10:23Z: origin/main + VPS HEAD `6c702ee9` (rebased onto `b4768840`), BUILD_ID `2026-09-24-parallax-d10b-polish`, entry `index-DkkfMVz8.js` → `index-CBdWJ8-C.js` (BUILD_ID string verified in the served entry), health OK, `/categories`, `/categories/20`, `/vendors/29277` 200; deployed via `deploy-safe.sh`.
