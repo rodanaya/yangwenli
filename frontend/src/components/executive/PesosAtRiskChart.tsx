@@ -18,6 +18,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -237,14 +238,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
               </motion.text>
 
               {/* → Investigate chip */}
-              <motion.a
-                href={`/aria?pattern=${p.code}`}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 0.65 }}
-                whileHover={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.25, delay: 0.7 + idx * 0.08 }}
-              >
+              <Link to={`/aria?pattern=${p.code}`}>
                 <text
                   x={SVG_W - RIGHT_PAD + 6}
                   y={y + 3}
@@ -255,7 +249,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
                 >
                   {lang === 'es' ? '→ Investigar' : '→ Investigate'}
                 </text>
-              </motion.a>
+              </Link>
             </g>
           )
         })}

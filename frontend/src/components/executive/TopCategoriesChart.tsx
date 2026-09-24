@@ -10,13 +10,13 @@
  *   - Risk pip (RISK_COLORS via getRiskLevelFromScore)
  *
  * Falls back to a curated dataset when the live category_stats table is empty.
- * Row click → /categories/:id (preserved from the old treemap behavior).
+ * The category name is the row's link (EntityIdentityChip variant="name" →
+ * /categories/:id); the curated fallback rows have no dossier and print plain.
  */
 
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 import { categoriesApi } from '@/api/client'
 import { formatCompactMXN, formatCompactUSD } from '@/lib/utils'
 import {
@@ -27,6 +27,7 @@ import {
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import { DotBar } from '@/components/ui/DotBar'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -92,7 +93,6 @@ interface TopCategoriesChartProps {
 }
 
 export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
-  const navigate = useNavigate()
   const { data: liveData } = useQuery({
     queryKey: ['executive', 'categories-treemap'],
     queryFn: () => categoriesApi.getSummary() as Promise<{ data: CategorySummaryItem[] }>,
@@ -125,6 +125,12 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
     return { items: FALLBACK_CATEGORIES, usingFallback: true }
   }, [liveData])
 
+  const nameStyle = {
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontWeight: 600,
+    fontSize: 17,
+    color: 'var(--color-text-primary)',
+  } as const
   const grandTotal = items.reduce((s, c) => s + c.total_value, 0)
   const maxValue = items[0]?.total_value ?? 1
 
@@ -174,6 +180,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
           const name = lang === 'en' ? (cat.name_en || cat.name_es) : cat.name_es
           const caption = lang === 'en' ? (cat.caption_en ?? cat.caption_es) : (cat.caption_es ?? cat.caption_en)
           const sharePct = (cat.total_value / grandTotal) * 100
+          const hasDossier = /^\d+$/.test(cat.id)
 
           return (
             <motion.li
@@ -182,12 +189,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: '-20px' }}
               transition={{ duration: 0.42, delay: idx * 0.045, ease: 'easeOut' }}
-              className="group cursor-pointer relative grid items-center gap-x-3 sm:gap-x-4 py-3 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent grid-cols-[28px_minmax(0,1fr)_auto_18px] sm:grid-cols-[28px_minmax(0,1fr)_176px_110px_18px]"
-              onClick={() => navigate(`/categories/${cat.id}`)}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/categories/${cat.id}`) }}
-              tabIndex={0}
-              role="link"
-              aria-label={`${name} — ${formatCompactMXN(cat.total_value)} — ${riskLabel}`}
+              className="group relative grid items-center gap-x-3 sm:gap-x-4 py-3 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] grid-cols-[28px_minmax(0,1fr)_auto_18px] sm:grid-cols-[28px_minmax(0,1fr)_176px_110px_18px]"
             >
               {/* Rank */}
               <span
@@ -204,18 +206,22 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                     style={{ background: sectorColor }}
                     aria-hidden="true"
                   />
-                  <span
-                    className="leading-[1.15] truncate-balance"
-                    style={{
-                      fontFamily: "'Playfair Display', Georgia, serif",
-                      fontWeight: 600,
-                      fontSize: 17,
-                      color: 'var(--color-text-primary)',
-                    }}
-                    title={name}
-                  >
-                    {name}
-                  </span>
+                  {hasDossier ? (
+                    <EntityIdentityChip
+                      type="category"
+                      id={cat.id}
+                      name={name}
+                      variant="name"
+                      fullName
+                      size="md"
+                      className="leading-[1.15] text-balance hover:underline underline-offset-2"
+                      style={nameStyle}
+                    />
+                  ) : (
+                    <span className="leading-[1.15] text-balance" style={nameStyle}>
+                      {name}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted">
                   <span style={{ color: sectorColor, opacity: 0.95, fontWeight: 600 }}>
@@ -229,6 +235,8 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                       </span>
                     </>
                   )}
+                  <span aria-hidden="true" className="opacity-50">·</span>
+                  <span className="whitespace-nowrap">{lang === 'en' ? 'risk' : 'riesgo'} {riskLabel}</span>
                 </div>
               </div>
 
@@ -282,7 +290,6 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                   background: riskColor,
                   boxShadow: `0 0 0 2px var(--color-background)`,
                 }}
-                title={`${lang === 'en' ? 'avg risk' : 'riesgo promedio'} · ${cat.avg_risk.toFixed(2)} · ${riskLabel}`}
                 aria-hidden="true"
               />
             </motion.li>

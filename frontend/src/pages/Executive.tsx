@@ -36,6 +36,8 @@ import { LeadTimeChart } from '@/components/executive/LeadTimeChart'
 import { TopCategoriesChart } from '@/components/executive/TopCategoriesChart'
 import { PesosAtRiskChart } from '@/components/executive/PesosAtRiskChart'
 
+const MotionLink = motion.create(Link)
+
 const ATLAS_LENSES = ['patterns', 'sectors', 'categories', 'sexenios'] as const satisfies readonly ConstellationMode[]
 
 export default function Executive() {
@@ -103,8 +105,8 @@ export default function Executive() {
   }, [dashboard])
 
   // Finding 04 hover dossier — which capture-leader row is under the cursor.
-  // The card itself is a role="link" (navigates to /aria?pattern=P6), so the
-  // detail strip is data-only: no nested anchors (nested-interactive trap).
+  // The card itself is a <Link> (to /aria?pattern=P6), so the detail strip is
+  // data-only: no nested anchors (nested-interactive trap).
   const [capDetail, setCapDetail] = useState<{ label: string; top: number; second: number } | null>(null)
 
   const handlePrint = () => window.print()
@@ -252,7 +254,8 @@ export default function Executive() {
             </div>
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-accent transition-colors"
+              type="button"
+              className="min-h-6 rounded-sm inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               aria-label={lang === 'en' ? 'Print this page' : 'Imprimir esta página'}
             >
               <Printer className="h-3.5 w-3.5" aria-hidden="true" />
@@ -464,7 +467,7 @@ export default function Executive() {
           <div className="mt-3 flex items-center justify-end">
             <Link
               to={`/atlas${atlasMode !== 'patterns' ? `?lens=${atlasMode}` : ''}`}
-              className="text-[12px] font-mono uppercase tracking-[0.12em] font-bold text-text-secondary hover:text-text-primary inline-flex items-center gap-1.5 transition-colors"
+              className="min-h-6 rounded-sm text-[12px] font-mono uppercase tracking-[0.12em] font-bold text-text-secondary hover:text-text-primary inline-flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             >
               {lang === 'en' ? 'Open full Atlas' : 'Abrir Atlas completo'}
               <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
@@ -627,25 +630,21 @@ export default function Executive() {
             // chapter rail above, not the tile's left edge. The bottom hairline
             // unifies the row visually.
             const tileBase =
-              'relative cursor-pointer group p-5 pt-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2'
+              'relative block group p-5 pt-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1'
 
             // Wrap each "column" so the chapter rail and tile share width.
-            const ColumnFrame = ({ children, step, onActivate, ariaLabel }: {
+            const ColumnFrame = ({ children, step, ariaLabel }: {
               children: React.ReactNode
               step: Step
-              onActivate: () => void
               ariaLabel: string
             }) => (
               <div className="relative flex flex-col">
                 <ChapterRail step={step} delay={0.05 + steps.indexOf(step) * 0.06} />
-                <div
+                <Link
+                  to={step.story}
+                  data-tile={step.roman}
                   className={`${tileBase} surface-card rounded-sm mt-2`}
-                  onClick={onActivate}
-                  onKeyDown={(e) => { if (e.key === 'Enter') onActivate() }}
-                  tabIndex={0}
-                  role="link"
                   aria-label={ariaLabel}
-                  style={{ outlineColor: step.accent }}
                 >
                   {/* drop-line fusing chapter rail to tile (lg only — on
                       stacked layouts the rail already sits flush above) */}
@@ -655,7 +654,7 @@ export default function Executive() {
                     aria-hidden="true"
                   />
                   {children}
-                </div>
+                </Link>
               </div>
             )
 
@@ -665,7 +664,6 @@ export default function Executive() {
                 {/* Chapter I — The Spend */}
                 <ColumnFrame
                   step={steps[0]}
-                  onActivate={() => navigate(steps[0].story)}
                   ariaLabel={lang === 'en' ? steps[0].ariaLabel.en : steps[0].ariaLabel.es}
                 >
                   <div
@@ -708,7 +706,6 @@ export default function Executive() {
                 {/* Chapter II — The Bypass */}
                 <ColumnFrame
                   step={steps[1]}
-                  onActivate={() => navigate(steps[1].story)}
                   ariaLabel={lang === 'en' ? steps[1].ariaLabel.en : steps[1].ariaLabel.es}
                 >
                   <div
@@ -755,7 +752,6 @@ export default function Executive() {
                 {/* Chapter III — The Flag */}
                 <ColumnFrame
                   step={steps[2]}
-                  onActivate={() => navigate(steps[2].story)}
                   ariaLabel={lang === 'en' ? steps[2].ariaLabel.en : steps[2].ariaLabel.es}
                 >
                   <div
@@ -796,7 +792,6 @@ export default function Executive() {
                 {/* Chapter IV — The Catch */}
                 <ColumnFrame
                   step={steps[3]}
-                  onActivate={() => navigate(steps[3].story)}
                   ariaLabel={lang === 'en' ? steps[3].ariaLabel.en : steps[3].ariaLabel.es}
                 >
                   <div
@@ -862,23 +857,23 @@ export default function Executive() {
 
             {/* Finding 01 — Ghost Economy: compare-gap animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="surface-card rounded-sm border-l-2"
               style={{ borderLeftColor: '#dc2626' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4 }}
-              onClick={() => navigate('/aria?pattern=P2')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Open ghost-company investigation queue (ARIA P2)' : 'Abrir cola de investigación de empresas fantasma (ARIA P2)'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/aria?pattern=P2') }}
             >
+              <Link
+                to="/aria?pattern=P2"
+                className="group block h-full p-5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                aria-label={lang === 'en' ? 'Open ghost-company investigation queue (ARIA P2)' : 'Abrir cola de investigación de empresas fantasma (ARIA P2)'}
+              >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
                 </span>
-                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-critical)' }}>
+                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-critical)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -964,27 +959,28 @@ export default function Executive() {
                   ? 'No digital footprint, burst activity, RFC anomalies, shared addresses. The 97% detection gap means most ghost-company fraud goes unregistered — and unrecovered.'
                   : 'Sin huella digital, actividad en ráfaga, anomalías RFC, domicilios compartidos. La brecha del 97% significa que la mayoría del fraude fantasma no se registra — y no se recupera.'}
               </p>
+              </Link>
             </motion.article>
 
             {/* Finding 02 — Audit Blindspot: fill animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="surface-card rounded-sm border-l-2"
               style={{ borderLeftColor: '#f59e0b' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              onClick={() => navigate('/contracts?risk_level=critical&min_amount=5000000000')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Open contracts above MX$5B at critical risk' : 'Ver contratos sobre MX$5B con riesgo crítico'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/contracts?risk_level=critical&min_amount=5000000000') }}
             >
+              <Link
+                to="/contracts?risk_level=critical&min_amount=5000000000"
+                className="group block h-full p-5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                aria-label={lang === 'en' ? 'Open contracts above MX$5B at critical risk' : 'Ver contratos sobre MX$5B con riesgo crítico'}
+              >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
                 </span>
-                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-high)' }}>
+                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-high)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -1067,27 +1063,28 @@ export default function Executive() {
                   ? 'ASF reviews ~5% of contracts above MX$5B annually. At that rate, a high-value contract waits ~25 years for review — long after the money is gone and the vendor dissolved.'
                   : 'La ASF revisa ~5% de contratos sobre 5,000 MDP al año. A ese ritmo, un contrato de alto valor espera ~25 años para ser revisado — mucho después de que el dinero desapareció.'}
               </p>
+              </Link>
             </motion.article>
 
             {/* Finding 03 — Threshold Gaming: two-bar comparison */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="surface-card rounded-sm border-l-2"
               style={{ borderLeftColor: '#8b5cf6' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              onClick={() => navigate('/contracts?procedure_type=ADJUDICACION_DIRECTA&sort_by=amount&sort_order=desc')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Open direct-award contracts sorted by amount' : 'Ver contratos por adjudicación directa ordenados por monto'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/contracts?procedure_type=ADJUDICACION_DIRECTA&sort_by=amount&sort_order=desc') }}
             >
+              <Link
+                to="/contracts?procedure_type=ADJUDICACION_DIRECTA&sort_by=amount&sort_order=desc"
+                className="group block h-full p-5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                aria-label={lang === 'en' ? 'Open direct-award contracts sorted by amount' : 'Ver contratos por adjudicación directa ordenados por monto'}
+              >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 03 · THRESHOLD GAMING' : 'HALLAZGO 03 · JUEGO DE UMBRALES'}
                 </span>
-                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#8b5cf6' }}>
+                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#8b5cf6' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -1247,27 +1244,28 @@ export default function Executive() {
                   ? 'Large contracts split into multiple awards just below the legal threshold that triggers public tender. The density spike is detectable only across all 3.1M contracts at once.'
                   : 'Contratos grandes divididos en múltiples adjudicaciones justo bajo el umbral legal. El pico de densidad solo es detectable con los 3.1M contratos a la vez.'}
               </p>
+              </Link>
             </motion.article>
 
             {/* Finding 04 — Institutional Capture: dot-field animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="surface-card rounded-sm border-l-2"
               style={{ borderLeftColor: '#a06820' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4, delay: 0.3 }}
-              onClick={() => navigate('/aria?pattern=P6')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Open institutional capture pattern (ARIA P6) investigation queue' : 'Abrir cola de captura institucional (ARIA P6)'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/aria?pattern=P6') }}
             >
+              <Link
+                to="/aria?pattern=P6"
+                className="group block h-full p-5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                aria-label={lang === 'en' ? 'Open institutional capture pattern (ARIA P6) investigation queue' : 'Abrir cola de captura institucional (ARIA P6)'}
+              >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
                 </span>
-                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-accent)' }}>
+                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-accent)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -1395,7 +1393,7 @@ export default function Executive() {
                           : '● cuota proveedor 1 · ○ proveedor 2 · brecha = ventaja de concentración'}
                       </div>
                       {/* Hover dossier — data-only (the whole card is already a
-                          role="link" to /aria?pattern=P6; nesting anchors here
+                          <Link> to /aria?pattern=P6; nesting anchors here
                           would be the nested-interactive trap). Defaults to the
                           top row so touch/keyboard readers see real numbers. */}
                       {(() => {
@@ -1435,6 +1433,7 @@ export default function Executive() {
                   ? 'P6 capture differs from national monopoly: abnormal concentration in one agency with above-threshold risk. Detectable only through cross-institution comparison.'
                   : 'La captura P6 difiere del monopolio nacional: concentración anormal en una sola agencia con riesgo por encima del umbral. Solo detectable comparando entre instituciones.'}
               </p>
+              </Link>
             </motion.article>
 
           </div>
@@ -1481,13 +1480,13 @@ export default function Executive() {
             <h2 id="categories-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
               {lang === 'en' ? 'Where the money goes — top spending categories' : 'Dónde va el dinero — principales categorías de gasto'}
             </h2>
-            <button
-              onClick={() => navigate('/sectors?view=categories')}
-              className="text-[12px] font-mono uppercase tracking-[0.1em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
+            <Link
+              to="/sectors?view=categories"
+              className="min-h-6 rounded-sm text-[12px] font-mono uppercase tracking-[0.1em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             >
               {lang === 'en' ? 'All categories' : 'Todas'}
               <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-            </button>
+            </Link>
           </div>
           <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
@@ -1656,9 +1655,9 @@ export default function Executive() {
                           className="relative"
                         >
                           {/* Rung row */}
-                          <a
-                            href={r.href}
-                            className="group grid items-baseline gap-x-4 py-2 transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                          <Link
+                            to={r.href}
+                            className="group grid items-baseline gap-x-4 py-2 rounded-sm transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                             style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}
                             aria-label={`${formatNumber(r.count)} — ${r.label[lang]}`}
                           >
@@ -1697,7 +1696,7 @@ export default function Executive() {
                             <span className="font-mono tabular-nums text-[13px] text-text-secondary text-right group-hover:text-text-primary transition-colors">
                               {fmtPct(r.pct)}
                             </span>
-                          </a>
+                          </Link>
 
                           {/* Filter-operation caption between this rung and next */}
                           {r.operation && (
@@ -1732,13 +1731,13 @@ export default function Executive() {
                   </ol>
 
                   {/* GT anchor band — sub-baseline, dotted-rule separator */}
-                  <motion.a
-                    href="/cases"
+                  <MotionLink
+                    to="/cases"
                     initial={{ opacity: 0, y: 4 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-30px' }}
                     transition={{ duration: 0.4, delay: 0.7 }}
-                    className="group block mt-5 pt-3 transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="group block mt-5 pt-3 rounded-sm transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                     style={{ borderTop: '1px dashed rgba(160, 104, 32, 0.45)' }}
                     aria-label={lang === 'en'
                       ? `43 named cases · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} GT vendors — training corpus`
@@ -1789,7 +1788,7 @@ export default function Executive() {
                         {lang === 'en' ? 'seed' : 'semilla'}
                       </span>
                     </div>
-                  </motion.a>
+                  </MotionLink>
                 </div>
               )
             })()}
@@ -1799,12 +1798,12 @@ export default function Executive() {
               {lang === 'en' ? (
                 <>
                   Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 72 active spending categories · 1,830 vendor memos (440 LLM-narrative) · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
-                  <a href="/methodology" className="text-accent hover:underline">methodology</a> for scope and limits.
+                  <Link to="/methodology" className="rounded-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1">methodology</Link> for scope and limits.
                 </>
               ) : (
                 <>
                   Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 72 categorías activas · 1,830 memos de proveedores (440 LLM-narrativos) · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
-                  <a href="/methodology" className="text-accent hover:underline">metodología</a> para alcance y límites.
+                  <Link to="/methodology" className="rounded-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1">metodología</Link> para alcance y límites.
                 </>
               )}
             </div>
@@ -1849,13 +1848,13 @@ export default function Executive() {
                   {lang === 'en' ? '· feed frozen Sep 28 2025' : '· corte 28 sep 2025'}
                 </span>
               </h2>
-              <button
-                onClick={() => navigate('/contracts?risk_level=critical')}
-                className="text-[13px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1"
+              <Link
+                to="/contracts?risk_level=critical"
+                className="min-h-6 rounded-sm text-[13px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               >
                 {lang === 'en' ? 'View all' : 'Ver todas'}
                 <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-              </button>
+              </Link>
             </div>
             <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
               {lang === 'en'
@@ -1877,11 +1876,7 @@ export default function Executive() {
                 return (
                   <div
                     key={c.id}
-                    onClick={() => navigate(`/contracts/${c.id}`)}
-                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate(`/contracts/${c.id}`)}
-                    role="link"
-                    tabIndex={0}
-                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/50 focus:bg-background-elevated"
+                    className="group w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors"
                   >
                     <span
                       className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[12px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"
@@ -1890,14 +1885,19 @@ export default function Executive() {
                       {lang === 'en' ? 'CRITICAL' : 'CRÍTICO'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <div className="truncate" onClick={(e) => e.stopPropagation()}>
+                      <div className="truncate">
                         {c.vendor_id
                           ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} riskScore={c.risk_score ?? undefined} size="sm" />
                           : <span className="text-sm font-semibold text-text-primary">{formatVendorName(c.vendor_name) || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}</span>
                         }
                       </div>
-                      <p className="text-[13px] text-text-muted truncate mt-0.5">
-                        {c.title || c.institution_name || '—'}
+                      <p className="text-[13px] truncate mt-0.5">
+                        <Link
+                          to={`/contracts/${c.id}`}
+                          className="rounded-sm text-text-primary hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                        >
+                          {c.title || c.institution_name || `${lang === 'en' ? 'Contract' : 'Contrato'} #${c.id}`}
+                        </Link>
                       </p>
                     </div>
                     <div className="hidden md:flex flex-shrink-0 w-36 items-center gap-2">
@@ -1947,19 +1947,19 @@ export default function Executive() {
                 : 'Busca por RFC, nombre de empresa, o explora ARIA Nivel 1 — 299 proveedores anclados en GT al tope de la cola de investigación.'}
             </p>
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => navigate('/aria')}
-                className="inline-flex items-center gap-1.5 bg-accent hover:bg-accent/80 text-text-primary font-medium text-sm px-4 py-2 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent/40"
+              <Link
+                to="/aria"
+                className="inline-flex items-center gap-1.5 bg-accent hover:bg-accent/80 text-text-primary font-medium text-sm px-4 py-2 rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               >
                 {lang === 'en' ? 'Open ARIA queue' : 'Abrir cola ARIA'}
                 <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
-              <button
-                onClick={() => navigate('/explore?entity=vendor')}
-                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-accent/5 text-accent border border-accent/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors"
+              </Link>
+              <Link
+                to="/explore?entity=vendor"
+                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-accent/5 text-accent border border-accent/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               >
                 {lang === 'en' ? 'Search a vendor' : 'Buscar un proveedor'}
-              </button>
+              </Link>
             </div>
           </div>
         </section>
@@ -1986,7 +1986,7 @@ export default function Executive() {
             {/* Investigate CTA — amber, mono, uppercase (charter coda rule) */}
             <Link
               to="/aria"
-              className="inline-flex items-center gap-1.5 text-[13px] font-mono uppercase tracking-[0.12em] font-bold text-accent hover:text-accent transition-colors mb-4"
+              className="rounded-sm inline-flex items-center gap-1.5 text-[13px] font-mono uppercase tracking-[0.12em] font-bold text-accent hover:text-accent transition-colors mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               aria-label={lang === 'en'
                 ? 'Open the ARIA investigation queue — 299 GT-anchored Tier-1 vendors'
                 : 'Abrir la cola de investigación ARIA — 299 proveedores Nivel 1 anclados en GT'}
