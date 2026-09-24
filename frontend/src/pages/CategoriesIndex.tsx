@@ -386,7 +386,7 @@ function ProvenanceNote({ lang }: { lang: 'en' | 'es' }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function CategoriesIndex() {
-  const { i18n } = useTranslation('categories')
+  const { t, i18n } = useTranslation('categories')
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
   const isEs = lang === 'es'
 
@@ -630,7 +630,7 @@ export default function CategoriesIndex() {
                       <span style={{ color: SECTOR_TEXT_COLORS[saldo.riskiest.sector_code] ?? 'var(--color-text-primary)', fontWeight: 600 }}>
                         {saldo.riskiest.name_en}
                       </span>{' '}
-                      posts a <SaldoNum>{Math.round(saldo.riskiest.avg_risk * 100)}</SaldoNum>-of-100 risk indicator,{' '}
+                      carries a risk indicator of <SaldoNum>{Math.round(saldo.riskiest.avg_risk * 100)}</SaldoNum> out of 100,{' '}
                       {saldo.ratio.toFixed(1)}× the inventory average.
                     </>
                   )}
@@ -846,7 +846,7 @@ export default function CategoriesIndex() {
                   className="font-mono uppercase tracking-wide transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                   style={{ fontSize: 13, letterSpacing: '0.1em', color: 'var(--color-accent)' }}
                 >
-                  {isEs ? 'Abrir la cola ARIA →' : 'Open the ARIA queue →'}
+                  {isEs ? 'Ver la' : 'Open the'} {t('nav:ariaQueue')} →
                 </Link>
                 <div className="flex items-center flex-wrap gap-2">
                   {codaRiskiest && (
