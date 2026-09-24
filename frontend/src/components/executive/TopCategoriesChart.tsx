@@ -215,7 +215,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                       variant="name"
                       fullName
                       size="md"
-                      className="leading-[1.15] text-balance hover:underline underline-offset-2"
+                      className="inline-flex items-center min-h-6 leading-[1.15] text-balance hover:underline underline-offset-2"
                       style={nameStyle}
                     />
                   ) : (

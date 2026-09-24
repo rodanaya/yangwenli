@@ -190,7 +190,7 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
                     <rect x={x - BAR_W / 2} y={AXIS_Y - h + h * 0.4} width={BAR_W} height={h * 0.6} fill={color} opacity={isCrit ? 0.55 : 0.35} rx={2} />
                     <rect x={x - BAR_W / 2} y={AXIS_Y - h} width={BAR_W} height={3} fill={color} opacity={isCrit ? 0.95 : 0.7} rx={1} />
                     <circle cx={x} cy={AXIS_Y} r={2.5} fill={color} opacity={0.6} />
-                    <title>{c.label[lang]} ({c.year}) — {c.severity}</title>
+                    <title>{c.label[lang]} ({c.year}) — {lang === 'en' ? c.severity : (isCrit ? 'crítico' : 'alto')}</title>
                   </g>
                 )
               })}

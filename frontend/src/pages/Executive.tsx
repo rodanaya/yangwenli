@@ -297,7 +297,7 @@ export default function Executive() {
   // English-only USD companion — surfaces foreign-reader scale alongside MXN.
   // Spanish stays MXN-only (Mexican audience reads pesos natively).
   const headlineSpendUSD = lang === 'en' ? `≈${formatCompactUSD(TOTAL_SPEND_MXN)}` : null
-  const wireDate = new Intl.DateTimeFormat(lang === 'es' ? 'es-MX' : 'en-US', { dateStyle: 'medium' })
+  const wireDate = useMemo(() => new Intl.DateTimeFormat(lang === 'es' ? 'es-MX' : 'en-US', { dateStyle: 'medium' }), [lang])
   // Per-tile descriptors below are inlined into the editorial cards JSX
   // so they can each have a distinctive micro-visualization and layout.
 
@@ -717,7 +717,7 @@ export default function Executive() {
                       42
                     </span>
                     <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.06em] text-center leading-[1.25]">
-                      SAT<br />official
+                      SAT<br />{lang === 'en' ? 'official' : 'oficial'}
                     </span>
                   </div>
 
@@ -729,7 +729,7 @@ export default function Executive() {
                     <span className="font-mono font-bold text-[15px] leading-none" style={{ color: RISK_TEXT_COLORS.critical }}>
                       145×
                     </span>
-                    <span className="text-[11px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
+                    <span className="text-[11px] font-mono text-text-muted mt-0.5 leading-none">{lang === 'en' ? 'gap' : 'brecha'}</span>
                   </div>
 
                   {/* Right panel: RUBLI detection — large, dramatic, animated */}
@@ -824,7 +824,7 @@ export default function Executive() {
                       5%
                     </span>
                     <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.06em] text-center leading-[1.25]">
-                      ASF<br />audits
+                      ASF<br />{lang === 'en' ? 'audits' : 'auditorías'}
                     </span>
                   </div>
 
@@ -836,7 +836,7 @@ export default function Executive() {
                     <span className="font-mono font-bold text-[15px] leading-none" style={{ color: RISK_TEXT_COLORS.high }}>
                       19×
                     </span>
-                    <span className="text-[11px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
+                    <span className="text-[11px] font-mono text-text-muted mt-0.5 leading-none">{lang === 'en' ? 'gap' : 'brecha'}</span>
                   </div>
 
                   {/* Right: massive value-at-risk panel */}
