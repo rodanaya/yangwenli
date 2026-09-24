@@ -15248,3 +15248,36 @@ Network policy blocks all outbound HTTPS to rubli.xyz (eighth consecutive blocke
 
 ### Overall: WARN
 **Recurring blocker**: HTTP and API checks unverifiable — blocked by egress proxy on rubli.xyz:443 (every run). Bilingual gap scan: **PASS**. **Action needed**: allowlist rubli.xyz in the remote session network policy, or move HTTP/API health checks to a GitHub Actions scheduled workflow with direct egress.
+
+---
+## Visual Review — 2026-09-24T12:25:17Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/atlas | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/aria | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/sectors | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/sectors/salud | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/cases | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/methodology | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (proxy rejected) | ✗ |
+
+**Reason**: Egress proxy `connect_rejected` — organization policy blocks outbound HTTPS to rubli.xyz:443. Recurring blocker across all scheduled runs; not a site-down event.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (same egress policy) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | ✗ |
+| /api/v1/sectors | BLOCKED | ✗ |
+
+### Bilingual Gaps
+- **Raw i18n key leaks**: None detected — grep hits are TypeScript comments, data-constant property accesses (`PATTERN_CHIP.P5`, `TIER_STYLES.Excelente`), bibliographic strings, corporate abbreviations (S.A., C.V.), and properly-guarded `isEs ? '...' : '...'` ternaries
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+
+### Overall: WARN
+**Recurring blocker**: HTTP and API checks unverifiable — blocked by egress proxy on rubli.xyz:443 (every run). Bilingual gap scan: **PASS**. **Action needed**: allowlist rubli.xyz in the remote session network policy, or move HTTP/API health checks to a GitHub Actions scheduled workflow with direct egress.
