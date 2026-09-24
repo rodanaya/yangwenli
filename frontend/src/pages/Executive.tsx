@@ -15,7 +15,7 @@
  * All data blocks load from one bundled request (useExecutiveData).
  */
 
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueryState, parseAsStringLiteral } from 'nuqs'
 import { useNavigate, Link } from 'react-router-dom'
@@ -23,13 +23,14 @@ import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
-import { SECTOR_COLORS, RISK_COLORS, RISK_TEXT_COLORS, getSectorTextColor, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, RISK_INK_ON_PLATE, RISK_TEXT_COLORS, getSectorTextColor, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { type ConstellationMode } from '@/components/charts/ConcentrationConstellation'
 import { ObservatoryScatter } from '@/components/atlas/ObservatoryScatter'
 import { useScatterClusters } from '@/lib/atlas/useScatterClusters'
 import { useExecutiveData } from '@/hooks/useExecutiveData'
+import { useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 import { MacroArc } from '@/components/dashboard/MacroArc'
 import { CaseTimeline } from '@/components/executive/CaseTimeline'
 import { LeadTimeChart } from '@/components/executive/LeadTimeChart'
@@ -41,6 +42,102 @@ import { CaptureLeaders } from '@/components/executive/CaptureLeaders'
 const MotionLink = motion.create(Link)
 
 const ATLAS_LENSES = ['patterns', 'sectors', 'categories', 'sexenios'] as const satisfies readonly ConstellationMode[]
+
+// FINDING 03's schematic histogram (PARALLAX D10 § Change 2): measured to its
+// card and drawn at 1:1 — 13 bars, the red dashed threshold; the glyphs are
+// HTML at ≥ 11px. Bar heights are illustrative (the caption says so).
+const HIST_PRE = [22, 24, 27, 30, 34, 40, 50, 64, 80] // ramp to a peak just below the legal limit
+const HIST_POST = [30, 28, 32, 30] // after the threshold: the normal market rate
+function ThresholdHistogram({ lang }: { lang: 'en' | 'es' }) {
+  const box = useRef<HTMLDivElement>(null)
+  const W = useMeasuredWidth(box)
+  const H = 96
+  const Y_BASE = 92
+  const X0 = 4
+  const n = HIST_PRE.length + HIST_POST.length
+  // 18:3 bar:gap rhythm, one 18-unit gap at the threshold, stretched to fit.
+  const unit = Math.max(0, W - X0 * 2) / (n * 21 + 18)
+  const BAR_W = 18 * unit
+  const GAP = 3 * unit
+  const THRESH_GAP = 18 * unit
+  const preX = (i: number) => X0 + i * (BAR_W + GAP)
+  const postX = (i: number) => X0 + HIST_PRE.length * (BAR_W + GAP) + THRESH_GAP + i * (BAR_W + GAP)
+  const threshX = X0 + HIST_PRE.length * (BAR_W + GAP) + THRESH_GAP / 2
+  const violetInk = getSectorTextColor('tecnologia')
+  return (
+    <div ref={box} className="relative" style={{ height: H + 18 }}>
+      {W > 0 && (
+        <>
+          <svg data-figure="histogram" width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }} aria-hidden>
+            <line x1={0} x2={W} y1={Y_BASE} y2={Y_BASE} stroke="var(--color-border)" strokeWidth={0.8} />
+            {HIST_PRE.map((h, i) => (
+              <motion.rect
+                key={`pre-${i}`}
+                x={preX(i)}
+                width={BAR_W}
+                rx={1}
+                fill={i >= HIST_PRE.length - 3 ? '#8b5cf6' : 'rgba(139,92,246,0.30)'}
+                initial={{ y: Y_BASE, height: 0 }}
+                whileInView={{ y: Y_BASE - h, height: h }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 + i * 0.05, ease: 'easeOut' }}
+              />
+            ))}
+            <motion.line
+              x1={threshX}
+              x2={threshX}
+              y1={4}
+              y2={Y_BASE}
+              stroke="#dc2626"
+              strokeWidth={1.4}
+              strokeDasharray="3 3"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 0.85 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.85 }}
+            />
+            {HIST_POST.map((h, i) => (
+              <motion.rect
+                key={`post-${i}`}
+                x={postX(i)}
+                width={BAR_W}
+                rx={1}
+                fill="rgba(100,116,139,0.32)"
+                initial={{ y: Y_BASE, height: 0 }}
+                whileInView={{ y: Y_BASE - h, height: h }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.7 + i * 0.05, ease: 'easeOut' }}
+              />
+            ))}
+          </svg>
+          {/* ── HTML glyphs ── */}
+          <div
+            className="absolute whitespace-nowrap font-mono text-[11px] font-bold leading-[14px]"
+            style={{ top: 2, color: RISK_TEXT_COLORS.critical, ...(W - threshX > 120 ? { left: threshX + 5 } : { right: W - threshX + 5 }) }}
+          >
+            {lang === 'en' ? 'TENDER THRESHOLD' : 'UMBRAL LICITACIÓN'}
+          </div>
+          <div
+            className="absolute whitespace-nowrap font-mono text-[13px] font-bold leading-[16px]"
+            style={{ right: W - (preX(HIST_PRE.length - 3) - 4), top: 20, color: violetInk }}
+          >
+            ↘ 75% DA
+          </div>
+          <div
+            className="absolute whitespace-nowrap font-mono text-[13px] font-bold leading-[16px] text-text-muted"
+            style={{ left: postX(0), top: Y_BASE - 34 - 18 }}
+          >
+            ~28% DA
+          </div>
+          <div className="absolute inset-x-0 flex justify-between font-mono text-[11px] text-text-muted leading-[14px]" style={{ top: H + 2 }}>
+            <span>{lang === 'en' ? '← smaller contracts' : '← contratos menores'}</span>
+            <span>{lang === 'en' ? 'larger →' : 'mayores →'}</span>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 export default function Executive() {
   const { i18n } = useTranslation()
@@ -422,7 +519,7 @@ export default function Executive() {
                     onClick={() => setAtlasMode(m.id)}
                     className="px-3 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
                     style={{
-                      background: isActive ? '#a06820' : 'transparent',
+                      background: isActive ? 'var(--color-accent-hover)' : 'transparent',
                       color: isActive ? 'var(--color-background)' : 'var(--color-text-muted)',
                       borderRight: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
                       fontWeight: isActive ? 700 : 500,
@@ -608,7 +705,7 @@ export default function Executive() {
                     >
                       42
                     </span>
-                    <span className="text-[7px] font-mono text-text-muted uppercase tracking-[0.06em] text-center leading-[1.25]">
+                    <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.06em] text-center leading-[1.25]">
                       SAT<br />official
                     </span>
                   </div>
@@ -621,7 +718,7 @@ export default function Executive() {
                     <span className="font-mono font-bold text-[15px] leading-none" style={{ color: RISK_TEXT_COLORS.critical }}>
                       145×
                     </span>
-                    <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
+                    <span className="text-[11px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
                   </div>
 
                   {/* Right panel: RUBLI detection — large, dramatic, animated */}
@@ -652,7 +749,7 @@ export default function Executive() {
                         6,118
                       </span>
                       <span
-                        className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1"
+                        className="text-[11px] font-mono uppercase tracking-[0.1em] mt-1"
                         style={{ color: RISK_TEXT_COLORS.critical }}
                       >
                         {lang === 'en' ? 'RUBLI detected' : 'RUBLI detectó'}
@@ -715,7 +812,7 @@ export default function Executive() {
                     >
                       5%
                     </span>
-                    <span className="text-[7px] font-mono text-text-muted uppercase tracking-[0.06em] text-center leading-[1.25]">
+                    <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.06em] text-center leading-[1.25]">
                       ASF<br />audits
                     </span>
                   </div>
@@ -728,7 +825,7 @@ export default function Executive() {
                     <span className="font-mono font-bold text-[15px] leading-none" style={{ color: RISK_TEXT_COLORS.high }}>
                       19×
                     </span>
-                    <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
+                    <span className="text-[11px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
                   </div>
 
                   {/* Right: massive value-at-risk panel */}
@@ -750,13 +847,13 @@ export default function Executive() {
                       transition={{ duration: 0.35, delay: 0.92 }}
                     >
                       <span
-                        className={`font-mono font-bold leading-none tabular-nums ${lang === 'en' ? 'text-[36px]' : 'text-[28px]'}`}
+                        className={`font-mono font-bold leading-none tabular-nums ${lang === 'en' ? 'text-[28px] sm:text-[36px]' : 'text-[22px] sm:text-[28px]'}`}
                         style={{ color: RISK_TEXT_COLORS.high }}
                       >
                         {lang === 'en' ? 'MX$1.25T' : 'MX$1.25 billones'}
                       </span>
                       <span
-                        className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1.5"
+                        className="text-[11px] font-mono uppercase tracking-[0.1em] mt-1.5"
                         style={{ color: RISK_TEXT_COLORS.high }}
                       >
                         {lang === 'en' ? '95% never audited' : '95% sin auditar'}
@@ -802,146 +899,8 @@ export default function Executive() {
               </div>
               {/* Threshold-bunching histogram — the statistical fingerprint */}
               <div className="mb-4">
-                {(() => {
-                  // Bars before threshold ramp toward a peak just below the legal limit
-                  const PRE = [22, 24, 27, 30, 34, 40, 50, 64, 80]
-                  // Bars after threshold drop sharply to normal market rate
-                  const POST = [30, 28, 32, 30]
-                  const BAR_W = 18
-                  const GAP = 3
-                  const X0 = 6
-                  const THRESH_GAP = 18
-                  const Y_BASE = 92
-                  const threshX = X0 + PRE.length * (BAR_W + GAP) + 7
-                  return (
-                    <svg viewBox="0 0 320 110" className="w-full" style={{ height: 110 }} aria-hidden>
-                      {/* Y baseline */}
-                      <line x1={4} x2={316} y1={Y_BASE} y2={Y_BASE} stroke="var(--color-border)" strokeWidth={0.8} />
-
-                      {/* Pre-threshold bars: full violet at the spike, faded for normal */}
-                      {PRE.map((h, i) => {
-                        const x = X0 + i * (BAR_W + GAP)
-                        const isPeak = i >= PRE.length - 3
-                        return (
-                          <motion.rect
-                            key={`pre-${i}`}
-                            x={x}
-                            width={BAR_W}
-                            rx={1}
-                            fill={isPeak ? '#8b5cf6' : 'rgba(139,92,246,0.30)'}
-                            initial={{ y: Y_BASE, height: 0 }}
-                            whileInView={{ y: Y_BASE - h, height: h }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.2 + i * 0.05, ease: 'easeOut' }}
-                          />
-                        )
-                      })}
-
-                      {/* Threshold line — vertical red dashed */}
-                      <motion.line
-                        x1={threshX}
-                        x2={threshX}
-                        y1={4}
-                        y2={Y_BASE}
-                        stroke="#dc2626"
-                        strokeWidth={1.4}
-                        strokeDasharray="3 3"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 0.85 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.85 }}
-                      />
-
-                      {/* Threshold label */}
-                      <motion.text
-                        x={threshX + 4}
-                        y={11}
-                        fontSize={8}
-                        fill="#dc2626"
-                        fontFamily="var(--font-family-mono, monospace)"
-                        fontWeight="700"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.3, delay: 1.05 }}
-                      >
-                        {lang === 'en' ? 'TENDER THRESHOLD' : 'UMBRAL LICITACIÓN'}
-                      </motion.text>
-
-                      {/* Post-threshold bars: muted gray = normal market */}
-                      {POST.map((h, i) => {
-                        const x = X0 + PRE.length * (BAR_W + GAP) + THRESH_GAP + i * (BAR_W + GAP)
-                        return (
-                          <motion.rect
-                            key={`post-${i}`}
-                            x={x}
-                            width={BAR_W}
-                            rx={1}
-                            fill="rgba(100,116,139,0.32)"
-                            initial={{ y: Y_BASE, height: 0 }}
-                            whileInView={{ y: Y_BASE - h, height: h }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.7 + i * 0.05, ease: 'easeOut' }}
-                          />
-                        )
-                      })}
-
-                      {/* Spike annotation (over the peak) */}
-                      <motion.text
-                        x={X0 + (PRE.length - 2) * (BAR_W + GAP) - 28}
-                        y={20}
-                        fontSize={13}
-                        fontWeight="700"
-                        fill="#8b5cf6"
-                        fontFamily="var(--font-family-mono, monospace)"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: 1.1 }}
-                      >
-                        ↘ 75% DA
-                      </motion.text>
-
-                      {/* Post-threshold annotation */}
-                      <motion.text
-                        x={threshX + THRESH_GAP + 26}
-                        y={56}
-                        fontSize={13}
-                        fontWeight="700"
-                        fill="var(--color-text-muted)"
-                        fontFamily="var(--font-family-mono, monospace)"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: 1.2 }}
-                      >
-                        ~28% DA
-                      </motion.text>
-
-                      {/* X-axis caption */}
-                      <text
-                        x={4}
-                        y={106}
-                        fontSize={7}
-                        fill="var(--color-text-muted)"
-                        fontFamily="var(--font-family-mono, monospace)"
-                      >
-                        {lang === 'en' ? '← smaller contracts' : '← contratos menores'}
-                      </text>
-                      <text
-                        x={316}
-                        y={106}
-                        fontSize={7}
-                        fill="var(--color-text-muted)"
-                        fontFamily="var(--font-family-mono, monospace)"
-                        textAnchor="end"
-                      >
-                        {lang === 'en' ? 'larger →' : 'mayores →'}
-                      </text>
-                    </svg>
-                  )
-                })()}
-                <div className="text-[8px] font-mono text-text-muted leading-[1.4] mt-1">
+                <ThresholdHistogram lang={lang} />
+                <div className="text-[11px] font-mono text-text-muted leading-[1.45] mt-1">
                   {lang === 'en'
                     ? 'Schematic — bar heights are illustrative, not measured counts. The pattern: a spike just below the tender threshold.'
                     : 'Esquema — las alturas son ilustrativas, no conteos medidos. El patrón: un pico justo bajo el umbral de licitación.'}
@@ -1127,8 +1086,8 @@ export default function Executive() {
               // Type twin of rungColors (the bars keep RISK_COLORS as marks).
               const rungInks = [
                 RISK_TEXT_COLORS.low,
-                RISK_TEXT_COLORS.medium,
-                RISK_TEXT_COLORS.high,
+                RISK_INK_ON_PLATE.medium, // the ledger sits on the plate paper
+                RISK_INK_ON_PLATE.high,
                 RISK_TEXT_COLORS.critical,
               ]
               const rungColors = [
@@ -1540,7 +1499,6 @@ export default function Executive() {
                   type="vendor"
                   id={codaChips.vendor.id}
                   name={codaChips.vendor.name}
-                  riskScore={codaChips.vendor.riskScore}
                   size="md"
                 />
               )}
@@ -1549,7 +1507,6 @@ export default function Executive() {
                   type="vendor"
                   id={codaChips.wireVendor.id}
                   name={codaChips.wireVendor.name}
-                  riskScore={codaChips.wireVendor.riskScore}
                   size="md"
                 />
               )}
@@ -1560,7 +1517,7 @@ export default function Executive() {
         {/* ─── Credibility colophon — one colophon (PARALLAX D10 § Change 6):
             a paragraph inside main; the shell colophon is the page's only
             <footer>. ─── */}
-        <div className="pt-8 border-t border-border font-mono text-[13px] text-text-muted leading-[1.6]">
+        <div data-colophon className="pt-8 border-t border-border font-mono text-[13px] text-text-muted leading-[1.6]">
           <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <Shield className="h-3 w-3" aria-hidden="true" />
             <span>AUC 0.785</span>

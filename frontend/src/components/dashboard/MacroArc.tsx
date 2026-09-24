@@ -1,32 +1,26 @@
 /**
- * MacroArc — 23-year direct-award rate trend
+ * MacroArc — the direct-award rate trend, 2010–2025 (Folio·III).
  *
- * Restored 2026-05-05 to a clean full-width FT-style time-series chart.
- * The omega-C-P3 "giant 74% + tiny sparkline" layout was reverted because
- * DashboardSledgehammer (rendered earlier on the page) ALREADY shows the
- * 74% headline number — having it twice on the same scroll was a clear
- * regression. MacroArc's job is to confirm the headline with the trend,
- * not duplicate it.
+ * Mexico's DA-rate line in crimson over an area fill, the EU scoreboard 10 %
+ * reference as a dashed cyan line, admin wash bands behind the line with
+ * their labels above the plot, four FT-style callouts (Casa Blanca · Estafa
+ * Maestra · COVID · Peak year) on leader lines below the line.
  *
- * Layout: full-width 820×260 SVG. Mexico DA-rate line in crimson.
- * EU scoreboard 10% reference dashed cyan + right-edge label. Admin wash bands
- * behind the line with mono labels at the top. 4 FT-style callout boxes
- * with leader lines (Casa Blanca · Estafa Maestra · COVID · Toka IT).
- *
- * Plan: docs/OMEGA_C_REGRESSIONS_2026_05_05.md fix #1 + #2
+ * PARALLAX D10 § Change 2 — "HTML owns glyphs, SVG owns geometry": the
+ * plate measures its own width (useMeasuredWidth) and draws at 1:1; every
+ * glyph (ticks, era labels, edge labels, callouts, the hover value) is an
+ * absolutely positioned HTML label, measured with measureLabel and seated
+ * with placeLabels. Marks (bands, line, area, dots, leaders, box frames)
+ * stay in the svg.
  */
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useYearOverYear } from '@/components/stories/live/useEmergencyData'
 import { RISK_TEXT_COLORS } from '@/lib/constants'
 import { ADMINISTRATIONS, ADMIN_DISPLAY_ACCENTED, type AdministrationKey } from '@/lib/administrations'
-
-// Per-year direct-award rates come from /analysis/year-over-year. The hardcoded
-// 2002-2025 series this component used to carry read 58-73% for 2002-2009 and
-// 87% for 2020; the register codes procedure type only from 2010 (Structure A
-// reads 0.0%) and 2020 closes at 78.09%. Years the register cannot score are
-// dropped rather than drawn.
+import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
+import { measureLabel, placeLabels, type LabelBox } from '@/lib/plateLabels'
 
 // Structure B (2010) is the first COMPRANET structure that codes the
 // procedure type; Structure A (2002–2009) reads 0.0–0.05 %, which drawn as a
@@ -43,17 +37,26 @@ const ERA_HUE: Record<AdministrationKey, string> = {
   amlo: '#7b2d8b',
   sheinbaum: '#7b2d8b',
 }
+// Initials when a phone cannot seat the full term name.
+const ERA_SHORT: Record<AdministrationKey, string> = {
+  fox: 'F', calderon: 'C', epn: 'EPN', amlo: 'AMLO', sheinbaum: 'S',
+}
 
-// FT-style annotation callouts BELOW the data line. Stagger pattern is
-// HIGH/LOW/HIGH/LOW (zigzag) so adjacent callouts in years can't share Y space.
-// Labels also tightened to short phrases — long names ('COVID emergency
-// procurement') were 160px wide and crashed into Estafa Maestra's box.
+// FT-style annotation callouts BELOW the data line, zigzag depths so
+// adjacent callouts cannot share Y space.
 const CALLOUTS: Array<{ year: number; en: string; es: string; dy: number }> = [
   { year: 2014, en: 'Casa Blanca',         es: 'Casa Blanca',         dy: 60 },
   { year: 2017, en: 'Estafa Maestra',      es: 'Estafa Maestra',      dy: 110 },
   { year: 2020, en: 'COVID emergency',     es: 'Emergencia COVID',    dy: 60 },
   { year: 2023, en: 'Peak year',           es: 'Año pico',            dy: 110 },
 ]
+
+const MONO = '"JetBrains Mono", monospace'
+const SERIF = "'Playfair Display', Georgia, serif"
+const H_WIDE = 260
+const H_NARROW = 300 // phones: a deeper plot so the callouts find a depth
+const PAD_T = 36 // era labels above the plot
+const PAD_B = 32 // x ticks
 
 interface Props {
   lang: 'en' | 'es'
@@ -63,20 +66,21 @@ export function MacroArc({ lang }: Props) {
   const [hoverYear, setHoverYear] = useState<number | null>(null)
   const isEs = lang === 'es'
   const yoy = useYearOverYear()
+  const plate = useRef<HTMLDivElement>(null)
+  const W = useMeasuredWidth(plate)
+  const narrow = W > 0 && W < 560
+  const H = narrow ? H_NARROW : H_WIDE
+  const FS = narrow ? 11 : 13
+  const TICK_FONT = `${FS}px ${MONO}`
+  const EDGE_FONT = `700 ${narrow ? 11 : 12}px ${MONO}`
+  const CALLOUT_FONT = `600 ${narrow ? 11 : 13}px ${MONO}`
+  const COVID_FONT = `700 ${narrow ? 12 : 13}px ${SERIF}`
+  const fontsReady = useFontsReady([TICK_FONT, EDGE_FONT, CALLOUT_FONT, COVID_FONT])
+
   const series = (yoy.data ?? [])
     .filter((d) => d.year >= DA_SERIES_FLOOR && d.direct_award_pct > 0)
     .map((d) => ({ year: d.year, da: d.direct_award_pct }))
     .sort((a, b) => a.year - b.year)
-
-  // Layout
-  const W = 820
-  const H = 260
-  const PAD_L = 50    // y-axis ticks
-  const PAD_R = 90    // right-edge labels
-  const PAD_T = 36    // admin band labels at top
-  const PAD_B = 32    // x-axis labels
-  const CW = W - PAD_L - PAD_R
-  const CH = H - PAD_T - PAD_B
 
   const Y_MIN_YR = series.length ? series[0].year : DA_SERIES_FLOOR
   const Y_MAX_YR = series.length ? series[series.length - 1].year : 2025
@@ -84,338 +88,376 @@ export function MacroArc({ lang }: Props) {
   // European Commission, Single Market Scoreboard: a direct-award share at or
   // above 10% is rated unsatisfactory. External reference, not a RUBLI measure.
   const EU_LINE = 10
+  const last = series[series.length - 1]
+  // Phones print the value alone (the red line is the only series).
+  const mexicoLabel = last ? (narrow ? `${last.da.toFixed(1)}%` : `${isEs ? 'México' : 'Mexico'} · ${last.da.toFixed(1)}%`) : ''
+  const euLabel = isEs ? `UE ${EU_LINE}%` : `EU ${EU_LINE}%`
 
-  const xOf = (year: number) =>
-    PAD_L + ((year - Y_MIN_YR) / Math.max(1, Y_MAX_YR - Y_MIN_YR)) * CW
+  // Canvas-measured in the real faces; the plate draws only once they landed.
+  const measure = (text: string, font: string, lh = FS + 4) => measureLabel(text, font, 999, lh)
+  const yTickW = measure('100%', TICK_FONT).width
+  const PAD_L = Math.ceil(yTickW) + 10
+  const edgeW = Math.max(measure(mexicoLabel, EDGE_FONT).width, measure(euLabel, EDGE_FONT).width)
+  // Desktop: the edge labels sit in a right margin; phones print them inside
+  // the plot (right-aligned) so the line keeps the width.
+  const PAD_R = narrow ? 12 : Math.ceil(edgeW) + 16
+  const CW = Math.max(1, W - PAD_L - PAD_R)
+  const CH = H - PAD_T - PAD_B
+
+  const xOf = (year: number) => PAD_L + ((year - Y_MIN_YR) / Math.max(1, Y_MAX_YR - Y_MIN_YR)) * CW
   const yOf = (pct: number) => PAD_T + CH * (1 - pct / Y_MAX_PCT)
   const EU_Y = yOf(EU_LINE)
   const AXIS_Y = PAD_T + CH
-
-  const linePath = series
-    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xOf(d.year).toFixed(2)} ${yOf(d.da).toFixed(2)}`)
-    .join(' ')
-
-  const areaPath = `${linePath} L ${xOf(Y_MAX_YR).toFixed(2)} ${AXIS_Y} L ${xOf(Y_MIN_YR).toFixed(2)} ${AXIS_Y} Z`
 
   // Bands clipped to the drawn window (Calderón → 2010–12; Fox leaves).
   const eraBands = ADMINISTRATIONS
     .filter((a) => a.yearEnd >= Y_MIN_YR && a.yearStart <= Y_MAX_YR)
     .map((a) => ({
+      key: a.key,
       label: ADMIN_DISPLAY_ACCENTED[a.key].toUpperCase(),
       start: Math.max(a.yearStart, Y_MIN_YR),
       end: Math.min(a.yearEnd, Y_MAX_YR),
       color: ERA_HUE[a.key],
     }))
+    .map((b) => {
+      const x1 = xOf(b.start)
+      const x2 = b.end > b.start ? xOf(b.end) : Math.min(x1 + 16, PAD_L + CW)
+      return { ...b, x1, x2 }
+    })
 
-  const yTicks = [0, 25, 50, 75, 100]
-  const xTicks = series
-    .map((d) => d.year)
-    .filter((y, i, a) => i === 0 || i === a.length - 1 || y % 4 === 0)
-
+  // The measured plate div stays mounted through loading (useMeasuredWidth
+  // attaches its observer once, on mount).
   if (yoy.isLoading || yoy.isError || !series.length) {
     return (
-      <p className="font-mono text-[12.5px] text-text-muted py-8">
-        {yoy.isLoading
-          ? (isEs ? 'Cargando la serie anual…' : 'Loading the annual series…')
-          : (isEs
-            ? 'La serie anual de adjudicación directa no cargó. No se dibuja nada en su lugar.'
-            : 'The annual direct-award series did not load. Nothing is drawn in its place.')}
-      </p>
+      <div ref={plate} className="w-full">
+        <p className="font-mono text-[12.5px] text-text-muted py-8">
+          {yoy.isLoading
+            ? (isEs ? 'Cargando la serie anual…' : 'Loading the annual series…')
+            : (isEs
+              ? 'La serie anual de adjudicación directa no cargó. No se dibuja nada en su lugar.'
+              : 'The annual direct-award series did not load. Nothing is drawn in its place.')}
+        </p>
+      </div>
     )
   }
 
-  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const svgX = ((e.clientX - rect.left) / rect.width) * W
-    const rawYear = Y_MIN_YR + ((svgX - PAD_L) / CW) * (Y_MAX_YR - Y_MIN_YR)
-    const year = Math.round(Math.max(Y_MIN_YR, Math.min(Y_MAX_YR, rawYear)))
-    setHoverYear(year)
+  const linePath = series
+    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xOf(d.year).toFixed(2)} ${yOf(d.da).toFixed(2)}`)
+    .join(' ')
+  const areaPath = `${linePath} L ${xOf(Y_MAX_YR).toFixed(2)} ${AXIS_Y} L ${xOf(Y_MIN_YR).toFixed(2)} ${AXIS_Y} Z`
+
+  const yTicks = [0, 25, 50, 75, 100]
+
+  // X ticks: desktop = first, last and every fourth year; phones = the band
+  // starts + the data horizon (the Day 8 seam pattern). Kept right-to-left
+  // while a label width apart, so the horizon wins over its neighbour.
+  const tickCandidates = narrow
+    ? [...new Set([...eraBands.map((b) => b.start), Y_MAX_YR])]
+    : series.map((d) => d.year).filter((y, i, a) => i === 0 || i === a.length - 1 || y % 4 === 0)
+  const tickW = measure('2025', TICK_FONT).width + 8
+  const xTicks: number[] = []
+  for (const yr of [...tickCandidates].sort((a, b) => b - a)) {
+    if (!xTicks.length || xOf(xTicks[xTicks.length - 1]) - xOf(yr) >= tickW) xTicks.push(yr)
   }
 
+  // Era labels — a mono row above the plot, full names first, initials when a
+  // name cannot be seated.
+  const ERA_FS = narrow ? 11 : 13
+  const ERA_FONT = `700 ${ERA_FS}px ${MONO}`
+  const eraTrack = narrow ? 0 : 0.08
+  const eraBounds: LabelBox = { x0: 0, y0: 0, x1: W, y1: PAD_T }
+  const eraPlaced = new Map<string, { text: string; left: number }>()
+  {
+    const taken: LabelBox[] = []
+    for (const b of eraBands) {
+      for (const text of [b.label, ERA_SHORT[b.key]]) {
+        const w = measure(text, ERA_FONT).width + text.length * ERA_FS * eraTrack
+        const cx = (b.x1 + b.x2) / 2
+        const [p] = placeLabels([{ id: b.key, x: cx, y: PAD_T - 4, width: w, height: ERA_FS + 4, above: 6 }], taken, eraBounds)
+        if (p) {
+          taken.push(p.box)
+          eraPlaced.set(b.key, { text, left: p.box.x0 })
+          break
+        }
+      }
+    }
+  }
+
+  // Edge labels (Mexico · %, EU 10%).
+  const lastX = xOf(last.year)
+  const lastY = yOf(last.da)
+  const edgeH = (narrow ? 11 : 12) + 4
+  const mexicoW = measure(mexicoLabel, EDGE_FONT).width
+  const euW = measure(euLabel, EDGE_FONT).width
+  // Phones print both edge labels inside the plot, right-aligned below their
+  // line (the value under its last point, EU under the dashed line).
+  const mexicoPos = narrow
+    ? { left: Math.max(PAD_L, lastX - mexicoW), top: lastY + 8 }
+    : { left: lastX + 6, top: lastY - edgeH / 2 }
+  const euPos = narrow
+    ? { left: PAD_L + CW - euW, top: EU_Y + 2 }
+    : { left: PAD_L + CW + 6, top: EU_Y - edgeH / 2 }
+
+  // Callouts — below the line at their zigzag depth; a box that would collide
+  // or leave the plot is dropped rather than overprinted.
+  const calloutObstacles: LabelBox[] = narrow
+    ? [{ x0: mexicoPos.left, y0: mexicoPos.top, x1: mexicoPos.left + mexicoW, y1: mexicoPos.top + edgeH },
+       { x0: euPos.left, y0: euPos.top, x1: euPos.left + euW, y1: euPos.top + edgeH },
+       // a box never sits on the EU reference line
+       { x0: PAD_L, y0: EU_Y - 1, x1: PAD_L + CW, y1: EU_Y + 1 }]
+    : []
+  // Priority: the COVID pull-out first; each box may fall back to the other
+  // zigzag depth before it is dropped.
+  const PRIORITY = [2020, 2017, 2014, 2023]
+  const calloutCands = [...CALLOUTS].sort((a, b) => PRIORITY.indexOf(a.year) - PRIORITY.indexOf(b.year)).flatMap((c) => {
+    const pt = series.find((d) => d.year === c.year)
+    if (!pt) return []
+    const isCovid = c.year === 2020
+    const label = isEs ? c.es : c.en
+    const font = isCovid ? COVID_FONT : CALLOUT_FONT
+    const padX = isCovid ? 12 : 7
+    const boxH = isCovid ? 24 : 18
+    const w = measure(label, font).width + padX * 2
+    const cx = xOf(c.year)
+    const cy = yOf(pt.da)
+    const altDy = c.dy === 60 ? 110 : 60
+    return [{ id: c.year, x: cx, y: cy, width: w, height: boxH, above: -c.dy - boxH, below: altDy, label, isCovid, cy }]
+  })
+  const calloutBounds: LabelBox = { x0: PAD_L + 2, y0: PAD_T, x1: PAD_L + CW - 2, y1: AXIS_Y + 0.5 }
+  // Seat each box at its depth, then the other depth; centred, then flush
+  // left/right of its year. A box is refused when it leaves the plot, meets
+  // another box or label, or when its leader crosses one (or an earlier
+  // leader crosses it) — dropped rather than overprinted.
+  const hit = (a: LabelBox, b: LabelBox) => !(a.x1 <= b.x0 || a.x0 >= b.x1 || a.y1 <= b.y0 || a.y0 >= b.y1)
+  const leaderHits = (x1: number, y1: number, x2: number, y2: number, b: LabelBox) => {
+    for (let t = 0; t <= 1; t += 0.04) {
+      const x = x1 + (x2 - x1) * t
+      const y = y1 + (y2 - y1) * t
+      if (x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1) return true
+    }
+    return false
+  }
+  const placedCallouts: Array<{ id: number; box: LabelBox }> = []
+  {
+    const taken: LabelBox[] = [...calloutObstacles]
+    const leaders: Array<[number, number, number, number]> = []
+    for (const c of calloutCands) {
+      let seat: LabelBox | null = null
+      for (const top of [c.cy - c.above - c.height, c.cy + c.below]) {
+        for (const x0 of [c.x - c.width / 2, c.x - 8, c.x - c.width + 8]) {
+          const box = { x0, y0: top, x1: x0 + c.width, y1: top + c.height }
+          const inside = box.x0 >= calloutBounds.x0 && box.x1 <= calloutBounds.x1 && box.y0 >= calloutBounds.y0 && box.y1 <= calloutBounds.y1
+          if (!inside || taken.some((t) => hit(box, t))) continue
+          const lead: [number, number, number, number] = [c.x, c.cy + 2, (box.x0 + box.x1) / 2, box.y0]
+          if (taken.some((t) => leaderHits(...lead, t)) || leaders.some((l) => leaderHits(...l, box))) continue
+          seat = box
+          leaders.push(lead)
+          break
+        }
+        if (seat) break
+      }
+      if (seat) {
+        taken.push(seat)
+        placedCallouts.push({ id: c.id, box: seat })
+      }
+    }
+  }
+  const calloutMeta = new Map(calloutCands.map((c) => [c.id, c]))
+
+  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const rawYear = Y_MIN_YR + ((e.clientX - rect.left - PAD_L) / CW) * (Y_MAX_YR - Y_MIN_YR)
+    const year = Math.round(Math.max(Y_MIN_YR, Math.min(Y_MAX_YR, rawYear)))
+    setHoverYear((prev) => (prev === year ? prev : year))
+  }
+  const hoverPt = hoverYear !== null ? series.find((d) => d.year === hoverYear) : undefined
+
+  const label = (style: React.CSSProperties, text: string, key?: string | number, extra?: Record<string, string>) => (
+    <div key={key} className="absolute whitespace-nowrap pointer-events-none" style={style} {...extra}>
+      {text}
+    </div>
+  )
+
   return (
-    <div className="w-full">
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        width="100%"
-        style={{ height: 'auto', maxHeight: H, overflow: 'visible' }}
-        role="img"
-        aria-label={isEs
-          ? `Tasa de adjudicación directa ${Y_MIN_YR}–${Y_MAX_YR} frente a la línea UE de ${EU_LINE}%`
-          : `Direct-award rate ${Y_MIN_YR}–${Y_MAX_YR} against the EU ${EU_LINE}% line`}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverYear(null)}
-      >
-        <defs>
-          <linearGradient id="macroarc-area" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {/* Admin wash bands behind the chart */}
-        {eraBands.map((era) => {
-          const x1 = xOf(era.start)
-          const x2 = era.end > era.start ? xOf(era.end) : Math.min(xOf(era.start) + 16, PAD_L + CW)
-          return (
-            <g key={era.label}>
-              <rect x={x1} y={PAD_T} width={Math.max(1, x2 - x1)} height={CH} fill={era.color} opacity={0.05} />
-              <text
-                x={(x1 + x2) / 2}
-                y={PAD_T - 18}
-                textAnchor="middle"
-                fontSize={13}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight="700"
-                fill={era.color}
-                letterSpacing="0.08em"
-              >
-                {era.label}
-              </text>
-            </g>
-          )
-        })}
-
-        {/* Y-axis grid + ticks */}
-        {yTicks.map((t) => (
-          <g key={`y-${t}`}>
-            <line
-              x1={PAD_L}
-              x2={PAD_L + CW}
-              y1={yOf(t)}
-              y2={yOf(t)}
-              stroke="var(--color-border)"
-              strokeWidth={t === 0 ? 1 : 0.5}
-              strokeDasharray={t === 0 ? '' : '2 4'}
-              opacity={t === 0 ? 0.6 : 0.35}
-            />
-            <text
-              x={PAD_L - 6}
-              y={yOf(t) + 3}
-              textAnchor="end"
-              fontSize={13}
-              fontFamily="var(--font-family-mono, monospace)"
-              fill="var(--color-text-muted)"
+    <div ref={plate} className="w-full">
+      <div className="relative w-full" style={{ height: H }}>
+        {W > 0 && fontsReady && (
+          <>
+            <svg
+              data-figure="macroarc"
+              width={W}
+              height={H}
+              viewBox={`0 0 ${W} ${H}`}
+              style={{ display: 'block', overflow: 'visible' }}
+              role="img"
+              aria-label={isEs
+                ? `Tasa de adjudicación directa ${Y_MIN_YR}–${Y_MAX_YR} frente a la línea UE de ${EU_LINE}%`
+                : `Direct-award rate ${Y_MIN_YR}–${Y_MAX_YR} against the EU ${EU_LINE}% line`}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setHoverYear(null)}
             >
-              {t}%
-            </text>
-          </g>
-        ))}
+              <defs>
+                <linearGradient id="macroarc-area" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#dc2626" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+                </linearGradient>
+              </defs>
 
-        {/* X-axis ticks */}
-        {xTicks.map((y) => (
-          <text
-            key={`x-${y}`}
-            x={xOf(y)}
-            y={AXIS_Y + 18}
-            textAnchor="middle"
-            fontSize={13}
-            fontFamily="var(--font-family-mono, monospace)"
-            fill="var(--color-text-muted)"
-          >
-            {y}
-          </text>
-        ))}
+              {/* Admin wash bands behind the chart */}
+              {eraBands.map((b) => (
+                <rect key={b.key} x={b.x1} y={PAD_T} width={Math.max(1, b.x2 - b.x1)} height={CH} fill={b.color} opacity={0.05} />
+              ))}
 
-        {/* EU scoreboard reference line — dashed cyan */}
-        <line
-          x1={PAD_L}
-          x2={PAD_L + CW}
-          y1={EU_Y}
-          y2={EU_Y}
-          stroke="#22d3ee"
-          strokeWidth={1.2}
-          strokeDasharray="6 4"
-          opacity={0.85}
-        />
-        <text
-          x={PAD_L + CW + 6}
-          y={EU_Y + 3}
-          fontSize={13}
-          fontFamily="var(--font-family-mono, monospace)"
-          fontWeight="700"
-          fill="var(--color-text-secondary)"
-        >
-          {isEs ? `UE ${EU_LINE}%` : `EU ${EU_LINE}%`}
-        </text>
+              {/* Y grid */}
+              {yTicks.map((t) => (
+                <line
+                  key={`y-${t}`}
+                  x1={PAD_L}
+                  x2={PAD_L + CW}
+                  y1={yOf(t)}
+                  y2={yOf(t)}
+                  stroke="var(--color-border)"
+                  strokeWidth={t === 0 ? 1 : 0.5}
+                  strokeDasharray={t === 0 ? '' : '2 4'}
+                  opacity={t === 0 ? 0.6 : 0.35}
+                />
+              ))}
 
-        {/* Area fill under Mexico line */}
-        <motion.path
-          d={areaPath}
-          fill="url(#macroarc-area)"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        />
+              {/* EU scoreboard reference line — dashed cyan */}
+              <line x1={PAD_L} x2={PAD_L + CW} y1={EU_Y} y2={EU_Y} stroke="#22d3ee" strokeWidth={1.2} strokeDasharray="6 4" opacity={0.85} />
 
-        {/* Mexico DA-rate line */}
-        <motion.path
-          d={linePath}
-          fill="none"
-          stroke="#dc2626"
-          strokeWidth={2}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.4, ease: 'easeOut', delay: 0.4 }}
-        />
-
-        {/* Year dots */}
-        {series.map((d) => (
-          <circle
-            key={d.year}
-            cx={xOf(d.year)}
-            cy={yOf(d.da)}
-            r={hoverYear === d.year ? 4 : 2.2}
-            fill="#dc2626"
-            opacity={hoverYear === d.year ? 1 : 0.7}
-            style={{ transition: 'r 120ms, opacity 120ms' }}
-          />
-        ))}
-
-        {/* Right-edge "Mexico" direct label at the line endpoint */}
-        {(() => {
-          const last = series[series.length - 1]
-          return (
-            <text
-              x={xOf(last.year) + 6}
-              y={yOf(last.da) + 3}
-              fontSize={12}
-              fontFamily="var(--font-family-mono, monospace)"
-              fontWeight="700"
-              fill={RISK_TEXT_COLORS.critical}
-            >
-              {isEs ? `México · ${last.da.toFixed(1)}%` : `Mexico · ${last.da.toFixed(1)}%`}
-            </text>
-          )
-        })()}
-
-        {/* Annotation callouts BELOW the line at staggered depths.
-            COVID 2020 gets a Playfair pull-out; the other three use the
-            standard FT-style mono box. 2020 is not the peak — the register's
-            highest direct-award year is 2023 — but it is the year readers
-            come looking for. */}
-        {CALLOUTS.map((c) => {
-          const cx = xOf(c.year)
-          const pt = series.find((d) => d.year === c.year)
-          if (!pt) return null
-          const cy = yOf(pt.da)
-          const label = isEs ? c.es : c.en
-          const minX = PAD_L + 2
-          const maxX2 = PAD_L + CW - 2
-
-          if (c.year === 2020) {
-            // Playfair editorial pull-out — peak event deserves visual promotion
-            const boxW = Math.min(label.length * 7.4 + 24, 120)
-            const boxH = 24
-            let boxX = cx - boxW / 2
-            if (boxX < minX) boxX = minX
-            if (boxX > maxX2 - boxW) boxX = maxX2 - boxW
-            const boxY = cy + c.dy
-            const leaderEndX = boxX + boxW / 2
-            return (
-              <g key={c.year}>
-                <line x1={cx} y1={cy + 2} x2={leaderEndX} y2={boxY} stroke="#dc2626" strokeWidth={0.9} opacity={0.65} />
-                <rect x={boxX} y={boxY} width={boxW} height={boxH} rx={2} fill="var(--color-background-card)" stroke="#dc2626" strokeWidth={1} opacity={0.97} />
-                <text
-                  x={boxX + boxW / 2}
-                  y={boxY + 16}
-                  textAnchor="middle"
-                  fontSize={13}
-                  fontFamily="'Playfair Display', Georgia, serif"
-                  fontStyle="normal"
-                  fontWeight="700"
-                  fill={RISK_TEXT_COLORS.critical}
-                >
-                  {label}
-                </text>
-              </g>
-            )
-          }
-
-          // Standard mono callout for the other three events
-          const boxW = label.length * 5.4 + 14
-          const boxH = 16
-          let boxX = cx - boxW / 2
-          if (boxX < minX) boxX = minX
-          if (boxX > maxX2 - boxW) boxX = maxX2 - boxW
-          const boxY = cy + c.dy
-          const leaderEndX = boxX + boxW / 2
-          return (
-            <g key={c.year}>
-              <line
-                x1={cx}
-                y1={cy + 2}
-                x2={leaderEndX}
-                y2={boxY}
-                stroke="var(--color-text-muted)"
-                strokeWidth={0.6}
-                opacity={0.55}
+              {/* Area fill under Mexico line */}
+              <motion.path
+                d={areaPath}
+                fill="url(#macroarc-area)"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.6 }}
               />
-              <rect
-                x={boxX}
-                y={boxY}
-                width={boxW}
-                height={boxH}
-                rx={2}
-                fill="var(--color-background-card)"
-                stroke="var(--color-border-hover)"
-                strokeWidth={0.7}
-                opacity={0.96}
-              />
-              <text
-                x={boxX + boxW / 2}
-                y={boxY + 11}
-                textAnchor="middle"
-                fontSize={13}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight="600"
-                fill="var(--color-text-secondary)"
-              >
-                {label}
-              </text>
-            </g>
-          )
-        })}
 
-        {/* Hover tooltip dot + value */}
-        {hoverYear !== null && (() => {
-          const pt = series.find((d) => d.year === hoverYear)
-          if (!pt) return null
-          const tx = xOf(pt.year)
-          const ty = yOf(pt.da)
-          return (
-            <g>
-              <line
-                x1={tx}
-                x2={tx}
-                y1={PAD_T}
-                y2={AXIS_Y}
-                stroke="var(--color-text-muted)"
-                strokeWidth={0.5}
-                strokeDasharray="2 3"
-                opacity={0.5}
+              {/* Mexico DA-rate line */}
+              <motion.path
+                d={linePath}
+                fill="none"
+                stroke="#dc2626"
+                strokeWidth={2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.4, ease: 'easeOut', delay: 0.4 }}
               />
-              <text
-                x={tx}
-                y={ty - 10}
-                textAnchor="middle"
-                fontSize={13}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight="800"
-                fill={RISK_TEXT_COLORS.critical}
-              >
-                {pt.da.toFixed(1)}%
-              </text>
-            </g>
-          )
-        })()}
-      </svg>
+
+              {/* Year dots */}
+              {series.map((d) => (
+                <circle
+                  key={d.year}
+                  cx={xOf(d.year)}
+                  cy={yOf(d.da)}
+                  r={hoverYear === d.year ? 4 : 2.2}
+                  fill="#dc2626"
+                  data-da={d.da}
+                  opacity={hoverYear === d.year ? 1 : 0.7}
+                  style={{ transition: 'r 120ms, opacity 120ms' }}
+                />
+              ))}
+
+              {/* Callout leaders + box frames (the text is HTML) */}
+              {placedCallouts.map((p) => {
+                const c = calloutMeta.get(p.id)!
+                const bx = (p.box.x0 + p.box.x1) / 2
+                return (
+                  <g key={p.id}>
+                    <line
+                      x1={c.x}
+                      y1={c.cy + 2}
+                      x2={bx}
+                      y2={p.box.y0}
+                      stroke={c.isCovid ? '#dc2626' : 'var(--color-text-muted)'}
+                      strokeWidth={c.isCovid ? 0.9 : 0.6}
+                      opacity={c.isCovid ? 0.65 : 0.55}
+                    />
+                    <rect
+                      x={p.box.x0}
+                      y={p.box.y0}
+                      width={p.box.x1 - p.box.x0}
+                      height={p.box.y1 - p.box.y0}
+                      rx={2}
+                      fill="var(--color-background-card)"
+                      stroke={c.isCovid ? '#dc2626' : 'var(--color-border-hover)'}
+                      strokeWidth={c.isCovid ? 1 : 0.7}
+                      opacity={c.isCovid ? 0.97 : 0.96}
+                    />
+                  </g>
+                )
+              })}
+
+              {/* Hover guide */}
+              {hoverPt && (
+                <line
+                  x1={xOf(hoverPt.year)}
+                  x2={xOf(hoverPt.year)}
+                  y1={PAD_T}
+                  y2={AXIS_Y}
+                  stroke="var(--color-text-muted)"
+                  strokeWidth={0.5}
+                  strokeDasharray="2 3"
+                  opacity={0.5}
+                />
+              )}
+            </svg>
+
+            {/* ── HTML label layer (1:1 with the svg) ── */}
+            {eraBands.map((b) => {
+              const p = eraPlaced.get(b.key)
+              if (!p) return null
+              return label({
+                left: p.left, top: PAD_T - ERA_FS - 14, fontFamily: MONO, fontSize: ERA_FS, fontWeight: 700,
+                lineHeight: `${ERA_FS + 4}px`, letterSpacing: `${eraTrack}em`, color: b.color,
+              }, p.text, `era-${b.key}`, { 'data-era-label': '' })
+            })}
+            {yTicks.map((t) => label({
+              left: 0, width: PAD_L - 6, top: yOf(t) - (FS + 4) / 2, textAlign: 'right', fontFamily: MONO,
+              fontSize: FS, lineHeight: `${FS + 4}px`, color: 'var(--color-text-muted)',
+            }, `${t}%`, `yt-${t}`))}
+            {xTicks.map((y) => {
+              const w = measure(String(y), TICK_FONT).width
+              return label({
+                left: Math.min(W - w, Math.max(0, xOf(y) - w / 2)), top: AXIS_Y + 6, fontFamily: MONO, fontSize: FS,
+                lineHeight: `${FS + 4}px`, color: 'var(--color-text-muted)',
+              }, String(y), `xt-${y}`, { 'data-x-tick': String(y) })
+            })}
+            {label({
+              left: euPos.left, top: euPos.top, fontFamily: MONO, fontSize: narrow ? 11 : 12, fontWeight: 700,
+              lineHeight: `${edgeH}px`, color: 'var(--color-text-secondary)',
+            }, euLabel, 'eu')}
+            {label({
+              left: mexicoPos.left, top: mexicoPos.top, fontFamily: MONO, fontSize: narrow ? 11 : 12, fontWeight: 700,
+              lineHeight: `${edgeH}px`, color: RISK_TEXT_COLORS.critical,
+            }, mexicoLabel, 'mx')}
+            {placedCallouts.map((p) => {
+              const c = calloutMeta.get(p.id)!
+              return label({
+                left: p.box.x0, top: p.box.y0, width: p.box.x1 - p.box.x0, height: p.box.y1 - p.box.y0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: c.isCovid ? SERIF : MONO, fontSize: c.isCovid ? (narrow ? 12 : 13) : (narrow ? 11 : 13),
+                fontWeight: c.isCovid ? 700 : 600,
+                color: c.isCovid ? RISK_TEXT_COLORS.critical : 'var(--color-text-secondary)',
+              }, c.label, `co-${p.id}`, { 'data-callout': String(p.id) })
+            })}
+            {hoverPt && label({
+              left: xOf(hoverPt.year), top: yOf(hoverPt.da) - 28, transform: 'translateX(-50%)', fontFamily: MONO,
+              fontSize: 13, fontWeight: 800, lineHeight: '17px', color: RISK_TEXT_COLORS.critical,
+              background: 'var(--color-background-elevated)', padding: '0 3px',
+            }, `${hoverPt.da.toFixed(1)}%`, 'hover')}
+          </>
+        )}
+      </div>
 
       {/* Caption — minimal, methodology-only */}
-      <p className="mt-2 text-[12px] font-mono text-text-muted leading-relaxed">
+      <p className="mt-2 text-[12.5px] font-mono text-text-muted leading-relaxed">
         {isEs
           ? `Tasa de adjudicación directa anual · bandas administrativas · el Tablero UE considera insatisfactorio ≥ ${EU_LINE}%. Fuente: COMPRANET ${Y_MIN_YR}–${Y_MAX_YR} · 2002–2009 no se dibujan — la Estructura A no codifica el tipo de procedimiento.`
           : `Yearly direct-award rate · admin wash bands · the EU scoreboard rates ≥ ${EU_LINE}% unsatisfactory. Source: COMPRANET ${Y_MIN_YR}–${Y_MAX_YR} · 2002–2009 not drawn — Structure A does not code the procedure type.`}

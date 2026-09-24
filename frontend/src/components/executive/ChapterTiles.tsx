@@ -12,7 +12,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { RISK_COLORS, RISK_TEXT_COLORS } from '@/lib/constants'
+import { RISK_COLORS, RISK_INK_ON_PLATE, RISK_TEXT_COLORS } from '@/lib/constants'
 
 // Chapter-marker rail: one Roman per step, sitting above the tile. Each
 // marker carries the tile's accent (marks) and its AA ink (type) so the eye
@@ -49,7 +49,7 @@ const STEPS: Step[] = [
   {
     roman: 'III',
     accent: '#f59e0b',
-    ink: RISK_TEXT_COLORS.high,
+    ink: RISK_INK_ON_PLATE.high, // the rail sits on the plate paper
     kicker: { en: 'The flag', es: 'La marca' },
     tail:   { en: 'and the catch —', es: 'y la captura —' },
     story: '/stories/el-sexenio-del-riesgo',
@@ -273,7 +273,7 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
           <div style={{ width: '16.20%', background: '#a06820', opacity: 0.40 }} />
           <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
         </div>
-        <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+        <div className="flex items-center justify-between gap-2 text-[11px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
           <span style={{ color: RISK_TEXT_COLORS.critical }}><span aria-hidden="true" style={{ color: RISK_COLORS.critical }}>●</span> {lang === 'en' ? 'crit' : 'crít'} 5%</span>
           <span style={{ color: RISK_TEXT_COLORS.high }}><span aria-hidden="true" style={{ color: RISK_COLORS.high }}>●</span> {lang === 'en' ? 'high' : 'alto'} 6%</span>
           <span style={{ color: RISK_TEXT_COLORS.medium }}><span aria-hidden="true" style={{ color: RISK_COLORS.medium }}>●</span> {lang === 'en' ? 'med' : 'med'} 16%</span>
@@ -322,7 +322,7 @@ export function ChapterTiles({ lang, stats, headlineSpend, headlineSpendUSD }: {
             style={{ left: '57%', background: 'var(--color-text-primary)' }}
           />
         </div>
-        <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+        <div className="flex items-center justify-between gap-2 text-[11px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
           <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
           <span style={{ color: 'var(--color-accent-hover)' }}><span aria-hidden="true" style={{ color: 'var(--color-accent)' }}>●</span> v0.8.5</span>
           <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>

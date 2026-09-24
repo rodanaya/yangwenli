@@ -8,12 +8,14 @@
  * Owns its hover state (PARALLAX D10 § Change 8): a row hover re-renders this
  * card, not the whole dashboard.
  */
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import type { CaptureLeadersResponse } from '@/api/types'
 import { formatNumber } from '@/lib/utils'
+import { formatEntityName } from '@/lib/entity/format'
+import { useMeasuredWidth } from '@/hooks/useMeasuredWidth'
 
 export function CaptureLeaders({ lang, leaders, p6Count }: {
   lang: 'en' | 'es'
@@ -23,6 +25,11 @@ export function CaptureLeaders({ lang, leaders, p6Count }: {
 }) {
   // Which capture-leader row is under the cursor (data-only detail strip).
   const [capDetail, setCapDetail] = useState<{ label: string; top: number; second: number } | null>(null)
+  // The dumbbells measure the card (PARALLAX D10 § Change 2): drawn at 1:1,
+  // the full institution name on its own line on phones, a 140px column
+  // beside the track from 400px up.
+  const rowsBox = useRef<HTMLDivElement>(null)
+  const Wc = useMeasuredWidth(rowsBox)
   return (
       <motion.article
         className="surface-card rounded-sm border-l-2"
@@ -61,20 +68,24 @@ export function CaptureLeaders({ lang, leaders, p6Count }: {
         </div>
         {/* Cleveland pair per institution: filled dot = top vendor share,
             open dot = second vendor share. Gap reveals capture. */}
-        <div className="mb-4">
+        <div className="mb-4" ref={rowsBox}>
           {(() => {
             // Live top-5 from capture_results (sorted by capture score DESC).
             // Fallback to static values if the API hasn't resolved yet.
             const INST_DATA = leaders ?? [
-              { label: 'ASIPONA', top: 76, second: 20, captured: true  },
-              { label: 'LOTERIA', top: 77, second:  2, captured: true  },
-              { label: 'SIAP',    top: 81, second: 16, captured: true  },
-              { label: 'SPF',     top: 70, second:  9, captured: true  },
-              { label: 'AFAC',    top: 81, second: 10, captured: true  },
+              { label: 'ASIPONA', institution_name: 'ASIPONA', top: 76, second: 20, captured: true  },
+              { label: 'LOTERIA', institution_name: 'LOTERIA', top: 77, second:  2, captured: true  },
+              { label: 'SIAP',    institution_name: 'SIAP',    top: 81, second: 16, captured: true  },
+              { label: 'SPF',     institution_name: 'SPF',     top: 70, second:  9, captured: true  },
+              { label: 'AFAC',    institution_name: 'AFAC',    top: 81, second: 10, captured: true  },
             ]
-            const SVG_W = 240
-            const PAD_L = 10
-            const PAD_R = 52  // gap label space
+            if (Wc === 0) return <div style={{ minHeight: INST_DATA.length * 25 }} />
+            const stacked = Wc < 400
+            const NAME_W = 140
+            const GAP_W = 58 // +NN.Npp readout column
+            const SVG_W = Math.max(60, stacked ? Wc - GAP_W - 8 : Wc - NAME_W - GAP_W - 16)
+            const PAD_L = 6
+            const PAD_R = 6
             const TRACK_W = SVG_W - PAD_L - PAD_R
             const xPos = (pct: number) => PAD_L + (pct / 100) * TRACK_W
             const ROW_H = 22
@@ -87,25 +98,29 @@ export function CaptureLeaders({ lang, leaders, p6Count }: {
                   return (
                     <div
                       key={inst.label}
-                      className="flex items-center gap-2 mb-[3px]"
+                      className={stacked ? 'mb-1.5' : 'flex items-center gap-2 mb-[3px]'}
                       data-capture-row
                       onMouseEnter={() => setCapDetail({ label: inst.label, top: inst.top, second: inst.second })}
                       onMouseLeave={() => setCapDetail(null)}
                     >
                       <span
-                        className="text-[8px] font-mono flex-shrink-0 text-right"
+                        className={`block text-[12px] font-mono leading-[1.3] ${stacked ? '' : 'flex-shrink-0 text-right'}`}
                         style={{
-                          width: 46,
+                          width: stacked ? undefined : NAME_W,
                           color: inst.captured ? 'var(--color-accent-hover)' : 'var(--color-text-muted)',
                           fontWeight: inst.captured ? 700 : 400,
                         }}
                       >
-                        {inst.captured ? '▶ ' : ''}{inst.label}
+                        {inst.captured ? <span aria-hidden="true">▶ </span> : null}
+                        {formatEntityName('institution', inst.institution_name || inst.label, 'full')}
                       </span>
+                      <span className="flex items-center gap-2">
 
                       <motion.svg
                         width={SVG_W}
                         height={ROW_H}
+                        data-figure="dumbbell"
+                        viewBox={`0 0 ${SVG_W} ${ROW_H}`}
                         style={{ flexShrink: 0, overflow: 'visible' }}
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
@@ -148,23 +163,20 @@ export function CaptureLeaders({ lang, leaders, p6Count }: {
                           fill={dotColor}
                           fillOpacity={inst.captured ? 1 : 0.7}
                         />
-                        {/* Gap annotation */}
-                        <text
-                          x={SVG_W - PAD_R + 5}
-                          y={ROW_H / 2 + 3.5}
-                          fontSize={8}
-                          fontFamily="var(--font-family-mono,monospace)"
-                          fontWeight="700"
-                          fill={inst.captured ? 'var(--color-accent-hover)' : 'var(--color-text-muted)'}
-                        >
-                          +{Number.isInteger(gap) ? gap : gap.toFixed(1)}pp
-                        </text>
                       </motion.svg>
+                      {/* Gap readout (HTML, 11px) */}
+                      <span
+                        className="font-mono text-[11px] font-bold tabular-nums whitespace-nowrap"
+                        style={{ width: GAP_W, color: inst.captured ? 'var(--color-accent-hover)' : 'var(--color-text-muted)' }}
+                      >
+                        +{Number.isInteger(gap) ? gap : gap.toFixed(1)}pp
+                      </span>
+                      </span>
                     </div>
                   )
                 })}
 
-                <div className="text-[8px] font-mono text-text-muted mt-1.5 leading-[1.4]">
+                <div className="text-[11px] font-mono text-text-muted mt-1.5 leading-[1.4]">
                   {lang === 'en'
                     ? '● top vendor share · ○ second vendor · gap = concentration advantage'
                     : '● cuota proveedor 1 · ○ proveedor 2 · brecha = ventaja de concentración'}

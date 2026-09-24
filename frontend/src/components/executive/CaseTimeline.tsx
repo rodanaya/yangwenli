@@ -3,11 +3,18 @@
  * Critical = tall spike (80px), high = medium spike (44px).
  * Trimmed to 2008+ since the GT corpus has no documented cases earlier.
  *
+ * PARALLAX D10 § Change 2 — drawn at 1:1 (useMeasuredWidth): bands, spikes
+ * and caps stay in the svg; era labels, tick years and the numbered badges
+ * are HTML at ≥ 11px.
+ *
  * Extracted from Executive.tsx — do not inline again.
  */
 
+import { useRef } from 'react'
 import { SECTOR_COLORS, getSectorTextColor } from '@/lib/constants'
 import { ADMINISTRATIONS, ADMIN_COLORS, ADMIN_DISPLAY_ACCENTED } from '@/lib/administrations'
+import { useFontsReady, useMeasuredWidth } from '@/hooks/useMeasuredWidth'
+import { measureLabel, placeLabels, type LabelBox } from '@/lib/plateLabels'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data + types
@@ -42,11 +49,20 @@ const YEAR_MAX = 2025
 const ERA_BANDS = ADMINISTRATIONS
   .filter((a) => a.yearEnd >= YEAR_MIN && a.yearStart <= YEAR_MAX)
   .map((a) => ({
+    key: a.key,
     label: ADMIN_DISPLAY_ACCENTED[a.key],
     start: Math.max(a.yearStart, YEAR_MIN),
     end: Math.min(a.yearEnd + 1, YEAR_MAX),
     color: ADMIN_COLORS[a.key],
   }))
+
+/** `hex` at 18 % over the plate paper (#f3f1ec), as a plain rgb(). */
+function tint18(hex: string): string {
+  const h = hex.replace('#', '')
+  const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16))
+  const paper = [0xf3, 0xf1, 0xec]
+  return `rgb(${c.map((v, i) => Math.round(v * 0.18 + paper[i] * 0.82)).join(', ')})`
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Component
@@ -56,144 +72,174 @@ interface CaseTimelineProps {
   lang: 'en' | 'es'
 }
 
+const MONO = '"JetBrains Mono", monospace'
+const ERA_FONT = `600 11px ${MONO}`
+const TICK_FONT = `11px ${MONO}`
+const H = 160
+const AXIS_Y = 130
+const PAD_X = 24
+const SPIKE_CRIT = 82
+const SPIKE_HIGH = 46
+const BAR_W = 7
+const BADGE = 18
+const TICK_YEARS = [2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024]
+
 export function CaseTimeline({ lang }: CaseTimelineProps) {
-  const SVG_W = 820
-  const SVG_H = 190
-  const AXIS_Y = 130
-  const PAD_X = 24
+  const box = useRef<HTMLDivElement>(null)
+  const W = useMeasuredWidth(box)
+  const fontsReady = useFontsReady([ERA_FONT, TICK_FONT])
+  const ready = W > 0 && fontsReady
 
   const yearToX = (year: number) =>
-    PAD_X + ((year - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * (SVG_W - PAD_X * 2)
+    PAD_X + ((year - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * (W - PAD_X * 2)
+  const bandX = (era: (typeof ERA_BANDS)[number]) => {
+    const x1 = yearToX(era.start)
+    // The last band (Sheinbaum, 2025–) runs from the axis end into the pad.
+    const x2 = era.end > era.start ? yearToX(era.end) : W - 2
+    return { x1, x2 }
+  }
 
-  const SPIKE_CRIT = 82
-  const SPIKE_HIGH = 46
-  const BAR_W = 7
+  // Era labels centred on their band (a narrow band's label may run left
+  // over its neighbour's paper, never over another label); initials when the
+  // name cannot be seated.
+  const eraLabels: Array<{ key: string; text: string; left: number }> = []
+  // Tick years kept left-to-right while a label width apart (phones thin them).
+  const ticks: number[] = []
+  if (ready) {
+    const taken: LabelBox[] = []
+    for (const era of ERA_BANDS) {
+      const { x1, x2 } = bandX(era)
+      for (const text of [era.label.toUpperCase(), era.label.charAt(0).toUpperCase()]) {
+        const w = measureLabel(text, ERA_FONT, 999, 14).width + text.length * 11 * 0.06
+        const [p] = placeLabels(
+          [{ id: era.key, x: (x1 + x2) / 2, y: 26, width: w, height: 14, above: 0 }],
+          taken,
+          { x0: 0, y0: 0, x1: W, y1: 30 },
+        )
+        if (p) {
+          taken.push(p.box)
+          eraLabels.push({ key: era.key, text, left: p.box.x0 })
+          break
+        }
+      }
+    }
+    const tw = measureLabel('2008', TICK_FONT, 999, 14).width
+    for (const y of TICK_YEARS) {
+      const prev = ticks[ticks.length - 1]
+      if (prev === undefined || yearToX(y) - yearToX(prev) >= tw + 8) ticks.push(y)
+    }
+  }
 
-  const TICK_YEARS = [2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024]
+  // Badge centres: over their spike, spread apart (half the deficit each)
+  // where two same-height neighbours one year apart would overlap on a phone.
+  const badgeX = TIMELINE_CASES.map((c) => yearToX(c.year))
+  for (let i = 1; i < badgeX.length; i++) {
+    const sameH = TIMELINE_CASES[i].severity === TIMELINE_CASES[i - 1].severity
+    const deficit = BADGE + 2 - (badgeX[i] - badgeX[i - 1])
+    if (sameH && deficit > 0) {
+      badgeX[i - 1] -= deficit / 2
+      badgeX[i] += deficit / 2
+    }
+  }
 
   return (
     <div>
-      <svg
-        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        className="w-full"
-        style={{ height: SVG_H }}
-        role="img"
-        aria-label={lang === 'en'
-          ? `${TIMELINE_CASES.length === 10 ? 'Ten' : TIMELINE_CASES.length} documented cases, 2008–2025, by year, severity and sector`
-          : `${TIMELINE_CASES.length === 10 ? 'Diez' : TIMELINE_CASES.length} casos documentados, 2008–2025, por año, gravedad y sector`}
-      >
-        {/* Administration era bands */}
-        {ERA_BANDS.map(era => {
-          const x1 = yearToX(era.start)
-          // The last band (Sheinbaum, 2025–) runs from the axis end into the pad.
-          const x2 = era.end > era.start ? yearToX(era.end) : SVG_W - 2
-          const midX = (x1 + x2) / 2
-          return (
-            <g key={era.label}>
-              {/* Subtle background fill */}
-              <rect x={x1} y={8} width={x2 - x1} height={AXIS_Y - 8} fill={era.color} opacity={0.04} />
-              {/* Top accent line */}
-              <rect x={x1} y={8} width={x2 - x1} height={2} fill={era.color} opacity={0.18} />
-              {/* Era label */}
-              <text
-                x={midX} y={20}
-                textAnchor="middle"
-                fill={era.color}
-                fontSize={7.5}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight="600"
-                opacity={0.65}
-                letterSpacing="0.06em"
-              >
-                {era.label.toUpperCase()}
-              </text>
-              {/* Right-edge divider */}
-              {era.end > era.start && era.end < YEAR_MAX && (
-                <line x1={x2} x2={x2} y1={8} y2={AXIS_Y} stroke={era.color} strokeWidth={0.5} opacity={0.2} />
-              )}
-            </g>
-          )
-        })}
-
-        {/* Axis */}
-        <line x1={PAD_X} x2={SVG_W - PAD_X} y1={AXIS_Y} y2={AXIS_Y} stroke="var(--color-border-hover)" strokeWidth={1.5} />
-
-        {/* Year ticks */}
-        {TICK_YEARS.map(y => (
-          <g key={y}>
-            <line x1={yearToX(y)} x2={yearToX(y)} y1={AXIS_Y} y2={AXIS_Y + 4} stroke="var(--color-border)" strokeWidth={1} />
-            <text
-              x={yearToX(y)} y={AXIS_Y + 14}
-              textAnchor="middle"
-              fill="var(--color-text-muted)"
-              fontSize={7.5}
-              fontFamily="var(--font-family-mono, monospace)"
+      <div ref={box} className="relative" style={{ height: H }}>
+        {ready && (
+          <>
+            <svg
+              data-figure="seismograph"
+              width={W}
+              height={H}
+              viewBox={`0 0 ${W} ${H}`}
+              style={{ display: 'block' }}
+              role="img"
+              aria-label={lang === 'en'
+                ? `${TIMELINE_CASES.length === 10 ? 'Ten' : TIMELINE_CASES.length} documented cases, 2008–2025, by year, severity and sector`
+                : `${TIMELINE_CASES.length === 10 ? 'Diez' : TIMELINE_CASES.length} casos documentados, 2008–2025, por año, gravedad y sector`}
             >
-              {y}
-            </text>
-          </g>
-        ))}
+              {/* Administration era bands */}
+              {ERA_BANDS.map((era) => {
+                const { x1, x2 } = bandX(era)
+                return (
+                  <g key={era.key} data-era-band={era.start}>
+                    <rect x={x1} y={8} width={x2 - x1} height={AXIS_Y - 8} fill={era.color} opacity={0.04} />
+                    <rect x={x1} y={8} width={x2 - x1} height={2} fill={era.color} opacity={0.18} />
+                    {era.end > era.start && era.end < YEAR_MAX && (
+                      <line x1={x2} x2={x2} y1={8} y2={AXIS_Y} stroke={era.color} strokeWidth={0.5} opacity={0.2} />
+                    )}
+                  </g>
+                )
+              })}
 
-        {/* Spikes */}
-        {TIMELINE_CASES.map((c, idx) => {
-          const x = yearToX(c.year)
-          const isCrit = c.severity === 'critical'
-          const h = isCrit ? SPIKE_CRIT : SPIKE_HIGH
-          const color = SECTOR_COLORS[c.sector]
-          const n = idx + 1
+              {/* Axis + tick marks */}
+              <line x1={PAD_X} x2={W - PAD_X} y1={AXIS_Y} y2={AXIS_Y} stroke="var(--color-border-hover)" strokeWidth={1.5} />
+              {TICK_YEARS.map((y) => (
+                <line key={y} x1={yearToX(y)} x2={yearToX(y)} y1={AXIS_Y} y2={AXIS_Y + 4} stroke="var(--color-border)" strokeWidth={1} />
+              ))}
 
-          return (
-            <g key={idx}>
-              {/* Spike bar — gradient-like effect via two overlapping rects */}
-              <rect
-                x={x - BAR_W / 2} y={AXIS_Y - h}
-                width={BAR_W} height={h}
-                fill={color}
-                opacity={isCrit ? 0.15 : 0.08}
-                rx={2}
-              />
-              <rect
-                x={x - BAR_W / 2} y={AXIS_Y - h + h * 0.4}
-                width={BAR_W} height={h * 0.6}
-                fill={color}
-                opacity={isCrit ? 0.55 : 0.35}
-                rx={2}
-              />
-              {/* Bright top cap */}
-              <rect
-                x={x - BAR_W / 2} y={AXIS_Y - h}
-                width={BAR_W} height={3}
-                fill={color}
-                opacity={isCrit ? 0.95 : 0.7}
-                rx={1}
-              />
-              {/* Number badge at spike top — wider pill for two-digit numbers */}
-              <rect
-                x={x - (n >= 10 ? 9 : 7)} y={AXIS_Y - h - 17}
-                width={n >= 10 ? 18 : 14} height={14}
-                rx={7}
-                fill={color} opacity={isCrit ? 0.88 : 0.6}
-              />
-              <text
-                x={x} y={AXIS_Y - h - 6.5}
-                textAnchor="middle"
-                fill="white"
-                fontSize={7}
-                fontWeight="700"
-                fontFamily="var(--font-family-mono, monospace)"
+              {/* Spikes */}
+              {TIMELINE_CASES.map((c, idx) => {
+                const x = yearToX(c.year)
+                const isCrit = c.severity === 'critical'
+                const h = isCrit ? SPIKE_CRIT : SPIKE_HIGH
+                const color = SECTOR_COLORS[c.sector]
+                return (
+                  <g key={idx}>
+                    <rect x={x - BAR_W / 2} y={AXIS_Y - h} width={BAR_W} height={h} fill={color} opacity={isCrit ? 0.15 : 0.08} rx={2} />
+                    <rect x={x - BAR_W / 2} y={AXIS_Y - h + h * 0.4} width={BAR_W} height={h * 0.6} fill={color} opacity={isCrit ? 0.55 : 0.35} rx={2} />
+                    <rect x={x - BAR_W / 2} y={AXIS_Y - h} width={BAR_W} height={3} fill={color} opacity={isCrit ? 0.95 : 0.7} rx={1} />
+                    <circle cx={x} cy={AXIS_Y} r={2.5} fill={color} opacity={0.6} />
+                    <title>{c.label[lang]} ({c.year}) — {c.severity}</title>
+                  </g>
+                )
+              })}
+            </svg>
+
+            {/* ── HTML label layer ── */}
+            {eraLabels.map((e) => (
+              <div
+                key={e.key}
+                data-era-label=""
+                className="absolute whitespace-nowrap font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-text-secondary leading-[14px]"
+                style={{ left: e.left, top: 12 }}
               >
-                {n}
-              </text>
-              {/* Axis tick dot */}
-              <circle cx={x} cy={AXIS_Y} r={2.5} fill={color} opacity={0.6} />
-              <title>{c.label[lang]} ({c.year}) — {c.severity}</title>
-            </g>
-          )
-        })}
-      </svg>
+                {e.text}
+              </div>
+            ))}
+            {ticks.map((y) => (
+              <div
+                key={y}
+                className="absolute font-mono text-[11px] text-text-muted tabular-nums leading-[14px]"
+                style={{ left: yearToX(y), top: AXIS_Y + 7, transform: 'translateX(-50%)' }}
+              >
+                {y}
+              </div>
+            ))}
+            {TIMELINE_CASES.map((c, idx) => {
+              const x = badgeX[idx]
+              const h = c.severity === 'critical' ? SPIKE_CRIT : SPIKE_HIGH
+              const color = SECTOR_COLORS[c.sector]
+              return (
+                <span
+                  key={idx}
+                  className="absolute inline-flex items-center justify-center rounded-full font-mono tabular-nums text-[11px] font-bold text-text-primary"
+                  style={{
+                    left: x - BADGE / 2, top: AXIS_Y - h - BADGE - 3, width: BADGE, height: BADGE,
+                    backgroundColor: tint18(color),
+                    boxShadow: `inset 0 0 0 1px ${color}`,
+                  }}
+                >
+                  {idx + 1}
+                </span>
+              )
+            })}
+          </>
+        )}
+      </div>
 
-      {/* Numbered legend — 2-column grid */}
-      <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1.5">
+      {/* Numbered legend — one column on phones, two from sm */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
         {TIMELINE_CASES.map((c, idx) => {
           const isCrit = c.severity === 'critical'
           const color = SECTOR_COLORS[c.sector]
@@ -206,7 +252,7 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
                 style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   width: 18, height: 18, borderRadius: '50%',
-                  backgroundColor: `color-mix(in srgb, ${color} 18%, transparent)`,
+                  backgroundColor: tint18(color),
                   boxShadow: `inset 0 0 0 1px ${color}`,
                   flexShrink: 0,
                 }}

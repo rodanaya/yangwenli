@@ -205,6 +205,14 @@ export const RISK_COLORS = {
 // are tuned for FILLS/bars/dots and fail WCAG AA as small coloured text
 // (critical #ef4444 = 3.57:1, high #f59e0b = 2.04:1). Use these for any
 // risk-coloured number/label; keep RISK_COLORS for fills, strokes, dots, bars.
+/** Risk ink for type on the elevated plate paper (#f3f1ec): RISK_TEXT_COLORS
+ *  high (#b45309, 4.45) and medium (#a16207, 4.36) clear 4.5:1 on white only.
+ *  These amber-800 twins read 6.3 / 6.1 on the plate paper (PARALLAX D10). */
+export const RISK_INK_ON_PLATE = {
+  high: '#92400e',
+  medium: '#854d0e',
+} as const
+
 export const RISK_TEXT_COLORS = {
   critical: '#b91c1c',  // red-700  (~5.9:1)
   high: '#b45309',      // amber-700 (passes AA)
