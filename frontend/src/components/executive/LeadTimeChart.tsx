@@ -66,7 +66,9 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
   return (
     <div>
       <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H }} role="img"
-        aria-label="Lead-time advantage: year RUBLI data first flagged each case versus year scandal became public.">
+        aria-label={lang === 'en'
+          ? 'Lead-time advantage: year RUBLI data first flagged each case versus year the scandal became public.'
+          : 'Ventaja temporal: año en que los datos de RUBLI señalaron cada caso frente al año en que el escándalo se hizo público.'}>
 
         {/* Median lead-time annotation — top header row */}
         <g>

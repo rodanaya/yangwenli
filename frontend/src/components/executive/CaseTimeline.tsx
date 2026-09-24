@@ -71,7 +71,9 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
         className="w-full"
         style={{ height: SVG_H }}
         role="img"
-        aria-label="Timeline of documented corruption cases 2008–2025"
+        aria-label={lang === 'en'
+          ? `${TIMELINE_CASES.length === 10 ? 'Ten' : TIMELINE_CASES.length} documented cases, 2008–2025, by year, severity and sector`
+          : `${TIMELINE_CASES.length === 10 ? 'Diez' : TIMELINE_CASES.length} casos documentados, 2008–2025, por año, gravedad y sector`}
       >
         {/* Administration era bands */}
         {ERA_BANDS.map(era => {

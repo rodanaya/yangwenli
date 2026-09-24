@@ -17,6 +17,7 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQueryState, parseAsStringLiteral } from 'nuqs'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
@@ -35,13 +36,20 @@ import { LeadTimeChart } from '@/components/executive/LeadTimeChart'
 import { TopCategoriesChart } from '@/components/executive/TopCategoriesChart'
 import { PesosAtRiskChart } from '@/components/executive/PesosAtRiskChart'
 
+const ATLAS_LENSES = ['patterns', 'sectors', 'categories', 'sexenios'] as const satisfies readonly ConstellationMode[]
+
 export default function Executive() {
   const { i18n } = useTranslation()
   const navigate = useNavigate()
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
   // § 1 The Atlas — constellation mode (PATRONES / SECTORES / SEXENIOS)
-  const [atlasMode, setAtlasMode] = useState<ConstellationMode>('patterns')
+  // The lens lives in the URL (?lens=) so /dashboard?lens=sectors deep-links;
+  // the default stays out of the URL (clearOnDefault).
+  const [atlasMode, setAtlasMode] = useQueryState(
+    'lens',
+    parseAsStringLiteral(ATLAS_LENSES).withDefault('patterns').withOptions({ history: 'replace', clearOnDefault: true }),
+  )
 
   // All 6 Dashboard data blocks in ONE cached, server-side-concurrent request
   // via /executive/dashboard-bundle (was 6 separate calls fanning out on
@@ -383,14 +391,14 @@ export default function Executive() {
           aria-labelledby="atlas-title"
         >
           <div className="flex items-start justify-between mb-1 gap-3 flex-wrap">
-            <div id="atlas-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
+            <h2 id="atlas-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
               {lang === 'en' ? '§ 1 · The Atlas — every contract in one view' : '§ 1 · El Atlas — cada contrato en una vista'}
-            </div>
+            </h2>
 
             {/* Mode toggle */}
             <div
               className="flex items-center text-[13px] font-mono uppercase tracking-[0.1em] rounded-sm overflow-hidden"
-              role="tablist"
+              role="group"
               aria-label={lang === 'en' ? 'Atlas mode' : 'Modo del Atlas'}
               style={{ border: '1px solid var(--color-border)' }}
             >
@@ -406,10 +414,10 @@ export default function Executive() {
                 return (
                   <button
                     key={m.id}
-                    role="tab"
-                    aria-selected={isActive}
+                    type="button"
+                    aria-pressed={isActive}
                     onClick={() => setAtlasMode(m.id)}
-                    className="px-3 py-1.5 transition-colors"
+                    className="px-3 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
                     style={{
                       background: isActive ? '#a06820' : 'transparent',
                       color: isActive ? 'var(--color-background)' : 'var(--color-text-muted)',
@@ -436,6 +444,7 @@ export default function Executive() {
               encoding caption). */}
           {scatterClusters.length === 0 && !scatterLoading ? (
             <p
+              role="status"
               className="font-mono text-[12px] text-text-muted py-10 text-center"
               style={{ letterSpacing: '0.08em' }}
             >
@@ -471,9 +480,9 @@ export default function Executive() {
           transition={{ duration: 0.5, delay: 0.2 }}
           aria-labelledby="macro-arc-title"
         >
-          <div id="macro-arc-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-2">
+          <h2 id="macro-arc-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-2">
             {lang === 'en' ? 'Five administrations · one structural failure' : 'Cinco administraciones · una falla estructural'}
-          </div>
+          </h2>
           <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Direct award rate — share of contracts awarded without competitive bidding — has stayed six to eight times the EU scoreboard line under every Mexican administration the register can score. The AI model trained on this systemic pattern now detects its variants automatically.'
@@ -495,9 +504,9 @@ export default function Executive() {
 
         {/* ─── LEAD-TIME ADVANTAGE — Hero #3 (promoted by d-P4 2026-05-04) ─── */}
         <section className="mb-10" aria-labelledby="leadtime-title">
-          <div id="leadtime-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+          <h2 id="leadtime-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Lead-time advantage — when RUBLI saw it vs. when the press did' : 'Ventaja temporal — cuándo lo vio RUBLI vs. cuándo lo vio la prensa'}
-          </div>
+          </h2>
           <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? <>For each documented corruption case, the gap between when the contracts crossed RUBLI's <strong className="text-text-primary">critical-risk threshold</strong> in the data, and when the scandal became public. The bigger the gap, the longer the platform could have flagged it for investigation.</>
@@ -841,9 +850,9 @@ export default function Executive() {
 
         {/* ─── KEY FINDINGS — specific discoveries with animated visualizations ─── */}
         <section className="mb-8" aria-labelledby="findings-title">
-          <div id="findings-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+          <h2 id="findings-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'What the analysis found' : 'Lo que encontró el análisis'}
-          </div>
+          </h2>
           <p className="text-[15px] text-text-secondary leading-[1.6] mb-5 text-pretty">
             {lang === 'en'
               ? 'Four findings that only became visible at scale — impossible to see by auditing contracts one by one.'
@@ -1433,9 +1442,9 @@ export default function Executive() {
 
         {/* ─── PESOS AT RISK — estimated overpayment by pattern ─── */}
         <section className="mb-8" aria-labelledby="pesos-title">
-          <div id="pesos-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+          <h2 id="pesos-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Pesos at risk — estimated exposure by corruption pattern' : 'Pesos en riesgo — exposición estimada por patrón'}
-          </div>
+          </h2>
           {/* U-007: surface the methodological caveat that previously only
               lived as a code comment. The aggregate scales high+critical
               contract counts by total spend, assuming each risk band's
@@ -1469,9 +1478,9 @@ export default function Executive() {
             the actual 2-row proportional treemap of top 8 categories. */}
         <section className="mb-8" aria-labelledby="categories-title">
           <div className="flex items-start justify-between mb-1">
-            <div id="categories-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
+            <h2 id="categories-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
               {lang === 'en' ? 'Where the money goes — top spending categories' : 'Dónde va el dinero — principales categorías de gasto'}
-            </div>
+            </h2>
             <button
               onClick={() => navigate('/sectors?view=categories')}
               className="text-[12px] font-mono uppercase tracking-[0.1em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
@@ -1501,9 +1510,9 @@ export default function Executive() {
 
         {/* ─── § 2 LA LENTE — concentric-rings narrowing visualization ─── */}
         <section className="mb-8" aria-labelledby="la-lente-title">
-          <div id="la-lente-title" className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+          <h2 id="la-lente-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? '§ 2 · The Lens — narrowing 3.1M to 299' : '§ 2 · La Lente — de 3.1M a 299'}
-          </div>
+          </h2>
           <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Four filters in sequence — risk model, then ARIA patterns, then GT match, then manual triage. Each step narrows the population further; the last 299 are hand-investigable today.'
@@ -1806,11 +1815,11 @@ export default function Executive() {
         <div className="h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-40 mb-10" />
 
         {/* ─── Documented Cases Timeline ─── */}
-        <section className="mb-8">
-          <div className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 flex items-center gap-2">
+        <section className="mb-8" aria-labelledby="timeline-title">
+          <h2 id="timeline-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 flex items-center gap-2">
             <Clock className="h-3 w-3" aria-hidden="true" />
             {lang === 'en' ? 'Documented corruption cases · 2008–2025' : 'Casos documentados de corrupción · 2008–2025'}
-          </div>
+          </h2>
           <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Ten landmark cases — IMSS ghost companies, Segalmex, Odebrecht, COVID-19 emergency procurement — form the backbone of the model\'s ground truth. The model detects these patterns years before the scandal becomes public.'
@@ -1831,15 +1840,15 @@ export default function Executive() {
         </section>
 
         {/* ─── Recent Critical Alerts — news wire (frozen upstream feed) ─── */}
-        <section className="mb-8">
+        <section className="mb-8" aria-labelledby="wire-title">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted flex items-center gap-2">
+              <h2 id="wire-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" aria-hidden />
                 {lang === 'en' ? 'Recent critical alerts' : 'Alertas críticas recientes'}
                 <span className="normal-case tracking-[0.08em] text-text-muted/70 font-normal">
                   {lang === 'en' ? '· feed frozen Sep 28 2025' : '· corte 28 sep 2025'}
                 </span>
-              </div>
+              </h2>
               <button
                 onClick={() => navigate('/contracts?risk_level=critical')}
                 className="text-[13px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1"
@@ -1918,14 +1927,14 @@ export default function Executive() {
           </section>
 
         {/* ─── CTA ─── */}
-        <section className="mb-8 print-hide">
+        <section className="mb-8 print-hide" aria-labelledby="cta-title">
           <div
             className="rounded-sm p-8 border border-accent/30"
             style={{ background: 'linear-gradient(135deg, rgba(160,104,32,0.06), rgba(160,104,32,0.02))' }}
           >
-            <div className="text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-accent mb-2">
+            <h2 id="cta-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-accent mb-2">
               {lang === 'en' ? 'Start Here' : 'Comienza aquí'}
-            </div>
+            </h2>
             <h3
               className="font-serif text-[28px] leading-[1.15] font-bold text-text-primary mb-3"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
@@ -1962,12 +1971,12 @@ export default function Executive() {
             route exclusively through EntityIdentityChip. */}
         {codaChipCount >= 2 && (
           <section className="mb-8 print-hide" aria-labelledby="coda-title">
-            <div
+            <h2
               id="coda-title"
-              className="text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2"
+              className="scroll-mt-14 text-[12px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2"
             >
               {lang === 'en' ? '§ · WHERE TO GO NEXT' : '§ · ADÓNDE IR'}
-            </div>
+            </h2>
             <p className="text-[15px] text-text-secondary leading-[1.6] mb-4 text-pretty">
               {lang === 'en'
                 ? 'The patterns above resolve to specific entities. Open the investigation queue, or pull the most exposed sector and vendors on record — each opens a live dossier with the evidence behind its risk indicator.'
