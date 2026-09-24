@@ -20,6 +20,7 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data + types
@@ -33,6 +34,9 @@ interface PatternRiskEntry {
   vendors: number
   color: string
 }
+
+// Type twin of each pattern's mark colour (pill text, value label, link).
+const inkOf = (color: string) => (color === '#b45309' ? RISK_TEXT_COLORS.high : RISK_TEXT_COLORS.critical)
 
 // baselineMdp = estimated exposure if pattern operated at sector median price
 // rather than observed price. Gap = pesosBn - baselineMdp = "corruption premium".
@@ -91,7 +95,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
           <svg aria-hidden="true" width="18" height="10"><circle cx="4" cy="5" r="4" fill="none" stroke="currentColor" strokeWidth="1.5"/><line x1="8" y1="5" x2="14" y2="5" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.55"/><circle cx="16" cy="5" r="3" fill="currentColor"/></svg>
           <span>{lang === 'es' ? 'base → exposición estimada' : 'baseline → estimated exposure'}</span>
         </div>
-        <div className="text-[13px] font-mono text-text-muted opacity-70">
+        <div className="text-[13px] font-mono text-text-muted">
           {lang === 'es' ? 'ordenado por premio sobre línea base' : 'ranked by premium over baseline'}
         </div>
       </div>
@@ -164,7 +168,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
               <rect x={4} y={y - 9} width={28} height={17} rx={2}
                 fill={p.color} fillOpacity={0.15} />
               <text x={18} y={y + 3} textAnchor="middle"
-                fontSize={8.5} fontWeight="800" fill={p.color}
+                fontSize={8.5} fontWeight="800" fill={inkOf(p.color)}
                 fontFamily="var(--font-family-mono, monospace)">
                 {p.code}
               </text>
@@ -227,7 +231,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
               <motion.text
                 x={xActual} y={y - 10}
                 textAnchor="middle"
-                fontSize={13} fontWeight="800" fill={p.color}
+                fontSize={13} fontWeight="800" fill={inkOf(p.color)}
                 fontFamily="var(--font-family-mono, monospace)"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
@@ -244,7 +248,7 @@ export function PesosAtRiskChart({ lang }: PesosAtRiskChartProps) {
                   y={y + 3}
                   fontSize={8.5}
                   fontWeight="600"
-                  fill={p.color}
+                  fill={inkOf(p.color)}
                   fontFamily="var(--font-family-mono, monospace)"
                 >
                   {lang === 'es' ? '→ Investigar' : '→ Investigate'}

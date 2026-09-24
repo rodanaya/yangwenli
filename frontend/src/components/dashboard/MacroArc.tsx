@@ -19,6 +19,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useYearOverYear } from '@/components/stories/live/useEmergencyData'
+import { RISK_TEXT_COLORS } from '@/lib/constants'
 
 // Per-year direct-award rates come from /analysis/year-over-year. The hardcoded
 // 2002-2025 series this component used to carry read 58-73% for 2002-2009 and
@@ -148,7 +149,6 @@ export function MacroArc({ lang }: Props) {
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight="700"
                 fill={era.color}
-                opacity={0.7}
                 letterSpacing="0.08em"
               >
                 {era.label}
@@ -215,7 +215,7 @@ export function MacroArc({ lang }: Props) {
           fontSize={13}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight="700"
-          fill="#22d3ee"
+          fill="var(--color-text-secondary)"
         >
           {isEs ? `UE ${EU_LINE}%` : `EU ${EU_LINE}%`}
         </text>
@@ -267,7 +267,7 @@ export function MacroArc({ lang }: Props) {
               fontSize={12}
               fontFamily="var(--font-family-mono, monospace)"
               fontWeight="700"
-              fill="#dc2626"
+              fill={RISK_TEXT_COLORS.critical}
             >
               {isEs ? `México · ${last.da.toFixed(1)}%` : `Mexico · ${last.da.toFixed(1)}%`}
             </text>
@@ -309,7 +309,7 @@ export function MacroArc({ lang }: Props) {
                   fontFamily="'Playfair Display', Georgia, serif"
                   fontStyle="normal"
                   fontWeight="700"
-                  fill="#dc2626"
+                  fill={RISK_TEXT_COLORS.critical}
                 >
                   {label}
                 </text>
@@ -387,7 +387,7 @@ export function MacroArc({ lang }: Props) {
                 fontSize={13}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight="800"
-                fill="#dc2626"
+                fill={RISK_TEXT_COLORS.critical}
               >
                 {pt.da.toFixed(1)}%
               </text>

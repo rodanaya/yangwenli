@@ -9,7 +9,7 @@
  */
 
 import { motion } from 'framer-motion'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_TEXT_COLORS, getSectorTextColor } from '@/lib/constants'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data + types
@@ -116,6 +116,7 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
           const pubX = yearToX(c.publicYear)
           const lead = c.publicYear - c.flagYear
           const sectorColor = SECTOR_COLORS[c.sector] ?? '#64748b'
+          const sectorInk = getSectorTextColor(c.sector)
           return (
             <motion.g
               key={c.name.en}
@@ -149,7 +150,7 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
               <circle cx={flagX} cy={y} r={4} fill={sectorColor} fillOpacity={1} />
               <circle cx={flagX} cy={y} r={6.5} fill="none" stroke={sectorColor} strokeOpacity={0.30} strokeWidth={1} />
               <text x={flagX} y={y - 9} textAnchor="middle"
-                fontSize={7.5} fontWeight="700" fill={sectorColor}
+                fontSize={7.5} fontWeight="700" fill={sectorInk}
                 fontFamily="var(--font-family-mono, monospace)">
                 {c.flagYear}
               </text>
@@ -157,7 +158,7 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
               {/* Public dot (scandal broke) */}
               <circle cx={pubX} cy={y} r={3.5} fill="#dc2626" stroke="white" strokeWidth={1.2} />
               <text x={pubX} y={y - 9} textAnchor="middle"
-                fontSize={7.5} fontWeight="700" fill="#dc2626"
+                fontSize={7.5} fontWeight="700" fill={RISK_TEXT_COLORS.critical}
                 fontFamily="var(--font-family-mono, monospace)">
                 {c.publicYear}
               </text>
@@ -165,7 +166,7 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
               {/* Lead-time count in right margin */}
               <text x={SVG_W - RIGHT_PAD} y={y + 3} textAnchor="end"
                 fontSize={13} fontWeight="800"
-                fill={sectorColor}
+                fill={sectorInk}
                 fontFamily="var(--font-family-mono, monospace)">
                 {lead}
                 <tspan fontSize={8} fontWeight="600" dx={2} fill="var(--color-text-muted)">

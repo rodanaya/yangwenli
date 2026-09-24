@@ -23,6 +23,7 @@ import {
   SECTOR_COLORS,
   SECTOR_NAMES_EN,
   SECTOR_NAMES_ES,
+  getSectorTextColor,
   RISK_COLORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
@@ -224,18 +225,18 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                   )}
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted">
-                  <span style={{ color: sectorColor, opacity: 0.95, fontWeight: 600 }}>
+                  <span style={{ color: getSectorTextColor(cat.sector_code), fontWeight: 600 }}>
                     {sectorName}
                   </span>
                   {caption && (
                     <>
-                      <span aria-hidden="true" className="opacity-50">·</span>
+                      <span aria-hidden="true">·</span>
                       <span className="normal-case tracking-normal text-[12px] text-text-secondary truncate">
                         {caption}
                       </span>
                     </>
                   )}
-                  <span aria-hidden="true" className="opacity-50">·</span>
+                  <span aria-hidden="true">·</span>
                   <span className="whitespace-nowrap">{lang === 'en' ? 'risk' : 'riesgo'} {riskLabel}</span>
                 </div>
               </div>
@@ -274,7 +275,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
                 {lang === 'en' && (
                   <span
                     className="font-mono text-[13px] tracking-[0.02em]"
-                    style={{ color: 'var(--color-text-muted)', opacity: 0.8 }}
+                    style={{ color: 'var(--color-text-muted)' }}
                   >
                     ≈{formatCompactUSD(cat.total_value)}
                   </span>
@@ -308,7 +309,7 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
             : <>top 8 <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>{formatCompactMXN(grandTotal)}</span> del total MX$9.9 billones{usingFallback ? ' · cifras ilustrativas (precómputo pendiente)' : ''}</>}
         </span>
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="opacity-80">
+          <span>
             {lang === 'en' ? 'bar = share of top 8 · pip = avg risk' : 'barra = cuota del top 8 · pip = riesgo promedio'}
           </span>
           <span className="flex items-center gap-1.5">

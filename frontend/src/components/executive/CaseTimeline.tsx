@@ -6,7 +6,7 @@
  * Extracted from Executive.tsx — do not inline again.
  */
 
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, getSectorTextColor } from '@/lib/constants'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data + types
@@ -191,25 +191,26 @@ export function CaseTimeline({ lang }: CaseTimelineProps) {
           const color = SECTOR_COLORS[c.sector]
           return (
             <div key={idx} className="flex items-start gap-2">
+              {/* Numbered disc — the number in primary ink on an 18% sector
+                  tint with a 1px sector ring (readable on every sector). */}
               <span
+                className="font-mono tabular-nums text-[11px] font-bold text-text-primary"
                 style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 16, height: 16, borderRadius: '50%',
-                  backgroundColor: color,
-                  opacity: isCrit ? 0.85 : 0.55,
-                  flexShrink: 0, marginTop: 1,
+                  width: 18, height: 18, borderRadius: '50%',
+                  backgroundColor: `color-mix(in srgb, ${color} 18%, transparent)`,
+                  boxShadow: `inset 0 0 0 1px ${color}`,
+                  flexShrink: 0,
                 }}
               >
-                <span style={{ color: 'white', fontSize: 8, fontWeight: 700, fontFamily: 'var(--font-family-mono, monospace)' }}>
-                  {idx + 1}
-                </span>
+                {idx + 1}
               </span>
               <span className="text-[12px] font-mono leading-tight" style={{ color: 'var(--color-text-secondary)' }}>
-                <span style={{ color, fontWeight: 600 }}>{c.year}</span>
+                <span style={{ color: getSectorTextColor(c.sector), fontWeight: 600 }}>{c.year}</span>
                 {' '}·{' '}
                 {c.label[lang]}
                 {isCrit && (
-                  <span style={{ color, marginLeft: 4, fontSize: 13, opacity: 0.8 }}>●</span>
+                  <span aria-hidden="true" style={{ color, marginLeft: 4, fontSize: 13 }}>●</span>
                 )}
               </span>
             </div>

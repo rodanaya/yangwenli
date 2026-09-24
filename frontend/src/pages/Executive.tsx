@@ -23,7 +23,7 @@ import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
-import { SECTOR_COLORS, RISK_COLORS, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, RISK_TEXT_COLORS, getSectorTextColor, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { type ConstellationMode } from '@/components/charts/ConcentrationConstellation'
@@ -246,7 +246,7 @@ export default function Executive() {
                 fontWeight: 400,
               }}
             >
-              <span style={{ color: 'var(--color-accent)', fontStyle: 'normal', fontWeight: 500 }}>Folio·I</span>
+              <span style={{ color: 'var(--color-accent-hover)', fontStyle: 'normal', fontWeight: 500 }}>Folio·I</span>
               <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
               <span style={{ fontStyle: 'normal', fontWeight: 300 }}>
                 {lang === 'en' ? 'RUBLI executive briefing' : 'RUBLI reporte ejecutivo'}
@@ -552,7 +552,8 @@ export default function Executive() {
             // the right edge of each marker hand off to the next chapter.
             type Step = {
               roman: string
-              accent: string
+              accent: string // marks: the rail rule + drop-line
+              ink: string    // type: the Roman + kicker (AA on the paper)
               kicker: { en: string; es: string }
               tail: { en: string; es: string } | null
               story: string
@@ -562,6 +563,7 @@ export default function Executive() {
               {
                 roman: 'I',
                 accent: '#a06820',
+                ink: 'var(--color-accent-hover)',
                 kicker: { en: 'The spend', es: 'El gasto' },
                 tail:   { en: 'of which —', es: 'del cual —' },
                 story: '/stories/el-gran-precio',
@@ -570,6 +572,7 @@ export default function Executive() {
               {
                 roman: 'II',
                 accent: '#dc2626',
+                ink: RISK_TEXT_COLORS.critical,
                 kicker: { en: 'The bypass', es: 'El desvío' },
                 tail:   { en: 'inside that bypass —', es: 'dentro de ese desvío —' },
                 story: '/stories/marea-de-adjudicaciones',
@@ -578,6 +581,7 @@ export default function Executive() {
               {
                 roman: 'III',
                 accent: '#f59e0b',
+                ink: RISK_TEXT_COLORS.high,
                 kicker: { en: 'The flag', es: 'La marca' },
                 tail:   { en: 'and the catch —', es: 'y la captura —' },
                 story: '/stories/el-sexenio-del-riesgo',
@@ -586,6 +590,7 @@ export default function Executive() {
               {
                 roman: 'IV',
                 accent: 'var(--color-text-primary)',
+                ink: 'var(--color-text-primary)',
                 kicker: { en: 'The catch', es: 'La captura' },
                 tail: null,
                 story: '/stories/volatilidad-el-precio-del-riesgo',
@@ -608,13 +613,13 @@ export default function Executive() {
                       fontStyle: 'normal',
                       fontWeight: 800,
                       fontSize: 22,
-                      color: step.accent,
+                      color: step.ink,
                     }}
                   >
                     {step.roman}
                   </span>
                   <span className="h-[2px] flex-1" style={{ background: step.accent, opacity: 0.55 }} />
-                  <span className="text-[13px] font-mono uppercase tracking-[0.18em] whitespace-nowrap" style={{ color: step.accent, opacity: 0.95 }}>
+                  <span className="text-[13px] font-mono uppercase tracking-[0.18em] whitespace-nowrap" style={{ color: step.ink }}>
                     {lang === 'en' ? step.kicker.en : step.kicker.es}
                   </span>
                 </div>
@@ -678,7 +683,7 @@ export default function Executive() {
                     {headlineSpend}
                   </div>
                   {headlineSpendUSD && (
-                    <div className="font-mono text-[13px] tracking-[0.04em] tabular-nums mt-1" style={{ color: 'var(--color-text-muted)', opacity: 0.85 }}>
+                    <div className="font-mono text-[13px] tracking-[0.04em] tabular-nums mt-1" style={{ color: 'var(--color-text-muted)' }}>
                       {headlineSpendUSD}
                     </div>
                   )}
@@ -760,12 +765,12 @@ export default function Executive() {
                       fontFamily: "'Playfair Display', Georgia, serif",
                       fontStyle: 'normal',
                       fontSize: 40,
-                      color: '#f59e0b',
+                      color: RISK_TEXT_COLORS.high,
                     }}
                   >
                     {formatNumber(stats.highCriticalCount)}
                   </div>
-                  <div className="font-mono text-[13px] tracking-[0.04em] tabular-nums mt-1" style={{ color: 'var(--color-risk-high)' }}>
+                  <div className="font-mono text-[13px] tracking-[0.04em] tabular-nums mt-1" style={{ color: RISK_TEXT_COLORS.high }}>
                     {formatCompactMXN(stats.valueAtRisk)} {lang === 'en' ? 'at stake' : 'en juego'} · {stats.valueAtRiskPct}%
                   </div>
                   <div className="font-mono text-[12px] tracking-[0.1em] text-text-muted mt-1">
@@ -783,9 +788,9 @@ export default function Executive() {
                     <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
                   </div>
                   <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
-                    <span style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
-                    <span style={{ color: 'var(--color-risk-high)' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
-                    <span style={{ color: 'var(--color-risk-medium)' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
+                    <span style={{ color: RISK_TEXT_COLORS.critical }}><span aria-hidden="true" style={{ color: RISK_COLORS.critical }}>●</span> {lang === 'en' ? 'crit' : 'crít'} 5%</span>
+                    <span style={{ color: RISK_TEXT_COLORS.high }}><span aria-hidden="true" style={{ color: RISK_COLORS.high }}>●</span> {lang === 'en' ? 'high' : 'alto'} 6%</span>
+                    <span style={{ color: RISK_TEXT_COLORS.medium }}><span aria-hidden="true" style={{ color: RISK_COLORS.medium }}>●</span> {lang === 'en' ? 'med' : 'med'} 16%</span>
                   </div>
                 </ColumnFrame>
 
@@ -832,7 +837,7 @@ export default function Executive() {
                   </div>
                   <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
                     <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
-                    <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
+                    <span style={{ color: 'var(--color-accent-hover)' }}><span aria-hidden="true" style={{ color: 'var(--color-accent)' }}>●</span> v0.8.5</span>
                     <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
                   </div>
                 </ColumnFrame>
@@ -873,7 +878,7 @@ export default function Executive() {
                 <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
                 </span>
-                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-critical)' }}>
+                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: RISK_TEXT_COLORS.critical }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -907,7 +912,7 @@ export default function Executive() {
                     className="flex flex-col items-center justify-center flex-shrink-0"
                     style={{ width: 50, background: 'var(--color-background)' }}
                   >
-                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: 'var(--color-risk-critical)' }}>
+                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: RISK_TEXT_COLORS.critical }}>
                       145×
                     </span>
                     <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
@@ -936,13 +941,13 @@ export default function Executive() {
                     >
                       <span
                         className="font-mono font-bold text-[42px] leading-none tabular-nums"
-                        style={{ color: 'var(--color-risk-critical)' }}
+                        style={{ color: RISK_TEXT_COLORS.critical }}
                       >
                         6,118
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1"
-                        style={{ color: 'var(--color-risk-critical)', opacity: 0.65 }}
+                        style={{ color: RISK_TEXT_COLORS.critical }}
                       >
                         {lang === 'en' ? 'RUBLI detected' : 'RUBLI detectó'}
                       </span>
@@ -980,7 +985,7 @@ export default function Executive() {
                 <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
                 </span>
-                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-high)' }}>
+                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: RISK_TEXT_COLORS.high }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -1014,7 +1019,7 @@ export default function Executive() {
                     className="flex flex-col items-center justify-center flex-shrink-0"
                     style={{ width: 50, background: 'var(--color-background)' }}
                   >
-                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: 'var(--color-risk-high)' }}>
+                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: RISK_TEXT_COLORS.high }}>
                       19×
                     </span>
                     <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
@@ -1040,13 +1045,13 @@ export default function Executive() {
                     >
                       <span
                         className={`font-mono font-bold leading-none tabular-nums ${lang === 'en' ? 'text-[36px]' : 'text-[28px]'}`}
-                        style={{ color: 'var(--color-risk-high)' }}
+                        style={{ color: RISK_TEXT_COLORS.high }}
                       >
                         {lang === 'en' ? 'MX$1.25T' : 'MX$1.25 billones'}
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1.5"
-                        style={{ color: 'var(--color-risk-high)', opacity: 0.7 }}
+                        style={{ color: RISK_TEXT_COLORS.high }}
                       >
                         {lang === 'en' ? '95% never audited' : '95% sin auditar'}
                       </span>
@@ -1084,7 +1089,7 @@ export default function Executive() {
                 <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 03 · THRESHOLD GAMING' : 'HALLAZGO 03 · JUEGO DE UMBRALES'}
                 </span>
-                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#8b5cf6' }}>
+                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: getSectorTextColor('tecnologia') }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -1265,7 +1270,7 @@ export default function Executive() {
                 <span className="text-[13px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
                 </span>
-                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-accent)' }}>
+                <span className="text-[13px] font-mono uppercase tracking-[0.1em] opacity-0 max-md:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-accent-hover)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
@@ -1274,13 +1279,13 @@ export default function Executive() {
               {/* Plain-English explanation of the pattern, before any number */}
               <p className="text-sm text-text-secondary leading-[1.55] mb-3">
                 {lang === 'en'
-                  ? <>One vendor controls <strong className="text-text-primary">80%+ of one institution's category budget for five-plus years</strong>. RUBLI calls this <span className="font-mono" style={{ color: 'var(--color-accent)' }}>P6 — capture</span>: a monopoly built inside a single agency, often invisible at the national level.</>
-                  : <>Un proveedor controla <strong className="text-text-primary">80% o más del presupuesto de una categoría dentro de una institución durante cinco o más años</strong>. RUBLI lo llama <span className="font-mono" style={{ color: 'var(--color-accent)' }}>P6 — captura</span>: un monopolio construido dentro de una sola dependencia, frecuentemente invisible a nivel nacional.</>
+                  ? <>One vendor controls <strong className="text-text-primary">80%+ of one institution's category budget for five-plus years</strong>. RUBLI calls this <span className="font-mono" style={{ color: 'var(--color-accent-hover)' }}>P6 — capture</span>: a monopoly built inside a single agency, often invisible at the national level.</>
+                  : <>Un proveedor controla <strong className="text-text-primary">80% o más del presupuesto de una categoría dentro de una institución durante cinco o más años</strong>. RUBLI lo llama <span className="font-mono" style={{ color: 'var(--color-accent-hover)' }}>P6 — captura</span>: un monopolio construido dentro de una sola dependencia, frecuentemente invisible a nivel nacional.</>
                 }
               </p>
 
               <div className="flex items-end gap-3 mb-4">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>15,923</span>
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: 'var(--color-accent-hover)' }}>15,923</span>
                 <span className="font-mono text-[13px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors fit\nthe P6 fingerprint' : 'proveedores ajustan\na la huella P6'}</span>
               </div>
               {/* Cleveland pair per institution: filled dot = top vendor share,
@@ -1319,7 +1324,7 @@ export default function Executive() {
                               className="text-[8px] font-mono flex-shrink-0 text-right"
                               style={{
                                 width: 46,
-                                color: inst.captured ? '#a06820' : 'var(--color-text-muted)',
+                                color: inst.captured ? 'var(--color-accent-hover)' : 'var(--color-text-muted)',
                                 fontWeight: inst.captured ? 700 : 400,
                               }}
                             >
@@ -1378,7 +1383,7 @@ export default function Executive() {
                                 fontSize={8}
                                 fontFamily="var(--font-family-mono,monospace)"
                                 fontWeight="700"
-                                fill={inst.captured ? '#a06820' : 'var(--color-text-muted)'}
+                                fill={inst.captured ? 'var(--color-accent-hover)' : 'var(--color-text-muted)'}
                               >
                                 +{Number.isInteger(gap) ? gap : gap.toFixed(1)}pp
                               </text>
@@ -1408,7 +1413,7 @@ export default function Executive() {
                             className="mt-1.5 rounded-sm px-2 py-1.5 text-[13px] font-mono leading-[1.5]"
                             style={{ background: 'rgba(160,104,32,0.07)', border: '1px solid rgba(160,104,32,0.18)', minHeight: 40 }}
                           >
-                            <span style={{ color: '#a06820', fontWeight: 700 }}>{d.label}</span>
+                            <span style={{ color: 'var(--color-accent-hover)', fontWeight: 700 }}>{d.label}</span>
                             {' — '}
                             {lang === 'en'
                               ? `top vendor ${d.top}% · second ${d.second}% · gap +${gpLabel}pp`
@@ -1448,7 +1453,7 @@ export default function Executive() {
               lived as a code comment. The aggregate scales high+critical
               contract counts by total spend, assuming each risk band's
               average ticket equals the population mean. */}
-          <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted/70 mb-2">
+          <div className="text-[13px] font-mono uppercase tracking-[0.12em] text-text-muted mb-2">
             {lang === 'en'
               ? '(estimated · assumes uniform value distribution across risk bands)'
               : '(estimado · supone distribución uniforme de valor entre bandas de riesgo)'}
@@ -1482,7 +1487,7 @@ export default function Executive() {
             </h2>
             <Link
               to="/sectors?view=categories"
-              className="min-h-6 rounded-sm text-[12px] font-mono uppercase tracking-[0.1em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+              className="min-h-6 rounded-sm text-[12px] font-mono uppercase tracking-[0.1em] text-accent-hover hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
             >
               {lang === 'en' ? 'All categories' : 'Todas'}
               <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
@@ -1601,6 +1606,13 @@ export default function Executive() {
               // filter narrows toward the most-concentrated risk population.
               // Rung 0 (universe) = neutral; rung 3 (T1) = critical red.
               // GT anchor below stays ochre as its own "training corpus" identity.
+              // Type twin of rungColors (the bars keep RISK_COLORS as marks).
+              const rungInks = [
+                RISK_TEXT_COLORS.low,
+                RISK_TEXT_COLORS.medium,
+                RISK_TEXT_COLORS.high,
+                RISK_TEXT_COLORS.critical,
+              ]
               const rungColors = [
                 RISK_COLORS.low,      // #71717a grey — universe, no judgment yet
                 RISK_COLORS.medium,   // #a16207 amber — flagging starts
@@ -1634,7 +1646,7 @@ export default function Executive() {
                 <div className="relative">
                   {/* Axis hint — top-right, archival caption */}
                   <div className="flex items-center justify-end mb-3">
-                    <span className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted opacity-75">
+                    <span className="text-[13px] font-mono uppercase tracking-[0.14em] text-text-muted">
                       {lang === 'en'
                         ? 'logarithmic scale · width = log₁₀(count)'
                         : 'escala logarítmica · ancho = log₁₀(conteo)'}
@@ -1709,7 +1721,6 @@ export default function Executive() {
                                     fontFamily: "'Playfair Display', Georgia, serif",
                                     fontStyle: 'normal',
                                     color: 'var(--color-text-secondary)',
-                                    opacity: 0.85,
                                   }}
                                 >
                                   {r.operation[lang]}
@@ -1719,7 +1730,7 @@ export default function Executive() {
                                   Color tints toward the destination rung so the
                                   eye reads "this drop lands in critical territory". */}
                               {rungs[i + 1]?.drop != null && (
-                                <span className="font-mono tabular-nums text-[13px] text-right" style={{ color: rungColors[i + 1], opacity: 0.8, letterSpacing: '0.06em' }}>
+                                <span className="font-mono tabular-nums text-[13px] text-right" style={{ color: rungInks[i + 1], letterSpacing: '0.06em' }}>
                                   ··· {fmtDrop(rungs[i + 1].drop as number)} {lang === 'en' ? 'drop' : 'caída'}
                                 </span>
                               )}
@@ -1746,7 +1757,7 @@ export default function Executive() {
                     <div className="grid items-baseline gap-x-4" style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}>
                       {/* Eyebrow + count, indented to align under count column */}
                       <div className="flex flex-col gap-1 items-end pr-1">
-                        <span className="text-[8.5px] font-mono uppercase tracking-[0.18em]" style={{ color: '#a06820', opacity: 0.75 }}>
+                        <span className="text-[11px] font-mono uppercase tracking-[0.18em]" style={{ color: 'var(--color-accent-hover)' }}>
                           {lang === 'en' ? 'Anchor' : 'Ancla'}
                         </span>
                         <span
@@ -1756,15 +1767,14 @@ export default function Executive() {
                             fontStyle: 'normal',
                             fontWeight: 800,
                             fontSize: 22,
-                            color: '#a06820',
-                            opacity: 0.85,
+                            color: 'var(--color-accent-hover)',
                           }}
                         >
                           43
                         </span>
                       </div>
                       <div className="flex flex-col gap-0.5 min-w-0">
-                        <div className="text-[12px] font-mono uppercase tracking-[0.14em]" style={{ color: '#a06820', opacity: 0.75 }}>
+                        <div className="text-[12px] font-mono uppercase tracking-[0.14em]" style={{ color: 'var(--color-accent-hover)' }}>
                           {lang === 'en' ? 'Training corpus' : 'Corpus de entrenamiento'}
                         </div>
                         <div className="text-[13px] text-text-secondary group-hover:text-text-primary transition-colors leading-[1.4]">
@@ -1778,7 +1788,6 @@ export default function Executive() {
                             fontFamily: "'Playfair Display', Georgia, serif",
                             fontStyle: 'normal',
                             color: 'var(--color-text-muted)',
-                            opacity: 0.85,
                           }}
                         >
                           {lang === 'en' ? '← informs every filter above' : '← informa todos los filtros anteriores'}
@@ -1798,12 +1807,12 @@ export default function Executive() {
               {lang === 'en' ? (
                 <>
                   Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 72 active spending categories · 1,830 vendor memos (440 LLM-narrative) · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
-                  <Link to="/methodology" className="rounded-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1">methodology</Link> for scope and limits.
+                  <Link to="/methodology" className="rounded-sm text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1">methodology</Link> for scope and limits.
                 </>
               ) : (
                 <>
                   Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 72 categorías activas · 1,830 memos de proveedores (440 LLM-narrativos) · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
-                  <Link to="/methodology" className="rounded-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1">metodología</Link> para alcance y límites.
+                  <Link to="/methodology" className="rounded-sm text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1">metodología</Link> para alcance y límites.
                 </>
               )}
             </div>
@@ -1844,13 +1853,13 @@ export default function Executive() {
               <h2 id="wire-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" aria-hidden />
                 {lang === 'en' ? 'Recent critical alerts' : 'Alertas críticas recientes'}
-                <span className="normal-case tracking-[0.08em] text-text-muted/70 font-normal">
+                <span className="normal-case tracking-[0.08em] text-text-muted font-normal">
                   {lang === 'en' ? '· feed frozen Sep 28 2025' : '· corte 28 sep 2025'}
                 </span>
               </h2>
               <Link
                 to="/contracts?risk_level=critical"
-                className="min-h-6 rounded-sm text-[13px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                className="min-h-6 rounded-sm text-[13px] font-mono uppercase tracking-[0.12em] text-accent-hover hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               >
                 {lang === 'en' ? 'View all' : 'Ver todas'}
                 <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
@@ -1880,14 +1889,14 @@ export default function Executive() {
                   >
                     <span
                       className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[12px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"
-                      style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: 'var(--color-risk-critical)' }}
+                      style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: RISK_TEXT_COLORS.critical }}
                     >
                       {lang === 'en' ? 'CRITICAL' : 'CRÍTICO'}
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="truncate">
                         {c.vendor_id
-                          ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} riskScore={c.risk_score ?? undefined} size="sm" />
+                          ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} size="sm" />
                           : <span className="text-sm font-semibold text-text-primary">{formatVendorName(c.vendor_name) || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}</span>
                         }
                       </div>
@@ -1932,7 +1941,7 @@ export default function Executive() {
             className="rounded-sm p-8 border border-accent/30"
             style={{ background: 'linear-gradient(135deg, rgba(160,104,32,0.06), rgba(160,104,32,0.02))' }}
           >
-            <h2 id="cta-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-accent mb-2">
+            <h2 id="cta-title" className="scroll-mt-14 text-[12px] font-mono font-semibold uppercase tracking-[0.15em] text-accent-hover mb-2">
               {lang === 'en' ? 'Start Here' : 'Comienza aquí'}
             </h2>
             <h3
@@ -1956,7 +1965,7 @@ export default function Executive() {
               </Link>
               <Link
                 to="/explore?entity=vendor"
-                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-accent/5 text-accent border border-accent/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-accent/5 text-accent-hover border border-accent/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               >
                 {lang === 'en' ? 'Search a vendor' : 'Buscar un proveedor'}
               </Link>
@@ -1986,7 +1995,7 @@ export default function Executive() {
             {/* Investigate CTA — amber, mono, uppercase (charter coda rule) */}
             <Link
               to="/aria"
-              className="rounded-sm inline-flex items-center gap-1.5 text-[13px] font-mono uppercase tracking-[0.12em] font-bold text-accent hover:text-accent transition-colors mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+              className="rounded-sm inline-flex items-center gap-1.5 text-[13px] font-mono uppercase tracking-[0.12em] font-bold text-accent-hover hover:underline underline-offset-2 transition-colors mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
               aria-label={lang === 'en'
                 ? 'Open the ARIA investigation queue — 299 GT-anchored Tier-1 vendors'
                 : 'Abrir la cola de investigación ARIA — 299 proveedores Nivel 1 anclados en GT'}
