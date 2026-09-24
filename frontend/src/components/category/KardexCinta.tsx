@@ -5,20 +5,20 @@
  * movement, nothing omitted, gaps as informative as entries. PARALLAX D11b
  * folds the 24-row ledger into one compact instrument:
  *
- *   (a) the tape strip — 24 year columns 2002–2025, √-scaled value bars on a
- *       common baseline, grouped by administration (from @/lib/administrations,
+ *   (a) the tape strip — 24 year columns 2002–2025, LINEAR value bars (the
+ *       strip shows shape; a nonzero year keeps ≥ 2px) on a common baseline, grouped by administration (from @/lib/administrations,
  *       clamped to the data window). Zero years draw a hairline; repricing
  *       years (†) carry a dagger. Each bar is a button that selects its term.
  *   (b) the selector — All · Fox · Calderón · Peña Nieto · AMLO · Sheinbaum.
  *   (c) the readout — All: one row per term (years, value, entries, average
- *       ticket, risk stamp), each row selects its term. A term: its year rows
- *       (year · √ bar · value · entries · ticket † · stamp) under a one-line
+ *       ticket, risk /100), each row selects its term. A term: its year rows
+ *       (year · √ bar · value · entries · ticket † · risk) under a one-line
  *       term total.
  *
  * Ticket = value ÷ entries; flagged † when ≥ 2× the category's median yearly
- * ticket (a repricing tell, computed live). The risk stamp goes through the
- * shared intensityColor helper (never green for low — Bible §3.10); a null
- * avg_risk renders a muted "s/d"/"n/a" word instead of a colour. The A/B/C/D
+ * ticket (a repricing tell, computed live). Risk prints as an integer of 100
+ * (contract-weighted per term); a null avg_risk prints "—". 2025 is
+ * a partial year (feed frozen 2025-09-28) and carries an asterisk. The A/B/C/D
  * structure ruler keeps the tape from over-claiming.
  *
  * State is local (useState); selection never refetches — everything comes
@@ -29,12 +29,13 @@
  */
 import { useCallback, useMemo, useState, type MouseEvent } from 'react'
 import { ADMINISTRATIONS, ADMIN_DISPLAY_ACCENTED, getAdministrationByYear, type AdministrationKey } from '@/lib/administrations'
-import { intensityColor } from '@/components/categories/types'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 
 const YEAR_START = 2002
 const YEAR_END = 2025
 const STRIP_H = 64
+const TERM_GAP = 8 // px between administrations (bars inside a term: 2px)
+const PARTIAL_NOTE = { en: '* data to 28 Sep 2025', es: '* datos al 28 sep 2025' } // the COMPRANET feed froze 2025-09-28
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2'
 
 export interface KardexYearPoint {
@@ -105,23 +106,12 @@ function ValorBar({ ratio, color }: { ratio: number; color: string }) {
   )
 }
 
-// ─── RiskStamp — 8px square via intensityColor (never green for low). Null
-//     avg_risk renders a muted "s/d"/"n/a" word, not a fabricated colour. ────
-function RiskStamp({ avgRisk, isEs }: { avgRisk: number | null; isEs: boolean }) {
+// ─── RiskValue — the risk indicator as an integer "of 100" (Day 11 one-scale
+//     rule). Null avg_risk prints a muted "—". ──────────────────────────────
+function RiskValue({ avgRisk }: { avgRisk: number | null }) {
   return (
-    <span className="inline-flex items-center justify-center shrink-0" style={{ width: 24, verticalAlign: 'middle' }}>
-      {avgRisk == null ? (
-        <span className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)' }} title={isEs ? 'Sin datos de riesgo' : 'No risk data'}>
-          {isEs ? 's/d' : 'n/a'}
-        </span>
-      ) : (
-        <span
-          role="img"
-          aria-label={`${isEs ? 'indicador de riesgo' : 'risk indicator'} ${Math.round(avgRisk * 100)}`}
-          style={{ width: 8, height: 8, borderRadius: 1.5, background: intensityColor(avgRisk), display: 'inline-block' }}
-          title={`${Math.round(avgRisk * 100)}`}
-        />
-      )}
+    <span className="tabular-nums shrink-0 inline-block text-right" style={{ minWidth: 28, fontSize: 12, color: avgRisk == null ? 'var(--color-text-muted)' : 'var(--color-text-secondary)' }}>
+      {avgRisk == null ? '—' : Math.round(avgRisk * 100)}
     </span>
   )
 }
@@ -187,7 +177,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
   const term = selected === 'all' ? null : terms.find((t) => t.key === selected) ?? null
   const inView = term ? term.years : rows
   const hasFlag = inView.some((r) => r.flagged)
-  const yearsLabel = (t: Term) => (t.from === t.to ? `${t.from}` : `${t.from}–${t.to}`)
+  const yearsLabel = (t: Term) => (t.from === t.to ? `${t.from}` : `${t.from}–${t.to}`) + (t.to === YEAR_END ? '*' : '')
 
   return (
     <div className="font-mono">
@@ -219,7 +209,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
 
       {/* (a) the tape strip */}
       <div>
-        <div className="flex items-end" style={{ gap: 6, height: STRIP_H + 12 }}>
+        <div className="flex items-end" style={{ gap: TERM_GAP, height: STRIP_H + 12 }}>
           {terms.map((t) => (
             <div
               key={t.key}
@@ -233,7 +223,8 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
               }}
             >
               {t.years.map((r) => {
-                const h = r.isZero ? 0 : Math.max(2, Math.round((Math.sqrt(r.totalValue) / Math.sqrt(maxValue)) * STRIP_H))
+                // Linear: the strip's job is the shape. (The term view's row bars stay √.)
+                const h = r.isZero ? 0 : Math.max(2, Math.round((r.totalValue / maxValue) * STRIP_H))
                 return (
                   <button
                     key={r.year}
@@ -260,7 +251,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
         </div>
         {/* baseline, year ticks every 5 years, term names — same column geometry */}
         <div style={{ height: 1, background: 'var(--color-border)' }} aria-hidden="true" />
-        <div className="flex" style={{ gap: 6 }} aria-hidden="true">
+        <div className="flex" style={{ gap: TERM_GAP }} aria-hidden="true">
           {terms.map((t) => (
             <div key={t.key} className="flex" style={{ flex: t.years.length, gap: 2, minWidth: 0 }}>
               {t.years.map((r) => (
@@ -270,7 +261,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
                       className="absolute tabular-nums"
                       style={{ top: 3, fontSize: 11, lineHeight: 1, color: 'var(--color-text-muted)', ...(r.year === YEAR_END ? { right: 0 } : { left: '50%', transform: 'translateX(-50%)' }) }}
                     >
-                      {r.year}
+                      {r.year}{r.year === YEAR_END ? '*' : ''}
                     </span>
                   )}
                 </div>
@@ -278,7 +269,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
             </div>
           ))}
         </div>
-        <div className="flex" style={{ gap: 6 }} aria-hidden="true">
+        <div className="flex" style={{ gap: TERM_GAP }} aria-hidden="true">
           {terms.map((t, i) => (
             <div
               key={t.key}
@@ -291,21 +282,31 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
                 lineHeight: 1.1,
                 letterSpacing: '0.06em',
                 textAlign: i === terms.length - 1 ? 'right' : 'left',
-                direction: i === terms.length - 1 ? 'rtl' : undefined,
+                // the last term (Sheinbaum) is one column wide: right-anchor it so its
+                // name overflows leftward over the axis line, never off the section
+                ...(i === terms.length - 1 ? { display: 'flex', justifyContent: 'flex-end' } : {}),
                 borderTop: '1px solid var(--color-border)',
                 paddingTop: 2,
                 color: term?.key === t.key ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
                 fontWeight: term?.key === t.key ? 700 : 400,
               }}
             >
-              {t.name}
+              {/* a one-year term: its column is narrow, so abbreviate below sm */}
+              {t.key === 'sheinbaum' ? (
+                <>
+                  <span className="sm:hidden">Sheinb.</span>
+                  <span className="hidden sm:inline">{t.name}</span>
+                </>
+              ) : (
+                t.name
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* (c) the readout */}
-      <div className="mt-1.5">
+      {/* (c) the readout — 16px and a hairline below the strip block */}
+      <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
         {term == null ? (
           <table className="w-full" style={{ borderCollapse: 'collapse', lineHeight: 1.3 }}>
             <caption className="sr-only">
@@ -318,7 +319,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
                 <th scope="col" className="text-right font-normal pb-1">{isEs ? 'Valor' : 'Value'}</th>
                 <th scope="col" className="text-right font-normal pb-1 hidden md:table-cell">{isEs ? 'Entradas' : 'Entries'}</th>
                 <th scope="col" className="text-right font-normal pb-1 hidden md:table-cell">{isEs ? 'Ticket medio' : 'Avg ticket'}</th>
-                <th scope="col" className="text-right font-normal pb-1">{isEs ? 'Riesgo' : 'Risk'}</th>
+                <th scope="col" className="text-right font-normal pb-1">{isEs ? 'Riesgo /100' : 'Risk /100'}</th>
               </tr>
             </thead>
             <tbody>
@@ -344,7 +345,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
                   <td className="py-1 tabular-nums text-right hidden md:table-cell" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                     {t.totalContracts > 0 ? formatCompactMXN(t.totalValue / t.totalContracts) : '—'}
                   </td>
-                  <td className="py-1 text-right"><RiskStamp avgRisk={t.avgRisk} isEs={isEs} /></td>
+                  <td className="py-1 text-right"><RiskValue avgRisk={t.avgRisk} /></td>
                 </tr>
               ))}
             </tbody>
@@ -359,12 +360,14 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
               style={{ fontSize: 12, letterSpacing: '0.04em', color: 'var(--color-text-secondary)' }}
             >
               <span style={{ color: 'var(--color-text-primary)', fontWeight: 700 }}>{term.name}</span> · {yearsLabel(term)} · {formatCompactMXN(term.totalValue)} · {entriesLabel(term.totalContracts, isEs)}
+              {/* names the unlabeled right-hand column of the year rows */}
+              {term.avgRisk != null && ` · ${isEs ? 'riesgo' : 'risk'} ${Math.round(term.avgRisk * 100)}/100`}
             </div>
             {term.years.map((r) => (
               <div key={r.year} data-year-row={r.year} data-year-value={r.totalValue} data-year-contracts={r.totalContracts}>
                 <div role="row" className="flex items-center gap-2 sm:gap-3 py-1.5" style={{ borderTop: '1px solid var(--color-border)' }}>
-                  <span role="rowheader" className="tabular-nums shrink-0" style={{ width: 36, fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                    {r.year}
+                  <span role="rowheader" className="tabular-nums shrink-0" style={{ width: 40, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                    {r.year}{r.year === YEAR_END ? '*' : ''}
                   </span>
                   <span aria-hidden="true" style={{ color: 'var(--color-border)' }}>│</span>
                   {r.isZero ? (
@@ -373,6 +376,7 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
                     </span>
                   ) : (
                     <>
+                      {/* √ here on purpose: an in-row magnitude bar, not the strip's shape (the strip is linear) */}
                       <ValorBar ratio={Math.sqrt(r.totalValue) / Math.sqrt(maxValue)} color={accent} />
                       <span role="cell" className="tabular-nums shrink-0 text-right" style={{ fontSize: 13, minWidth: 68, color: 'var(--color-text-secondary)' }}>
                         {formatCompactMXN(r.totalValue)}
@@ -386,8 +390,8 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
                         {/* "ticket" is an accepted loanword in Mexican procurement Spanish — same word both languages */}
                         ticket {formatCompactMXN(r.ticket ?? 0)}{r.flagged ? ' †' : ''}
                       </span>
-                      <span className="ml-auto md:ml-0" />
-                      <RiskStamp avgRisk={r.avgRisk} isEs={isEs} />
+                      <span className="ml-auto" />
+                      <RiskValue avgRisk={r.avgRisk} />
                     </>
                   )}
                 </div>
@@ -405,13 +409,15 @@ export function KardexCinta({ trend, accent, lang }: KardexCintaProps) {
         )}
       </div>
 
-      {hasFlag && (
-        <p className="mt-1.5" style={{ fontSize: 12, color: 'var(--color-text-muted)', maxWidth: 'none' }}>
-          {isEs
+      {/* 2025 is always in the data window, so its partial-year note always shows */}
+      <p className="mt-1.5" style={{ fontSize: 12, color: 'var(--color-text-muted)', maxWidth: 'none' }}>
+        {hasFlag &&
+          (isEs
             ? '† reprecio: ticket implícito ≥ 2× la mediana anual de esta categoría — el ticket es valor ÷ entradas, no una observación de precio.'
-            : '† repricing: implied ticket ≥ 2× this category’s median yearly ticket — the ticket is value ÷ entries, not a price observation.'}
-        </p>
-      )}
+            : '† repricing: implied ticket ≥ 2× this category’s median yearly ticket — the ticket is value ÷ entries, not a price observation.')}
+        {hasFlag && ' '}
+        <span className="whitespace-nowrap">{PARTIAL_NOTE[lang]}</span>
+      </p>
 
       {/* Structure ruler — the honesty instrument */}
       <div className="mt-2">
