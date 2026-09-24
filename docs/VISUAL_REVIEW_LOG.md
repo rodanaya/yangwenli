@@ -1,4 +1,37 @@
 ---
+## Visual Review — 2026-09-24T00:24:00Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ✗ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ✗ |
+| https://rubli.xyz/aria | BLOCKED (000) | ✗ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ✗ |
+| https://rubli.xyz/cases | BLOCKED (000) | ✗ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ✗ |
+
+**Note**: All requests blocked by egress proxy policy (connect_rejected on rubli.xyz:443). Persistent issue — every run blocked since 2026-08-28.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED (proxy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (proxy) | ✗ |
+| /api/v1/sectors | BLOCKED (proxy) | ✗ |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep hits are TypeScript code comments, data-constant property accesses (`PATTERN_CHIP.P5`, `TIER_STYLES.Excelente`), bibliographic strings, corporate form abbreviations (S.A., C.V.), and properly-guarded `isEs ? '...' : '...'` ternaries; not UI-visible raw key leaks
+
+### Overall: WARN
+**Persistent blocker (≥20 runs)**: HTTP and API health checks remain unverifiable — all blocked by egress proxy policy on rubli.xyz:443. Bilingual gap scan (local): PASS. **Action required**: migrate these checks to a GitHub Actions scheduled workflow with direct internet access, or add rubli.xyz to the allowed egress list in the claude.ai remote session network policy.
+
+---
 ## Visual Review — 2026-09-20T00:24:00Z
 
 ### HTTP Status
