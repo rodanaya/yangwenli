@@ -15347,3 +15347,36 @@ Network policy blocks all outbound HTTPS to rubli.xyz (eighth consecutive blocke
 
 ### Overall: WARN
 **Recurring blocker**: HTTP and API checks remain unverifiable — egress proxy blocks rubli.xyz:443 on every run. Bilingual gap scan: **PASS**. **Action required**: allowlist rubli.xyz in the remote session network policy at https://code.claude.com/docs, or move HTTP/API health checks to a GitHub Actions scheduled workflow with direct egress.
+
+---
+## Visual Review — 2026-09-25T06:25:03Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/atlas | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/aria | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/sectors | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/sectors/salud | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/cases | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/methodology | 000 (proxy rejected) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 000 (proxy rejected) | ✗ |
+
+**Reason**: Egress proxy `connect_rejected` — organization policy blocks outbound HTTPS to rubli.xyz:443 from this remote execution environment. Not a site-down event; recurring environment constraint on every run.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (egress policy) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED | ✗ |
+| /api/v1/sectors | BLOCKED | ✗ |
+
+### Bilingual Gaps
+- **Raw i18n key leaks**: None detected — grep hits are TypeScript comments, data-constant property accesses (`PATTERN_CHIP.P5`, `TIER_STYLES.Satisfactorio`), bibliographic author strings, and `isEs ? ... : ...` ternaries
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+
+### Overall: WARN
+**Recurring blocker**: HTTP and API checks cannot be verified — egress proxy blocks rubli.xyz:443 on every run. Bilingual gap scan: **PASS**. **Action required**: allowlist rubli.xyz in the remote session network policy, or move HTTP/API health checks to a GitHub Actions workflow with direct egress access.
