@@ -15545,3 +15545,36 @@ Network policy blocks all outbound HTTPS to rubli.xyz (eighth consecutive blocke
 
 ### Overall: WARN
 **Persistent blocker (22+ runs since 2026-08-28)**: HTTP and API health checks remain unverifiable — all blocked by egress proxy policy on rubli.xyz:443. Bilingual gap scan (local): PASS. **Action required**: add rubli.xyz to the allowed egress list in the claude.ai remote session network policy (see https://code.claude.com/docs/en/claude-code-on-the-web for environment configuration), or migrate these checks to a GitHub Actions scheduled workflow with direct internet access.
+
+---
+## Visual Review — 2026-09-26T18:23:47Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (000) | ✗ |
+| https://rubli.xyz/atlas | BLOCKED (000) | ✗ |
+| https://rubli.xyz/aria | BLOCKED (000) | ✗ |
+| https://rubli.xyz/sectors | BLOCKED (000) | ✗ |
+| https://rubli.xyz/sectors/salud | BLOCKED (000) | ✗ |
+| https://rubli.xyz/cases | BLOCKED (000) | ✗ |
+| https://rubli.xyz/methodology | BLOCKED (000) | ✗ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (000) | ✗ |
+
+**Note**: Egress proxy continues to block rubli.xyz:443 (CONNECT rejected by org policy). Persistent since 2026-08-28 — this is run #23+.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (proxy) | ✗ |
+| /api/v1/cases?limit=5 | BLOCKED (proxy) | ✗ |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (proxy) | ✗ |
+| /api/v1/sectors | BLOCKED (proxy) | ✗ |
+
+### Bilingual Gaps
+- **"Generate Report" hardcoded**: None detected
+- **"SIGN IN" hardcoded**: None detected
+- **Raw i18n key leaks**: None detected — grep hits are TS comments, data-constant accesses (`PATTERN_CHIP.P5`, `TIER_STYLES.Excelente`), bibliographic strings, corporate form abbreviations (S.A., C.V.), and properly-guarded `isEs ? '...' : '...'` ternaries; not UI-visible raw key leaks
+
+### Overall: WARN
+**Persistent blocker**: HTTP and API checks blocked by egress proxy (connect_rejected) for 30+ days. Bilingual gap scan (local): PASS. **Action required**: allow rubli.xyz in the claude.ai remote session network policy, or migrate checks to a GitHub Actions workflow with direct internet access.
